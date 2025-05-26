@@ -46,7 +46,7 @@ app.*.map.json
 
 .gitignore
 
-/ios
+
 
 /web
 READ.md

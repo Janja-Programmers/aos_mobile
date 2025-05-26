@@ -7,7 +7,7 @@ import '../../../cart/domain/cart_item.dart';
 import '../../../cart/presentation/cart_provider.dart';
 import '../../../wishlist/domain/wishlist_item.dart';
 import '../../../wishlist/presentation/wishlist_provider.dart';
-import '../../domain/product.dart';
+import '../../../../shared/products/domain/product.dart';
 import '../product_provider.dart';
 import '../widgets/product_action_buttons.dart';
 import '../widgets/product_card.dart';

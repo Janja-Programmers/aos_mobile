@@ -5,23 +5,23 @@ import '../core/navigation/app_router.dart';
 import '../core/constants/strings.dart';
 
 // Product Feature
-import 'features/products/domain/usecases/get_product_details.dart';
-import 'features/products/domain/usecases/get_products.dart';
-import 'features/products/presentation/product_provider.dart';
+import 'features/shared/products/domain/usecases/get_product_details.dart';
+import 'features/shared/products/domain/usecases/get_products.dart';
+import 'features/customer/product/presentation/product_provider.dart';
 
 // Wishlist Feature
-import 'features/wishlist/domain/usecases/add_to_wishlist.dart';
-import 'features/wishlist/domain/usecases/remove_from_wishlist.dart';
-import 'features/wishlist/domain/usecases/get_wishlist.dart';
-import 'features/wishlist/presentation/wishlist_provider.dart';
+import 'features/customer/wishlist/domain/usecases/add_to_wishlist.dart';
+import 'features/customer/wishlist/domain/usecases/remove_from_wishlist.dart';
+import 'features/customer/wishlist/domain/usecases/get_wishlist.dart';
+import 'features/customer/wishlist/presentation/wishlist_provider.dart';
 
 // Cart Feature
-import 'features/cart/domain/usecases/add_to_cart.dart';
-import 'features/cart/domain/usecases/get_cart.dart';
-import 'features/cart/domain/usecases/remove_from_cart.dart';
-import 'features/cart/domain/usecases/update_cart_quantity.dart';
-import 'features/cart/domain/usecases/clear_cart.dart';
-import 'features/cart/presentation/cart_provider.dart';
+import 'features/customer/cart/domain/usecases/add_to_cart.dart';
+import 'features/customer/cart/domain/usecases/get_cart.dart';
+import 'features/customer/cart/domain/usecases/remove_from_cart.dart';
+import 'features/customer/cart/domain/usecases/update_cart_quantity.dart';
+import 'features/customer/cart/domain/usecases/clear_cart.dart';
+import 'features/customer/cart/presentation/cart_provider.dart';
 
 class App extends StatelessWidget {
   final GetProducts getProducts;

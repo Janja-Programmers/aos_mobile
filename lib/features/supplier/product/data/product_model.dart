@@ -1,4 +1,4 @@
-import '../domain/product.dart';
+import '../../../shared/products/domain/product.dart';
 
 class ProductModel extends Product {
   const ProductModel({

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/constants/colors.dart';
+import '../../../../../core/constants/colors.dart';
 import '../../../cart/presentation/cart_provider.dart';
 
 class CartIconWithBadge extends StatelessWidget {

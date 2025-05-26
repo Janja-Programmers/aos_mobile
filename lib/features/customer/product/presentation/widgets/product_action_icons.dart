@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/colors.dart';
-import '../../domain/product.dart';
+import '../../../../../core/constants/colors.dart';
+import '../../../../shared/products/domain/product.dart';
 import 'cart_icon_with_badge.dart';
 
 class ProductActionIcons extends StatelessWidget {

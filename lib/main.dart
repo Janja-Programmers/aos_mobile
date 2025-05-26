@@ -2,26 +2,26 @@ import 'package:flutter/material.dart';
 import './app.dart';
 
 // Products
-import 'features/products/domain/usecases/get_product_details.dart';
-import 'features/products/domain/usecases/get_products.dart';
-import 'features/products/data/product_remote_datasource.dart';
-import 'features/products/data/product_repository_impl.dart';
+import 'features/shared/products/domain/usecases/get_product_details.dart';
+import 'features/shared/products/domain/usecases/get_products.dart';
+import 'features/supplier/product/data/product_remote_datasource.dart';
+import 'features/supplier/product/data/product_repository_impl.dart';
 
 // Wishlist
-import 'features/wishlist/domain/usecases/add_to_wishlist.dart';
-import 'features/wishlist/domain/usecases/remove_from_wishlist.dart';
-import 'features/wishlist/domain/usecases/get_wishlist.dart';
-import 'features/wishlist/data/wishlist_local_data_source.dart';
-import 'features/wishlist/data/wishlist_repository_impl.dart';
+import 'features/customer/wishlist/domain/usecases/add_to_wishlist.dart';
+import 'features/customer/wishlist/domain/usecases/remove_from_wishlist.dart';
+import 'features/customer/wishlist/domain/usecases/get_wishlist.dart';
+import 'features/customer/wishlist/data/wishlist_local_data_source.dart';
+import 'features/customer/wishlist/data/wishlist_repository_impl.dart';
 
 // Cart
-import 'features/cart/domain/usecases/clear_cart.dart';
-import 'features/cart/domain/usecases/update_cart_quantity.dart';
-import 'features/cart/domain/usecases/add_to_cart.dart';
-import 'features/cart/domain/usecases/get_cart.dart';
-import 'features/cart/domain/usecases/remove_from_cart.dart';
-import 'features/cart/data/cart_local_data_source.dart';
-import 'features/cart/data/cart_repository_impl.dart';
+import 'features/customer/cart/domain/usecases/clear_cart.dart';
+import 'features/customer/cart/domain/usecases/update_cart_quantity.dart';
+import 'features/customer/cart/domain/usecases/add_to_cart.dart';
+import 'features/customer/cart/domain/usecases/get_cart.dart';
+import 'features/customer/cart/domain/usecases/remove_from_cart.dart';
+import 'features/customer/cart/data/cart_local_data_source.dart';
+import 'features/customer/cart/data/cart_repository_impl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

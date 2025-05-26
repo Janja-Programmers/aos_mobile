@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../domain/product.dart';
-import '../domain/usecases/get_products.dart';
-import '../domain/usecases/get_product_details.dart';
+import '../../../shared/products/domain/product.dart';
+import '../../../shared/products/domain/usecases/get_products.dart';
+import '../../../shared/products/domain/usecases/get_product_details.dart';
 
 class ProductProvider extends ChangeNotifier {
   final GetProducts getProducts;

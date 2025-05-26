@@ -1,5 +1,5 @@
-import '../domain/product.dart';
-import '../domain/product_repository.dart';
+import '../../../shared/products/domain/product.dart';
+import '../../../shared/products/domain/product_repository.dart';
 import 'product_remote_datasource.dart';
 
 class ProductRepositoryImpl implements ProductRepository {

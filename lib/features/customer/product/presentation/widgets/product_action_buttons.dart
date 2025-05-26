@@ -1,9 +1,9 @@
-import 'package:amani_mall/features/products/presentation/widgets/supplier_contact_sheet.dart';
+import 'package:amani_mall/features/customer/product/presentation/widgets/supplier_contact_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 // Product feature;
-import '../../domain/product.dart';
+import '../../../../shared/products/domain/product.dart';
 
 // Cart feature;
 import '../../../cart/presentation/cart_provider.dart';

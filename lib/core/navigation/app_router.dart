@@ -1,10 +1,10 @@
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
-import '../../features/products/presentation/screens/product_detail_screen.dart';
-import '../../features/products/presentation/screens/product_list_screen.dart';
-import '../../features/wishlist/presentation/wishlist_screen.dart';
-import '../../features/cart/presentation/cart_screen.dart';
+import '../../features/customer/product/presentation/screens/product_detail_screen.dart';
+import '../../features/customer/product/presentation/screens/product_list_screen.dart';
+import '../../features/customer/wishlist/presentation/wishlist_screen.dart';
+import '../../features/customer/cart/presentation/cart_screen.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: '/register',

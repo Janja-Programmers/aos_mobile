@@ -1,13 +1,20 @@
+import 'package:amani_mall/features/auth/presentation/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/themes.dart';
 import '../core/navigation/app_router.dart';
 import '../core/constants/strings.dart';
 
-// Product Feature
-import 'features/shared/products/domain/usecases/get_product_details.dart';
-import 'features/shared/products/domain/usecases/get_products.dart';
-import 'features/customer/product/presentation/product_provider.dart';
+// Item Feature
+import 'features/shared/item/domain/usecases/get_items.dart';
+import 'features/supplier/item/domain/usecases/create_item.dart';
+import 'features/supplier/item/domain/usecases/delete_item.dart';
+import 'features/supplier/item/domain/usecases/update_item.dart';
+import 'features/supplier/item/presentation/item_provider.dart';
+
+// AUth Feature
+import 'features/auth/domain/usecases/login.dart';
+import 'features/auth/domain/usecases/register.dart';
 
 // Wishlist Feature
 import 'features/customer/wishlist/domain/usecases/add_to_wishlist.dart';
@@ -24,9 +31,6 @@ import 'features/customer/cart/domain/usecases/clear_cart.dart';
 import 'features/customer/cart/presentation/cart_provider.dart';
 
 class App extends StatelessWidget {
-  final GetProducts getProducts;
-  final GetProductDetails getProductDetails;
-
   final GetWishlist getWishlist;
   final AddToWishlist addToWishlist;
   final RemoveFromWishlist removeFromWishlist;
@@ -37,10 +41,16 @@ class App extends StatelessWidget {
   final UpdateCartQuantity updateCartQuantity;
   final ClearCart clearCart;
 
+  final LoginUser loginUser;
+  final RegisterUser registerUser;
+
+  final GetItems getItems;
+  final CreateItem createItem;
+  final UpdateItem updateItem;
+  final DeleteItem deleteItem;
+
   const App({
     super.key,
-    required this.getProducts,
-    required this.getProductDetails,
     required this.getWishlist,
     required this.addToWishlist,
     required this.removeFromWishlist,
@@ -49,19 +59,18 @@ class App extends StatelessWidget {
     required this.removeFromCart,
     required this.updateCartQuantity,
     required this.clearCart,
+    required this.loginUser,
+    required this.registerUser,
+    required this.getItems,
+    required this.createItem,
+    required this.updateItem,
+    required this.deleteItem,
   });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create:
-              (_) => ProductProvider(
-                getProducts: getProducts,
-                getProductDetails: getProductDetails,
-              ),
-        ),
         ChangeNotifierProvider(
           create:
               (_) => WishlistProvider(
@@ -78,6 +87,22 @@ class App extends StatelessWidget {
                 removeFromCart: removeFromCart,
                 updateCartQuantity: updateCartQuantity,
                 clearCart: clearCart,
+              ),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (_) => AuthProvider(
+                loginUser: loginUser,
+                registerUser: registerUser,
+              ),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (_) => ItemProvider(
+                getItemsUseCase: getItems,
+                createItemUseCase: createItem,
+                updateItemUseCase: updateItem,
+                deleteItemUseCase: deleteItem,
               ),
         ),
       ],

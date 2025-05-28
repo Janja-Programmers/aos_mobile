@@ -1,12 +1,10 @@
-import '../entities/user.dart';
-import '../repositories/auth_repository.dart';
+import '../user.dart';
+import '../auth_repository.dart';
 
-class LoginUseCase {
+class LoginUser {
   final AuthRepository repository;
+  LoginUser(this.repository);
 
-  LoginUseCase({required this.repository});
-
-  Future<User> call(String email, String password) async {
-    return await repository.login(email, password);
-  }
+  Future<User?> call(String username, String password) =>
+      repository.login(username, password);
 }

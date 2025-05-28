@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/products/domain/product.dart';
+import '../../../../shared/item/domain/product.dart';
 import '../../../../../core/constants/colors.dart';
 import 'product_action_icons.dart';
 

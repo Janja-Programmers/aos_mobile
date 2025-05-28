@@ -1,12 +1,9 @@
-import '../entities/user.dart';
-import '../repositories/auth_repository.dart';
+import '../user.dart';
+import '../auth_repository.dart';
 
-class RegisterUseCase {
+class RegisterUser {
   final AuthRepository repository;
+  RegisterUser(this.repository);
 
-  RegisterUseCase({required this.repository});
-
-  Future<User> call(String email, String password) async {
-    return await repository.register(email, password);
-  }
+  Future<void> call(User user) => repository.register(user);
 }

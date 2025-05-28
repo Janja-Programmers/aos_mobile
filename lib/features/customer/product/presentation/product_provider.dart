@@ -1,11 +1,11 @@
+import 'package:amani_mall/features/shared/item/domain/usecases/get_item_by_name.dart';
+import 'package:amani_mall/features/shared/item/domain/usecases/get_items.dart';
 import 'package:flutter/material.dart';
-import '../../../shared/products/domain/product.dart';
-import '../../../shared/products/domain/usecases/get_products.dart';
-import '../../../shared/products/domain/usecases/get_product_details.dart';
+import '../../../shared/item/domain/product.dart';
 
 class ProductProvider extends ChangeNotifier {
-  final GetProducts getProducts;
-  final GetProductDetails getProductDetails;
+  final GetItems getProducts;
+  final GetItemByName getProductDetails;
 
   ProductProvider({required this.getProducts, required this.getProductDetails});
 
@@ -27,7 +27,7 @@ class ProductProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _products = await getProducts();
+      _products = (await getProducts()).cast<Product>();
     } catch (e) {
       _error = 'Failed to load products';
     }
@@ -42,7 +42,7 @@ class ProductProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _selectedProduct = await getProductDetails(id);
+      _selectedProduct = (await getProductDetails(id)) as Product?;
     } catch (e) {
       _error = 'Failed to load product details';
     }

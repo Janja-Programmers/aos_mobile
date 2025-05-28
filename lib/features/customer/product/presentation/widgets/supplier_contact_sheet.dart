@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/products/domain/product.dart';
+import '../../../../shared/item/domain/product.dart';
 
 class SupplierContactSheet extends StatelessWidget {
   final Product product;

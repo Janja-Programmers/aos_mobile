@@ -1,79 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../../core/constants/strings.dart';
-import '../../../../../core/constants/dimensions.dart';
-import '../../../../../shared/widgets/custom_button.dart';
-import '../../../../../shared/widgets/custom_text_field.dart';
+import 'package:provider/provider.dart';
+import '../auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isLoading = false;
+  final TextEditingController userCtrl = TextEditingController();
+  final TextEditingController passCtrl = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.login)),
-      body: Padding(
-        padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              CustomTextField(
-                controller: _emailController,
-                label: AppStrings.email,
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Enter email';
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppDimensions.paddingSmall),
-              CustomTextField(
-                controller: _passwordController,
-                label: AppStrings.password,
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Enter password';
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppDimensions.paddingMedium),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : CustomButton(
-                    text: AppStrings.signIn,
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        setState(() => _isLoading = true);
-                        await Future.delayed(
-                          const Duration(seconds: 1),
-                        ); // Simulate API
-                        setState(() => _isLoading = false);
-                        context.push('/products');
-                      }
-                    },
-                  ),
-              const SizedBox(height: AppDimensions.paddingSmall),
-              TextButton(
-                onPressed: () => context.push('/register'),
-                child: const Text(AppStrings.noAccount),
-              ),
-            ],
+      appBar: AppBar(title: Text('Login')),
+      body: Column(
+        children: [
+          TextField(
+            controller: userCtrl,
+            decoration: InputDecoration(hintText: 'Username'),
           ),
-        ),
+          TextField(
+            controller: passCtrl,
+            decoration: InputDecoration(hintText: 'Password'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              print('Login button pressed');
+              await auth.login(userCtrl.text, passCtrl.text);
+              print('Login finished');
+
+              if (!mounted) return;
+
+              if (auth.user != null) {
+                print('User is valid, navigating to products');
+                context.go('/products');
+              } else {
+                print('Login failed, user is null');
+              }
+            },
+
+            child: Text('Login'),
+          ),
+        ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    userCtrl.dispose();
+    passCtrl.dispose();
+    super.dispose();
   }
 }

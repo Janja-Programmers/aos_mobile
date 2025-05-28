@@ -13,4 +13,18 @@ class AppColors {
   static final Color shadow = AppColors.black.withAlpha(
     (0.1 * 255).toInt(),
   ); // Equivalent to 10% opacity black
+  static const Color cardColor = Colors.white;
+  static const Color borderColor = Colors.grey;
+  static const Color error = Colors.redAccent;
+  static const Color warning = Colors.amber;
+  static const Color info = Colors.blueAccent;
+  static const Color light = Colors.lightBlueAccent;
+  static const Color dark = Colors.blueGrey;
+  static const Color background = Colors.white;
+  static const Color transparent = Colors.transparent;
+  static const Color disabled = Colors.grey;
+  static const Color highlight = Colors.yellow;
+  static const Color overlay = Color(0x80000000); // Semi-transparent black
+  static const Color accent = Colors.pinkAccent;
+  static const Color divider = Colors.grey;
 }

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 // Product feature;
-import '../../../../shared/products/domain/product.dart';
+import '../../../../shared/item/domain/product.dart';
 
 // Cart feature;
 import '../../../cart/presentation/cart_provider.dart';

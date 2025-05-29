@@ -7,7 +7,7 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   static const _dbName = 'mall.db';
-  static const _dbVersion = 2; // ✅ Increased from 1 to 2
+  static const _dbVersion = 1;
 
   Database? _db;
 
@@ -23,13 +23,18 @@ class DatabaseHelper {
       path,
       version: _dbVersion,
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade, // ✅ Handle schema upgrades
+      onConfigure: _onConfigure,
     );
+  }
+
+  Future<void> _onConfigure(Database db) async {
+    // Enable foreign key constraints
+    await db.execute('PRAGMA foreign_keys = ON');
   }
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE users(
+      CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
         password TEXT
@@ -37,30 +42,15 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
-      CREATE TABLE items(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        item_name TEXT,
-        item_group TEXT,
-        company TEXT,
-        created_by TEXT
-      )
-    ''');
-  }
-
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      // ✅ Add the `items` table
-      await db.execute('''
-        CREATE TABLE items(
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          item_name TEXT,
-          item_group TEXT,
-          company TEXT,
-          created_by TEXT
-        )
-      ''');
-    }
-
-    // Add more migrations here for future versions
+  CREATE TABLE items (
+    item_code TEXT PRIMARY KEY,
+    item_name TEXT UNIQUE NOT NULL,
+    item_group TEXT NOT NULL,
+    company TEXT NOT NULL,
+    created_by INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+  )
+''');
   }
 }

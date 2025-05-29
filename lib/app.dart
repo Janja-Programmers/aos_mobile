@@ -1,4 +1,3 @@
-import 'package:amani_mall/features/auth/presentation/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/themes.dart';
@@ -6,13 +5,12 @@ import '../core/navigation/app_router.dart';
 import '../core/constants/strings.dart';
 
 // Item Feature
-import 'features/shared/item/domain/usecases/get_items.dart';
-import 'features/supplier/item/domain/usecases/create_item.dart';
-import 'features/supplier/item/domain/usecases/delete_item.dart';
-import 'features/supplier/item/domain/usecases/update_item.dart';
-import 'features/supplier/item/presentation/item_provider.dart';
+import 'features/item/domain/usecases/get_items.dart';
+import 'features/item/domain/usecases/create_item.dart';
+import 'features/item/presentation/item_provider.dart';
 
 // AUth Feature
+import 'package:amani_mall/features/auth/presentation/auth_provider.dart';
 import 'features/auth/domain/usecases/login.dart';
 import 'features/auth/domain/usecases/register.dart';
 
@@ -46,8 +44,6 @@ class App extends StatelessWidget {
 
   final GetItems getItems;
   final CreateItem createItem;
-  final UpdateItem updateItem;
-  final DeleteItem deleteItem;
 
   const App({
     super.key,
@@ -63,8 +59,6 @@ class App extends StatelessWidget {
     required this.registerUser,
     required this.getItems,
     required this.createItem,
-    required this.updateItem,
-    required this.deleteItem,
   });
 
   @override
@@ -99,10 +93,8 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(
           create:
               (_) => ItemProvider(
-                getItemsUseCase: getItems,
-                createItemUseCase: createItem,
-                updateItemUseCase: updateItem,
-                deleteItemUseCase: deleteItem,
+                createItemUsecase: createItem,
+                getItemsUsecase: getItems,
               ),
         ),
       ],

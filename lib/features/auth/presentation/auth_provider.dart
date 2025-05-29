@@ -12,9 +12,10 @@ class AuthProvider with ChangeNotifier {
 
   AuthProvider({required this.loginUser, required this.registerUser});
 
-  Future<void> login(String username, String password) async {
+  Future<User?> login(String username, String password) async {
     _user = await loginUser(username, password);
     notifyListeners();
+    return _user;
   }
 
   Future<void> register(String username, String password) async {

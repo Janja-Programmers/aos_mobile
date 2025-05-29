@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import './app.dart';
 
 // Items
-import 'features/shared/item/data/item_local_datasource.dart';
-import 'features/shared/item/data/item_repository_impl.dart';
-import 'features/shared/item/domain/usecases/get_items.dart';
-import 'features/supplier/item/domain/usecases/create_item.dart';
-import 'features/supplier/item/domain/usecases/delete_item.dart';
-import 'features/supplier/item/domain/usecases/update_item.dart';
+import 'features/item/data/datasource/item_local_datasource.dart';
+import 'features/item/data/item_repo_impl.dart';
+import 'features/item/domain/usecases/get_items.dart';
+import 'features/item/domain/usecases/create_item.dart';
 
 // Auth
 import 'features/auth/data/auth_local_datasource.dart';
@@ -35,7 +33,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Item setup
-  final itemLocalDataSource = ItemLocalDataSourceImpl();
+  final itemLocalDataSource = ItemLocalDataSource();
   final itemRepo = ItemRepositoryImpl(itemLocalDataSource);
 
   // Wishlist setup
@@ -57,8 +55,7 @@ void main() async {
       // Items
       getItems: GetItems(itemRepo),
       createItem: CreateItem(itemRepo),
-      updateItem: UpdateItem(itemRepo),
-      deleteItem: DeleteItem(itemRepo),
+
       // Wishlist
       getWishlist: GetWishlist(wishlistRepo),
       addToWishlist: AddToWishlist(wishlistRepo),

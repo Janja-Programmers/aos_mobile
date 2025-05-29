@@ -4,6 +4,10 @@ import 'package:amani_mall/core/constants/strings.dart';
 import 'package:amani_mall/features/supplier/dashboard/widgets/drawer_item.dart';
 import 'package:amani_mall/features/supplier/dashboard/widgets/dashboard_card.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
+import '../../auth/domain/user.dart';
+import '../../auth/presentation/auth_provider.dart';
 
 class SellerDashboard extends StatefulWidget {
   const SellerDashboard({super.key});
@@ -15,6 +19,9 @@ class SellerDashboard extends StatefulWidget {
 class _SellerDashboardState extends State<SellerDashboard> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  late AuthProvider authProvider;
+  User? user;
+
   int _selectedIndex = 0;
   final List<String> _sections = [
     AppStrings.dashboard,
@@ -25,6 +32,17 @@ class _SellerDashboardState extends State<SellerDashboard> {
     AppStrings.orders,
     AppStrings.reports,
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      authProvider = context.read<AuthProvider>();
+      setState(() {
+        user = authProvider.user;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,19 +62,30 @@ class _SellerDashboardState extends State<SellerDashboard> {
                 ),
               ),
             ),
-            ..._sections.asMap().entries.map((entry) {
-              return DrawerItem(
-                icon: Icons.circle, // Replace with actual icons
-                title: entry.value,
-                selected: _selectedIndex == entry.key,
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = entry.key;
-                  });
-                  Navigator.pop(context);
-                },
-              );
-            }),
+            DrawerItem(
+              icon: Icons.dashboard,
+              title: AppStrings.dashboard,
+              selected: _selectedIndex == 0,
+              onTap: () {
+                setState(() => _selectedIndex = 0);
+                Navigator.pop(context);
+                context.push('/dashboard');
+              },
+            ),
+            DrawerItem(
+              icon: Icons.inventory,
+              title: AppStrings.items,
+              selected: _selectedIndex == 1,
+              onTap: () {
+                setState(() => _selectedIndex = 1);
+                Navigator.pop(context);
+                if (user != null) {
+                  context.push('/items', extra: user!); // ✅ safe push
+                }
+              },
+            ),
+
+            // other DrawerItems unchanged...
             const Spacer(),
             const Divider(),
             DrawerItem(icon: Icons.account_circle, title: AppStrings.profile),
@@ -81,13 +110,16 @@ class _SellerDashboardState extends State<SellerDashboard> {
             DashboardCard(
               title: "Items",
               icon: Icons.inventory,
-              onTap: () => context.push('/items'),
+              onTap: () {
+                if (user != null) {
+                  context.push('/items', extra: user!);
+                }
+              },
             ),
-            DashboardCard(title: "Prices", icon: Icons.attach_money),
+
             DashboardCard(title: "Stock", icon: Icons.store),
             DashboardCard(title: "Orders", icon: Icons.shopping_cart),
             DashboardCard(title: "Website Items", icon: Icons.web),
-            DashboardCard(title: "Reports", icon: Icons.bar_chart),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../stock/presentation/stock_entry_form_screen.dart';
 import 'item_provider.dart';
 import 'widgets/add_item_form.dart';
 import 'widgets/item_tile.dart';
@@ -24,7 +25,12 @@ class ItemScreen extends StatelessWidget {
                     (_, i) => ItemTile(
                       item: provider.items[i],
                       onAddStock: () {
-                        // TODO: Navigate to stock add screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const StockEntryFormScreen(),
+                          ),
+                        );
                       },
                     ),
               ),

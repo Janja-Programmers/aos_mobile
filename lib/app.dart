@@ -28,6 +28,12 @@ import 'features/customer/cart/domain/usecases/update_cart_quantity.dart';
 import 'features/customer/cart/domain/usecases/clear_cart.dart';
 import 'features/customer/cart/presentation/cart_provider.dart';
 
+// Stock Feature
+import 'features/stock/domain/usecases/create_stock_entry.dart';
+import 'features/stock/domain/usecases/get_stock_entry_by_user.dart';
+import 'features/stock/domain/usecases/get_stock_entry_detail.dart';
+import 'features/stock/presentation/stock_provider.dart';
+
 class App extends StatelessWidget {
   final GetWishlist getWishlist;
   final AddToWishlist addToWishlist;
@@ -45,6 +51,11 @@ class App extends StatelessWidget {
   final GetItems getItems;
   final CreateItem createItem;
 
+  // Stock Feature
+  final CreateStockEntry createStockEntryUseCase;
+  final GetStockEntriesByUser getAllStockEntriesByUserUseCase;
+  final GetStockEntryDetail getStockEntryDetailUseCase;
+
   const App({
     super.key,
     required this.getWishlist,
@@ -59,6 +70,9 @@ class App extends StatelessWidget {
     required this.registerUser,
     required this.getItems,
     required this.createItem,
+    required this.createStockEntryUseCase,
+    required this.getAllStockEntriesByUserUseCase,
+    required this.getStockEntryDetailUseCase,
   });
 
   @override
@@ -95,6 +109,15 @@ class App extends StatelessWidget {
               (_) => ItemProvider(
                 createItemUsecase: createItem,
                 getItemsUsecase: getItems,
+              ),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (_) => StockProvider(
+                createStockEntryUseCase: createStockEntryUseCase,
+                getAllStockEntriesByUserUseCase:
+                    getAllStockEntriesByUserUseCase,
+                getStockEntryDetailUseCase: getStockEntryDetailUseCase,
               ),
         ),
       ],

@@ -96,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 10),
                 ElevatedButton.icon(
                   icon: const Icon(Icons.store),
-                  onPressed: () => context.go('/products'),
+                  onPressed: () => context.go('/'),
                   label: const Text('View as Buyer'),
                 ),
               ],

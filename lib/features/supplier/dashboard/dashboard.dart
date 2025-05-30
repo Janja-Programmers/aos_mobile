@@ -117,7 +117,11 @@ class _SellerDashboardState extends State<SellerDashboard> {
               },
             ),
 
-            DashboardCard(title: "Stock", icon: Icons.store),
+            DashboardCard(
+              title: "Stock",
+              icon: Icons.store,
+              onTap: () => context.push('/stock'),
+            ),
             DashboardCard(title: "Orders", icon: Icons.shopping_cart),
             DashboardCard(title: "Website Items", icon: Icons.web),
           ],

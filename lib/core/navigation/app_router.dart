@@ -1,15 +1,20 @@
 import 'package:amani_mall/features/auth/domain/user.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/item/presentation/item_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/customer/wishlist/presentation/wishlist_screen.dart';
 import '../../features/customer/cart/presentation/cart_screen.dart';
+import '../../features/stock/presentation/stock_entry_detail_screen.dart';
+import '../../features/stock/presentation/stock_entry_list_screen.dart';
 import '../../features/supplier/dashboard/dashboard.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: '/login',
   routes: [
     GoRoute(path: '/', builder: (context, state) => const SellerDashboard()),
+
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
@@ -36,6 +41,23 @@ final GoRouter router = GoRouter(
           );
         }
         return ItemScreen(userId: user.id!);
+      },
+    ),
+
+    // STOCK ROUTES
+    GoRoute(
+      path: '/stock',
+      builder: (context, state) => const StockEntryListScreen(),
+    ),
+
+    GoRoute(
+      path: '/stock/:id',
+      builder: (context, state) {
+        final stockEntryId = int.tryParse(state.pathParameters['id'] ?? '');
+        if (stockEntryId == null) {
+          throw Exception('Invalid stock entry ID');
+        }
+        return StockEntryDetailScreen(stockEntryId: stockEntryId);
       },
     ),
   ],

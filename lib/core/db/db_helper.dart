@@ -42,15 +42,40 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
-  CREATE TABLE items (
-    item_code TEXT PRIMARY KEY,
-    item_name TEXT UNIQUE NOT NULL,
-    item_group TEXT NOT NULL,
-    company TEXT NOT NULL,
-    created_by INTEGER NOT NULL,
-    created_at INTEGER NOT NULL,
-    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
-  )
-''');
+      CREATE TABLE items (
+        item_code TEXT PRIMARY KEY,
+        item_name TEXT UNIQUE NOT NULL,
+        item_group TEXT NOT NULL,
+        company TEXT NOT NULL,
+        created_by INTEGER NOT NULL,
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE stock_entries (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        company TEXT NOT NULL,
+        stock_entry_type TEXT NOT NULL,
+        target_warehouse TEXT NOT NULL,
+        created_by INTEGER NOT NULL,
+        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE stock_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        stock_entry_id INTEGER NOT NULL,
+        target_warehouse TEXT NOT NULL,
+        item_code TEXT NOT NULL,
+        quantity INTEGER NOT NULL,
+        item_price REAL NOT NULL,
+        FOREIGN KEY (stock_entry_id) REFERENCES stock_entries(id) ON DELETE CASCADE,
+        FOREIGN KEY (item_code) REFERENCES items(item_code) ON DELETE CASCADE
+      )
+    ''');
   }
 }

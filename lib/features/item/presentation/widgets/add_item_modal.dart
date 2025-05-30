@@ -6,7 +6,7 @@ import '../item_provider.dart';
 class AddItemModal extends StatefulWidget {
   final int userId;
 
-  const AddItemModal({Key? key, required this.userId}) : super(key: key);
+  const AddItemModal({super.key, required this.userId});
 
   @override
   State<AddItemModal> createState() => _AddItemModalState();
@@ -17,8 +17,7 @@ class _AddItemModalState extends State<AddItemModal> {
 
   final TextEditingController _itemCodeController = TextEditingController();
   final TextEditingController _itemNameController = TextEditingController();
-  final TextEditingController _itemGroupController =
-      TextEditingController(); // Replace w/ dropdown later
+  final TextEditingController _itemGroupController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {

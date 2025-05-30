@@ -29,6 +29,13 @@ import 'features/customer/cart/domain/usecases/remove_from_cart.dart';
 import 'features/customer/cart/data/cart_local_data_source.dart';
 import 'features/customer/cart/data/cart_repository_impl.dart';
 
+// Stock
+import 'features/stock/data/stock_local_datasource.dart';
+import 'features/stock/data/stock_repo_impl.dart';
+import 'features/stock/domain/usecases/create_stock_entry.dart';
+import 'features/stock/domain/usecases/get_stock_entry_by_user.dart';
+import 'features/stock/domain/usecases/get_stock_entry_detail.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -50,6 +57,11 @@ void main() async {
   final loginUser = LoginUser(authRepo);
   final registerUser = RegisterUser(authRepo);
 
+  // Stock setup
+
+  final stockLocalDataSource = StockLocalDataSource();
+  final stockRepo = StockRepositoryImpl(stockLocalDataSource);
+
   runApp(
     App(
       // Items
@@ -60,15 +72,24 @@ void main() async {
       getWishlist: GetWishlist(wishlistRepo),
       addToWishlist: AddToWishlist(wishlistRepo),
       removeFromWishlist: RemoveFromWishlist(wishlistRepo),
+
       // Cart
       getCart: GetCart(cartRepo),
       addToCart: AddToCart(cartRepo),
       removeFromCart: RemoveFromCart(cartRepo),
       updateCartQuantity: UpdateCartQuantity(cartRepo),
       clearCart: ClearCart(cartRepo),
+
       // Auth
       loginUser: loginUser,
       registerUser: registerUser,
+
+      // Stock
+      createStockEntryUseCase: CreateStockEntry(stockRepo),
+      getAllStockEntriesByUserUseCase: GetStockEntriesByUser(stockRepo),
+      getStockEntryDetailUseCase: GetStockEntryDetail(stockRepo),
+
+      // Other dependencies can be added here
     ),
   );
 }

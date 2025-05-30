@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:amani_mall/core/constants/colors.dart';
+import 'package:ownashop/core/constants/colors.dart';
 
 class DashboardCard extends StatelessWidget {
   final IconData icon;

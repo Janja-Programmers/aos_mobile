@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:amani_mall/core/constants/colors.dart';
-import 'package:amani_mall/core/constants/strings.dart';
-import 'package:amani_mall/features/supplier/dashboard/widgets/drawer_item.dart';
-import 'package:amani_mall/features/supplier/dashboard/widgets/dashboard_card.dart';
+import '/core/constants/colors.dart';
+import '/core/constants/strings.dart';
+import '/features/supplier/dashboard/widgets/drawer_item.dart';
+import '/features/supplier/dashboard/widgets/dashboard_card.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -122,8 +122,12 @@ class _SellerDashboardState extends State<SellerDashboard> {
               icon: Icons.store,
               onTap: () => context.push('/stock'),
             ),
+            DashboardCard(
+              title: "Website Items",
+              icon: Icons.web,
+              onTap: () => context.push('/web-items'),
+            ),
             DashboardCard(title: "Orders", icon: Icons.shopping_cart),
-            DashboardCard(title: "Website Items", icon: Icons.web),
           ],
         ),
       ),

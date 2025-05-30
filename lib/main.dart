@@ -36,6 +36,13 @@ import 'features/stock/domain/usecases/create_stock_entry.dart';
 import 'features/stock/domain/usecases/get_stock_entry_by_user.dart';
 import 'features/stock/domain/usecases/get_stock_entry_detail.dart';
 
+// Web-item
+import 'features/website/data/web_item_local_datasource.dart';
+import 'features/website/data/web_item_repo_impl.dart';
+import 'features/website/domain/usecases/add_website_item.dart';
+import 'features/website/domain/usecases/get_all_website_items.dart';
+import 'features/website/domain/usecases/get_website_item_by_user.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -58,9 +65,12 @@ void main() async {
   final registerUser = RegisterUser(authRepo);
 
   // Stock setup
-
   final stockLocalDataSource = StockLocalDataSource();
   final stockRepo = StockRepositoryImpl(stockLocalDataSource);
+
+  // Web-item setup
+  final webItemLocalDataSource = WebsiteItemLocalDatasourceImpl();
+  final webItemRepo = WebsiteItemRepositoryImpl(webItemLocalDataSource);
 
   runApp(
     App(
@@ -89,7 +99,10 @@ void main() async {
       getAllStockEntriesByUserUseCase: GetStockEntriesByUser(stockRepo),
       getStockEntryDetailUseCase: GetStockEntryDetail(stockRepo),
 
-      // Other dependencies can be added here
+      // Web-item
+      getAllWebsiteItems: GetAllWebsiteItems(webItemRepo),
+      addWebsiteItem: AddWebsiteItem(webItemRepo),
+      getWebsiteItemsByUser: GetWebsiteItemsByUser(webItemRepo),
     ),
   );
 }

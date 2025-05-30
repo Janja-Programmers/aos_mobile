@@ -1,5 +1,5 @@
-import 'package:amani_mall/features/auth/domain/user.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/auth/domain/user.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/item/presentation/item_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
@@ -8,6 +8,7 @@ import '../../features/customer/cart/presentation/cart_screen.dart';
 import '../../features/stock/presentation/stock_entry_detail_screen.dart';
 import '../../features/stock/presentation/stock_entry_list_screen.dart';
 import '../../features/supplier/dashboard/dashboard.dart';
+import '../../features/website/presentation/web_item_list_screen.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: '/login',
@@ -59,6 +60,12 @@ final GoRouter router = GoRouter(
         }
         return StockEntryDetailScreen(stockEntryId: stockEntryId);
       },
+    ),
+
+    // WEBSITE ITEM ROUTES
+    GoRoute(
+      path: '/web-items',
+      builder: (context, state) => const WebsiteItemListScreen(),
     ),
   ],
 );

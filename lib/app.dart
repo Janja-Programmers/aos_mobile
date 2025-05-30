@@ -4,13 +4,18 @@ import '../core/constants/themes.dart';
 import '../core/navigation/app_router.dart';
 import '../core/constants/strings.dart';
 
+// Web-item Feature
+import 'features/website/domain/usecases/add_website_item.dart';
+import 'features/website/domain/usecases/get_all_website_items.dart';
+import 'features/website/domain/usecases/get_website_item_by_user.dart';
+
 // Item Feature
 import 'features/item/domain/usecases/get_items.dart';
 import 'features/item/domain/usecases/create_item.dart';
 import 'features/item/presentation/item_provider.dart';
 
 // AUth Feature
-import 'package:amani_mall/features/auth/presentation/auth_provider.dart';
+import 'features/auth/presentation/auth_provider.dart';
 import 'features/auth/domain/usecases/login.dart';
 import 'features/auth/domain/usecases/register.dart';
 
@@ -33,6 +38,7 @@ import 'features/stock/domain/usecases/create_stock_entry.dart';
 import 'features/stock/domain/usecases/get_stock_entry_by_user.dart';
 import 'features/stock/domain/usecases/get_stock_entry_detail.dart';
 import 'features/stock/presentation/stock_provider.dart';
+import 'features/website/presentation/web_item_provider.dart';
 
 class App extends StatelessWidget {
   final GetWishlist getWishlist;
@@ -56,6 +62,11 @@ class App extends StatelessWidget {
   final GetStockEntriesByUser getAllStockEntriesByUserUseCase;
   final GetStockEntryDetail getStockEntryDetailUseCase;
 
+  // Web-item Feature
+  final AddWebsiteItem addWebsiteItem;
+  final GetWebsiteItemsByUser getWebsiteItemsByUser;
+  final GetAllWebsiteItems getAllWebsiteItems;
+
   const App({
     super.key,
     required this.getWishlist,
@@ -73,6 +84,9 @@ class App extends StatelessWidget {
     required this.createStockEntryUseCase,
     required this.getAllStockEntriesByUserUseCase,
     required this.getStockEntryDetailUseCase,
+    required this.addWebsiteItem,
+    required this.getWebsiteItemsByUser,
+    required this.getAllWebsiteItems,
   });
 
   @override
@@ -118,6 +132,14 @@ class App extends StatelessWidget {
                 getAllStockEntriesByUserUseCase:
                     getAllStockEntriesByUserUseCase,
                 getStockEntryDetailUseCase: getStockEntryDetailUseCase,
+              ),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (_) => WebsiteItemProvider(
+                addWebsiteItem: addWebsiteItem,
+                getWebsiteItemsByUser: getWebsiteItemsByUser,
+                getAllWebsiteItems: getAllWebsiteItems,
               ),
         ),
       ],

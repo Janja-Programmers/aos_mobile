@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.amani_mall"
+    namespace = "com.ownashop.app"
     compileSdk = flutter.compileSdkVersion
 
     compileOptions {
@@ -19,7 +19,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.amani_mall"
+        applicationId = "com.ownashop.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

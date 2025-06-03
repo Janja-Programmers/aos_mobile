@@ -15,7 +15,40 @@ class ItemScreen extends StatelessWidget {
     final provider = Provider.of<ItemProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Items')),
+      appBar: AppBar(
+        title: const Text('My Items'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () async {
+              provider.fetchItems(userId);
+            },
+          ),
+          TextButton.icon(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder:
+                    (_) => Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom,
+                      ),
+                      child: AddItemForm(
+                        userId: userId,
+                        onSubmit: (newItem) => provider.addItem(newItem),
+                      ),
+                    ),
+              );
+            },
+            icon: Icon(Icons.add_circle_outline, color: Colors.white),
+            label: Text("Add item", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
       body:
           provider.isLoading
               ? const Center(child: CircularProgressIndicator())

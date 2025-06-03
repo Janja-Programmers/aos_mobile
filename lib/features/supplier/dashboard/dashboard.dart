@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sqlite_viewer2/sqlite_viewer.dart';
 import '/core/constants/colors.dart';
 import '/core/constants/strings.dart';
 import '/features/supplier/dashboard/widgets/drawer_item.dart';
@@ -55,7 +56,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
               decoration: BoxDecoration(color: AppColors.primary),
               child: Center(
                 child: Text(
-                  AppStrings.sellerPanel,
+                  user?.username ?? AppStrings.sellerPanel,
                   style: Theme.of(
                     context,
                   ).textTheme.headlineSmall?.copyWith(color: Colors.white),
@@ -80,8 +81,38 @@ class _SellerDashboardState extends State<SellerDashboard> {
                 setState(() => _selectedIndex = 1);
                 Navigator.pop(context);
                 if (user != null) {
-                  context.push('/items', extra: user!); // ✅ safe push
+                  context.push('/items', extra: user!);
                 }
+              },
+            ),
+            DrawerItem(
+              icon: Icons.store,
+              title: AppStrings.stock,
+              selected: _selectedIndex == 3,
+              onTap: () {
+                setState(() => _selectedIndex = 3);
+                Navigator.pop(context);
+                context.push('/stock');
+              },
+            ),
+            DrawerItem(
+              icon: Icons.web,
+              title: AppStrings.websiteItem,
+              selected: _selectedIndex == 4,
+              onTap: () {
+                setState(() => _selectedIndex = 4);
+                Navigator.pop(context);
+                context.push('/web-items');
+              },
+            ),
+            DrawerItem(
+              icon: Icons.admin_panel_settings,
+              title: "Admin Database",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => DatabaseList()),
+                );
               },
             ),
 
@@ -89,7 +120,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
             const Spacer(),
             const Divider(),
             DrawerItem(icon: Icons.account_circle, title: AppStrings.profile),
-            DrawerItem(icon: Icons.settings, title: AppStrings.logout),
+            DrawerItem(icon: Icons.logout, title: AppStrings.logout),
           ],
         ),
       ),

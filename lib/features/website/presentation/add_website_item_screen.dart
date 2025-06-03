@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ownashop/core/utils/permissions.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -25,8 +27,8 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
   bool _isPublished = false;
   bool _isLoading = false;
 
-  String? _selectedImage;
   String? _selectedVideo;
+  List<String> _selectedImages = [];
 
   @override
   void dispose() {
@@ -37,42 +39,61 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
-    );
-    if (result != null && result.files.isNotEmpty) {
+  Future<void> _pickImages() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.image,
+      );
+
+      if (result == null || result.files.isEmpty) return; // Graceful skip
+
+      final pickedFiles = result.files.take(5).toList(); // Limit to 5
+      final imagePaths =
+          pickedFiles
+              .map((file) => file.path)
+              .whereType<String>() // remove nulls
+              .toList();
+
       setState(() {
-        _selectedImage = result.files.single.path;
+        _selectedImages = imagePaths;
       });
+    } catch (e) {
+      debugPrint('Image picking failed: $e');
+      // optionally show a snackbar
     }
   }
 
   Future<void> _pickVideo() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.video,
-      allowMultiple: false,
-    );
-    if (result != null && result.files.isNotEmpty) {
-      setState(() {
-        _selectedVideo = result.files.single.path;
-      });
-    }
-  }
-
-  void _submit() async {
-    FocusScope.of(context).unfocus();
-
-    // Check permission first
     final hasPermission = await checkStoragePermission();
-
     if (!hasPermission) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Storage permission is required')));
       return;
     }
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.video,
+      allowMultiple: false,
+    );
+
+    if (result != null && result.files.isNotEmpty) {
+      final path = result.files.single.path;
+      if (path != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _selectedVideo = path;
+            });
+          }
+        });
+      }
+    }
+  }
+
+  void _submit() async {
+    FocusScope.of(context).unfocus();
 
     final authProvider = context.read<AuthProvider>();
     final user = authProvider.user;
@@ -106,13 +127,12 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
         websiteDisplayName: websiteDisplayName,
         itemCode: itemCode,
         isPublished: _isPublished,
-        image: _selectedImage,
+        images: _selectedImages,
         video: _selectedVideo,
         shortDescription: shortDesc.isEmpty ? null : shortDesc,
         fullDescription: fullDesc.isEmpty ? null : fullDesc,
         createdBy: user.id!,
         createdAt: DateTime.now(),
-        images: [],
       );
 
       await websiteItemProvider.addWebsiteItem(newItem);
@@ -131,10 +151,38 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
     }
   }
 
-  Widget _buildSelectedImagePreview() {
-    if (_selectedImage == null) return Text('No image selected');
-    final filename = _selectedImage!.split('/').last;
-    return Chip(label: Text(filename));
+  Widget _buildSelectedImagesPreview() {
+    if (_selectedImages.isEmpty) {
+      return Text('No images selected');
+    } else {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children:
+            _selectedImages.map((path) {
+              return Builder(
+                builder: (_) {
+                  final file = File(path);
+                  return FutureBuilder<bool>(
+                    future: file.exists(),
+                    builder: (_, snapshot) {
+                      if (snapshot.connectionState != ConnectionState.done ||
+                          snapshot.data != true) {
+                        return const SizedBox();
+                      }
+                      return Image.file(
+                        file,
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit.cover,
+                      );
+                    },
+                  );
+                },
+              );
+            }).toList(),
+      );
+    }
   }
 
   Widget _buildSelectedVideoPreview() {
@@ -158,38 +206,52 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
                 label: 'Website Display Name',
                 textInputAction: TextInputAction.next,
               ),
+
               SizedBox(height: 12),
+
               CustomTextField(
                 controller: _itemCodeController,
                 label: 'Item Code',
                 textInputAction: TextInputAction.next,
               ),
+
               SizedBox(height: 12),
-              Text('Image'),
+
+              Text('Images'),
+
               SizedBox(height: 4),
-              _buildSelectedImagePreview(),
+
+              _buildSelectedImagesPreview(),
               ElevatedButton.icon(
-                onPressed: _pickImage,
+                onPressed: _pickImages,
                 icon: Icon(Icons.photo_library),
-                label: Text('Pick Image'),
+                label: Text('Pick Images'),
               ),
+
               SizedBox(height: 12),
+
               Text('Video'),
+
               SizedBox(height: 4),
+
               _buildSelectedVideoPreview(),
               ElevatedButton.icon(
                 onPressed: _pickVideo,
                 icon: Icon(Icons.videocam),
                 label: Text('Pick Video'),
               ),
+
               SizedBox(height: 12),
+
               CustomTextField(
                 controller: _shortDescController,
                 label: 'Short Description',
                 maxLines: 2,
                 textInputAction: TextInputAction.next,
               ),
+
               SizedBox(height: 12),
+
               CustomTextField(
                 controller: _fullDescController,
                 label: 'Full Description',
@@ -197,7 +259,9 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
                 textInputAction: TextInputAction.done,
                 onSubmitted: (_) => _submit(),
               ),
+
               SizedBox(height: 12),
+
               Row(
                 children: [
                   Checkbox(
@@ -208,7 +272,9 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
                   Text('Publish'),
                 ],
               ),
+
               SizedBox(height: 24),
+
               CustomButton(
                 label: 'Add Website Item',
                 onPressed: _submit,

@@ -15,7 +15,7 @@ class WebsiteItemRepositoryImpl implements WebsiteItemRepository {
       websiteDisplayName: item.websiteDisplayName,
       itemCode: item.itemCode,
       isPublished: item.isPublished,
-      images: item.image != null ? [item.image!] : [],
+      images: item.images,
       video: item.video,
       shortDescription: item.shortDescription,
       fullDescription: item.fullDescription,
@@ -28,51 +28,19 @@ class WebsiteItemRepositoryImpl implements WebsiteItemRepository {
   @override
   Future<List<WebsiteItem>> getWebsiteItems() async {
     final models = await localDatasource.getAllWebsiteItems();
-    return models
-        .map(
-          (model) => WebsiteItem(
-            id: model.id,
-            websiteDisplayName: model.websiteDisplayName,
-            itemCode: model.itemCode,
-            isPublished: model.isPublished,
-            images: model.image != null ? [model.image!] : [],
-            video: model.video,
-            shortDescription: model.shortDescription,
-            fullDescription: model.fullDescription,
-            createdBy: model.createdBy,
-            createdAt: model.createdAt,
-          ),
-        )
-        .toList();
+    return models.map((model) => model).toList(); // already is WebsiteItem
   }
 
   @override
   Future<List<WebsiteItem>> getWebsiteItemsByUser(int userId) async {
-    // If you want, implement filtering on the datasource side
     final allItems = await localDatasource.getAllWebsiteItems();
     final filtered =
         allItems.where((item) => item.createdBy == userId).toList();
-    return filtered
-        .map(
-          (model) => WebsiteItem(
-            id: model.id,
-            websiteDisplayName: model.websiteDisplayName,
-            itemCode: model.itemCode,
-            isPublished: model.isPublished,
-            images: model.image != null ? [model.image!] : [],
-            video: model.video,
-            shortDescription: model.shortDescription,
-            fullDescription: model.fullDescription,
-            createdBy: model.createdBy,
-            createdAt: model.createdAt,
-          ),
-        )
-        .toList();
+    return filtered.map((model) => model).toList();
   }
 
   @override
   Future<void> publishWebsiteItem(int itemId, int publishStatus) async {
-    // Example: update publish status locally, you might want a datasource method for this
     final allItems = await localDatasource.getAllWebsiteItems();
     final item = allItems.firstWhere(
       (item) => item.id == itemId,
@@ -84,7 +52,7 @@ class WebsiteItemRepositoryImpl implements WebsiteItemRepository {
       websiteDisplayName: item.websiteDisplayName,
       itemCode: item.itemCode,
       isPublished: publishStatus == 1,
-      images: item.image != null ? [item.image!] : [],
+      images: item.images,
       video: item.video,
       shortDescription: item.shortDescription,
       fullDescription: item.fullDescription,
@@ -92,8 +60,6 @@ class WebsiteItemRepositoryImpl implements WebsiteItemRepository {
       createdAt: item.createdAt,
     );
 
-    await localDatasource.addWebsiteItem(
-      updatedItem,
-    ); // Replace old item with updated one
+    await localDatasource.addWebsiteItem(updatedItem);
   }
 }

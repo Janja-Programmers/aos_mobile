@@ -83,15 +83,13 @@ class DatabaseHelper {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       website_display_name TEXT NOT NULL,
       item_code TEXT NOT NULL,
-      is_published INTEGER NOT NULL DEFAULT 0,
+      is_published INTEGER NOT NULL,
       images TEXT,
       video TEXT,
       short_description TEXT,
       full_description TEXT,
       created_by INTEGER NOT NULL,
-      created_at TEXT NOT NULL,
-      FOREIGN KEY (item_code) REFERENCES items(item_code) ON DELETE CASCADE,
-      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+      created_at TEXT NOT NULL
     )
   ''');
   }

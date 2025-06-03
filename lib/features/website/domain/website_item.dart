@@ -3,7 +3,7 @@ class WebsiteItem {
   final String websiteDisplayName;
   final String itemCode;
   final bool isPublished;
-  final String? image; // single optional image
+  final List<String> images; // 0 or more optional images
   final String? video;
   final String? shortDescription;
   final String? fullDescription;
@@ -15,11 +15,11 @@ class WebsiteItem {
     required this.websiteDisplayName,
     required this.itemCode,
     this.isPublished = false,
-    this.image, // optional
+    this.images = const [], // default to empty list
     this.video,
     this.shortDescription,
     this.fullDescription,
     required this.createdBy,
-    required this.createdAt, required List<String> images,
+    required this.createdAt,
   });
 }

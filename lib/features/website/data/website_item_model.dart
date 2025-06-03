@@ -6,12 +6,12 @@ class WebsiteItemModel extends WebsiteItem {
     required super.websiteDisplayName,
     required super.itemCode,
     super.isPublished,
-    super.image,
+    required super.images,
     super.video,
     super.shortDescription,
     super.fullDescription,
     required super.createdBy,
-    required super.createdAt, required super.images,
+    required super.createdAt,
   });
 
   factory WebsiteItemModel.fromJson(Map<String, dynamic> json) {
@@ -20,12 +20,15 @@ class WebsiteItemModel extends WebsiteItem {
       websiteDisplayName: json['website_display_name'] as String,
       itemCode: json['item_code'] as String,
       isPublished: json['is_published'] == 1,
-      image: json['image'] as String?, // nullable
+      images:
+          json['images'] != null
+              ? List<String>.from((json['images'] as String).split(','))
+              : [],
       video: json['video'] as String?,
       shortDescription: json['short_description'] as String?,
       fullDescription: json['full_description'] as String?,
       createdBy: json['created_by'] as int,
-      createdAt: DateTime.parse(json['created_at'] as String), images: [],
+      createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
 
@@ -35,7 +38,7 @@ class WebsiteItemModel extends WebsiteItem {
       'website_display_name': websiteDisplayName,
       'item_code': itemCode,
       'is_published': isPublished ? 1 : 0,
-      'image': image, // store single image here
+      'images': images.join(','),
       'video': video,
       'short_description': shortDescription,
       'full_description': fullDescription,

@@ -10,7 +10,8 @@ import 'features/website/domain/usecases/get_all_website_items.dart';
 import 'features/website/domain/usecases/get_website_item_by_user.dart';
 
 // Item Feature
-import 'features/item/domain/usecases/get_items.dart';
+import 'features/item/domain/usecases/get_items_by_user.dart';
+import 'features/item/domain/usecases/get_all_items.dart';
 import 'features/item/domain/usecases/create_item.dart';
 import 'features/item/presentation/item_provider.dart';
 
@@ -56,6 +57,7 @@ class App extends StatelessWidget {
 
   final GetItems getItems;
   final CreateItem createItem;
+  final GetAllItems getAllItems;
 
   // Stock Feature
   final CreateStockEntry createStockEntryUseCase;
@@ -69,21 +71,34 @@ class App extends StatelessWidget {
 
   const App({
     super.key,
+
+    // Wishlist
     required this.getWishlist,
     required this.addToWishlist,
     required this.removeFromWishlist,
+
+    // Cart
     required this.getCart,
     required this.addToCart,
     required this.removeFromCart,
     required this.updateCartQuantity,
     required this.clearCart,
+
+    // Auth
     required this.loginUser,
     required this.registerUser,
+
+    // Items
     required this.getItems,
     required this.createItem,
+    required this.getAllItems,
+
+    // Stock
     required this.createStockEntryUseCase,
     required this.getAllStockEntriesByUserUseCase,
     required this.getStockEntryDetailUseCase,
+
+    // Website Item
     required this.addWebsiteItem,
     required this.getWebsiteItemsByUser,
     required this.getAllWebsiteItems,
@@ -123,6 +138,7 @@ class App extends StatelessWidget {
               (_) => ItemProvider(
                 createItemUsecase: createItem,
                 getItemsUsecase: getItems,
+                getAllItemsUsecase: getAllItems,
               ),
         ),
         ChangeNotifierProvider(
@@ -144,6 +160,7 @@ class App extends StatelessWidget {
         ),
       ],
       child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
         routerConfig: router,
         title: AppStrings.appName,
         theme: AppThemes.lightTheme,

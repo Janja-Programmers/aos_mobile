@@ -4,7 +4,8 @@ import './app.dart';
 // Items
 import 'features/item/data/datasource/item_local_datasource.dart';
 import 'features/item/data/item_repo_impl.dart';
-import 'features/item/domain/usecases/get_items.dart';
+import 'features/item/domain/usecases/get_all_items.dart';
+import 'features/item/domain/usecases/get_items_by_user.dart';
 import 'features/item/domain/usecases/create_item.dart';
 
 // Auth
@@ -77,6 +78,7 @@ void main() async {
       // Items
       getItems: GetItems(itemRepo),
       createItem: CreateItem(itemRepo),
+      getAllItems: GetAllItems(itemRepo),
 
       // Wishlist
       getWishlist: GetWishlist(wishlistRepo),

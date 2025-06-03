@@ -28,4 +28,11 @@ class ItemLocalDataSource {
 
     return maps.map((map) => ItemModel.fromJson(map)).toList();
   }
+
+  Future<List<ItemModel>> getAllItems() async {
+    final db = await _dbFuture;
+    final maps = await db.query('items');
+
+    return maps.map((map) => ItemModel.fromJson(map)).toList();
+  }
 }

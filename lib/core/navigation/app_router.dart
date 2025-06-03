@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import '../../features/auth/domain/user.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/customer/products/screens/product_list_screen.dart';
 import '../../features/item/presentation/item_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/customer/wishlist/presentation/wishlist_screen.dart';
@@ -11,10 +12,8 @@ import '../../features/supplier/dashboard/dashboard.dart';
 import '../../features/website/presentation/web_item_list_screen.dart';
 
 final GoRouter router = GoRouter(
-  initialLocation: '/login',
+  initialLocation: '/',
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const SellerDashboard()),
-
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
       path: '/register',
@@ -67,5 +66,9 @@ final GoRouter router = GoRouter(
       path: '/web-items',
       builder: (context, state) => const WebsiteItemListScreen(),
     ),
+
+    // CUSTOMER ROUTES
+    // All Products
+    GoRoute(path: '/', builder: (context, state) => const ProductListScreen()),
   ],
 );

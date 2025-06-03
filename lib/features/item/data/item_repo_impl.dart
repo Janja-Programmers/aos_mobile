@@ -26,4 +26,10 @@ class ItemRepositoryImpl implements ItemRepository {
     final data = await localDataSource.getItemsByUser(userId);
     return data.map((e) => e as Item).toList();
   }
+
+  @override
+  Future<List<Item>> getAllItems() async {
+    final data = await localDataSource.getAllItems();
+    return data.map((e) => e as Item).toList();
+  }
 }

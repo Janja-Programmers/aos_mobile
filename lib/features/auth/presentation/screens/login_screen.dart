@@ -87,17 +87,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 40),
                 const Divider(),
                 const SizedBox(height: 10),
-                const Center(
-                  child: Text(
-                    "🔧 Debug Options",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 10),
                 ElevatedButton.icon(
                   icon: const Icon(Icons.store),
                   onPressed: () => context.go('/'),
-                  label: const Text('View as Buyer'),
+                  label: const Text('Continue Shopping'),
                 ),
               ],
             ),
@@ -121,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (auth.user != null) {
-        context.go('/');
+        context.go('/dashboard');
       } else {
         setState(() {
           _error = 'Invalid username or password';

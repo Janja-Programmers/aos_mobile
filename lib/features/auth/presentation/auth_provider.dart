@@ -22,4 +22,9 @@ class AuthProvider with ChangeNotifier {
     await registerUser(User(username: username, password: password));
     notifyListeners();
   }
+
+  void logout() {
+    _user = null;
+    notifyListeners();
+  }
 }

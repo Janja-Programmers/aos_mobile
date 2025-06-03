@@ -120,7 +120,14 @@ class _SellerDashboardState extends State<SellerDashboard> {
             const Spacer(),
             const Divider(),
             DrawerItem(icon: Icons.account_circle, title: AppStrings.profile),
-            DrawerItem(icon: Icons.logout, title: AppStrings.logout),
+            DrawerItem(
+              icon: Icons.logout,
+              title: AppStrings.logout,
+              onTap: () {
+                authProvider.logout();
+                context.push('/');
+              },
+            ),
           ],
         ),
       ),

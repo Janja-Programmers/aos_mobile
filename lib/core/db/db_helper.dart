@@ -92,5 +92,39 @@ class DatabaseHelper {
       created_at TEXT NOT NULL
     )
   ''');
+
+    // 🔥 Add orders table
+    await db.execute('''
+    CREATE TABLE orders (
+      id TEXT PRIMARY KEY,
+      customer_id TEXT NOT NULL,
+      customer_name TEXT NOT NULL,
+      order_type TEXT NOT NULL DEFAULT 'Sales',
+      order_date TEXT NOT NULL,
+      company TEXT NOT NULL DEFAULT 'Ownashop',
+      grand_total REAL NOT NULL,
+      shipping_address TEXT NOT NULL,
+      contact_name TEXT NOT NULL,
+      contact_mobile TEXT NOT NULL,
+      contact_email TEXT NOT NULL,
+      status TEXT NOT NULL
+    )
+  ''');
+
+    // 🔥 Add order_items table
+    await db.execute('''
+    CREATE TABLE order_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id TEXT NOT NULL,
+      sno INTEGER NOT NULL,
+      item_id TEXT NOT NULL,
+      item_name TEXT NOT NULL,
+      delivery_date TEXT NOT NULL,
+      quantity INTEGER NOT NULL,
+      rate REAL NOT NULL,
+      amount REAL NOT NULL,
+      FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+    )
+  ''');
   }
 }

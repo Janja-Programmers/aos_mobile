@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ownashop/features/auth/presentation/widgets/app_input.dart';
 import 'package:provider/provider.dart';
 import '../auth_provider.dart';
+import '../widgets/text_widget.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passCtrl = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  bool obscurePass = true;
   bool _isLoading = false;
   String? _error;
 
@@ -23,76 +26,141 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = Provider.of<AuthProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              children: [
-                const SizedBox(height: 50),
-                TextFormField(
-                  controller: userCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Username',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
+      backgroundColor: const Color(0xFFF2F2F2),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset('assets/logo_transparent.png', height: 80),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Login to Own A Shop',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  textInputAction: TextInputAction.next,
-                  validator:
-                      (value) =>
-                          value == null || value.isEmpty
-                              ? 'Please enter your username'
-                              : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: passCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
+                  const SizedBox(height: 20),
+
+                  // Username or email
+                  CustomTextField(
+                    controller: userCtrl,
+                    hint: 'Username or Email',
+                    icon: Icons.person,
+                    validator:
+                        (value) =>
+                            value == null || value.isEmpty
+                                ? 'Please enter your username or email'
+                                : null,
                   ),
-                  obscureText: true,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _handleLogin(auth),
-                  validator:
-                      (value) =>
-                          value == null || value.isEmpty
-                              ? 'Please enter your password'
-                              : null,
-                ),
-                const SizedBox(height: 20),
-                if (_error != null)
-                  Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
+                  const SizedBox(height: 12),
+
+                  // Password
+                  AppInputField(
+                    controller: passCtrl,
+                    hint: 'Password',
+                    icon: Icons.lock,
+                    isPassword: true,
+                    obscure: obscurePass,
+                    toggle: () => setState(() => obscurePass = !obscurePass),
+                    validator:
+                        (value) =>
+                            value == null || value.isEmpty
+                                ? 'Please enter your password'
+                                : null,
+                    textInputAction: TextInputAction.done,
                   ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : () => _handleLogin(auth),
-                  child:
-                      _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Login'),
-                ),
-                const SizedBox(height: 20),
-                TextButton(
-                  onPressed: () => context.push('/register'),
-                  child: const Text("Don't have an account? Register"),
-                ),
-                const SizedBox(height: 40),
-                const Divider(),
-                const SizedBox(height: 10),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.store),
-                  onPressed: () => context.go('/'),
-                  label: const Text('Continue Shopping'),
-                ),
-              ],
+                  const SizedBox(height: 10),
+
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        // Add forgot password logic
+                      },
+                      child: const Text(
+                        'Forgot Password?',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+                  if (_error != null)
+                    Text(
+                      _error!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : () => _handleLogin(auth),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child:
+                          _isLoading
+                              ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                              : const Text(
+                                'Login',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+                  const Text('or'),
+                  const SizedBox(height: 10),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Email link login
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEFEFEF),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Login with Email Link',
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                  TextButton(
+                    onPressed: () => context.push('/register'),
+                    child: const Text("Don't have an account? Sign up"),
+                  ),
+
+                  const SizedBox(height: 10),
+                  TextButton(
+                    onPressed: () => context.go('/'),
+                    child: const Text('Browse Items'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

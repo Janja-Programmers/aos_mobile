@@ -5,6 +5,7 @@ import '../core/navigation/app_router.dart';
 import '../core/constants/strings.dart';
 
 // Web-item Feature
+import 'core/di/service_locator.dart';
 import 'features/website/domain/usecases/add_website_item.dart';
 import 'features/website/domain/usecases/get_all_website_items.dart';
 import 'features/website/domain/usecases/get_website_item_by_user.dart';
@@ -126,13 +127,7 @@ class App extends StatelessWidget {
         //         clearCart: clearCart,
         //       ),
         // ),
-        ChangeNotifierProvider(
-          create:
-              (_) => AuthProvider(
-                loginUser: loginUser,
-                registerUser: registerUser,
-              ),
-        ),
+        ChangeNotifierProvider(create: (_) => sl<AuthProvider>()),
         ChangeNotifierProvider(
           create:
               (_) => ItemProvider(

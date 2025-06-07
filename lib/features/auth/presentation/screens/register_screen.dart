@@ -136,7 +136,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () async {
-                      await auth.register(userCtrl.text, passCtrl.text);
+                      await auth.login(userCtrl.text, passCtrl.text);
                       context.push('/login');
                     },
                     child: const Text(

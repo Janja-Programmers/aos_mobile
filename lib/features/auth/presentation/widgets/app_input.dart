@@ -36,9 +36,13 @@ class AppInputField extends StatelessWidget {
             isPassword
                 ? GestureDetector(
                   onTap: toggle,
-                  child: Text(
-                    obscure ? "Show" : "Hide",
-                    style: const TextStyle(color: Colors.grey),
+                  child: Container(
+                    alignment: Alignment.center,
+                    width: 70,
+                    child: Text(
+                      obscure ? "Show" : "Hide",
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
                   ),
                 )
                 : null,

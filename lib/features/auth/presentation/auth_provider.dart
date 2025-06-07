@@ -1,30 +1,27 @@
 import 'package:flutter/material.dart';
 import '../domain/user.dart';
-import '../domain/usecases/login.dart';
-import '../domain/usecases/register.dart';
+import '../data/auth_remote_datasource.dart';
 
 class AuthProvider with ChangeNotifier {
-  final LoginUser loginUser;
-  final RegisterUser registerUser;
+  final AuthRemoteDataSource dataSource;
 
-  User? _user;
-  User? get user => _user;
+  User? user;
 
-  AuthProvider({required this.loginUser, required this.registerUser});
+  AuthProvider(this.dataSource);
 
-  Future<User?> login(String username, String password) async {
-    _user = await loginUser(username, password);
-    notifyListeners();
-    return _user;
+  Future<void> login(String usr, String pwd) async {
+    final result = await dataSource.login(usr, pwd);
+
+    if (result.containsKey('message') && result['message'] == 'Logged In') {
+      user = User(username: usr);
+      notifyListeners();
+    } else {
+      throw Exception('Invalid credentials');
+    }
   }
 
-  Future<void> register(String username, String password) async {
-    await registerUser(User(username: username, password: password));
-    notifyListeners();
-  }
-
-  void logout() {
-    _user = null;
+  Future<void> logout() async {
+    user = null;
     notifyListeners();
   }
 }

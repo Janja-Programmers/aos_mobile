@@ -185,13 +185,15 @@ class _LoginScreenState extends State<LoginScreen> {
         context.go('/dashboard');
       } else {
         setState(() {
-          _error = 'Invalid username or password';
+          _error = 'Oops! I did not capture that! Please try again.';
         });
       }
     } catch (e) {
-      setState(() {
-        _error = 'Something went wrong. Try again.';
-      });
+      if (e.toString().contains('401')) {
+        setState(() {
+          _error = 'Invalid username or password';
+        });
+      }
     } finally {
       setState(() {
         _isLoading = false;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import './app.dart';
 
 // Items
+import 'core/di/service_locator.dart';
 import 'features/item/data/datasource/item_local_datasource.dart';
 import 'features/item/data/item_repo_impl.dart';
 import 'features/item/domain/usecases/get_all_items.dart';
@@ -72,6 +73,8 @@ void main() async {
   // Web-item setup
   final webItemLocalDataSource = WebsiteItemLocalDatasourceImpl();
   final webItemRepo = WebsiteItemRepositoryImpl(webItemLocalDataSource);
+
+  await init();
 
   runApp(
     App(

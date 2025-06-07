@@ -1,9 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ownashop/features/shared/widgets/app_bars.dart';
+import 'package:provider/provider.dart';
 
+import '../../../../core/constants/colors.dart';
+import '../../../auth/presentation/auth_provider.dart';
 import '../../../website/presentation/web_item_provider.dart';
 
 import '../../wishlist/presentation/wishlist_provider.dart';
@@ -43,20 +46,60 @@ class _ProductListScreenState extends State<ProductListScreen> {
             )
             .toList();
 
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
+
     return Scaffold(
-      appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Image.asset('assets/logo.png'),
-        ),
-        title: const Text('Own A Shop'),
-        actions: [
-          TextButton(
-            onPressed: () => context.push('/login'),
-            child: const Text('Login', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+      appBar: TopAppBar(
+        actions:
+            user == null
+                ? [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: TextButton(
+                      onPressed: () {
+                        print('Pressed login');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Clicked')),
+                        );
+                        Future.delayed(const Duration(seconds: 1), () {
+                          print('Navigating...');
+                          context.push('/login');
+                        });
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: AppColors.black,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      child: const Text(
+                        'Login',
+                        style: TextStyle(color: AppColors.white),
+                      ),
+                    ),
+                  ),
+                ]
+                : [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.notifications,
+                      color: AppColors.black,
+                    ),
+                    onPressed: () {
+                      print('Notifications clicked');
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.person, color: AppColors.black),
+                    onPressed: () {
+                      print('Profile clicked');
+                    },
+                  ),
+                ],
       ),
+
       body:
           itemProvider.isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -293,6 +336,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   ),
                 ],
               ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.go('/dashboard');
+        },
+        child: const Icon(Icons.dashboard),
+      ),
     );
   }
 }

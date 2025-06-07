@@ -16,8 +16,8 @@ class AppStrings {
   static const String dashboard = 'Dashboard';
   static const String items = 'Items';
   static const String itemPrice = 'Item Price';
-  static const String stock = 'Stock';
-  static const String websiteItem = 'Website Item';
+  static const String stock = 'Manage Stock';
+  static const String websiteItem = 'Publish in website';
   static const String orders = 'Orders';
   static const String reports = 'Reports';
 }

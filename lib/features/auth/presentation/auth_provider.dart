@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/user.dart';
 import '../data/auth_remote_datasource.dart';
 
@@ -9,19 +10,39 @@ class AuthProvider with ChangeNotifier {
 
   AuthProvider(this.dataSource);
 
+  bool get isLoggedIn => user != null;
+
+  Future<void> persistUser(String username) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('username', username);
+  }
+
+  Future<void> loadUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final username = prefs.getString('username');
+
+    if (username != null) {
+      user = User(username: username);
+      notifyListeners();
+    }
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('username');
+    user = null;
+    notifyListeners();
+  }
+
   Future<void> login(String usr, String pwd) async {
     final result = await dataSource.login(usr, pwd);
 
     if (result.containsKey('message') && result['message'] == 'Logged In') {
       user = User(username: usr);
+      await persistUser(usr);
       notifyListeners();
     } else {
       throw Exception('Invalid credentials');
     }
-  }
-
-  Future<void> logout() async {
-    user = null;
-    notifyListeners();
   }
 }

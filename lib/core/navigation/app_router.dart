@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import '../../features/auth/domain/user.dart';
+import '../../features/auth/presentation/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/customer/products/screens/product_list_screen.dart';
 import '../../features/item/presentation/item_screen.dart';
@@ -10,10 +11,14 @@ import '../../features/stock/presentation/stock_entry_detail_screen.dart';
 import '../../features/stock/presentation/stock_entry_list_screen.dart';
 import '../../features/supplier/dashboard/dashboard.dart';
 import '../../features/website/presentation/web_item_list_screen.dart';
+import '../di/service_locator.dart';
 
-final GoRouter router = GoRouter(
-  initialLocation: '/',
+final authProvider = sl<AuthProvider>();
+
+final router = GoRouter(
+  initialLocation: '/login',
   routes: [
+    
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
       path: '/register',

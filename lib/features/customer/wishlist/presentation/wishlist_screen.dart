@@ -5,8 +5,8 @@ import 'wishlist_provider.dart';
 import 'wishlist_item_card.dart';
 
 // Cart Feature
-import '../../cart/presentation/cart_provider.dart';
-import '../../cart/domain/cart_item.dart';
+// import '../../cart/presentation/cart_provider.dart';
+// import '../../cart/domain/cart_item.dart';
 
 class WishlistScreen extends StatefulWidget {
   const WishlistScreen({super.key});
@@ -28,7 +28,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<WishlistProvider>(context);
-    final cart = Provider.of<CartProvider>(context, listen: false);
+    // final cart = Provider.of<CartProvider>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -65,30 +65,31 @@ class _WishlistScreenState extends State<WishlistScreen> {
                     item: item,
                     onRemove: () => provider.remove(item.id),
 
-                    onAddToCart: () async {
-                      final cartItem = CartItem(
-                        id: item.id,
-                        title: item.title,
-                        imageUrl: item.imageUrl,
-                        price: item.price,
-                        quantity: 1,
-                      );
+                    onAddToCart: () {},
+                    //  () async {
+                    //   final cartItem = CartItem(
+                    //     id: item.id,
+                    //     title: item.title,
+                    //     imageUrl: item.imageUrl,
+                    //     price: item.price,
+                    //     quantity: 1,
+                    //   );
 
-                      await cart.add(cartItem);
-                      await provider.remove(item.id);
+                    // await cart.add(cartItem);
+                    // await provider.remove(item.id);
 
-                      if (mounted) {
-                        ScaffoldMessenger.of(context)
-                          ..hideCurrentSnackBar()
-                          ..showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                '🛒 Added to Cart and removed from Wishlist',
-                              ),
-                            ),
-                          );
-                      }
-                    },
+                    // if (mounted) {
+                    //   ScaffoldMessenger.of(context)
+                    //     ..hideCurrentSnackBar()
+                    //     ..showSnackBar(
+                    //       const SnackBar(
+                    //         content: Text(
+                    //           '🛒 Added to Cart and removed from Wishlist',
+                    //         ),
+                    //       ),
+                    //     );
+                    //   }
+                    // },
                   );
                 },
               ),

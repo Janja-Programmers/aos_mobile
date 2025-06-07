@@ -31,4 +31,15 @@ class ItemModel extends Item {
       'created_at': createdAt.toIso8601String(),
     };
   }
+
+  factory ItemModel.fromDomain(Item item) {
+    return ItemModel(
+      itemCode: item.itemCode,
+      itemName: item.itemName,
+      itemGroup: item.itemGroup,
+      company: item.company,
+      createdBy: item.createdBy,
+      createdAt: item.createdAt,
+    );
+  }
 }

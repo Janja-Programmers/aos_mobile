@@ -46,4 +46,19 @@ class WebsiteItemModel extends WebsiteItem {
       'created_at': createdAt.toIso8601String(),
     };
   }
+
+  factory WebsiteItemModel.fromDomain(WebsiteItem websiteItem) {
+    return WebsiteItemModel(
+      id: websiteItem.id,
+      websiteDisplayName: websiteItem.websiteDisplayName,
+      itemCode: websiteItem.itemCode,
+      isPublished: websiteItem.isPublished,
+      images: websiteItem.images,
+      video: websiteItem.video,
+      shortDescription: websiteItem.shortDescription,
+      fullDescription: websiteItem.fullDescription,
+      createdBy: websiteItem.createdBy,
+      createdAt: websiteItem.createdAt,
+    );
+  }
 }

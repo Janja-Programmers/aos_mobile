@@ -22,13 +22,13 @@ import 'features/customer/wishlist/data/wishlist_local_data_source.dart';
 import 'features/customer/wishlist/data/wishlist_repository_impl.dart';
 
 // Cart
-import 'features/customer/cart/domain/usecases/clear_cart.dart';
-import 'features/customer/cart/domain/usecases/update_cart_quantity.dart';
-import 'features/customer/cart/domain/usecases/add_to_cart.dart';
-import 'features/customer/cart/domain/usecases/get_cart.dart';
-import 'features/customer/cart/domain/usecases/remove_from_cart.dart';
-import 'features/customer/cart/data/cart_local_data_source.dart';
-import 'features/customer/cart/data/cart_repository_impl.dart';
+// import 'features/customer/cart/domain/usecases/clear_cart.dart';
+// import 'features/customer/cart/domain/usecases/update_cart_quantity.dart';
+// import 'features/customer/cart/domain/usecases/add_to_cart.dart';
+// import 'features/customer/cart/domain/usecases/get_cart.dart';
+// import 'features/customer/cart/domain/usecases/remove_from_cart.dart';
+// import 'features/customer/cart/data/cart_local_data_source.dart';
+// import 'features/customer/cart/data/cart_repository_impl.dart';
 
 // Stock
 import 'features/stock/data/stock_local_datasource.dart';
@@ -56,8 +56,8 @@ void main() async {
   final wishlistRepo = WishlistRepositoryImpl(wishlistLocal);
 
   // Cart setup
-  final cartLocal = CartLocalDataSourceImpl();
-  final cartRepo = CartRepositoryImpl(cartLocal, localDataSource: cartLocal);
+  // final cartLocal = CartLocalDataSourceImpl();
+  // final cartRepo = CartRepositoryImpl(cartLocal, localDataSource: cartLocal);
 
   // Auth setup
   final authLocal = AuthLocalDataSource();
@@ -86,11 +86,11 @@ void main() async {
       removeFromWishlist: RemoveFromWishlist(wishlistRepo),
 
       // Cart
-      getCart: GetCart(cartRepo),
-      addToCart: AddToCart(cartRepo),
-      removeFromCart: RemoveFromCart(cartRepo),
-      updateCartQuantity: UpdateCartQuantity(cartRepo),
-      clearCart: ClearCart(cartRepo),
+      // getCart: GetCart(cartRepo),
+      // addToCart: AddToCart(cartRepo),
+      // removeFromCart: RemoveFromCart(cartRepo),
+      // updateCartQuantity: UpdateCartQuantity(cartRepo),
+      // clearCart: ClearCart(cartRepo),
 
       // Auth
       loginUser: loginUser,

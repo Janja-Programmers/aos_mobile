@@ -1,3 +1,6 @@
+import 'package:dartz/dartz.dart';
+
+import '/core/errors/failures.dart';
 import '../domain/website_item.dart';
 import '../domain/website_item_repo.dart';
 import 'web_item_local_datasource.dart';
@@ -61,5 +64,15 @@ class WebsiteItemRepositoryImpl implements WebsiteItemRepository {
     );
 
     await localDatasource.addWebsiteItem(updatedItem);
+  }
+
+  @override
+  Future<Either<Failure, WebsiteItem>> getItemByCode(String itemCode) async {
+    try {
+      final websiteItem = await localDatasource.getWebsiteItemByCode(itemCode);
+      return Right(websiteItem);
+    } catch (e) {
+      return Left(Failure('Failed to get website item by code: $e'));
+    }
   }
 }

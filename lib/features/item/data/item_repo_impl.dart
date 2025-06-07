@@ -1,3 +1,7 @@
+import 'package:dartz/dartz.dart';
+
+import 'package:ownashop/core/errors/failures.dart';
+
 import '../domain/item.dart';
 import '../domain/item_repo.dart';
 import 'datasource/item_local_datasource.dart';
@@ -31,5 +35,11 @@ class ItemRepositoryImpl implements ItemRepository {
   Future<List<Item>> getAllItems() async {
     final data = await localDataSource.getAllItems();
     return data.map((e) => e as Item).toList();
+  }
+
+  @override
+  Future<Either<Failure, Item>> getItemByCode(String itemCode) {
+    // TODO: implement getItemByCode
+    throw UnimplementedError();
   }
 }

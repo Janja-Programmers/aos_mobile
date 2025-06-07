@@ -27,12 +27,12 @@ import 'features/customer/wishlist/domain/usecases/get_wishlist.dart';
 import 'features/customer/wishlist/presentation/wishlist_provider.dart';
 
 // Cart Feature
-import 'features/customer/cart/domain/usecases/add_to_cart.dart';
-import 'features/customer/cart/domain/usecases/get_cart.dart';
-import 'features/customer/cart/domain/usecases/remove_from_cart.dart';
-import 'features/customer/cart/domain/usecases/update_cart_quantity.dart';
-import 'features/customer/cart/domain/usecases/clear_cart.dart';
-import 'features/customer/cart/presentation/cart_provider.dart';
+// import 'features/customer/cart/domain/usecases/add_to_cart.dart';
+// import 'features/customer/cart/domain/usecases/get_cart.dart';
+// import 'features/customer/cart/domain/usecases/remove_from_cart.dart';
+// import 'features/customer/cart/domain/usecases/update_cart_quantity.dart';
+// import 'features/customer/cart/domain/usecases/clear_cart.dart';
+// import 'features/customer/cart/presentation/cart_provider.dart';
 
 // Stock Feature
 import 'features/stock/domain/usecases/create_stock_entry.dart';
@@ -46,11 +46,11 @@ class App extends StatelessWidget {
   final AddToWishlist addToWishlist;
   final RemoveFromWishlist removeFromWishlist;
 
-  final GetCart getCart;
-  final AddToCart addToCart;
-  final RemoveFromCart removeFromCart;
-  final UpdateCartQuantity updateCartQuantity;
-  final ClearCart clearCart;
+  // final GetCart getCart;
+  // final AddToCart addToCart;
+  // final RemoveFromCart removeFromCart;
+  // final UpdateCartQuantity updateCartQuantity;
+  // final ClearCart clearCart;
 
   final LoginUser loginUser;
   final RegisterUser registerUser;
@@ -78,11 +78,11 @@ class App extends StatelessWidget {
     required this.removeFromWishlist,
 
     // Cart
-    required this.getCart,
-    required this.addToCart,
-    required this.removeFromCart,
-    required this.updateCartQuantity,
-    required this.clearCart,
+    // required this.getCart,
+    // required this.addToCart,
+    // required this.removeFromCart,
+    // required this.updateCartQuantity,
+    // required this.clearCart,
 
     // Auth
     required this.loginUser,
@@ -116,16 +116,16 @@ class App extends StatelessWidget {
                 removeFromWishlist: removeFromWishlist,
               ),
         ),
-        ChangeNotifierProvider(
-          create:
-              (_) => CartProvider(
-                getCart: getCart,
-                addToCart: addToCart,
-                removeFromCart: removeFromCart,
-                updateCartQuantity: updateCartQuantity,
-                clearCart: clearCart,
-              ),
-        ),
+        // ChangeNotifierProvider(
+        //   create:
+        //       (_) => CartProvider(
+        //         getCart: getCart,
+        //         addToCart: addToCart,
+        //         removeFromCart: removeFromCart,
+        //         updateCartQuantity: updateCartQuantity,
+        //         clearCart: clearCart,
+        //       ),
+        // ),
         ChangeNotifierProvider(
           create:
               (_) => AuthProvider(

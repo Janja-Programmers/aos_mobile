@@ -93,6 +93,15 @@ class DatabaseHelper {
     )
   ''');
 
+    // 🔥 Add cart_items table
+    await db.execute('''
+    CREATE TABLE cart_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_code TEXT NOT NULL UNIQUE,
+      quantity INTEGER NOT NULL
+    )
+  ''');
+
     // 🔥 Add orders table
     await db.execute('''
     CREATE TABLE orders (

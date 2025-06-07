@@ -5,7 +5,7 @@ import '../../features/customer/products/screens/product_list_screen.dart';
 import '../../features/item/presentation/item_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/customer/wishlist/presentation/wishlist_screen.dart';
-import '../../features/customer/cart/presentation/cart_screen.dart';
+// import '../../features/customer/cart/presentation/cart_screen.dart';
 import '../../features/stock/presentation/stock_entry_detail_screen.dart';
 import '../../features/stock/presentation/stock_entry_list_screen.dart';
 import '../../features/supplier/dashboard/dashboard.dart';
@@ -24,7 +24,7 @@ final GoRouter router = GoRouter(
       path: '/wishlist',
       builder: (context, state) => const WishlistScreen(),
     ),
-    GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
+    // GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
 
     // SELLER ROUTES
     GoRoute(

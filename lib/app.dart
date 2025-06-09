@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ownashop/features/website/presentation/prov.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/themes.dart';
 import '../core/navigation/app_router.dart';
@@ -128,6 +129,7 @@ class App extends StatelessWidget {
         //       ),
         // ),
         ChangeNotifierProvider(create: (_) => sl<AuthProvider>()),
+        ChangeNotifierProvider(create: (_) => sl<WebsiteItemProv>()),
         ChangeNotifierProvider(
           create:
               (_) => ItemProvider(

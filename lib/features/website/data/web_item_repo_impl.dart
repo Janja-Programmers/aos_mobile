@@ -31,7 +31,7 @@ class WebsiteItemRepositoryImpl implements WebsiteItemRepository {
   @override
   Future<List<WebsiteItem>> getWebsiteItems() async {
     final models = await localDatasource.getAllWebsiteItems();
-    return models.map((model) => model).toList(); // already is WebsiteItem
+    return models.map((model) => model).toList();
   }
 
   @override
@@ -72,7 +72,7 @@ class WebsiteItemRepositoryImpl implements WebsiteItemRepository {
       final websiteItem = await localDatasource.getWebsiteItemByCode(itemCode);
       return Right(websiteItem);
     } catch (e) {
-      return Left(Failure('Failed to get website item by code: $e'));
+      return Left(NetworkFailure());
     }
   }
 }

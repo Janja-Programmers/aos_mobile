@@ -1,15 +1,17 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/features/shared/widgets/app_bars.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/constants/colors.dart';
-import '../../../auth/presentation/auth_provider.dart';
-import '../../../website/presentation/web_item_provider.dart';
+import '/core/constants/colors.dart';
+import '/core/utils/formatters.dart';
 
+import '/features/shared/widgets/app_bars.dart';
+
+import '../../../auth/presentation/auth_provider.dart';
+import '../../../website/presentation/prov.dart';
 import '../../wishlist/presentation/wishlist_provider.dart';
+
+import '../widgets/image_or_placeholder.dart';
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
@@ -25,29 +27,26 @@ class _ProductListScreenState extends State<ProductListScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<WebsiteItemProvider>().loadAllWebsiteItems();
+      context.read<WebsiteItemProv>().loadItems();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final itemProvider = context.watch<WebsiteItemProvider>();
+    final itemProvider = context.watch<WebsiteItemProv>();
     final wishlist = context.watch<WishlistProvider>();
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
 
     final items =
-        itemProvider.websiteItems
-            .where((item) => item.isPublished == true)
+        itemProvider.items
+            .where((item) => item.published == true)
             .where(
               (item) =>
                   _searchQuery.isEmpty ||
-                  item.websiteDisplayName.toLowerCase().contains(
-                    _searchQuery.toLowerCase(),
-                  ),
+                  item.name.toLowerCase().contains(_searchQuery.toLowerCase()),
             )
             .toList();
-
-    final authProvider = context.watch<AuthProvider>();
-    final user = authProvider.user;
 
     return Scaffold(
       appBar: TopAppBar(
@@ -58,14 +57,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: TextButton(
                       onPressed: () {
-                        print('Pressed login');
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Clicked')),
-                        );
-                        Future.delayed(const Duration(seconds: 1), () {
-                          print('Navigating...');
-                          context.push('/login');
-                        });
+                        context.push('/login');
                       },
                       style: TextButton.styleFrom(
                         backgroundColor: AppColors.black,
@@ -87,19 +79,14 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       Icons.notifications,
                       color: AppColors.black,
                     ),
-                    onPressed: () {
-                      print('Notifications clicked');
-                    },
+                    onPressed: () {},
                   ),
                   IconButton(
                     icon: const Icon(Icons.person, color: AppColors.black),
-                    onPressed: () {
-                      print('Profile clicked');
-                    },
+                    onPressed: () {},
                   ),
                 ],
       ),
-
       body:
           itemProvider.isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -142,10 +129,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                   item.id.toString(),
                                 );
 
-                                final firstImage =
-                                    item.images.isNotEmpty
-                                        ? item.images.first
-                                        : null;
+                                final imgUrl = resolveImageUrl(item.imageUrl);
 
                                 return GestureDetector(
                                   onTap: () {
@@ -155,7 +139,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                       ),
                                     );
                                   },
-
                                   child: Card(
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
@@ -167,89 +150,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                       children: [
                                         Stack(
                                           children: [
-                                            ClipRRect(
-                                              borderRadius:
-                                                  const BorderRadius.only(
-                                                    topLeft: Radius.circular(
-                                                      12,
-                                                    ),
-                                                    topRight: Radius.circular(
-                                                      12,
-                                                    ),
-                                                  ),
-                                              child: FutureBuilder<bool>(
-                                                future:
-                                                    firstImage != null
-                                                        ? File(
-                                                          firstImage,
-                                                        ).exists()
-                                                        : Future.value(false),
-                                                builder: (context, snapshot) {
-                                                  if (snapshot.connectionState !=
-                                                          ConnectionState
-                                                              .done ||
-                                                      !(snapshot.data ??
-                                                          false)) {
-                                                    // Show placeholder with item initial
-                                                    return Container(
-                                                      width: double.infinity,
-                                                      height: 120,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.grey[300],
-                                                        borderRadius:
-                                                            const BorderRadius.only(
-                                                              topLeft:
-                                                                  Radius.circular(
-                                                                    12,
-                                                                  ),
-                                                              topRight:
-                                                                  Radius.circular(
-                                                                    12,
-                                                                  ),
-                                                            ),
-                                                      ),
-                                                      alignment:
-                                                          Alignment.center,
-                                                      child: Text(
-                                                        item
-                                                                .websiteDisplayName
-                                                                .isNotEmpty
-                                                            ? item
-                                                                .websiteDisplayName[0]
-                                                                .toUpperCase()
-                                                            : '?',
-                                                        style: const TextStyle(
-                                                          fontSize: 48,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: Colors.white,
-                                                        ),
-                                                      ),
-                                                    );
-                                                  } else {
-                                                    // Image exists
-                                                    return ClipRRect(
-                                                      borderRadius:
-                                                          const BorderRadius.only(
-                                                            topLeft:
-                                                                Radius.circular(
-                                                                  12,
-                                                                ),
-                                                            topRight:
-                                                                Radius.circular(
-                                                                  12,
-                                                                ),
-                                                          ),
-                                                      child: Image.file(
-                                                        File(firstImage!),
-                                                        width: double.infinity,
-                                                        height: 120,
-                                                        fit: BoxFit.cover,
-                                                      ),
-                                                    );
-                                                  }
-                                                },
-                                              ),
+                                            ImageOrPlaceholder(
+                                              imageUrl: imgUrl,
+                                              fallbackText: item.name,
                                             ),
                                             Positioned(
                                               top: 6,
@@ -289,7 +192,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                item.websiteDisplayName,
+                                                item.name,
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 14,
@@ -297,9 +200,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
-                                              Text(
+                                              const Text(
                                                 'No Group',
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 12,
                                                   color: Colors.grey,
                                                 ),
@@ -336,7 +239,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   ),
                 ],
               ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           context.go('/dashboard');

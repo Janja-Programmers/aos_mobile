@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:ownashop/core/constants/colors.dart';
 
-import '../../domain/item.dart';
+import '../../domain/entity.dart';
 
 class ItemTile extends StatelessWidget {
   final Item item;
-  final VoidCallback onAddStock;
 
-  const ItemTile({super.key, required this.item, required this.onAddStock});
+  const ItemTile({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
@@ -16,10 +15,9 @@ class ItemTile extends StatelessWidget {
       shadowColor: AppColors.accent,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
-        title: Text(item.itemName),
+        title: Text(item.name),
         subtitle: Text('Group: ${item.itemGroup}'),
         trailing: TextButton.icon(
-          onPressed: onAddStock,
           icon: const Icon(Icons.add, color: Colors.white),
           label: const Text('Add Stock', style: TextStyle(color: Colors.white)),
           style: TextButton.styleFrom(
@@ -29,6 +27,7 @@ class ItemTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
+          onPressed: () {},
         ),
       ),
     );

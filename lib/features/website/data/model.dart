@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../domain/item.dart';
+import '../domain/webitem.dart';
 
 class WebsiteItemModel extends Equatable {
   final String id;

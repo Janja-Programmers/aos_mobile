@@ -12,6 +12,13 @@ import '/features/website/data/remote.dart';
 import '/features/website/data/repo_impl.dart';
 import '/features/website/presentation/prov.dart';
 
+/*****  ITEMS *******/
+import '/features/item/domain/repo.dart';
+import '/features/item/domain/usecases.dart';
+import '/features/item/data/remote.dart';
+import '/features/item/data/repo_impl.dart';
+import '/features/item/presentation/prov.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -34,7 +41,20 @@ Future<void> init() async {
     () => WebsiteRepoImpl(sl<WebsiteRemoteDataSource>()),
   );
   // 3. Use Cases
-  sl.registerLazySingleton(() => GetAllItemsUseCase(sl<WebsiteRepo>()));
+  sl.registerLazySingleton(() => GetAllWebItemsUseCase(sl<WebsiteRepo>()));
   // 4. Provider (State Management)
   sl.registerFactory(() => WebsiteItemProv(getAllItems: sl()));
+
+  // ITEMS Doctype
+
+  // 1. Remote data source
+  sl.registerLazySingleton(() => ItemRemoteDataSource(sl<APIClient>()));
+  // 2. Repository
+  sl.registerLazySingleton<ItemRepo>(
+    () => ItemRepoImpl(sl<ItemRemoteDataSource>()),
+  );
+  // 3. Use Cases
+  sl.registerLazySingleton(() => GetAllItemsUseCase(sl<ItemRepo>()));
+  // 4. Provider (State Management)
+  sl.registerFactory(() => ItemProv(getAllItems: sl()));
 }

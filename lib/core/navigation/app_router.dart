@@ -1,5 +1,4 @@
 import 'package:go_router/go_router.dart';
-import '../../features/auth/domain/user.dart';
 import '../../features/auth/presentation/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/customer/products/screens/product_list_screen.dart';
@@ -18,7 +17,6 @@ final authProvider = sl<AuthProvider>();
 final router = GoRouter(
   initialLocation: '/login',
   routes: [
-    
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
       path: '/register',
@@ -36,18 +34,7 @@ final router = GoRouter(
       path: '/dashboard',
       builder: (context, state) => const SellerDashboard(),
     ),
-    GoRoute(
-      path: '/items',
-      builder: (context, state) {
-        final user = state.extra;
-        if (user is! User || user.id == null) {
-          throw Exception(
-            'User object with valid ID must be passed via state.extra',
-          );
-        }
-        return ItemScreen(userId: user.id!);
-      },
-    ),
+    GoRoute(path: '/items', builder: (context, state) => const ItemScreen()),
 
     // STOCK ROUTES
     GoRoute(

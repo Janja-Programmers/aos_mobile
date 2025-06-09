@@ -1,13 +1,13 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../core/errors/failures.dart';
-import 'item.dart';
+import 'webitem.dart';
 import 'repo.dart';
 
-class GetAllItemsUseCase {
+class GetAllWebItemsUseCase {
   final WebsiteRepo repo;
 
-  GetAllItemsUseCase(this.repo);
+  GetAllWebItemsUseCase(this.repo);
 
   Future<Either<Failure, List<WebsiteItem>>> call() async {
     return await repo.getAllItems();

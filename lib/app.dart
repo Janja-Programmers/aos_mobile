@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/features/website/presentation/prov.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/themes.dart';
 import '../core/navigation/app_router.dart';
@@ -7,6 +6,7 @@ import '../core/constants/strings.dart';
 
 // Web-item Feature
 import 'core/di/service_locator.dart';
+import 'features/item/presentation/prov.dart';
 import 'features/website/domain/usecases/add_website_item.dart';
 import 'features/website/domain/usecases/get_all_website_items.dart';
 import 'features/website/domain/usecases/get_website_item_by_user.dart';
@@ -41,6 +41,7 @@ import 'features/stock/domain/usecases/create_stock_entry.dart';
 import 'features/stock/domain/usecases/get_stock_entry_by_user.dart';
 import 'features/stock/domain/usecases/get_stock_entry_detail.dart';
 import 'features/stock/presentation/stock_provider.dart';
+import 'features/website/presentation/prov.dart';
 import 'features/website/presentation/web_item_provider.dart';
 
 class App extends StatelessWidget {
@@ -130,6 +131,7 @@ class App extends StatelessWidget {
         // ),
         ChangeNotifierProvider(create: (_) => sl<AuthProvider>()),
         ChangeNotifierProvider(create: (_) => sl<WebsiteItemProv>()),
+        ChangeNotifierProvider(create: (_) => sl<ItemProv>()),
         ChangeNotifierProvider(
           create:
               (_) => ItemProvider(

@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 
 import '/core/errors/failures.dart';
 import '../domain/repo.dart';
-import '../domain/item.dart';
+import '../domain/webitem.dart';
 import 'remote.dart';
 
 class WebsiteRepoImpl implements WebsiteRepo {

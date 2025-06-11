@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/core/constants/colors.dart';
 import 'package:provider/provider.dart';
+
+import '/core/constants/colors.dart';
 import '../auth_provider.dart';
 import '../widgets/app_input.dart';
+import '../widgets/custom_snackbar.dart';
 import '../widgets/text_widget.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -136,8 +138,90 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: () async {
-                      await auth.login(userCtrl.text, passCtrl.text);
-                      context.push('/login');
+                      final username = userCtrl.text.trim();
+                      final email = emailCtrl.text.trim();
+                      final fullName = userCtrl.text.trim();
+                      final userType = userTypeCtrl.text.trim();
+                      final phone = numCtrl.text.trim();
+                      final password = passCtrl.text.trim();
+
+                      if (username.isEmpty ||
+                          email.isEmpty ||
+                          fullName.isEmpty ||
+                          userType.isEmpty ||
+                          phone.isEmpty ||
+                          password.isEmpty) {
+                        CustomSnackbar.showTopSnackbar(
+                          context,
+                          'Please fill all fields.',
+                        );
+                        return;
+                      }
+
+                      if (password != confirmPassCtrl.text.trim()) {
+                        CustomSnackbar.showTopSnackbar(
+                          context,
+                          'Passwords do not match.',
+                        );
+                        return;
+                      }
+                      try {
+                        final result = await auth.register(
+                          username,
+                          email,
+                          fullName,
+                          userType,
+                          phone,
+                          password,
+                        );
+
+                        if (!context.mounted) return;
+
+                        final messageList = result['message'];
+                        if (messageList is List && messageList.length > 1) {
+                          final statusCode = messageList[0];
+                          // final messageText = messageList[1];
+
+                          if (statusCode == 0) {
+                            // Already Registered
+                            CustomSnackbar.showTopSnackbar(
+                              context,
+                              'User already registered.',
+                            );
+                          } else if (statusCode == 1) {
+                            // Email verification required
+                            CustomSnackbar.showTopSnackbar(
+                              context,
+                              'Please verify your email before logging in.',
+                            );
+                          } else if (statusCode == 2) {
+                            // Successful registration
+                            CustomSnackbar.showTopSnackbar(
+                              context,
+                              'Registration successful!',
+                            );
+
+                            context.push('/dashboard');
+                          } else {
+                            // Unknown status code
+                            CustomSnackbar.showTopSnackbar(
+                              context,
+                              'Unexpected status: $statusCode',
+                            );
+                          }
+                        } else {
+                          CustomSnackbar.showTopSnackbar(
+                            context,
+                            'Invalid response from server.',
+                          );
+                        }
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        CustomSnackbar.showTopSnackbar(
+                          context,
+                          'Registration failed: $e',
+                        );
+                      }
                     },
                     child: const Text(
                       'Sign up',

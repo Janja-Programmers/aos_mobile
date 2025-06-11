@@ -45,4 +45,31 @@ class AuthProvider with ChangeNotifier {
       throw Exception('Invalid credentials');
     }
   }
+
+  Future<Map<String, dynamic>> register(
+    String username,
+    String email,
+    String fullName,
+    String userType,
+    String phone,
+    String password,
+  ) async {
+    final result = await dataSource.register(
+      username,
+      email,
+      fullName,
+      userType,
+      phone,
+      password,
+    );
+
+    if (result.containsKey('message') &&
+        result['message'] == 'Already Registered') {
+      user = User(username: username);
+      await persistUser(username);
+      notifyListeners();
+    }
+
+    return result;
+  }
 }

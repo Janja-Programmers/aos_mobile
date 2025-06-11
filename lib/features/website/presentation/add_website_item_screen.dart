@@ -1,289 +1,289 @@
-import 'dart:io';
+// import 'dart:io';
 
-import 'package:ownashop/core/utils/permissions.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+// import 'package:file_picker/file_picker.dart';
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
 
-import '../../auth/presentation/auth_provider.dart';
-import '../domain/website_item.dart';
-import 'web_item_provider.dart';
-import 'widgets/custom_button.dart';
-import 'widgets/custom_text_controller.dart';
+// import '/core/utils/permissions.dart';
+// import '/features/website/presentation/prov.dart';
 
-class AddWebsiteItemScreen extends StatefulWidget {
-  const AddWebsiteItemScreen({super.key});
+// import '../../auth/presentation/auth_provider.dart';
+// import 'widgets/custom_button.dart';
+// import 'widgets/custom_text_controller.dart';
 
-  @override
-  State<AddWebsiteItemScreen> createState() => _AddWebsiteItemScreenState();
-}
+// class AddWebsiteItemScreen extends StatefulWidget {
+//   const AddWebsiteItemScreen({super.key});
 
-class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
-  final _websiteDisplayNameController = TextEditingController();
-  final _itemCodeController = TextEditingController();
-  final _shortDescController = TextEditingController();
-  final _fullDescController = TextEditingController();
+//   @override
+//   State<AddWebsiteItemScreen> createState() => _AddWebsiteItemScreenState();
+// }
 
-  bool _isPublished = false;
-  bool _isLoading = false;
+// class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
+//   final _websiteDisplayNameController = TextEditingController();
+//   final _itemCodeController = TextEditingController();
+//   final _shortDescController = TextEditingController();
+//   final _fullDescController = TextEditingController();
 
-  String? _selectedVideo;
-  List<String> _selectedImages = [];
+//   bool _isPublished = false;
+//   bool _isLoading = false;
 
-  @override
-  void dispose() {
-    _websiteDisplayNameController.dispose();
-    _itemCodeController.dispose();
-    _shortDescController.dispose();
-    _fullDescController.dispose();
-    super.dispose();
-  }
+//   String? _selectedVideo;
+//   List<String> _selectedImages = [];
 
-  Future<void> _pickImages() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        allowMultiple: true,
-        type: FileType.image,
-      );
+//   @override
+//   void dispose() {
+//     _websiteDisplayNameController.dispose();
+//     _itemCodeController.dispose();
+//     _shortDescController.dispose();
+//     _fullDescController.dispose();
+//     super.dispose();
+//   }
 
-      if (result == null || result.files.isEmpty) return; // Graceful skip
+//   Future<void> _pickImages() async {
+//     try {
+//       final result = await FilePicker.platform.pickFiles(
+//         allowMultiple: true,
+//         type: FileType.image,
+//       );
 
-      final pickedFiles = result.files.take(5).toList(); // Limit to 5
-      final imagePaths =
-          pickedFiles
-              .map((file) => file.path)
-              .whereType<String>() // remove nulls
-              .toList();
+//       if (result == null || result.files.isEmpty) return; // Graceful skip
 
-      setState(() {
-        _selectedImages = imagePaths;
-      });
-    } catch (e) {
-      debugPrint('Image picking failed: $e');
-      // optionally show a snackbar
-    }
-  }
+//       final pickedFiles = result.files.take(5).toList(); // Limit to 5
+//       final imagePaths =
+//           pickedFiles
+//               .map((file) => file.path)
+//               .whereType<String>() // remove nulls
+//               .toList();
 
-  Future<void> _pickVideo() async {
-    final hasPermission = await checkStoragePermission();
-    if (!hasPermission) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Storage permission is required')));
-      return;
-    }
+//       setState(() {
+//         _selectedImages = imagePaths;
+//       });
+//     } catch (e) {
+//       debugPrint('Image picking failed: $e');
+//       // optionally show a snackbar
+//     }
+//   }
 
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.video,
-      allowMultiple: false,
-    );
+//   Future<void> _pickVideo() async {
+//     final hasPermission = await checkStoragePermission();
+//     if (!hasPermission) {
+//       ScaffoldMessenger.of(
+//         context,
+//       ).showSnackBar(SnackBar(content: Text('Storage permission is required')));
+//       return;
+//     }
 
-    if (result != null && result.files.isNotEmpty) {
-      final path = result.files.single.path;
-      if (path != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() {
-              _selectedVideo = path;
-            });
-          }
-        });
-      }
-    }
-  }
+//     final result = await FilePicker.platform.pickFiles(
+//       type: FileType.video,
+//       allowMultiple: false,
+//     );
 
-  void _submit() async {
-    FocusScope.of(context).unfocus();
+//     if (result != null && result.files.isNotEmpty) {
+//       final path = result.files.single.path;
+//       if (path != null) {
+//         WidgetsBinding.instance.addPostFrameCallback((_) {
+//           if (mounted) {
+//             setState(() {
+//               _selectedVideo = path;
+//             });
+//           }
+//         });
+//       }
+//     }
+//   }
 
-    final authProvider = context.read<AuthProvider>();
-    final user = authProvider.user;
+//   void _submit() async {
+//     FocusScope.of(context).unfocus();
 
-    if (user == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('User not logged in')));
-      return;
-    }
+//     final authProvider = context.read<AuthProvider>();
+//     final user = authProvider.user;
 
-    final websiteItemProvider = context.read<WebsiteItemProvider>();
+//     if (user == null) {
+//       ScaffoldMessenger.of(
+//         context,
+//       ).showSnackBar(SnackBar(content: Text('User not logged in')));
+//       return;
+//     }
 
-    final websiteDisplayName = _websiteDisplayNameController.text.trim();
-    final itemCode = _itemCodeController.text.trim();
-    final shortDesc = _shortDescController.text.trim();
-    final fullDesc = _fullDescController.text.trim();
+//     final websiteItemProvider = context.read<WebsiteItemProv>();
 
-    if (websiteDisplayName.isEmpty || itemCode.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill all required fields')),
-      );
-      return;
-    }
+//     final websiteDisplayName = _websiteDisplayNameController.text.trim();
+//     final itemCode = _itemCodeController.text.trim();
+//     final shortDesc = _shortDescController.text.trim();
+//     final fullDesc = _fullDescController.text.trim();
 
-    setState(() => _isLoading = true);
+//     if (websiteDisplayName.isEmpty || itemCode.isEmpty) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text('Please fill all required fields')),
+//       );
+//       return;
+//     }
 
-    try {
-      final newItem = WebsiteItem(
-        id: null,
-        websiteDisplayName: websiteDisplayName,
-        itemCode: itemCode,
-        isPublished: _isPublished,
-        images: _selectedImages,
-        video: _selectedVideo,
-        shortDescription: shortDesc.isEmpty ? null : shortDesc,
-        fullDescription: fullDesc.isEmpty ? null : fullDesc,
-        createdBy: user.id!,
-        createdAt: DateTime.now(),
-      );
+//     setState(() => _isLoading = true);
 
-      await websiteItemProvider.addWebsiteItem(newItem);
+//     try {
+//       final newItem = WebsiteItem(
+//         id: null,
+//         websiteDisplayName: websiteDisplayName,
+//         itemCode: itemCode,
+//         isPublished: _isPublished,
+//         images: _selectedImages,
+//         video: _selectedVideo,
+//         shortDescription: shortDesc.isEmpty ? null : shortDesc,
+//         fullDescription: fullDesc.isEmpty ? null : fullDesc,
+//         createdBy: user.id!,
+//         createdAt: DateTime.now(),
+//       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Website item added successfully!')),
-      );
+//       await websiteItemProvider.addWebsiteItem(newItem);
 
-      Navigator.pop(context);
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to add website item')));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text('Website item added successfully!')),
+//       );
 
-  Widget _buildSelectedImagesPreview() {
-    if (_selectedImages.isEmpty) {
-      return Text('No images selected');
-    } else {
-      return Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children:
-            _selectedImages.map((path) {
-              return Builder(
-                builder: (_) {
-                  final file = File(path);
-                  return FutureBuilder<bool>(
-                    future: file.exists(),
-                    builder: (_, snapshot) {
-                      if (snapshot.connectionState != ConnectionState.done ||
-                          snapshot.data != true) {
-                        return const SizedBox();
-                      }
-                      return Image.file(
-                        file,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                      );
-                    },
-                  );
-                },
-              );
-            }).toList(),
-      );
-    }
-  }
+//       Navigator.pop(context);
+//     } catch (e) {
+//       ScaffoldMessenger.of(
+//         context,
+//       ).showSnackBar(SnackBar(content: Text('Failed to add website item')));
+//     } finally {
+//       if (mounted) setState(() => _isLoading = false);
+//     }
+//   }
 
-  Widget _buildSelectedVideoPreview() {
-    if (_selectedVideo == null) return Text('No video selected');
-    final filename = _selectedVideo!.split('/').last;
-    return Chip(label: Text(filename));
-  }
+//   Widget _buildSelectedImagesPreview() {
+//     if (_selectedImages.isEmpty) {
+//       return Text('No images selected');
+//     } else {
+//       return Wrap(
+//         spacing: 8,
+//         runSpacing: 8,
+//         children:
+//             _selectedImages.map((path) {
+//               return Builder(
+//                 builder: (_) {
+//                   final file = File(path);
+//                   return FutureBuilder<bool>(
+//                     future: file.exists(),
+//                     builder: (_, snapshot) {
+//                       if (snapshot.connectionState != ConnectionState.done ||
+//                           snapshot.data != true) {
+//                         return const SizedBox();
+//                       }
+//                       return Image.file(
+//                         file,
+//                         width: 80,
+//                         height: 80,
+//                         fit: BoxFit.cover,
+//                       );
+//                     },
+//                   );
+//                 },
+//               );
+//             }).toList(),
+//       );
+//     }
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Add Website Item')),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: ListView(
-            children: [
-              CustomTextField(
-                controller: _websiteDisplayNameController,
-                label: 'Website Display Name',
-                textInputAction: TextInputAction.next,
-              ),
+//   Widget _buildSelectedVideoPreview() {
+//     if (_selectedVideo == null) return Text('No video selected');
+//     final filename = _selectedVideo!.split('/').last;
+//     return Chip(label: Text(filename));
+//   }
 
-              SizedBox(height: 12),
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: Text('Add Website Item')),
+//       body: GestureDetector(
+//         onTap: () => FocusScope.of(context).unfocus(),
+//         child: Padding(
+//           padding: const EdgeInsets.all(16),
+//           child: ListView(
+//             children: [
+//               CustomTextField(
+//                 controller: _websiteDisplayNameController,
+//                 label: 'Website Display Name',
+//                 textInputAction: TextInputAction.next,
+//               ),
 
-              CustomTextField(
-                controller: _itemCodeController,
-                label: 'Item Code',
-                textInputAction: TextInputAction.next,
-              ),
+//               SizedBox(height: 12),
 
-              SizedBox(height: 12),
+//               CustomTextField(
+//                 controller: _itemCodeController,
+//                 label: 'Item Code',
+//                 textInputAction: TextInputAction.next,
+//               ),
 
-              Text('Images'),
+//               SizedBox(height: 12),
 
-              SizedBox(height: 4),
+//               Text('Images'),
 
-              _buildSelectedImagesPreview(),
-              ElevatedButton.icon(
-                onPressed: _pickImages,
-                icon: Icon(Icons.photo_library),
-                label: Text('Pick Images'),
-              ),
+//               SizedBox(height: 4),
 
-              SizedBox(height: 12),
+//               _buildSelectedImagesPreview(),
+//               ElevatedButton.icon(
+//                 onPressed: _pickImages,
+//                 icon: Icon(Icons.photo_library),
+//                 label: Text('Pick Images'),
+//               ),
 
-              Text('Video'),
+//               SizedBox(height: 12),
 
-              SizedBox(height: 4),
+//               Text('Video'),
 
-              _buildSelectedVideoPreview(),
-              ElevatedButton.icon(
-                onPressed: _pickVideo,
-                icon: Icon(Icons.videocam),
-                label: Text('Pick Video'),
-              ),
+//               SizedBox(height: 4),
 
-              SizedBox(height: 12),
+//               _buildSelectedVideoPreview(),
+//               ElevatedButton.icon(
+//                 onPressed: _pickVideo,
+//                 icon: Icon(Icons.videocam),
+//                 label: Text('Pick Video'),
+//               ),
 
-              CustomTextField(
-                controller: _shortDescController,
-                label: 'Short Description',
-                maxLines: 2,
-                textInputAction: TextInputAction.next,
-              ),
+//               SizedBox(height: 12),
 
-              SizedBox(height: 12),
+//               CustomTextField(
+//                 controller: _shortDescController,
+//                 label: 'Short Description',
+//                 maxLines: 2,
+//                 textInputAction: TextInputAction.next,
+//               ),
 
-              CustomTextField(
-                controller: _fullDescController,
-                label: 'Full Description',
-                maxLines: 4,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _submit(),
-              ),
+//               SizedBox(height: 12),
 
-              SizedBox(height: 12),
+//               CustomTextField(
+//                 controller: _fullDescController,
+//                 label: 'Full Description',
+//                 maxLines: 4,
+//                 textInputAction: TextInputAction.done,
+//                 onSubmitted: (_) => _submit(),
+//               ),
 
-              Row(
-                children: [
-                  Checkbox(
-                    value: _isPublished,
-                    onChanged:
-                        (val) => setState(() => _isPublished = val ?? false),
-                  ),
-                  Text('Publish'),
-                ],
-              ),
+//               SizedBox(height: 12),
 
-              SizedBox(height: 24),
+//               Row(
+//                 children: [
+//                   Checkbox(
+//                     value: _isPublished,
+//                     onChanged:
+//                         (val) => setState(() => _isPublished = val ?? false),
+//                   ),
+//                   Text('Publish'),
+//                 ],
+//               ),
 
-              CustomButton(
-                label: 'Add Website Item',
-                onPressed: _submit,
-                isLoading: _isLoading,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+//               SizedBox(height: 24),
+
+//               CustomButton(
+//                 label: 'Add Website Item',
+//                 onPressed: _submit,
+//                 isLoading: _isLoading,
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }

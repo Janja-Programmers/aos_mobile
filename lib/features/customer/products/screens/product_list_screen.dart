@@ -9,7 +9,6 @@ import '/features/shared/widgets/app_bars.dart';
 
 import '../../../auth/presentation/auth_provider.dart';
 import '../../../website/presentation/prov.dart';
-import '../../wishlist/presentation/wishlist_provider.dart';
 
 import '../widgets/image_or_placeholder.dart';
 
@@ -34,7 +33,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   @override
   Widget build(BuildContext context) {
     final itemProvider = context.watch<WebsiteItemProv>();
-    final wishlist = context.watch<WishlistProvider>();
+    // final wishlist = context.watch<WishlistProvider>();
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.user;
 
@@ -125,18 +124,17 @@ class _ProductListScreenState extends State<ProductListScreen> {
                               itemCount: items.length,
                               itemBuilder: (context, index) {
                                 final item = items[index];
-                                final isInWishlist = wishlist.isInWishlist(
-                                  item.id.toString(),
-                                );
+                                // final isInWishlist = wishlist.isInWishlist(
+                                //   item.id.toString(),
+                                // );
 
                                 final imgUrl = resolveImageUrl(item.imageUrl);
 
                                 return GestureDetector(
                                   onTap: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text("Product Detail Later"),
-                                      ),
+                                    context.push(
+                                      '/product/${item.id}',
+                                      extra: item,
                                     );
                                   },
                                   child: Card(
@@ -159,13 +157,14 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                               right: 6,
                                               child: IconButton(
                                                 icon: Icon(
-                                                  isInWishlist
-                                                      ? Icons.favorite
-                                                      : Icons.favorite_border,
-                                                  color:
-                                                      isInWishlist
-                                                          ? Colors.red
-                                                          : Colors.black54,
+                                                  Icons.favorite_border,
+                                                  // isInWishlist
+                                                  //     ? Icons.favorite
+                                                  //     : Icons.favorite_border,
+                                                  // color:
+                                                  //     isInWishlist
+                                                  //         ? Colors.red
+                                                  //         : Colors.black54,
                                                 ),
                                                 onPressed: () {
                                                   ScaffoldMessenger.of(context)
@@ -200,8 +199,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
-                                              const Text(
-                                                'No Group',
+                                              Text(
+                                                item.itemGroup,
                                                 style: TextStyle(
                                                   fontSize: 12,
                                                   color: Colors.grey,

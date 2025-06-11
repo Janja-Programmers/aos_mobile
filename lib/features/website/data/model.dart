@@ -7,6 +7,7 @@ class WebsiteItemModel extends Equatable {
   final String name;
   final String image;
   final String thumbnail;
+  final String? demoVideoUrl;
   final String itemCode;
   final String description;
   final String title;
@@ -23,6 +24,7 @@ class WebsiteItemModel extends Equatable {
     required this.name,
     required this.image,
     required this.thumbnail,
+    this.demoVideoUrl,
     required this.itemCode,
     required this.description,
     required this.title,
@@ -41,12 +43,13 @@ class WebsiteItemModel extends Equatable {
       name: json['item_name'] ?? '',
       image: json['website_image'] ?? '',
       thumbnail: json['thumbnail'] ?? '',
+      demoVideoUrl: json['custom_demo_video'],
       itemCode: json['item_code'] ?? '',
       description: json['short_description'] ?? '',
       title: json['title'] ?? '',
       itemGroup: json['item_group'] ?? '',
       shortDescription: json['short_description'] ?? '',
-      longDescription: json['long_description'] ?? '',
+      longDescription: json['web_long_description'] ?? '',
       onBackorder: json['on_backorder'] == 1,
       published: json['published'] == 1,
       specifications:
@@ -64,6 +67,7 @@ class WebsiteItemModel extends Equatable {
       owner: owner,
       imageUrl: image,
       thumbnailUrl: thumbnail,
+      demoVideoUrl: demoVideoUrl,
       itemCode: itemCode,
       description: description,
       published: published,

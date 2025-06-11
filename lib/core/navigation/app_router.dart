@@ -1,16 +1,22 @@
 import 'package:go_router/go_router.dart';
-import '../../features/auth/presentation/auth_provider.dart';
-import '../../features/auth/presentation/screens/login_screen.dart';
-import '../../features/customer/products/screens/product_list_screen.dart';
-import '../../features/item/presentation/item_screen.dart';
-import '../../features/auth/presentation/screens/register_screen.dart';
-import '../../features/customer/wishlist/presentation/wishlist_screen.dart';
-// import '../../features/customer/cart/presentation/cart_screen.dart';
-import '../../features/stock/presentation/stock_entry_detail_screen.dart';
-import '../../features/stock/presentation/stock_entry_list_screen.dart';
-import '../../features/supplier/dashboard/dashboard.dart';
-import '../../features/website/presentation/web_item_list_screen.dart';
+
 import '../di/service_locator.dart';
+
+// Auth
+import '/features/auth/presentation/auth_provider.dart';
+import '/features/auth/presentation/screens/login_screen.dart';
+
+import '/features/website/domain/webitem.dart';
+// Customer
+import '/features/customer/products/screens/product_list_screen.dart';
+import '/features/customer/products/screens/product_detail_screen.dart';
+import '/features/customer/wishlist/presentation/wishlist_screen.dart';
+// Seller
+import '/features/item/presentation/item_screen.dart';
+import '/features/auth/presentation/screens/register_screen.dart';
+import '/features/stock/presentation/stock_entry_detail_screen.dart';
+import '/features/stock/presentation/stock_entry_list_screen.dart';
+import '/features/supplier/dashboard/dashboard.dart';
 
 final authProvider = sl<AuthProvider>();
 
@@ -27,7 +33,6 @@ final router = GoRouter(
       path: '/wishlist',
       builder: (context, state) => const WishlistScreen(),
     ),
-    // GoRoute(path: '/cart', builder: (context, state) => const CartScreen()),
 
     // SELLER ROUTES
     GoRoute(
@@ -53,14 +58,16 @@ final router = GoRouter(
       },
     ),
 
-    // WEBSITE ITEM ROUTES
-    GoRoute(
-      path: '/web-items',
-      builder: (context, state) => const WebsiteItemListScreen(),
-    ),
-
     // CUSTOMER ROUTES
     // All Products
     GoRoute(path: '/', builder: (context, state) => const ProductListScreen()),
+    // Product Details
+    GoRoute(
+      path: '/product/:id',
+      builder: (context, state) {
+        final item = state.extra as WebsiteItem;
+        return ProductDetailScreen(product: item);
+      },
+    ),
   ],
 );

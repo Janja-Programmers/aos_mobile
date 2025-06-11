@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../domain/item.dart';
-import '../item_provider.dart';
 
 class AddItemModal extends StatefulWidget {
   final int userId;
@@ -21,8 +19,6 @@ class _AddItemModalState extends State<AddItemModal> {
 
   @override
   Widget build(BuildContext context) {
-    final itemProvider = Provider.of<ItemProvider>(context, listen: false);
-
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Form(
@@ -60,7 +56,8 @@ class _AddItemModalState extends State<AddItemModal> {
                     createdBy: widget.userId,
                     createdAt: DateTime.now(),
                   );
-                  await itemProvider.addItem(newItem);
+                  // await itemProvider.addItem(newItem);
+                  print(newItem);
                   Navigator.of(context).pop();
                 }
               },

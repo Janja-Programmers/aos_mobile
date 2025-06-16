@@ -8,7 +8,7 @@ import '/core/utils/formatters.dart';
 import '/features/shared/widgets/app_bars.dart';
 
 import '../../../auth/presentation/auth_provider.dart';
-import '../../../website/presentation/prov.dart';
+import '../../../website/prov.dart';
 
 import '../widgets/image_or_placeholder.dart';
 

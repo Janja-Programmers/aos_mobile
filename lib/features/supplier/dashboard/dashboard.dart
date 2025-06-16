@@ -131,6 +131,17 @@ class _SellerDashboardState extends State<SellerDashboard> {
                 context.push('/web-items');
               },
             ),
+
+            DrawerItem(
+              icon: Icons.list_alt,
+              title: AppStrings.reports,
+              selected: _selectedIndex == 5,
+              onTap: () {
+                setState(() => _selectedIndex = 5);
+                Navigator.pop(context);
+                context.push('/web-items');
+              },
+            ),
             // DrawerItem(
             //   icon: Icons.admin_panel_settings,
             //   title: "Admin Database",

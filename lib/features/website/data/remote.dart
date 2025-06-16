@@ -34,19 +34,59 @@ class WebsiteRemoteDataSource {
           }).toList();
 
       return Right(items);
-    } on DioException catch (e) {
+    } catch (e) {
+      return Left(_handleException(e));
+    }
+  }
+
+  // ----------------- CREATE -----------------
+  Future<Either<Failure, WebsiteItem>> createItem(WebsiteItem entity) async {
+    try {
+      final model = WebsiteItemModel.fromEntity(entity);
+      final res = await _client.client.post(
+        WEB_ITEM_ENDPOINT,
+        data: model.toJson(),
+      );
+      final created = WebsiteItemModel.fromJson(res.data['data']).toEntity();
+      return Right(created);
+    } catch (e) {
+      return Left(_handleException(e));
+    }
+  }
+
+  // ----------------- UPDATE -----------------
+  Future<Either<Failure, WebsiteItem>> updateItem(
+    String id,
+    WebsiteItem entity,
+  ) async {
+    try {
+      final model = WebsiteItemModel.fromEntity(entity);
+      final res = await _client.client.put(
+        '$WEB_ITEM_ENDPOINT/$id',
+        data: model.toJson(),
+      );
+      final updated = WebsiteItemModel.fromJson(res.data['data']).toEntity();
+      return Right(updated);
+    } catch (e) {
+      return Left(_handleException(e));
+    }
+  }
+
+  // ----------------- DRY error handling -----------------
+  Failure _handleException(Object e) {
+    if (e is DioException) {
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout) {
-        return Left(TimeoutFailure());
+        return TimeoutFailure();
       } else if (e.type == DioExceptionType.connectionError) {
-        return Left(NetworkFailure());
+        return NetworkFailure();
       } else {
-        return Left(ServerFailure(e.message ?? 'Server error'));
+        return ServerFailure(e.message ?? 'Server error');
       }
-    } on FormatException {
-      return Left(ParsingFailure());
-    } catch (e) {
-      return Left(UnknownFailure());
+    } else if (e is FormatException) {
+      return ParsingFailure();
+    } else {
+      return UnknownFailure();
     }
   }
 }

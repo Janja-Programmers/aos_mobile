@@ -9,6 +9,7 @@ class MainBarScaffold extends StatelessWidget {
   final VoidCallback? onSave;
   final GlobalKey<ScaffoldState> scaffoldKey;
   final Widget drawer;
+  final Widget? actionButton;
 
   const MainBarScaffold({
     super.key,
@@ -17,6 +18,7 @@ class MainBarScaffold extends StatelessWidget {
     required this.scaffoldKey,
     required this.drawer,
     this.onSave,
+    this.actionButton,
   });
 
   @override
@@ -35,6 +37,7 @@ class MainBarScaffold extends StatelessWidget {
             onMenuPressed: () => scaffoldKey.currentState?.openDrawer(),
             onSavePressed: onSave,
             showSaveButton: false,
+            actionButton: actionButton,
           ),
           const Divider(height: 1, color: Color.fromARGB(255, 205, 201, 201)),
           Expanded(child: body),

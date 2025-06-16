@@ -11,7 +11,16 @@ class WebsiteRepoImpl implements WebsiteRepo {
   WebsiteRepoImpl(this.remote);
 
   @override
-  Future<Either<Failure, List<WebsiteItem>>> getAllItems() async {
-    return await remote.fetchItems();
-  }
+  Future<Either<Failure, List<WebsiteItem>>> getAllItems() =>
+      remote.fetchItems();
+
+  @override
+  Future<Either<Failure, WebsiteItem>> createItem(WebsiteItem item) =>
+      remote.createItem(item);
+
+  @override
+  Future<Either<Failure, WebsiteItem>> updateItem(
+    String id,
+    WebsiteItem item,
+  ) => remote.updateItem(id, item);
 }

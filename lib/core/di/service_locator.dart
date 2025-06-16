@@ -10,7 +10,7 @@ import '/features/website/domain/repo.dart';
 import '/features/website/domain/usecases.dart';
 import '/features/website/data/remote.dart';
 import '/features/website/data/repo_impl.dart';
-import '/features/website/presentation/prov.dart';
+import '../../features/website/prov.dart';
 
 /*****  ITEMS *******/
 import '/features/item/domain/repo.dart';
@@ -42,8 +42,13 @@ Future<void> init() async {
   );
   // 3. Use Cases
   sl.registerLazySingleton(() => GetAllWebItemsUseCase(sl<WebsiteRepo>()));
+  sl.registerLazySingleton(() => CreateWebItemUseCase(sl<WebsiteRepo>()));
+  sl.registerLazySingleton(() => UpdateWebItemUseCase(sl<WebsiteRepo>()));
   // 4. Provider (State Management)
-  sl.registerFactory(() => WebsiteItemProv(getAllItems: sl()));
+  sl.registerFactory(
+    () =>
+        WebsiteItemProv(getAllItems: sl(), createItem: sl(), updateItem: sl()),
+  );
 
   // ITEMS Doctype
 

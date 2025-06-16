@@ -2,36 +2,36 @@ import 'package:equatable/equatable.dart';
 import '../domain/webitem.dart';
 
 class WebsiteItemModel extends Equatable {
-  final String id;
-  final String owner;
+  final String? id;
+  final String? owner;
   final String name;
-  final String image;
-  final String thumbnail;
+  final String? image;
+  final String? thumbnail;
   final String? demoVideoUrl;
   final String itemCode;
-  final String description;
-  final String title;
-  final String itemGroup;
-  final String shortDescription;
-  final String longDescription;
-  final bool onBackorder;
+  final String? description;
+  final String? title;
+  final String? itemGroup;
+  final String? shortDescription;
+  final String? longDescription;
+  final bool? onBackorder;
   final bool published;
   final List<WebsiteSpecModel> specifications;
 
   const WebsiteItemModel({
-    required this.id,
-    required this.owner,
+    this.id,
+    this.owner,
     required this.name,
-    required this.image,
-    required this.thumbnail,
+    this.image,
+    this.thumbnail,
     this.demoVideoUrl,
     required this.itemCode,
-    required this.description,
-    required this.title,
-    required this.itemGroup,
-    required this.shortDescription,
-    required this.longDescription,
-    required this.onBackorder,
+    this.description,
+    this.title,
+    this.itemGroup,
+    this.shortDescription,
+    this.longDescription,
+    this.onBackorder,
     required this.published,
     required this.specifications,
   });
@@ -62,23 +62,65 @@ class WebsiteItemModel extends Equatable {
 
   WebsiteItem toEntity() {
     return WebsiteItem(
-      id: id,
+      id: id ?? '',
       name: name,
-      owner: owner,
-      imageUrl: image,
-      thumbnailUrl: thumbnail,
-      demoVideoUrl: demoVideoUrl,
+      owner: owner ?? '',
+      imageUrl: image ?? '',
+      thumbnailUrl: thumbnail ?? '',
+      demoVideoUrl: demoVideoUrl ?? '',
       itemCode: itemCode,
-      description: description,
+      description: description ?? '',
       published: published,
       specifications: specifications.map((e) => e.toEntity()).toList(),
-      title: title,
-      itemGroup: itemGroup,
-      shortDescription: shortDescription,
-      longDescription: longDescription,
-      onBackorder: onBackorder,
+      title: title ?? '',
+      itemGroup: itemGroup ?? '',
+      shortDescription: shortDescription ?? '',
+      longDescription: longDescription ?? '',
+      onBackorder: onBackorder ?? false,
     );
   }
+
+  // --- NEW: Factory to build model from a domain entity ---
+  factory WebsiteItemModel.fromEntity(WebsiteItem e) {
+    return WebsiteItemModel(
+      id: e.id,
+      owner: e.owner,
+      name: e.name,
+      image: e.imageUrl,
+      thumbnail: e.thumbnailUrl,
+      demoVideoUrl: e.demoVideoUrl,
+      itemCode: e.itemCode,
+      description: e.description,
+      title: e.title,
+      itemGroup: e.itemGroup,
+      shortDescription: e.shortDescription,
+      longDescription: e.longDescription,
+      onBackorder: e.onBackorder,
+      published: e.published,
+      specifications:
+          e.specifications
+              .map((s) => WebsiteSpecModel.fromJson(s as Map<String, dynamic>))
+              .toList(),
+    );
+  }
+
+  // --- JSON for POST/PUT to Frappe ---
+  Map<String, dynamic> toJson() => {
+    // Only include fields Frappe accepts/needs
+    "item_name": name,
+    "item_code": itemCode,
+    "published": published ? 1 : 0,
+    if (image?.isNotEmpty ?? false) "website_image": image,
+    if (thumbnail?.isNotEmpty ?? false) "thumbnail": thumbnail,
+    if (demoVideoUrl?.isNotEmpty ?? false) "custom_demo_video": demoVideoUrl,
+    if (shortDescription?.isNotEmpty ?? false)
+      "short_description": shortDescription,
+    if (longDescription?.isNotEmpty ?? false)
+      "web_long_description": longDescription,
+    if (itemGroup?.isNotEmpty ?? false) "item_group": itemGroup,
+    "on_backorder": onBackorder == true ? 1 : 0,
+    "website_specifications": specifications.map((s) => s.toEntity()).toList(),
+  };
 
   @override
   List<Object?> get props => [id, name, itemCode];

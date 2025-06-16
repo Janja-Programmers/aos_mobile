@@ -46,59 +46,57 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
-class SubAppBar extends StatelessWidget implements PreferredSizeWidget {
+class SubAppBar extends StatelessWidget {
   final String title;
   final VoidCallback onMenuPressed;
   final VoidCallback? onSavePressed;
   final bool showSaveButton;
+  final Widget? actionButton;
 
   const SubAppBar({
     super.key,
     required this.title,
     required this.onMenuPressed,
     this.onSavePressed,
-    this.showSaveButton = false,
+    this.showSaveButton = true,
+    this.actionButton,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black),
-            onPressed: onMenuPressed,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const Spacer(),
-          if (showSaveButton)
-            TextButton(
-              onPressed: onSavePressed,
-              style: TextButton.styleFrom(
-                backgroundColor: AppColors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
+          Row(
+            children: [
+              IconButton(
+                onPressed: onMenuPressed,
+                icon: const Icon(Icons.menu),
+              ),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              child: const Text('Save', style: TextStyle(color: Colors.white)),
-            ),
+            ],
+          ),
+          Row(
+            children: [
+              if (actionButton != null) actionButton!,
+              if (showSaveButton && onSavePressed != null)
+                IconButton(
+                  icon: const Icon(Icons.save),
+                  onPressed: onSavePressed,
+                ),
+            ],
+          ),
         ],
       ),
     );
   }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(48);
 }

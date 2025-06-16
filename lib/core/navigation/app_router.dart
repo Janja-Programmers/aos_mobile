@@ -6,17 +6,19 @@ import '../di/service_locator.dart';
 import '/features/auth/presentation/auth_provider.dart';
 import '/features/auth/presentation/screens/login_screen.dart';
 
-import '/features/website/domain/webitem.dart';
 // Customer
 import '/features/customer/products/screens/product_list_screen.dart';
 import '/features/customer/products/screens/product_detail_screen.dart';
 import '/features/customer/wishlist/presentation/wishlist_screen.dart';
+import '/features/website/domain/webitem.dart';
+
 // Seller
 import '/features/item/presentation/item_screen.dart';
 import '/features/auth/presentation/screens/register_screen.dart';
 import '/features/stock/presentation/stock_entry_detail_screen.dart';
 import '/features/stock/presentation/stock_entry_list_screen.dart';
 import '/features/supplier/dashboard/dashboard.dart';
+import '/features/supplier/website/web_item_list_screen.dart';
 
 final authProvider = sl<AuthProvider>();
 
@@ -68,6 +70,12 @@ final router = GoRouter(
         final item = state.extra as WebsiteItem;
         return ProductDetailScreen(product: item);
       },
+    ),
+
+    // SELLER ROUTES
+    GoRoute(
+      path: '/web-items',
+      builder: (context, state) => const WebsiteItemListScreen(),
     ),
   ],
 );

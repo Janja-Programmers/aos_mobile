@@ -1,10 +1,12 @@
 import 'package:dartz/dartz.dart';
-import 'package:dio/dio.dart';
 
 import '/core/constants/const.dart';
+import '/core/errors/exception.dart';
 import '/core/errors/failures.dart';
 import '/core/utils/api_client.dart';
+
 import '../domain/entity.dart';
+
 import 'model.dart';
 
 class ItemRemoteDataSource {
@@ -19,33 +21,20 @@ class ItemRemoteDataSource {
 
       final futures =
           list
-              .map(
-                (item) => _client.client.get('$ITEM_ENDPOINT/${item['name']}'),
-              )
+              .map((e) => _client.client.get('$ITEM_ENDPOINT/${e['name']}'))
               .toList();
 
       final responses = await Future.wait(futures);
 
       final items =
-          responses.map((resp) {
+          responses.map<Item>((resp) {
             final model = ItemModel.fromJson(resp.data['data']);
-            return model.toJson();
+            return model.toEntity();
           }).toList();
 
-      return Right(items.cast<Item>());
-    } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        return Left(TimeoutFailure());
-      } else if (e.type == DioExceptionType.connectionError) {
-        return Left(NetworkFailure());
-      } else {
-        return Left(ServerFailure(e.message ?? 'Server error'));
-      }
-    } on FormatException {
-      return Left(ParsingFailure());
+      return Right(items);
     } catch (e) {
-      return Left(UnknownFailure());
+      return Left(handleException(e));
     }
   }
 }

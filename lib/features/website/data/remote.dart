@@ -1,10 +1,12 @@
 import 'package:dartz/dartz.dart';
-import 'package:dio/dio.dart';
 
 import '/core/constants/const.dart';
+import '/core/errors/exception.dart';
 import '/core/errors/failures.dart';
 import '/core/utils/api_client.dart';
+
 import '../domain/webitem.dart';
+
 import 'model.dart';
 
 class WebsiteRemoteDataSource {
@@ -35,7 +37,7 @@ class WebsiteRemoteDataSource {
 
       return Right(items);
     } catch (e) {
-      return Left(_handleException(e));
+      return Left(handleException(e));
     }
   }
 
@@ -50,7 +52,7 @@ class WebsiteRemoteDataSource {
       final created = WebsiteItemModel.fromJson(res.data['data']).toEntity();
       return Right(created);
     } catch (e) {
-      return Left(_handleException(e));
+      return Left(handleException(e));
     }
   }
 
@@ -68,25 +70,7 @@ class WebsiteRemoteDataSource {
       final updated = WebsiteItemModel.fromJson(res.data['data']).toEntity();
       return Right(updated);
     } catch (e) {
-      return Left(_handleException(e));
-    }
-  }
-
-  // ----------------- DRY error handling -----------------
-  Failure _handleException(Object e) {
-    if (e is DioException) {
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        return TimeoutFailure();
-      } else if (e.type == DioExceptionType.connectionError) {
-        return NetworkFailure();
-      } else {
-        return ServerFailure(e.message ?? 'Server error');
-      }
-    } else if (e is FormatException) {
-      return ParsingFailure();
-    } else {
-      return UnknownFailure();
+      return Left(handleException(e));
     }
   }
 }

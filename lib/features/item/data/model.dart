@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../domain/entity.dart';
+
 class ItemModel extends Equatable {
   final String name;
   final String? owner;
@@ -324,6 +326,79 @@ class ItemModel extends Equatable {
     "taxes": taxes,
   };
 
+  Item toEntity() => Item(
+    name: name,
+    owner: owner,
+    creation: creation,
+    modified: modified,
+    modifiedBy: modifiedBy,
+    docstatus: docstatus,
+    idx: idx,
+    namingSeries: namingSeries,
+    itemCode: itemCode,
+    itemName: itemName,
+    itemGroup: itemGroup,
+    stockUom: stockUom,
+    customVendor: customVendor,
+    disabled: disabled,
+    allowAlternativeItem: allowAlternativeItem,
+    isStockItem: isStockItem,
+    hasVariants: hasVariants,
+    openingStock: openingStock,
+    valuationRate: valuationRate,
+    standardRate: standardRate,
+    isFixedAsset: isFixedAsset,
+    autoCreateAssets: autoCreateAssets,
+    isGroupedAsset: isGroupedAsset,
+    overDeliveryReceiptAllowance: overDeliveryReceiptAllowance,
+    overBillingAllowance: overBillingAllowance,
+    description: description,
+    shelfLifeInDays: shelfLifeInDays,
+    endOfLife: endOfLife,
+    defaultMaterialRequestType: defaultMaterialRequestType,
+    valuationMethod: valuationMethod,
+    weightPerUnit: weightPerUnit,
+    allowNegativeStock: allowNegativeStock,
+    hasBatchNo: hasBatchNo,
+    createNewBatch: createNewBatch,
+    hasExpiryDate: hasExpiryDate,
+    retainSample: retainSample,
+    sampleQuantity: sampleQuantity,
+    hasSerialNo: hasSerialNo,
+    variantBasedOn: variantBasedOn,
+    enableDeferredExpense: enableDeferredExpense,
+    noOfMonthsExp: noOfMonthsExp,
+    enableDeferredRevenue: enableDeferredRevenue,
+    noOfMonths: noOfMonths,
+    minOrderQty: minOrderQty,
+    safetyStock: safetyStock,
+    isPurchaseItem: isPurchaseItem,
+    leadTimeDays: leadTimeDays,
+    lastPurchaseRate: lastPurchaseRate,
+    isCustomerProvidedItem: isCustomerProvidedItem,
+    deliveredBySupplier: deliveredBySupplier,
+    countryOfOrigin: countryOfOrigin,
+    grantCommission: grantCommission,
+    isSalesItem: isSalesItem,
+    maxDiscount: maxDiscount,
+    inspectionRequiredBeforePurchase: inspectionRequiredBeforePurchase,
+    inspectionRequiredBeforeDelivery: inspectionRequiredBeforeDelivery,
+    includeItemInManufacturing: includeItemInManufacturing,
+    isSubContractedItem: isSubContractedItem,
+    customerCode: customerCode,
+    publishedInWebsite: publishedInWebsite,
+    totalProjectedQty: totalProjectedQty,
+    doctype: doctype,
+    uoms: uoms?.map((e) => e.toEntity()).toList(),
+    barcodes: barcodes,
+    reorderLevels: reorderLevels,
+    attributes: attributes,
+    itemDefaults: itemDefaults?.map((e) => e.toEntity()).toList(),
+    supplierItems: supplierItems,
+    customerItems: customerItems,
+    taxes: taxes,
+  );
+
   @override
   List<Object?> get props => [name, itemCode];
 }
@@ -390,6 +465,9 @@ class UomModel {
     "parenttype": parenttype,
     "doctype": doctype,
   };
+
+  Uom toEntity() =>
+      Uom(uom: uom, conversionFactor: conversionFactor, name: name);
 }
 
 class SpecificationModel extends Equatable {
@@ -485,4 +563,6 @@ class ItemDefaultModel {
     "parenttype": parenttype,
     "doctype": doctype,
   };
+
+  ItemDefault toEntity() => ItemDefault(parent: parent, name: name);
 }

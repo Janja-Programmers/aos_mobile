@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ownashop/core/constants/colors.dart';
 
-import '../../domain/entity.dart';
+import '../../../../item/domain/entity.dart';
 
 class ItemTile extends StatelessWidget {
   final Item item;

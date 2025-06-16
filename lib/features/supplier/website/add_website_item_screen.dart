@@ -1,278 +1,220 @@
-import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../website/domain/webitem.dart';
-import '/core/utils/permissions.dart';
-
+import '/features/website/domain/webitem.dart';
 import '/features/website/prov.dart';
+import '/features/auth/presentation/auth_provider.dart';
 
-import '../../auth/presentation/auth_provider.dart';
+import '../../shared/widgets/app_drawer.dart';
+import '../../shared/widgets/main_bar.dart';
 
-import 'widgets/custom_button.dart';
 import 'widgets/custom_text_controller.dart';
+import 'widgets/file_upload.dart';
+import 'widgets/labeled_card.dart';
+import 'widgets/selectable_field.dart';
 
 class AddWebsiteItemScreen extends StatefulWidget {
-  const AddWebsiteItemScreen({super.key});
+  final WebsiteItem? existingItem;
+
+  const AddWebsiteItemScreen({super.key, this.existingItem});
 
   @override
   State<AddWebsiteItemScreen> createState() => _AddWebsiteItemScreenState();
 }
 
 class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
-  final _websiteDisplayNameController = TextEditingController();
-  final _itemCodeController = TextEditingController();
-  final _shortDescController = TextEditingController();
-  final _fullDescController = TextEditingController();
+  // ───── text controllers ─────
+  late final _nameCtrl = TextEditingController(text: widget.existingItem?.name);
+  late final _codeCtrl = TextEditingController(
+    text: widget.existingItem?.itemCode,
+  );
+  late final _shortCtrl = TextEditingController(
+    text: widget.existingItem?.shortDescription,
+  );
+  late final _longCtrl = TextEditingController(
+    text: widget.existingItem?.longDescription,
+  );
 
+  // ───── state ─────
   bool _isPublished = false;
   bool _isLoading = false;
+  List<String> _images = [];
+  String? _video;
 
-  String? _selectedVideo;
-  List<String> _selectedImages = [];
+  @override
+  void initState() {
+    super.initState();
+    if (widget.existingItem != null) {
+      _isPublished = widget.existingItem!.published;
+      _images =
+          widget.existingItem!.imageUrl.isNotEmpty
+              ? [widget.existingItem!.imageUrl]
+              : [];
+      _video =
+          widget.existingItem!.demoVideoUrl != null &&
+                  widget.existingItem!.demoVideoUrl!.isNotEmpty
+              ? widget.existingItem!.demoVideoUrl
+              : null;
+    }
+  }
 
   @override
   void dispose() {
-    _websiteDisplayNameController.dispose();
-    _itemCodeController.dispose();
-    _shortDescController.dispose();
-    _fullDescController.dispose();
+    _nameCtrl.dispose();
+    _codeCtrl.dispose();
+    _shortCtrl.dispose();
+    _longCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _pickImages() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        allowMultiple: true,
-        type: FileType.image,
-      );
-
-      if (result == null || result.files.isEmpty) return; // Graceful skip
-
-      final pickedFiles = result.files.take(5).toList(); // Limit to 5
-      final imagePaths =
-          pickedFiles
-              .map((file) => file.path)
-              .whereType<String>() // remove nulls
-              .toList();
-
-      setState(() {
-        _selectedImages = imagePaths;
-      });
-    } catch (e) {
-      debugPrint('Image picking failed: $e');
-      // optionally show a snackbar
-    }
-  }
-
-  Future<void> _pickVideo() async {
-    final hasPermission = await checkStoragePermission();
-    if (!hasPermission) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Storage permission is required')));
-      return;
-    }
-
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.video,
-      allowMultiple: false,
-    );
-
-    if (result != null && result.files.isNotEmpty) {
-      final path = result.files.single.path;
-      if (path != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() {
-              _selectedVideo = path;
-            });
-          }
-        });
-      }
-    }
-  }
-
-  void _submit() async {
+  // ───────────────────────── submit ─────────────────────────
+  Future<void> _onSave() async {
     FocusScope.of(context).unfocus();
 
-    final authProvider = context.read<AuthProvider>();
-    final user = authProvider.user;
-
-    if (user == null) {
+    final auth = context.read<AuthProvider>().user;
+    if (auth == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('User not logged in')));
+      ).showSnackBar(const SnackBar(content: Text('User not logged in')));
       return;
     }
 
-    final websiteItemProvider = context.read<WebsiteItemProv>();
-
-    final websiteDisplayName = _websiteDisplayNameController.text.trim();
-    final itemCode = _itemCodeController.text.trim();
-    final shortDesc = _shortDescController.text.trim();
-    final fullDesc = _fullDescController.text.trim();
-
-    if (websiteDisplayName.isEmpty || itemCode.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill all required fields')),
-      );
+    if (_nameCtrl.text.trim().isEmpty || _codeCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Name & Code are required')));
       return;
     }
 
     setState(() => _isLoading = true);
 
-    try {
-      final newItem = "Item";
+    final provider = context.read<WebsiteItemProv>();
+    final entity = WebsiteItem(
+      id: widget.existingItem?.id ?? '',
+      name: _nameCtrl.text.trim(),
+      owner: auth.username,
+      imageUrl: _images.isNotEmpty ? _images.first : '',
+      demoVideoUrl: _video ?? '',
+      itemCode: _codeCtrl.text.trim(),
+      shortDescription: _shortCtrl.text.trim(),
+      longDescription: _longCtrl.text.trim(),
+      published: _isPublished,
+      specifications: const [], // you can extend later
+      itemGroup: '', // optional
+      description: '',
+      thumbnailUrl: '',
+      onBackorder: false,
+      title: '',
+    );
 
-      // await websiteItemProvider.addWebsiteItem(newItem);
+    final ok =
+        widget.existingItem == null
+            ? await provider.addItem(entity)
+            : await provider.updateExistingItem(entity.id, entity);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Website item added successfully!')),
-      );
+    setState(() => _isLoading = false);
 
-      Navigator.pop(context);
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to add website item')));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok ? 'Saved successfully' : (provider.error ?? 'Error')),
+      ),
+    );
+    if (ok) Navigator.of(context).pop();
   }
 
-  Widget _buildSelectedImagesPreview() {
-    if (_selectedImages.isEmpty) {
-      return Text('No images selected');
-    } else {
-      return Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children:
-            _selectedImages.map((path) {
-              return Builder(
-                builder: (_) {
-                  final file = File(path);
-                  return FutureBuilder<bool>(
-                    future: file.exists(),
-                    builder: (_, snapshot) {
-                      if (snapshot.connectionState != ConnectionState.done ||
-                          snapshot.data != true) {
-                        return const SizedBox();
-                      }
-                      return Image.file(
-                        file,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                      );
-                    },
-                  );
-                },
-              );
-            }).toList(),
-      );
-    }
-  }
-
-  Widget _buildSelectedVideoPreview() {
-    if (_selectedVideo == null) return Text('No video selected');
-    final filename = _selectedVideo!.split('/').last;
-    return Chip(label: Text(filename));
-  }
-
+  // ───────────────────────── view ─────────────────────────
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Add Website Item')),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Padding(
+    return MainBarScaffold(
+      subTitle:
+          widget.existingItem == null
+              ? 'Create Website Item'
+              : 'Update Website Item',
+      scaffoldKey: GlobalKey<ScaffoldState>(),
+      drawer: AppDrawer(selectedIndex: 4, onItemSelected: (_) {}),
+      actionButton: TextButton.icon(
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        ),
+        icon: const Icon(Icons.save, size: 16),
+        label: const Text('Save', style: TextStyle(fontSize: 13)),
+        onPressed: _isLoading ? null : _onSave,
+      ),
+      body: AbsorbPointer(
+        absorbing: _isLoading,
+        child: ListView(
           padding: const EdgeInsets.all(16),
-          child: ListView(
-            children: [
-              CustomTextField(
-                controller: _websiteDisplayNameController,
-                label: 'Website Display Name',
-                textInputAction: TextInputAction.next,
+          children: [
+            // name & code
+            LabeledCard(
+              label: 'Basic',
+              child: Column(
+                children: [
+                  CustomTextField(controller: _nameCtrl, label: 'Name'),
+                  const SizedBox(height: 8),
+                  SelectableItemCodeField(controller: _codeCtrl),
+                ],
               ),
+            ),
+            const SizedBox(height: 12),
 
-              SizedBox(height: 12),
+            // images
+            ImagePickerField(
+              paths: _images,
+              onChanged: (paths) => setState(() => _images = paths),
+            ),
+            const SizedBox(height: 12),
 
-              CustomTextField(
-                controller: _itemCodeController,
-                label: 'Item Code',
-                textInputAction: TextInputAction.next,
+            // video
+            VideoPickerField(
+              path: _video,
+              onChanged: (p) => setState(() => _video = p),
+            ),
+            const SizedBox(height: 12),
+
+            // descriptions
+            LabeledCard(
+              label: 'Descriptions',
+              child: Column(
+                children: [
+                  CustomTextField(
+                    controller: _shortCtrl,
+                    label: 'Short Description',
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 8),
+                  CustomTextField(
+                    controller: _longCtrl,
+                    label: 'Long Description',
+                    maxLines: 4,
+                  ),
+                ],
               ),
+            ),
+            const SizedBox(height: 12),
 
-              SizedBox(height: 12),
-
-              Text('Images'),
-
-              SizedBox(height: 4),
-
-              _buildSelectedImagesPreview(),
-              ElevatedButton.icon(
-                onPressed: _pickImages,
-                icon: Icon(Icons.photo_library),
-                label: Text('Pick Images'),
-              ),
-
-              SizedBox(height: 12),
-
-              Text('Video'),
-
-              SizedBox(height: 4),
-
-              _buildSelectedVideoPreview(),
-              ElevatedButton.icon(
-                onPressed: _pickVideo,
-                icon: Icon(Icons.videocam),
-                label: Text('Pick Video'),
-              ),
-
-              SizedBox(height: 12),
-
-              CustomTextField(
-                controller: _shortDescController,
-                label: 'Short Description',
-                maxLines: 2,
-                textInputAction: TextInputAction.next,
-              ),
-
-              SizedBox(height: 12),
-
-              CustomTextField(
-                controller: _fullDescController,
-                label: 'Full Description',
-                maxLines: 4,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _submit(),
-              ),
-
-              SizedBox(height: 12),
-
-              Row(
+            // publish checkbox
+            LabeledCard(
+              label: 'Publish',
+              child: Row(
                 children: [
                   Checkbox(
                     value: _isPublished,
                     onChanged:
                         (val) => setState(() => _isPublished = val ?? false),
                   ),
-                  Text('Publish'),
+                  const Text('Visible on website'),
                 ],
               ),
-
-              SizedBox(height: 24),
-
-              CustomButton(
-                label: 'Add Website Item',
-                onPressed: _submit,
-                isLoading: _isLoading,
+            ),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.only(top: 24),
+                child: Center(child: CircularProgressIndicator()),
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );

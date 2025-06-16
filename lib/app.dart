@@ -10,7 +10,7 @@ import 'core/di/service_locator.dart';
 import 'features/auth/presentation/auth_provider.dart';
 
 // ITEM Feature
-import 'features/item/presentation/prov.dart';
+import 'features/item/prov.dart';
 
 // WEBITEM Feature
 import 'features/website/prov.dart';

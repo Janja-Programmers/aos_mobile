@@ -17,7 +17,7 @@ import '/features/item/domain/repo.dart';
 import '/features/item/domain/usecases.dart';
 import '/features/item/data/remote.dart';
 import '/features/item/data/repo_impl.dart';
-import '/features/item/presentation/prov.dart';
+import '../../features/item/prov.dart';
 
 final sl = GetIt.instance;
 

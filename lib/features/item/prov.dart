@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:collection/collection.dart';
 
-import '../domain/entity.dart';
-import '../domain/usecases.dart';
+import 'domain/entity.dart';
+import 'domain/usecases.dart';
 
 class ItemProv with ChangeNotifier {
   final GetAllItemsUseCase getAllItems;

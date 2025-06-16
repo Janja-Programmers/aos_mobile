@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 import '/features/website/domain/webitem.dart';
 
-import '../components/product_action_buttons.dart';
-import '../components/product_availability_and_rating.dart';
-import '../components/product_description.dart';
-import '../components/product_image_with_video.dart';
-import '../components/product_review_section.dart';
-import '../components/product_specification_list.dart';
-import '../components/product_tile_and_price.dart';
+import '../widgets/product_action_buttons.dart';
+import '../widgets/product_availability_and_rating.dart';
+import '../widgets/product_description.dart';
+import '../widgets/product_image_with_video.dart';
+import '../widgets/product_review_section.dart';
+import '../widgets/product_specification_list.dart';
+import '../widgets/product_tile_and_price.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final WebsiteItem product;

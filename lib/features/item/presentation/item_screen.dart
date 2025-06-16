@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'prov.dart';
-import 'widgets/item_tile.dart';
+import '../../shared/widgets/app_drawer.dart';
+import '../../shared/widgets/main_bar.dart';
+
+import '../../auth/presentation/auth_provider.dart';
+
+import '/features/item/presentation/prov.dart';
 
 class ItemScreen extends StatefulWidget {
   const ItemScreen({super.key});
@@ -12,41 +16,173 @@ class ItemScreen extends StatefulWidget {
 }
 
 class _ItemScreenState extends State<ItemScreen> {
+  final TextEditingController _itemNameController = TextEditingController();
+  final TextEditingController _itemGroupController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  int _selectedIndex = 0;
+
   @override
   void initState() {
     super.initState();
-    // Trigger item load
-    Future.microtask(() {
-      final provider = Provider.of<ItemProv>(context, listen: false);
-      provider.getAllItems(); // or provider.loadItems();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ItemProv>().loadItems();
     });
   }
 
   @override
-  Widget build(BuildContext context) {
-    final provider = Provider.of<ItemProv>(context);
+  void dispose() {
+    _itemNameController.dispose();
+    _itemGroupController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Items'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () async {
-              provider.getAllItems(); // or provider.loadItems();
-            },
+  @override
+  Widget build(BuildContext context) {
+    final itemProvider = context.watch<ItemProv>();
+
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.user;
+
+    // final items =
+    //     itemProvider.items
+    //         .where((item) => item.published == true)
+    //         .where(
+    //           (item) =>
+    //               _searchQuery.isEmpty ||
+    //               item.name.toLowerCase().contains(_searchQuery.toLowerCase()),
+    //         )
+    //         .toList();
+
+    final query = _searchController.text.trim().toLowerCase();
+    final filteredItems =
+        itemProvider.items.where((item) {
+          return query.isEmpty || item.name.toLowerCase().contains(query);
+        }).toList();
+
+    Widget content;
+
+    if (itemProvider.isLoading) {
+      content = const Center(child: CircularProgressIndicator());
+    } else if (itemProvider.error != null) {
+      content = Center(
+        child: Text(
+          'Error: ${itemProvider.error}',
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
+    } else if (itemProvider.items.isEmpty) {
+      content = const Center(child: Text('No items found.'));
+    } else {
+      content = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Search + Filter Section
+          Card(
+            elevation: 2,
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            color: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _itemNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Item Name',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _itemGroupController,
+                          decoration: const InputDecoration(
+                            labelText: 'Item Group',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _searchController,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.search),
+                      hintText: 'Search...',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 4),
+
+          // List Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: Row(
+              children: [
+                const Text("Item Name"),
+                const Spacer(),
+                Text("${filteredItems.length} of ${itemProvider.items.length}"),
+              ],
+            ),
+          ),
+
+          const Divider(),
+
+          // Item List
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredItems.length,
+              itemBuilder: (context, index) {
+                final item = filteredItems[index];
+                return ListTile(
+                  title: Text(item.name),
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color:
+                          item.disabled == 0
+                              ? Colors.grey[300]
+                              : Colors.blue[100],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      item.disabled == 0 ? "Disabled" : "Enabled",
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
+      );
+    }
+
+    return MainBarScaffold(
+      drawer: AppDrawer(
+        selectedIndex: _selectedIndex,
+        onItemSelected: (index) => setState(() => _selectedIndex = index),
       ),
-      body:
-          provider.isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : provider.items.isEmpty
-              ? const Center(child: Text('No items found.'))
-              : ListView.builder(
-                itemCount: provider.items.length,
-                itemBuilder: (_, i) => ItemTile(item: provider.items[i]),
-              ),
+      scaffoldKey: _scaffoldKey,
+      subTitle: "Items",
+      body: content,
     );
   }
 }

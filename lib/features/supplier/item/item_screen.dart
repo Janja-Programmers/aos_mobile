@@ -24,7 +24,6 @@ class _ItemScreenState extends State<ItemScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -175,10 +174,7 @@ class _ItemScreenState extends State<ItemScreen> {
     }
 
     return MainBarScaffold(
-      drawer: AppDrawer(
-        selectedIndex: _selectedIndex,
-        onItemSelected: (index) => setState(() => _selectedIndex = index),
-      ),
+      drawer: AppDrawer(selectedIndex: 1, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
       subTitle: "Items",
       actionButton: CustomButton(

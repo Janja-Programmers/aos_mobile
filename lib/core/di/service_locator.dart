@@ -60,6 +60,16 @@ Future<void> init() async {
   );
   // 3. Use Cases
   sl.registerLazySingleton(() => GetAllItemsUseCase(sl<ItemRepo>()));
+  sl.registerLazySingleton(() => GetItemByNameUseCase(sl<ItemRepo>()));
+  sl.registerLazySingleton(() => CreateItemUseCase(sl<ItemRepo>()));
+  sl.registerLazySingleton(() => UpdateItemUseCase(sl<ItemRepo>()));
   // 4. Provider (State Management)
-  sl.registerFactory(() => ItemProv(getAllItems: sl()));
+  sl.registerFactory(
+    () => ItemProv(
+      getAllItems: sl(),
+      getItemByName: sl(),
+      createItem: sl(),
+      updateItem: sl(),
+    ),
+  );
 }

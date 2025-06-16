@@ -14,4 +14,19 @@ class ItemRepoImpl implements ItemRepo {
   Future<Either<Failure, List<Item>>> getAllItems() async {
     return await remote.fetchItems();
   }
+
+  @override
+  Future<Either<Failure, Item>> getItemByName(String name) async {
+    return await remote.fetchItemByName(name);
+  }
+
+  @override
+  Future<Either<Failure, Item>> addItem(Item item) async {
+    return await remote.createItem(item);
+  }
+
+  @override
+  Future<Either<Failure, Item>> updateItem(Item item) async {
+    return await remote.updateItem(item);
+  }
 }

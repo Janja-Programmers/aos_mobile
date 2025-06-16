@@ -5,9 +5,16 @@ import '/features/auth/presentation/auth_provider.dart';
 import '../../../item/prov.dart';
 
 class SelectableItemCodeField extends StatefulWidget {
-  final TextEditingController controller;
+  final String? value;
+  final bool? readOnly;
+  final void Function(String)? onChanged;
 
-  const SelectableItemCodeField({super.key, required this.controller});
+  const SelectableItemCodeField({
+    super.key,
+    this.value,
+    this.readOnly = true,
+    this.onChanged,
+  });
 
   @override
   State<SelectableItemCodeField> createState() =>
@@ -28,7 +35,6 @@ class _SelectableItemCodeFieldState extends State<SelectableItemCodeField> {
     final auth = context.read<AuthProvider>().user;
     final itemProv = context.read<ItemProv>();
 
-    // If items haven’t been loaded yet, load them first.
     if (itemProv.items.isEmpty && !itemProv.isLoading) {
       await itemProv.loadItems();
     }
@@ -47,8 +53,16 @@ class _SelectableItemCodeFieldState extends State<SelectableItemCodeField> {
   Widget build(BuildContext context) {
     if (_isLoading) return const CircularProgressIndicator();
 
+    if (widget.readOnly == true) {
+      return TextField(
+        controller: TextEditingController(text: widget.value ?? ''),
+        decoration: const InputDecoration(labelText: 'Code'),
+        readOnly: true,
+      );
+    }
+
     return Autocomplete<String>(
-      initialValue: TextEditingValue(text: widget.controller.text),
+      initialValue: TextEditingValue(text: widget.value ?? ''),
       optionsBuilder: (TextEditingValue textEditingValue) {
         if (textEditingValue.text.isEmpty) return codes;
         return codes.where(
@@ -56,9 +70,7 @@ class _SelectableItemCodeFieldState extends State<SelectableItemCodeField> {
               code.toLowerCase().contains(textEditingValue.text.toLowerCase()),
         );
       },
-      onSelected: (String selection) {
-        widget.controller.text = selection;
-      },
+      onSelected: widget.onChanged,
       fieldViewBuilder: (
         context,
         textEditingController,

@@ -399,6 +399,79 @@ class ItemModel extends Equatable {
     taxes: taxes,
   );
 
+  factory ItemModel.fromEntity(Item e) => ItemModel(
+    name: e.name,
+    owner: e.owner,
+    creation: e.creation,
+    modified: e.modified,
+    modifiedBy: e.modifiedBy,
+    docstatus: e.docstatus,
+    idx: e.idx,
+    namingSeries: e.namingSeries,
+    itemCode: e.itemCode,
+    itemName: e.itemName,
+    itemGroup: e.itemGroup,
+    stockUom: e.stockUom,
+    customVendor: e.customVendor,
+    disabled: e.disabled,
+    allowAlternativeItem: e.allowAlternativeItem,
+    isStockItem: e.isStockItem,
+    hasVariants: e.hasVariants,
+    openingStock: e.openingStock,
+    valuationRate: e.valuationRate,
+    standardRate: e.standardRate,
+    isFixedAsset: e.isFixedAsset,
+    autoCreateAssets: e.autoCreateAssets,
+    isGroupedAsset: e.isGroupedAsset,
+    overDeliveryReceiptAllowance: e.overDeliveryReceiptAllowance,
+    overBillingAllowance: e.overBillingAllowance,
+    description: e.description,
+    shelfLifeInDays: e.shelfLifeInDays,
+    endOfLife: e.endOfLife,
+    defaultMaterialRequestType: e.defaultMaterialRequestType,
+    valuationMethod: e.valuationMethod,
+    weightPerUnit: e.weightPerUnit,
+    allowNegativeStock: e.allowNegativeStock,
+    hasBatchNo: e.hasBatchNo,
+    createNewBatch: e.createNewBatch,
+    hasExpiryDate: e.hasExpiryDate,
+    retainSample: e.retainSample,
+    sampleQuantity: e.sampleQuantity,
+    hasSerialNo: e.hasSerialNo,
+    variantBasedOn: e.variantBasedOn,
+    enableDeferredExpense: e.enableDeferredExpense,
+    noOfMonthsExp: e.noOfMonthsExp,
+    enableDeferredRevenue: e.enableDeferredRevenue,
+    noOfMonths: e.noOfMonths,
+    minOrderQty: e.minOrderQty,
+    safetyStock: e.safetyStock,
+    isPurchaseItem: e.isPurchaseItem,
+    leadTimeDays: e.leadTimeDays,
+    lastPurchaseRate: e.lastPurchaseRate,
+    isCustomerProvidedItem: e.isCustomerProvidedItem,
+    deliveredBySupplier: e.deliveredBySupplier,
+    countryOfOrigin: e.countryOfOrigin,
+    grantCommission: e.grantCommission,
+    isSalesItem: e.isSalesItem,
+    maxDiscount: e.maxDiscount,
+    inspectionRequiredBeforePurchase: e.inspectionRequiredBeforePurchase,
+    inspectionRequiredBeforeDelivery: e.inspectionRequiredBeforeDelivery,
+    includeItemInManufacturing: e.includeItemInManufacturing,
+    isSubContractedItem: e.isSubContractedItem,
+    customerCode: e.customerCode,
+    publishedInWebsite: e.publishedInWebsite,
+    totalProjectedQty: e.totalProjectedQty,
+    doctype: e.doctype,
+    uoms: e.uoms?.map(UomModel.fromEntity).toList(),
+    barcodes: e.barcodes,
+    reorderLevels: e.reorderLevels,
+    attributes: e.attributes,
+    itemDefaults: e.itemDefaults?.map(ItemDefaultModel.fromEntity).toList(),
+    supplierItems: e.supplierItems,
+    customerItems: e.customerItems,
+    taxes: e.taxes,
+  );
+
   @override
   List<Object?> get props => [name, itemCode];
 }
@@ -468,6 +541,14 @@ class UomModel {
 
   Uom toEntity() =>
       Uom(uom: uom, conversionFactor: conversionFactor, name: name);
+
+  static UomModel fromEntity(Uom e) {
+    return UomModel(
+      name: e.name,
+      uom: e.uom,
+      conversionFactor: e.conversionFactor,
+    );
+  }
 }
 
 class SpecificationModel extends Equatable {
@@ -564,5 +645,21 @@ class ItemDefaultModel {
     "doctype": doctype,
   };
 
-  ItemDefault toEntity() => ItemDefault(parent: parent, name: name);
+  ItemDefault toEntity() => ItemDefault(
+    parent: parent,
+    name: name,
+    company: company,
+    defaultWarehouse: defaultWarehouse,
+    incomeAccount: incomeAccount,
+  );
+
+  static ItemDefaultModel fromEntity(ItemDefault e) {
+    return ItemDefaultModel(
+      name: e.name,
+      parent: e.parent,
+      company: e.company,
+      defaultWarehouse: e.defaultWarehouse,
+      incomeAccount: e.incomeAccount,
+    );
+  }
 }

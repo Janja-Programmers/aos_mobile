@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '/features/website/domain/webitem.dart';
 import '/features/website/prov.dart';
 import '/features/auth/presentation/auth_provider.dart';
+import '/features/shared/widgets/custom_button.dart';
 
 import '../../shared/widgets/app_drawer.dart';
 import '../../shared/widgets/main_bar.dart';
@@ -25,9 +26,6 @@ class AddWebsiteItemScreen extends StatefulWidget {
 class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
   // ───── text controllers ─────
   late final _nameCtrl = TextEditingController(text: widget.existingItem?.name);
-  late final _codeCtrl = TextEditingController(
-    text: widget.existingItem?.itemCode,
-  );
   late final _shortCtrl = TextEditingController(
     text: widget.existingItem?.shortDescription,
   );
@@ -36,6 +34,7 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
   );
 
   // ───── state ─────
+  String? _itemCode; // ← selected code (was _codeCtrl)
   bool _isPublished = false;
   bool _isLoading = false;
   List<String> _images = [];
@@ -45,23 +44,17 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
   void initState() {
     super.initState();
     if (widget.existingItem != null) {
-      _isPublished = widget.existingItem!.published;
-      _images =
-          widget.existingItem!.imageUrl.isNotEmpty
-              ? [widget.existingItem!.imageUrl]
-              : [];
-      _video =
-          widget.existingItem!.demoVideoUrl != null &&
-                  widget.existingItem!.demoVideoUrl!.isNotEmpty
-              ? widget.existingItem!.demoVideoUrl
-              : null;
+      final itm = widget.existingItem!;
+      _isPublished = itm.published;
+      _itemCode = itm.itemCode;
+      _images = itm.imageUrl.isNotEmpty ? [itm.imageUrl] : [];
+      _video = itm.demoVideoUrl?.isNotEmpty == true ? itm.demoVideoUrl : null;
     }
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _codeCtrl.dispose();
     _shortCtrl.dispose();
     _longCtrl.dispose();
     super.dispose();
@@ -69,17 +62,7 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
 
   // ───────────────────────── submit ─────────────────────────
   Future<void> _onSave() async {
-    FocusScope.of(context).unfocus();
-
-    final auth = context.read<AuthProvider>().user;
-    if (auth == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('User not logged in')));
-      return;
-    }
-
-    if (_nameCtrl.text.trim().isEmpty || _codeCtrl.text.trim().isEmpty) {
+    if (_nameCtrl.text.trim().isEmpty || (_itemCode?.isEmpty ?? true)) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Name & Code are required')));
@@ -88,19 +71,21 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
 
     setState(() => _isLoading = true);
 
+    final auth = context.read<AuthProvider>().user!;
     final provider = context.read<WebsiteItemProv>();
+
     final entity = WebsiteItem(
       id: widget.existingItem?.id ?? '',
       name: _nameCtrl.text.trim(),
       owner: auth.username,
       imageUrl: _images.isNotEmpty ? _images.first : '',
       demoVideoUrl: _video ?? '',
-      itemCode: _codeCtrl.text.trim(),
+      itemCode: _itemCode!,
       shortDescription: _shortCtrl.text.trim(),
       longDescription: _longCtrl.text.trim(),
       published: _isPublished,
-      specifications: const [], // you can extend later
-      itemGroup: '', // optional
+      specifications: const [],
+      itemGroup: '',
       description: '',
       thumbnailUrl: '',
       onBackorder: false,
@@ -116,7 +101,7 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ok ? 'Saved successfully' : (provider.error ?? 'Error')),
+        content: Text(ok ? 'Saved successfully' : provider.error ?? 'Error'),
       ),
     );
     if (ok) Navigator.of(context).pop();
@@ -132,29 +117,29 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
               : 'Update Website Item',
       scaffoldKey: GlobalKey<ScaffoldState>(),
       drawer: AppDrawer(selectedIndex: 4, onItemSelected: (_) {}),
-      actionButton: TextButton.icon(
-        style: TextButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: Colors.black,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        ),
-        icon: const Icon(Icons.save, size: 16),
-        label: const Text('Save', style: TextStyle(fontSize: 13)),
-        onPressed: _isLoading ? null : _onSave,
+      actionButton: CustomButton(
+        label: 'Save',
+        icon: Icons.save,
+        pageBuilder: () => widget,
       ),
+      onSave: _isLoading ? null : _onSave,
       body: AbsorbPointer(
         absorbing: _isLoading,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // name & code
+            // ► name & code
             LabeledCard(
               label: 'Basic',
               child: Column(
                 children: [
                   CustomTextField(controller: _nameCtrl, label: 'Name'),
                   const SizedBox(height: 8),
-                  SelectableItemCodeField(controller: _codeCtrl),
+                  SelectableItemCodeField(
+                    value: _itemCode,
+                    readOnly: widget.existingItem != null,
+                    onChanged: (code) => setState(() => _itemCode = code),
+                  ),
                 ],
               ),
             ),
@@ -195,20 +180,20 @@ class _AddWebsiteItemScreenState extends State<AddWebsiteItemScreen> {
             ),
             const SizedBox(height: 12),
 
-            // publish checkbox
+            // publish
             LabeledCard(
               label: 'Publish',
               child: Row(
                 children: [
                   Checkbox(
                     value: _isPublished,
-                    onChanged:
-                        (val) => setState(() => _isPublished = val ?? false),
+                    onChanged: (v) => setState(() => _isPublished = v ?? false),
                   ),
                   const Text('Visible on website'),
                 ],
               ),
             ),
+
             if (_isLoading)
               const Padding(
                 padding: EdgeInsets.only(top: 24),

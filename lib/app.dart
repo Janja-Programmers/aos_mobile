@@ -24,6 +24,9 @@ import 'features/order/prov.dart';
 // DELIVERYNOTE Feature
 import 'features/d_note/prov.dart';
 
+// STOCKENTRY Feature
+import 'features/stock/prov.dart';
+
 class App extends StatelessWidget {
   const App({super.key});
 
@@ -37,6 +40,7 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => sl<ItemPriceProvider>()),
         ChangeNotifierProvider(create: (_) => sl<SalesOrderProvider>()),
         ChangeNotifierProvider(create: (_) => sl<DeliveryNoteProvider>()),
+        ChangeNotifierProvider(create: (_) => sl<StockEntryProvider>()),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,

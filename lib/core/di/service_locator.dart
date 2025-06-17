@@ -1,9 +1,4 @@
 import 'package:get_it/get_it.dart';
-import 'package:ownashop/features/d_note/data/remote.dart';
-import 'package:ownashop/features/d_note/data/repo_impl.dart';
-import 'package:ownashop/features/d_note/domain/repo.dart';
-import 'package:ownashop/features/d_note/domain/usecases.dart';
-import 'package:ownashop/features/d_note/prov.dart';
 
 import '../utils/api_client.dart';
 
@@ -37,6 +32,20 @@ import '/features/order/data/repo_impl.dart';
 import '/features/order/domain/repo.dart';
 import '/features/order/domain/usecases.dart';
 import '/features/order/prov.dart';
+
+/*****  DELIVERYNOTE *******/
+import '/features/d_note/data/remote.dart';
+import '/features/d_note/data/repo_impl.dart';
+import '/features/d_note/domain/repo.dart';
+import '/features/d_note/domain/usecases.dart';
+import '/features/d_note/prov.dart';
+
+/***** STOCK */
+import '/features/stock/data/remote.dart';
+import '/features/stock/data/repo_impl.dart';
+import '/features/stock/domain/repo.dart';
+import '/features/stock/domain/usecases.dart';
+import '/features/stock/prov.dart';
 
 final sl = GetIt.instance;
 
@@ -136,4 +145,16 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetAllDeliveryNotes(sl()));
   // === PROVIDER ===
   sl.registerFactory(() => DeliveryNoteProvider(getAllDeliveryNotes: sl()));
+
+  // STOCKENTRY Doctype
+  // === Data ===
+  sl.registerLazySingleton(() => StockEntryRemoteDS(sl()));
+  // === Repository ===
+  sl.registerLazySingleton<StockEntryRepo>(
+    () => StockEntryRepoImpl(remote: sl()),
+  );
+  // === Domain ===
+  sl.registerLazySingleton(() => GetAllStockEntries(sl()));
+  // === Provider ===
+  sl.registerFactory(() => StockEntryProvider(getAll: sl()));
 }

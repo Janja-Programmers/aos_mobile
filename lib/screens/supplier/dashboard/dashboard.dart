@@ -77,7 +77,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
             ),
             DashboardTile(
               title: AppStrings.stock,
-              onTap: () => context.push('/stock'),
+              onTap: () => context.push('/stock-entry'),
             ),
             DashboardTile(
               title: AppStrings.websiteItem,

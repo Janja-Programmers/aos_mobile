@@ -68,7 +68,7 @@ class AppDrawer extends StatelessWidget {
             Icons.inventory_2_outlined,
             AppStrings.stock,
             3,
-            '/stock',
+            '/stock-entry',
           ),
           _buildDrawerItem(
             context,

@@ -21,8 +21,7 @@ import '/screens/supplier/website/web_item_list_screen.dart';
 import '/screens/supplier/price/screens/item_price_list.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';
 import '/screens/supplier/d_note/delivery_note_list_screen.dart';
-import '/features/stock/presentation/stock_entry_detail_screen.dart';
-import '/features/stock/presentation/stock_entry_list_screen.dart';
+import '/screens/supplier/stock/stock_entry_list_screen.dart';
 
 final authProvider = sl<AuthProvider>();
 
@@ -90,19 +89,8 @@ final router = GoRouter(
 
     // STOCK ROUTES
     GoRoute(
-      path: '/stock',
-      builder: (context, state) => const StockEntryListScreen(),
-    ),
-
-    GoRoute(
-      path: '/stock/:id',
-      builder: (context, state) {
-        final stockEntryId = int.tryParse(state.pathParameters['id'] ?? '');
-        if (stockEntryId == null) {
-          throw Exception('Invalid stock entry ID');
-        }
-        return StockEntryDetailScreen(stockEntryId: stockEntryId);
-      },
+      path: '/stock-entry',
+      builder: (context, state) => const StockEntryScreen(),
     ),
 
     // CUSTOMER ROUTES

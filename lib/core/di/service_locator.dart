@@ -26,6 +26,14 @@ import '/features/itemPrice/domain/repo.dart';
 import '/features/itemPrice/domain/usecase.dart';
 import '/features/itemPrice/prov.dart';
 
+/***** SALESORDER *******/
+import '/features/order/data/remote.dart';
+import '/features/order/data/repo_impl.dart';
+import '/features/order/domain/repo.dart';
+import '/features/order/domain/usecases.dart';
+import '/features/order/prov.dart';
+
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -97,4 +105,19 @@ Future<void> init() async {
 
   // === PROVIDER ===
   sl.registerFactory(() => ItemPriceProvider(getAll: sl(), create: sl()));
+
+  // SALESORDER Doctype
+  // === Dara ===
+  sl.registerLazySingleton<SalesOrderRemoteDS>(
+    () => SalesOrderRemoteDS(sl<APIClient>()),
+  );
+  // === Repository ===
+  sl.registerLazySingleton<SalesOrderRepo>(
+    () => SalesOrderRepoImpl(remote: sl()),
+  );
+  // === Domain ===
+  sl.registerLazySingleton(() => GetAllSalesOrders(sl()));
+
+  //  === PROVIDER ===
+  sl.registerFactory(() => SalesOrderProvider(getAllSalesOrders: sl()));
 }

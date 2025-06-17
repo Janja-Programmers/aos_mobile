@@ -8,17 +8,18 @@ import '/features/auth/presentation/screens/login_screen.dart';
 import '/features/auth/presentation/screens/register_screen.dart';
 
 // Customer
-import '/features/customer/products/screens/product_list_screen.dart';
-import '/features/customer/products/screens/product_detail_screen.dart';
-import '/features/customer/wishlist/presentation/wishlist_screen.dart';
+import '/screens/customer/products/screens/product_list_screen.dart';
+import '/screens/customer/products/screens/product_detail_screen.dart';
+import '/screens/customer/wishlist/presentation/wishlist_screen.dart';
 import '/features/website/domain/webitem.dart';
 
 // Seller
-import '/features/supplier/dashboard/dashboard.dart';
-import '/features/supplier/item/item_screen.dart';
-import '/features/supplier/item/item_detail.dart';
-import '/features/supplier/website/web_item_list_screen.dart';
-import '/features/supplier/price/screens/item_price_list.dart';
+import '/screens/supplier/dashboard/dashboard.dart';
+import '/screens/supplier/item/item_screen.dart';
+import '/screens/supplier/item/item_detail.dart';
+import '/screens/supplier/website/web_item_list_screen.dart';
+import '/screens/supplier/price/screens/item_price_list.dart';
+import '/screens/supplier/order/sales_order_list_screen.dart';
 import '/features/stock/presentation/stock_entry_detail_screen.dart';
 import '/features/stock/presentation/stock_entry_list_screen.dart';
 
@@ -75,7 +76,11 @@ final router = GoRouter(
       path: '/web-items',
       builder: (context, state) => const WebsiteItemListScreen(),
     ),
-
+    // Sales Order
+    GoRoute(
+      path: '/sales-orders',
+      builder: (context, state) => const SalesOrderListScreen(), 
+    ),
     // STOCK ROUTES
     GoRoute(
       path: '/stock',

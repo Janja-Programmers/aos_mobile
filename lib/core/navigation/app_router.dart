@@ -18,6 +18,7 @@ import '/features/supplier/dashboard/dashboard.dart';
 import '/features/supplier/item/item_screen.dart';
 import '/features/supplier/item/item_detail.dart';
 import '/features/supplier/website/web_item_list_screen.dart';
+import '/features/supplier/price/screens/item_price_list.dart';
 import '/features/stock/presentation/stock_entry_detail_screen.dart';
 import '/features/stock/presentation/stock_entry_list_screen.dart';
 
@@ -38,11 +39,14 @@ final router = GoRouter(
     ),
 
     // SELLER ROUTES
+    // Dashboard
     GoRoute(
       path: '/dashboard',
       builder: (context, state) => const SellerDashboard(),
     ),
+    // Items
     GoRoute(path: '/items', builder: (context, state) => const ItemScreen()),
+    // Item Detail
     GoRoute(
       path: '/item-detail/:name',
       builder: (context, state) {
@@ -50,6 +54,23 @@ final router = GoRouter(
         return ItemDetailScreen(itemName: name);
       },
     ),
+    // Item Price
+    GoRoute(
+      path: '/item-price',
+      builder: (context, state) => const ItemPriceScreen(),
+    ),
+    // Item Price Detail
+    GoRoute(
+      path: '/item-price/:name',
+      builder: (context, state) {
+        // final itemCode = state.pathParameters['itemCode'];
+        // if (itemCode == null) {
+        //   throw Exception('Invalid item price');
+        // }
+        return ItemPriceScreen();
+      },
+    ),
+    // Website Items
     GoRoute(
       path: '/web-items',
       builder: (context, state) => const WebsiteItemListScreen(),

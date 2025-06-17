@@ -27,7 +27,7 @@ class ImageOrPlaceholder extends StatelessWidget {
           width: double.infinity,
           height: height,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildPlaceholder(),
+          errorBuilder: (_, _, _) => _buildPlaceholder(),
         ),
       );
     } else {

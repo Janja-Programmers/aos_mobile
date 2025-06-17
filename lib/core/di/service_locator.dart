@@ -10,14 +10,21 @@ import '/features/website/domain/repo.dart';
 import '/features/website/domain/usecases.dart';
 import '/features/website/data/remote.dart';
 import '/features/website/data/repo_impl.dart';
-import '../../features/website/prov.dart';
+import '/features/website/prov.dart';
 
 /*****  ITEMS *******/
 import '/features/item/domain/repo.dart';
 import '/features/item/domain/usecases.dart';
 import '/features/item/data/remote.dart';
 import '/features/item/data/repo_impl.dart';
-import '../../features/item/prov.dart';
+import '/features/item/prov.dart';
+
+/***** ITEMPRICE *******/
+import '/features/itemPrice/data/remote.dart';
+import '/features/itemPrice/data/repo_impl.dart';
+import '/features/itemPrice/domain/repo.dart';
+import '/features/itemPrice/domain/usecase.dart';
+import '/features/itemPrice/prov.dart';
 
 final sl = GetIt.instance;
 
@@ -72,4 +79,22 @@ Future<void> init() async {
       updateItem: sl(),
     ),
   );
+
+  // ITEMPRICE Doctype
+
+  // === Data ===
+  sl.registerLazySingleton<ItemPriceRemoteDS>(
+    () => ItemPriceRemoteDS(sl<APIClient>()),
+  );
+  // === Repository ===
+  sl.registerLazySingleton<ItemPriceRepo>(
+    () => ItemPriceRepoImpl(remote: sl()),
+  );
+
+  // === Domain ===
+  sl.registerLazySingleton(() => GetAllItemPrices(sl()));
+  sl.registerLazySingleton(() => CreateItemPrice(sl()));
+
+  // === PROVIDER ===
+  sl.registerFactory(() => ItemPriceProvider(getAll: sl(), create: sl()));
 }

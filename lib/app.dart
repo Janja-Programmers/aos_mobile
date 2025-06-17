@@ -15,6 +15,9 @@ import 'features/item/prov.dart';
 // WEBITEM Feature
 import 'features/website/prov.dart';
 
+// ITEMPRICE Feature
+import 'package:ownashop/features/itemPrice/prov.dart';
+
 class App extends StatelessWidget {
   const App({super.key});
 
@@ -25,6 +28,7 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => sl<AuthProvider>()),
         ChangeNotifierProvider(create: (_) => sl<WebsiteItemProv>()),
         ChangeNotifierProvider(create: (_) => sl<ItemProv>()),
+        ChangeNotifierProvider(create: (_) => sl<ItemPriceProvider>()),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,

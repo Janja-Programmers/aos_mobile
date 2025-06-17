@@ -24,7 +24,7 @@ class _ItemScreenState extends State<ItemScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int _selectedIndex = 0;
+  int _selectedIndex = 1;
 
   @override
   void initState() {

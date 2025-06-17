@@ -18,25 +18,23 @@ class DrawerItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: selected ? AppColors.primary : Colors.grey[700],
-      ),
+      leading: Icon(icon, color: selected ? AppColors.white : Colors.grey[800]),
       title: Text(
         title,
         style: TextStyle(
-          color: selected ? AppColors.primary : Colors.grey[800],
+          color: selected ? AppColors.white : Colors.grey[800],
           fontWeight: selected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
       selected: selected,
-      selectedTileColor: AppColors.primary.withOpacity(0.1),
+      selectedTileColor: AppColors.primary,
       onTap: onTap,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       contentPadding: const EdgeInsets.symmetric(
-        horizontal: 14.0,
-        vertical: 3.0,
+        horizontal: 12.0,
+        vertical: 1.0,
       ),
+      
     );
   }
 }

@@ -27,6 +27,8 @@ class AppDrawer extends StatelessWidget {
         children: [
           DrawerHeader(
             decoration: BoxDecoration(color: AppColors.primary),
+            margin: EdgeInsets.only(bottom: 2.0, top: 0.0),
+            padding: EdgeInsets.all(8.0),
             child: Center(
               child: Text(
                 user?.username ?? AppStrings.sellerPanel,
@@ -56,7 +58,7 @@ class AppDrawer extends StatelessWidget {
             Icons.monetization_on,
             AppStrings.itemPrice,
             2,
-            '/items',
+            '/item-price',
             extra: user,
           ),
           _buildDrawerItem(context, Icons.store, AppStrings.stock, 3, '/stock'),
@@ -71,6 +73,13 @@ class AppDrawer extends StatelessWidget {
             context,
             Icons.list_alt,
             AppStrings.orders,
+            5,
+            '/web-items',
+          ),
+          _buildDrawerItem(
+            context,
+            Icons.report,
+            AppStrings.reports,
             5,
             '/web-items',
           ),

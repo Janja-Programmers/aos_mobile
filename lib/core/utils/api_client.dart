@@ -15,6 +15,7 @@ class APIClient {
       InterceptorsWrapper(
         onRequest: (options, handler) {
           _logger.i('Body: ${options.data}');
+          _logger.i('➡️ ${options.method} ${options.uri}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
@@ -23,6 +24,7 @@ class APIClient {
         },
         onError: (DioException e, handler) {
           _logger.e('❌ ERROR[${e.response?.statusCode}]: ${e.message}');
+          _logger.e('❌ Message: ${e.message}');
           return handler.next(e);
         },
       ),

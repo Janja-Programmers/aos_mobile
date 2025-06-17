@@ -7,3 +7,4 @@ const String WEB_ITEM_ENDPOINT = '/api/resource/Website Item';
 const String ITEM_ENDPOINT = '/api/resource/Item';
 const String ITEM_PRICE_ENDPOINT = '/api/resource/Item Price';
 const String SALES_ORDER_ENDPOINT = '/api/resource/Sales Order';
+const String  DELIVERY_NOTE_ENDPOINT = '/api/resource/Delivery Note';

@@ -1,4 +1,9 @@
 import 'package:get_it/get_it.dart';
+import 'package:ownashop/features/d_note/data/remote.dart';
+import 'package:ownashop/features/d_note/data/repo_impl.dart';
+import 'package:ownashop/features/d_note/domain/repo.dart';
+import 'package:ownashop/features/d_note/domain/usecases.dart';
+import 'package:ownashop/features/d_note/prov.dart';
 
 import '../utils/api_client.dart';
 
@@ -32,7 +37,6 @@ import '/features/order/data/repo_impl.dart';
 import '/features/order/domain/repo.dart';
 import '/features/order/domain/usecases.dart';
 import '/features/order/prov.dart';
-
 
 final sl = GetIt.instance;
 
@@ -120,4 +124,16 @@ Future<void> init() async {
 
   //  === PROVIDER ===
   sl.registerFactory(() => SalesOrderProvider(getAllSalesOrders: sl()));
+
+  // DELIVERYNOTE Doctype
+  // === Data ===
+  sl.registerLazySingleton(() => DeliveryNoteRemoteDS(sl<APIClient>()));
+  // === Repository ===
+  sl.registerLazySingleton<DeliveryNoteRepo>(
+    () => DeliveryNoteRepoImpl(remote: sl()),
+  );
+  // === Domain ===
+  sl.registerLazySingleton(() => GetAllDeliveryNotes(sl()));
+  // === PROVIDER ===
+  sl.registerFactory(() => DeliveryNoteProvider(getAllDeliveryNotes: sl()));
 }

@@ -20,6 +20,7 @@ import '/screens/supplier/item/item_detail.dart';
 import '/screens/supplier/website/web_item_list_screen.dart';
 import '/screens/supplier/price/screens/item_price_list.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';
+import '/screens/supplier/d_note/delivery_note_list_screen.dart';
 import '/features/stock/presentation/stock_entry_detail_screen.dart';
 import '/features/stock/presentation/stock_entry_list_screen.dart';
 
@@ -79,8 +80,14 @@ final router = GoRouter(
     // Sales Order
     GoRoute(
       path: '/sales-orders',
-      builder: (context, state) => const SalesOrderListScreen(), 
+      builder: (context, state) => const SalesOrderListScreen(),
     ),
+    // Delivery Note
+    GoRoute(
+      path: '/delivery-notes',
+      builder: (context, state) => const DeliveryNoteListScreen(),
+    ),
+
     // STOCK ROUTES
     GoRoute(
       path: '/stock',

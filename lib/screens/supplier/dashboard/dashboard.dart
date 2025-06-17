@@ -31,7 +31,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
     AppStrings.stock,
     AppStrings.websiteItem,
     AppStrings.orders,
-    AppStrings.reports,
+    AppStrings.deliveryNote,
   ];
 
   @override
@@ -60,7 +60,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
           childAspectRatio: 2,
           children: [
             DashboardTile(
-              title: "Items",
+              title: AppStrings.items,
               onTap: () {
                 if (user != null) {
                   context.push('/items', extra: user!);
@@ -68,7 +68,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
               },
             ),
             DashboardTile(
-              title: "Item Price",
+              title: AppStrings.itemPrice,
               onTap: () {
                 if (user != null) {
                   context.push('/item-price', extra: user!);
@@ -76,18 +76,21 @@ class _SellerDashboardState extends State<SellerDashboard> {
               },
             ),
             DashboardTile(
-              title: "Stock Entry",
+              title: AppStrings.stock,
               onTap: () => context.push('/stock'),
             ),
             DashboardTile(
-              title: "Publish to website",
+              title: AppStrings.websiteItem,
               onTap: () => context.push('/web-items'),
             ),
             DashboardTile(
-              title: "View Orders",
+              title: AppStrings.orders,
               onTap: () => context.push('/sales-orders'),
             ),
-            DashboardTile(title: "Delivery Note"),
+            DashboardTile(
+              title: AppStrings.deliveryNote,
+              onTap: () => context.push('/delivery-notes'),
+            ),
           ],
         ),
       ),

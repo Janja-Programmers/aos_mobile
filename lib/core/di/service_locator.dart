@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 
+import '/core/db/db_helper.dart';
 import '../utils/api_client.dart';
 
 import '/features/auth/data/auth_remote_datasource.dart';
@@ -47,12 +49,24 @@ import '/features/stock/domain/repo.dart';
 import '/features/stock/domain/usecases.dart';
 import '/features/stock/prov.dart';
 
+/***** CART *******/
+import '/features/cart/domain/usecase.dart';
+import '/features/cart/domain/repo.dart';
+import '/features/cart/data/repo_impl.dart';
+import '/features/cart/data/local.dart';
+import '/features/cart/provider.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  // APIClient
-  sl.registerLazySingleton(() => APIClient());
-  sl.registerLazySingleton(() => sl<APIClient>().client);
+  // DATABASE Helper
+  // Shared DB
+  sl.registerLazySingleton<DatabaseHelper>(() => DatabaseHelper());
+
+  // API Client
+  final apiClient = await APIClient.create();
+  sl.registerSingleton<APIClient>(apiClient);
+  sl.registerSingleton<Dio>(apiClient.client);
 
   // Auth
   sl.registerLazySingleton<AuthRemoteDataSource>(
@@ -157,4 +171,26 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetAllStockEntries(sl()));
   // === Provider ===
   sl.registerFactory(() => StockEntryProvider(getAll: sl()));
+
+  // CART Feature
+  // ==== Data ===
+  sl.registerLazySingleton<CartLocalDataSource>(() => CartLocalDataSource());
+  // === Repository ===
+  sl.registerLazySingleton<CartRepo>(() => CartRepoImpl(sl()));
+  // === Domain ===
+  sl.registerLazySingleton(() => GetCartItemsUseCase(sl()));
+  sl.registerLazySingleton(() => AddToCartUseCase(sl()));
+  sl.registerLazySingleton(() => RemoveFromCartUseCase(sl()));
+  sl.registerLazySingleton(() => ClearCartUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateCartItemQuantityUseCase(sl()));
+  // === Provider ===
+  sl.registerLazySingleton(
+    () => CartProvider(
+      getCartItems: sl(),
+      addToCart: sl(),
+      removeFromCart: sl(),
+      clearCart: sl(),
+      updateQty: sl(),
+    ),
+  );
 }

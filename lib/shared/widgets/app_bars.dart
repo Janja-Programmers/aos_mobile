@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../core/constants/colors.dart';
+import '/core/constants/colors.dart';
+import 'cart_button.dart';
 
 class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onHomePressed;
@@ -26,12 +27,7 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions:
           actions ??
           [
-            IconButton(
-              icon: const Icon(Icons.notifications, color: AppColors.black),
-              onPressed: () {
-                // Handle notifications
-              },
-            ),
+            const CartIconButton(),
             IconButton(
               icon: const Icon(Icons.person, color: AppColors.black),
               onPressed: () {

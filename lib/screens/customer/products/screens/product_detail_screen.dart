@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '/features/cart/provider.dart';
+import '/features/cart/domain/cart.dart';
 import '/features/website/domain/webitem.dart';
 
 import '../widgets/product_action_buttons.dart';
@@ -46,7 +49,24 @@ class ProductDetailScreen extends StatelessWidget {
             ProductActionButtons(
               onAddToCart: () {
                 // Call your add-to-cart logic
+                final cart = context.read<CartProvider>();
+
+                final cartItem = CartItem(
+                  code: product.itemCode,
+                  name: product.name,
+                  price: 10.00,
+                  quantity: 1,
+                );
+
+                cart.addToCart(cartItem);
+
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    SnackBar(content: Text('${product.name} added to cart')),
+                  );
               },
+
               onContact: () {
                 // Show vendor contact sheet
               },

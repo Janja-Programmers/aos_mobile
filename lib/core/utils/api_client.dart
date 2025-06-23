@@ -1,35 +1,65 @@
 import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:cookie_jar/cookie_jar.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:logger/logger.dart';
-import 'package:ownashop/core/constants/const.dart';
+
+import '/core/constants/const.dart';
 
 class APIClient {
-  final Dio _dio;
+  late final Dio _dio;
+  late final PersistCookieJar _cookieJar;
   final Logger _logger;
 
-  APIClient({Dio? dio}) : _dio = dio ?? Dio(), _logger = Logger() {
-    // ✅ Set base URL
-    _dio.options.baseUrl = BASE_URL;
+  // 🔐 Private internal constructor
+  APIClient._internal(Dio? dio) : _dio = dio ?? Dio(), _logger = Logger();
 
-    // Logging interceptor
-    _dio.interceptors.add(
+  /// ✅ Factory constructor you call
+  static Future<APIClient> create({Dio? dio}) async {
+    final client = APIClient._internal(dio);
+
+    // Get a directory to store cookies
+    final dir = await getApplicationDocumentsDirectory();
+    client._cookieJar = PersistCookieJar(
+      storage: FileStorage('${dir.path}/.cookies/'),
+      ignoreExpires: false,
+    );
+
+    client._dio.options
+      ..baseUrl = BASE_URL
+      ..connectTimeout = const Duration(seconds: 25)
+      ..receiveTimeout = const Duration(seconds: 25);
+
+    client._dio.interceptors.addAll([
+      CookieManager(client._cookieJar),
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          _logger.i('Body: ${options.data}');
-          _logger.i('➡️ ${options.method} ${options.uri}');
+          client._logger.i('➡️ ${options.method} ${options.uri}');
+          if (options.data != null) client._logger.i('Body: ${options.data}');
+
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          _logger.i('✅ RESPONSE[${response.statusCode}]: ${response.data}');
+          client._logger.i(
+            '✅ ${response.statusCode} ← ${response.requestOptions.uri}',
+          );
           return handler.next(response);
         },
         onError: (DioException e, handler) {
-          _logger.e('❌ ERROR[${e.response?.statusCode}]: ${e.message}');
-          _logger.e('❌ Message: ${e.message}');
+          client._logger.e(
+            '❌ ${e.response?.statusCode} ← ${e.requestOptions.uri}',
+          );
+          client._logger.e(e);
           return handler.next(e);
         },
       ),
-    );
+    ]);
+
+    return client;
   }
 
   Dio get client => _dio;
+
+  /// 🧹 Call this on logout
+  Future<void> clearCookies() async => _cookieJar.deleteAll();
 }

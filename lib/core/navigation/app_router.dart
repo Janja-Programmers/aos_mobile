@@ -1,7 +1,5 @@
 import 'package:go_router/go_router.dart';
 
-import '../di/service_locator.dart';
-
 // Auth
 import '/features/auth/presentation/auth_provider.dart';
 import '/features/auth/presentation/screens/login_screen.dart';
@@ -11,6 +9,7 @@ import '/features/auth/presentation/screens/register_screen.dart';
 import '/screens/customer/products/screens/product_list_screen.dart';
 import '/screens/customer/products/screens/product_detail_screen.dart';
 import '/screens/customer/wishlist/presentation/wishlist_screen.dart';
+import '/screens/customer/cart/cart_screen.dart';
 import '/features/website/domain/webitem.dart';
 
 // Seller
@@ -23,86 +22,102 @@ import '/screens/supplier/order/sales_order_list_screen.dart';
 import '/screens/supplier/d_note/delivery_note_list_screen.dart';
 import '/screens/supplier/stock/stock_entry_list_screen.dart';
 
-final authProvider = sl<AuthProvider>();
+class AppRouter {
+  final AuthProvider auth;
 
-final router = GoRouter(
-  initialLocation: '/login',
-  routes: [
-    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-    GoRoute(
-      path: '/register',
-      builder: (context, state) => const RegisterScreen(),
-    ),
+  AppRouter(this.auth);
 
-    GoRoute(
-      path: '/wishlist',
-      builder: (context, state) => const WishlistScreen(),
-    ),
+  late final GoRouter router = GoRouter(
+    refreshListenable: auth,
+    initialLocation: '/login',
+    redirect: (context, state) {
+      final loggedIn = auth.isLoggedIn;
+      final loggingIn =
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register';
 
-    // SELLER ROUTES
-    // Dashboard
-    GoRoute(
-      path: '/dashboard',
-      builder: (context, state) => const SellerDashboard(),
-    ),
-    // Items
-    GoRoute(path: '/items', builder: (context, state) => const ItemScreen()),
-    // Item Detail
-    GoRoute(
-      path: '/item-detail/:name',
-      builder: (context, state) {
-        final name = state.pathParameters['name']!;
-        return ItemDetailScreen(itemName: name);
-      },
-    ),
-    // Item Price
-    GoRoute(
-      path: '/item-price',
-      builder: (context, state) => const ItemPriceScreen(),
-    ),
-    // Item Price Detail
-    GoRoute(
-      path: '/item-price/:name',
-      builder: (context, state) {
-        // final itemCode = state.pathParameters['itemCode'];
-        // if (itemCode == null) {
-        //   throw Exception('Invalid item price');
-        // }
-        return ItemPriceScreen();
-      },
-    ),
-    // Website Items
-    GoRoute(
-      path: '/web-items',
-      builder: (context, state) => const WebsiteItemListScreen(),
-    ),
-    // Sales Order
-    GoRoute(
-      path: '/sales-orders',
-      builder: (context, state) => const SalesOrderListScreen(),
-    ),
-    // Delivery Note
-    GoRoute(
-      path: '/delivery-notes',
-      builder: (context, state) => const DeliveryNoteListScreen(),
-    ),
+      if (!loggedIn && !loggingIn) return '/login';
+      if (loggedIn && loggingIn) return '/';
+      return null;
+    },
+    routes: [
+      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
+      GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
+      GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
 
-    // STOCK ROUTES
-    GoRoute(
-      path: '/stock-entry',
-      builder: (context, state) => const StockEntryScreen(),
-    ),
+      GoRoute(
+        path: '/wishlist',
+        builder: (context, state) => const WishlistScreen(),
+      ),
 
-    // CUSTOMER ROUTES
-    // All Products
-    GoRoute(path: '/', builder: (context, state) => const ProductListScreen()),
-    // Product Details
-    GoRoute(
-      path: '/product/:id',
-      builder: (context, state) {
-        final item = state.extra as WebsiteItem;
-        return ProductDetailScreen(product: item);
-      },
-    ),
-  ],
-);
+      // SELLER ROUTES
+      // Dashboard
+      GoRoute(
+        path: '/dashboard',
+        builder: (context, state) => const SellerDashboard(),
+      ),
+      // Items
+      GoRoute(path: '/items', builder: (context, state) => const ItemScreen()),
+      // Item Detail
+      GoRoute(
+        path: '/item-detail/:name',
+        builder: (context, state) {
+          final name = state.pathParameters['name']!;
+          return ItemDetailScreen(itemName: name);
+        },
+      ),
+      // Item Price
+      GoRoute(
+        path: '/item-price',
+        builder: (context, state) => const ItemPriceScreen(),
+      ),
+      // Item Price Detail
+      GoRoute(
+        path: '/item-price/:name',
+        builder: (context, state) {
+          // final itemCode = state.pathParameters['itemCode'];
+          // if (itemCode == null) {
+          //   throw Exception('Invalid item price');
+          // }
+          return ItemPriceScreen();
+        },
+      ),
+      // Website Items
+      GoRoute(
+        path: '/web-items',
+        builder: (context, state) => const WebsiteItemListScreen(),
+      ),
+      // Sales Order
+      GoRoute(
+        path: '/sales-orders',
+        builder: (context, state) => const SalesOrderListScreen(),
+      ),
+      // Delivery Note
+      GoRoute(
+        path: '/delivery-notes',
+        builder: (context, state) => const DeliveryNoteListScreen(),
+      ),
+
+      // STOCK ROUTES
+      GoRoute(
+        path: '/stock-entry',
+        builder: (context, state) => const StockEntryScreen(),
+      ),
+
+      // CUSTOMER ROUTES
+      // All Products
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const ProductListScreen(),
+      ),
+      // Product Details
+      GoRoute(
+        path: '/product/:id',
+        builder: (context, state) {
+          final item = state.extra as WebsiteItem;
+          return ProductDetailScreen(product: item);
+        },
+      ),
+    ],
+  );
+}

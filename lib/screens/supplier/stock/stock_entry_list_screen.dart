@@ -56,7 +56,7 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(12),
               itemCount: prov.entries.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (_, i) {
                 final entry = prov.entries[i];
                 return _StockEntryCard(entry: entry);

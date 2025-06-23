@@ -6,9 +6,13 @@ import '/core/constants/colors.dart';
 import '/core/utils/formatters.dart';
 
 import '/shared/widgets/app_bars.dart';
+import '/shared/widgets/cart_button.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
 import '/features/website/prov.dart';
+
+import '/features/cart/domain/cart.dart';
+import '/features/cart/provider.dart';
 
 import '../widgets/image_or_placeholder.dart';
 
@@ -73,13 +77,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   ),
                 ]
                 : [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.notifications,
-                      color: AppColors.black,
-                    ),
-                    onPressed: () {},
-                  ),
+                  const CartIconButton(),
                   IconButton(
                     icon: const Icon(Icons.person, color: AppColors.black),
                     onPressed: () {},
@@ -207,14 +205,28 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                                 ),
                                               ),
                                               const SizedBox(height: 8),
+
                                               ElevatedButton.icon(
                                                 onPressed: () {
+                                                  final cart =
+                                                      context
+                                                          .read<CartProvider>();
+
+                                                  final cartItem = CartItem(
+                                                    code: item.itemCode,
+                                                    name: item.name,
+                                                    price: 10.00,
+                                                    quantity: 1,
+                                                  );
+
+                                                  cart.addToCart(cartItem);
+
                                                   ScaffoldMessenger.of(context)
                                                     ..hideCurrentSnackBar()
                                                     ..showSnackBar(
-                                                      const SnackBar(
+                                                      SnackBar(
                                                         content: Text(
-                                                          'Add to cart functionality to be implemented',
+                                                          '${item.name} added to cart',
                                                         ),
                                                       ),
                                                     );

@@ -7,12 +7,12 @@ import '/core/utils/formatters.dart';
 
 import '/shared/widgets/app_bars.dart';
 import '/shared/widgets/cart_button.dart';
+import '/shared/widgets/add_to_cart_button.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
 import '/features/website/prov.dart';
 
 import '/features/cart/domain/cart.dart';
-import '/features/cart/provider.dart';
 
 import '../widgets/image_or_placeholder.dart';
 
@@ -206,36 +206,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                               ),
                                               const SizedBox(height: 8),
 
-                                              ElevatedButton.icon(
-                                                onPressed: () {
-                                                  final cart =
-                                                      context
-                                                          .read<CartProvider>();
-
-                                                  final cartItem = CartItem(
-                                                    code: item.itemCode,
-                                                    name: item.name,
-                                                    price: 10.00,
-                                                    quantity: 1,
-                                                  );
-
-                                                  cart.addToCart(cartItem);
-
-                                                  ScaffoldMessenger.of(context)
-                                                    ..hideCurrentSnackBar()
-                                                    ..showSnackBar(
-                                                      SnackBar(
-                                                        content: Text(
-                                                          '${item.name} added to cart',
-                                                        ),
-                                                      ),
-                                                    );
-                                                },
-                                                icon: const Icon(
-                                                  Icons.shopping_cart,
-                                                ),
-                                                label: const Text(
-                                                  'Add to cart',
+                                              AddToCartButton(
+                                                item: CartItem(
+                                                  code: item.itemCode,
+                                                  name: item.name,
+                                                  price: 10.0,
+                                                  quantity: 1,
                                                 ),
                                               ),
                                             ],

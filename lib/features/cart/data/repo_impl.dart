@@ -1,6 +1,9 @@
+import 'package:dartz/dartz.dart';
+import 'package:ownashop/core/errors/failures.dart';
+import 'package:ownashop/core/errors/exception.dart';
+
 import '../domain/cart.dart';
 import '../domain/repo.dart';
-
 import 'local.dart';
 import 'model.dart';
 
@@ -9,26 +12,59 @@ class CartRepoImpl implements CartRepo {
   CartRepoImpl(this.local);
 
   @override
-  Future<void> addItem(CartItem item) async {
-    final model = CartItemModel(
-      code: item.code,
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity,
-    );
-    await local.insert(model);
+  Future<Either<Failure, List<CartItem>>> addItem(CartItem item) async {
+    try {
+      final model = CartItemModel.fromEntity(item);
+      return await local
+          .insert(model)
+          .then(
+            (result) =>
+                result.fold((failure) => Left(failure), (_) => local.getAll()),
+          );
+    } catch (e) {
+      return Left(handleException('Failed to add item: $e'));
+    }
   }
 
   @override
-  Future<List<CartItem>> getItems() async => local.getAll();
+  Future<Either<Failure, List<CartItem>>> getItems() async {
+    try {
+      return await local.getAll();
+    } catch (e) {
+      return Left(handleException('Failed to load cart items: $e'));
+    }
+  }
 
   @override
-  Future<void> removeItem(String code) async => local.delete(code);
+  Future<Either<Failure, Unit>> removeItem(String code) async {
+    try {
+      await local.delete(code);
+      return const Right(unit);
+    } catch (e) {
+      return Left(handleException('Failed to remove item: $e'));
+    }
+  }
 
   @override
-  Future<void> clearCart() async => local.clear();
+  Future<Either<Failure, Unit>> clearCart() async {
+    try {
+      await local.clear();
+      return const Right(unit);
+    } catch (e) {
+      return Left(handleException('Failed to clear cart: $e'));
+    }
+  }
 
   @override
-  Future<void> updateQuantity(String code, int quantity) async =>
-      local.updateQuantity(code, quantity);
+  Future<Either<Failure, Unit>> updateQuantity(
+    String code,
+    int quantity,
+  ) async {
+    try {
+      await local.updateQuantity(code, quantity);
+      return const Right(unit);
+    } catch (e) {
+      return Left(handleException('Failed to update quantity: $e'));
+    }
+  }
 }

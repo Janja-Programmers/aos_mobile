@@ -1,9 +1,12 @@
+import 'package:dartz/dartz.dart';
+import 'package:ownashop/core/errors/failures.dart';
+
 import 'cart.dart';
 
 abstract class CartRepo {
-  Future<void> addItem(CartItem item);
-  Future<List<CartItem>> getItems();
-  Future<void> removeItem(String code);
-  Future<void> clearCart();
-  Future<void> updateQuantity(String code, int quantity);
+  Future<Either<Failure, List<CartItem>>> getItems();
+  Future<Either<Failure, List<CartItem>>> addItem(CartItem item);
+  Future<Either<Failure, Unit>> removeItem(String code);
+  Future<Either<Failure, Unit>> updateQuantity(String code, int quantity);
+  Future<Either<Failure, Unit>> clearCart();
 }

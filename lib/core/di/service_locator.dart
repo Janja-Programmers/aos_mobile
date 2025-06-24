@@ -174,7 +174,9 @@ Future<void> init() async {
 
   // CART Feature
   // ==== Data ===
-  sl.registerLazySingleton<CartLocalDataSource>(() => CartLocalDataSource());
+  sl.registerLazySingleton<CartLocalDataSource>(
+    () => CartLocalDataSource(sl()),
+  );
   // === Repository ===
   sl.registerLazySingleton<CartRepo>(() => CartRepoImpl(sl()));
   // === Domain ===

@@ -21,22 +21,58 @@ class CartProvider with ChangeNotifier {
   List<CartItem> _items = [];
   List<CartItem> get items => _items;
 
+  bool _isLoading = false;
+  String? _error;
+
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+
   double get grandTotal =>
       _items.fold(0, (total, item) => total + item.price * item.quantity);
 
   Future<void> loadCart() async {
-    _items = await getCartItems();
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    final cartModels = await getCartItems();
+    cartModels.fold(
+      (failure) => _error = failure.message,
+      (items) => _items = items,
+    );
+
+    _isLoading = false;
     notifyListeners();
   }
 
-  Future<void> add(CartItem item) async {
-    await addToCart(item);
-    await loadCart();
+  Future<bool> add(CartItem item) async {
+    final result = await addToCart(item);
+    return result.fold(
+      (failure) {
+        _error = failure.message;
+        return false;
+      },
+      (updatedList) {
+        _items = updatedList;
+        notifyListeners();
+        return true;
+      },
+    );
   }
 
-  Future<void> remove(String code) async {
-    await removeFromCart(code);
-    await loadCart();
+  Future<bool> remove(String code) async {
+    final result = await removeFromCart(code);
+    return result.fold(
+      (failure) {
+        _error = failure.message;
+        return false;
+      },
+      (_) {
+        _items.removeWhere((e) => e.code == code);
+        notifyListeners();
+        return true;
+      },
+    );
   }
 
   Future<void> clear() async {

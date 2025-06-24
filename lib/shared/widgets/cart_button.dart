@@ -12,10 +12,6 @@ class CartIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<CartProvider>(
       builder: (context, cart, _) {
-        // if (cart.items.isEmpty) {
-        //   return const SizedBox.shrink();
-        // }
-
         return Stack(
           children: [
             IconButton(

@@ -1,3 +1,5 @@
+import '../../cart/domain/cart.dart';
+
 class SalesOrder {
   final String id;
   final String customerName;
@@ -15,5 +17,17 @@ class SalesOrder {
     required this.grandTotal,
     required this.percentDelivered,
     required this.percentBilled,
+  });
+}
+
+class OrderPayload {
+  final String customer;
+  final String deliveryDate;
+  final List<CartItem> items;
+
+  OrderPayload({
+    required this.customer,
+    required this.deliveryDate,
+    required this.items,
   });
 }

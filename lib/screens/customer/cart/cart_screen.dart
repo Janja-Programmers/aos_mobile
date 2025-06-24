@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ownashop/features/auth/presentation/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 import '/features/cart/provider.dart';
@@ -12,14 +13,6 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  final shippingController = TextEditingController();
-
-  @override
-  void dispose() {
-    shippingController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -139,14 +132,6 @@ class _CartScreenState extends State<CartScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                   child: Column(
                     children: [
-                      TextField(
-                        controller: shippingController,
-                        decoration: const InputDecoration(
-                          labelText: 'Shipping Address',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -168,26 +153,36 @@ class _CartScreenState extends State<CartScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            final address = shippingController.text.trim();
-                            if (address.isEmpty) {
+                          onPressed: () async {
+                            final cart = context.read<CartProvider>();
+                            final user = context.read<AuthProvider>();
+
+                            final success = await cart.submitOrder(
+                              user.user!.username,
+                              DateTime.now().toIso8601String().split('T').first,
+                            );
+
+                            print(
+                              'Username:${user.user!.username} and Success:$success',
+                            );
+
+                            if (success) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
+                                  content: Text('Order placed successfully!'),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
                                   content: Text(
-                                    'Please enter a shipping address',
+                                    cart.error ?? 'Something went wrong',
                                   ),
                                 ),
                               );
-                              return;
                             }
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Order placed successfully!'),
-                              ),
-                            );
-                            provider.clear();
                           },
+
                           icon: const Icon(Icons.shopping_bag),
                           label: const Text('Place Order'),
                           style: ElevatedButton.styleFrom(

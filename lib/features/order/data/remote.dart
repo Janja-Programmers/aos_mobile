@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
-import 'package:ownashop/core/constants/const.dart';
 
+import '/core/constants/const.dart';
 import '/core/errors/exception.dart';
 import '/core/errors/failures.dart';
 import '/core/utils/api_client.dart';
@@ -9,17 +9,18 @@ import 'model.dart';
 
 class SalesOrderRemoteDS {
   final APIClient client;
+  static const _endpoint = SALES_ORDER_ENDPOINT;
 
   SalesOrderRemoteDS(this.client);
 
   Future<Either<Failure, List<SalesOrderModel>>> getAll() async {
     try {
-      final res = await client.client.get(SALES_ORDER_ENDPOINT);
+      final res = await client.client.get(_endpoint);
       final List data = res.data['data'];
 
       final futures =
           data.map((e) {
-            return client.client.get('$SALES_ORDER_ENDPOINT/${e['name']}');
+            return client.client.get('$_endpoint/${e['name']}');
           }).toList();
 
       final fullData = await Future.wait(futures);
@@ -31,6 +32,21 @@ class SalesOrderRemoteDS {
       return Right(models);
     } catch (e) {
       return Left(handleException(e));
+    }
+  }
+}
+
+class SalesOrderPayloadRemoteDS {
+  final APIClient client;
+
+  SalesOrderPayloadRemoteDS(this.client);
+
+  Future<Either<Failure, Unit>> placeOrder(OrderPayloadModel order) async {
+    try {
+      await client.client.post(SALES_ORDER_ENDPOINT, data: order.toJson());
+      return const Right(unit);
+    } catch (e) {
+      return Left(handleException('Failed to place order: $e'));
     }
   }
 }

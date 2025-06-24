@@ -134,19 +134,33 @@ Future<void> init() async {
   sl.registerFactory(() => ItemPriceProvider(getAll: sl(), create: sl()));
 
   // SALESORDER Doctype
-  // === Dara ===
+  // === Data Layer ===
   sl.registerLazySingleton<SalesOrderRemoteDS>(
     () => SalesOrderRemoteDS(sl<APIClient>()),
   );
-  // === Repository ===
-  sl.registerLazySingleton<SalesOrderRepo>(
-    () => SalesOrderRepoImpl(remote: sl()),
+  sl.registerLazySingleton<SalesOrderPayloadRemoteDS>(
+    () => SalesOrderPayloadRemoteDS(sl<APIClient>()),
   );
-  // === Domain ===
-  sl.registerLazySingleton(() => GetAllSalesOrders(sl()));
 
-  //  === PROVIDER ===
-  sl.registerFactory(() => SalesOrderProvider(getAllSalesOrders: sl()));
+  // === Repository Layer ===
+  sl.registerLazySingleton<SalesOrderRepo>(
+    () => SalesOrderRepoImpl(
+      remote: sl<SalesOrderRemoteDS>(),
+      payloadRemote: sl<SalesOrderPayloadRemoteDS>(),
+    ),
+  );
+
+  // === Domain Layer ===
+  sl.registerLazySingleton(() => GetAllSalesOrders(sl<SalesOrderRepo>()));
+  sl.registerLazySingleton(() => PlaceOrderUseCase(sl<SalesOrderRepo>()));
+
+  // === Provider Layer ===
+  sl.registerFactory(
+    () => SalesOrderProvider(
+      getAllSalesOrders: sl<GetAllSalesOrders>(),
+      placeOrderUseCase: sl<PlaceOrderUseCase>(),
+    ),
+  );
 
   // DELIVERYNOTE Doctype
   // === Data ===
@@ -193,6 +207,7 @@ Future<void> init() async {
       removeFromCart: sl(),
       clearCart: sl(),
       updateQty: sl(),
+      placeOrder: sl<PlaceOrderUseCase>(),
     ),
   );
 }

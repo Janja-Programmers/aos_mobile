@@ -12,3 +12,13 @@ class GetAllSalesOrders {
 
   Future<Either<Failure, List<SalesOrder>>> call() => repo.getAll();
 }
+
+class PlaceOrderUseCase {
+  final SalesOrderRepo repo;
+
+  PlaceOrderUseCase(this.repo);
+
+  Future<Either<Failure, Unit>> call(OrderPayload payload) {
+    return repo.placeOrder(payload);
+  }
+}

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../order/domain/sales_order.dart';
+import '../order/domain/usecases.dart';
+
 import 'domain/cart.dart';
 import 'domain/usecase.dart';
 
@@ -9,6 +12,7 @@ class CartProvider with ChangeNotifier {
   final RemoveFromCartUseCase removeFromCart;
   final ClearCartUseCase clearCart;
   final UpdateCartItemQuantityUseCase updateQty;
+  final PlaceOrderUseCase placeOrder;
 
   CartProvider({
     required this.getCartItems,
@@ -16,6 +20,7 @@ class CartProvider with ChangeNotifier {
     required this.removeFromCart,
     required this.clearCart,
     required this.updateQty,
+    required this.placeOrder,
   });
 
   List<CartItem> _items = [];
@@ -83,5 +88,30 @@ class CartProvider with ChangeNotifier {
   Future<void> updateQuantity(String code, int qty) async {
     await updateQty(code, qty);
     await loadCart();
+  }
+
+  Future<bool> submitOrder(String customer, String deliveryDate) async {
+    _error = null;
+    notifyListeners();
+
+    final payload = OrderPayload(
+      customer: customer,
+      deliveryDate: deliveryDate,
+      items: _items,
+    );
+
+    final result = await placeOrder(payload);
+
+    return result.fold(
+      (failure) {
+        _error = failure.message;
+        notifyListeners();
+        return false;
+      },
+      (_) {
+        clear();
+        return true;
+      },
+    );
   }
 }

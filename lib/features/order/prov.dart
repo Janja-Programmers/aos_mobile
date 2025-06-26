@@ -6,13 +6,13 @@ import 'domain/usecases.dart';
 
 class SalesOrderProvider with ChangeNotifier {
   final GetAllSalesOrders _getAllSalesOrders;
-  final PlaceOrderUseCase _placeOrderUseCase;
+  // final PlaceOrderUseCase _placeOrderUseCase;
 
   SalesOrderProvider({
     required GetAllSalesOrders getAllSalesOrders,
     required PlaceOrderUseCase placeOrderUseCase,
-  }) : _getAllSalesOrders = getAllSalesOrders,
-       _placeOrderUseCase = placeOrderUseCase;
+  }) : _getAllSalesOrders = getAllSalesOrders;
+  //  _placeOrderUseCase = placeOrderUseCase;
 
   List<SalesOrder> _orders = [];
   List<SalesOrder> get orders => _orders;
@@ -35,25 +35,25 @@ class SalesOrderProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> placeOrder(OrderPayload payload) async {
-    _loading = true;
-    _failure = null;
-    notifyListeners();
+  // Future<bool> placeOrder(OrderPayload payload) async {
+  //   _loading = true;
+  //   _failure = null;
+  //   notifyListeners();
 
-    final result = await _placeOrderUseCase(payload);
-    final success = result.isRight();
+  //   final result = await _placeOrderUseCase(payload);
+  //   final success = result.isRight();
 
-    result.fold((f) => _failure = f, (_) => null);
+  //   result.fold((f) => _failure = f, (_) => null);
 
-    _loading = false;
-    notifyListeners();
+  //   _loading = false;
+  //   notifyListeners();
 
-    if (success) {
-      await fetchAll();
-    }
+  //   if (success) {
+  //     await fetchAll();
+  //   }
 
-    return success;
-  }
+  //   return success;
+  // }
 
   void reset() {
     _orders = [];

@@ -2,18 +2,54 @@ import 'package:flutter/material.dart';
 import './colors.dart';
 
 class AppThemes {
-  static final ThemeData lightTheme = ThemeData(
-    brightness: Brightness.light,
-    primaryColor: AppColors.primary,
-    scaffoldBackgroundColor: AppColors.tertiary,
-    appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.primary,
-      foregroundColor: AppColors.tertiary,
+  static ThemeData get lightTheme => ThemeData(
+    colorScheme: const ColorScheme.light(
+      primary: Colors.black,
+      secondary: Colors.black,
+      background: Colors.white,
+      surface: Colors.white,
+      onPrimary: Colors.white,
+      onBackground: Colors.black,
+      onSurface: Colors.black,
     ),
-    textTheme: TextTheme(
-      bodyLarge: TextStyle(color: AppColors.black),
-      bodyMedium: TextStyle(color: AppColors.black),
+    scaffoldBackgroundColor: Colors.white,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      elevation: 0,
     ),
+    inputDecorationTheme: const InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(),
+      focusedBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.black),
+      ),
+      labelStyle: TextStyle(color: Colors.black),
+    ),
+    iconTheme: const IconThemeData(color: Colors.black),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        textStyle: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: Colors.black),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.black,
+        side: const BorderSide(color: Colors.black),
+      ),
+    ),
+    textTheme: const TextTheme(
+      bodyLarge: TextStyle(color: Colors.black),
+      bodyMedium: TextStyle(color: Colors.black),
+      titleLarge: TextStyle(color: Colors.black),
+    ),
+    useMaterial3: false,
   );
 
   static final ThemeData darkTheme = ThemeData(

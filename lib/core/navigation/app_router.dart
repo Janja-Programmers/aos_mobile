@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/features/product/domain/product.dart';
 
 // Auth
+import '/features/product/domain/product.dart';
 import '/features/auth/presentation/auth_provider.dart';
 import '/features/auth/presentation/screens/login_screen.dart';
 import '/features/auth/presentation/screens/register_screen.dart';
@@ -11,6 +11,7 @@ import '/screens/customer/products/screens/product_list_screen.dart';
 import '/screens/customer/products/screens/product_detail_screen.dart';
 import '/screens/customer/wishlist/presentation/wishlist_screen.dart';
 import '/screens/customer/cart/cart_screen.dart';
+import '/screens/customer/address/shipping_address_form.dart';
 // import '/features/website/domain/webitem.dart';
 
 // Seller
@@ -123,6 +124,11 @@ class AppRouter {
           final product = state.extra as Product;
           return ProductDetailScreen(product: product);
         },
+      ),
+      // Shipping Address
+      GoRoute(
+        path: '/shipping-address',
+        builder: (_, _) => const ShippingAddressForm(),
       ),
     ],
   );

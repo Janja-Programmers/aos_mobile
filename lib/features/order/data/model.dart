@@ -46,12 +46,18 @@ class OrderPayloadModel {
   final String customer;
   final String deliveryDate;
   final List<Map<String, dynamic>> items;
+  final String shippingAddress;
+  final String customerAddress;
+  final String addressType;
   final int docstatus;
 
   OrderPayloadModel({
     required this.customer,
     required this.deliveryDate,
     required this.items,
+    required this.shippingAddress,
+    required this.customerAddress,
+    required this.addressType,
     this.docstatus = 1,
   });
 
@@ -60,9 +66,13 @@ class OrderPayloadModel {
     "delivery_date": deliveryDate,
     "docstatus": docstatus,
     "items": items,
+    "shipping_address": shippingAddress,
+    "customer_address": customerAddress,
+    "address_type": addressType,
   };
 
   factory OrderPayloadModel.fromEntity(OrderPayload payload) {
+    final address = payload.shippingAddressName;
     return OrderPayloadModel(
       customer: payload.customer,
       deliveryDate: payload.deliveryDate,
@@ -76,6 +86,9 @@ class OrderPayloadModel {
                 },
               )
               .toList(),
+      shippingAddress: address,
+      customerAddress: address,
+      addressType: 'Shipping',
     );
   }
 

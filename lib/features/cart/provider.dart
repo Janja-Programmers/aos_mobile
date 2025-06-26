@@ -1,7 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:ownashop/core/utils/logger.dart';
+
+import '/core/di/service_locator.dart';
 
 import '../order/domain/sales_order.dart';
 import '../order/domain/usecases.dart';
+import '../address/data/datasource/local.dart';
 
 import 'domain/cart.dart';
 import 'domain/usecase.dart';
@@ -90,29 +96,58 @@ class CartProvider with ChangeNotifier {
     await loadCart();
   }
 
-  Future<bool> submitOrder(String customer, String deliveryDate) async {
+  Future<void> submitOrderWithExistingOrRedirect({
+    required String customer,
+    required VoidCallback openShippingForm,
+    required Function(String addressName) onSuccess,
+  }) async {
     _error = null;
     notifyListeners();
 
-    final payload = OrderPayload(
-      customer: customer,
-      deliveryDate: deliveryDate,
-      items: _items,
-    );
+    try {
+      final local = sl<LocalAddressRepository>();
+      final addresses = await local.getAddressesForCustomer(customer);
 
-    final result = await placeOrder(payload);
+      if (addresses.isEmpty) {
+        openShippingForm();
+        return;
+      }
 
-    return result.fold(
-      (failure) {
-        _error = failure.message;
-        notifyListeners();
-        return false;
-      },
-      (_) {
-        clear();
-        return true;
-      },
-    );
+      final fullAddressName = "$customer-Shipping";
+
+      final payload = OrderPayload(
+        customer: customer,
+        deliveryDate: DateTime.now().toIso8601String().split('T').first,
+        items: _items,
+        shippingAddress: fullAddressName,
+        customerAddress: fullAddressName,
+        addressType: "Shipping",
+      );
+
+      appLogger.i(
+        'Placing order from PROVIDER.DART with $fullAddressName and PAYLOAD:$payload',
+      );
+      print(
+        "🟢 Cart Provider sending OrderPayload: ${jsonEncode(payload.toJson())}",
+      );
+
+      final result = await placeOrder(payload);
+
+      result.fold(
+        (failure) {
+          _error = failure.message;
+          notifyListeners();
+        },
+        (_) {
+          appLogger.i('Placing order from PROVIDER.DART with RESULT:$result');
+          clear();
+          onSuccess(fullAddressName);
+        },
+      );
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+    }
   }
 
   bool containsProduct(String productCode) {

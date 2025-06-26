@@ -6,6 +6,7 @@ class CartItemModel extends CartItem {
     required super.name,
     required super.price,
     required super.quantity,
+    super.image,
   });
 
   factory CartItemModel.fromEntity(CartItem item) => CartItemModel(
@@ -13,6 +14,7 @@ class CartItemModel extends CartItem {
     name: item.name,
     price: item.price,
     quantity: item.quantity,
+    image: item.image,
   );
 
   factory CartItemModel.fromMap(Map<String, dynamic> map) => CartItemModel(
@@ -20,6 +22,7 @@ class CartItemModel extends CartItem {
     name: map['name'],
     price: (map['price'] as num).toDouble(),
     quantity: map['quantity'],
+    image: map['image'],
   );
 
   Map<String, dynamic> toMap() => {
@@ -27,14 +30,25 @@ class CartItemModel extends CartItem {
     'name': name,
     'price': price,
     'quantity': quantity,
+    'image': image,
   };
 
   @override
-  CartItem toEntity() =>
-      CartItem(code: code, name: name, price: price, quantity: quantity);
+  CartItem toEntity() => CartItem(
+    code: code,
+    name: name,
+    price: price,
+    quantity: quantity,
+    image: image,
+  );
 }
 
 extension CartItemX on CartItem {
-  CartItemModel toModel() =>
-      CartItemModel(code: code, name: name, price: price, quantity: quantity);
+  CartItemModel toModel() => CartItemModel(
+    code: code,
+    name: name,
+    price: price,
+    quantity: quantity,
+    image: image,
+  );
 }

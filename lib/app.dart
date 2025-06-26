@@ -33,6 +33,9 @@ import 'features/stock/prov.dart';
 // CART Feature
 import 'package:ownashop/features/cart/provider.dart';
 
+// ADDRESS Feature
+import '/features/address/provider.dart';
+
 class App extends StatelessWidget {
   final AuthProvider auth;
 
@@ -51,10 +54,11 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => sl<DeliveryNoteProvider>()),
         ChangeNotifierProvider(create: (_) => sl<StockEntryProvider>()),
         ChangeNotifierProvider(create: (_) => sl<CartProvider>()),
+        ChangeNotifierProvider(create: (_) => sl<AddressProvider>()),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
-        routerConfig: AppRouter(auth).router, // 👈 inject auth here
+        routerConfig: AppRouter(auth).router,
         title: AppStrings.appName,
         theme: AppThemes.lightTheme,
         darkTheme: AppThemes.darkTheme,

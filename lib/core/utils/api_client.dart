@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:ownashop/core/utils/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:logger/logger.dart';
 
@@ -35,6 +36,9 @@ class APIClient {
       InterceptorsWrapper(
         onRequest: (options, handler) {
           client._logger.i('➡️ ${options.method} ${options.uri}');
+          print(
+            "🌐 API CLIENT sending request to ${options.uri} with body: ${options.data}",
+          );
           if (options.data != null) client._logger.i('Body: ${options.data}');
 
           return handler.next(options);
@@ -46,6 +50,7 @@ class APIClient {
           return handler.next(response);
         },
         onError: (DioException e, handler) {
+          appLogger.e('❌ Server error: ${e.response?.data}');
           client._logger.e(
             '❌ ${e.response?.statusCode} ← ${e.requestOptions.uri}',
           );

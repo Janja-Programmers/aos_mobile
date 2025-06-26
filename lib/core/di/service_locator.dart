@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 
-import '/core/db/db_helper.dart';
+import '../db/db_helper.dart';
 import '../utils/api_client.dart';
 
 /***** Auth *******/
@@ -67,6 +67,13 @@ import '/features/cart/domain/repo.dart';
 import '/features/cart/data/repo_impl.dart';
 import '/features/cart/data/local.dart';
 import '/features/cart/provider.dart';
+
+/***** ADDRESS ********/
+import '/features/address/data/repo_impl.dart';
+import '/features/address/data/datasource/remote.dart';
+import '/features/address/data/datasource/local.dart';
+import '/features/address/domain/repo.dart';
+import '/features/address/provider.dart';
 
 final sl = GetIt.instance;
 
@@ -251,4 +258,28 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));
   // === Provider ===
   sl.registerFactory(() => ProductProvider(sl()));
+
+  // ADDRESS Feature
+  // ✅ Remote datasource
+  sl.registerLazySingleton<AddressRemoteDatasource>(
+    () => AddressRemoteDatasourceImpl(sl()),
+  );
+
+  // ✅ Local datasource
+  sl.registerLazySingleton<LocalAddressRepository>(
+    () => LocalAddressRepository(),
+  );
+
+  // ✅ Repository
+  sl.registerLazySingleton<AddressRepository>(
+    () => AddressRepositoryImpl(
+      remote: sl<AddressRemoteDatasource>(),
+      local: sl<LocalAddressRepository>(),
+    ),
+  );
+
+  // ✅ Provider
+  sl.registerLazySingleton<AddressProvider>(
+    () => AddressProvider(repository: sl<AddressRepository>()),
+  );
 }

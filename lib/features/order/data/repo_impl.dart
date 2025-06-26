@@ -1,5 +1,9 @@
-import 'package:dartz/dartz.dart';
+import 'dart:convert';
 
+import 'package:dartz/dartz.dart';
+import 'package:ownashop/core/utils/logger.dart';
+
+import '../../../core/errors/exception.dart';
 import '/core/errors/failures.dart';
 
 import '../domain/repo.dart';
@@ -22,7 +26,26 @@ class SalesOrderRepoImpl implements SalesOrderRepo {
 
   @override
   Future<Either<Failure, Unit>> placeOrder(OrderPayload payload) async {
-    final model = OrderPayloadModel.fromEntity(payload);
-    return await payloadRemote.placeOrder(model);
+    try {
+      appLogger.i(
+        'Placing order with payload: ${payload.toJson()} from REPO_IMPL',
+      );
+
+      print("🧪 payload.customer = ${payload.customer}");
+      print("🧪 payload.deliveryDate = ${payload.deliveryDate}");
+      print("🧪 payload.items = ${payload.items.length}");
+      print("🧪 payload.shippingAddressName = ${payload.shippingAddressName}");
+      final model = OrderPayloadModel.fromEntity(payload);
+
+      print(
+        "📦 SalesOrderRepoImpl sending OrderPayload: ${jsonEncode(model.toJson())}",
+      );
+
+      return await payloadRemote.placeOrder(model);
+    } catch (e, stack) {
+      print("❌ Exception while building payload model: $e");
+      print(stack);
+      return Left(handleException(e));
+    }
   }
 }

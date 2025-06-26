@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:ownashop/core/utils/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '/core/errors/failures.dart';
@@ -24,15 +25,21 @@ class AuthProvider with ChangeNotifier {
   Future<Either<Failure, void>> login(String username, String password) async {
     final result = await loginUser(username, password);
 
-    return result.fold((failure) => Left(failure), (loginResult) async {
-      user = loginResult.user;
-      await persistUser(user!.username);
+    if (result.isLeft()) return result;
 
-      _redirectPath = _mapFrappePath(loginResult.homePage);
+    final loginResult = result.getOrElse(
+      () => throw Exception('Unexpected null'),
+    );
 
-      notifyListeners();
-      return const Right(null);
-    });
+    user = loginResult.user;
+    appLogger.i('Redirecting to: ${loginResult.homePage}');
+    _redirectPath = _mapFrappePath(loginResult.homePage);
+    appLogger.i('Redirecting to: ${loginResult.homePage}');
+
+    await persistUser(user!.username);
+
+    notifyListeners();
+    return const Right(null);
   }
 
   Future<Either<Failure, List<dynamic>>> register(
@@ -51,12 +58,6 @@ class AuthProvider with ChangeNotifier {
       phone,
       password,
     );
-  }
-
-  String _mapFrappePath(String path) {
-    if (path == '/app/home') return '/dashboard';
-    if (path == '/all-products') return '/';
-    return '/';
   }
 
   Future<void> persistUser(String username) async {
@@ -79,5 +80,9 @@ class AuthProvider with ChangeNotifier {
     await prefs.remove('username');
     user = null;
     notifyListeners();
+  }
+
+  String _mapFrappePath(String path) {
+    return path == '/all-products' ? '/' : '/products';
   }
 }

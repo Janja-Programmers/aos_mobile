@@ -1,6 +1,5 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:logger/logger.dart';
 
 import '/core/constants/const.dart';
 import '/core/errors/exception.dart';
@@ -20,7 +19,6 @@ abstract class AuthRemoteDataSource {
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final Dio dio;
-  Logger? logger;
 
   AuthRemoteDataSourceImpl(this.dio);
 
@@ -85,7 +83,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final sid = sidCookie.split(';').first.split('=').last;
 
       if (sid.isNotEmpty) {
-        logger?.i('Session ID extracted from cookie: $sid');
         dio.options.headers['Cookie'] = 'sid=$sid';
       }
     }

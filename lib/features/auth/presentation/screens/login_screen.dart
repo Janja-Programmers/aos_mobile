@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ownashop/core/utils/logger.dart';
 import 'package:ownashop/features/auth/presentation/widgets/app_input.dart';
 import 'package:provider/provider.dart';
 import '../auth_provider.dart';
@@ -113,15 +114,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child:
-                          _isLoading
-                              ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                              : const Text(
-                                'Login',
-                                style: TextStyle(color: Colors.white),
-                              ),
+                      child: Text(
+                        _isLoading ? 'Verifying...' : 'Log in',
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
 
@@ -171,20 +167,22 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
 
-    try {
-      await auth.login(userCtrl.text.trim(), passCtrl.text.trim());
-    } catch (e) {
-      setState(() {
-        _error =
-            e.toString().contains('401')
-                ? 'Invalid email or password'
-                : 'Login failed. Try again.';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    final result = await auth.login(userCtrl.text.trim(), passCtrl.text.trim());
+
+    result.fold(
+      (failure) {
+        setState(() {
+          _error = failure.message;
+        });
+      },
+      (_) {
+        appLogger.i('Redirecting to: ${auth.redirectPath}');
+        context.go(auth.redirectPath ?? '/');
+        auth.clearRedirect();
+      },
+    );
+
+    setState(() => _isLoading = false);
   }
 
   @override

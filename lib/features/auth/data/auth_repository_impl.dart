@@ -5,7 +5,6 @@ import '/core/errors/failures.dart';
 import '../domain/user.dart';
 import '../domain/auth_repository.dart';
 import '../data/auth_remote_datasource.dart';
-import '../data/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remote;
@@ -20,8 +19,8 @@ class AuthRepositoryImpl implements AuthRepository {
     final result = await remote.login(username, password);
 
     return result.map((data) {
-      final user = UserModel.fromJson(data);
-      final homePage = data['home_page'] ?? '/app/home';
+      final user = User(username: data['full_name'] ?? 'Guest');
+      final homePage = data['home_page'];
       return LoginResult(user: user, homePage: homePage);
     });
   }

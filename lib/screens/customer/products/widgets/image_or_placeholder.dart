@@ -49,7 +49,7 @@ class ImageOrPlaceholder extends StatelessWidget {
         style: const TextStyle(
           fontSize: 48,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: Colors.black,
         ),
       ),
     );

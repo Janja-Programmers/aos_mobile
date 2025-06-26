@@ -9,3 +9,4 @@ const String ITEM_PRICE_ENDPOINT = '/api/resource/Item Price';
 const String SALES_ORDER_ENDPOINT = '/api/resource/Sales Order';
 const String DELIVERY_NOTE_ENDPOINT = '/api/resource/Delivery Note';
 const String STOCK_ENTRY_ENDPOINT = '/api/resource/Stock Entry';
+const String ALL_PRODUCTS_ENDPOINT = '/api/method/amani_mall.api.get_products';

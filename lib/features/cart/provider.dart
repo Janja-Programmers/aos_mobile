@@ -114,4 +114,8 @@ class CartProvider with ChangeNotifier {
       },
     );
   }
+
+  bool containsProduct(String productCode) {
+    return _items.any((item) => item.code == productCode);
+  }
 }

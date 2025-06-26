@@ -10,7 +10,8 @@ import '/shared/widgets/cart_button.dart';
 import '/shared/widgets/add_to_cart_button.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
-import '/features/website/prov.dart';
+import '/features/product/provider.dart';
+// import '/features/website/prov.dart';
 
 import '/features/cart/domain/cart.dart';
 
@@ -30,20 +31,19 @@ class _ProductListScreenState extends State<ProductListScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<WebsiteItemProv>().loadItems();
+      context.read<ProductProvider>().fetchProducts();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final itemProvider = context.watch<WebsiteItemProv>();
+    final productProvider = context.watch<ProductProvider>();
     // final wishlist = context.watch<WishlistProvider>();
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.user;
 
     final items =
-        itemProvider.items
-            .where((item) => item.published == true)
+        productProvider.products
             .where(
               (item) =>
                   _searchQuery.isEmpty ||
@@ -52,6 +52,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
             .toList();
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: TopAppBar(
         actions:
             user == null
@@ -85,21 +86,24 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 ],
       ),
       body:
-          itemProvider.isLoading
+          productProvider.isLoading
               ? const Center(child: CircularProgressIndicator())
-              : itemProvider.error != null
-              ? Center(child: Text(itemProvider.error!))
+              : productProvider.error != null
+              ? Center(child: Text(productProvider.error!))
               : Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(8),
                     child: TextField(
                       decoration: InputDecoration(
                         hintText: 'Search for products',
                         prefixIcon: const Icon(Icons.search),
+                        fillColor: AppColors.white,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
                         ),
+                        filled: true,
                       ),
                       onChanged: (value) {
                         setState(() => _searchQuery = value);
@@ -126,21 +130,21 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                 //   item.id.toString(),
                                 // );
 
-                                final imgUrl = resolveImageUrl(item.imageUrl);
+                                final imgUrl = resolveImageUrl(item.image);
 
                                 return GestureDetector(
                                   onTap: () {
                                     context.push(
-                                      '/product/${item.id}',
+                                      '/product/${item.name}',
                                       extra: item,
                                     );
                                   },
                                   child: Card(
+                                    color: AppColors.white,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     elevation: 3,
-                                    color: Colors.red[150],
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -149,7 +153,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                           children: [
                                             ImageOrPlaceholder(
                                               imageUrl: imgUrl,
-                                              fallbackText: item.name,
+                                              fallbackText: item.itemName,
                                             ),
                                             // Positioned(
                                             //   top: 6,
@@ -188,9 +192,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                           child: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
+
                                             children: [
                                               Text(
-                                                item.name,
+                                                item.itemName,
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 14,
@@ -198,8 +203,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
+
                                               Text(
-                                                item.itemGroup,
+                                                item.category,
                                                 style: TextStyle(
                                                   fontSize: 12,
                                                   color: Colors.grey,
@@ -209,9 +215,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
                                               AddToCartButton(
                                                 item: CartItem(
-                                                  code: item.itemCode,
-                                                  name: item.name,
-                                                  price: 10.0,
+                                                  code: item.name,
+                                                  name: item.itemName,
+                                                  price: item.itemPrice,
                                                   quantity: 1,
                                                 ),
                                               ),

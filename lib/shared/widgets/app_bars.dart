@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ownashop/features/auth/presentation/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
 import 'cart_button.dart';
@@ -16,10 +19,15 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 1,
       leading: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: CircleAvatar(
-          backgroundImage: AssetImage('assets/logo.png'),
-          radius: 22,
-          backgroundColor: AppColors.transparent,
+        child: GestureDetector(
+          onTap: () {
+            context.go('/');
+          },
+          child: CircleAvatar(
+            backgroundImage: AssetImage('assets/logo.png'),
+            radius: 22,
+            backgroundColor: AppColors.transparent,
+          ),
         ),
       ),
 
@@ -28,11 +36,22 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
           actions ??
           [
             const CartIconButton(),
-            IconButton(
+            PopupMenuButton<String>(
               icon: const Icon(Icons.person, color: AppColors.black),
-              onPressed: () {
-                // Handle settings
+              onSelected: (value) async {
+                if (value == 'logout') {
+                  final authProvider = context.read<AuthProvider>();
+                  await authProvider.logout();
+                  context.go('/login');
+                } else if (value == 'orders') {
+                  context.go('/');
+                }
               },
+              itemBuilder:
+                  (context) => const [
+                    PopupMenuItem(value: 'orders', child: Text('My Orders')),
+                    PopupMenuItem(value: 'logout', child: Text('Logout')),
+                  ],
             ),
           ],
     );
@@ -94,5 +113,24 @@ class SubAppBar extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+Future<void> showProfileMenu(BuildContext context, Offset offset) async {
+  final selected = await showMenu<String>(
+    context: context,
+    position: RelativeRect.fromLTRB(offset.dx, offset.dy, 0, 0),
+    items: const [
+      PopupMenuItem(value: 'orders', child: Text('My Orders')),
+      PopupMenuItem(value: 'logout', child: Text('Logout')),
+    ],
+  );
+
+  if (selected == 'logout') {
+    final authProvider = context.read<AuthProvider>();
+    await authProvider.logout();
+    context.go('/login');
+  } else if (selected == 'orders') {
+    context.go('/orders');
   }
 }

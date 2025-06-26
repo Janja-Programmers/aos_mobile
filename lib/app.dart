@@ -9,6 +9,9 @@ import 'core/di/service_locator.dart';
 // AUTH Feature
 import 'features/auth/presentation/auth_provider.dart';
 
+// PRODUCT Feature
+import 'package:ownashop/features/product/provider.dart';
+
 // ITEM Feature
 import 'features/item/prov.dart';
 
@@ -40,6 +43,7 @@ class App extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: auth),
+        ChangeNotifierProvider(create: (_) => sl<ProductProvider>()),
         ChangeNotifierProvider(create: (_) => sl<WebsiteItemProv>()),
         ChangeNotifierProvider(create: (_) => sl<ItemProv>()),
         ChangeNotifierProvider(create: (_) => sl<ItemPriceProvider>()),

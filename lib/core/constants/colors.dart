@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   static const Color primary = Colors.blue;
+  static const Color red = Color.fromARGB(156, 192, 33, 33);
   static const Color secondary = Colors.grey;
   static const Color tertiary = Colors.white;
   static const Color white = Colors.white;
@@ -20,7 +21,7 @@ class AppColors {
   static const Color info = Colors.blueAccent;
   static const Color light = Colors.lightBlueAccent;
   static const Color dark = Colors.blueGrey;
-  static const Color background = Colors.white;
+  static const Color background = Color.fromARGB(255, 233, 227, 227);
   static const Color transparent = Colors.transparent;
   static const Color disabled = Colors.grey;
   static const Color highlight = Colors.yellow;

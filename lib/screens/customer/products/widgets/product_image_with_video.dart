@@ -24,12 +24,15 @@ class ProductImageWithVideo extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            resolvedImageUrl,
+          child: Container(
+            color: Colors.white,
             width: double.infinity,
             height: 200,
-            fit: BoxFit.cover,
-            errorBuilder: (ctx, _, _) => const Icon(Icons.broken_image),
+            child: Image.network(
+              resolvedImageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (ctx, _, __) => const Icon(Icons.broken_image),
+            ),
           ),
         ),
 

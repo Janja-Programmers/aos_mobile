@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
 class ProductActionButtons extends StatelessWidget {
+  final bool isInCart;
   final VoidCallback onAddToCart;
-  final VoidCallback onContact;
+  final VoidCallback onViewCart;
+  final VoidCallback? onContact;
 
   const ProductActionButtons({
     super.key,
+    required this.isInCart,
     required this.onAddToCart,
-    required this.onContact,
+    required this.onViewCart,
+    this.onContact,
   });
 
   @override
@@ -15,18 +19,26 @@ class ProductActionButtons extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: ElevatedButton(
-            onPressed: onAddToCart,
-            child: const Text("Add to Cart"),
+          child: ElevatedButton.icon(
+            icon: Icon(
+              isInCart ? Icons.shopping_cart : Icons.add_shopping_cart,
+            ),
+            label: Text(isInCart ? 'View in Cart' : 'Add to Cart'),
+            onPressed: isInCart ? onViewCart : onAddToCart,
           ),
         ),
         const SizedBox(width: 12),
-        Expanded(
-          child: OutlinedButton(
+        if (onContact != null)
+          ElevatedButton.icon(
+            icon: const Icon(Icons.chat),
+            label: const Text('Contact Vendor'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey,
+              foregroundColor: Colors.black87,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
             onPressed: onContact,
-            child: const Text("Contact Vendor"),
           ),
-        ),
       ],
     );
   }

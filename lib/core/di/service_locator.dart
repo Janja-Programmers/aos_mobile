@@ -1,15 +1,23 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
-import 'package:ownashop/features/auth/data/auth_repository_impl.dart';
-import 'package:ownashop/features/auth/domain/auth_repository.dart';
-import 'package:ownashop/features/auth/domain/usecases/login.dart';
-import 'package:ownashop/features/auth/domain/usecases/register.dart';
 
 import '/core/db/db_helper.dart';
 import '../utils/api_client.dart';
 
+/***** Auth *******/
 import '/features/auth/data/auth_remote_datasource.dart';
 import '/features/auth/presentation/auth_provider.dart';
+import '/features/auth/data/auth_repository_impl.dart';
+import '/features/auth/domain/auth_repository.dart';
+import '/features/auth/domain/usecases/login.dart';
+import '/features/auth/domain/usecases/register.dart';
+
+/***** PRODUCT *******/
+import '/features/product/data/remote.dart';
+import '/features/product/data/repo_impl.dart';
+import '/features/product/domain/repo.dart';
+import '/features/product/domain/usecase.dart';
+import '/features/product/provider.dart';
 
 /***** WEBSITE ITEMS *******/
 import '/features/website/domain/repo.dart';
@@ -231,4 +239,16 @@ Future<void> init() async {
       placeOrder: sl<PlaceOrderUseCase>(),
     ),
   );
+
+  // PRODUCTS Feature
+  // === Data ===
+  sl.registerLazySingleton<ProductRemoteDataSource>(
+    () => ProductRemoteDataSourceImpl(sl()),
+  );
+  // === Repository ===
+  sl.registerLazySingleton<ProductRepo>(() => ProductRepoImpl(sl()));
+  // === Domain ===
+  sl.registerLazySingleton(() => GetProductsUseCase(sl()));
+  // === Provider ===
+  sl.registerFactory(() => ProductProvider(sl()));
 }

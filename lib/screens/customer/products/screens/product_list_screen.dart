@@ -140,6 +140,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     elevation: 3,
+                                    color: Colors.red[150],
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -150,33 +151,33 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                               imageUrl: imgUrl,
                                               fallbackText: item.name,
                                             ),
-                                            Positioned(
-                                              top: 6,
-                                              right: 6,
-                                              child: IconButton(
-                                                icon: Icon(
-                                                  Icons.favorite_border,
-                                                  // isInWishlist
-                                                  //     ? Icons.favorite
-                                                  //     : Icons.favorite_border,
-                                                  // color:
-                                                  //     isInWishlist
-                                                  //         ? Colors.red
-                                                  //         : Colors.black54,
-                                                ),
-                                                onPressed: () {
-                                                  ScaffoldMessenger.of(context)
-                                                    ..hideCurrentSnackBar()
-                                                    ..showSnackBar(
-                                                      const SnackBar(
-                                                        content: Text(
-                                                          'Wishlist functionality to be implemented',
-                                                        ),
-                                                      ),
-                                                    );
-                                                },
-                                              ),
-                                            ),
+                                            // Positioned(
+                                            //   top: 6,
+                                            //   right: 6,
+                                            //   child: IconButton(
+                                            //     icon: Icon(
+                                            //       Icons.favorite_border,
+                                            //       // isInWishlist
+                                            //       //     ? Icons.favorite
+                                            //       //     : Icons.favorite_border,
+                                            //       // color:
+                                            //       //     isInWishlist
+                                            //       //         ? Colors.red
+                                            //       //         : Colors.black54,
+                                            //     ),
+                                            //     onPressed: () {
+                                            //       ScaffoldMessenger.of(context)
+                                            //         ..hideCurrentSnackBar()
+                                            //         ..showSnackBar(
+                                            //           const SnackBar(
+                                            //             content: Text(
+                                            //               'Wishlist functionality to be implemented',
+                                            //             ),
+                                            //           ),
+                                            //         );
+                                            //     },
+                                            //   ),
+                                            // ),
                                           ],
                                         ),
                                         Padding(

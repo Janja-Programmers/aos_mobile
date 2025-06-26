@@ -39,7 +39,7 @@ class _CartScreenState extends State<CartScreen> {
                   child: ListView.separated(
                     padding: const EdgeInsets.all(12),
                     itemCount: items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    separatorBuilder: (_, _) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final item = items[index];
                       return Card(
@@ -162,9 +162,6 @@ class _CartScreenState extends State<CartScreen> {
                               DateTime.now().toIso8601String().split('T').first,
                             );
 
-                            print(
-                              'Username:${user.user!.username} and Success:$success',
-                            );
 
                             if (success) {
                               ScaffoldMessenger.of(context).showSnackBar(

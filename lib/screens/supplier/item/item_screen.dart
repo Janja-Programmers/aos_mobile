@@ -83,30 +83,6 @@ class _ItemScreenState extends State<ItemScreen> {
               padding: const EdgeInsets.all(12.0),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _itemNameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Item Name',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _itemGroupController,
-                          decoration: const InputDecoration(
-                            labelText: 'Item Group',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
                   TextField(
                     controller: _searchController,
                     decoration: const InputDecoration(

@@ -117,6 +117,7 @@ class _StockEntryCard extends StatelessWidget {
                     isApproved ? 'Approved' : 'Pending',
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
+                  // ignore: deprecated_member_use
                   backgroundColor: statusColor.withOpacity(0.2),
                   avatar: Icon(
                     isApproved ? Icons.check_circle : Icons.hourglass_empty,

@@ -29,6 +29,7 @@ class CartItemModel extends CartItem {
     'quantity': quantity,
   };
 
+  @override
   CartItem toEntity() =>
       CartItem(code: code, name: name, price: price, quantity: quantity);
 }

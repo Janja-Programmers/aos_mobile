@@ -52,12 +52,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Username or email
                   CustomTextField(
                     controller: userCtrl,
-                    hint: 'Username or Email',
+                    hint: 'Email',
                     icon: Icons.person,
                     validator:
                         (value) =>
                             value == null || value.isEmpty
-                                ? 'Please enter your username or email'
+                                ? 'Please enter your email'
                                 : null,
                   ),
                   const SizedBox(height: 12),
@@ -191,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (e.toString().contains('401')) {
         setState(() {
-          _error = 'Invalid username or password';
+          _error = 'Invalid email or password';
         });
       }
     } finally {

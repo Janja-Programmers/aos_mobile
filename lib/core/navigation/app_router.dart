@@ -37,7 +37,12 @@ class AppRouter {
           state.matchedLocation == '/register';
 
       if (!loggedIn && !loggingIn) return '/login';
-      if (loggedIn && loggingIn) return '/';
+      if (loggedIn && loggingIn) {
+        final target = auth.redirectPath ?? '/';
+        auth.clearRedirect();
+        return target;
+      }
+
       return null;
     },
     routes: [

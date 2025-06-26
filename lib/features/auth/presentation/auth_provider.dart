@@ -1,16 +1,63 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '/core/errors/failures.dart';
+
+import '../domain/usecases/register.dart';
+import '../domain/usecases/login.dart';
 import '../domain/user.dart';
-import '../data/auth_remote_datasource.dart';
 
 class AuthProvider with ChangeNotifier {
-  final AuthRemoteDataSource dataSource;
+  final LoginUser loginUser;
+  final RegisterUser registerUser;
 
   User? user;
+  String? _redirectPath;
 
-  AuthProvider(this.dataSource);
+  AuthProvider({required this.loginUser, required this.registerUser});
 
   bool get isLoggedIn => user != null;
+  String? get redirectPath => _redirectPath;
+  void clearRedirect() => _redirectPath = null;
+
+  Future<Either<Failure, void>> login(String username, String password) async {
+    final result = await loginUser(username, password);
+
+    return result.fold((failure) => Left(failure), (loginResult) async {
+      user = loginResult.user;
+      await persistUser(user!.username);
+
+      _redirectPath = _mapFrappePath(loginResult.homePage);
+
+      notifyListeners();
+      return const Right(null);
+    });
+  }
+
+  Future<Either<Failure, List<dynamic>>> register(
+    String username,
+    String email,
+    String fullName,
+    String userType,
+    String phone,
+    String password,
+  ) async {
+    return await registerUser(
+      username,
+      email,
+      fullName,
+      userType,
+      phone,
+      password,
+    );
+  }
+
+  String _mapFrappePath(String path) {
+    if (path == '/app/home') return '/dashboard';
+    if (path == '/all-products') return '/';
+    return '/';
+  }
 
   Future<void> persistUser(String username) async {
     final prefs = await SharedPreferences.getInstance();
@@ -32,44 +79,5 @@ class AuthProvider with ChangeNotifier {
     await prefs.remove('username');
     user = null;
     notifyListeners();
-  }
-
-  Future<void> login(String usr, String pwd) async {
-    final result = await dataSource.login(usr, pwd);
-
-    if (result.containsKey('message') && result['message'] == 'Logged In') {
-      user = User(username: usr);
-      await persistUser(usr);
-      notifyListeners();
-    } else {
-      throw Exception('Invalid credentials');
-    }
-  }
-
-  Future<Map<String, dynamic>> register(
-    String username,
-    String email,
-    String fullName,
-    String userType,
-    String phone,
-    String password,
-  ) async {
-    final result = await dataSource.register(
-      username,
-      email,
-      fullName,
-      userType,
-      phone,
-      password,
-    );
-
-    if (result.containsKey('message') &&
-        result['message'] == 'Already Registered') {
-      user = User(username: username);
-      await persistUser(username);
-      notifyListeners();
-    }
-
-    return result;
   }
 }

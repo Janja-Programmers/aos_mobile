@@ -17,3 +17,10 @@ class User {
     this.password,
   });
 }
+
+class LoginResult {
+  final User user;
+  final String homePage;
+
+  LoginResult({required this.user, required this.homePage});
+}

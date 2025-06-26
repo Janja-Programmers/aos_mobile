@@ -54,6 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: userCtrl,
                     hint: 'Email',
                     icon: Icons.person,
+                    inputType: TextInputType.emailAddress,
                     validator:
                         (value) =>
                             value == null || value.isEmpty
@@ -153,12 +154,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () => context.push('/register'),
                     child: const Text("Don't have an account? Sign up"),
                   ),
-
-                  const SizedBox(height: 10),
-                  TextButton(
-                    onPressed: () => context.go('/'),
-                    child: const Text('Browse Items'),
-                  ),
                 ],
               ),
             ),
@@ -178,22 +173,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await auth.login(userCtrl.text.trim(), passCtrl.text.trim());
-
-      if (!mounted) return;
-
-      if (auth.user != null) {
-        context.go('/dashboard');
-      } else {
-        setState(() {
-          _error = 'Oops! I did not capture that! Please try again.';
-        });
-      }
     } catch (e) {
-      if (e.toString().contains('401')) {
-        setState(() {
-          _error = 'Invalid email or password';
-        });
-      }
+      setState(() {
+        _error =
+            e.toString().contains('401')
+                ? 'Invalid email or password'
+                : 'Login failed. Try again.';
+      });
     } finally {
       setState(() {
         _isLoading = false;

@@ -1,5 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:ownashop/features/auth/data/auth_repository_impl.dart';
+import 'package:ownashop/features/auth/domain/auth_repository.dart';
+import 'package:ownashop/features/auth/domain/usecases/login.dart';
+import 'package:ownashop/features/auth/domain/usecases/register.dart';
 
 import '/core/db/db_helper.dart';
 import '../utils/api_client.dart';
@@ -68,11 +72,28 @@ Future<void> init() async {
   sl.registerSingleton<APIClient>(apiClient);
   sl.registerSingleton<Dio>(apiClient.client);
 
-  // Auth
+  // AUTH Feature
+  // Data source
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(sl()),
+    () => AuthRemoteDataSourceImpl(sl<Dio>()),
   );
-  sl.registerFactory(() => AuthProvider(sl()));
+
+  // Repository
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(sl<AuthRemoteDataSource>()),
+  );
+
+  // Use cases
+  sl.registerLazySingleton(() => LoginUser(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => RegisterUser(sl<AuthRepository>()));
+
+  // Provider
+  sl.registerFactory(
+    () => AuthProvider(
+      loginUser: sl<LoginUser>(),
+      registerUser: sl<RegisterUser>(),
+    ),
+  );
 
   // WEB Items
 

@@ -1,21 +1,33 @@
+import 'package:dartz/dartz.dart';
+
+import '/core/errors/failures.dart';
+
 import '../domain/user.dart';
 import '../domain/auth_repository.dart';
-
-import 'auth_remote_datasource.dart';
-import 'user_model.dart';
+import '../data/auth_remote_datasource.dart';
+import '../data/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remote;
+
   AuthRepositoryImpl(this.remote);
 
   @override
-  Future<User?> login(String username, String password) async {
-    final data = await remote.login(username, password);
-    return UserModel.fromJson(data);
+  Future<Either<Failure, LoginResult>> login(
+    String username,
+    String password,
+  ) async {
+    final result = await remote.login(username, password);
+
+    return result.map((data) {
+      final user = UserModel.fromJson(data);
+      final homePage = data['home_page'] ?? '/app/home';
+      return LoginResult(user: user, homePage: homePage);
+    });
   }
 
   @override
-  Future<User?> register(
+  Future<List<dynamic>> register(
     String username,
     String email,
     String fullName,
@@ -23,7 +35,7 @@ class AuthRepositoryImpl implements AuthRepository {
     String phone,
     String password,
   ) async {
-    final data = await remote.register(
+    final result = await remote.register(
       username,
       email,
       fullName,
@@ -31,6 +43,16 @@ class AuthRepositoryImpl implements AuthRepository {
       phone,
       password,
     );
-    return UserModel.fromJson(data);
+
+    return result.fold((failure) => throw Exception(failure.toString()), (
+      data,
+    ) {
+      final message = data['message'];
+      if (message is List) {
+        return message;
+      } else {
+        throw Exception("Unexpected response structure");
+      }
+    });
   }
 }

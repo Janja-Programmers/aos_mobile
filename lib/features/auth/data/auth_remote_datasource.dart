@@ -1,11 +1,14 @@
+import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 
-import '../../../core/constants/const.dart';
+import '/core/constants/const.dart';
+import '/core/errors/exception.dart';
+import '/core/errors/failures.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<Map<String, dynamic>> login(String usr, String pwd);
-  Future<Map<String, dynamic>> register(
+  Future<Either<Failure, Map<String, dynamic>>> login(String usr, String pwd);
+  Future<Either<Failure, Map<String, dynamic>>> register(
     String username,
     String email,
     String fullName,
@@ -22,33 +25,27 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl(this.dio);
 
   @override
-  Future<Map<String, dynamic>> login(String usr, String pwd) async {
-    final response = await dio.post(
-      LOGIN_ENDPOINT,
-      data: {'usr': usr, 'pwd': pwd},
-    );
-
-    // extract 'sid' from Set-Cookie header
-    final setCookie = response.headers['set-cookie'];
-    if (setCookie != null && setCookie.isNotEmpty) {
-      final sidCookie = setCookie.firstWhere(
-        (cookie) => cookie.startsWith('sid='),
-        orElse: () => '',
+  Future<Either<Failure, Map<String, dynamic>>> login(
+    String usr,
+    String pwd,
+  ) async {
+    try {
+      final response = await dio.post(
+        LOGIN_ENDPOINT,
+        data: {'usr': usr, 'pwd': pwd},
       );
-      final sid = sidCookie.split(';').first.split('=').last;
 
-      // Store this for future use (e.g., shared_preferences, memory, etc.)
-      logger?.i('Session ID extracted from cookie: $sid');
+      // Extract and save session cookie
+      _setSessionCookie(response);
 
-      // Add it to headers for future requests
-      dio.options.headers['Cookie'] = 'sid=$sid';
+      return Right(response.data);
+    } catch (e) {
+      return Left(handleException(e));
     }
-
-    return response.data;
   }
 
   @override
-  Future<Map<String, dynamic>> register(
+  Future<Either<Failure, Map<String, dynamic>>> register(
     String username,
     String email,
     String fullName,
@@ -56,20 +53,29 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     String phone,
     String password,
   ) async {
-    final response = await dio.post(
-      REGISTER_ENDPOINT,
-      data: {
-        'username': username,
-        'email': email,
-        'full_name': fullName,
-        'user_type': userType,
-        'phone': phone,
-        'password': password,
-        'redirect_to': "/dashboard",
-      },
-    );
+    try {
+      final response = await dio.post(
+        REGISTER_ENDPOINT,
+        data: {
+          'username': username,
+          'email': email,
+          'full_name': fullName,
+          'user_type': userType,
+          'phone': phone,
+          'password': password,
+          'redirect_to': "/dashboard",
+        },
+      );
 
-    // extract 'sid' from Set-Cookie header
+      _setSessionCookie(response);
+
+      return Right(response.data);
+    } catch (e) {
+      return Left(handleException(e));
+    }
+  }
+
+  void _setSessionCookie(Response response) {
     final setCookie = response.headers['set-cookie'];
     if (setCookie != null && setCookie.isNotEmpty) {
       final sidCookie = setCookie.firstWhere(
@@ -78,13 +84,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
       final sid = sidCookie.split(';').first.split('=').last;
 
-      // Store this for future use (e.g., shared_preferences, memory, etc.)
-      logger?.i('Session ID extracted from cookie: $sid');
-
-      // Add it to headers for future requests
-      dio.options.headers['Cookie'] = 'sid=$sid';
+      if (sid.isNotEmpty) {
+        logger?.i('Session ID extracted from cookie: $sid');
+        dio.options.headers['Cookie'] = 'sid=$sid';
+      }
     }
-
-    return response.data;
   }
 }

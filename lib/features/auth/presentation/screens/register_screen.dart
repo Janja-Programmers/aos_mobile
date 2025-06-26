@@ -24,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController userTypeCtrl = TextEditingController();
 
   bool obscurePass = true;
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -84,8 +85,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   value:
                       userTypeCtrl.text.isNotEmpty ? userTypeCtrl.text : null,
                   items: const [
-                    DropdownMenuItem(value: 'Vendor', child: Text('Vendor')),
-                    DropdownMenuItem(value: 'Buyer', child: Text('Buyer')),
+                    DropdownMenuItem(value: 'buyer', child: Text('Buyer')),
+                    DropdownMenuItem(value: 'vendor', child: Text('Vendor')),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -137,95 +138,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    onPressed: () async {
-                      final username = userCtrl.text.trim();
-                      final email = emailCtrl.text.trim();
-                      final fullName = userCtrl.text.trim();
-                      final userType = userTypeCtrl.text.trim();
-                      final phone = numCtrl.text.trim();
-                      final password = passCtrl.text.trim();
-
-                      if (username.isEmpty ||
-                          email.isEmpty ||
-                          fullName.isEmpty ||
-                          userType.isEmpty ||
-                          phone.isEmpty ||
-                          password.isEmpty) {
-                        CustomSnackbar.showTopSnackbar(
-                          context,
-                          'Please fill all fields.',
-                        );
-                        return;
-                      }
-
-                      if (password != confirmPassCtrl.text.trim()) {
-                        CustomSnackbar.showTopSnackbar(
-                          context,
-                          'Passwords do not match.',
-                        );
-                        return;
-                      }
-                      try {
-                        final result = await auth.register(
-                          username,
-                          email,
-                          fullName,
-                          userType,
-                          phone,
-                          password,
-                        );
-
-                        if (!context.mounted) return;
-
-                        final messageList = result['message'];
-                        if (messageList is List && messageList.length > 1) {
-                          final statusCode = messageList[0];
-                          // final messageText = messageList[1];
-
-                          if (statusCode == 0) {
-                            // Already Registered
-                            CustomSnackbar.showTopSnackbar(
-                              context,
-                              'User already registered.',
-                            );
-                          } else if (statusCode == 1) {
-                            // Email verification required
-                            CustomSnackbar.showTopSnackbar(
-                              context,
-                              'Please verify your email before logging in.',
-                            );
-                          } else if (statusCode == 2) {
-                            // Successful registration
-                            CustomSnackbar.showTopSnackbar(
-                              context,
-                              'Registration successful!',
-                            );
-
-                            context.push('/dashboard');
-                          } else {
-                            // Unknown status code
-                            CustomSnackbar.showTopSnackbar(
-                              context,
-                              'Unexpected status: $statusCode',
-                            );
-                          }
-                        } else {
-                          CustomSnackbar.showTopSnackbar(
-                            context,
-                            'Invalid response from server.',
-                          );
-                        }
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        CustomSnackbar.showTopSnackbar(
-                          context,
-                          'Registration failed: $e',
-                        );
-                      }
-                    },
-                    child: const Text(
-                      'Sign up',
-                      style: TextStyle(color: Colors.white),
+                    onPressed: isLoading ? null : () => _registerUser(auth),
+                    child: Text(
+                      isLoading ? 'Verifying...' : 'Sign Up',
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
                 ),
@@ -252,5 +168,99 @@ class _RegisterScreenState extends State<RegisterScreen> {
     numCtrl.dispose();
     userTypeCtrl.dispose();
     super.dispose();
+  }
+
+  void _registerUser(AuthProvider auth) async {
+    if (isLoading) return;
+    setState(() => isLoading = true);
+
+    final username = userCtrl.text.trim();
+    final email = emailCtrl.text.trim();
+    final fullName = userCtrl.text.trim();
+    final userType = userTypeCtrl.text.trim();
+    final phone = numCtrl.text.trim();
+    final password = passCtrl.text.trim();
+    final confirmPassword = confirmPassCtrl.text.trim();
+
+    if ([
+      username,
+      email,
+      fullName,
+      userType,
+      phone,
+      password,
+    ].any((val) => val.isEmpty)) {
+      CustomSnackbar.showTopSnackbar(
+        context,
+        'Please fill all fields.',
+        backgroundColor: Colors.red,
+      );
+      setState(() => isLoading = false);
+      return;
+    }
+
+    if (password != confirmPassword) {
+      CustomSnackbar.showTopSnackbar(
+        context,
+        'Passwords do not match.',
+        backgroundColor: Colors.red,
+      );
+      setState(() => isLoading = false);
+      return;
+    }
+
+    try {
+      final result = await auth.register(
+        username,
+        email,
+        fullName,
+        userType,
+        phone,
+        password,
+      );
+
+      if (!context.mounted) return;
+
+      result.fold(
+        (failure) {
+          CustomSnackbar.showTopSnackbar(
+            context,
+            failure.message,
+            backgroundColor: Colors.red,
+          );
+        },
+        (messageList) {
+          if (messageList.length >= 2) {
+            final status = messageList[0];
+
+            if (status == 0) {
+              CustomSnackbar.showTopSnackbar(context, "Already registered.");
+              context.push('/login');
+            } else if (status == 2) {
+              CustomSnackbar.showTopSnackbar(
+                context,
+                "Registration successful.",
+                backgroundColor: Colors.green,
+              );
+              context.push('/login');
+            } else {
+              CustomSnackbar.showTopSnackbar(
+                context,
+                "Unexpected status: $status",
+                backgroundColor: Colors.red,
+              );
+            }
+          } else {
+            CustomSnackbar.showTopSnackbar(
+              context,
+              "Invalid server response.",
+              backgroundColor: Colors.red,
+            );
+          }
+        },
+      );
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 }

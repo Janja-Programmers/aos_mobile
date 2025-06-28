@@ -1,8 +1,12 @@
 import 'package:dartz/dartz.dart';
-import 'package:ownashop/core/errors/failures.dart';
-import 'package:ownashop/features/product/data/remote.dart';
-import 'package:ownashop/features/product/domain/product.dart';
-import 'package:ownashop/features/product/domain/repo.dart';
+
+import '/core/errors/failures.dart';
+
+import '../domain/product.dart';
+import '../domain/repo.dart';
+
+import 'model.dart';
+import 'remote.dart';
 
 class ProductRepoImpl implements ProductRepo {
   final ProductRemoteDataSource remote;
@@ -15,6 +19,18 @@ class ProductRepoImpl implements ProductRepo {
       final models = await remote.getProducts();
       final entities = models.map((e) => e.toEntity()).toList();
       return Right(entities);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Product>> createProduct(Product product) async {
+    try {
+      final model = ProductModel.fromEntity(product);
+      final createdModel = await remote.createProduct(model);
+      final createdEntity = createdModel.toEntity();
+      return Right(createdEntity);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

@@ -62,7 +62,7 @@ class App extends StatelessWidget {
         title: AppStrings.appName,
         theme: AppThemes.lightTheme,
         darkTheme: AppThemes.darkTheme,
-        themeMode: ThemeMode.system,
+        themeMode: ThemeMode.light
       ),
     );
   }

@@ -256,8 +256,9 @@ Future<void> init() async {
   sl.registerLazySingleton<ProductRepo>(() => ProductRepoImpl(sl()));
   // === Domain ===
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));
+  sl.registerLazySingleton(() => CreateProductUseCase(sl()));
   // === Provider ===
-  sl.registerFactory(() => ProductProvider(sl()));
+  sl.registerFactory(() => ProductProvider(sl(), sl()));
 
   // ADDRESS Feature
   // ✅ Remote datasource

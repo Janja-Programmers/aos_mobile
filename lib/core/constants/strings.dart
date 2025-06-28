@@ -14,9 +14,9 @@ class AppStrings {
   static const String noAccount = 'Don\'t have an account?';
 
   static const String dashboard = 'Dashboard';
-  static const String items = 'Items';
+  static const String items = 'Products';
   static const String itemPrice = 'Add/Edit Price';
-  static const String stock = 'Stock Entry';
+  static const String stock = 'Stock Intake';
   static const String websiteItem = 'Publish in website';
   static const String orders = 'View Orders';
   static const String deliveryNote = 'Delivery Note';

@@ -87,7 +87,7 @@ class _ItemScreenState extends State<ItemScreen> {
                     controller: _searchController,
                     decoration: const InputDecoration(
                       prefixIcon: Icon(Icons.search),
-                      hintText: 'Search...',
+                      hintText: 'Search items by name',
                       border: OutlineInputBorder(),
                     ),
                     onChanged: (_) => setState(() {}),

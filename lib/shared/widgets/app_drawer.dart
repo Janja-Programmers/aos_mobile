@@ -57,38 +57,23 @@ class AppDrawer extends StatelessWidget {
           ),
           _buildDrawerItem(
             context,
-            Icons.price_change_outlined,
-            AppStrings.itemPrice,
-            2,
-            '/item-price',
-            extra: user,
-          ),
-          _buildDrawerItem(
-            context,
             Icons.inventory_2_outlined,
             AppStrings.stock,
-            3,
+            2,
             '/stock-entry',
-          ),
-          _buildDrawerItem(
-            context,
-            Icons.shopping_bag_outlined,
-            AppStrings.websiteItem,
-            4,
-            '/web-items',
           ),
           _buildDrawerItem(
             context,
             Icons.receipt_long_outlined,
             AppStrings.orders,
-            5,
+            3,
             '/sales-orders',
           ),
           _buildDrawerItem(
             context,
             Icons.local_shipping_outlined,
             AppStrings.deliveryNote,
-            6,
+            4,
             '/delivery-notes',
           ),
 
@@ -98,15 +83,6 @@ class AppDrawer extends StatelessWidget {
             icon: Icons.web,
             title: "View in website",
             onTap: () => context.push('/'),
-          ),
-          DrawerItem(icon: Icons.account_circle, title: AppStrings.profile),
-          DrawerItem(
-            icon: Icons.logout,
-            title: AppStrings.logout,
-            onTap: () {
-              authProvider.logout();
-              context.push('/');
-            },
           ),
         ],
       ),

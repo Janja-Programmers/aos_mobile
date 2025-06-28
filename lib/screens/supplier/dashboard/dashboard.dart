@@ -68,20 +68,8 @@ class _SellerDashboardState extends State<SellerDashboard> {
               },
             ),
             DashboardTile(
-              title: AppStrings.itemPrice,
-              onTap: () {
-                if (user != null) {
-                  context.push('/item-price', extra: user!);
-                }
-              },
-            ),
-            DashboardTile(
               title: AppStrings.stock,
               onTap: () => context.push('/stock-entry'),
-            ),
-            DashboardTile(
-              title: AppStrings.websiteItem,
-              onTap: () => context.push('/web-items'),
             ),
             DashboardTile(
               title: AppStrings.orders,

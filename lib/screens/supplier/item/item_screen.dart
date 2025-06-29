@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:ownashop/screens/supplier/item/add_item_screen.dart';
+import 'package:ownashop/shared/widgets/custom_button.dart';
 import 'package:provider/provider.dart';
 
-import '../../../shared/widgets/app_drawer.dart';
-import '../../../shared/widgets/custom_button.dart';
-import '../../../shared/widgets/main_bar.dart';
-import '../website/add_website_item_screen.dart';
+import '/shared/widgets/app_drawer.dart';
+import '/shared/widgets/main_bar.dart';
 
-import '../../../features/auth/presentation/auth_provider.dart';
+import '/features/auth/presentation/auth_provider.dart';
+import '/features/product/provider.dart';
 
-import '../../../features/item/prov.dart';
+import 'widgets/item_tile.dart';
 
 class ItemScreen extends StatefulWidget {
   const ItemScreen({super.key});
@@ -29,7 +29,8 @@ class _ItemScreenState extends State<ItemScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ItemProv>().loadItems();
+      final user = context.read<AuthProvider>().user?.username;
+      context.read<ProductProvider>().fetchVendorProducts(user!);
     });
   }
 
@@ -43,32 +44,27 @@ class _ItemScreenState extends State<ItemScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final itemProvider = context.watch<ItemProv>();
-
-    final authProvider = context.watch<AuthProvider>();
-    final user = authProvider.user?.username;
-
-    final items =
-        itemProvider.items.where((item) => item.owner == user).toList();
+    final productProvider = context.watch<ProductProvider>();
+    final products = productProvider.products;
 
     final query = _searchController.text.trim().toLowerCase();
-    final filteredItems =
-        items.where((item) {
-          return query.isEmpty || item.name.toLowerCase().contains(query);
+    final filteredproducts =
+        products.where((product) {
+          return query.isEmpty || product.name.toLowerCase().contains(query);
         }).toList();
 
     Widget content;
 
-    if (itemProvider.isLoading) {
+    if (productProvider.isLoading) {
       content = const Center(child: CircularProgressIndicator());
-    } else if (itemProvider.error != null) {
+    } else if (productProvider.error != null) {
       content = Center(
         child: Text(
-          'Error: ${itemProvider.error}',
+          'Error: ${productProvider.error}',
           style: const TextStyle(color: Colors.red),
         ),
       );
-    } else if (itemProvider.items.isEmpty) {
+    } else if (productProvider.products.isEmpty) {
       content = const Center(child: Text('No items found.'));
     } else {
       content = Column(
@@ -106,7 +102,9 @@ class _ItemScreenState extends State<ItemScreen> {
               children: [
                 const Text("Item Name"),
                 const Spacer(),
-                Text("${filteredItems.length} of ${filteredItems.length}"),
+                Text(
+                  "${filteredproducts.length} of ${filteredproducts.length}",
+                ),
               ],
             ),
           ),
@@ -116,32 +114,10 @@ class _ItemScreenState extends State<ItemScreen> {
           // Item List
           Expanded(
             child: ListView.builder(
-              itemCount: filteredItems.length,
+              itemCount: filteredproducts.length,
               itemBuilder: (context, index) {
-                final item = filteredItems[index];
-                return ListTile(
-                  title: Text(item.name),
-                  onTap: () {
-                    context.go('/item-detail/${item.name}');
-                  },
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          item.disabled == 1
-                              ? Colors.grey[300]
-                              : Colors.blue[100],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      item.disabled == 0 ? "Enabled" : "Disabled",
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                );
+                final product = filteredproducts[index];
+                return ItemTile(product: product);
               },
             ),
           ),
@@ -153,10 +129,7 @@ class _ItemScreenState extends State<ItemScreen> {
       drawer: AppDrawer(selectedIndex: 1, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
       subTitle: "Items",
-      actionButton: CustomButton(
-        label: "Create New",
-        pageBuilder: () => const AddWebsiteItemScreen(),
-      ),
+      actionButton: CustomButton(pageBuilder: () => const AddItemScreen()),
       body: content,
     );
   }

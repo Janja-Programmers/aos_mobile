@@ -31,7 +31,7 @@ class ProductImageWithVideo extends StatelessWidget {
             child: Image.network(
               resolvedImageUrl,
               fit: BoxFit.cover,
-              errorBuilder: (ctx, _, __) => const Icon(Icons.broken_image),
+              errorBuilder: (ctx, _, _) => const Icon(Icons.broken_image),
             ),
           ),
         ),

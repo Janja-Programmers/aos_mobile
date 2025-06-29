@@ -13,4 +13,4 @@ const String DELIVERY_NOTE_ENDPOINT = '/api/resource/Delivery Note';
 const String STOCK_ENTRY_ENDPOINT = '/api/resource/Stock Entry';
 const String ADDRESS_ENDPOINT = '/api/resource/Address';
 const String ALL_PRODUCTS_ENDPOINT = '/api/method/amani_mall.api.get_products';
-const String CREATE_PRODUCTS_ENDPOINT = '/api/resource/Product';
+const String CREATE_PRODUCT_ENDPOINT = '/api/resource/Product';

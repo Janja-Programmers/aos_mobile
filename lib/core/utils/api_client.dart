@@ -36,9 +36,6 @@ class APIClient {
       InterceptorsWrapper(
         onRequest: (options, handler) {
           client._logger.i('➡️ ${options.method} ${options.uri}');
-          print(
-            "🌐 API CLIENT sending request to ${options.uri} with body: ${options.data}",
-          );
           if (options.data != null) client._logger.i('Body: ${options.data}');
 
           return handler.next(options);

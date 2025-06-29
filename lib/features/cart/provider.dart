@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:ownashop/core/utils/logger.dart';
@@ -126,9 +125,6 @@ class CartProvider with ChangeNotifier {
 
       appLogger.i(
         'Placing order from PROVIDER.DART with $fullAddressName and PAYLOAD:$payload',
-      );
-      print(
-        "🟢 Cart Provider sending OrderPayload: ${jsonEncode(payload.toJson())}",
       );
 
       final result = await placeOrder(payload);

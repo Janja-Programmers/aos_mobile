@@ -11,7 +11,7 @@ class ProductModel {
   final String? demoVideo;
   final String? websiteDescription;
   final String? shortWebsiteDescription;
-  final List<String>? websiteSpecifications;
+  final List<WebsiteSpecificationModel>? websiteSpecifications;
 
   ProductModel({
     required this.name,
@@ -37,11 +37,11 @@ class ProductModel {
       image: json['image'],
       slideShow: json['slide_show'],
       demoVideo: json['demo_video'],
-      websiteDescription: json['website_description'],
-      shortWebsiteDescription: json['short_website_description'],
+      websiteDescription: json['web_long_description'],
+      shortWebsiteDescription: json['short_description'],
       websiteSpecifications:
           (json['website_specifications'] as List<dynamic>?)
-              ?.map((spec) => spec as String)
+              ?.map((e) => WebsiteSpecificationModel.fromJson(e))
               .toList(),
     );
   }
@@ -56,9 +56,10 @@ class ProductModel {
       'image': image,
       'slide_show': slideShow,
       'demo_video': demoVideo,
-      'website_description': websiteDescription,
-      'short_website_description': shortWebsiteDescription,
-      'website_specifications': websiteSpecifications,
+      'web_long_description': websiteDescription,
+      'short_description': shortWebsiteDescription,
+      'website_specifications':
+          websiteSpecifications?.map((e) => e.toJson()).toList(),
     };
   }
 
@@ -73,7 +74,8 @@ class ProductModel {
     demoVideo: demoVideo,
     websiteDescription: websiteDescription,
     shortWebsiteDescription: shortWebsiteDescription,
-    websiteSpecifications: websiteSpecifications,
+    websiteSpecifications:
+        websiteSpecifications?.map((e) => e.toEntity()).toList(),
   );
 
   factory ProductModel.fromEntity(Product product) {
@@ -88,7 +90,36 @@ class ProductModel {
       demoVideo: product.demoVideo,
       websiteDescription: product.websiteDescription,
       shortWebsiteDescription: product.shortWebsiteDescription,
-      websiteSpecifications: product.websiteSpecifications,
+      websiteSpecifications:
+          product.websiteSpecifications
+              ?.map((e) => WebsiteSpecificationModel.fromEntity(e))
+              .toList(),
+    );
+  }
+}
+
+class WebsiteSpecificationModel {
+  final String label;
+  final String description;
+
+  WebsiteSpecificationModel({required this.label, required this.description});
+
+  factory WebsiteSpecificationModel.fromJson(Map<String, dynamic> json) {
+    return WebsiteSpecificationModel(
+      label: json['label'] ?? '',
+      description: json['description'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {'label': label, 'description': description};
+
+  WebsiteSpecification toEntity() =>
+      WebsiteSpecification(label: label, description: description);
+
+  factory WebsiteSpecificationModel.fromEntity(WebsiteSpecification spec) {
+    return WebsiteSpecificationModel(
+      label: spec.label,
+      description: spec.description,
     );
   }
 }

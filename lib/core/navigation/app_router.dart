@@ -64,7 +64,7 @@ class AppRouter {
         builder: (context, state) => const SellerDashboard(),
       ),
       // Items
-      GoRoute(path: '/items', builder: (context, state) => const ItemScreen()),
+      GoRoute(path: '/items', builder: (context, state) => ItemScreen()),
       // Item Detail
       GoRoute(
         path: '/item-detail/:name',

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/core/constants/colors.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../../../features/item/domain/entity.dart';
+import '/features/product/domain/product.dart';
+
+import '/core/constants/colors.dart';
 
 class ItemTile extends StatelessWidget {
-  final Item item;
+  final Product product;
 
-  const ItemTile({super.key, required this.item});
+  const ItemTile({super.key, required this.product});
 
   @override
   Widget build(BuildContext context) {
@@ -15,11 +17,11 @@ class ItemTile extends StatelessWidget {
       shadowColor: AppColors.accent,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
-        title: Text(item.name),
-        subtitle: Text('Group: ${item.itemGroup}'),
+        title: Text(product.itemName),
+        subtitle: Text(product.category),
         trailing: TextButton.icon(
-          icon: const Icon(Icons.add, color: Colors.white),
-          label: const Text('Add Stock', style: TextStyle(color: Colors.white)),
+          icon: const Icon(Icons.edit, color: Colors.white),
+          label: const Text('Edit', style: TextStyle(color: Colors.white)),
           style: TextButton.styleFrom(
             backgroundColor: AppColors.primary,
             padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -27,7 +29,9 @@ class ItemTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          onPressed: () {},
+          onPressed: () {
+            context.go('/item-detail/${product.itemName}');
+          },
         ),
       ),
     );

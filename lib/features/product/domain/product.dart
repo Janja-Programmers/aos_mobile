@@ -9,7 +9,7 @@ class Product {
   final String? demoVideo;
   final String? websiteDescription;
   final String? shortWebsiteDescription;
-  final List<String>? websiteSpecifications;
+  final List<WebsiteSpecification>? websiteSpecifications;
 
   const Product({
     required this.name,
@@ -24,4 +24,11 @@ class Product {
     this.shortWebsiteDescription,
     this.websiteSpecifications,
   });
+}
+
+class WebsiteSpecification {
+  final String label;
+  final String description;
+
+  WebsiteSpecification({required this.label, required this.description});
 }

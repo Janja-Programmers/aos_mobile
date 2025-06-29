@@ -6,10 +6,8 @@ class AppThemes {
     colorScheme: const ColorScheme.light(
       primary: Colors.black,
       secondary: Colors.black,
-      background: Colors.white,
       surface: Colors.white,
       onPrimary: Colors.white,
-      onBackground: Colors.black,
       onSurface: Colors.black,
     ),
     scaffoldBackgroundColor: Colors.white,

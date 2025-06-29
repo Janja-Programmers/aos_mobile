@@ -15,6 +15,16 @@ class GetProductsUseCase {
   }
 }
 
+class GetVendorProductsUseCase {
+  final ProductRepo repo;
+
+  GetVendorProductsUseCase(this.repo);
+
+  Future<Either<Failure, List<Product>>> call(String vendor) async {
+    return await repo.getProductsByVendor(vendor);
+  }
+}
+
 class CreateProductUseCase {
   final ProductRepo repo;
 

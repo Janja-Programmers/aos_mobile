@@ -7,10 +7,11 @@ import '/features/auth/presentation/auth_provider.dart';
 import '/features/item/prov.dart';
 import '/features/item/domain/entity.dart';
 
-import '../../../shared/widgets/app_drawer.dart';
+import '/shared/widgets/app_drawer.dart';
+import '/shared/widgets/custom_button.dart';
+import '/shared/widgets/main_bar.dart';
+
 import '../website/widgets/labeled_card.dart';
-import '../../../shared/widgets/custom_button.dart';
-import '../../../shared/widgets/main_bar.dart';
 import '../website/widgets/selectable_field.dart';
 
 class ItemDetailScreen extends StatefulWidget {

@@ -1,3 +1,4 @@
+// ignore: unused_import
 import 'dart:convert';
 
 import 'package:dartz/dartz.dart';
@@ -31,20 +32,10 @@ class SalesOrderRepoImpl implements SalesOrderRepo {
         'Placing order with payload: ${payload.toJson()} from REPO_IMPL',
       );
 
-      print("🧪 payload.customer = ${payload.customer}");
-      print("🧪 payload.deliveryDate = ${payload.deliveryDate}");
-      print("🧪 payload.items = ${payload.items.length}");
-      print("🧪 payload.shippingAddressName = ${payload.shippingAddressName}");
       final model = OrderPayloadModel.fromEntity(payload);
 
-      print(
-        "📦 SalesOrderRepoImpl sending OrderPayload: ${jsonEncode(model.toJson())}",
-      );
-
       return await payloadRemote.placeOrder(model);
-    } catch (e, stack) {
-      print("❌ Exception while building payload model: $e");
-      print(stack);
+    } catch (e) {
       return Left(handleException(e));
     }
   }

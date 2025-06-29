@@ -54,7 +54,7 @@ class _CartScreenState extends State<CartScreen> {
                       child: ListView.separated(
                         padding: const EdgeInsets.all(12),
                         itemCount: items.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final item = items[index];
                           final resolvedimage = resolveImageUrl(item.image);
@@ -81,7 +81,7 @@ class _CartScreenState extends State<CartScreen> {
                                             resolvedimage,
                                             fit: BoxFit.cover,
                                             errorBuilder:
-                                                (ctx, _, __) => const Icon(
+                                                (ctx, _, _) => const Icon(
                                                   Icons.broken_image,
                                                 ),
                                           ),

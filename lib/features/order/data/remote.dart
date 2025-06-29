@@ -43,14 +43,10 @@ class SalesOrderPayloadRemoteDS {
 
   Future<Either<Failure, Unit>> placeOrder(OrderPayloadModel order) async {
     try {
-      print("🧪 Entered placeOrder in REMOTE.DART");
-
       await client.client.post(PLACE_ORDER_ENDPOINT, data: order.toJson());
 
-      print("🟢 POST succeeded in REMOTE.DART");
       return const Right(unit);
     } catch (e) {
-      print("❌ Exception caught in REMOTE.DART: $e");
       return Left(handleException('Failed to place order: $e'));
     }
   }

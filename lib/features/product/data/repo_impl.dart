@@ -48,4 +48,15 @@ class ProductRepoImpl implements ProductRepo {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, Product>> updateProduct(Product product) async {
+    try {
+      final model = ProductModel.fromEntity(product);
+      final updatedModel = await remote.updateProduct(model);
+      return Right(updatedModel.toEntity());
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

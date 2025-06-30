@@ -129,7 +129,7 @@ class _ItemScreenState extends State<ItemScreen> {
       drawer: AppDrawer(selectedIndex: 1, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
       subTitle: "Items",
-      actionButton: CustomButton(pageBuilder: () => const AddItemScreen()),
+      actionButton: CustomButton(pageBuilder: () => AddItemScreen()),
       body: content,
     );
   }

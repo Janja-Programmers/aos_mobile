@@ -9,11 +9,13 @@ class ProductProvider with ChangeNotifier {
   final GetProductsUseCase getProductsUseCase;
   final CreateProductUseCase createProductUseCase;
   final GetVendorProductsUseCase getVendorProductsUseCase;
+  final UpdateProductUseCase updateProductUseCase;
 
   ProductProvider(
     this.getProductsUseCase,
     this.createProductUseCase,
     this.getVendorProductsUseCase,
+    this.updateProductUseCase,
   );
 
   List<Product> _products = [];
@@ -56,19 +58,52 @@ class ProductProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> createProduct(Product product) async {
+  Future<bool> createProduct(Product product) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     final result = await createProductUseCase(product);
 
-    result.fold((failure) => _error = failure.message, (createdProduct) {
-      _products.add(createdProduct);
-      appLogger.i('Product created: ${createdProduct.itemName}');
-    });
+    _isLoading = false;
+
+    return result.fold(
+      (failure) {
+        _error = failure.message;
+        notifyListeners();
+        return false;
+      },
+      (createdProduct) {
+        _products.add(createdProduct);
+        notifyListeners();
+        return true;
+      },
+    );
+  }
+
+  Future<bool> updateExistingItem(Product product) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    final result = await updateProductUseCase(product);
 
     _isLoading = false;
     notifyListeners();
+
+    return result.fold(
+      (failure) {
+        _error = failure.message;
+        return false;
+      },
+      (updated) {
+        final index = _products.indexWhere((p) => p.name == updated.name);
+        if (index != -1) {
+          _products[index] = updated;
+        }
+        appLogger.i('Product updated: ${updated.itemName}');
+        return true;
+      },
+    );
   }
 }

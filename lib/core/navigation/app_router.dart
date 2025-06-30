@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:ownashop/screens/supplier/item/add_item_screen.dart';
 
 // Auth
 import '/features/product/domain/product.dart';
@@ -8,7 +9,6 @@ import '/features/auth/presentation/screens/register_screen.dart';
 
 // Customer
 import '/screens/customer/products/screens/product_list_screen.dart';
-import '/screens/customer/products/screens/product_detail_screen.dart';
 import '/screens/customer/wishlist/presentation/wishlist_screen.dart';
 import '/screens/customer/cart/cart_screen.dart';
 import '/screens/customer/address/shipping_address_form.dart';
@@ -17,7 +17,6 @@ import '/screens/customer/address/shipping_address_form.dart';
 // Seller
 import '/screens/supplier/dashboard/dashboard.dart';
 import '/screens/supplier/item/item_screen.dart';
-import '/screens/supplier/item/item_detail.dart';
 import '/screens/supplier/website/web_item_list_screen.dart';
 import '/screens/supplier/price/screens/item_price_list.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';
@@ -66,13 +65,7 @@ class AppRouter {
       // Items
       GoRoute(path: '/items', builder: (context, state) => ItemScreen()),
       // Item Detail
-      GoRoute(
-        path: '/item-detail/:name',
-        builder: (context, state) {
-          final name = state.pathParameters['name']!;
-          return ItemDetailScreen(itemName: name);
-        },
-      ),
+
       // Item Price
       GoRoute(
         path: '/item-price',
@@ -119,12 +112,13 @@ class AppRouter {
       ),
       // Product Details
       GoRoute(
-        path: '/product/:name',
+        path: '/add-item',
         builder: (context, state) {
-          final product = state.extra as Product;
-          return ProductDetailScreen(product: product);
+          final product = state.extra as Product?;
+          return AddItemScreen(product: product);
         },
       ),
+
       // Shipping Address
       GoRoute(
         path: '/shipping-address',

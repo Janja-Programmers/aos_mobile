@@ -30,7 +30,8 @@ class ItemTile extends StatelessWidget {
             ),
           ),
           onPressed: () {
-            context.go('/item-detail/${product.itemName}');
+            // Navigate to update
+            context.push('/add-item', extra: product);
           },
         ),
       ),

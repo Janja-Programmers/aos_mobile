@@ -6,6 +6,8 @@ class AppTextField extends StatelessWidget {
   final bool isRequired;
   final int maxLines;
   final TextInputType keyboardType;
+  final bool readOnly;
+  final void Function(String)? onChanged;
 
   const AppTextField({
     super.key,
@@ -14,6 +16,8 @@ class AppTextField extends StatelessWidget {
     this.isRequired = false,
     this.maxLines = 1,
     this.keyboardType = TextInputType.text,
+    this.readOnly = false,
+    this.onChanged,
   });
 
   @override
@@ -22,9 +26,13 @@ class AppTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      readOnly: readOnly,
+      onChanged: readOnly ? null : onChanged,
       decoration: InputDecoration(
         labelText: label,
         border: const OutlineInputBorder(),
+        fillColor: readOnly ? Colors.grey.shade100 : null,
+        filled: readOnly,
       ),
       validator:
           isRequired

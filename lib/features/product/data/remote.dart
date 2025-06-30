@@ -10,6 +10,7 @@ abstract class ProductRemoteDataSource {
   Future<List<ProductModel>> getProducts();
   Future<List<ProductModel>> vendorProducts(String vendor);
   Future<ProductModel> createProduct(ProductModel model);
+  Future<ProductModel> updateProduct(ProductModel model);
 }
 
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
@@ -52,6 +53,22 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     if (data == null || data is! Map<String, dynamic>) {
       throw Exception('Failed to parse created product');
     }
+    return ProductModel.fromJson(data);
+  }
+
+  @override
+  Future<ProductModel> updateProduct(ProductModel model) async {
+    final response = await client.client.put(
+      '$CREATE_PRODUCT_ENDPOINT/${model.name}',
+      data: model.toJson(),
+    );
+
+    final data = response.data['data'];
+
+    if (data == null || data is! Map<String, dynamic>) {
+      throw Exception('Failed to parse updated product');
+    }
+
     return ProductModel.fromJson(data);
   }
 }

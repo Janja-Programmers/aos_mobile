@@ -34,3 +34,13 @@ class CreateProductUseCase {
     return await repo.createProduct(product);
   }
 }
+
+class UpdateProductUseCase {
+  final ProductRepo repo;
+
+  UpdateProductUseCase(this.repo);
+
+  Future<Either<Failure, Product>> call(Product product) {
+    return repo.updateProduct(product);
+  }
+}

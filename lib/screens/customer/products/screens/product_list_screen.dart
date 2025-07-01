@@ -233,11 +233,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   ),
                 ],
               ),
+
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          debugPrint('Navigating to:${user?.userType} dashboard');
           context.go('/dashboard');
         },
-        child: const Icon(Icons.dashboard),
+        child: const Icon(Icons.dashboard, color: Colors.white),
       ),
     );
   }

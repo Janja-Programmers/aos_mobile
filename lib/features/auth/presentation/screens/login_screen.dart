@@ -172,11 +172,14 @@ class _LoginScreenState extends State<LoginScreen> {
     result.fold(
       (failure) {
         setState(() {
-          _error = failure.message;
+          _error =
+              failure.hashCode == 401
+                  ? 'Invalid email or password'
+                  : 'An error occurred! Please try again.';
         });
       },
       (_) {
-        appLogger.i('Redirecting to: ${auth.redirectPath}');
+        appLogger.i('Redirecting from Login Screen to: ${auth.redirectPath}');
         context.go(auth.redirectPath ?? '/');
         auth.clearRedirect();
       },

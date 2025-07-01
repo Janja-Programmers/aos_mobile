@@ -19,7 +19,10 @@ class AuthRepositoryImpl implements AuthRepository {
     final result = await remote.login(username, password);
 
     return result.map((data) {
-      final user = User(username: data['full_name'] ?? 'Guest');
+      final user = User(
+        username: data['full_name'] ?? 'Guest',
+        userType: data['user_type'] ?? 'Buyer',
+      );
       final homePage = data['home_page'];
       return LoginResult(user: user, homePage: homePage);
     });

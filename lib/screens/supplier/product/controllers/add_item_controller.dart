@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
 
+import '/core/di/service_locator.dart';
 import '/core/utils/api_client.dart';
 
 import '/features/product/domain/product.dart';
@@ -11,6 +13,7 @@ import '/features/product/provider.dart';
 class AddItemController extends ChangeNotifier {
   final ProductProvider provider;
   final APIClient apiClient;
+  final formKey = GlobalKey<FormState>();
 
   final nameController = TextEditingController();
   final groupController = TextEditingController();
@@ -86,35 +89,76 @@ class AddItemController extends ChangeNotifier {
     return data.map((e) => e['name'] as String).toList();
   }
 
-  Future<bool> submit(Product? initialProduct) async {
-    if (isSubmitting) return false;
+  Future<String?> uploadFile(File? file) async {
+    if (file == null) return null;
+
+    try {
+      final fileName = file.path.split('/').last;
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(file.path, filename: fileName),
+      });
+
+      final client = sl<APIClient>();
+
+      final response = await client.client.post(
+        '/api/method/upload_file',
+        data: formData,
+      );
+
+      final fileUrl = response.data['message']['file_url'];
+      return fileUrl;
+    } catch (e, stack) {
+      debugPrint('❌ Upload failed: $e\n$stack');
+      return null;
+    }
+  }
+
+  Future<bool> submit(Product? existingProduct) async {
+    if (!formKey.currentState!.validate()) {
+      debugPrint("❌ Form validation failed");
+      return false;
+    }
+
+    if (!formKey.currentState!.validate()) return false;
+
     isSubmitting = true;
     notifyListeners();
 
+    String? imagePath = existingProduct?.image;
+    String? videoPath = existingProduct?.demoVideo;
+    if (selectedImage != null) {
+      imagePath = await uploadFile(selectedImage);
+      if (imagePath == null) {
+        isSubmitting = false;
+        notifyListeners();
+        return false;
+      }
+    }
+
+    if (selectedVideo != null) {
+      videoPath = await uploadFile(selectedVideo!);
+    }
+
     final product = Product(
-      name: initialProduct?.name ?? itemCodeController.text.trim(),
+      name: existingProduct?.name ?? itemCodeController.text.trim(),
       itemName: nameController.text.trim(),
       itemPrice: double.tryParse(priceController.text.trim()) ?? 0.0,
       category: groupController.text.trim(),
-      vendor: initialProduct?.vendor,
-      image: initialProduct?.image,
-      imageFile: selectedImage,
-      slideShow: initialProduct?.slideShow,
-      demoVideo: initialProduct?.demoVideo,
-      videoFile: selectedVideo,
+      vendor: existingProduct?.vendor,
+      image: imagePath,
+      demoVideo: videoPath,
       websiteDescription: descController.text.trim(),
       shortWebsiteDescription: shortDescController.text.trim(),
-      websiteSpecifications: initialProduct?.websiteSpecifications ?? [],
+      websiteSpecifications: existingProduct?.websiteSpecifications ?? [],
     );
 
     final success =
-        initialProduct == null
+        existingProduct == null
             ? await provider.createProduct(product)
             : await provider.updateExistingItem(product);
 
     isSubmitting = false;
     notifyListeners();
-
     return success;
   }
 

@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
-import 'package:ownashop/core/utils/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '/core/utils/logger.dart';
 import '/core/errors/failures.dart';
 
 import '../domain/usecases/register.dart';
@@ -20,7 +20,6 @@ class AuthProvider with ChangeNotifier {
 
   bool get isLoggedIn => user != null;
   String? get redirectPath => _redirectPath;
-  void clearRedirect() => _redirectPath = null;
 
   Future<Either<Failure, void>> login(String username, String password) async {
     final result = await loginUser(username, password);
@@ -32,11 +31,13 @@ class AuthProvider with ChangeNotifier {
     );
 
     user = loginResult.user;
-    appLogger.i('Redirecting to: ${loginResult.homePage}');
-    _redirectPath = _mapFrappePath(loginResult.homePage);
-    appLogger.i('Redirecting to: ${loginResult.homePage}');
+    appLogger.i('Logged in as: ${user?.username}, type: ${user?.userType}');
 
-    await persistUser(user!.username);
+    // Redirect based on user type
+    _redirectPath = user?.userType == 'Vendor' ? '/dashboard' : '/';
+    appLogger.i('➡️ _redirectPath just set to: $_redirectPath');
+
+    await persistUser(user!.username, user!.userType ?? '');
 
     notifyListeners();
     return const Right(null);
@@ -60,17 +61,19 @@ class AuthProvider with ChangeNotifier {
     );
   }
 
-  Future<void> persistUser(String username) async {
+  Future<void> persistUser(String username, String userType) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('username', username);
+    await prefs.setString('userType', userType);
   }
 
   Future<void> loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     final username = prefs.getString('username');
+    final userType = prefs.getString('userType');
 
     if (username != null) {
-      user = User(username: username);
+      user = User(username: username, userType: userType);
       notifyListeners();
     }
   }
@@ -78,11 +81,10 @@ class AuthProvider with ChangeNotifier {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('username');
+    await prefs.remove('userType');
     user = null;
     notifyListeners();
   }
 
-  String _mapFrappePath(String path) {
-    return path == '/all-products' ? '/' : '/products';
-  }
+  void clearRedirect() => _redirectPath = null;
 }

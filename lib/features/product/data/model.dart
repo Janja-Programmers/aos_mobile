@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../domain/product.dart';
 
 class ProductModel {
@@ -7,8 +8,10 @@ class ProductModel {
   final String category;
   final String? vendor;
   final String? image;
+  final File? imageFile;
   final String? slideShow;
   final String? demoVideo;
+  final File? videoFile;
   final String? websiteDescription;
   final String? shortWebsiteDescription;
   final List<WebsiteSpecificationModel>? websiteSpecifications;
@@ -20,8 +23,10 @@ class ProductModel {
     required this.category,
     this.vendor,
     this.image,
+    this.imageFile,
     this.slideShow,
     this.demoVideo,
+    this.videoFile,
     this.websiteDescription,
     this.shortWebsiteDescription,
     this.websiteSpecifications,
@@ -29,10 +34,10 @@ class ProductModel {
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
-      name: json['name'],
-      itemName: json['item_name'],
-      itemPrice: (json['item_price'] as num).toDouble(),
-      category: json['category'],
+      name: json['name'] ?? '',
+      itemName: json['item_name'] ?? '',
+      itemPrice: (json['item_price'] as num?)?.toDouble() ?? 0.0,
+      category: json['category'] ?? '',
       vendor: json['vendor'],
       image: json['image'],
       slideShow: json['slide_show'],

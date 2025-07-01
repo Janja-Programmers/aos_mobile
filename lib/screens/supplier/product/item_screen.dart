@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/screens/supplier/item/add_item_screen.dart';
+import 'package:ownashop/screens/supplier/product/add_item_screen.dart';
 import 'package:ownashop/shared/widgets/custom_button.dart';
 import 'package:provider/provider.dart';
 

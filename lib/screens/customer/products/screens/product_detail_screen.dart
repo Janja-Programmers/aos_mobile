@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '/core/constants/colors.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
+import '/features/product/provider.dart';
 import '/features/cart/provider.dart';
 import '/features/cart/domain/cart.dart';
 import '/features/product/domain/product.dart';
@@ -21,18 +22,35 @@ import '../widgets/product_specification_list.dart';
 import '../widgets/product_tile_and_price.dart';
 
 class ProductDetailScreen extends StatelessWidget {
-  final Product product;
+  final String productId;
 
-  const ProductDetailScreen({super.key, required this.product});
+  const ProductDetailScreen({super.key, required this.productId});
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-    final user = authProvider.user;
+    final user = context.watch<AuthProvider>().user;
+    final provider = context.watch<ProductProvider>();
+    final product = provider.products.firstWhere(
+      (p) => p.name == productId,
+      orElse:
+          () => Product(
+            name: '',
+            itemName: '',
+            itemPrice: 0,
+            category: '',
+            image: '',
+            demoVideo: '',
+          ),
+    );
+
+    if (product.name.isEmpty) {
+      return const Scaffold(body: Center(child: Text('Product not found')));
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: TopAppBar(
+        
         actions:
             user == null
                 ? [
@@ -138,9 +156,8 @@ class ProductDetailScreen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   ProductDescriptions(
-                    shortDesc: "Short description of the product goes here.",
-                    longDesc:
-                        "Long description of the product goes here.\nIt can include details about the features, specifications, and other relevant information that helps customers understand the product better.",
+                    shortDesc: product.shortWebsiteDescription!,
+                    longDesc: product.websiteDescription!,
                   ),
                   const SizedBox(height: 16),
 

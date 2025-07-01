@@ -1,3 +1,5 @@
+import 'dart:io';
+
 class Product {
   final String name;
   final String itemName;
@@ -5,8 +7,10 @@ class Product {
   final String category;
   final String? vendor;
   final String? image;
+  final File? imageFile;
   final String? slideShow;
   final String? demoVideo;
+  final File? videoFile;
   final String? websiteDescription;
   final String? shortWebsiteDescription;
   final List<WebsiteSpecification>? websiteSpecifications;
@@ -18,8 +22,10 @@ class Product {
     required this.category,
     this.vendor,
     this.image,
+    this.imageFile,
     this.slideShow,
     this.demoVideo,
+    this.videoFile,
     this.websiteDescription,
     this.shortWebsiteDescription,
     this.websiteSpecifications,

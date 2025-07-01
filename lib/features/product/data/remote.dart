@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
+
 import '/core/constants/const.dart';
 import '/core/utils/api_client.dart';
 import '/core/utils/logger.dart';
@@ -43,32 +45,85 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
 
   @override
   Future<ProductModel> createProduct(ProductModel model) async {
-    final response = await client.client.post(
-      CREATE_PRODUCT_ENDPOINT,
-      data: model.toJson(),
-    );
+    try {
+      final formData = FormData.fromMap({
+        ...model.toJson(),
+        if (model.imageFile != null)
+          'image': await MultipartFile.fromFile(
+            model.imageFile!.path,
+            filename: model.imageFile!.path.split('/').last,
+          ),
+        if (model.videoFile != null)
+          'demo_video': await MultipartFile.fromFile(
+            model.videoFile!.path,
+            filename: model.videoFile!.path.split('/').last,
+          ),
+      });
 
-    final data = response.data['data'];
+      for (var field in formData.fields) {
+        appLogger.i(
+          'Prinitng DATA OF EACH FORMDATA: 📝 ${field.key}: ${field.value}',
+        );
+      }
 
-    if (data == null || data is! Map<String, dynamic>) {
-      throw Exception('Failed to parse created product');
+      final response = await client.client.post(
+        CREATE_PRODUCT_ENDPOINT,
+        data: formData,
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+      );
+
+      final data = response.data['data'];
+
+      if (data == null || data is! Map<String, dynamic>) {
+        throw Exception('Failed to parse created product');
+      }
+      return ProductModel.fromJson(data);
+    } catch (e) {
+      throw Exception('Failed to create product: $e');
     }
-    return ProductModel.fromJson(data);
   }
 
   @override
   Future<ProductModel> updateProduct(ProductModel model) async {
-    final response = await client.client.put(
-      '$CREATE_PRODUCT_ENDPOINT/${model.name}',
-      data: model.toJson(),
-    );
+    try {
+      final formData = FormData.fromMap({
+        ...model.toJson(),
+        if (model.imageFile != null)
+          'image': await MultipartFile.fromFile(
+            model.imageFile!.path,
+            filename: model.imageFile!.path.split('/').last,
+          ),
+        if (model.videoFile != null)
+          'demo_video': await MultipartFile.fromFile(
+            model.videoFile!.path,
+            filename: model.videoFile!.path.split('/').last,
+          ),
+      });
 
-    final data = response.data['data'];
+      final response = await client.client.put(
+        '$CREATE_PRODUCT_ENDPOINT/${model.name}',
+        data: formData,
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+      );
 
-    if (data == null || data is! Map<String, dynamic>) {
-      throw Exception('Failed to parse updated product');
+      final data = response.data['data'];
+
+      if (data == null || data is! Map<String, dynamic>) {
+        throw Exception('Failed to parse updated product');
+      }
+
+      return ProductModel.fromJson(data);
+    } catch (e) {
+      throw Exception('Failed to update product: $e');
     }
-
-    return ProductModel.fromJson(data);
   }
 }
+
+
+
+// options: Options(
+//   headers: {
+//     'Authorization': 'Bearer your_token_here', // Replace with your token
+//   },
+// ),
+      

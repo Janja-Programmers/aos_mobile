@@ -1,5 +1,4 @@
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/screens/supplier/item/add_item_screen.dart';
 
 // Auth
 import '/features/product/domain/product.dart';
@@ -15,8 +14,10 @@ import '/screens/customer/address/shipping_address_form.dart';
 // import '/features/website/domain/webitem.dart';
 
 // Seller
+import '/screens/customer/products/screens/product_detail_screen.dart';
+import '/screens/supplier/product/add_item_screen.dart';
 import '/screens/supplier/dashboard/dashboard.dart';
-import '/screens/supplier/item/item_screen.dart';
+import '/screens/supplier/product/item_screen.dart';
 import '/screens/supplier/website/web_item_list_screen.dart';
 import '/screens/supplier/price/screens/item_price_list.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';
@@ -111,6 +112,17 @@ class AppRouter {
         builder: (context, state) => const ProductListScreen(),
       ),
       // Product Details
+      GoRoute(
+        path: '/product/:name',
+        builder: (context, state) {
+          final productId = state.pathParameters['name'];
+          if (productId == null) {
+            throw Exception('Product ID is required');
+          }
+          return ProductDetailScreen(productId: productId);
+        },
+      ),
+
       GoRoute(
         path: '/add-item',
         builder: (context, state) {

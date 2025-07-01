@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '/core/utils/logger.dart';
-
-import 'domain/product.dart';
-import 'domain/usecase.dart';
+import '/features/product/domain/product.dart';
+import '/features/product/domain/usecase.dart';
 
 class ProductProvider with ChangeNotifier {
   final GetProductsUseCase getProductsUseCase;
@@ -94,6 +93,7 @@ class ProductProvider with ChangeNotifier {
     return result.fold(
       (failure) {
         _error = failure.message;
+        notifyListeners();
         return false;
       },
       (updated) {
@@ -102,6 +102,7 @@ class ProductProvider with ChangeNotifier {
           _products[index] = updated;
         }
         appLogger.i('Product updated: ${updated.itemName}');
+        notifyListeners();
         return true;
       },
     );

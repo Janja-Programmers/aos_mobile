@@ -1,12 +1,13 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:ownashop/core/utils/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
 
 import '/core/di/service_locator.dart';
 import '/core/utils/api_client.dart';
-
+import '/core/utils/snackbar.dart';
 import '/features/product/domain/product.dart';
 import '/features/product/provider.dart';
 
@@ -24,6 +25,8 @@ class AddItemController extends ChangeNotifier {
 
   File? selectedImage;
   File? selectedVideo;
+  String? uploadedImageUrl;
+  String? uploadedVideoUrl;
   bool isSubmitting = false;
 
   AddItemController({
@@ -38,6 +41,8 @@ class AddItemController extends ChangeNotifier {
       priceController.text = initialProduct.itemPrice.toString();
       descController.text = initialProduct.websiteDescription ?? '';
       shortDescController.text = initialProduct.shortWebsiteDescription ?? '';
+      uploadedImageUrl = initialProduct.image;
+      uploadedVideoUrl = initialProduct.demoVideo;
     }
   }
 
@@ -55,10 +60,29 @@ class AddItemController extends ChangeNotifier {
     );
 
     if (result != null && result.files.single.path != null) {
+      final file = File(result.files.single.path!);
       if (isImage) {
-        selectedImage = File(result.files.single.path!);
+        selectedImage = file;
+        uploadedImageUrl = await uploadFile(file);
+        if (uploadedImageUrl != null &&
+            formKey.currentState != null &&
+            !formKey.currentState!.validate()) {
+          topSnackBar(
+            context,
+            'Image uploaded, please fill all required fields',
+          );
+        }
       } else {
-        selectedVideo = File(result.files.single.path!);
+        selectedVideo = file;
+        uploadedVideoUrl = await uploadFile(file);
+        if (uploadedVideoUrl != null &&
+            formKey.currentState != null &&
+            !formKey.currentState!.validate()) {
+          topSnackBar(
+            context,
+            'Video uploaded, please fill all required fields',
+          );
+        }
       }
       notifyListeners();
     }
@@ -81,12 +105,17 @@ class AddItemController extends ChangeNotifier {
   }
 
   Future<List<String>> fetchItemGroups() async {
-    final response = await apiClient.client.get(
-      'https://ownashop.com/api/resource/Item Group',
-      queryParameters: {'fields': '["name"]', 'limit_page_length': 100},
-    );
-    final List data = response.data['data'];
-    return data.map((e) => e['name'] as String).toList();
+    try {
+      final response = await apiClient.client.get(
+        'https://ownashop.com/api/resource/Item Group',
+        queryParameters: {'fields': '["name"]', 'limit_page_length': 100},
+      );
+      final List data = response.data['data'];
+      return data.map((e) => e['name'] as String).toList();
+    } catch (e) {
+      debugPrint('❌ Failed to fetch item groups: $e');
+      return [];
+    }
   }
 
   Future<String?> uploadFile(File? file) async {
@@ -105,7 +134,9 @@ class AddItemController extends ChangeNotifier {
         data: formData,
       );
 
+      debugPrint('Upload response: ${response.data}');
       final fileUrl = response.data['message']['file_url'];
+      debugPrint('Uploaded file URL: $fileUrl');
       return fileUrl;
     } catch (e, stack) {
       debugPrint('❌ Upload failed: $e\n$stack');
@@ -113,53 +144,64 @@ class AddItemController extends ChangeNotifier {
     }
   }
 
-  Future<bool> submit(Product? existingProduct) async {
-    if (!formKey.currentState!.validate()) {
-      debugPrint("❌ Form validation failed");
-      return false;
-    }
-
-    if (!formKey.currentState!.validate()) return false;
-
+  Future<bool> submit(BuildContext context, Product? existingProduct) async {
     isSubmitting = true;
     notifyListeners();
 
-    String? imagePath = existingProduct?.image;
-    String? videoPath = existingProduct?.demoVideo;
-    if (selectedImage != null) {
-      imagePath = await uploadFile(selectedImage);
-      if (imagePath == null) {
-        isSubmitting = false;
-        notifyListeners();
+    try {
+      if (formKey.currentState == null || !formKey.currentState!.validate()) {
+        debugPrint("❌ Form validation failed");
+        topSnackBar(
+          context,
+          'Please fix form errors',
+          type: TopSnackType.error,
+        );
         return false;
       }
+
+      final product = Product(
+        name: existingProduct?.name ?? itemCodeController.text.trim(),
+        itemName: nameController.text.trim(),
+        itemPrice: double.tryParse(priceController.text.trim()) ?? 0.0,
+        category: groupController.text.trim(),
+        vendor: existingProduct?.vendor,
+        image: uploadedImageUrl,
+        demoVideo: uploadedVideoUrl,
+        websiteDescription: descController.text.trim(),
+        shortWebsiteDescription: shortDescController.text.trim(),
+        websiteSpecifications: existingProduct?.websiteSpecifications ?? [],
+      );
+
+      appLogger.i('📦 Submitting product: ${product.name}');
+      appLogger.i('📦 Submitting product: ${product.itemName}');
+      appLogger.i('📦 Submitting product: ${product.itemPrice}');
+      appLogger.i('Image URL: ${product.category}');
+      appLogger.i('Image URL: ${product.vendor}');
+      appLogger.i('Image URL: ${product.image}');
+      appLogger.i('Video URL: ${product.demoVideo}');
+
+      final success =
+          existingProduct == null
+              ? await provider.createProduct(product)
+              : await provider.updateExistingItem(product);
+      return success;
+    } catch (e) {
+      debugPrint('❌ Submit failed: $e');
+      String errorMessage = 'Error saving product';
+      if (e is DioException && e.response != null) {
+        errorMessage =
+            e.response!.data['exception']?.toString() ?? 'Error saving product';
+        if (errorMessage.contains('PermissionError')) {
+          errorMessage =
+              'You do not have permission to update this product. Contact an admin.';
+        }
+      }
+      topSnackBar(context, errorMessage, type: TopSnackType.error);
+      return false;
+    } finally {
+      isSubmitting = false;
+      notifyListeners();
     }
-
-    if (selectedVideo != null) {
-      videoPath = await uploadFile(selectedVideo!);
-    }
-
-    final product = Product(
-      name: existingProduct?.name ?? itemCodeController.text.trim(),
-      itemName: nameController.text.trim(),
-      itemPrice: double.tryParse(priceController.text.trim()) ?? 0.0,
-      category: groupController.text.trim(),
-      vendor: existingProduct?.vendor,
-      image: imagePath,
-      demoVideo: videoPath,
-      websiteDescription: descController.text.trim(),
-      shortWebsiteDescription: shortDescController.text.trim(),
-      websiteSpecifications: existingProduct?.websiteSpecifications ?? [],
-    );
-
-    final success =
-        existingProduct == null
-            ? await provider.createProduct(product)
-            : await provider.updateExistingItem(product);
-
-    isSubmitting = false;
-    notifyListeners();
-    return success;
   }
 
   void disposeControllers() {

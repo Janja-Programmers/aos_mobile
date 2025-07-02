@@ -28,7 +28,6 @@ class AddItemScreen extends StatefulWidget {
 class _AddItemScreenState extends State<AddItemScreen> {
   late final AddItemController controller;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -61,48 +60,41 @@ class _AddItemScreenState extends State<AddItemScreen> {
               absorbing: ctrl.isSubmitting,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
-                child: Form(
-                  child: Column(
-                    children: [
-                      ItemFormFields(
-                        controller: ctrl,
-                        isUpdate: isUpdate,
-                        formKey: _formKey,
-                      ),
-                      const SizedBox(height: 16),
-                      ImageVideoPickerSection(
-                        controller: ctrl,
-                        product: widget.product,
-                      ),
-                      const SizedBox(height: 16),
-                      ActionButton(
-                        label: isUpdate ? 'Update Item' : 'Save Item',
-                        isLoading: ctrl.isSubmitting,
-                        onPressed: () async {
-                          if (!_formKey.currentState!.validate()) {
-                            topSnackBar(
-                              context,
-                              'Please fix form errors',
-                              type: TopSnackType.error,
-                            );
-                            return;
-                          }
-                          final success = await ctrl.submit(widget.product);
-                          if (!mounted) return;
-                          if (success) {
-                            topSnackBar(context, 'Product saved successfully');
-                            context.pop();
-                          } else {
-                            topSnackBar(
-                              context,
-                              ctrl.provider.error ?? 'Error saving product',
-                              type: TopSnackType.error,
-                            );
-                          }
-                        },
-                      ),
-                    ],
-                  ),
+                child: Column(
+                  children: [
+                    ItemFormFields(
+                      controller: ctrl,
+                      isUpdate: isUpdate,
+                      formKey: ctrl.formKey,
+                    ),
+                    const SizedBox(height: 16),
+                    ImageVideoPickerSection(
+                      controller: ctrl,
+                      product: widget.product,
+                    ),
+                    const SizedBox(height: 16),
+                    ActionButton(
+                      label: isUpdate ? 'Update Item' : 'Save Item',
+                      isLoading: ctrl.isSubmitting,
+                      onPressed: () async {
+                        final success = await ctrl.submit(
+                          context,
+                          widget.product,
+                        );
+                        if (!mounted) return;
+                        if (success) {
+                          topSnackBar(context, 'Product saved successfully');
+                          context.pop();
+                        } else {
+                          topSnackBar(
+                            context,
+                            ctrl.provider.error ?? 'Error saving product',
+                            type: TopSnackType.error,
+                          );
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),

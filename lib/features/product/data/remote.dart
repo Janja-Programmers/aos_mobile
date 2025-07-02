@@ -100,9 +100,14 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
           ),
       });
 
+      for (var file in formData.files) {
+        appLogger.i('File: ${file.key}, ${file.value.filename}');
+      }
+
       final response = await client.client.put(
         '$CREATE_PRODUCT_ENDPOINT/${model.name}',
         data: formData,
+        // queryParameters: {'ignore_permissions': 'true'},
         options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
 

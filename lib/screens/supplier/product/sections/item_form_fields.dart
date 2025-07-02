@@ -53,6 +53,34 @@ class ItemFormFields extends StatelessWidget {
                 (val) => AppValidator.isNumber(val, fieldName: 'Item Price'),
           ),
           const SizedBox(height: 10),
+          FutureBuilder<List<String>>(
+            future: controller.fetchItemGroups(),
+            builder: (context, snapshot) {
+              final groups = snapshot.data ?? [];
+              return DropdownButtonFormField<String>(
+                value:
+                    controller.groupController.text.isNotEmpty
+                        ? controller.groupController.text
+                        : null,
+                onChanged: (val) => controller.groupController.text = val ?? '',
+                items:
+                    groups
+                        .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                        .toList(),
+                decoration: const InputDecoration(
+                  labelText: 'Category (Item Group)',
+                  border: OutlineInputBorder(),
+                ),
+                validator:
+                    (value) =>
+                        (value == null || value.isEmpty)
+                            ? 'Category is required'
+                            : null,
+              );
+            },
+          ),
+          const SizedBox(height: 10),
+
           AppTextField(
             label: 'Short Description',
             controller: controller.shortDescController,

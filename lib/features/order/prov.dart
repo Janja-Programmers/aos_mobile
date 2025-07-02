@@ -4,18 +4,28 @@ import '/core/errors/failures.dart';
 import 'domain/sales_order.dart';
 import 'domain/usecases.dart';
 
+import 'package:dartz/dartz.dart';
+
 class SalesOrderProvider with ChangeNotifier {
-  final GetAllSalesOrders _getAllSalesOrders;
-  // final PlaceOrderUseCase _placeOrderUseCase;
+  final GetAllSalesOrders getAllSalesOrders;
+  final GetSalesOrderById getById;
+  final DeliverSalesOrder deliver;
+  final BillSalesOrder bill;
+  final PlaceOrderUseCase placeOrder;
 
   SalesOrderProvider({
-    required GetAllSalesOrders getAllSalesOrders,
-    required PlaceOrderUseCase placeOrderUseCase,
-  }) : _getAllSalesOrders = getAllSalesOrders;
-  //  _placeOrderUseCase = placeOrderUseCase;
+    required this.getAllSalesOrders,
+    required this.getById,
+    required this.deliver,
+    required this.bill,
+    required this.placeOrder,
+  });
 
   List<SalesOrder> _orders = [];
   List<SalesOrder> get orders => _orders;
+
+  SalesOrder? _selectedOrder;
+  SalesOrder? get selectedOrder => _selectedOrder;
 
   bool _loading = false;
   bool get loading => _loading;
@@ -23,24 +33,73 @@ class SalesOrderProvider with ChangeNotifier {
   Failure? _failure;
   Failure? get failure => _failure;
 
+  /// Fetch all sales orders
   Future<void> fetchAll() async {
-    _loading = true;
-    _failure = null;
-    notifyListeners();
-
-    final result = await _getAllSalesOrders();
+    _setLoading(true);
+    final result = await getAllSalesOrders();
     result.fold((f) => _failure = f, (list) => _orders = list);
+    _setLoading(false);
+  }
 
+  /// Fetch single order by ID
+  Future<void> fetchById(String id) async {
+    _setLoading(true);
+    _failure = null;
+    final result = await getById(id);
+    result.fold((f) => _failure = f, (order) => _selectedOrder = order);
+    _setLoading(false);
+  }
+
+  /// Mark sales order as delivered
+  // ignore: non_constant_identifier_names
+  Future<Either<Failure, Unit>> deliver_order(String id) async {
+    _setLoading(true);
+    final result = await deliver(id);
+
+    if (result.isRight()) {
+      // refresh order
+      await fetchById(id);
+    }
+
+    _setLoading(false);
+    return result;
+  }
+
+  /// Mark sales order as billed
+  // ignore: non_constant_identifier_names
+  Future<Either<Failure, Unit>> bill_order(String id) async {
+    _setLoading(true);
+    final result = await bill(id);
+
+    if (result.isRight()) {
+      // refresh order
+      await fetchById(id);
+    }
+
+    _setLoading(false);
+    return result;
+  }
+
+  void reset() {
+    _orders = [];
+    _selectedOrder = null;
+    _failure = null;
     _loading = false;
     notifyListeners();
   }
 
-  // Future<bool> placeOrder(OrderPayload payload) async {
+  void _setLoading(bool value) {
+    _loading = value;
+    notifyListeners();
+  }
+}
+
+ // Future<bool> placeOrder(OrderPayload payload) async {
   //   _loading = true;
   //   _failure = null;
   //   notifyListeners();
 
-  //   final result = await _placeOrderUseCase(payload);
+  //   final result = await placeOrderUseCase(payload);
   //   final success = result.isRight();
 
   //   result.fold((f) => _failure = f, (_) => null);
@@ -55,10 +114,3 @@ class SalesOrderProvider with ChangeNotifier {
   //   return success;
   // }
 
-  void reset() {
-    _orders = [];
-    _failure = null;
-    _loading = false;
-    notifyListeners();
-  }
-}

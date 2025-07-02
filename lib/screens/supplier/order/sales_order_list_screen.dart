@@ -6,7 +6,7 @@ import '/features/order/prov.dart';
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
 
-import 'sales_order_tile.dart';
+import 'widgets/sales_order_tile.dart';
 
 class SalesOrderListScreen extends StatefulWidget {
   const SalesOrderListScreen({super.key});

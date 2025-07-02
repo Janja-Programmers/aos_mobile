@@ -8,6 +8,7 @@ class SalesOrder {
   final double grandTotal;
   final double percentDelivered;
   final double percentBilled;
+  final List<SalesOrderItem> items;
 
   SalesOrder({
     required this.id,
@@ -17,6 +18,23 @@ class SalesOrder {
     required this.grandTotal,
     required this.percentDelivered,
     required this.percentBilled,
+    required this.items,
+  });
+}
+
+class SalesOrderItem {
+  final String itemCode;
+  final String itemName;
+  final int qty;
+  final double rate;
+  final double amount;
+
+  SalesOrderItem({
+    required this.itemCode,
+    required this.itemName,
+    required this.qty,
+    required this.rate,
+    required this.amount,
   });
 }
 

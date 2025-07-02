@@ -1,5 +1,4 @@
 import 'package:go_router/go_router.dart';
-
 // Auth
 import '../../screens/supplier/stock/create_stock_screen.dart';
 import '/features/product/domain/product.dart';
@@ -23,6 +22,7 @@ import '/screens/supplier/website/web_item_list_screen.dart';
 import '/screens/supplier/price/screens/item_price_list.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';
 import '/screens/supplier/d_note/delivery_note_list_screen.dart';
+import '/screens/supplier/order/order_detail_screen.dart';
 
 import '/features/stock/domain/entity/stock.dart';
 import '/screens/supplier/stock/stock_list_screen.dart';
@@ -97,6 +97,14 @@ class AppRouter {
         path: '/sales-orders',
         builder: (context, state) => const SalesOrderListScreen(),
       ),
+      GoRoute(
+        path: '/sales-order/:id',
+        builder: (context, state) {
+          final orderId = state.pathParameters['id']!;
+          return SalesOrderDetailScreen(orderId: orderId);
+        },
+      ),
+
       // Delivery Note
       GoRoute(
         path: '/delivery-notes',

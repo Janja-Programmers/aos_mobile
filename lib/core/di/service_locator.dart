@@ -189,14 +189,20 @@ Future<void> init() async {
   );
 
   // === Domain Layer ===
-  sl.registerLazySingleton(() => GetAllSalesOrders(sl<SalesOrderRepo>()));
-  sl.registerLazySingleton(() => PlaceOrderUseCase(sl<SalesOrderRepo>()));
+  sl.registerLazySingleton(() => GetAllSalesOrders(sl()));
+  sl.registerLazySingleton(() => GetSalesOrderById(sl()));
+  sl.registerLazySingleton(() => DeliverSalesOrder(sl()));
+  sl.registerLazySingleton(() => BillSalesOrder(sl()));
+  sl.registerLazySingleton(() => PlaceOrderUseCase(sl()));
 
   // === Provider Layer ===
   sl.registerFactory(
     () => SalesOrderProvider(
-      getAllSalesOrders: sl<GetAllSalesOrders>(),
-      placeOrderUseCase: sl<PlaceOrderUseCase>(),
+      getAllSalesOrders: sl(),
+      getById: sl(),
+      deliver: sl(),
+      bill: sl(),
+      placeOrder: sl(),
     ),
   );
 

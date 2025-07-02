@@ -8,6 +8,7 @@ class SalesOrderModel {
   final double grandTotal;
   final double percentDelivered;
   final double percentBilled;
+  final List<SalesOrderItemModel> items;
 
   SalesOrderModel({
     required this.id,
@@ -17,9 +18,12 @@ class SalesOrderModel {
     required this.grandTotal,
     required this.percentDelivered,
     required this.percentBilled,
+    required this.items,
   });
 
   factory SalesOrderModel.fromJson(Map<String, dynamic> json) {
+    final List<dynamic> itemsJson = json['items'] ?? [];
+
     return SalesOrderModel(
       id: json["name"],
       customerName: json["customer_name"],
@@ -28,6 +32,8 @@ class SalesOrderModel {
       grandTotal: (json["grand_total"] as num).toDouble(),
       percentDelivered: (json["per_delivered"] as num).toDouble(),
       percentBilled: (json["per_billed"] as num).toDouble(),
+      items:
+          itemsJson.map((item) => SalesOrderItemModel.fromJson(item)).toList(),
     );
   }
 
@@ -39,6 +45,41 @@ class SalesOrderModel {
     grandTotal: grandTotal,
     percentDelivered: percentDelivered,
     percentBilled: percentBilled,
+    items: items.map((e) => e.toEntity()).toList(),
+  );
+}
+
+class SalesOrderItemModel {
+  final String itemCode;
+  final String itemName;
+  final int qty;
+  final double rate;
+  final double amount;
+
+  SalesOrderItemModel({
+    required this.itemCode,
+    required this.itemName,
+    required this.qty,
+    required this.rate,
+    required this.amount,
+  });
+
+  factory SalesOrderItemModel.fromJson(Map<String, dynamic> json) {
+    return SalesOrderItemModel(
+      itemCode: json["item_code"],
+      itemName: json["item_name"],
+      qty: (json["qty"] as num).toInt(),
+      rate: (json["rate"] as num).toDouble(),
+      amount: (json["amount"] as num).toDouble(),
+    );
+  }
+
+  SalesOrderItem toEntity() => SalesOrderItem(
+    itemCode: itemCode,
+    itemName: itemName,
+    qty: qty,
+    rate: rate,
+    amount: amount,
   );
 }
 

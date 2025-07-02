@@ -81,7 +81,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
     try {
       final res = await sl<APIClient>().client.get(
         'https://ownashop.com/api/resource/Item Group',
-        queryParameters: {'fields': '["name"]', 'limit_page_length': 100},
+        queryParameters: {
+          'fields': '["name"]',
+          'limit_page_length': 20,
+          'filters': '[["is_group", "=", 0]]',
+        },
       );
       return (res.data['data'] as List)
           .map((e) => e['name'] as String)

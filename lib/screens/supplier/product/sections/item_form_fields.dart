@@ -28,7 +28,6 @@ class ItemFormFields extends StatelessWidget {
             label: 'Item Name',
             controller: controller.nameController,
             isRequired: true,
-            readOnly: isUpdate,
             validator:
                 (val) => AppValidator.required(val, fieldName: 'Item Name'),
           ),

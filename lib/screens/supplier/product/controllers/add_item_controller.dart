@@ -106,14 +106,19 @@ class AddItemController extends ChangeNotifier {
 
   Future<List<String>> fetchItemGroups() async {
     try {
-      final response = await apiClient.client.get(
+      final res = await sl<APIClient>().client.get(
         'https://ownashop.com/api/resource/Item Group',
-        queryParameters: {'fields': '["name"]', 'limit_page_length': 100},
+        queryParameters: {
+          'fields': '["name"]',
+          'limit_page_length': 20,
+          'filters': '[["is_group", "=", 0]]',
+        },
       );
-      final List data = response.data['data'];
-      return data.map((e) => e['name'] as String).toList();
+      return (res.data['data'] as List)
+          .map((e) => e['name'] as String)
+          .toList();
     } catch (e) {
-      debugPrint('❌ Failed to fetch item groups: $e');
+      debugPrint('Group fetch error: $e');
       return [];
     }
   }

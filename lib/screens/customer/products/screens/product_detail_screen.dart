@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ownashop/screens/customer/products/utils/vendor_prov.dart';
 import 'package:provider/provider.dart';
 
+import '../utils/url_launcher.dart';
 import '/core/constants/colors.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
@@ -149,7 +151,72 @@ class ProductDetailScreen extends StatelessWidget {
                       context.go('/cart');
                     },
 
-                    onContact: () {},
+                    onContact: () async {
+                      final vendorProvider = context.read<VendorProvider>();
+                      await vendorProvider.loadVendor(
+                        product.vendor ?? 'No vendor found',
+                      );
+
+                      if (!context.mounted) return;
+
+                      showDialog(
+                        context: context,
+                        builder:
+                            (_) => Consumer<VendorProvider>(
+                              builder: (context, provider, _) {
+                                if (provider.loading) {
+                                  return const AlertDialog(
+                                    content: SizedBox(
+                                      height: 80,
+                                      child: Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                final vendor = provider.vendor;
+                                if (vendor == null) {
+                                  return const AlertDialog(
+                                    title: Text('Error'),
+                                    content: Text(
+                                      'Failed to load vendor details.',
+                                    ),
+                                  );
+                                }
+
+                                return AlertDialog(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  title: Text('Contact ${vendor.name}'),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text('📧 ${vendor.email}'),
+                                      const SizedBox(height: 12),
+                                      Text('📞 ${vendor.phone}'),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed:
+                                          () => launchCaller(vendor.phone),
+                                      child: const Text('Call'),
+                                    ),
+
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Close'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 16),

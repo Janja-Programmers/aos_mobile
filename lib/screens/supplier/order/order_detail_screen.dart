@@ -9,6 +9,7 @@ import '/core/utils/snackbar.dart';
 import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/app_drawer.dart';
 
+import 'utils/print_order.dart';
 import 'widgets/order_detail_item.dart';
 
 class SalesOrderDetailScreen extends StatefulWidget {
@@ -175,11 +176,8 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
         const SizedBox(width: 12),
         OutlinedButton.icon(
           onPressed: () {
-            topSnackBar(
-              context,
-              '🖨️ Printing not yet implemented',
-              type: TopSnackType.info,
-            );
+            printSalesOrder(order);
+            topSnackBar(context, '🖨️ Printing...', type: TopSnackType.info);
           },
           icon: const Icon(Icons.print),
           label: const Text('Print'),

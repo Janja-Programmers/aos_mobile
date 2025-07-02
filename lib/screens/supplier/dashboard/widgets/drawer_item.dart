@@ -27,14 +27,13 @@ class DrawerItem extends StatelessWidget {
         ),
       ),
       selected: selected,
-      selectedTileColor: AppColors.primary,
+      selectedTileColor: Colors.black,
       onTap: onTap,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 12.0,
         vertical: 1.0,
       ),
-      
     );
   }
 }

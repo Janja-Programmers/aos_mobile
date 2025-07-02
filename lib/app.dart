@@ -10,13 +10,10 @@ import 'core/di/service_locator.dart';
 import 'features/auth/presentation/auth_provider.dart';
 
 // PRODUCT Feature
-import 'package:ownashop/features/product/provider.dart';
+import 'features/product/provider.dart';
 
 // ITEM Feature
 import 'features/item/prov.dart';
-
-// WEBITEM Feature
-import 'features/website/prov.dart';
 
 // ITEMPRICE Feature
 import 'features/itemPrice/prov.dart';
@@ -49,7 +46,6 @@ class App extends StatelessWidget {
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: auth),
         ChangeNotifierProvider(create: (_) => sl<ProductProvider>()),
-        ChangeNotifierProvider(create: (_) => sl<WebsiteItemProv>()),
         ChangeNotifierProvider(create: (_) => sl<ItemProv>()),
         ChangeNotifierProvider(create: (_) => sl<ItemPriceProvider>()),
         ChangeNotifierProvider(create: (_) => sl<SalesOrderProvider>()),

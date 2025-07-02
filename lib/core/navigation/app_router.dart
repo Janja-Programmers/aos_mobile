@@ -19,6 +19,7 @@ import '/screens/supplier/product/item_screen.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';
 import '/screens/supplier/d_note/delivery_note_list_screen.dart';
 import '/screens/supplier/order/order_detail_screen.dart';
+import '/screens/supplier/d_note/delivery_note_detail_screen.dart';
 
 import '/features/stock/domain/entity/stock.dart';
 import '/screens/supplier/stock/create_stock_screen.dart';
@@ -85,6 +86,13 @@ class AppRouter {
       GoRoute(
         path: '/delivery-notes',
         builder: (context, state) => const DeliveryNoteListScreen(),
+      ),
+      GoRoute(
+        path: '/delivery-note/:id',
+        builder: (context, state) {
+          final noteId = state.pathParameters['id']!;
+          return DeliveryNoteDetailScreen(noteId: noteId);
+        },
       ),
 
       // STOCK ROUTES

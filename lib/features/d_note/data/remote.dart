@@ -9,33 +9,38 @@ import 'model.dart';
 
 class DeliveryNoteRemoteDS {
   final APIClient _client;
+
   DeliveryNoteRemoteDS(this._client);
 
-  /// Fetches *full* Delivery Note records and returns DTOs.
+  /// 1️⃣ Fetch list records (only fields needed for listing)
   Future<Either<Failure, List<DeliveryNoteModel>>> getAll() async {
     try {
-      // 1️⃣‑ list endpoint (names only)
-      final res = await _client.client.get(DELIVERY_NOTE_ENDPOINT);
+      final res = await _client.client.get(
+        DELIVERY_NOTE_ENDPOINT,
+        queryParameters: {
+          'fields':
+              '["name", "customer_name", "status", "grand_total", "per_installed"]',
+        },
+      );
+
       final List<dynamic> list = res.data['data'];
 
-      // 2️⃣‑ fetch each full record in parallel
-      final futures =
-          list
-              .map(
-                (e) =>
-                    _client.client.get('$DELIVERY_NOTE_ENDPOINT/${e['name']}'),
-              )
-              .toList();
-
-      final responses = await Future.wait(futures);
-
-      // 3️⃣‑ map JSON → DTO
       final models =
-          responses
-              .map((resp) => DeliveryNoteModel.fromJson(resp.data['data']))
+          list
+              .map((e) => DeliveryNoteModel.fromJson(e as Map<String, dynamic>))
               .toList();
 
       return Right(models);
+    } catch (e) {
+      return Left(handleException(e));
+    }
+  }
+
+  /// 2️⃣ Fetch a full record by ID
+  Future<Either<Failure, DeliveryNoteModel>> getById(String id) async {
+    try {
+      final res = await _client.client.get('$DELIVERY_NOTE_ENDPOINT/$id');
+      return Right(DeliveryNoteModel.fromJson(res.data['data']));
     } catch (e) {
       return Left(handleException(e));
     }

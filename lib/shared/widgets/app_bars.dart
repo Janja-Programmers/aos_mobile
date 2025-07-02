@@ -50,7 +50,13 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
               itemBuilder:
                   (context) => const [
                     PopupMenuItem(value: 'orders', child: Text('My Orders')),
-                    PopupMenuItem(value: 'logout', child: Text('Logout')),
+                    PopupMenuItem(
+                      value: 'logout',
+                      child: Text(
+                        'Logout',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
                   ],
             ),
           ],

@@ -1,11 +1,14 @@
 import 'package:equatable/equatable.dart';
 
+import 'delivery_note_item.dart';
+
 class DeliveryNote extends Equatable {
   final String id;
   final String customerName;
   final String status;
   final double grandTotal;
   final double percentInstalled;
+  final List<DeliveryNoteItem> items;
 
   const DeliveryNote({
     required this.id,
@@ -13,6 +16,7 @@ class DeliveryNote extends Equatable {
     required this.status,
     required this.grandTotal,
     required this.percentInstalled,
+    required this.items,
   });
 
   @override
@@ -22,5 +26,6 @@ class DeliveryNote extends Equatable {
     status,
     grandTotal,
     percentInstalled,
+    items,
   ];
 }

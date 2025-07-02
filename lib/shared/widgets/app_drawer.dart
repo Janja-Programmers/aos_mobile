@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '/core/constants/colors.dart';
 import '/core/constants/strings.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
@@ -28,7 +27,7 @@ class AppDrawer extends StatelessWidget {
       child: Column(
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(color: AppColors.primary),
+            decoration: BoxDecoration(color: Colors.black),
             margin: EdgeInsets.only(bottom: 2.0, top: 0.0),
             padding: EdgeInsets.all(8.0),
             child: Center(
@@ -80,7 +79,7 @@ class AppDrawer extends StatelessWidget {
           const Spacer(),
           const Divider(),
           DrawerItem(
-            icon: Icons.web,
+            icon: Icons.public,
             title: "View in website",
             onTap: () => context.push('/'),
           ),

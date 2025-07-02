@@ -2,12 +2,20 @@ import 'package:dartz/dartz.dart';
 
 import '/core/errors/failures.dart';
 
-import 'stock_entry.dart';
+import 'entity/stock.dart';
+
 import 'repo.dart';
 
-class GetAllStockEntries {
+class GetAllStockEntryNames {
   final StockEntryRepo repo;
-  GetAllStockEntries(this.repo);
+  GetAllStockEntryNames(this.repo);
 
-  Future<Either<Failure, List<StockEntry>>> call() => repo.getAll();
+  Future<Either<Failure, List<String>>> call() => repo.getAllNames();
+}
+
+class GetStockEntryById {
+  final StockEntryRepo repo;
+  GetStockEntryById(this.repo);
+
+  Future<Either<Failure, StockEntry>> call(String name) => repo.getById(name);
 }

@@ -59,7 +59,8 @@ import '/features/stock/data/remote.dart';
 import '/features/stock/data/repo_impl.dart';
 import '/features/stock/domain/repo.dart';
 import '/features/stock/domain/usecases.dart';
-import '/features/stock/prov.dart';
+import '/features/stock/providers/all.dart';
+import '/features/stock/providers/single.dart';
 
 /***** CART *******/
 import '/features/cart/domain/usecase.dart';
@@ -215,12 +216,18 @@ Future<void> init() async {
   sl.registerLazySingleton(() => StockEntryRemoteDS(sl()));
   // === Repository ===
   sl.registerLazySingleton<StockEntryRepo>(
-    () => StockEntryRepoImpl(remote: sl()),
+    () => StockEntryRepoImpl(sl<StockEntryRemoteDS>()),
   );
   // === Domain ===
-  sl.registerLazySingleton(() => GetAllStockEntries(sl()));
-  // === Provider ===
-  sl.registerFactory(() => StockEntryProvider(getAll: sl()));
+  sl.registerLazySingleton(() => GetAllStockEntryNames(sl()));
+  // === UseCase: Get by ID ===
+  sl.registerLazySingleton(() => GetStockEntryById(sl()));
+  // === Provider: All Names ===
+  sl.registerFactory(
+    () => StockEntryProvider(getAll: sl<GetAllStockEntryNames>()),
+  );
+  // === Provider: Detail ===
+  sl.registerFactory(() => StockEntryDetailProvider(getById: sl()));
 
   // CART Feature
   // ==== Data ===

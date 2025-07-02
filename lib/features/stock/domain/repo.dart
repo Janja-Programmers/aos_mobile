@@ -1,8 +1,10 @@
-// lib/features/stock_entry/domain/stock_entry_repo.dart
 import 'package:dartz/dartz.dart';
+
 import '/core/errors/failures.dart';
-import 'stock_entry.dart';
+
+import 'entity/stock.dart';
 
 abstract class StockEntryRepo {
-  Future<Either<Failure, List<StockEntry>>> getAll();
+  Future<Either<Failure, List<String>>> getAllNames();
+  Future<Either<Failure, StockEntry>> getById(String name);
 }

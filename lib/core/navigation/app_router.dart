@@ -22,7 +22,9 @@ import '/screens/supplier/website/web_item_list_screen.dart';
 import '/screens/supplier/price/screens/item_price_list.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';
 import '/screens/supplier/d_note/delivery_note_list_screen.dart';
-import '/screens/supplier/stock/stock_entry_list_screen.dart';
+
+import '/screens/supplier/stock/stock_list_screen.dart';
+import '/screens/supplier/stock/stock_detail_screen.dart';
 
 class AppRouter {
   final AuthProvider auth;
@@ -103,6 +105,13 @@ class AppRouter {
       GoRoute(
         path: '/stock-entry',
         builder: (context, state) => const StockEntryScreen(),
+      ),
+      GoRoute(
+        path: '/stock-entry/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return StockEntryDetailScreen(stockEntryName: id);
+        },
       ),
 
       // CUSTOMER ROUTES

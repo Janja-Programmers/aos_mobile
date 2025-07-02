@@ -27,13 +27,14 @@ class _DeliveryNoteDetailScreenState extends State<DeliveryNoteDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final _scaffoldKey = GlobalKey<ScaffoldState>();
+    final scaffoldKey = GlobalKey<ScaffoldState>();
     final provider = context.watch<DeliveryNoteProvider>();
     final note = provider.selectedNote;
 
     return MainBarScaffold(
       drawer: AppDrawer(selectedIndex: 4, onItemSelected: (_) {}),
       subTitle: 'Delivery Note Detail',
+      scaffoldKey: scaffoldKey,
       body: Builder(
         builder: (_) {
           if (provider.loading || note == null) {
@@ -125,7 +126,6 @@ class _DeliveryNoteDetailScreenState extends State<DeliveryNoteDetailScreen> {
           );
         },
       ),
-      scaffoldKey: _scaffoldKey,
     );
   }
 

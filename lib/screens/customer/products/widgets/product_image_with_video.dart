@@ -33,7 +33,7 @@ class ProductImageWithVideo extends StatelessWidget {
                     ? Image.network(
                       resolvedImageUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (ctx, _, __) => _fallbackImage(),
+                      errorBuilder: (ctx, _, _) => _fallbackImage(),
                     )
                     : _fallbackImage(),
           ),

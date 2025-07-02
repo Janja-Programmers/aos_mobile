@@ -10,6 +10,7 @@ import 'core/di/service_locator.dart';
 import 'features/auth/presentation/auth_provider.dart';
 
 // PRODUCT Feature
+import 'features/charts/presentation/provider.dart';
 import 'features/product/provider.dart';
 
 // ITEM Feature
@@ -55,6 +56,9 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => sl<StockEntryDetailProvider>()),
         ChangeNotifierProvider(create: (_) => sl<CartProvider>()),
         ChangeNotifierProvider(create: (_) => sl<AddressProvider>()),
+        ChangeNotifierProvider(
+          create: (_) => sl<SalesChartProvider>()..fetchChart(),
+        ),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,

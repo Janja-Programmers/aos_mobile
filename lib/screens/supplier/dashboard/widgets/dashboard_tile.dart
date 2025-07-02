@@ -1,31 +1,54 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
-import '/core/constants/colors.dart';
 
 class DashboardTile extends StatelessWidget {
   final String title;
-  final VoidCallback? onTap;
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color color;
 
-  const DashboardTile({super.key, required this.title, this.onTap});
+  const DashboardTile({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.onTap,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: AppColors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(6),
-        side: const BorderSide(color: Color.fromARGB(255, 190, 189, 189), width: 1),
-      ),
-      elevation: 1,
-      margin: EdgeInsets.all(6),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-        title: Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: AppColors.black),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: color.withOpacity(0.1),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.2),
+              blurRadius: 6,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        onTap: onTap,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 36),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

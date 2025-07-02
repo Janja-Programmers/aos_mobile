@@ -70,6 +70,13 @@ import '/features/address/data/datasource/local.dart';
 import '/features/address/domain/repo.dart';
 import '/features/address/provider.dart';
 
+/***** CHART ********/
+import '/features/charts/data/remote.dart';
+import '/features/charts/data/repo_impl.dart';
+import '/features/charts/domain/repo.dart';
+import '/features/charts/domain/usecase.dart';
+import '/features/charts/presentation/provider.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -280,4 +287,10 @@ Future<void> init() async {
   sl.registerLazySingleton<AddressProvider>(
     () => AddressProvider(repository: sl<AddressRepository>()),
   );
+
+  // CHART Feature
+  sl.registerLazySingleton(() => SalesChartRemoteDS(sl<APIClient>()));
+  sl.registerLazySingleton<SalesChartRepo>(() => SalesChartRepoImpl(sl()));
+  sl.registerLazySingleton(() => GetSalesChart(sl()));
+  sl.registerFactory(() => SalesChartProvider(getChart: sl()));
 }

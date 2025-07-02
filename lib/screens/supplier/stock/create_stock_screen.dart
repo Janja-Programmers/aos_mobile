@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/screens/supplier/stock/controllers/item_row_controller.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
-import '/core/di/service_locator.dart';
 import '/core/utils/snackbar.dart';
 import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/app_drawer.dart';
@@ -11,19 +9,13 @@ import '/shared/widgets/action_button.dart';
 
 import '/features/stock/providers/create.dart';
 import '/features/stock/domain/entity/stock.dart';
-import '/features/stock/domain/entity/stock_item.dart';
 
-/**************************************************************************************************************************************
- * ERRORS IN FILE
- * 
- * 
- * ** */
-
-import 'widgets/item_row.dart';
+import 'controllers/item_row_controller.dart';
 import 'widgets/item_row.dart';
 
 class CreateStockEntryScreen extends StatefulWidget {
-  const CreateStockEntryScreen({super.key});
+  final StockEntry? entry;
+  const CreateStockEntryScreen({super.key, this.entry});
 
   @override
   State<CreateStockEntryScreen> createState() => _CreateStockEntryScreenState();
@@ -34,7 +26,33 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final List<ItemRowController> _itemControllers = [ItemRowController()];
 
-  void _submit() async {
+  bool get isEditing => widget.entry != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (isEditing) {
+      for (final item in widget.entry!.items) {
+        final controller = ItemRowController();
+        controller.populateFromItem(item);
+        _itemControllers.add(controller);
+      }
+      // Remove initial empty row if editing
+      if (_itemControllers.length > 1) {
+        _itemControllers.removeAt(0);
+      }
+    }
+  }
+
+  void _saveDraft() => _submitEntry(docstatus: 0);
+  void _submitFinal() => _submitEntry(docstatus: 1);
+
+  void _submitEntry({required int docstatus}) async {
+    if (_itemControllers.any((c) => !c.isValid)) {
+      topSnackBar(context, 'Please fix item fields.', type: TopSnackType.error);
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) {
       topSnackBar(
         context,
@@ -44,28 +62,43 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
       return;
     }
 
-    final provider = context.read<CreateStockEntryProvider>();
+    final items =
+        _itemControllers
+            .map((ctrl) => ctrl.entry)
+            .where((item) => item.itemCode.isNotEmpty)
+            .toList();
 
-    // final items = _itemControllers.map((ctrl) => ctrl.toEntryItem()).toList();
-    final items = [
-      {"item": "12", "quantity": 12, "rate": 12.10, "amount": 120},
-    ];
+    if (items.isEmpty) {
+      topSnackBar(
+        context,
+        'Please add at least one item.',
+        type: TopSnackType.error,
+      );
+      return;
+    }
 
     final entry = StockEntry(
-      id: '',
-      docstatus: 0,
-      vendor: '', // will be set by backend
-      items: items as List<StockEntryItem>,
+      id: widget.entry?.id ?? '',
+      docstatus: docstatus,
+      vendor: '',
+      items: items,
     );
 
-    await provider.submit(entry);
+    final provider = context.read<CreateStockEntryProvider>();
+
+    if (isEditing) {
+      await provider.update(entry);
+    } else {
+      await provider.submit(entry);
+    }
 
     if (!mounted) return;
 
     if (provider.hasError) {
       topSnackBar(context, provider.failure!.message, type: TopSnackType.error);
     } else {
-      topSnackBar(context, 'Stock Entry submitted');
+      final action = docstatus == 1 ? 'submitted' : 'saved';
+      topSnackBar(context, 'Stock Entry $action successfully');
       context.pop();
     }
   }
@@ -84,7 +117,7 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
 
     return MainBarScaffold(
       drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
-      subTitle: 'Create Stock Entry',
+      subTitle: isEditing ? 'Edit Stock Entry' : 'Create Stock Entry',
       body: Form(
         key: _formKey,
         child: ListView(
@@ -95,27 +128,51 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
               final ctrl = entry.value;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: ItemRow(
-                  onRemove:
-                      _itemControllers.length == 1
-                          ? null
-                          : () =>
-                              setState(() => _itemControllers.removeAt(index)),
+                child: Card(
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: ItemRow(
+                      controller: ctrl,
+                      onRemove:
+                          _itemControllers.length == 1
+                              ? null
+                              : () => setState(
+                                () => _itemControllers.removeAt(index),
+                              ),
+                    ),
+                  ),
                 ),
               );
             }),
+            const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: () {
                 setState(() => _itemControllers.add(ItemRowController()));
               },
               icon: const Icon(Icons.add),
-              label: const Text('Add Item'),
+              label: const Text('Add Another Item'),
             ),
             const SizedBox(height: 24),
-            ActionButton(
-              label: provider.loading ? 'Submitting...' : 'Submit Entry',
-              isLoading: provider.loading,
-              onPressed: _submit,
+            const Divider(),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: provider.loading ? null : _saveDraft,
+                    child: const Text('Save Draft'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ActionButton(
+                    label: provider.loading ? 'Submitting...' : 'Submit',
+                    isLoading: provider.loading,
+                    onPressed: _submitFinal,
+                  ),
+                ),
+              ],
             ),
             if (provider.failure != null) ...[
               const SizedBox(height: 16),

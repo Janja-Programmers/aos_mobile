@@ -14,7 +14,10 @@ class StockEntryRemoteDS {
 
   Future<Either<Failure, List<String>>> getAllNames() async {
     try {
-      final res = await _client.client.get(STOCK_ENTRY_ENDPOINT);
+      final res = await _client.client.get(
+        STOCK_ENTRY_ENDPOINT,
+        queryParameters: {'order_by': 'creation desc'},
+      );
       final List<dynamic> list = res.data['data'];
       final names = list.map((e) => e['name'] as String).toList();
       return Right(names);
@@ -36,6 +39,23 @@ class StockEntryRemoteDS {
   Future<Either<Failure, void>> add(StockEntryModel entry) async {
     try {
       await _client.client.post(STOCK_ENTRY_ENDPOINT, data: entry.toJson());
+      return const Right(null);
+    } catch (e) {
+      return Left(handleException(e));
+    }
+  }
+
+  Future<Either<Failure, void>> update(StockEntryModel entry) async {
+    try {
+      final id = entry.id;
+      if (id.isEmpty) {
+        return Left(handleException('Missing Stock Entry ID for update.'));
+      }
+
+      await _client.client.put(
+        '$STOCK_ENTRY_ENDPOINT/$id',
+        data: entry.toJson(),
+      );
       return const Right(null);
     } catch (e) {
       return Left(handleException(e));

@@ -29,4 +29,10 @@ class StockEntryRepoImpl implements StockEntryRepo {
     final model = StockEntryModel.fromEntity(entry);
     return remoteDS.add(model);
   }
+
+  @override
+  Future<Either<Failure, void>> update(StockEntry entry) {
+    final model = StockEntryModel.fromEntity(entry);
+    return remoteDS.update(model); // 🔁 call remote datasource
+  }
 }

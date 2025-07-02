@@ -8,7 +8,6 @@ class ItemRowController {
   final qty = TextEditingController();
   final valuationRate = TextEditingController();
 
-  /// Converts controller values to StockEntryItem
   StockEntryItem get entry => StockEntryItem(
     itemCode: itemCode.text.trim(),
     itemName: itemName.text.trim(),
@@ -16,7 +15,6 @@ class ItemRowController {
     valuationRate: double.tryParse(valuationRate.text) ?? 0,
   );
 
-  /// Dispose all controllers
   void dispose() {
     itemCode.dispose();
     itemName.dispose();
@@ -24,11 +22,17 @@ class ItemRowController {
     valuationRate.dispose();
   }
 
-  /// Populate fields from an item (used for auto-fill if needed)
   void populateFromItem(StockEntryItem item) {
     itemCode.text = item.itemCode;
     itemName.text = item.itemName;
     qty.text = item.qty.toString();
     valuationRate.text = item.valuationRate.toString();
   }
+
+  bool get isValid =>
+      itemCode.text.trim().isNotEmpty &&
+      qty.text.trim().isNotEmpty &&
+      valuationRate.text.trim().isNotEmpty &&
+      double.tryParse(qty.text.trim()) != null &&
+      double.tryParse(valuationRate.text.trim()) != null;
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 // Auth
@@ -25,6 +24,7 @@ import '/screens/supplier/price/screens/item_price_list.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';
 import '/screens/supplier/d_note/delivery_note_list_screen.dart';
 
+import '/features/stock/domain/entity/stock.dart';
 import '/screens/supplier/stock/stock_list_screen.dart';
 import '/screens/supplier/stock/stock_detail_screen.dart';
 
@@ -116,9 +116,11 @@ class AppRouter {
         },
       ),
       GoRoute(
-        path: '/stock-entry/add',
-        pageBuilder:
-            (context, state) => MaterialPage(child: CreateStockEntryScreen()),
+        path: '/stock/edit',
+        builder: (_, state) {
+          final stockEntry = state.extra as StockEntry;
+          return CreateStockEntryScreen(entry: stockEntry);
+        },
       ),
 
       // CUSTOMER ROUTES

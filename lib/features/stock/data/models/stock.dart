@@ -8,7 +8,7 @@ class StockEntryModel {
   final String vendor;
   final List<StockEntryItemModel> items;
 
-  const StockEntryModel({
+  StockEntryModel({
     required this.id,
     required this.docstatus,
     required this.vendor,
@@ -17,22 +17,24 @@ class StockEntryModel {
 
   factory StockEntryModel.fromJson(Map<String, dynamic> json) {
     return StockEntryModel(
-      id: json['name'],
+      id: json['name'] ?? '',
       docstatus: json['docstatus'] ?? 0,
-      vendor: json['vendor'] ?? 'Unknown',
+      vendor: json['vendor'] ?? '',
       items:
-          (json['items'] as List<dynamic>)
+          (json['items'] as List)
               .map((e) => StockEntryItemModel.fromJson(e))
               .toList(),
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'name': id,
-    'docstatus': docstatus,
-    'vendor': vendor,
-    'items': items.map((e) => e.toJson()).toList(),
-  };
+  Map<String, dynamic> toJson() {
+    return {
+      'name': id,
+      'docstatus': docstatus,
+      'vendor': vendor,
+      'items': items.map((e) => e.toJson()).toList(),
+    };
+  }
 
   StockEntry toEntity() => StockEntry(
     id: id,
@@ -41,10 +43,10 @@ class StockEntryModel {
     items: items.map((e) => e.toEntity()).toList(),
   );
 
-  factory StockEntryModel.fromEntity(StockEntry entity) => StockEntryModel(
-    id: entity.id,
-    docstatus: entity.docstatus,
-    vendor: entity.vendor,
-    items: entity.items.map((e) => StockEntryItemModel.fromEntity(e)).toList(),
+  static StockEntryModel fromEntity(StockEntry entry) => StockEntryModel(
+    id: entry.id,
+    docstatus: entry.docstatus,
+    vendor: entry.vendor,
+    items: entry.items.map((e) => StockEntryItemModel.fromEntity(e)).toList(),
   );
 }

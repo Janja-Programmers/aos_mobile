@@ -17,4 +17,18 @@ class StockEntry extends Equatable {
 
   @override
   List<Object?> get props => [id, docstatus, vendor, items];
+
+  StockEntry copyWith({
+    String? id,
+    int? docstatus,
+    String? vendor,
+    List<StockEntryItem>? items,
+  }) {
+    return StockEntry(
+      id: id ?? this.id,
+      docstatus: docstatus ?? this.docstatus,
+      vendor: vendor ?? this.vendor,
+      items: items ?? this.items,
+    );
+  }
 }

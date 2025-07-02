@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../features/stock/providers/read.dart';
+import '/features/stock/providers/read.dart';
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
 
 import 'utils/failure_display.dart';
+import 'utils/submit_stock.dart';
+
 import 'widgets/item_tile.dart';
 import 'widgets/stock_detail_header.dart';
 
@@ -67,6 +69,16 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
               children: [
                 StockDetailHeader(entry: entry),
                 const SizedBox(height: 16),
+                if (entry.docstatus == 0)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ElevatedButton.icon(
+                      onPressed: () => submitStockEntry(context, entry),
+                      icon: const Icon(Icons.send),
+                      label: const Text('Submit Entry'),
+                    ),
+                  ),
+                const SizedBox(height: 16),
                 const Text(
                   'Items',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -75,7 +87,7 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
                 Expanded(
                   child: ListView.separated(
                     itemCount: entry.items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (_, i) => StockItemTile(item: entry.items[i]),
                   ),
                 ),

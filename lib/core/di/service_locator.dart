@@ -215,22 +215,22 @@ Future<void> init() async {
   // STOCKENTRY Doctype
   // === Data ===
   sl.registerLazySingleton(() => StockEntryRemoteDS(sl()));
+
   // === Repository ===
   sl.registerLazySingleton<StockEntryRepo>(
     () => StockEntryRepoImpl(sl<StockEntryRemoteDS>()),
   );
+
   // === Domain ===
   sl.registerLazySingleton(() => GetAllStockEntryNames(sl()));
   sl.registerLazySingleton(() => AddStockEntry(sl()));
-  // === UseCase: Get by ID ===
+  sl.registerLazySingleton(() => UpdateStockEntry(sl())); // ✅ ADD THIS
   sl.registerLazySingleton(() => GetStockEntryById(sl()));
-  // === Provider: All Names ===
-  sl.registerFactory(
-    () => StockEntryProvider(getAll: sl<GetAllStockEntryNames>()),
-  );
-  // === Provider: Detail ===
+
+  // === Providers ===
+  sl.registerFactory(() => StockEntryProvider(getAll: sl()));
   sl.registerFactory(() => StockEntryDetailProvider(getById: sl()));
-  sl.registerFactory(() => CreateStockEntryProvider(add: sl()));
+  sl.registerFactory(() => CreateStockEntryProvider(add: sl(), update: sl()));
 
   // CART Feature
   // ==== Data ===

@@ -7,4 +7,5 @@ import 'entity/stock.dart';
 abstract class StockEntryRepo {
   Future<Either<Failure, List<String>>> getAllNames();
   Future<Either<Failure, StockEntry>> getById(String name);
+  Future<Either<Failure, void>> add(StockEntry entry);
 }

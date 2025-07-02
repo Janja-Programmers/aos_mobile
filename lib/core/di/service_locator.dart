@@ -60,7 +60,8 @@ import '/features/stock/data/repo_impl.dart';
 import '/features/stock/domain/repo.dart';
 import '/features/stock/domain/usecases.dart';
 import '/features/stock/providers/all.dart';
-import '/features/stock/providers/single.dart';
+import '/features/stock/providers/create.dart';
+import '/features/stock/providers/read.dart';
 
 /***** CART *******/
 import '/features/cart/domain/usecase.dart';
@@ -220,6 +221,7 @@ Future<void> init() async {
   );
   // === Domain ===
   sl.registerLazySingleton(() => GetAllStockEntryNames(sl()));
+  sl.registerLazySingleton(() => AddStockEntry(sl()));
   // === UseCase: Get by ID ===
   sl.registerLazySingleton(() => GetStockEntryById(sl()));
   // === Provider: All Names ===
@@ -228,6 +230,7 @@ Future<void> init() async {
   );
   // === Provider: Detail ===
   sl.registerFactory(() => StockEntryDetailProvider(getById: sl()));
+  sl.registerFactory(() => CreateStockEntryProvider(add: sl()));
 
   // CART Feature
   // ==== Data ===

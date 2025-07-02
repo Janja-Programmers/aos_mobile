@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '/features/stock/providers/single.dart';
+import '../../../features/stock/providers/read.dart';
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
 

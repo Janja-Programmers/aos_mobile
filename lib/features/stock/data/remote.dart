@@ -32,4 +32,13 @@ class StockEntryRemoteDS {
       return Left(handleException(e));
     }
   }
+
+  Future<Either<Failure, void>> add(StockEntryModel entry) async {
+    try {
+      await _client.client.post(STOCK_ENTRY_ENDPOINT, data: entry.toJson());
+      return const Right(null);
+    } catch (e) {
+      return Left(handleException(e));
+    }
+  }
 }

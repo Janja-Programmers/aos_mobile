@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../shared/widgets/custom_button.dart';
 import '/features/stock/providers/all.dart';
 
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
 
+import 'create_stock_screen.dart';
 import 'widgets/stock_list_body.dart';
 
 class StockEntryScreen extends StatefulWidget {
@@ -27,6 +29,7 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
   @override
   Widget build(BuildContext context) {
     return MainBarScaffold(
+      actionButton: CustomButton(pageBuilder: () => CreateStockEntryScreen()),
       drawer: AppDrawer(selectedIndex: 2, onItemSelected: (_) {}),
       subTitle: 'Stock Entry List',
       scaffoldKey: _scaffoldKey,

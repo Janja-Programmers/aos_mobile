@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 // Auth
+import '../../screens/supplier/stock/create_stock_screen.dart';
 import '/features/product/domain/product.dart';
 import '/features/auth/presentation/auth_provider.dart';
 import '/features/auth/presentation/screens/login_screen.dart';
@@ -112,6 +114,11 @@ class AppRouter {
           final id = state.pathParameters['id']!;
           return StockEntryDetailScreen(stockEntryName: id);
         },
+      ),
+      GoRoute(
+        path: '/stock-entry/add',
+        pageBuilder:
+            (context, state) => MaterialPage(child: CreateStockEntryScreen()),
       ),
 
       // CUSTOMER ROUTES

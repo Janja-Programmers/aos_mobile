@@ -19,3 +19,13 @@ class GetStockEntryById {
 
   Future<Either<Failure, StockEntry>> call(String name) => repo.getById(name);
 }
+
+class AddStockEntry {
+  final StockEntryRepo repo;
+
+  AddStockEntry(this.repo);
+
+  Future<Either<Failure, void>> call(StockEntry entry) {
+    return repo.add(entry);
+  }
+}

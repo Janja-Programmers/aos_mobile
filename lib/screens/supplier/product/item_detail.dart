@@ -8,10 +8,10 @@ import '/features/item/prov.dart';
 import '/features/item/domain/entity.dart';
 
 import '../../../shared/widgets/app_drawer.dart';
-import '../website/widgets/labeled_card.dart';
+import '../../../shared/widgets/labeled_card.dart';
 import '../../../shared/widgets/custom_button.dart';
 import '../../../shared/widgets/main_bar.dart';
-import '../website/widgets/selectable_field.dart';
+import '../../../shared/widgets/selectable_field.dart';
 
 class ItemDetailScreen extends StatefulWidget {
   final String? itemName;

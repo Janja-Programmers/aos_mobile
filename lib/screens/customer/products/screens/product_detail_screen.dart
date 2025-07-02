@@ -50,7 +50,6 @@ class ProductDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: TopAppBar(
-        
         actions:
             user == null
                 ? [
@@ -156,8 +155,8 @@ class ProductDetailScreen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   ProductDescriptions(
-                    shortDesc: product.shortWebsiteDescription!,
-                    longDesc: product.websiteDescription!,
+                    shortDesc: product.shortWebsiteDescription ?? '',
+                    longDesc: product.websiteDescription ?? '',
                   ),
                   const SizedBox(height: 16),
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
-import '../../../../features/item/prov.dart';
+import '../../features/item/prov.dart';
 
 class SelectableItemCodeField extends StatefulWidget {
   final String? value;

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '/core/utils/formatters.dart';
-
 import 'mini_video_player.dart';
 
 class ProductImageWithVideo extends StatelessWidget {
@@ -19,6 +18,7 @@ class ProductImageWithVideo extends StatelessWidget {
   Widget build(BuildContext context) {
     final resolvedImageUrl = resolveImageUrl(imageUrl);
     final resolvedVideoUrl = resolveImageUrl(videoUrl);
+    final hasImage = resolvedImageUrl.trim().isNotEmpty;
 
     return Stack(
       children: [
@@ -28,30 +28,39 @@ class ProductImageWithVideo extends StatelessWidget {
             color: Colors.white,
             width: double.infinity,
             height: 200,
-            child: Image.network(
-              resolvedImageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (ctx, _, _) => const Icon(Icons.broken_image),
-            ),
+            child:
+                hasImage
+                    ? Image.network(
+                      resolvedImageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (ctx, _, __) => _fallbackImage(),
+                    )
+                    : _fallbackImage(),
           ),
         ),
 
-        // Show mini video preview if URL exists
+        // Mini Video Preview
         if (resolvedVideoUrl.isNotEmpty)
           Positioned(
             bottom: 12,
             right: 12,
             child: GestureDetector(
               onTap: () => _showFullScreenVideo(context, resolvedVideoUrl),
-              child: const Hero(
+              child: Hero(
                 tag: 'video-player',
-                child: MiniVideoPlayer(
-                  videoUrl: '', // passed dynamically below
-                ),
+                child: MiniVideoPlayer(videoUrl: resolvedVideoUrl),
               ),
             ),
           ),
       ],
+    );
+  }
+
+  Widget _fallbackImage() {
+    return Container(
+      color: Colors.grey.shade200,
+      alignment: Alignment.center,
+      child: const Icon(Icons.broken_image, size: 64, color: Colors.grey),
     );
   }
 

@@ -1,6 +1,5 @@
 import 'package:go_router/go_router.dart';
 // Auth
-import '../../screens/supplier/stock/create_stock_screen.dart';
 import '/features/product/domain/product.dart';
 import '/features/auth/presentation/auth_provider.dart';
 import '/features/auth/presentation/screens/login_screen.dart';
@@ -11,20 +10,18 @@ import '/screens/customer/products/screens/product_list_screen.dart';
 import '/screens/customer/wishlist/presentation/wishlist_screen.dart';
 import '/screens/customer/cart/cart_screen.dart';
 import '/screens/customer/address/shipping_address_form.dart';
-// import '/features/website/domain/webitem.dart';
 
 // Seller
 import '/screens/customer/products/screens/product_detail_screen.dart';
 import '/screens/supplier/product/add_item_screen.dart';
 import '/screens/supplier/dashboard/dashboard.dart';
 import '/screens/supplier/product/item_screen.dart';
-import '/screens/supplier/website/web_item_list_screen.dart';
-import '/screens/supplier/price/screens/item_price_list.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';
 import '/screens/supplier/d_note/delivery_note_list_screen.dart';
 import '/screens/supplier/order/order_detail_screen.dart';
 
 import '/features/stock/domain/entity/stock.dart';
+import '/screens/supplier/stock/create_stock_screen.dart';
 import '/screens/supplier/stock/stock_list_screen.dart';
 import '/screens/supplier/stock/stock_detail_screen.dart';
 
@@ -71,27 +68,6 @@ class AppRouter {
       GoRoute(path: '/items', builder: (context, state) => ItemScreen()),
       // Item Detail
 
-      // Item Price
-      GoRoute(
-        path: '/item-price',
-        builder: (context, state) => const ItemPriceScreen(),
-      ),
-      // Item Price Detail
-      GoRoute(
-        path: '/item-price/:name',
-        builder: (context, state) {
-          // final itemCode = state.pathParameters['itemCode'];
-          // if (itemCode == null) {
-          //   throw Exception('Invalid item price');
-          // }
-          return ItemPriceScreen();
-        },
-      ),
-      // Website Items
-      GoRoute(
-        path: '/web-items',
-        builder: (context, state) => const WebsiteItemListScreen(),
-      ),
       // Sales Order
       GoRoute(
         path: '/sales-orders',

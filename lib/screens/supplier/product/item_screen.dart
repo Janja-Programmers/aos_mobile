@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/screens/supplier/product/add_item_screen.dart';
-import 'package:ownashop/shared/widgets/custom_button.dart';
 import 'package:provider/provider.dart';
 
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
 
+import '/shared/widgets/custom_button.dart';
+
 import '/features/auth/presentation/auth_provider.dart';
 import '/features/product/provider.dart';
 
+import 'add_product_screen.dart';
 import 'widgets/item_tile.dart';
 
 class ItemScreen extends StatefulWidget {
@@ -50,7 +51,8 @@ class _ItemScreenState extends State<ItemScreen> {
     final query = _searchController.text.trim().toLowerCase();
     final filteredproducts =
         products.where((product) {
-          return query.isEmpty || product.name.toLowerCase().contains(query);
+          return query.isEmpty ||
+              product.itemName.toLowerCase().contains(query);
         }).toList();
 
     Widget content;
@@ -109,16 +111,24 @@ class _ItemScreenState extends State<ItemScreen> {
             ),
           ),
 
-          const Divider(),
-
           // Item List
           Expanded(
-            child: ListView.builder(
-              itemCount: filteredproducts.length,
-              itemBuilder: (context, index) {
-                final product = filteredproducts[index];
-                return ItemTile(product: product);
+            child: RefreshIndicator(
+              onRefresh: () async {
+                final user = context.read<AuthProvider>().user?.username;
+                if (user != null) {
+                  await context.read<ProductProvider>().fetchVendorProducts(
+                    user,
+                  );
+                }
               },
+              child: ListView.builder(
+                itemCount: filteredproducts.length,
+                itemBuilder: (context, index) {
+                  final product = filteredproducts[index];
+                  return ItemTile(product: product);
+                },
+              ),
             ),
           ),
         ],
@@ -129,7 +139,7 @@ class _ItemScreenState extends State<ItemScreen> {
       drawer: AppDrawer(selectedIndex: 1, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
       subTitle: "Items",
-      actionButton: CustomButton(pageBuilder: () => AddItemScreen()),
+      actionButton: CustomButton(pageBuilder: () => AddProductScreen()),
       body: content,
     );
   }

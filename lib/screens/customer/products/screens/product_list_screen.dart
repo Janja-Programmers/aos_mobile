@@ -47,7 +47,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
             .where(
               (item) =>
                   _searchQuery.isEmpty ||
-                  item.name.toLowerCase().contains(_searchQuery.toLowerCase()),
+                  item.itemName.toLowerCase().contains(
+                    _searchQuery.toLowerCase(),
+                  ),
             )
             .toList();
 

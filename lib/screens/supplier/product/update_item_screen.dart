@@ -28,6 +28,7 @@ class AddItemScreen extends StatefulWidget {
 class _AddItemScreenState extends State<AddItemScreen> {
   late final AddItemController controller;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool showRawEditor = false;
 
   @override
   void initState() {

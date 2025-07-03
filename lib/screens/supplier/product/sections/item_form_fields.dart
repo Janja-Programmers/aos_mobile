@@ -4,7 +4,7 @@ import '/core/utils/validators.dart';
 import '../controllers/add_item_controller.dart';
 import '/shared/widgets/form_fields.dart';
 
-class ItemFormFields extends StatelessWidget {
+class ItemFormFields extends StatefulWidget {
   final AddItemController controller;
   final bool isUpdate;
   final GlobalKey<FormState> formKey;
@@ -17,10 +17,20 @@ class ItemFormFields extends StatelessWidget {
   });
 
   @override
+  State<ItemFormFields> createState() => _ItemFormFieldsState();
+}
+
+class _ItemFormFieldsState extends State<ItemFormFields> {
+  bool showRawEditor = false;
+
+  @override
   Widget build(BuildContext context) {
+    final controller = widget.controller;
+
     return Form(
-      key: formKey,
+      key: widget.formKey,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppTextField(
             label: 'Item Name',
@@ -30,15 +40,17 @@ class ItemFormFields extends StatelessWidget {
                 (val) => AppValidator.required(val, fieldName: 'Item Name'),
           ),
           const SizedBox(height: 10),
+
           AppTextField(
             label: 'Item Code',
             controller: controller.itemCodeController,
             isRequired: true,
-            readOnly: isUpdate,
+            readOnly: widget.isUpdate,
             validator:
                 (val) => AppValidator.required(val, fieldName: 'Item Code'),
           ),
           const SizedBox(height: 10),
+
           AppTextField(
             label: 'Item Price',
             controller: controller.priceController,
@@ -48,6 +60,7 @@ class ItemFormFields extends StatelessWidget {
                 (val) => AppValidator.isNumber(val, fieldName: 'Item Price'),
           ),
           const SizedBox(height: 10),
+
           FutureBuilder<List<String>>(
             future: controller.fetchItemGroups(),
             builder: (context, snapshot) {
@@ -75,55 +88,57 @@ class ItemFormFields extends StatelessWidget {
             },
           ),
           const SizedBox(height: 10),
+
           AppTextField(
             label: 'Short Description',
             controller: controller.shortDescController,
             maxLines: 2,
           ),
           const SizedBox(height: 10),
-          AppTextField(
-            label: 'Long Description',
-            controller: controller.descController,
-            maxLines: 4,
+
+          // 🔻 Long Description with toggle
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Long Description"),
+                  TextButton(
+                    onPressed: () {
+                      setState(() => showRawEditor = !showRawEditor);
+                    },
+                    child: Text(showRawEditor ? 'Preview' : 'Edit HTML'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (showRawEditor)
+                AppTextField(
+                  label: 'Long Description',
+                  controller: controller.descController,
+                  maxLines: 6,
+                )
+              else
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade400),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    controller.descController.text.trim().isEmpty
+                        ? 'No description added.'
+                        : controller.descController.text.trim(),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 10),
-          // const Divider(),
-          // const SizedBox(height: 8),
-          // Align(
-          //   alignment: Alignment.centerLeft,
-          //   child: Text(
-          //     'Website Specifications',
-          //     style: Theme.of(context).textTheme.titleMedium,
-          //   ),
-          // ),
-          // const SizedBox(height: 10),
 
-          // // Input fields for specification
-          // Row(
-          //   children: [
-          //     Expanded(
-          //       child: AppTextField(
-          //         label: 'Label',
-          //         controller: controller.specLabelController,
-          //       ),
-          //     ),
-          //     const SizedBox(width: 8),
-          //     Expanded(
-          //       child: AppTextField(
-          //         label: 'Description',
-          //         controller: controller.specDescController,
-          //       ),
-          //     ),
-          //     const SizedBox(width: 8),
-          //     ElevatedButton(
-          //       onPressed: controller.addSpecification,
-          //       child: const Icon(Icons.add),
-          //     ),
-          //   ],
-          // ),
-          // const SizedBox(height: 12),
-
-          // Display current specifications
+          // 🧩 Specification list
           if (controller.websiteSpecifications.isNotEmpty)
             ListView.builder(
               shrinkWrap: true,

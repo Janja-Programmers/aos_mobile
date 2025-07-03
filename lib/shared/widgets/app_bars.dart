@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/features/auth/presentation/auth_provider.dart';
 import 'package:provider/provider.dart';
+
+import '/features/auth/presentation/auth_provider.dart';
 
 import '/core/constants/colors.dart';
 import 'cart_button.dart';
@@ -14,6 +15,7 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.read<AuthProvider>().user?.userType;
     return AppBar(
       backgroundColor: AppColors.white,
       elevation: 1,
@@ -31,35 +33,31 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
 
-      title: const Text('Own A Shop', style: TextStyle(color: AppColors.black)),
-      actions:
-          actions ??
-          [
-            const CartIconButton(),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.person, color: AppColors.black),
-              onSelected: (value) async {
-                if (value == 'logout') {
-                  final authProvider = context.read<AuthProvider>();
-                  await authProvider.logout();
-                  context.go('/login');
-                } else if (value == 'orders') {
-                  context.go('/');
-                }
-              },
-              itemBuilder:
-                  (context) => const [
-                    PopupMenuItem(value: 'orders', child: Text('My Orders')),
-                    PopupMenuItem(
-                      value: 'logout',
-                      child: Text(
-                        'Logout',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
-            ),
-          ],
+      title: Text('Own A Shop', style: const TextStyle(color: AppColors.black)),
+      actions: [
+        if (user != 'Buyer') const CartIconButton(),
+        ...?actions,
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.person, color: AppColors.black),
+          onSelected: (value) async {
+            if (value == 'logout') {
+              final authProvider = context.read<AuthProvider>();
+              await authProvider.logout();
+              context.go('/login');
+            } else if (value == 'orders') {
+              context.go('/');
+            }
+          },
+          itemBuilder:
+              (context) => const [
+                PopupMenuItem(value: 'orders', child: Text('My Orders')),
+                PopupMenuItem(
+                  value: 'logout',
+                  child: Text('Logout', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+        ),
+      ],
     );
   }
 

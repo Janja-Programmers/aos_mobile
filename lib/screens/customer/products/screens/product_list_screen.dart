@@ -79,13 +79,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     ),
                   ),
                 ]
-                : [
-                  const CartIconButton(),
-                  IconButton(
-                    icon: const Icon(Icons.person, color: AppColors.black),
-                    onPressed: () {},
-                  ),
-                ],
+                : [const CartIconButton()],
       ),
       body:
           productProvider.isLoading

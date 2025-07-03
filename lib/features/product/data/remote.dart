@@ -102,19 +102,22 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     try {
       final dataMap = model.toJson();
 
-      // 👇 Patch specifications to include child doctype
+      // Inject Frappe-required structure into website_specifications
       dataMap['website_specifications'] =
           model.websiteSpecifications
               ?.map(
-                (e) => {
+                (spec) => {
                   'doctype': 'Product Website Specification',
-                  'label': e.label,
-                  'description': e.description,
+                  if (spec.name != null) 'name': spec.name,
+                  'label': spec.label,
+                  'description': spec.description,
+                  'parent': model.name,
+                  'parenttype': 'Product',
+                  'parentfield': 'website_specifications',
                 },
               )
               .toList();
 
-      // 👇 Inject files manually
       final formData = FormData.fromMap({
         ...dataMap,
         if (model.imageFile != null)

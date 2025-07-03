@@ -13,7 +13,7 @@ import '/screens/customer/address/shipping_address_form.dart';
 
 // Seller
 import '/screens/customer/products/screens/product_detail_screen.dart';
-import '/screens/supplier/product/add_item_screen.dart';
+import '../../screens/supplier/product/update_item_screen.dart';
 import '/screens/supplier/dashboard/dashboard.dart';
 import '/screens/supplier/product/item_screen.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';

@@ -86,42 +86,42 @@ class ItemFormFields extends StatelessWidget {
             controller: controller.descController,
             maxLines: 4,
           ),
-          const SizedBox(height: 16),
-          const Divider(),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Website Specifications',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
           const SizedBox(height: 10),
+          // const Divider(),
+          // const SizedBox(height: 8),
+          // Align(
+          //   alignment: Alignment.centerLeft,
+          //   child: Text(
+          //     'Website Specifications',
+          //     style: Theme.of(context).textTheme.titleMedium,
+          //   ),
+          // ),
+          // const SizedBox(height: 10),
 
-          // Input fields for specification
-          Row(
-            children: [
-              Expanded(
-                child: AppTextField(
-                  label: 'Label',
-                  controller: controller.specLabelController,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: AppTextField(
-                  label: 'Description',
-                  controller: controller.specDescController,
-                ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: controller.addSpecification,
-                child: const Icon(Icons.add),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+          // // Input fields for specification
+          // Row(
+          //   children: [
+          //     Expanded(
+          //       child: AppTextField(
+          //         label: 'Label',
+          //         controller: controller.specLabelController,
+          //       ),
+          //     ),
+          //     const SizedBox(width: 8),
+          //     Expanded(
+          //       child: AppTextField(
+          //         label: 'Description',
+          //         controller: controller.specDescController,
+          //       ),
+          //     ),
+          //     const SizedBox(width: 8),
+          //     ElevatedButton(
+          //       onPressed: controller.addSpecification,
+          //       child: const Icon(Icons.add),
+          //     ),
+          //   ],
+          // ),
+          // const SizedBox(height: 12),
 
           // Display current specifications
           if (controller.websiteSpecifications.isNotEmpty)

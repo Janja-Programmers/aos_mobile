@@ -104,25 +104,35 @@ class ProductModel {
 }
 
 class WebsiteSpecificationModel {
+  final String? name;
   final String label;
   final String description;
 
-  WebsiteSpecificationModel({required this.label, required this.description});
+  WebsiteSpecificationModel({
+    this.name,
+    required this.label,
+    required this.description,
+  });
 
   factory WebsiteSpecificationModel.fromJson(Map<String, dynamic> json) {
     return WebsiteSpecificationModel(
+      name: json['name'],
       label: json['label'] ?? '',
       description: json['description'] ?? '',
     );
   }
 
-  Map<String, dynamic> toJson() => {'label': label, 'description': description};
-
+  Map<String, dynamic> toJson() => {
+    if (name != null) 'name': name,
+    'label': label,
+    'description': description,
+  };
   WebsiteSpecification toEntity() =>
-      WebsiteSpecification(label: label, description: description);
+      WebsiteSpecification(name: name, label: label, description: description);
 
   factory WebsiteSpecificationModel.fromEntity(WebsiteSpecification spec) {
     return WebsiteSpecificationModel(
+      name: spec.name,
       label: spec.label,
       description: spec.description,
     );

@@ -46,7 +46,13 @@ class _ItemScreenState extends State<ItemScreen> {
   @override
   Widget build(BuildContext context) {
     final productProvider = context.watch<ProductProvider>();
-    final products = productProvider.products;
+    final user = context.read<AuthProvider>().user;
+    final vendorUsername = user?.username;
+
+    final products =
+        productProvider.products
+            .where((prod) => prod.vendor == vendorUsername)
+            .toList();
 
     final query = _searchController.text.trim().toLowerCase();
     final filteredproducts =
@@ -85,7 +91,7 @@ class _ItemScreenState extends State<ItemScreen> {
                     controller: _searchController,
                     decoration: const InputDecoration(
                       prefixIcon: Icon(Icons.search),
-                      hintText: 'Search items by name',
+                      hintText: 'Search products by name',
                       border: OutlineInputBorder(),
                     ),
                     onChanged: (_) => setState(() {}),

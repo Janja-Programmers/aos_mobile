@@ -46,8 +46,24 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   @override
   Future<ProductModel> createProduct(ProductModel model) async {
     try {
+      final dataMap = model.toJson();
+
+      // 🔁 Encode website_specifications as JSON string
+      if (model.websiteSpecifications != null) {
+        dataMap['website_specifications'] =
+            model.websiteSpecifications
+                ?.map(
+                  (e) => {
+                    'doctype': 'Product Website Specification',
+                    'label': e.label,
+                    'description': e.description,
+                  },
+                )
+                .toList();
+      }
+
       final formData = FormData.fromMap({
-        ...model.toJson(),
+        ...dataMap,
         if (model.imageFile != null)
           'image': await MultipartFile.fromFile(
             model.imageFile!.path,
@@ -61,9 +77,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       });
 
       for (var field in formData.fields) {
-        appLogger.i(
-          'Prinitng DATA OF EACH FORMDATA: 📝 ${field.key}: ${field.value}',
-        );
+        appLogger.i('📝 Field: ${field.key}: ${field.value}');
       }
 
       final response = await client.client.post(
@@ -73,10 +87,10 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       );
 
       final data = response.data['data'];
-
       if (data == null || data is! Map<String, dynamic>) {
         throw Exception('Failed to parse created product');
       }
+
       return ProductModel.fromJson(data);
     } catch (e) {
       throw Exception('Failed to create product: $e');
@@ -86,8 +100,23 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   @override
   Future<ProductModel> updateProduct(ProductModel model) async {
     try {
+      final dataMap = model.toJson();
+
+      // 👇 Patch specifications to include child doctype
+      dataMap['website_specifications'] =
+          model.websiteSpecifications
+              ?.map(
+                (e) => {
+                  'doctype': 'Product Website Specification',
+                  'label': e.label,
+                  'description': e.description,
+                },
+              )
+              .toList();
+
+      // 👇 Inject files manually
       final formData = FormData.fromMap({
-        ...model.toJson(),
+        ...dataMap,
         if (model.imageFile != null)
           'image': await MultipartFile.fromFile(
             model.imageFile!.path,
@@ -100,14 +129,9 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
           ),
       });
 
-      for (var file in formData.files) {
-        appLogger.i('File: ${file.key}, ${file.value.filename}');
-      }
-
       final response = await client.client.put(
         '$CREATE_PRODUCT_ENDPOINT/${model.name}',
         data: formData,
-        // queryParameters: {'ignore_permissions': 'true'},
         options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
 

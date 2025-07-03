@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '/core/utils/validators.dart';
-
 import '../controllers/add_item_controller.dart';
-
 import '/shared/widgets/form_fields.dart';
 
 class ItemFormFields extends StatelessWidget {
@@ -41,8 +39,6 @@ class ItemFormFields extends StatelessWidget {
                 (val) => AppValidator.required(val, fieldName: 'Item Code'),
           ),
           const SizedBox(height: 10),
-          // Group dropdown is already validated in its own builder
-          const SizedBox(height: 10),
           AppTextField(
             label: 'Item Price',
             controller: controller.priceController,
@@ -79,7 +75,6 @@ class ItemFormFields extends StatelessWidget {
             },
           ),
           const SizedBox(height: 10),
-
           AppTextField(
             label: 'Short Description',
             controller: controller.shortDescController,
@@ -91,6 +86,64 @@ class ItemFormFields extends StatelessWidget {
             controller: controller.descController,
             maxLines: 4,
           ),
+          const SizedBox(height: 16),
+          const Divider(),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Website Specifications',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Input fields for specification
+          Row(
+            children: [
+              Expanded(
+                child: AppTextField(
+                  label: 'Label',
+                  controller: controller.specLabelController,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: AppTextField(
+                  label: 'Description',
+                  controller: controller.specDescController,
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: controller.addSpecification,
+                child: const Icon(Icons.add),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Display current specifications
+          if (controller.websiteSpecifications.isNotEmpty)
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: controller.websiteSpecifications.length,
+              itemBuilder: (context, index) {
+                final spec = controller.websiteSpecifications[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 4),
+                  child: ListTile(
+                    title: Text(spec.label),
+                    subtitle: Text(spec.description),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () => controller.removeSpecification(index),
+                    ),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );

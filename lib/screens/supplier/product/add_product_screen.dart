@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../../features/product/domain/product.dart';
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/action_button.dart';
@@ -27,6 +28,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final priceController = TextEditingController();
   final descController = TextEditingController();
   final shortDescController = TextEditingController();
+  final specLabelController = TextEditingController();
+  final specDescController = TextEditingController();
+  final List<WebsiteSpecification> websiteSpecifications = [];
   String? selectedCategory;
   File? selectedImage;
   File? selectedVideo;
@@ -117,6 +121,16 @@ class _AddProductScreenState extends State<AddProductScreen> {
         "short_website_description": shortDescController.text.trim(),
         "image": uploadedImageUrl,
         "demo_video": uploadedVideoUrl,
+        "website_specifications":
+            websiteSpecifications
+                .map(
+                  (e) => {
+                    "doctype": "Product Website Specification",
+                    "label": e.label,
+                    "description": e.description,
+                  },
+                )
+                .toList(),
       };
 
       debugPrint('Submitting product: $payload');
@@ -148,7 +162,27 @@ class _AddProductScreenState extends State<AddProductScreen> {
     priceController.dispose();
     descController.dispose();
     shortDescController.dispose();
+    specLabelController.dispose();
+    specDescController.dispose();
     super.dispose();
+  }
+
+  void addSpecification() {
+    final label = specLabelController.text.trim();
+    final desc = specDescController.text.trim();
+
+    if (label.isEmpty || desc.isEmpty) return;
+
+    websiteSpecifications.add(
+      WebsiteSpecification(label: label, description: desc),
+    );
+
+    specLabelController.clear();
+    specDescController.clear();
+  }
+
+  void removeSpecification(int index) {
+    websiteSpecifications.removeAt(index);
   }
 
   @override
@@ -216,6 +250,64 @@ class _AddProductScreenState extends State<AddProductScreen> {
               decoration: const InputDecoration(labelText: 'Long Description'),
             ),
             const SizedBox(height: 12),
+            const Divider(),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Website Specifications',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Input fields for specification
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    decoration: const InputDecoration(labelText: 'Label'),
+                    controller: specLabelController,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    decoration: const InputDecoration(labelText: 'Description'),
+                    controller: specDescController,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: addSpecification,
+                  child: const Icon(Icons.add),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Display current specifications
+            if (websiteSpecifications.isNotEmpty)
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: websiteSpecifications.length,
+                itemBuilder: (context, index) {
+                  final spec = websiteSpecifications[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    child: ListTile(
+                      title: Text(spec.label),
+                      subtitle: Text(spec.description),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () => removeSpecification(index),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [

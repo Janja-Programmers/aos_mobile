@@ -55,7 +55,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
           return MainBarScaffold(
             drawer: AppDrawer(selectedIndex: 1, onItemSelected: (_) {}),
             scaffoldKey: _scaffoldKey,
-            subTitle: isUpdate ? 'Update Item' : 'Create Item',
+            subTitle: isUpdate ? 'Update Product' : 'Create Product',
             body: AbsorbPointer(
               absorbing: ctrl.isSubmitting,
               child: SingleChildScrollView(
@@ -74,7 +74,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     ),
                     const SizedBox(height: 16),
                     ActionButton(
-                      label: isUpdate ? 'Update Item' : 'Save Item',
+                      label: isUpdate ? 'Update Product' : 'Save Product',
                       isLoading: ctrl.isSubmitting,
                       onPressed: () async {
                         final success = await ctrl.submit(

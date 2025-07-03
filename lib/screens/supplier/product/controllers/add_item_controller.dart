@@ -1,19 +1,21 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:ownashop/core/utils/logger.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-import '/core/di/service_locator.dart';
 import '/core/utils/api_client.dart';
 import '/core/utils/snackbar.dart';
+import '/core/utils/logger.dart';
+import '/core/di/service_locator.dart';
+
 import '/features/product/domain/product.dart';
 import '/features/product/provider.dart';
 
 class AddItemController extends ChangeNotifier {
   final ProductProvider provider;
   final APIClient apiClient;
+
   final formKey = GlobalKey<FormState>();
 
   final nameController = TextEditingController();
@@ -23,10 +25,16 @@ class AddItemController extends ChangeNotifier {
   final descController = TextEditingController();
   final shortDescController = TextEditingController();
 
+  final specLabelController = TextEditingController();
+  final specDescController = TextEditingController();
+
+  final List<WebsiteSpecification> websiteSpecifications = [];
+
   File? selectedImage;
   File? selectedVideo;
   String? uploadedImageUrl;
   String? uploadedVideoUrl;
+
   bool isSubmitting = false;
 
   AddItemController({
@@ -43,6 +51,9 @@ class AddItemController extends ChangeNotifier {
       shortDescController.text = initialProduct.shortWebsiteDescription ?? '';
       uploadedImageUrl = initialProduct.image;
       uploadedVideoUrl = initialProduct.demoVideo;
+
+      // Pre-fill specifications if editing
+      websiteSpecifications.addAll(initialProduct.websiteSpecifications ?? []);
     }
   }
 
@@ -67,10 +78,7 @@ class AddItemController extends ChangeNotifier {
         if (uploadedImageUrl != null &&
             formKey.currentState != null &&
             !formKey.currentState!.validate()) {
-          topSnackBar(
-            context,
-            'Image uploaded, please fill all required fields',
-          );
+          topSnackBar(context, 'Image uploaded. Please fix form errors.');
         }
       } else {
         selectedVideo = file;
@@ -78,10 +86,7 @@ class AddItemController extends ChangeNotifier {
         if (uploadedVideoUrl != null &&
             formKey.currentState != null &&
             !formKey.currentState!.validate()) {
-          topSnackBar(
-            context,
-            'Video uploaded, please fill all required fields',
-          );
+          topSnackBar(context, 'Video uploaded. Please fix form errors.');
         }
       }
       notifyListeners();
@@ -97,7 +102,7 @@ class AddItemController extends ChangeNotifier {
       permission = Permission.photos;
     }
 
-    var status = await permission.request();
+    final status = await permission.request();
     return PermissionResult(
       granted: status.isGranted,
       permanentlyDenied: status.isPermanentlyDenied,
@@ -132,17 +137,13 @@ class AddItemController extends ChangeNotifier {
         'file': await MultipartFile.fromFile(file.path, filename: fileName),
       });
 
-      final client = sl<APIClient>();
-
-      final response = await client.client.post(
+      final response = await apiClient.client.post(
         '/api/method/upload_file',
         data: formData,
       );
 
       debugPrint('Upload response: ${response.data}');
-      final fileUrl = response.data['message']['file_url'];
-      debugPrint('Uploaded file URL: $fileUrl');
-      return fileUrl;
+      return response.data['message']['file_url'];
     } catch (e, stack) {
       debugPrint('❌ Upload failed: $e\n$stack');
       return null;
@@ -155,7 +156,6 @@ class AddItemController extends ChangeNotifier {
 
     try {
       if (formKey.currentState == null || !formKey.currentState!.validate()) {
-        debugPrint("❌ Form validation failed");
         topSnackBar(
           context,
           'Please fix form errors',
@@ -174,31 +174,24 @@ class AddItemController extends ChangeNotifier {
         demoVideo: uploadedVideoUrl,
         websiteDescription: descController.text.trim(),
         shortWebsiteDescription: shortDescController.text.trim(),
-        websiteSpecifications: existingProduct?.websiteSpecifications ?? [],
+        websiteSpecifications: websiteSpecifications,
       );
 
       appLogger.i('📦 Submitting product: ${product.name}');
-      appLogger.i('📦 Submitting product: ${product.itemName}');
-      appLogger.i('📦 Submitting product: ${product.itemPrice}');
-      appLogger.i('Image URL: ${product.category}');
-      appLogger.i('Image URL: ${product.vendor}');
-      appLogger.i('Image URL: ${product.image}');
-      appLogger.i('Video URL: ${product.demoVideo}');
-
       final success =
           existingProduct == null
               ? await provider.createProduct(product)
               : await provider.updateExistingItem(product);
+
       return success;
     } catch (e) {
       debugPrint('❌ Submit failed: $e');
       String errorMessage = 'Error saving product';
       if (e is DioException && e.response != null) {
         errorMessage =
-            e.response!.data['exception']?.toString() ?? 'Error saving product';
+            e.response!.data['exception']?.toString() ?? errorMessage;
         if (errorMessage.contains('PermissionError')) {
-          errorMessage =
-              'You do not have permission to update this product. Contact an admin.';
+          errorMessage = 'You do not have permission to update this product.';
         }
       }
       topSnackBar(context, errorMessage, type: TopSnackType.error);
@@ -209,6 +202,27 @@ class AddItemController extends ChangeNotifier {
     }
   }
 
+  void addSpecification() {
+    final label = specLabelController.text.trim();
+    final desc = specDescController.text.trim();
+
+    if (label.isEmpty || desc.isEmpty) return;
+
+    websiteSpecifications.add(
+      WebsiteSpecification(label: label, description: desc),
+    );
+
+    specLabelController.clear();
+    specDescController.clear();
+
+    notifyListeners();
+  }
+
+  void removeSpecification(int index) {
+    websiteSpecifications.removeAt(index);
+    notifyListeners();
+  }
+
   void disposeControllers() {
     nameController.dispose();
     groupController.dispose();
@@ -216,11 +230,14 @@ class AddItemController extends ChangeNotifier {
     priceController.dispose();
     descController.dispose();
     shortDescController.dispose();
+    specLabelController.dispose();
+    specDescController.dispose();
   }
 }
 
 class PermissionResult {
   final bool granted;
   final bool permanentlyDenied;
+
   PermissionResult({required this.granted, required this.permanentlyDenied});
 }

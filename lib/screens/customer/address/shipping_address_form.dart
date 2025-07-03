@@ -15,7 +15,7 @@ class ShippingAddressForm extends StatefulWidget {
 
 class _ShippingAddressFormState extends State<ShippingAddressForm> {
   final _formKey = GlobalKey<FormState>();
-  final _addressTitleController = TextEditingController();
+
   final _addressLineController = TextEditingController();
   final _cityController = TextEditingController();
   final _countryController = TextEditingController(text: 'Kenya');
@@ -23,7 +23,6 @@ class _ShippingAddressFormState extends State<ShippingAddressForm> {
 
   @override
   void dispose() {
-    _addressTitleController.dispose();
     _addressLineController.dispose();
     _cityController.dispose();
     _countryController.dispose();
@@ -39,7 +38,7 @@ class _ShippingAddressFormState extends State<ShippingAddressForm> {
 
     final addressEntity = Address(
       customer: user.user!.username,
-      title: _addressTitleController.text.trim(),
+      title: user.user!.username,
       line1: _addressLineController.text.trim(),
       city: _cityController.text.trim(),
       country: _countryController.text.trim(),
@@ -47,11 +46,10 @@ class _ShippingAddressFormState extends State<ShippingAddressForm> {
       phone: _phoneController.text.trim(),
     );
 
-    final success = await addressProv.createShippingAddress(addressEntity);
+    final name = await addressProv.createShippingAddress(addressEntity);
 
-    if (success && context.mounted) {
-      context.pop();
-      context.go('/');
+    if (name != null && context.mounted) {
+      context.pop(name);
     } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(addressProv.error ?? 'Something went wrong')),
@@ -78,39 +76,38 @@ class _ShippingAddressFormState extends State<ShippingAddressForm> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _addressTitleController,
-                decoration: const InputDecoration(labelText: 'Address Title'),
-                validator: (val) => val!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
+
               TextFormField(
                 controller: _addressLineController,
                 decoration: const InputDecoration(labelText: 'Address Line 1'),
                 validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 12),
+
               TextFormField(
                 controller: _cityController,
                 decoration: const InputDecoration(labelText: 'City/Town'),
                 validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 12),
+
               TextFormField(
                 controller: _countryController,
                 decoration: const InputDecoration(labelText: 'Country'),
               ),
               const SizedBox(height: 12),
+
               TextFormField(
                 controller: _phoneController,
                 decoration: const InputDecoration(labelText: 'Phone'),
                 validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 20),
+
               ElevatedButton.icon(
                 onPressed: _submitAddress,
                 icon: const Icon(Icons.check),
-                label: const Text('Confirm and Place Order'),
+                label: const Text('Save Address'),
               ),
             ],
           ),

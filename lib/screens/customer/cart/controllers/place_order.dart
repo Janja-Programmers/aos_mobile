@@ -1,0 +1,99 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
+import '/features/cart/provider.dart';
+import '/features/auth/presentation/auth_provider.dart';
+import '/screens/customer/address/shipping_address_form.dart';
+
+class PlaceOrderController {
+  final BuildContext context;
+
+  PlaceOrderController(this.context);
+
+  Future<void> placeOrder() async {
+    final cart = context.read<CartProvider>();
+    final user = context.read<AuthProvider>().user;
+
+    if (user == null) {
+      _showErrorDialog('You must be logged in to place an order.');
+      return;
+    }
+
+    _showLoading();
+
+    await cart.submitCartWithAutoAddress(
+      customer: user.username,
+      openShippingForm: () async {
+        Navigator.of(context).pop(); // Close loading dialog before bottom sheet
+
+        final name = await showModalBottomSheet<String>(
+          context: context,
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          builder: (_) => const ShippingAddressForm(),
+        );
+
+        if (name != null) {
+          _showLoading();
+          await cart.submitCartAsSalesOrder(shippingAddressName: name);
+          Navigator.of(context).pop(); // Close loading
+        }
+      },
+      onSuccess: (addressUsed) {
+        Navigator.of(context).pop();
+        _showSuccessDialog();
+      },
+    );
+  }
+
+  void _showLoading() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Order Successful'),
+            content: const Text(
+              'Would you like to view your orders or continue shopping?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => context.go('/orders'),
+                child: const Text('View Orders'),
+              ),
+              TextButton(
+                onPressed: () => context.go('/'),
+                child: const Text('Continue Shopping'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+    );
+  }
+}

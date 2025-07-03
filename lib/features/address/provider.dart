@@ -18,18 +18,18 @@ class AddressProvider with ChangeNotifier {
   String? get error => _error;
 
   /// Create and persist address (remote + local)
-  Future<bool> createShippingAddress(Address address) async {
+  Future<String?> createShippingAddress(Address address) async {
     _error = null;
     _isLoading = true;
     notifyListeners();
 
     try {
-      await repository.createShippingAddress(address);
-      await fetchShippingAddresses(); // refresh local cache
-      return true;
+      final name = await repository.createShippingAddress(address);
+      await fetchShippingAddresses(); // Optional: update local list
+      return name;
     } catch (e) {
       _error = e.toString();
-      return false;
+      return null;
     } finally {
       _isLoading = false;
       notifyListeners();

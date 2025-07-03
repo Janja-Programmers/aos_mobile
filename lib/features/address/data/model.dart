@@ -28,7 +28,7 @@ class AddressModel {
     "phone": phone,
     "address_type": type,
     "links": [
-      {"link_doctype": "Customer", "link_name": customer},
+      {"link_doctype": "Customer", "link_name": title},
     ],
   };
 

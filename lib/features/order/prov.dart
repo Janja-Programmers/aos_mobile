@@ -92,25 +92,18 @@ class SalesOrderProvider with ChangeNotifier {
     _loading = value;
     notifyListeners();
   }
+
+  Future<Either<Failure, Unit>> placeOrderRequest(OrderPayload payload) async {
+    _setLoading(true);
+    _failure = null;
+
+    final result = await placeOrder(payload);
+
+    result.fold((f) => _failure = f, (_) async {
+      await fetchAll();
+    });
+
+    _setLoading(false);
+    return result;
+  }
 }
-
- // Future<bool> placeOrder(OrderPayload payload) async {
-  //   _loading = true;
-  //   _failure = null;
-  //   notifyListeners();
-
-  //   final result = await placeOrderUseCase(payload);
-  //   final success = result.isRight();
-
-  //   result.fold((f) => _failure = f, (_) => null);
-
-  //   _loading = false;
-  //   notifyListeners();
-
-  //   if (success) {
-  //     await fetchAll();
-  //   }
-
-  //   return success;
-  // }
-

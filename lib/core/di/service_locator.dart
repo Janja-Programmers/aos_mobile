@@ -225,6 +225,7 @@ Future<void> init() async {
   sl.registerFactory(() => CreateStockEntryProvider(add: sl(), update: sl()));
 
   // CART Feature
+
   // ==== Data ===
   sl.registerLazySingleton<CartLocalDataSource>(
     () => CartLocalDataSource(sl()),
@@ -245,7 +246,7 @@ Future<void> init() async {
       removeFromCart: sl(),
       clearCart: sl(),
       updateQty: sl(),
-      placeOrder: sl<PlaceOrderUseCase>(),
+      placeOrder: sl(),
     ),
   );
 

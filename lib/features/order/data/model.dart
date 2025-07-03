@@ -127,8 +127,8 @@ class OrderPayloadModel {
                 },
               )
               .toList(),
-      shippingAddress: address,
-      customerAddress: address,
+      shippingAddress: '$address-Shipping',
+      customerAddress: '$address-Shipping',
       addressType: 'Shipping',
     );
   }

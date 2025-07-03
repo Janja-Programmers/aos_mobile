@@ -1,3 +1,5 @@
+import 'package:ownashop/core/utils/logger.dart';
+
 import '/core/constants/const.dart';
 import '/core/utils/api_client.dart';
 
@@ -25,6 +27,7 @@ class AddressRemoteDatasourceImpl implements AddressRemoteDatasource {
 
     final name = res.data['data']?['name'];
     if (name == null) throw Exception('Address creation failed');
+    appLogger.i('Address created: $name');
     return name;
   }
 }

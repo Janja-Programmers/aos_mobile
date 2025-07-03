@@ -44,7 +44,7 @@ class OrderPayload {
   final int docstatus;
   final List<CartItem> items;
   final String shippingAddress;
-  final String customerAddress;
+  final String? customerAddress;
   final String addressType;
 
   OrderPayload({
@@ -52,7 +52,7 @@ class OrderPayload {
     required this.deliveryDate,
     required this.items,
     required this.shippingAddress,
-    required this.customerAddress,
+    this.customerAddress,
     required this.addressType,
     this.docstatus = 1,
   });
@@ -65,7 +65,6 @@ class OrderPayload {
     "docstatus": docstatus,
     "items": items.map((item) => item.toJson()).toList(),
     "shipping_address": shippingAddress,
-    "customer_address": customerAddress,
     "address_type": addressType,
   };
 }

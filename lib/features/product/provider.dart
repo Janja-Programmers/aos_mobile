@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 
+import '/core/utils/api_client.dart';
 import '/core/utils/logger.dart';
+
 import '/features/product/domain/product.dart';
 import '/features/product/domain/usecase.dart';
 
@@ -106,5 +109,18 @@ class ProductProvider with ChangeNotifier {
         return true;
       },
     );
+  }
+
+  final getIt = GetIt.instance;
+
+  Future<void> deleteProduct(String name) async {
+    try {
+      final client = getIt<APIClient>();
+      await client.client.delete('/api/resource/Product/$name');
+      _products.removeWhere((p) => p.name == name);
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    }
   }
 }

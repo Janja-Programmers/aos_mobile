@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:ownashop/features/product/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 import '../../../features/product/domain/product.dart';
 import '/shared/widgets/app_drawer.dart';
@@ -143,6 +145,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
       debugPrint('✅ Product created: ${res.data}');
       if (!mounted) return;
       topSnackBar(context, 'Product created successfully');
+      final productProvider = context.read<ProductProvider>();
+      await productProvider.fetchProducts();
       Navigator.pop(context);
     } catch (e) {
       debugPrint('❌ Submit failed: $e');

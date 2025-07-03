@@ -81,23 +81,30 @@ class _CartScreenState extends State<CartScreen> {
                                             resolvedimage,
                                             fit: BoxFit.cover,
                                             errorBuilder:
-                                                (ctx, _, _) => const Icon(
+                                                (ctx, _, __) => const Icon(
                                                   Icons.broken_image,
                                                 ),
                                           ),
                                         ),
                                       ),
-
                                       const SizedBox(width: 12),
-                                      Text(
-                                        item.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
+
+                                      /// 🔥 FIX HERE
+                                      Expanded(
+                                        child: Text(
+                                          item.name,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                      const Spacer(),
+
+                                      /// Quantity controls
                                       Row(
+                                        mainAxisSize: MainAxisSize.min,
                                         children: [
                                           IconButton(
                                             icon: const Icon(
@@ -126,6 +133,8 @@ class _CartScreenState extends State<CartScreen> {
                                           ),
                                         ],
                                       ),
+
+                                      /// Remove button
                                       IconButton(
                                         icon: const Icon(
                                           Icons.close,

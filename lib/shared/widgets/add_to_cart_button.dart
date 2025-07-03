@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ownashop/core/utils/snackbar.dart';
 import 'package:provider/provider.dart';
 
 import '/features/cart/domain/cart.dart';
@@ -30,13 +31,11 @@ class _AddToCartButtonState extends State<AddToCartButton> {
 
                 if (success) {
                   setState(() => _added = true);
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      SnackBar(
-                        content: Text('${widget.item.name} added to cart'),
-                      ),
-                    );
+                  topSnackBar(
+                    context,
+                    '${widget.item.name} added to cart',
+                    type: TopSnackType.success,
+                  );
                 }
               },
       style: ElevatedButton.styleFrom(

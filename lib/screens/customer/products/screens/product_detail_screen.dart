@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ownashop/core/utils/snackbar.dart';
 import 'package:ownashop/screens/customer/products/utils/vendor_prov.dart';
 import 'package:provider/provider.dart';
 
@@ -23,17 +24,116 @@ import '../widgets/product_review_section.dart';
 import '../widgets/product_specification_list.dart';
 import '../widgets/product_tile_and_price.dart';
 
-class ProductDetailScreen extends StatelessWidget {
+class ProductDetailScreen extends StatefulWidget {
   final String productId;
 
   const ProductDetailScreen({super.key, required this.productId});
 
   @override
+  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  void addToCart(Product product) async {
+    final cart = context.read<CartProvider>();
+    final success = await cart.add(
+      CartItem(
+        code: product.name,
+        name: product.itemName,
+        price: product.itemPrice,
+        quantity: 1,
+        image: product.image,
+      ),
+    );
+
+    if (success) {
+      topSnackBar(
+        context,
+        '${product.itemName} added to cart',
+        type: TopSnackType.success,
+      );
+    }
+  }
+
+  void contactVendor(Product product) async {
+    final vendorProvider = context.read<VendorProvider>();
+    await vendorProvider.loadVendor(product.vendor ?? 'Unknown');
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder:
+          (_) => Consumer<VendorProvider>(
+            builder: (context, provider, _) {
+              if (provider.loading) {
+                return const AlertDialog(
+                  content: SizedBox(
+                    height: 80,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                );
+              }
+
+              final vendor = provider.vendor;
+              if (vendor == null) {
+                return const AlertDialog(
+                  title: Text('Error'),
+                  content: Text('Failed to load vendor details.'),
+                );
+              }
+
+              return AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                title: Text('Supplier: ${vendor.name}'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (vendor.email.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text('📧 ${vendor.email}'),
+                      ),
+                    if (vendor.phone.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text('📞 ${vendor.phone}'),
+                      ),
+                  ],
+                ),
+                actions: [
+                  if (vendor.phone.isNotEmpty)
+                    TextButton(
+                      onPressed: () => launchCaller(vendor.phone),
+                      child: const Text(
+                        'Call',
+                        style: TextStyle(color: Colors.blueAccent),
+                      ),
+                    ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Close',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().user;
     final provider = context.watch<ProductProvider>();
+
     final product = provider.products.firstWhere(
-      (p) => p.name == productId,
+      (p) => p.name == widget.productId,
       orElse:
           () => Product(
             name: '',
@@ -42,6 +142,9 @@ class ProductDetailScreen extends StatelessWidget {
             category: '',
             image: '',
             demoVideo: '',
+            shortWebsiteDescription: '',
+            websiteDescription: '',
+            websiteSpecifications: [],
           ),
     );
 
@@ -58,9 +161,7 @@ class ProductDetailScreen extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: TextButton(
-                      onPressed: () {
-                        context.push('/login');
-                      },
+                      onPressed: () => context.push('/login'),
                       style: TextButton.styleFrom(
                         backgroundColor: AppColors.black,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -83,21 +184,9 @@ class ProductDetailScreen extends StatelessWidget {
                   ),
                 ],
       ),
-
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: Colors.white70,
-            child: const Text(
-              'Product detail',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ),
-
-          // 🔻 Main scrollable content
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -109,127 +198,33 @@ class ProductDetailScreen extends StatelessWidget {
                     videoUrl: product.demoVideo ?? "",
                   ),
                   const SizedBox(height: 16),
-
                   ProductTitleAndPrice(
                     title: product.itemName,
                     category: product.category,
                     price: product.itemPrice,
                   ),
                   const SizedBox(height: 8),
-
                   ProductAvailabilityAndRating(inStock: true, rating: 0),
                   const SizedBox(height: 16),
-
                   ProductActionButtons(
                     isInCart: context.watch<CartProvider>().containsProduct(
                       product.name,
                     ),
-                    onAddToCart: () {
-                      final cart = Provider.of<CartProvider>(
-                        context,
-                        listen: false,
-                      );
-
-                      final cartItem = CartItem(
-                        code: product.name,
-                        name: product.itemName,
-                        price: product.itemPrice,
-                        quantity: 1,
-                      );
-
-                      cart.addToCart(cartItem);
-
-                      ScaffoldMessenger.of(context)
-                        ..hideCurrentSnackBar()
-                        ..showSnackBar(
-                          SnackBar(
-                            content: Text('${product.itemName} added to cart'),
-                          ),
-                        );
-                    },
-                    onViewCart: () {
-                      context.go('/cart');
-                    },
-
-                    onContact: () async {
-                      final vendorProvider = context.read<VendorProvider>();
-                      await vendorProvider.loadVendor(
-                        product.vendor ?? 'No vendor found',
-                      );
-
-                      if (!context.mounted) return;
-
-                      showDialog(
-                        context: context,
-                        builder:
-                            (_) => Consumer<VendorProvider>(
-                              builder: (context, provider, _) {
-                                if (provider.loading) {
-                                  return const AlertDialog(
-                                    content: SizedBox(
-                                      height: 80,
-                                      child: Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                    ),
-                                  );
-                                }
-
-                                final vendor = provider.vendor;
-                                if (vendor == null) {
-                                  return const AlertDialog(
-                                    title: Text('Error'),
-                                    content: Text(
-                                      'Failed to load vendor details.',
-                                    ),
-                                  );
-                                }
-
-                                return AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  title: Text('Contact ${vendor.name}'),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text('📧 ${vendor.email}'),
-                                      const SizedBox(height: 12),
-                                      Text('📞 ${vendor.phone}'),
-                                    ],
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed:
-                                          () => launchCaller(vendor.phone),
-                                      child: const Text('Call'),
-                                    ),
-
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('Close'),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                      );
-                    },
+                    onAddToCart: () => addToCart(product),
+                    onViewCart: () => context.push('/cart'),
+                    onContact: () => contactVendor(product),
                   ),
-
                   const SizedBox(height: 16),
-
                   ProductDescriptions(
-                    shortDesc: product.shortWebsiteDescription ?? '',
+                    shortDesc:
+                        product.shortWebsiteDescription ?? 'About this product',
                     longDesc: product.websiteDescription ?? '',
                   ),
                   const SizedBox(height: 16),
-
-                  ProductSpecificationsList(specs: []),
+                  ProductSpecificationsList(
+                    specs: product.websiteSpecifications ?? [],
+                  ),
                   const SizedBox(height: 16),
-
                   ProductReviewsSection(rating: 0, totalReviews: 0),
                 ],
               ),

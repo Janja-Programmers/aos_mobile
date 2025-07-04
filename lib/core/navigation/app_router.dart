@@ -40,15 +40,16 @@ class AppRouter {
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register';
 
-      if (!loggedIn && !loggingIn) return '/login';
-      if (loggedIn && loggingIn) {
-        final target = auth.redirectPath ?? '/';
-        auth.clearRedirect();
-        return target;
+      if (!loggedIn && !loggingIn) {
+        auth.setReturnTo(state.matchedLocation);
+        return '/login';
       }
+
+      if (loggedIn && loggingIn) return auth.defaultHome;
 
       return null;
     },
+
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),

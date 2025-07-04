@@ -179,9 +179,9 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       },
       (_) {
-        appLogger.i('Redirecting from Login Screen to: ${auth.redirectPath}');
-        context.go(auth.redirectPath ?? '/');
-        auth.clearRedirect();
+        final goTo = auth.consumeReturnTo() ?? auth.defaultHome;
+        appLogger.i('✅ Navigating to: $goTo from login screen');
+        context.go(goTo);
       },
     );
 

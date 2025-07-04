@@ -14,16 +14,33 @@ class AuthProvider with ChangeNotifier {
   final RegisterUser registerUser;
 
   User? user;
-  String? _redirectPath;
+  String? _returnTo;
+  String? _defaultHome;
 
   AuthProvider({required this.loginUser, required this.registerUser});
 
   bool get isLoggedIn => user != null;
-  String? get redirectPath => _redirectPath;
+
+  String get defaultHome => _defaultHome ?? '/';
+
+  void setReturnTo(String path) {
+    if (path != '/' && path != '/login' && path != '/register') {
+      _returnTo = path;
+      appLogger.i('🧭 setReturnTo: $path');
+    } else {
+      appLogger.i('⚠️ Ignored returnTo: $path');
+    }
+  }
+
+  String? consumeReturnTo() {
+    final temp = _returnTo;
+    _returnTo = null;
+    appLogger.i('🧭 Consuming returnTo: $temp');
+    return temp;
+  }
 
   Future<Either<Failure, void>> login(String username, String password) async {
     final result = await loginUser(username, password);
-
     if (result.isLeft()) return result;
 
     final loginResult = result.getOrElse(
@@ -31,16 +48,23 @@ class AuthProvider with ChangeNotifier {
     );
 
     user = loginResult.user;
-    appLogger.i('Logged in as: ${user?.username}, type: ${user?.userType}');
+    appLogger.i('💡 Logged in as: ${user?.username}, type: ${user?.userType}');
 
-    // Redirect based on user type
-    _redirectPath = user?.userType == 'Vendor' ? '/dashboard' : '/';
-    appLogger.i('➡️ _redirectPath just set to: $_redirectPath');
+    _defaultHome = _mapHomePage(
+      loginResult.homePage,
+    ); // ✅ This is now used post-login
+    appLogger.i('🏠 _defaultHome set to: $_defaultHome by auth prov');
 
     await persistUser(user!.username, user!.userType ?? '');
-
     notifyListeners();
+
     return const Right(null);
+  }
+
+  String _mapHomePage(String? homePage) {
+    if (homePage == null || homePage.contains('/all-products')) return '/';
+    if (homePage.contains('/app')) return '/dashboard';
+    return '/'; // fallback
   }
 
   Future<Either<Failure, List<dynamic>>> register(
@@ -86,5 +110,5 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void clearRedirect() => _redirectPath = null;
+  void clearRedirect() => _defaultHome = null;
 }

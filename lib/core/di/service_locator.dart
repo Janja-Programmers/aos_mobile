@@ -110,6 +110,7 @@ Future<void> init() async {
     () => AuthProvider(
       loginUser: sl<LoginUser>(),
       registerUser: sl<RegisterUser>(),
+      apiClient: sl<APIClient>(),
     ),
   );
 

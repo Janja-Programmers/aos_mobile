@@ -179,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       },
       (_) {
-        final goTo = auth.consumeReturnTo() ?? auth.defaultHome;
+        final goTo = auth.consumeReturnTo();
         appLogger.i('✅ Navigating to: $goTo from login screen');
         context.go(goTo);
       },

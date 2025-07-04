@@ -7,6 +7,8 @@ import '/shared/widgets/main_bar.dart';
 
 import 'utils/failure_display.dart';
 import 'utils/submit_stock.dart';
+import 'utils/cancel_stock.dart';
+import 'utils/action_button.dart';
 
 import 'widgets/item_tile.dart';
 import 'widgets/stock_detail_header.dart';
@@ -26,21 +28,28 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => context.read<StockEntryDetailProvider>().fetchById(
-        widget.stockEntryName,
-      ),
-    );
+    Future.microtask(() {
+      context.read<StockEntryDetailProvider>().fetchById(widget.stockEntryName);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final prov = context.watch<StockEntryDetailProvider>();
+    final entry = prov.data;
 
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 2, onItemSelected: (_) {}),
       subTitle: 'Stock Entry Detail',
+      actionButton:
+          entry == null
+              ? null
+              : StockEntryActions(
+                docstatus: entry.docstatus,
+                onSubmit: () => submitStockEntry(context, entry),
+                onCancel: () => cancelStockEntry(context, entry),
+              ),
       body: Builder(
         builder: (_) {
           if (prov.loading) {
@@ -57,7 +66,6 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
             );
           }
 
-          final entry = prov.data;
           if (entry == null) {
             return const Center(child: Text('Entry not found'));
           }
@@ -69,27 +77,24 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
               children: [
                 StockDetailHeader(entry: entry),
                 const SizedBox(height: 16),
-                if (entry.docstatus == 0)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton.icon(
-                      onPressed: () => submitStockEntry(context, entry),
-                      icon: const Icon(Icons.send),
-                      label: const Text('Submit Entry'),
-                    ),
-                  ),
-                const SizedBox(height: 16),
                 const Text(
                   'Items',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Expanded(
-                  child: ListView.separated(
-                    itemCount: entry.items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (_, i) => StockItemTile(item: entry.items[i]),
-                  ),
+                  child:
+                      entry.items.isEmpty
+                          ? const Center(
+                            child: Text('No items found in this entry.'),
+                          )
+                          : ListView.separated(
+                            itemCount: entry.items.length,
+                            separatorBuilder:
+                                (_, __) => const SizedBox(height: 8),
+                            itemBuilder:
+                                (_, i) => StockItemTile(item: entry.items[i]),
+                          ),
                 ),
               ],
             ),

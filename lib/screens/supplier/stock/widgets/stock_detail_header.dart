@@ -34,6 +34,8 @@ class StockDetailHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
@@ -44,20 +46,25 @@ class StockDetailHeader extends StatelessWidget {
           children: [
             Text(
               entry.id,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Row(
               children: [
-                Text('Status: ', style: Theme.of(context).textTheme.bodyMedium),
-                Text(
-                  getStatusLabel(entry.docstatus),
-                  style: TextStyle(
-                    color: getStatusColor(entry.docstatus),
-                    fontWeight: FontWeight.w600,
+                const Text('Status: '),
+                Chip(
+                  label: Text(
+                    getStatusLabel(entry.docstatus),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
+                  backgroundColor: getStatusColor(entry.docstatus),
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
                 ),
               ],
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ownashop/features/auth/presentation/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 import '/features/stock/providers/all.dart';
@@ -28,16 +29,21 @@ class StockListBody extends StatelessWidget {
             );
           }
 
-          if (prov.names.isEmpty) {
-            return const Center(child: Text('No stock entriese found.'));
+          final username = context.watch<AuthProvider>().user?.username;
+
+          final vendorEntries =
+              prov.entries.where((e) => e.vendor == username).toList();
+
+          if (vendorEntries.isEmpty) {
+            return const Center(child: Text('No Vendor entries found.'));
           }
 
           return ListView.separated(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(12),
-            itemCount: prov.names.length,
+            itemCount: vendorEntries.length,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (_, i) => StockCard(name: prov.names[i]),
+            itemBuilder: (_, i) => StockCard(name: vendorEntries[i].id),
           );
         },
       ),

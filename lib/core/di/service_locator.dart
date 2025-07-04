@@ -214,13 +214,16 @@ Future<void> init() async {
   );
 
   // === Domain ===
-  sl.registerLazySingleton(() => GetAllStockEntryNames(sl()));
+  sl.registerLazySingleton(() => GetAllStockEntries(sl()));
   sl.registerLazySingleton(() => AddStockEntry(sl()));
-  sl.registerLazySingleton(() => UpdateStockEntry(sl())); // ✅ ADD THIS
+  sl.registerLazySingleton(() => UpdateStockEntry(sl()));
   sl.registerLazySingleton(() => GetStockEntryById(sl()));
 
   // === Providers ===
   sl.registerFactory(() => StockEntryProvider(getAll: sl()));
+  // sl.registerFactory(
+  //   () => StockEntryProvider(getAll: sl<GetAllStockEntries>()),
+  // );
   sl.registerFactory(() => StockEntryDetailProvider(getById: sl()));
   sl.registerFactory(() => CreateStockEntryProvider(add: sl(), update: sl()));
 

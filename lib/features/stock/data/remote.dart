@@ -1,9 +1,12 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/material.dart';
 
 import '/core/constants/const.dart';
 import '/core/errors/failures.dart';
 import '/core/errors/exception.dart';
 import '/core/utils/api_client.dart';
+
+import '../domain/entity/stock.dart';
 
 import 'models/stock.dart';
 
@@ -12,16 +15,36 @@ class StockEntryRemoteDS {
 
   StockEntryRemoteDS(this._client);
 
-  Future<Either<Failure, List<String>>> getAllNames() async {
+  Future<Either<Failure, List<StockEntry>>> getAll() async {
     try {
       final res = await _client.client.get(
         STOCK_ENTRY_ENDPOINT,
-        queryParameters: {'order_by': 'creation desc'},
+        queryParameters: {
+          'fields': '["name", "owner", "docstatus", "modified", "vendor"]',
+          'limit_page_length': 100,
+          'order_by': 'creation desc',
+        },
       );
-      final List<dynamic> list = res.data['data'];
-      final names = list.map((e) => e['name'] as String).toList();
-      return Right(names);
-    } catch (e) {
+
+      final data = res.data['data'];
+      if (data is! List) throw Exception("Expected a list, got: $data");
+
+      final entries =
+          data
+              .map((e) {
+                try {
+                  return StockEntryModel.fromJson(e).toEntity();
+                } catch (e) {
+                  handleException('Error parsing stock entry');
+                  return null;
+                }
+              })
+              .whereType<StockEntry>()
+              .toList();
+
+      return Right(entries);
+    } catch (e, stack) {
+      debugPrint('❌ StockEntryRemoteDS.getAll failed: $e\n$stack');
       return Left(handleException(e));
     }
   }

@@ -21,7 +21,7 @@ class StockEntryModel {
       docstatus: json['docstatus'] ?? 0,
       vendor: json['vendor'] ?? '',
       items:
-          (json['items'] as List)
+          (json['items'] as List<dynamic>? ?? [])
               .map((e) => StockEntryItemModel.fromJson(e))
               .toList(),
     );

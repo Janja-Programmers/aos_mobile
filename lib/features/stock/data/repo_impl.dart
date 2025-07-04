@@ -14,8 +14,8 @@ class StockEntryRepoImpl implements StockEntryRepo {
   StockEntryRepoImpl(this.remoteDS);
 
   @override
-  Future<Either<Failure, List<String>>> getAllNames() {
-    return remoteDS.getAllNames();
+  Future<Either<Failure, List<StockEntry>>> getAll() {
+    return remoteDS.getAll();
   }
 
   @override

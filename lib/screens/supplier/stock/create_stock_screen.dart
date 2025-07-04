@@ -48,10 +48,11 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
   void _submitFinal() => _submitEntry(docstatus: 1);
 
   void _submitEntry({required int docstatus}) async {
-    if (_itemControllers.any((c) => !c.isValid)) {
-      topSnackBar(context, 'Please fix item fields.', type: TopSnackType.error);
-      return;
+    bool allValid = true;
+    for (final ctrl in _itemControllers) {
+      if (!ctrl.validate()) allValid = false;
     }
+    if (!allValid) return;
 
     if (!_formKey.currentState!.validate()) {
       topSnackBar(
@@ -99,7 +100,8 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
     } else {
       final action = docstatus == 1 ? 'submitted' : 'saved';
       topSnackBar(context, 'Stock Entry $action successfully');
-      context.pop();
+      await Future.delayed(Duration(milliseconds: 400));
+      context.pop(true);
     }
   }
 
@@ -116,7 +118,7 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
     final provider = context.watch<CreateStockEntryProvider>();
 
     return MainBarScaffold(
-      drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
+      drawer: AppDrawer(selectedIndex: 2, onItemSelected: (_) {}),
       subTitle: isEditing ? 'Edit Stock Entry' : 'Create Stock Entry',
       body: Form(
         key: _formKey,
@@ -126,6 +128,15 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
             ..._itemControllers.asMap().entries.map((entry) {
               final index = entry.key;
               final ctrl = entry.value;
+
+              // All item codes in the list, except this current one
+              final usedCodes =
+                  _itemControllers
+                      .where((c) => c != ctrl)
+                      .map((c) => c.itemCode.text)
+                      .where((code) => code.isNotEmpty)
+                      .toList();
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Card(
@@ -134,6 +145,7 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
                     padding: const EdgeInsets.all(12.0),
                     child: ItemRow(
                       controller: ctrl,
+                      usedItemCodes: usedCodes,
                       onRemove:
                           _itemControllers.length == 1
                               ? null
@@ -145,14 +157,31 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
                 ),
               );
             }),
+
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: () {
-                setState(() => _itemControllers.add(ItemRowController()));
+                final usedCodes =
+                    _itemControllers
+                        .map((c) => c.itemCode.text)
+                        .where((code) => code.isNotEmpty)
+                        .toSet();
+
+                // Check if all items are already selected
+                if (usedCodes.length >= 100) {
+                  // Since you're fetching 100 items max
+                  topSnackBar(context, 'All products have been added');
+                  return;
+                }
+
+                setState(() {
+                  _itemControllers.add(ItemRowController());
+                });
               },
               icon: const Icon(Icons.add),
               label: const Text('Add Another Item'),
             ),
+
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 16),

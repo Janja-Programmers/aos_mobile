@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '/features/stock/domain/entity/stock_item.dart';
 
 class ItemRowController {
+  final formKey = GlobalKey<FormState>();
+
   final itemCode = TextEditingController();
   final itemName = TextEditingController();
   final qty = TextEditingController();
@@ -11,8 +13,8 @@ class ItemRowController {
   StockEntryItem get entry => StockEntryItem(
     itemCode: itemCode.text.trim(),
     itemName: itemName.text.trim(),
-    qty: double.tryParse(qty.text) ?? 0,
-    valuationRate: double.tryParse(valuationRate.text) ?? 0,
+    qty: double.tryParse(qty.text.trim()) ?? 0,
+    valuationRate: double.tryParse(valuationRate.text.trim()) ?? 0,
   );
 
   void dispose() {
@@ -29,10 +31,5 @@ class ItemRowController {
     valuationRate.text = item.valuationRate.toString();
   }
 
-  bool get isValid =>
-      itemCode.text.trim().isNotEmpty &&
-      qty.text.trim().isNotEmpty &&
-      valuationRate.text.trim().isNotEmpty &&
-      double.tryParse(qty.text.trim()) != null &&
-      double.tryParse(valuationRate.text.trim()) != null;
+  bool validate() => formKey.currentState?.validate() ?? false;
 }

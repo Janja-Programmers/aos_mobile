@@ -1,6 +1,9 @@
 import 'package:equatable/equatable.dart';
+import 'package:ownashop/features/reviews/entity.dart';
 
 import '/core/utils/formatters.dart';
+
+import '/features/reviews/model.dart';
 
 import '/shared/models/specifications.dart';
 
@@ -24,6 +27,7 @@ class WebsiteItemModel extends Equatable {
   final double price;
   final bool inStock;
   final List<WebsiteSpecModel> specifications;
+  final List<Review> reviews;
 
   const WebsiteItemModel({
     this.id,
@@ -43,6 +47,7 @@ class WebsiteItemModel extends Equatable {
     this.inStock = true,
     required this.published,
     required this.specifications,
+    this.reviews = const [],
   });
 
   factory WebsiteItemModel.fromJson(Map<String, dynamic> json) {
@@ -71,6 +76,11 @@ class WebsiteItemModel extends Equatable {
               ?.map((e) => WebsiteSpecModel.fromJson(e))
               .toList() ??
           [],
+      reviews:
+          (json['reviews'] as List<dynamic>?)
+              ?.map((e) => ReviewModel.fromJson(e).toEntity())
+              .toList() ??
+          [],
     );
   }
 
@@ -93,6 +103,7 @@ class WebsiteItemModel extends Equatable {
       price: price,
       inStock: inStock,
       onBackorder: onBackorder ?? false,
+      reviews: reviews,
     );
   }
 
@@ -119,6 +130,7 @@ class WebsiteItemModel extends Equatable {
           e.specifications
               .map((s) => WebsiteSpecModel.fromJson(s as Map<String, dynamic>))
               .toList(),
+      reviews: e.reviews,
     );
   }
 
@@ -140,6 +152,7 @@ class WebsiteItemModel extends Equatable {
     "price": price,
     "in_stock": inStock,
     "website_specifications": specifications.map((s) => s.toEntity()).toList(),
+    "reviews": reviews.map((r) => ReviewModel.fromEntity(r).toJson()).toList(),
   };
 
   @override

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '/features/reviews/entity.dart';
 import '/shared/models/specifications.dart';
 
 class WebsiteItem extends Equatable {
@@ -20,6 +21,7 @@ class WebsiteItem extends Equatable {
   final double price;
   final bool inStock;
   final List<Specification> specifications;
+  final List<Review> reviews;
 
   const WebsiteItem({
     required this.id,
@@ -39,6 +41,7 @@ class WebsiteItem extends Equatable {
     this.price = 0.0,
     this.inStock = true,
     required this.specifications,
+    this.reviews = const [],
   });
 
   @override
@@ -60,5 +63,6 @@ class WebsiteItem extends Equatable {
     price,
     inStock,
     specifications,
+    reviews,
   ];
 }

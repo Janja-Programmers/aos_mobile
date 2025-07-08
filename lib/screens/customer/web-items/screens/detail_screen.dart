@@ -216,8 +216,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                   ProductAvailabilityAndRating(
                     inStock: product.inStock,
-                    rating: 0,
+                    rating:
+                        product.reviews.isNotEmpty
+                            ? product.reviews
+                                    .map((e) => e.rating)
+                                    .reduce((a, b) => a + b) /
+                                product.reviews.length
+                            : 0.0,
+                    totalReviews: product.reviews.length,
                   ),
+
                   const SizedBox(height: 12),
 
                   if (!product.inStock)
@@ -274,19 +282,29 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 12),
 
-                  ProductDescriptions(
-                    shortDesc: product.shortDescription,
-                    longDesc: product.longDescription,
-                  ),
+                  // --- Conditional Description ---
+                  if ((product.shortDescription.isNotEmpty) ||
+                      (product.longDescription.isNotEmpty)) ...[
+                    ProductDescriptions(
+                      shortDesc: product.shortDescription,
+                      longDesc: product.longDescription,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
 
-                  const SizedBox(height: 3),
+                  // --- Conditional Specs ---
+                  if (product.specifications.isNotEmpty) ...[
+                    ProductSpecificationsList(specs: product.specifications),
+                    const SizedBox(height: 12),
+                  ],
 
-                  ProductSpecificationsList(specs: product.specifications),
-                  const SizedBox(height: 16),
-
-                  ProductReviewsSection(rating: 0, totalReviews: 0),
+                  // --- Conditional Reviews ---
+                  if (product.reviews.isNotEmpty) ...[
+                    ProductReviews(reviews: product.reviews),
+                    const SizedBox(height: 12),
+                  ],
                 ],
               ),
             ),

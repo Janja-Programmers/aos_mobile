@@ -81,6 +81,7 @@ class ProductCard extends StatelessWidget {
                               name: item.name,
                               price: item.price.toDouble(),
                               quantity: 1,
+                              image: item.imageUrl,
                             ),
                           ),
                         )

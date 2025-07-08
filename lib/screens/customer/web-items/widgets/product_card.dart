@@ -77,7 +77,7 @@ class ProductCard extends StatelessWidget {
                           width: double.infinity,
                           child: AddToCartButton(
                             item: CartItem(
-                              code: item.name,
+                              code: item.itemCode,
                               name: item.name,
                               price: item.price.toDouble(),
                               quantity: 1,

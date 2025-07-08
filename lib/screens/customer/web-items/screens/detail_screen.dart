@@ -199,7 +199,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ProductImageWithVideo(
-                    imageUrls: product.images,
+                    imageUrls:
+                        product.images.isNotEmpty
+                            ? product.images
+                            : [product.imageUrl],
                     videoUrl: product.demoVideoUrl ?? "",
                   ),
 
@@ -223,15 +226,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             : 0.0,
                     totalReviews: product.reviews.length,
                   ),
-
-                  const SizedBox(height: 12),
-
-                  if (!product.inStock)
-                    const Chip(
-                      label: Text('Not in stock'),
-                      backgroundColor: Color.fromARGB(255, 235, 87, 87),
-                      labelStyle: TextStyle(color: Colors.white),
-                    ),
 
                   const SizedBox(height: 12),
 

@@ -102,13 +102,13 @@ class WebsiteItemModel extends Equatable {
           [],
     );
   }
-
   WebsiteItem toEntity() {
     return WebsiteItem(
       id: id ?? '',
       name: name,
       owner: owner ?? '',
       imageUrl: image ?? '',
+      images: images,
       thumbnailUrl: thumbnail ?? '',
       demoVideoUrl: demoVideoUrl ?? '',
       itemCode: itemCode,
@@ -133,6 +133,7 @@ class WebsiteItemModel extends Equatable {
       owner: e.owner,
       name: e.name,
       image: e.imageUrl,
+      images: e.images,
       thumbnail: e.thumbnailUrl,
       demoVideoUrl: e.demoVideoUrl,
       itemCode: e.itemCode,

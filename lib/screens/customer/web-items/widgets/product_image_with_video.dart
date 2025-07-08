@@ -31,41 +31,42 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
             .map(resolveImageUrl)
             .toList();
 
+    print('🖼 Resolved image URLs: $images');
+
     final videoUrl = resolveImageUrl(widget.videoUrl);
 
     if (images.isEmpty) {
       return _fallbackImage();
     }
 
+    final isCarousel = images.length > 1;
+
     return Column(
       children: [
         Stack(
           children: [
-            CarouselSlider(
-              items:
-                  images.map((imgUrl) {
-                    return GestureDetector(
-                      onTap: () => _openFullscreen(context, imgUrl),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          imgUrl,
-                          width: double.infinity,
-                          height: 200,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _fallbackImage(),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-              options: CarouselOptions(
-                height: 200,
-                autoPlay: true,
-                enlargeCenterPage: true,
-                viewportFraction: 1.0,
-                onPageChanged: (index, _) => setState(() => _current = index),
-              ),
-            ),
+            isCarousel
+                ? CarouselSlider(
+                  items:
+                      images.map((imgUrl) {
+                        return GestureDetector(
+                          onTap: () => _openFullscreen(context, imgUrl),
+                          child: _buildImage(imgUrl),
+                        );
+                      }).toList(),
+                  options: CarouselOptions(
+                    height: 220,
+                    autoPlay: true,
+                    enlargeCenterPage: true,
+                    viewportFraction: 1.0,
+                    onPageChanged:
+                        (index, _) => setState(() => _current = index),
+                  ),
+                )
+                : GestureDetector(
+                  onTap: () => _openFullscreen(context, images.first),
+                  child: _buildImage(images.first),
+                ),
 
             if (videoUrl.isNotEmpty)
               Positioned(
@@ -82,7 +83,7 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
           ],
         ),
 
-        if (images.length > 1)
+        if (isCarousel)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children:
@@ -108,10 +109,23 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
     );
   }
 
+  Widget _buildImage(String url) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Image.network(
+        url,
+        width: double.infinity,
+        height: 220,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _fallbackImage(),
+      ),
+    );
+  }
+
   Widget _fallbackImage() {
     return Container(
       color: Colors.grey.shade200,
-      height: 200,
+      height: 220,
       width: double.infinity,
       alignment: Alignment.center,
       child: const Icon(Icons.broken_image, size: 64, color: Colors.grey),

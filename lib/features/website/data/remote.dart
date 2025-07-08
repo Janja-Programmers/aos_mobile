@@ -26,10 +26,6 @@ class WebsiteRemoteDataSource {
             return model.toEntity();
           }).toList();
 
-      appLogger.i(
-        'Fetched ${items.length} items from remote source as images: ${items.map((e) => e.imageUrl).toList()}',
-      );
-
       return Right(items);
     } catch (e) {
       return Left(handleException(e));
@@ -46,6 +42,7 @@ class WebsiteRemoteDataSource {
       );
 
       final data = res.data['message'];
+      appLogger.i('Raw product detail response: $data'); // ADD THIS
       final product = WebsiteItemModel.fromJson(data);
 
       return Right(product);

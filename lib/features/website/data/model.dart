@@ -67,7 +67,7 @@ class WebsiteItemModel extends Equatable {
       price: (json['price'] ?? 0).toDouble(),
       inStock: json['in_stock'] ?? false,
       specifications:
-          (json['website_specifications'] as List<dynamic>?)
+          (json['specifications'] as List<dynamic>?)
               ?.map((e) => WebsiteSpecModel.fromJson(e))
               .toList() ??
           [],
@@ -155,7 +155,7 @@ class WebsiteSpecModel extends Equatable {
   factory WebsiteSpecModel.fromJson(Map<String, dynamic> json) {
     return WebsiteSpecModel(
       label: json['label'] ?? '',
-      description: _extractTextFromHtml(json['description'] ?? ''),
+      description: _extractTextFromHtml(json['value'] ?? ''),
     );
   }
 

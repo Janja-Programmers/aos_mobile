@@ -17,7 +17,7 @@ class ProductDescriptions extends StatelessWidget {
 
     return Card(
       elevation: 2,
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      margin: const EdgeInsets.symmetric(vertical: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: Colors.white,
       child: Padding(

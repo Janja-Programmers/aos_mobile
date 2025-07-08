@@ -12,6 +12,13 @@ import '/features/auth/domain/auth_repository.dart';
 import '/features/auth/domain/usecases/login.dart';
 import '/features/auth/domain/usecases/register.dart';
 
+/***** WEBSITE ITEMS *******/
+import '/features/website/domain/repo.dart';
+import '/features/website/domain/usecases.dart';
+import '/features/website/data/remote.dart';
+import '/features/website/data/repo_impl.dart';
+import '/features/website/prov.dart';
+
 /***** PRODUCT *******/
 import '/features/product/data/remote.dart';
 import '/features/product/data/repo_impl.dart';
@@ -110,6 +117,24 @@ Future<void> init() async {
       loginUser: sl<LoginUser>(),
       registerUser: sl<RegisterUser>(),
     ),
+  );
+
+  // WEB Items
+
+  // 1. Remote data source
+  sl.registerLazySingleton(() => WebsiteRemoteDataSource(sl<APIClient>()));
+  // 2. Repository
+  sl.registerLazySingleton<WebsiteRepo>(
+    () => WebsiteRepoImpl(sl<WebsiteRemoteDataSource>()),
+  );
+  // 3. Use Cases
+  sl.registerLazySingleton(() => GetAllWebItemsUseCase(sl<WebsiteRepo>()));
+  sl.registerLazySingleton(() => CreateWebItemUseCase(sl<WebsiteRepo>()));
+  sl.registerLazySingleton(() => UpdateWebItemUseCase(sl<WebsiteRepo>()));
+  // 4. Provider (State Management)
+  sl.registerFactory(
+    () =>
+        WebsiteItemProv(getAllItems: sl(), createItem: sl(), updateItem: sl()),
   );
 
   // ITEMS Doctype

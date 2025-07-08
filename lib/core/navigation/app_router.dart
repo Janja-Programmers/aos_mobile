@@ -6,13 +6,13 @@ import '/features/auth/presentation/screens/login_screen.dart';
 import '/features/auth/presentation/screens/register_screen.dart';
 
 // Customer
-import '/screens/customer/products/screens/product_list_screen.dart';
+import '../../screens/customer/web-items/screens/list_screen.dart';
 import '/screens/customer/wishlist/presentation/wishlist_screen.dart';
 import '/screens/customer/cart/cart_screen.dart';
 import '/screens/customer/address/shipping_address_form.dart';
 
 // Seller
-import '/screens/customer/products/screens/product_detail_screen.dart';
+import '../../screens/customer/web-items/screens/detail_screen.dart';
 import '/screens/supplier/product/add_item_screen.dart';
 import '/screens/supplier/dashboard/dashboard.dart';
 import '/screens/supplier/product/item_screen.dart';

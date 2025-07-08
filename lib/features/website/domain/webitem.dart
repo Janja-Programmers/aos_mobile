@@ -12,6 +12,7 @@ class WebsiteItem extends Equatable {
   final String itemGroup;
   final String thumbnailUrl;
   final String imageUrl;
+  final List<String> images;
   final String? demoVideoUrl;
   final String description;
   final String shortDescription;
@@ -32,6 +33,7 @@ class WebsiteItem extends Equatable {
     required this.itemGroup,
     required this.thumbnailUrl,
     required this.imageUrl,
+    this.images = const [],
     this.demoVideoUrl,
     required this.description,
     required this.shortDescription,

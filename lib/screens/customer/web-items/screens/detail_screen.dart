@@ -198,17 +198,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Hero(
-                    tag: 'product-${product.name}',
-                    child: ProductImageWithVideo(
-                      imageUrl: product.imageUrl,
-                      videoUrl: product.demoVideoUrl ?? "",
-                    ),
+                  ProductImageWithVideo(
+                    imageUrls: product.images,
+                    videoUrl: product.demoVideoUrl ?? "",
                   ),
+
                   const SizedBox(height: 16),
 
                   ProductTitleAndPrice(
-                    title: product.name,
+                    title: product.id,
                     category: product.itemGroup,
                     price: product.price,
                   ),

@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:ownashop/core/utils/logger.dart';
 
 import '/core/constants/const.dart';
 import '/core/errors/exception.dart';
@@ -24,6 +25,10 @@ class WebsiteRemoteDataSource {
             final model = WebsiteItemModel.fromJson(item);
             return model.toEntity();
           }).toList();
+
+      appLogger.i(
+        'Fetched ${items.length} items from remote source as images: ${items.map((e) => e.imageUrl).toList()}',
+      );
 
       return Right(items);
     } catch (e) {

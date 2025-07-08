@@ -14,6 +14,7 @@ class WebsiteItemModel extends Equatable {
   final String? owner;
   final String name;
   final String? image;
+  final List<String> images;
   final String? thumbnail;
   final String? demoVideoUrl;
   final String itemCode;
@@ -34,6 +35,7 @@ class WebsiteItemModel extends Equatable {
     this.owner,
     required this.name,
     this.image,
+    this.images = const [],
     this.thumbnail,
     this.demoVideoUrl,
     required this.itemCode,
@@ -51,13 +53,30 @@ class WebsiteItemModel extends Equatable {
   });
 
   factory WebsiteItemModel.fromJson(Map<String, dynamic> json) {
+    // Handle multi-image list (used in detail page)
+    final rawImages = json['images'];
+
+    List<String> images = [];
+    if (rawImages is List) {
+      images = rawImages.whereType<String>().toList();
+    } else if (rawImages is String && rawImages.trim().isNotEmpty) {
+      images = [rawImages];
+    }
+
     return WebsiteItemModel(
       id: json['name'],
       owner: json['owner'],
       name: json['item_name'] ?? '',
-      image: json['website_image'] ?? '',
+
+      // 👇 FIX: Fall back to `json['image']` if multi-image list is empty
+      image:
+          images.isNotEmpty
+              ? images.first
+              : (json['image'] is String ? json['image'] : ''),
+
+      images: images,
       thumbnail: json['thumbnail'] ?? '',
-      demoVideoUrl: json['custom_demo_video'],
+      demoVideoUrl: json['demo_video'],
       itemCode: json['item_code'] ?? '',
       description: json['short_description'] ?? '',
       title: json['title'] ?? '',

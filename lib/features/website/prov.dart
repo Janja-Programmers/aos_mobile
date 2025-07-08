@@ -37,8 +37,9 @@ class WebsiteItemProv with ChangeNotifier {
   }
 
   Future<void> loadProductDetail(String productId) async {
-    _isLoading = true;
     _error = null;
+    _selectedProduct = null;
+    _isLoading = true;
     notifyListeners();
 
     final result = await getSingleItem(productId);
@@ -53,6 +54,12 @@ class WebsiteItemProv with ChangeNotifier {
     );
 
     _isLoading = false;
+    notifyListeners();
+  }
+
+  void clearProductDetail() {
+    _selectedProduct = null;
+    _error = null;
     notifyListeners();
   }
 }

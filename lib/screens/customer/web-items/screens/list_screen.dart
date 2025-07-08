@@ -96,17 +96,24 @@ class _ProductListScreenState extends State<ProductListScreen> {
               ? const Center(child: CircularProgressIndicator())
               : productProvider.error != null
               ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(productProvider.error!),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed:
-                          () => context.read<WebsiteItemProv>().loadItems(),
-                      child: const Text('Retry'),
-                    ),
-                  ],
+                child: Builder(
+                  builder: (context) {
+                    debugPrint(
+                      '❌ Error loading product: ${productProvider.error}',
+                    );
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text("Oops! We ran into a problem."),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed:
+                              () => context.read<WebsiteItemProv>().loadItems(),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               )
               : Column(

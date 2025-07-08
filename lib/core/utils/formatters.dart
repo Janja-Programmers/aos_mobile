@@ -18,3 +18,8 @@ String formatCurrency(num amount) {
   );
   return format.format(amount);
 }
+
+String cleanHtml(String? input) {
+  if (input == null) return '';
+  return input.replaceAll(RegExp(r'[^\x20-\x7E\r\n\t]'), '').trim();
+}

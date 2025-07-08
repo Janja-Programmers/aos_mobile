@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '/core/utils/formatters.dart';
+
 import '/shared/models/specifications.dart';
 
 import '../domain/webitem.dart';
@@ -56,7 +58,10 @@ class WebsiteItemModel extends Equatable {
       title: json['title'] ?? '',
       itemGroup: json['category'] ?? '',
       shortDescription: json['short_description'] ?? '',
-      longDescription: json['web_long_description'] ?? '',
+      longDescription:
+          json['long_description'] is String
+              ? cleanHtml(json['long_description'])
+              : '',
       onBackorder: json['on_backorder'] == 1,
       published: json['published'] == 1,
       price: (json['price'] ?? 0).toDouble(),

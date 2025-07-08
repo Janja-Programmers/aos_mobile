@@ -5,7 +5,7 @@ const String REGISTER_ENDPOINT =
     '/api/method/amani_mall.overrides.user.sign_up';
 const String WEB_ITEM_ENDPOINT = '/api/method/amani_mall.api.get_product_list';
 const String SINGLE_WEB_ITEM_ENDPOINT =
-    '/api/method/amani_mall.api.get_product_detail?item_code=STO-ITEM-2025-00001';
+    '/api/method/amani_mall.api.get_product_detail';
 const String ITEM_ENDPOINT = '/api/resource/Item';
 const String ITEM_PRICE_ENDPOINT = '/api/resource/Item Price';
 const String SALES_ORDER_ENDPOINT = '/api/resource/Sales Order';

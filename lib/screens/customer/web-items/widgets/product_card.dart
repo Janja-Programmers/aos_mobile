@@ -18,7 +18,7 @@ class ProductCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        context.push('/product/${item.name}', extra: item);
+        context.push('/product/${item.id}', extra: item);
       },
       child: AnimatedScale(
         scale: 1.0,

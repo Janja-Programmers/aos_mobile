@@ -41,7 +41,9 @@ class WebsiteRemoteDataSource {
       );
 
       final data = res.data['message'];
-      return Right(WebsiteItemModel.fromJson(data));
+      final product = WebsiteItemModel.fromJson(data);
+
+      return Right(product);
     } catch (e) {
       return Left(handleException(e));
     }

@@ -31,34 +31,17 @@ class WebsiteRemoteDataSource {
     }
   }
 
-  // ----------------- CREATE -----------------
-  Future<Either<Failure, WebsiteItem>> createItem(WebsiteItem entity) async {
-    try {
-      final model = WebsiteItemModel.fromEntity(entity);
-      final res = await _client.client.post(
-        WEB_ITEM_ENDPOINT,
-        data: model.toJson(),
-      );
-      final created = WebsiteItemModel.fromJson(res.data['data']).toEntity();
-      return Right(created);
-    } catch (e) {
-      return Left(handleException(e));
-    }
-  }
-
-  // ----------------- UPDATE -----------------
-  Future<Either<Failure, WebsiteItem>> updateItem(
-    String id,
-    WebsiteItem entity,
+  Future<Either<Failure, WebsiteItemModel>> fetchProductDetail(
+    String itemCode,
   ) async {
     try {
-      final model = WebsiteItemModel.fromEntity(entity);
-      final res = await _client.client.put(
-        '$WEB_ITEM_ENDPOINT/$id',
-        data: model.toJson(),
+      final res = await _client.client.get(
+        SINGLE_WEB_ITEM_ENDPOINT,
+        queryParameters: {'item_code': itemCode},
       );
-      final updated = WebsiteItemModel.fromJson(res.data['data']).toEntity();
-      return Right(updated);
+
+      final data = res.data['message'];
+      return Right(WebsiteItemModel.fromJson(data));
     } catch (e) {
       return Left(handleException(e));
     }

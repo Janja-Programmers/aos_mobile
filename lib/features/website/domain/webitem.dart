@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '/shared/models/specifications.dart';
+
 class WebsiteItem extends Equatable {
   final String id;
   final String name;
@@ -59,14 +61,4 @@ class WebsiteItem extends Equatable {
     inStock,
     specifications,
   ];
-}
-
-class Specification extends Equatable {
-  final String label;
-  final String description;
-
-  const Specification({required this.label, required this.description});
-
-  @override
-  List<Object> get props => [label, description];
 }

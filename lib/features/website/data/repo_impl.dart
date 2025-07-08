@@ -15,12 +15,9 @@ class WebsiteRepoImpl implements WebsiteRepo {
       remote.fetchItems();
 
   @override
-  Future<Either<Failure, WebsiteItem>> createItem(WebsiteItem item) =>
-      remote.createItem(item);
-
-  @override
-  Future<Either<Failure, WebsiteItem>> updateItem(
-    String id,
-    WebsiteItem item,
-  ) => remote.updateItem(id, item);
+  Future<Either<Failure, WebsiteItem>> getOne(String id) {
+    return remote
+        .fetchProductDetail(id)
+        .then((either) => either.map((model) => model.toEntity()));
+  }
 }

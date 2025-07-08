@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 
-import '/features/item/domain/entity.dart';
+import '/shared/models/specifications.dart';
 
 class ProductSpecificationsList extends StatelessWidget {
   final List<Specification> specs;

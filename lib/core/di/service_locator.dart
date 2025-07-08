@@ -129,12 +129,10 @@ Future<void> init() async {
   );
   // 3. Use Cases
   sl.registerLazySingleton(() => GetAllWebItemsUseCase(sl<WebsiteRepo>()));
-  sl.registerLazySingleton(() => CreateWebItemUseCase(sl<WebsiteRepo>()));
-  sl.registerLazySingleton(() => UpdateWebItemUseCase(sl<WebsiteRepo>()));
+  sl.registerLazySingleton(() => GetSingleWebItemUseCase(sl<WebsiteRepo>()));
   // 4. Provider (State Management)
   sl.registerFactory(
-    () =>
-        WebsiteItemProv(getAllItems: sl(), createItem: sl(), updateItem: sl()),
+    () => WebsiteItemProv(getAllItems: sl(), getSingleItem: sl()),
   );
 
   // ITEMS Doctype

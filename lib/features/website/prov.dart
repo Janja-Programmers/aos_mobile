@@ -1,25 +1,22 @@
 import 'package:flutter/foundation.dart';
-import 'package:collection/collection.dart';
 
 import 'domain/webitem.dart';
 import 'domain/usecases.dart';
 
 class WebsiteItemProv with ChangeNotifier {
   final GetAllWebItemsUseCase getAllItems;
-  final CreateWebItemUseCase createItem;
-  final UpdateWebItemUseCase updateItem;
+  final GetSingleWebItemUseCase getSingleItem;
 
-  WebsiteItemProv({
-    required this.getAllItems,
-    required this.createItem,
-    required this.updateItem,
-  });
+  WebsiteItemProv({required this.getAllItems, required this.getSingleItem});
 
   List<WebsiteItem> _items = [];
-  List<WebsiteItem> get items => _items;
-
+  WebsiteItem? _selectedProduct;
   bool _isLoading = false;
   String? _error;
+
+  List<WebsiteItem> get items => _items;
+
+  WebsiteItem? get selectedProduct => _selectedProduct;
 
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -39,39 +36,23 @@ class WebsiteItemProv with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> addItem(WebsiteItem item) async {
-    final result = await createItem(item);
-    return result.fold(
+  Future<void> loadProductDetail(String productId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    final result = await getSingleItem(productId);
+    result.fold(
       (failure) {
         _error = failure.message;
-        return false;
+        _selectedProduct = null;
       },
-      (newItem) {
-        _items.add(newItem);
-        notifyListeners();
-        return true;
+      (product) {
+        _selectedProduct = product;
       },
     );
-  }
 
-  Future<bool> updateExistingItem(String id, WebsiteItem item) async {
-    final result = await updateItem(id, item);
-    return result.fold(
-      (failure) {
-        _error = failure.message;
-        return false;
-      },
-      (updatedItem) {
-        final index = _items.indexWhere((e) => e.id == id);
-        if (index != -1) {
-          _items[index] = updatedItem;
-          notifyListeners();
-        }
-        return true;
-      },
-    );
+    _isLoading = false;
+    notifyListeners();
   }
-
-  WebsiteItem? getItemById(String id) =>
-      _items.firstWhereOrNull((item) => item.id == id);
 }

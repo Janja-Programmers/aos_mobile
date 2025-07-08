@@ -123,13 +123,10 @@ class AppRouter {
       ),
       // Product Details
       GoRoute(
-        path: '/product/:name',
+        path: '/product/:id',
         builder: (context, state) {
-          final productId = state.pathParameters['name'];
-          if (productId == null) {
-            throw Exception('Product ID is required');
-          }
-          return ProductDetailScreen(productId: productId);
+          final id = state.pathParameters['id']!;
+          return ProductDetailScreen(productId: id);
         },
       ),
 

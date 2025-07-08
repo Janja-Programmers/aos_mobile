@@ -1,4 +1,7 @@
 import 'package:equatable/equatable.dart';
+
+import '/shared/models/specifications.dart';
+
 import '../domain/webitem.dart';
 
 class WebsiteItemModel extends Equatable {

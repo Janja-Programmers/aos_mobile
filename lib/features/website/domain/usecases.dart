@@ -15,22 +15,12 @@ class GetAllWebItemsUseCase {
   }
 }
 
-class CreateWebItemUseCase {
+class GetSingleWebItemUseCase {
   final WebsiteRepo repo;
 
-  CreateWebItemUseCase(this.repo);
+  GetSingleWebItemUseCase(this.repo);
 
-  Future<Either<Failure, WebsiteItem>> call(WebsiteItem item) async {
-    return await repo.createItem(item);
-  }
-}
-
-class UpdateWebItemUseCase {
-  final WebsiteRepo repo;
-
-  UpdateWebItemUseCase(this.repo);
-
-  Future<Either<Failure, WebsiteItem>> call(String id, WebsiteItem item) async {
-    return await repo.updateItem(id, item);
+  Future<Either<Failure, WebsiteItem>> call(dynamic id) async {
+    return await repo.getOne(id);
   }
 }

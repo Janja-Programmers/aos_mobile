@@ -40,6 +40,7 @@ import '/features/address/provider.dart';
 
 // WEBSITE Feature
 import 'features/website/prov.dart';
+import 'screens/supplier/product/controllers/add_item_controller.dart';
 
 class App extends StatelessWidget {
   final AuthProvider auth;
@@ -67,6 +68,13 @@ class App extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => VendorProvider(utils: sl<VendorUtils>()),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (_) => AddItemController(
+                provider: sl<ProductProvider>(),
+                apiClient: sl(),
+              ),
         ),
       ],
       child: MaterialApp.router(

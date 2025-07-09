@@ -54,7 +54,7 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
     result.fold(
       (failure) =>
           topSnackBar(context, failure.message, type: TopSnackType.error),
-      (_) => topSnackBar(context, ' Sales Order billed successfully'),
+      (_) => topSnackBar(context, 'Order billed successfully'),
     );
   }
 
@@ -66,7 +66,7 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
-      subTitle: 'Sales Order Detail',
+      subTitle: 'Order Detail',
       body: Builder(
         builder: (_) {
           if (provider.loading || order == null) {
@@ -109,7 +109,7 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
                 _actionButtons(order),
                 const SizedBox(height: 24),
                 const Text(
-                  'Items',
+                  'Products',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),

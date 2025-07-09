@@ -94,7 +94,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
-      subTitle: widget.itemName == null ? 'Create Item' : 'Update Item',
+      subTitle: widget.itemName == null ? 'Create Product' : 'Update Product',
       actionButton: CustomButton(
         label: 'Save',
         icon: Icons.save,

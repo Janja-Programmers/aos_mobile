@@ -41,7 +41,7 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 2, onItemSelected: (_) {}),
-      subTitle: 'Stock Entry Detail',
+      subTitle: 'Stock Intake Detail',
       actionButton:
           entry == null
               ? null
@@ -78,7 +78,7 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
                 StockDetailHeader(entry: entry),
                 const SizedBox(height: 16),
                 const Text(
-                  'Items',
+                  'Products',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),

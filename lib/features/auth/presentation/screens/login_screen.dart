@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ownashop/core/utils/logger.dart';
 import 'package:ownashop/features/auth/presentation/widgets/app_input.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/errors/failures.dart';
 import '../auth_provider.dart';
 import '../widgets/text_widget.dart';
 
@@ -171,13 +172,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
     result.fold(
       (failure) {
+        appLogger.e('❌ Login failed: $failure');
         setState(() {
           _error =
-              failure.hashCode == 401
-                  ? 'Invalid email or password'
-                  : 'An error occurred! Please try again.';
+              failure is ServerFailure && failure.message.contains("403")
+                  ? 'Access denied. Check your user permissions.'
+                  : 'Invalid email or password';
         });
       },
+
       (_) {
         final goTo = auth.consumeReturnTo();
         appLogger.i('✅ Navigating to: $goTo from login screen');

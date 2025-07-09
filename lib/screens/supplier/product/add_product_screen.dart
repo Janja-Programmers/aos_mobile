@@ -2,12 +2,11 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:ownashop/features/product/provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
-import '../../../features/product/domain/product.dart';
+import '/features/product/provider.dart';
+import '/features/product/domain/product.dart';
+
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/action_button.dart';
@@ -15,6 +14,8 @@ import '/shared/widgets/action_button.dart';
 import '/core/utils/api_client.dart';
 import '/core/utils/snackbar.dart';
 import '/core/di/service_locator.dart';
+
+import 'controllers/add_item_controller.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -40,30 +41,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
   String? uploadedVideoUrl;
   bool isSubmitting = false;
 
-  Future<void> pickFile({required bool isImage}) async {
-    final permission =
-        Platform.isAndroid ? Permission.storage : Permission.photos;
-    final result = await permission.request();
-    if (!result.isGranted) {
-      if (result.isPermanentlyDenied) await openAppSettings();
-      return;
-    }
-    final picked = await FilePicker.platform.pickFiles(
-      type: isImage ? FileType.image : FileType.video,
-    );
-    if (picked != null && picked.files.single.path != null) {
-      final file = File(picked.files.single.path!);
-      final url = await uploadFile(file);
-      setState(() {
-        if (isImage) {
-          selectedImage = file;
-          uploadedImageUrl = url;
-        } else {
-          selectedVideo = file;
-          uploadedVideoUrl = url;
-        }
-      });
-    }
+  late final AddItemController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = context.read<AddItemController>();
   }
 
   Future<String?> uploadFile(File file) async {
@@ -200,7 +183,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
           children: [
             TextFormField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: 'Item Name'),
+              decoration: const InputDecoration(labelText: 'Product Name'),
               validator:
                   (val) => val == null || val.isEmpty ? 'Required' : null,
             ),
@@ -208,7 +191,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
             TextFormField(
               controller: priceController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Item Price'),
+              decoration: const InputDecoration(labelText: 'Product Price'),
               validator:
                   (val) =>
                       val == null || double.tryParse(val) == null
@@ -230,7 +213,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                           )
                           .toList(),
                   decoration: const InputDecoration(
-                    labelText: 'Category (Item Group)',
+                    labelText: 'Category',
                     border: OutlineInputBorder(),
                   ),
                   validator:
@@ -284,7 +267,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: addSpecification,
-                  child: const Icon(Icons.add),
+                  child: Icon(Icons.add, semanticLabel: "Add"),
                 ),
               ],
             ),
@@ -316,12 +299,12 @@ class _AddProductScreenState extends State<AddProductScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton.icon(
-                  onPressed: () => pickFile(isImage: true),
+                  onPressed: () => controller.pickFile(context, isImage: true),
                   icon: const Icon(Icons.image),
                   label: const Text('Pick Image'),
                 ),
                 ElevatedButton.icon(
-                  onPressed: () => pickFile(isImage: false),
+                  onPressed: () => controller.pickFile(context, isImage: false),
                   icon: const Icon(Icons.videocam),
                   label: const Text('Pick Video'),
                 ),

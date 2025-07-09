@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
-import '/core/di/service_locator.dart';
-import '/core/utils/api_client.dart';
 import '/core/utils/snackbar.dart';
 
 import '/features/product/domain/product.dart';
-import '/features/product/provider.dart';
 
 import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/app_drawer.dart';
@@ -31,76 +28,70 @@ class _AddItemScreenState extends State<AddItemScreen> {
   bool showRawEditor = false;
 
   @override
-  void initState() {
-    super.initState();
-    controller = AddItemController(
-      provider: context.read<ProductProvider>(),
-      apiClient: sl<APIClient>(),
-      initialProduct: widget.product,
-    );
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final ctrl = context.read<AddItemController>();
+    if (widget.product != null) {
+      ctrl.setInitialProduct(widget.product!);
+    }
   }
 
   @override
   void dispose() {
-    controller.disposeControllers();
+    context.read<AddItemController>().disposeControllers();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: controller,
-      child: Consumer<AddItemController>(
-        builder: (context, ctrl, _) {
-          final isUpdate = widget.product != null;
-          return MainBarScaffold(
-            drawer: AppDrawer(selectedIndex: 1, onItemSelected: (_) {}),
-            scaffoldKey: _scaffoldKey,
-            subTitle: isUpdate ? 'Update Product' : 'Create Product',
-            body: AbsorbPointer(
-              absorbing: ctrl.isSubmitting,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    ItemFormFields(
-                      controller: ctrl,
-                      isUpdate: isUpdate,
-                      formKey: ctrl.formKey,
-                    ),
-                    const SizedBox(height: 16),
-                    ImageVideoPickerSection(
-                      controller: ctrl,
-                      product: widget.product,
-                    ),
-                    const SizedBox(height: 16),
-                    ActionButton(
-                      label: isUpdate ? 'Update Product' : 'Save Product',
-                      isLoading: ctrl.isSubmitting,
-                      onPressed: () async {
-                        final success = await ctrl.submit(
-                          context,
-                          widget.product,
-                        );
-                        if (!mounted) return;
-                        if (success) {
-                          topSnackBar(context, 'Product saved successfully');
-                          context.pop();
-                        } else {
-                          topSnackBar(
-                            context,
-                            ctrl.provider.error ?? 'Error saving product',
-                            type: TopSnackType.error,
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
+    final controller = context.watch<AddItemController>();
+    final isUpdate = widget.product != null;
+
+    return MainBarScaffold(
+      drawer: AppDrawer(selectedIndex: 1, onItemSelected: (_) {}),
+      scaffoldKey: _scaffoldKey,
+      subTitle: isUpdate ? 'Update Product' : 'Create Product',
+      body: AbsorbPointer(
+        absorbing: controller.isSubmitting,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              ItemFormFields(
+                controller: controller,
+                isUpdate: isUpdate,
+                formKey: controller.formKey,
               ),
-            ),
-          );
-        },
+              const SizedBox(height: 16),
+              ImageVideoPickerSection(
+                controller: controller,
+                product: widget.product,
+              ),
+              const SizedBox(height: 16),
+              ActionButton(
+                label: isUpdate ? 'Update Product' : 'Save Product',
+                isLoading: controller.isSubmitting,
+                onPressed: () async {
+                  final success = await controller.submit(
+                    context,
+                    widget.product,
+                  );
+                  if (!mounted) return;
+                  if (success) {
+                    topSnackBar(context, 'Product saved successfully');
+                    context.pop();
+                  } else {
+                    topSnackBar(
+                      context,
+                      controller.provider.error ?? 'Error saving product',
+                      type: TopSnackType.error,
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

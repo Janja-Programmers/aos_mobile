@@ -182,13 +182,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
                 ]
-                : [
-                  const CartIconButton(),
-                  IconButton(
-                    icon: const Icon(Icons.person, color: AppColors.black),
-                    onPressed: () {},
-                  ),
-                ],
+                : [const CartIconButton()],
       ),
 
       body: Column(

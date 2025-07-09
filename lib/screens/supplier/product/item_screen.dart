@@ -73,7 +73,7 @@ class _ItemScreenState extends State<ItemScreen> {
         ),
       );
     } else if (productProvider.products.isEmpty) {
-      content = const Center(child: Text('No items found.'));
+      content = const Center(child: Text('No products found.'));
     } else {
       content = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,7 +144,7 @@ class _ItemScreenState extends State<ItemScreen> {
     return MainBarScaffold(
       drawer: AppDrawer(selectedIndex: 1, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
-      subTitle: "Items",
+      subTitle: "Products",
       actionButton: CustomButton(pageBuilder: () => AddProductScreen()),
       body: content,
     );

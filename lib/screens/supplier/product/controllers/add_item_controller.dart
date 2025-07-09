@@ -14,6 +14,8 @@ import '/features/product/domain/product.dart';
 import '/features/product/provider.dart';
 
 class AddItemController extends ChangeNotifier {
+  Product? product;
+
   final ProductProvider provider;
   final APIClient apiClient;
 
@@ -44,27 +46,40 @@ class AddItemController extends ChangeNotifier {
     Product? initialProduct,
   }) {
     if (initialProduct != null) {
-      nameController.text = initialProduct.itemName;
-      groupController.text = initialProduct.category;
-      itemCodeController.text = initialProduct.name;
-      priceController.text = initialProduct.itemPrice.toString();
-      descController.text = initialProduct.websiteDescription ?? '';
-      shortDescController.text = initialProduct.shortWebsiteDescription ?? '';
-      uploadedImageUrl = initialProduct.image;
-      uploadedVideoUrl = initialProduct.demoVideo;
-
-      // Pre-fill specifications if editing
-      websiteSpecifications.addAll(initialProduct.websiteSpecifications ?? []);
+      setInitialProduct(initialProduct);
     }
   }
 
-  Future<void> pickFile(BuildContext context, {required bool isImage}) async {
+  void setInitialProduct(Product newProduct) {
+    if (product != null) return;
+
+    product = newProduct;
+
+    nameController.text = product!.itemName;
+    groupController.text = product!.category;
+    itemCodeController.text = product!.name;
+    priceController.text = product!.itemPrice.toString();
+    descController.text = product!.websiteDescription ?? '';
+    shortDescController.text = product!.shortWebsiteDescription ?? '';
+    uploadedImageUrl = product!.image;
+    uploadedVideoUrl = product!.demoVideo;
+
+    websiteSpecifications.clear();
+    websiteSpecifications.addAll(product!.websiteSpecifications ?? []);
+
+    notifyListeners();
+  }
+
+  Future<String?> pickFile(
+    BuildContext context, {
+    required bool isImage,
+  }) async {
     final permissionResult = await _requestPermissions(isImage: isImage);
     if (!permissionResult.granted) {
       if (permissionResult.permanentlyDenied) {
         await openAppSettings();
       }
-      return;
+      return null;
     }
 
     final result = await FilePicker.platform.pickFiles(
@@ -81,6 +96,8 @@ class AddItemController extends ChangeNotifier {
             !formKey.currentState!.validate()) {
           topSnackBar(context, 'Image uploaded. Please fix form errors.');
         }
+        notifyListeners();
+        return uploadedImageUrl;
       } else {
         selectedVideo = file;
         uploadedVideoUrl = await uploadFile(file);
@@ -89,9 +106,13 @@ class AddItemController extends ChangeNotifier {
             !formKey.currentState!.validate()) {
           topSnackBar(context, 'Video uploaded. Please fix form errors.');
         }
+        notifyListeners();
+        return uploadedVideoUrl;
       }
-      notifyListeners();
     }
+
+    // If user cancels the file picker
+    return null;
   }
 
   Future<PermissionResult> _requestPermissions({required bool isImage}) async {

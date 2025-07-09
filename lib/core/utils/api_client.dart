@@ -35,23 +35,25 @@ class APIClient {
       CookieManager(client._cookieJar),
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          client._logger.i('➡️ ${options.method} ${options.uri}');
           if (options.data != null) client._logger.i('Body: ${options.data}');
-
           return handler.next(options);
         },
-        onResponse: (response, handler) {
+        onResponse: (response, handler) async {
+          final uri = response.requestOptions.uri;
+          final cookies = await client._cookieJar.loadForRequest(uri);
+          client._logger.i('🍪 Cookies after response for $uri: $cookies');
+
           client._logger.i(
             '✅ ${response.statusCode} ← ${response.requestOptions.uri}',
           );
           return handler.next(response);
         },
+
         onError: (DioException e, handler) {
           appLogger.e('❌ Server error: ${e.response?.data}');
           client._logger.e(
-            '❌ ${e.response?.statusCode} ← ${e.requestOptions.uri}',
+            '❌ ${e.response?.statusCode} ← ${e.requestOptions.uri} ===> ${e.message}',
           );
-          client._logger.e(e);
           return handler.next(e);
         },
       ),

@@ -21,8 +21,7 @@ class ItemFormFields extends StatefulWidget {
 }
 
 class _ItemFormFieldsState extends State<ItemFormFields> {
-  bool showRawEditor = false;
-
+  bool showRawEditor = true;
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
@@ -33,31 +32,31 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppTextField(
-            label: 'Item Name',
+            label: 'Product Name',
             controller: controller.nameController,
             isRequired: true,
             validator:
-                (val) => AppValidator.required(val, fieldName: 'Item Name'),
+                (val) => AppValidator.required(val, fieldName: 'Product Name'),
           ),
           const SizedBox(height: 10),
 
           AppTextField(
-            label: 'Item Code',
+            label: 'Product Code',
             controller: controller.itemCodeController,
             isRequired: true,
             readOnly: widget.isUpdate,
             validator:
-                (val) => AppValidator.required(val, fieldName: 'Item Code'),
+                (val) => AppValidator.required(val, fieldName: 'Product Code'),
           ),
           const SizedBox(height: 10),
 
           AppTextField(
-            label: 'Item Price',
+            label: 'Product Price',
             controller: controller.priceController,
             isRequired: true,
             keyboardType: TextInputType.number,
             validator:
-                (val) => AppValidator.isNumber(val, fieldName: 'Item Price'),
+                (val) => AppValidator.isNumber(val, fieldName: 'Product Price'),
           ),
           const SizedBox(height: 10),
 
@@ -76,7 +75,7 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
                         .map((g) => DropdownMenuItem(value: g, child: Text(g)))
                         .toList(),
                 decoration: const InputDecoration(
-                  labelText: 'Category (Item Group)',
+                  labelText: 'Category',
                   border: OutlineInputBorder(),
                 ),
                 validator:

@@ -36,7 +36,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
     return MainBarScaffold(
       drawer: AppDrawer(selectedIndex: 5, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
-      subTitle: 'Sales Order',
+      subTitle: 'Orders',
       body: Consumer<SalesOrderProvider>(
         builder: (context, provider, _) {
           if (provider.loading) {
@@ -53,7 +53,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
           }
 
           if (provider.orders.isEmpty) {
-            return const Center(child: Text('No sales orders found.'));
+            return const Center(child: Text('No orders found.'));
           }
 
           return RefreshIndicator(

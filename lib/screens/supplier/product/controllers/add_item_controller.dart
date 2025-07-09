@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -94,12 +95,27 @@ class AddItemController extends ChangeNotifier {
   }
 
   Future<PermissionResult> _requestPermissions({required bool isImage}) async {
+    if (!Platform.isAndroid) {
+      // iOS: request photos
+      final status = await Permission.photos.request();
+      return PermissionResult(
+        granted: status.isGranted,
+        permanentlyDenied: status.isPermanentlyDenied,
+      );
+    }
+
+    // For Android, handle API-specific permissions
+    final androidInfo = await DeviceInfoPlugin().androidInfo;
+    final sdkInt = androidInfo.version.sdkInt;
+
     Permission permission;
 
-    if (Platform.isAndroid) {
-      permission = Permission.storage;
+    if (sdkInt >= 33) {
+      // Android 13+ uses granular permissions
+      permission = isImage ? Permission.photos : Permission.videos;
     } else {
-      permission = Permission.photos;
+      // Android 12 and below use storage
+      permission = Permission.storage;
     }
 
     final status = await permission.request();

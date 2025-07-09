@@ -36,17 +36,24 @@ class AppRouter {
     initialLocation: '/login',
     redirect: (context, state) {
       final loggedIn = auth.isLoggedIn;
+
+      // Checks if the current path is /login or /register
       final loggingIn =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register';
 
+      // 🚫 Not logged in, and trying to go to any protected page
       if (!loggedIn && !loggingIn) {
-        auth.setReturnTo(state.matchedLocation);
+        auth.setReturnTo(
+          state.matchedLocation,
+        ); // remember where they wanted to go
         return '/login';
       }
 
+      // ✅ Logged in, but trying to go to /login or /register → redirect to home
       if (loggedIn && loggingIn) return auth.defaultHome;
 
+      // ✅ No redirect needed
       return null;
     },
 

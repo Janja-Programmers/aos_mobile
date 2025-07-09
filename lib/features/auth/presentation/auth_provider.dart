@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '/core/utils/api_client.dart';
 import '/core/utils/logger.dart';
 import '/core/errors/failures.dart';
 
@@ -12,59 +13,113 @@ import '../domain/user.dart';
 class AuthProvider with ChangeNotifier {
   final LoginUser loginUser;
   final RegisterUser registerUser;
+  final APIClient apiClient;
 
   User? user;
-  String? _returnTo;
   String? _defaultHome;
+  String? _returnTo;
 
-  AuthProvider({required this.loginUser, required this.registerUser});
+  AuthProvider({
+    required this.loginUser,
+    required this.registerUser,
+    required this.apiClient,
+  }) {
+    Future.microtask(() => _restoreSession());
+  }
 
   bool get isLoggedIn => user != null;
 
   String get defaultHome => _defaultHome ?? '/';
 
+  /// Home to navigate to (returnTo > default > fallback)
+  String get home => _returnTo ?? _defaultHome ?? '/';
+
+  /// Used by login screen to set redirect path
   void setReturnTo(String path) {
-    if (path != '/' && path != '/login' && path != '/register') {
-      _returnTo = path;
-      appLogger.i('🧭 setReturnTo: $path');
+    _returnTo = path;
+    appLogger.i('💡 ⤴️ returnTo set to: $path');
+  }
+
+  /// Used by login screen after successful login
+  String consumeReturnTo() {
+    final path = _returnTo;
+    _returnTo = null;
+    appLogger.i('💡 🧭 Consuming returnTo: $path');
+    return path ?? _defaultHome ?? '/';
+  }
+
+  Future<void> _restoreSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final username = prefs.getString('username');
+    final password = prefs.getString('password');
+
+    if (username == null || password == null) {
+      appLogger.w('⚠️ No persisted credentials found.');
+      return;
+    }
+
+    appLogger.i('🔄 Attempting session restore for: $username');
+    final result = await login(username, password, persist: false);
+
+    result.fold(
+      (failure) => appLogger.w('⚠️ Failed to auto-restore session'),
+      (_) => appLogger.i(
+        '🪄 Session auto-restored: ${user?.username}, home: $_defaultHome',
+      ),
+    );
+  }
+
+  Future<void> loadUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final username = prefs.getString('username');
+    final password = prefs.getString('password');
+
+    if (username != null && password != null) {
+      final result = await login(username, password, persist: false);
+
+      result.fold(
+        (failure) {
+          appLogger.w('⚠️ Failed to load user from persisted credentials');
+        },
+        (_) {
+          appLogger.i('✅ User loaded via `loadUser()`');
+        },
+      );
     } else {
-      appLogger.i('⚠️ Ignored returnTo: $path');
+      appLogger.w('⚠️ No stored credentials to load user');
     }
   }
 
-  String? consumeReturnTo() {
-    final temp = _returnTo;
-    _returnTo = null;
-    appLogger.i('🧭 Consuming returnTo: $temp');
-    return temp;
-  }
-
-  Future<Either<Failure, void>> login(String username, String password) async {
+  Future<Either<Failure, void>> login(
+    String username,
+    String password, {
+    bool persist = true,
+  }) async {
     final result = await loginUser(username, password);
     if (result.isLeft()) return result;
 
     final loginResult = result.getOrElse(
       () => throw Exception('Unexpected null'),
     );
-
     user = loginResult.user;
-    appLogger.i('💡 Logged in as: ${user?.username}, type: ${user?.userType}');
+    _defaultHome = _mapHomePage(loginResult.homePage);
 
-    _defaultHome = _mapHomePage(
-      loginResult.homePage,
-    ); // ✅ This is now used post-login
-    appLogger.i('🏠 _defaultHome set to: $_defaultHome by auth prov');
+    appLogger.i('💡 Logged in as: ${user?.username}, home: $_defaultHome');
 
-    await persistUser(user!.username, user!.userType ?? '');
+    if (persist) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('username', username);
+      await prefs.setString('password', password);
+    }
+
     notifyListeners();
-
     return const Right(null);
   }
 
   String _mapHomePage(String? homePage) {
     if (homePage == null || homePage.contains('/all-products')) return '/';
     if (homePage.contains('/app')) return '/dashboard';
-    return '/'; // fallback
+    return '/';
   }
 
   Future<Either<Failure, List<dynamic>>> register(
@@ -85,30 +140,15 @@ class AuthProvider with ChangeNotifier {
     );
   }
 
-  Future<void> persistUser(String username, String userType) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('username', username);
-    await prefs.setString('userType', userType);
-  }
-
-  Future<void> loadUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final username = prefs.getString('username');
-    final userType = prefs.getString('userType');
-
-    if (username != null) {
-      user = User(username: username, userType: userType);
-      notifyListeners();
-    }
-  }
-
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('username');
-    await prefs.remove('userType');
+    await prefs.remove('password');
     user = null;
+    _defaultHome = null;
+    _returnTo = null;
     notifyListeners();
   }
 
-  void clearRedirect() => _defaultHome = null;
+  void clearRedirect() => _returnTo = null;
 }

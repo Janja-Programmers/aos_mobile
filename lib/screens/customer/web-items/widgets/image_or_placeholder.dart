@@ -28,6 +28,21 @@ class ImageOrPlaceholder extends StatelessWidget {
           height: height,
           fit: BoxFit.cover,
           errorBuilder: (_, _, _) => _buildPlaceholder(),
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return AnimatedOpacity(
+                opacity: 1.0,
+                duration: const Duration(milliseconds: 300),
+                child: child,
+              );
+            }
+            return Container(
+              width: double.infinity,
+              height: height,
+              alignment: Alignment.center,
+              child: const CircularProgressIndicator(strokeWidth: 2),
+            );
+          },
         ),
       );
     } else {

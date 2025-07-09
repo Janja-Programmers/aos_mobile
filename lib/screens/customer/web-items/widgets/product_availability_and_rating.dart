@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class ProductAvailabilityAndRating extends StatelessWidget {
   final bool inStock;
   final double rating;
+  final int totalReviews;
 
   const ProductAvailabilityAndRating({
     super.key,
     required this.inStock,
     required this.rating,
+    required this.totalReviews,
   });
 
   @override
@@ -19,7 +21,11 @@ class ProductAvailabilityAndRating extends StatelessWidget {
           backgroundColor: inStock ? Colors.green[100] : Colors.red[100],
         ),
         const SizedBox(width: 8),
-        Chip(label: Text('⭐ ${rating.toStringAsFixed(1)}')),
+        Chip(
+          label: Text(
+            '⭐ ${rating.toStringAsFixed(1)}${totalReviews > 0 ? ' ($totalReviews)' : ''}',
+          ),
+        ),
       ],
     );
   }

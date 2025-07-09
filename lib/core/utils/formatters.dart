@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dartz/dartz.dart';
+import 'package:intl/intl.dart';
 
 import '/core/di/service_locator.dart';
 import '/core/errors/exception.dart';
@@ -40,4 +41,18 @@ Future<Either<Failure, List<Map<String, dynamic>>>> fetchFilteredList({
   } catch (e) {
     return Left(handleException(e));
   }
+}
+
+String formatCurrency(num amount) {
+  final format = NumberFormat.currency(
+    locale: 'en_KE',
+    symbol: 'Sh ',
+    decimalDigits: 2,
+  );
+  return format.format(amount);
+}
+
+String cleanHtml(String? input) {
+  if (input == null) return '';
+  return input.replaceAll(RegExp(r'[^\x20-\x7E\r\n\t]'), '').trim();
 }

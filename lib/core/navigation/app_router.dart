@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:ownashop/screens/supplier/product/update_item_screen.dart';
 // Auth
 import '/features/product/domain/product.dart';
 import '/features/auth/presentation/auth_provider.dart';
@@ -6,14 +7,13 @@ import '/features/auth/presentation/screens/login_screen.dart';
 import '/features/auth/presentation/screens/register_screen.dart';
 
 // Customer
-import '/screens/customer/products/screens/product_list_screen.dart';
+import '../../screens/customer/web-items/screens/list_screen.dart';
 import '/screens/customer/wishlist/presentation/wishlist_screen.dart';
 import '/screens/customer/cart/cart_screen.dart';
 import '/screens/customer/address/shipping_address_form.dart';
 
 // Seller
-import '/screens/customer/products/screens/product_detail_screen.dart';
-import '../../screens/supplier/product/update_item_screen.dart';
+import '/screens/customer/web-items/screens/detail_screen.dart';
 import '/screens/supplier/dashboard/dashboard.dart';
 import '/screens/supplier/product/item_screen.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';
@@ -124,13 +124,10 @@ class AppRouter {
       ),
       // Product Details
       GoRoute(
-        path: '/product/:name',
+        path: '/product/:id',
         builder: (context, state) {
-          final productId = state.pathParameters['name'];
-          if (productId == null) {
-            throw Exception('Product ID is required');
-          }
-          return ProductDetailScreen(productId: productId);
+          final id = state.pathParameters['id']!;
+          return ProductDetailScreen(productId: id);
         },
       ),
 

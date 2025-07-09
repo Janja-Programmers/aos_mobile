@@ -34,7 +34,7 @@ class CustomButton extends StatelessWidget {
             if (pageBuilder != null) {
               Navigator.of(context).push(
                 PageRouteBuilder(
-                  pageBuilder: (_, animation, __) => pageBuilder!(),
+                  pageBuilder: (_, animation, _) => pageBuilder!(),
                   transitionsBuilder: (
                     context,
                     animation,

@@ -12,8 +12,8 @@ import 'features/auth/presentation/auth_provider.dart';
 // PRODUCT Feature
 import 'features/charts/presentation/provider.dart';
 import 'features/product/provider.dart';
-import 'screens/customer/products/utils/vendor_prov.dart';
-import 'screens/customer/products/utils/vendor_utils.dart';
+import 'screens/customer/web-items/utils/vendor_prov.dart';
+import 'screens/customer/web-items/utils/vendor_utils.dart';
 
 // ITEM Feature
 import 'features/item/prov.dart';
@@ -38,6 +38,9 @@ import 'package:ownashop/features/cart/provider.dart';
 // ADDRESS Feature
 import '/features/address/provider.dart';
 
+// WEBSITE Feature
+import 'features/website/prov.dart';
+
 class App extends StatelessWidget {
   final AuthProvider auth;
 
@@ -48,6 +51,7 @@ class App extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: auth),
+        ChangeNotifierProvider(create: (_) => sl<WebsiteItemProv>()),
         ChangeNotifierProvider(create: (_) => sl<ProductProvider>()),
         ChangeNotifierProvider(create: (_) => sl<ItemProv>()),
         ChangeNotifierProvider(create: (_) => sl<ItemPriceProvider>()),

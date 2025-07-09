@@ -3,18 +3,19 @@ import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
 import '/core/utils/formatters.dart';
+
 import '/features/cart/domain/cart.dart';
 import '/features/cart/provider.dart';
 
-class CartItemTile extends StatelessWidget {
+class CartItemCard extends StatelessWidget {
   final CartItem item;
 
-  const CartItemTile({super.key, required this.item});
+  const CartItemCard({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
     final provider = context.read<CartProvider>();
-    final resolvedImage = resolveImageUrl(item.image);
+    final resolvedImage = resolveImageUrl(item.image ?? '');
 
     return Card(
       color: AppColors.white,
@@ -48,29 +49,23 @@ class CartItemTile extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
-                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle_outline),
-                      onPressed: () {
-                        if (item.quantity > 1) {
-                          provider.updateQuantity(item.code, item.quantity - 1);
-                        }
-                      },
-                    ),
-                    Text('${item.quantity}'),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline),
-                      onPressed: () {
-                        provider.updateQuantity(item.code, item.quantity + 1);
-                      },
-                    ),
-                  ],
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: () {
+                    if (item.quantity > 1) {
+                      provider.updateQuantity(item.code, item.quantity - 1);
+                    }
+                  },
+                ),
+                Text('${item.quantity}'),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: () {
+                    provider.updateQuantity(item.code, item.quantity + 1);
+                  },
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.redAccent),

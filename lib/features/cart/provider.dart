@@ -62,12 +62,35 @@ class CartProvider with ChangeNotifier {
   }
 
   Future<bool> add(CartItem item) async {
+    final existingIndex = _items.indexWhere((e) => e.code == item.code);
+
+    // Prepare the updated list locally
+    List<CartItem> updatedItems = List.from(_items);
+
+    if (existingIndex != -1) {
+      // 🛠 Update quantity if item exists
+      final existingItem = updatedItems[existingIndex];
+      updatedItems[existingIndex] = CartItem(
+        code: existingItem.code,
+        name: existingItem.name,
+        price: existingItem.price,
+        quantity: existingItem.quantity + item.quantity,
+        image: existingItem.image,
+      );
+    } else {
+      // ✅ Add new item
+      updatedItems.add(item);
+    }
+
+    // Now sync with your cart persistence layer (DB/storage/api)
     final result = await addToCart(item);
+
     return result.fold(
       (failure) {
         _setError(failure.message);
         return false;
       },
+
       (updatedItems) {
         _items = updatedItems;
         notifyListeners();

@@ -259,16 +259,6 @@ class Uom {
   ];
 }
 
-class Specification extends Equatable {
-  final String label;
-  final String description;
-
-  const Specification({required this.label, required this.description});
-
-  @override
-  List<Object?> get props => [label, description];
-}
-
 class ItemDefault {
   final String name;
   final String? owner;

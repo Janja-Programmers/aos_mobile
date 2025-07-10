@@ -27,10 +27,18 @@ class ItemTile extends StatelessWidget {
             // Edit button
             IconButton(
               icon: const Icon(Icons.edit, color: AppColors.primary),
-              onPressed: () {
-                context.push('/edit-item/${product.name}', extra: product);
+              onPressed: () async {
+                final shouldRefresh = await context.push<bool>(
+                  '/edit-item/${product.name}',
+                  extra: product,
+                );
+
+                if (shouldRefresh == true && context.mounted) {
+                  await context.read<ProductProvider>().fetchProducts();
+                }
               },
             ),
+
             // Delete button
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
@@ -62,16 +70,17 @@ class ItemTile extends StatelessWidget {
                       product.name,
                     );
                     if (context.mounted) {
-                      topSnackBar(context, '✅ Deleted successfully');
+                      topSnackBar(context, 'Deleted successfully');
+                      await context.read<ProductProvider>().fetchProducts();
                     }
-                    final productProvider = context.read<ProductProvider>();
-                    await productProvider.fetchProducts();
-                    return;
                   } catch (e) {
                     if (context.mounted) {
-                      topSnackBar(context, '❌ Error: $e');
+                      topSnackBar(
+                        context,
+                        'Error: Unable to delete product',
+                        type: TopSnackType.error,
+                      );
                     }
-                    return;
                   }
                 }
               },

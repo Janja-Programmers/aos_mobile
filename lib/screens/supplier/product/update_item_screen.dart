@@ -60,7 +60,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   if (!context.mounted) return;
                   if (success) {
                     topSnackBar(context, 'Product saved successfully');
-                    context.pop();
+                    context.pop(true);
                   } else {
                     topSnackBar(
                       context,

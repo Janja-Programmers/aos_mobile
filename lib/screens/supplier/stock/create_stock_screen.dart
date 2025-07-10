@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ownashop/features/auth/presentation/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -89,10 +90,12 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
     }
 
     // ✅ 4. Create entry and submit
+    final currentUser = context.read<AuthProvider>().user;
+
     final entry = StockEntry(
       id: widget.entry?.id ?? '',
       docstatus: docstatus,
-      vendor: '',
+      vendor: currentUser!.username,
       items: items,
     );
 
@@ -139,38 +142,39 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            ..._itemControllers.asMap().entries.map((entry) {
-              final index = entry.key;
-              final ctrl = entry.value;
-
-              // All item codes in the list, except this current one
-              final usedCodes =
-                  _itemControllers
-                      .where((c) => c != ctrl)
-                      .map((c) => c.itemCode.text)
-                      .where((code) => code.isNotEmpty)
-                      .toList();
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Card(
-                  elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: ItemRow(
-                      controller: ctrl,
-                      usedItemCodes: usedCodes,
-                      onRemove:
-                          _itemControllers.length == 1
-                              ? null
-                              : () => setState(
-                                () => _itemControllers.removeAt(index),
-                              ),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: _itemControllers.length,
+              itemBuilder: (_, index) {
+                final ctrl = _itemControllers[index];
+                final usedCodes =
+                    _itemControllers
+                        .where((c) => c != ctrl)
+                        .map((c) => c.itemCode.text)
+                        .where((code) => code.isNotEmpty)
+                        .toList();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Card(
+                    elevation: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: ItemRow(
+                        controller: ctrl,
+                        usedItemCodes: usedCodes,
+                        onRemove:
+                            _itemControllers.length == 1
+                                ? null
+                                : () => setState(
+                                  () => _itemControllers.removeAt(index),
+                                ),
+                      ),
                     ),
                   ),
-                ),
-              );
-            }),
+                );
+              },
+            ),
 
             const SizedBox(height: 16),
             OutlinedButton.icon(
@@ -181,9 +185,7 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
                         .where((code) => code.isNotEmpty)
                         .toSet();
 
-                // Check if all items are already selected
                 if (usedCodes.length >= 100) {
-                  // Since you're fetching 100 items max
                   if (mounted) {
                     topSnackBar(context, 'All products have been added');
                   }

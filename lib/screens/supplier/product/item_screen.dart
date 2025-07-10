@@ -151,7 +151,17 @@ class _ItemScreenState extends State<ItemScreen> {
       drawer: AppDrawer(selectedIndex: 1, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
       subTitle: "Products",
-      actionButton: CustomButton(onPressed: () => context.push('/add-item')),
+      actionButton: CustomButton(
+        onPressed: () async {
+          final result = await context.push<bool>('/add-item');
+          if (result == true && context.mounted) {
+            await context.read<ProductProvider>().fetchVendorProducts(
+              context.read<AuthProvider>().user!.username,
+            );
+          }
+        },
+      ),
+
       body: content,
     );
   }

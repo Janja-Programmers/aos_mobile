@@ -9,13 +9,13 @@ class StockDetailHeader extends StatelessWidget {
   Color getStatusColor(int docstatus) {
     switch (docstatus) {
       case 0:
-        return Colors.orange;
-      case 1:
-        return Colors.green;
-      case 2:
-        return Colors.red;
-      default:
         return Colors.grey;
+      case 1:
+        return Colors.blue;
+      case 2:
+        return const Color.fromARGB(255, 215, 116, 109);
+      default:
+        return Colors.orange;
     }
   }
 
@@ -57,7 +57,7 @@ class StockDetailHeader extends StatelessWidget {
                 Chip(
                   label: Text(
                     getStatusLabel(entry.docstatus),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w500,
                     ),

@@ -15,26 +15,26 @@ class StockEntryActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (docstatus == 0) {
-      return TextButton.icon(
+      return OutlinedButton.icon(
         onPressed: onSubmit,
         icon: const Icon(Icons.send),
         label: const Text('Submit'),
-        style: TextButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: Colors.green[700],
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.green[700],
+          side: BorderSide(color: Colors.green[700]!),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         ),
       );
     }
 
     if (docstatus == 1) {
-      return TextButton.icon(
+      return OutlinedButton.icon(
         onPressed: onCancel,
         icon: const Icon(Icons.cancel),
         label: const Text('Cancel'),
-        style: TextButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: Colors.red[700],
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.red[700],
+          side: BorderSide(color: Colors.red[700]!),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         ),
       );

@@ -112,6 +112,23 @@ class ProductProvider with ChangeNotifier {
   }
 
   final getIt = GetIt.instance;
+  final apiClient = GetIt.instance<APIClient>();
+
+  Future<bool> createProductFromRaw(Map<String, dynamic> payload) async {
+    try {
+      final response = await apiClient.client.post(
+        '/api/resource/Product',
+        data: payload,
+      );
+
+      debugPrint('✅ Product created: ${response.data}');
+      await fetchProducts();
+      return true;
+    } catch (e, stack) {
+      debugPrint('❌ Failed to create product: $e\n$stack');
+      return false;
+    }
+  }
 
   Future<void> deleteProduct(String name) async {
     try {

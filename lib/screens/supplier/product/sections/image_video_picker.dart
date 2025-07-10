@@ -29,10 +29,7 @@ class ImageVideoPickerSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Product Image',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              Text('Image', style: Theme.of(context).textTheme.bodyLarge),
               const SizedBox(height: 8),
               controller.selectedImage != null
                   ? Image.file(
@@ -52,7 +49,14 @@ class ImageVideoPickerSection extends StatelessWidget {
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () => controller.pickFile(context, isImage: true),
-                child: const Text('Pick Image'),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.attach_file),
+                    SizedBox(width: 8),
+                    Text('Attach'),
+                  ],
+                ),
               ),
             ],
           ),
@@ -72,9 +76,17 @@ class ImageVideoPickerSection extends StatelessWidget {
                   ? Text('Video: $videoUrl')
                   : const Text('No video selected'),
               const SizedBox(height: 8),
+
               ElevatedButton(
                 onPressed: () => controller.pickFile(context, isImage: false),
-                child: const Text('Pick Video'),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.video_file),
+                    SizedBox(width: 8),
+                    Text('Attach'),
+                  ],
+                ),
               ),
             ],
           ),

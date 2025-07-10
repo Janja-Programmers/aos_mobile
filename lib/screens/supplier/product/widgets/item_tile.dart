@@ -28,7 +28,7 @@ class ItemTile extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.edit, color: AppColors.primary),
               onPressed: () {
-                context.push('/add-item', extra: product);
+                context.push('/edit-item/${product.name}', extra: product);
               },
             ),
             // Delete button

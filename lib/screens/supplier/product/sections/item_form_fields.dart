@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '/core/utils/validators.dart';
 import '../controllers/add_item_controller.dart';
@@ -25,41 +26,46 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
+    final isUpdate = widget.isUpdate;
 
     return Form(
       key: widget.formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Only show Item Code in update mode
+          if (isUpdate) ...[
+            const Divider(),
+            AppTextField(
+              label: 'Item Code',
+              controller: controller.itemCodeController,
+              readOnly: true,
+            ),
+          ],
+          const SizedBox(height: 10),
+
+          // 🔷 Item Name
           AppTextField(
-            label: 'Product Name',
+            label: 'Item Name',
             controller: controller.nameController,
             isRequired: true,
             validator:
-                (val) => AppValidator.required(val, fieldName: 'Product Name'),
+                (val) => AppValidator.required(val, fieldName: 'Item Name'),
           ),
           const SizedBox(height: 10),
 
+          // 🔷 Item Price
           AppTextField(
-            label: 'Product Code',
-            controller: controller.itemCodeController,
-            isRequired: true,
-            readOnly: widget.isUpdate,
-            validator:
-                (val) => AppValidator.required(val, fieldName: 'Product Code'),
-          ),
-          const SizedBox(height: 10),
-
-          AppTextField(
-            label: 'Product Price',
+            label: 'Item Price',
             controller: controller.priceController,
             isRequired: true,
             keyboardType: TextInputType.number,
             validator:
-                (val) => AppValidator.isNumber(val, fieldName: 'Product Price'),
+                (val) => AppValidator.isNumber(val, fieldName: 'Item Price'),
           ),
           const SizedBox(height: 10),
 
+          // 🔷 Category
           FutureBuilder<List<String>>(
             future: controller.fetchItemGroups(),
             builder: (context, snapshot) {
@@ -86,23 +92,23 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
               );
             },
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 20),
 
-          AppTextField(
-            label: 'Short Description',
-            controller: controller.shortDescController,
-            maxLines: 2,
+          // ℹ️ Display Information
+          const Text(
+            'Display Information',
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
 
-          // 🔻 Long Description with toggle
+          // 🔶 Website Description
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Long Description"),
+                  const Text("Website Description"),
                   TextButton(
                     onPressed: () {
                       setState(() => showRawEditor = !showRawEditor);
@@ -114,7 +120,7 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
               const SizedBox(height: 8),
               if (showRawEditor)
                 AppTextField(
-                  label: 'Long Description',
+                  label: 'Website Description',
                   controller: controller.descController,
                   maxLines: 6,
                 )
@@ -137,27 +143,72 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
           ),
           const SizedBox(height: 10),
 
-          // 🧩 Specification list
-          if (controller.websiteSpecifications.isNotEmpty)
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.websiteSpecifications.length,
-              itemBuilder: (context, index) {
-                final spec = controller.websiteSpecifications[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 4),
-                  child: ListTile(
-                    title: Text(spec.label),
-                    subtitle: Text(spec.description),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () => controller.removeSpecification(index),
-                    ),
-                  ),
-                );
-              },
-            ),
+          // 🔶 Short Website Description
+          AppTextField(
+            label: 'Short Website Description',
+            controller: controller.shortDescController,
+            maxLines: 2,
+          ),
+          const SizedBox(height: 10),
+
+          // 🔶 Website Specifications
+          Row(
+            children: [
+              Text(
+                'Website Specifications',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(width: 8),
+              TextButton.icon(
+                onPressed: controller.addSpecificationFromNewRow,
+                icon: const Icon(Icons.add, size: 18, color: Colors.black),
+                label: const Text(
+                  'Add Row',
+                  style: TextStyle(color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          Consumer<AddItemController>(
+            builder: (_, controller, _) {
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(12),
+                itemCount: controller.specControllers.length,
+                itemBuilder: (context, index) {
+                  final entry = controller.specControllers[index];
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: entry.labelController,
+                          decoration: const InputDecoration(labelText: 'Label'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextFormField(
+                          controller: entry.descriptionController,
+                          decoration: const InputDecoration(
+                            labelText: 'Description',
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          controller.specControllers.removeAt(index);
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
         ],
       ),
     );

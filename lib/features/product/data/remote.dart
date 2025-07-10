@@ -48,19 +48,19 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     try {
       final dataMap = model.toJson();
 
-      // 🔁 Encode website_specifications as JSON string
-      if (model.websiteSpecifications != null) {
-        dataMap['website_specifications'] =
-            model.websiteSpecifications
-                ?.map(
-                  (e) => {
-                    'doctype': 'Product Website Specification',
-                    'label': e.label,
-                    'description': e.description,
-                  },
-                )
-                .toList();
-      }
+      // Inject Frappe-required structure into website_specifications
+      dataMap['website_specifications'] =
+          model.websiteSpecifications
+              ?.map(
+                (spec) => {
+                  'doctype': 'Product Website Specification',
+                  'label': spec.label,
+                  'description': spec.description,
+                  'parenttype': 'Product',
+                  'parentfield': 'website_specifications',
+                },
+              )
+              .toList();
 
       final formData = FormData.fromMap({
         ...dataMap,
@@ -76,10 +76,6 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
           ),
       });
 
-      for (var field in formData.fields) {
-        appLogger.i('📝 Field: ${field.key}: ${field.value}');
-      }
-
       final response = await client.client.post(
         CREATE_PRODUCT_ENDPOINT,
         data: formData,
@@ -87,6 +83,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       );
 
       final data = response.data['data'];
+
       if (data == null || data is! Map<String, dynamic>) {
         throw Exception('Failed to parse created product');
       }

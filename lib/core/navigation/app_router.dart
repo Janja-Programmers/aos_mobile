@@ -1,21 +1,15 @@
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/screens/supplier/product/update_item_screen.dart';
 // Auth
-import '/features/product/domain/product.dart';
 import '/features/auth/presentation/auth_provider.dart';
 import '/features/auth/presentation/screens/login_screen.dart';
 import '/features/auth/presentation/screens/register_screen.dart';
 
-// Customer
-import '../../screens/customer/web-items/screens/list_screen.dart';
-import '/screens/customer/wishlist/presentation/wishlist_screen.dart';
-import '/screens/customer/cart/cart_screen.dart';
-import '/screens/customer/address/shipping_address_form.dart';
-
 // Seller
-import '/screens/customer/web-items/screens/detail_screen.dart';
 import '/screens/supplier/dashboard/dashboard.dart';
+import '/features/product/domain/product.dart';
 import '/screens/supplier/product/item_screen.dart';
+import '/screens/supplier/product/update_item_screen.dart';
+import '/screens/customer/web-items/screens/detail_screen.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';
 import '/screens/supplier/d_note/delivery_note_list_screen.dart';
 import '/screens/supplier/order/order_detail_screen.dart';
@@ -25,6 +19,12 @@ import '/features/stock/domain/entity/stock.dart';
 import '/screens/supplier/stock/create_stock_screen.dart';
 import '/screens/supplier/stock/stock_list_screen.dart';
 import '/screens/supplier/stock/stock_detail_screen.dart';
+
+// Customer
+import '/screens/customer/web-items/screens/list_screen.dart';
+import '/screens/customer/wishlist/presentation/wishlist_screen.dart';
+import '/screens/customer/cart/cart_screen.dart';
+import '/screens/customer/address/shipping_address_form.dart';
 
 class AppRouter {
   final AuthProvider auth;
@@ -73,9 +73,25 @@ class AppRouter {
         path: '/dashboard',
         builder: (context, state) => const SellerDashboard(),
       ),
-      // Items
+
+      // PRODUCTS ROUTES
+      // CREATE ROUTE
+      GoRoute(
+        path: '/add-item',
+        builder: (context, state) => const AddItemScreen(),
+      ),
+
+      // READ ROUTE
       GoRoute(path: '/items', builder: (context, state) => ItemScreen()),
-      // Item Detail
+
+      // UPDATE ROUTE
+      GoRoute(
+        path: '/edit-item/:name',
+        builder: (context, state) {
+          final product = state.extra as Product;
+          return AddItemScreen(product: product);
+        },
+      ),
 
       // Sales Order
       GoRoute(
@@ -135,14 +151,6 @@ class AppRouter {
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return ProductDetailScreen(productId: id);
-        },
-      ),
-
-      GoRoute(
-        path: '/add-item',
-        builder: (context, state) {
-          final product = state.extra as Product?;
-          return AddItemScreen(product: product);
         },
       ),
 

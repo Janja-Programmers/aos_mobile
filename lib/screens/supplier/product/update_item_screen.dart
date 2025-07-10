@@ -23,23 +23,18 @@ class AddItemScreen extends StatefulWidget {
 }
 
 class _AddItemScreenState extends State<AddItemScreen> {
-  late final AddItemController controller;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool showRawEditor = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final ctrl = context.read<AddItemController>();
-    if (widget.product != null) {
-      ctrl.setInitialProduct(widget.product!);
-    }
-  }
-
-  @override
-  void dispose() {
-    context.read<AddItemController>().disposeControllers();
-    super.dispose();
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      final ctrl = context.read<AddItemController>();
+      ctrl.reset();
+      if (widget.product != null) {
+        ctrl.setInitialProduct(widget.product!);
+      }
+    });
   }
 
   @override
@@ -63,6 +58,14 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 formKey: controller.formKey,
               ),
               const SizedBox(height: 16),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Display Images',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 8),
               ImageVideoPickerSection(
                 controller: controller,
                 product: widget.product,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '/shared/widgets/app_drawer.dart';
@@ -9,7 +10,6 @@ import '/shared/widgets/custom_button.dart';
 import '/features/auth/presentation/auth_provider.dart';
 import '/features/product/provider.dart';
 
-import 'add_product_screen.dart';
 import 'widgets/item_tile.dart';
 
 class ItemScreen extends StatefulWidget {
@@ -105,10 +105,16 @@ class _ItemScreenState extends State<ItemScreen> {
 
           // List Header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12.0,
+              vertical: 8.0,
+            ),
             child: Row(
               children: [
-                const Text("Item Name"),
+                const Text(
+                  "Item Name",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const Spacer(),
                 Text(
                   "${filteredproducts.length} of ${filteredproducts.length}",
@@ -145,7 +151,7 @@ class _ItemScreenState extends State<ItemScreen> {
       drawer: AppDrawer(selectedIndex: 1, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
       subTitle: "Products",
-      actionButton: CustomButton(pageBuilder: () => AddProductScreen()),
+      actionButton: CustomButton(onPressed: () => context.push('/add-item')),
       body: content,
     );
   }

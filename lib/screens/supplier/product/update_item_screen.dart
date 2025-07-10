@@ -6,9 +6,9 @@ import '/core/utils/snackbar.dart';
 
 import '/features/product/domain/product.dart';
 
-import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/app_drawer.dart';
-import '/shared/widgets/action_button.dart';
+import '/shared/widgets/custom_button.dart';
+import '/shared/widgets/main_bar.dart';
 
 import 'controllers/add_item_controller.dart';
 import 'sections/image_video_picker.dart';
@@ -46,6 +46,30 @@ class _AddItemScreenState extends State<AddItemScreen> {
       drawer: AppDrawer(selectedIndex: 1, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
       subTitle: isUpdate ? 'Update Product' : 'Create Product',
+      actionButton: CustomButton(
+        label: isUpdate ? 'Update' : 'Save',
+        icon: Icons.save,
+        onPressed:
+            controller.isSubmitting
+                ? null
+                : () async {
+                  final success = await controller.submit(
+                    context,
+                    widget.product,
+                  );
+                  if (!context.mounted) return;
+                  if (success) {
+                    topSnackBar(context, 'Product saved successfully');
+                    context.pop();
+                  } else {
+                    topSnackBar(
+                      context,
+                      controller.provider.error ?? 'Error saving product',
+                      type: TopSnackType.error,
+                    );
+                  }
+                },
+      ),
       body: AbsorbPointer(
         absorbing: controller.isSubmitting,
         child: SingleChildScrollView(
@@ -69,28 +93,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ImageVideoPickerSection(
                 controller: controller,
                 product: widget.product,
-              ),
-              const SizedBox(height: 16),
-              ActionButton(
-                label: isUpdate ? 'Update Product' : 'Save Product',
-                isLoading: controller.isSubmitting,
-                onPressed: () async {
-                  final success = await controller.submit(
-                    context,
-                    widget.product,
-                  );
-                  if (!mounted) return;
-                  if (success) {
-                    topSnackBar(context, 'Product saved successfully');
-                    context.pop();
-                  } else {
-                    topSnackBar(
-                      context,
-                      controller.provider.error ?? 'Error saving product',
-                      type: TopSnackType.error,
-                    );
-                  }
-                },
               ),
             ],
           ),

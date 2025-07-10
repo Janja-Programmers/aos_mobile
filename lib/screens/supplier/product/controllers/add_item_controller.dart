@@ -95,6 +95,7 @@ class AddItemController extends ChangeNotifier {
   }
 
   void removeSpecification(int index) {
+    if (specControllers.length <= 1) return;
     if (index >= 0 && index < specControllers.length) {
       specControllers.removeAt(index);
       notifyListeners();

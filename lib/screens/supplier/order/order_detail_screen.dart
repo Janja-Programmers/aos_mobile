@@ -34,26 +34,32 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
 
   Future<void> _deliverOrder(SalesOrder order) async {
     final prov = context.read<SalesOrderProvider>();
-    final result = await prov.deliver_order(order.id);
+    final result = await prov.deliverOrder(order.id);
 
     if (!mounted) return;
 
     result.fold(
-      (failure) =>
-          topSnackBar(context, failure.message, type: TopSnackType.error),
+      (failure) => topSnackBar(
+        context,
+        "Error creating delivery note",
+        type: TopSnackType.error,
+      ),
       (_) => topSnackBar(context, ' Delivery Note created successfully'),
     );
   }
 
   Future<void> _billOrder(SalesOrder order) async {
     final prov = context.read<SalesOrderProvider>();
-    final result = await prov.bill_order(order.id);
+    final result = await prov.billOrder(order.id);
 
     if (!mounted) return;
 
     result.fold(
-      (failure) =>
-          topSnackBar(context, failure.message, type: TopSnackType.error),
+      (failure) => topSnackBar(
+        context,
+        "Failed to bill Sales Order",
+        type: TopSnackType.error,
+      ),
       (_) => topSnackBar(context, 'Order billed successfully'),
     );
   }
@@ -69,7 +75,7 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
       subTitle: 'Order Detail',
       body: Builder(
         builder: (_) {
-          if (provider.loading || order == null) {
+          if (provider.detailLoading || order == null) {
             return const Center(child: CircularProgressIndicator());
           }
 

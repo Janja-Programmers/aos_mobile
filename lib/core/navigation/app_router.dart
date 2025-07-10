@@ -93,11 +93,14 @@ class AppRouter {
         },
       ),
 
-      // Sales Order
+      // SALES ORDER ROUTES
+      // Sales Order List
       GoRoute(
         path: '/sales-orders',
         builder: (context, state) => const SalesOrderListScreen(),
       ),
+
+      // Sales Order Detail
       GoRoute(
         path: '/sales-order/:id',
         builder: (context, state) {

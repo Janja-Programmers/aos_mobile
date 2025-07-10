@@ -33,7 +33,17 @@ class SalesOrderModel {
       percentDelivered: (json["per_delivered"] as num).toDouble(),
       percentBilled: (json["per_billed"] as num).toDouble(),
       items:
-          itemsJson.map((item) => SalesOrderItemModel.fromJson(item)).toList(),
+          itemsJson.map((item) {
+            // Add fallback if certain fields are missing
+            return SalesOrderItemModel.fromJson({
+              ...item,
+              'qty': item['qty'] ?? 0,
+              'rate': item['rate'] ?? 0,
+              'amount': item['amount'] ?? 0,
+              'item_code': item['item_code'] ?? '',
+              'item_name': item['item_name'] ?? '',
+            });
+          }).toList(),
     );
   }
 

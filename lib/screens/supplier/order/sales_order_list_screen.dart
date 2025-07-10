@@ -34,20 +34,37 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
   @override
   Widget build(BuildContext context) {
     return MainBarScaffold(
-      drawer: AppDrawer(selectedIndex: 5, onItemSelected: (_) {}),
+      drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
-      subTitle: 'Orders',
+      subTitle: 'Sales Order',
       body: Consumer<SalesOrderProvider>(
         builder: (context, provider, _) {
-          if (provider.loading) {
-            return const Center(child: CircularProgressIndicator());
+          if (provider.listLoading) {
+            return const Center(
+              child: SizedBox(
+                width: 32,
+                height: 32,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+            );
           }
 
           if (provider.failure != null) {
             return Center(
-              child: Text(
-                'Error: ${provider.failure!.message}',
-                style: const TextStyle(color: Colors.red),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Error: Could not load orders',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                    onPressed: _refresh,
+                  ),
+                ],
               ),
             );
           }
@@ -59,6 +76,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
           return RefreshIndicator(
             onRefresh: _refresh,
             child: ListView.builder(
+              padding: const EdgeInsets.all(16),
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: provider.orders.length,
               itemBuilder: (context, index) {

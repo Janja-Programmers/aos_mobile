@@ -116,12 +116,13 @@ class ProductProvider with ChangeNotifier {
 
   Future<bool> createProductFromRaw(Map<String, dynamic> payload) async {
     try {
+      debugPrint('📤 Creating product with payload: $payload');
       final response = await apiClient.client.post(
         '/api/resource/Product',
         data: payload,
       );
 
-      debugPrint('✅ Product created: ${response.data}');
+      debugPrint('✅ Product created from provider: ${response.data}');
       await fetchProducts();
       return true;
     } catch (e, stack) {

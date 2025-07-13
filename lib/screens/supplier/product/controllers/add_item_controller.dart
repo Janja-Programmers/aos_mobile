@@ -7,7 +7,6 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '/core/utils/api_client.dart';
 import '/core/utils/snackbar.dart';
-import '/core/utils/logger.dart';
 import '/core/di/service_locator.dart';
 
 import '/features/product/domain/product.dart';
@@ -131,106 +130,20 @@ class AddItemController extends ChangeNotifier {
         websiteSpecifications: specs,
       );
 
-      appLogger.i('📦 Submitting product: ${productToSubmit.name}');
+      final payload = _buildPayloadFromProduct(productToSubmit);
 
-      if (existingProduct != null &&
-          existingProduct.name != productToSubmit.name) {
-        topSnackBar(
-          context,
-          'Item code mismatch during update.',
-          type: TopSnackType.error,
-        );
-        return false;
-      }
+      debugPrint('📤 Submitting payload from AddItemController: $payload');
 
       final success =
           await (existingProduct == null
-              ? submitRaw(context)
+              ? provider.createProductFromRaw(payload)
               : provider.updateExistingItem(productToSubmit));
 
       return success;
     } catch (e, stack) {
-      debugPrint('Group fetch error: $e\n$stack');
-
-      debugPrint('❌ Submit failed: $e');
-      String errorMessage = 'Error saving product';
-      if (e is DioException && e.response != null) {
-        errorMessage = errorMessage;
-        if (errorMessage.contains('PermissionError')) {
-          errorMessage = 'You do not have permission to update this product.';
-        }
-      }
+      debugPrint('❌ Submit failed: $e\n$stack');
       if (!context.mounted) return false;
-      topSnackBar(context, errorMessage, type: TopSnackType.error);
-
-      debugPrint('❌ Submit error: $errorMessage');
-      return false;
-    } finally {
-      isSubmitting = false;
-      notifyListeners();
-    }
-  }
-
-  Future<bool> submitRaw(BuildContext context) async {
-    if (formKey.currentState == null || !formKey.currentState!.validate()) {
-      topSnackBar(
-        context,
-        'Please fix the form errors',
-        type: TopSnackType.error,
-      );
-      return false;
-    }
-
-    isSubmitting = true;
-    notifyListeners();
-
-    try {
-      final payload = {
-        "item_name": nameController.text.trim(),
-        "item_price": double.tryParse(priceController.text.trim()) ?? 0.0,
-        "category": groupController.text.trim(),
-        "website_description": descController.text.trim(),
-        "short_website_description": shortDescController.text.trim(),
-        "image": uploadedImageUrl,
-        "demo_video": uploadedVideoUrl,
-        "website_specifications":
-            getWebsiteSpecificationsFromControllers()
-                .map(
-                  (e) => {
-                    "doctype": "Product Website Specification",
-                    "label": e.label,
-                    "description": e.description,
-                  },
-                )
-                .toList(),
-      };
-
-      debugPrint('📤 Submitting payload: $payload');
-
-      final success = await provider.createProductFromRaw(payload);
-
-      if (success) {
-        if (context.mounted) {
-          topSnackBar(context, 'Product created successfully');
-          Navigator.pop(context);
-        }
-        return true;
-      } else {
-        if (!context.mounted) return false;
-        topSnackBar(
-          context,
-          'Failed to create product',
-          type: TopSnackType.error,
-        );
-        return false;
-      }
-    } catch (e) {
-      debugPrint('❌ SubmitRaw failed: $e');
-      topSnackBar(
-        context,
-        'Failed to create product',
-        type: TopSnackType.error,
-      );
+      topSnackBar(context, 'Error saving product', type: TopSnackType.error);
       return false;
     } finally {
       isSubmitting = false;
@@ -381,6 +294,29 @@ class AddItemController extends ChangeNotifier {
     specControllers.add(WebsiteSpecificationEntry());
 
     notifyListeners();
+  }
+
+  Map<String, dynamic> _buildPayloadFromProduct(Product p) {
+    return {
+      "item_name": p.itemName,
+      "item_price": p.itemPrice,
+      "category": p.category,
+      "vendor": p.vendor,
+      "web_long_description": p.websiteDescription,
+      "short_description": p.shortWebsiteDescription,
+      "image": p.image,
+      "demo_video": p.demoVideo,
+      "website_specifications":
+          p.websiteSpecifications
+              ?.map(
+                (e) => {
+                  "doctype": "Product Website Specification",
+                  "label": e.label,
+                  "description": e.description,
+                },
+              )
+              .toList(),
+    };
   }
 }
 

@@ -20,8 +20,8 @@ class _TopSnackBarState extends State<_TopSnackBar>
   );
 
   late final Animation<Offset> _offsetAnimation = Tween<Offset>(
-    begin: const Offset(0, -1), // Start offscreen top
-    end: Offset.zero, // Slide to visible
+    begin: const Offset(0, -1),
+    end: Offset.zero,
   ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
   @override
@@ -30,9 +30,16 @@ class _TopSnackBarState extends State<_TopSnackBar>
     _controller.forward();
 
     Future.delayed(widget.duration, () async {
-      await _controller.reverse(); // animate out
-      if (mounted) Navigator.of(context).overlay?.dispose();
+      if (!mounted) return; // extra safety
+      await _controller.reverse();
+      // overlayEntry will handle removal
     });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose(); // ✅
+    super.dispose();
   }
 
   @override
@@ -47,7 +54,6 @@ void topSnackBar(
   TopSnackType type = TopSnackType.success,
   Duration duration = const Duration(seconds: 3),
 }) {
-  final overlay = Overlay.of(context);
   final color = switch (type) {
     TopSnackType.success => Colors.green.shade600,
     TopSnackType.error => Colors.red.shade600,
@@ -61,6 +67,9 @@ void topSnackBar(
     TopSnackType.info => Icons.info,
     TopSnackType.cart => Icons.shopping_cart,
   };
+
+  final overlay = Overlay.maybeOf(context);
+  if (overlay == null) return;
 
   final overlayEntry = OverlayEntry(
     builder:

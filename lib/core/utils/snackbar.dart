@@ -30,15 +30,14 @@ class _TopSnackBarState extends State<_TopSnackBar>
     _controller.forward();
 
     Future.delayed(widget.duration, () async {
-      if (!mounted) return; // extra safety
+      if (!mounted) return;
       await _controller.reverse();
-      // overlayEntry will handle removal
     });
   }
 
   @override
   void dispose() {
-    _controller.dispose(); // ✅
+    _controller.dispose();
     super.dispose();
   }
 
@@ -48,77 +47,89 @@ class _TopSnackBarState extends State<_TopSnackBar>
   }
 }
 
+// Track if a snackbar is already visible
+bool _isSnackVisible = false;
+
 void topSnackBar(
   BuildContext context,
   String message, {
   TopSnackType type = TopSnackType.success,
   Duration duration = const Duration(seconds: 3),
 }) {
-  final color = switch (type) {
-    TopSnackType.success => Colors.green.shade600,
-    TopSnackType.error => Colors.red.shade600,
-    TopSnackType.info => Colors.blue.shade600,
-    TopSnackType.cart => Colors.black,
-  };
+  if (_isSnackVisible) return;
+  _isSnackVisible = true;
 
-  final icon = switch (type) {
-    TopSnackType.success => Icons.check_circle,
-    TopSnackType.error => Icons.error,
-    TopSnackType.info => Icons.info,
-    TopSnackType.cart => Icons.shopping_cart,
-  };
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final overlay = Overlay.of(context);
 
-  final overlay = Overlay.maybeOf(context);
-  if (overlay == null) return;
+    final color = switch (type) {
+      TopSnackType.success => Colors.green.shade600,
+      TopSnackType.error => Colors.red.shade600,
+      TopSnackType.info => Colors.blue.shade600,
+      TopSnackType.cart => Colors.black,
+    };
 
-  final overlayEntry = OverlayEntry(
-    builder:
-        (_) => Positioned(
-          top: MediaQuery.of(context).padding.top + 16,
-          left: 16,
-          right: 16,
-          child: Material(
-            color: Colors.transparent,
-            child: _TopSnackBar(
-              duration: duration,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 6,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Icon(icon, color: Colors.white),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        message,
-                        style: const TextStyle(color: Colors.white),
+    final icon = switch (type) {
+      TopSnackType.success => Icons.check_circle,
+      TopSnackType.error => Icons.error,
+      TopSnackType.info => Icons.info,
+      TopSnackType.cart => Icons.shopping_cart,
+    };
+
+    final overlayEntry = OverlayEntry(
+      builder:
+          (_) => Builder(
+            builder: (context) {
+              final paddingTop = MediaQuery.of(context).padding.top;
+              return Positioned(
+                top: paddingTop + 16,
+                left: 16,
+                right: 16,
+                child: Material(
+                  color: Colors.transparent,
+                  child: _TopSnackBar(
+                    duration: duration,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 6,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(icon, color: Colors.white),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              message,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
-        ),
-  );
+    );
 
-  overlay.insert(overlayEntry);
+    overlay.insert(overlayEntry);
 
-  // Cleanup after animation is complete
-  Future.delayed(duration + const Duration(milliseconds: 300), () {
-    overlayEntry.remove();
+    Future.delayed(duration + const Duration(milliseconds: 300), () {
+      overlayEntry.remove();
+      _isSnackVisible = false;
+    });
   });
 }

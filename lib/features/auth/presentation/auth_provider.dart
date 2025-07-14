@@ -1,5 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
+import 'package:ownashop/core/di/service_locator.dart';
+import 'package:ownashop/features/auth/domain/auth_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '/core/utils/api_client.dart';
@@ -26,6 +28,8 @@ class AuthProvider with ChangeNotifier {
   }) {
     Future.microtask(() => _restoreSession());
   }
+
+  final authRepo = sl<AuthRepository>();
 
   bool get isLoggedIn => user != null;
 
@@ -141,12 +145,26 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
+    final result = await authRepo.logout();
+
+    result.fold(
+      (failure) {
+        appLogger.e('❌ Logout API call failed: ${failure.message}');
+      },
+      (_) {
+        appLogger.i('✅ Successfully logged out from Frappe');
+      },
+    );
+
+    // Clear local session regardless of API call success
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('username');
     await prefs.remove('password');
+
     user = null;
     _defaultHome = null;
     _returnTo = null;
+
     notifyListeners();
   }
 

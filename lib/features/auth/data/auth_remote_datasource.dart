@@ -15,6 +15,7 @@ abstract class AuthRemoteDataSource {
     String phone,
     String password,
   );
+  Future<Either<Failure, void>> logout();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -68,6 +69,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       _setSessionCookie(response);
 
       return Right(response.data);
+    } catch (e) {
+      return Left(handleException(e));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> logout() async {
+    try {
+      final response = await dio.get(LOGOUT_ENDPOINT);
+
+      dio.options.headers.remove('Cookie'); // clear session
+
+      if (response.statusCode == 200) {
+        return const Right(null);
+      } else {
+        return Left(ServerFailure('Logout failed'));
+      }
     } catch (e) {
       return Left(handleException(e));
     }

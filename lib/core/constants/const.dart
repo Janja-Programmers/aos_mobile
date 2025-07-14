@@ -1,6 +1,7 @@
 // ignore_for_file: constant_identifier_names
 const String BASE_URL = 'https://ownashop.com';
 const String LOGIN_ENDPOINT = '/api/method/login';
+const String LOGOUT_ENDPOINT = "/api/method/logout";
 const String REGISTER_ENDPOINT =
     '/api/method/amani_mall.overrides.user.sign_up';
 const String WEB_ITEM_ENDPOINT = '/api/method/amani_mall.api.get_product_list';

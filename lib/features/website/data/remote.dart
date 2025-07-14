@@ -42,12 +42,8 @@ class WebsiteRemoteDataSource {
         queryParameters: {'item_code': itemCode},
       );
 
-      print("✅ API Response of fetch PRODUCT DETAIL: ${res.data}");
-
       final data = res.data['message'];
-      appLogger.i('Raw product detail response: $data'); // ADD THIS
-      final product = WebsiteItemModel.fromJson(data);
-      appLogger.i('Parsed product detail: $product'); // ADD THIS
+      final product = WebsiteItemModel.fromDetailJson(data);
 
       return Right(product);
     } catch (e) {

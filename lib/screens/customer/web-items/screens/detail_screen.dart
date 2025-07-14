@@ -76,9 +76,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
     if (error != null) {
       debugPrint('❌ Failed to load product "${widget.productName}"');
-      debugPrint(
-        '✅ Cached items: ${provider.items.map((e) => e.name).toList()}',
-      );
 
       return Scaffold(
         backgroundColor: AppColors.background,

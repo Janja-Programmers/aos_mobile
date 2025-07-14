@@ -24,9 +24,9 @@ import '../helper/contact_vendor.dart';
 import '../helper/add_to_cart_button.dart';
 
 class ProductDetailScreen extends StatefulWidget {
-  final String productId;
+  final String productName;
 
-  const ProductDetailScreen({super.key, required this.productId});
+  const ProductDetailScreen({super.key, required this.productName});
 
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
@@ -37,7 +37,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<WebsiteItemProv>().loadProductDetail(widget.productId);
+      if (context.read<WebsiteItemProv>().selectedProduct?.name !=
+          widget.productName) {
+        context.read<WebsiteItemProv>().loadProductDetail(widget.productName);
+      }
     });
   }
 
@@ -71,9 +74,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
     if (error != null) {
-      debugPrint('❌ Error loading product: ${provider.error}');
+      debugPrint('❌ Failed to load product "${widget.productName}"');
+      debugPrint(
+        '✅ Cached items: ${provider.items.map((e) => e.name).toList()}',
+      );
 
       return Scaffold(
         backgroundColor: AppColors.background,
@@ -103,7 +108,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   children: [
                     ElevatedButton.icon(
                       onPressed:
-                          () => provider.loadProductDetail(widget.productId),
+                          () => provider.loadProductDetail(widget.productName),
                       icon: const Icon(Icons.refresh),
                       label: const Text('Retry'),
                       style: ElevatedButton.styleFrom(

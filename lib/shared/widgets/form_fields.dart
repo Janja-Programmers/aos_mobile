@@ -31,7 +31,26 @@ class AppTextField extends StatelessWidget {
       readOnly: readOnly,
       onChanged: readOnly ? null : onChanged,
       decoration: InputDecoration(
-        labelText: label,
+        label: RichText(
+          text: TextSpan(
+            text: label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: Colors.grey[700]),
+            children:
+                isRequired
+                    ? const [
+                      TextSpan(
+                        text: ' *',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ]
+                    : [],
+          ),
+        ),
         border: const OutlineInputBorder(),
         fillColor: readOnly ? Colors.grey.shade100 : null,
         filled: readOnly,

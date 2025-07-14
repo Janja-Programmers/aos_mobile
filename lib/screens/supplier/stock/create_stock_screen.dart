@@ -114,7 +114,11 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
       topSnackBar(context, "Unauthorized action", type: TopSnackType.error);
     } else {
       final action = docstatus == 1 ? 'submitted' : 'saved';
-      topSnackBar(context, 'Stock Entry $action successfully');
+      topSnackBar(
+        context,
+        type: TopSnackType.success,
+        'Stock Intake $action successfully',
+      );
       await Future.delayed(const Duration(milliseconds: 400));
       if (!mounted) return;
       context.pop(true);

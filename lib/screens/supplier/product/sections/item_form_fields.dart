@@ -80,9 +80,25 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
                     groups
                         .map((g) => DropdownMenuItem(value: g, child: Text(g)))
                         .toList(),
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  label: RichText(
+                    text: TextSpan(
+                      text: 'Category',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyLarge?.copyWith(color: Colors.grey[700]),
+                      children: const [
+                        TextSpan(
+                          text: ' *',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  border: const OutlineInputBorder(),
                 ),
                 validator:
                     (value) =>

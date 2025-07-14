@@ -27,7 +27,7 @@ class SalesChartCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'Error: ${provider.failure!.message}',
+            "Error:Can't load chart",
             style: const TextStyle(color: Colors.red),
           ),
         ),

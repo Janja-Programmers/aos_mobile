@@ -1,4 +1,3 @@
-import 'package:ownashop/core/utils/logger.dart';
 import '/core/utils/api_client.dart';
 
 class VendorUtils {
@@ -7,20 +6,30 @@ class VendorUtils {
 
   Future<VendorDetails?> fetchVendor(String vendorName) async {
     try {
-      final res = await client.client.get(
+      print('✅ VendorName: $vendorName');
+
+      final res = await client.client.post(
         '/api/method/amani_mall.overrides.item.get_supplier_details',
-        queryParameters: {"vendor_name": vendorName},
+        data: {"vendor_name": vendorName},
       );
 
+      print('✅ API Response: ${res.data}');
+
       final data = res.data['message'];
+      if (data == null) {
+        print('⚠️ No "message" field in response');
+        return null;
+      }
+
+      print('✅ Vendor data: $data');
+
       return VendorDetails(
         name: data['name'] ?? '',
         email: data['email'] ?? '',
         phone: data['phone'] ?? '',
       );
     } catch (e) {
-      appLogger.e('Vendor fetch error', error: e);
-
+      print('❌ Error fetching vendor: $e');
       return null;
     }
   }

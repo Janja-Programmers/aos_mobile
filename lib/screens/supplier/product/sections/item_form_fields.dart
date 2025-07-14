@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../widgets/web_spec_table.dart';
+import '/features/product/domain/product.dart';
 import '/core/utils/validators.dart';
+
 import '../controllers/add_item_controller.dart';
+
 import '/shared/widgets/form_fields.dart';
+import 'image_video_picker.dart';
 
 class ItemFormFields extends StatefulWidget {
+  final Product? product;
   final AddItemController controller;
   final bool isUpdate;
   final GlobalKey<FormState> formKey;
 
   const ItemFormFields({
     super.key,
+    this.product,
     required this.controller,
     required this.isUpdate,
     required this.formKey,
@@ -108,32 +115,34 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
               );
             },
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
+
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Display Images',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          ImageVideoPickerSection(
+            controller: controller,
+            product: widget.product,
+          ),
+          const SizedBox(height: 10),
 
           // ℹ️ Display Information
           const Text(
             'Display Information',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
           // 🔶 Website Description
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Website Description"),
-                  TextButton(
-                    onPressed: () {
-                      setState(() => showRawEditor = !showRawEditor);
-                    },
-                    child: Text(showRawEditor ? 'Preview' : 'Edit HTML'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
               if (showRawEditor)
                 AppTextField(
                   label: 'Website Description',
@@ -168,63 +177,12 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
           const SizedBox(height: 10),
 
           // 🔶 Website Specifications
-          Row(
-            children: [
-              Text(
-                'Website Specifications',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(width: 8),
-              TextButton.icon(
-                onPressed: controller.addSpecificationFromNewRow,
-                icon: const Icon(Icons.add, size: 18, color: Colors.black),
-                label: const Text(
-                  'Add Row',
-                  style: TextStyle(color: Colors.black),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
           Consumer<AddItemController>(
-            builder: (_, controller, _) {
-              return ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(12),
-                itemCount: controller.specControllers.length,
-                itemBuilder: (context, index) {
-                  final entry = controller.specControllers[index];
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: entry.labelController,
-                          decoration: const InputDecoration(labelText: 'Label'),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextFormField(
-                          controller: entry.descriptionController,
-                          decoration: const InputDecoration(
-                            labelText: 'Description',
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          controller.removeSpecification(index);
-                        },
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
+            builder:
+                (_, controller, __) =>
+                    WebsiteSpecificationsTable(controller: controller),
           ),
+          const SizedBox(height: 10),
         ],
       ),
     );

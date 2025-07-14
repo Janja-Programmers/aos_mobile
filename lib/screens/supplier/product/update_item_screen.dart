@@ -11,7 +11,6 @@ import '/shared/widgets/custom_button.dart';
 import '/shared/widgets/main_bar.dart';
 
 import 'controllers/add_item_controller.dart';
-import 'sections/image_video_picker.dart';
 import 'sections/item_form_fields.dart';
 
 class AddItemScreen extends StatefulWidget {
@@ -80,19 +79,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 controller: controller,
                 isUpdate: isUpdate,
                 formKey: controller.formKey,
-              ),
-              const SizedBox(height: 16),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Display Images',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-              ),
-              const SizedBox(height: 8),
-              ImageVideoPickerSection(
-                controller: controller,
-                product: widget.product,
               ),
             ],
           ),

@@ -259,6 +259,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       Expanded(
                         child: ContactVendorButton(
                           onPressed: () {
+                            print('🟡 ContactVendorButton pressed');
+
                             contactVendor(context, product);
                           },
                         ),

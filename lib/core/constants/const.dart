@@ -4,7 +4,8 @@ const String LOGIN_ENDPOINT = '/api/method/login';
 const String LOGOUT_ENDPOINT = "/api/method/logout";
 const String REGISTER_ENDPOINT =
     '/api/method/amani_mall.overrides.user.sign_up';
-const String WEB_ITEM_ENDPOINT = '/api/method/amani_mall.api.get_product_list';
+const String WEB_ITEM_ENDPOINT =
+    '/api/method/webshop.webshop.api.get_product_filter_data';
 const String SINGLE_WEB_ITEM_ENDPOINT =
     '/api/method/amani_mall.api.get_product_detail';
 const String ITEM_ENDPOINT = '/api/resource/Item';

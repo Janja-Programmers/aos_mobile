@@ -72,7 +72,9 @@ class WebsiteItemModel extends Equatable {
       image:
           images.isNotEmpty
               ? images.first
-              : (json['image'] is String ? json['image'] : ''),
+              : (json['website_image'] is String
+                  ? json['website_image'].toString().trim()
+                  : ''),
 
       images: images,
       thumbnail: json['thumbnail'] ?? '',
@@ -80,15 +82,15 @@ class WebsiteItemModel extends Equatable {
       itemCode: json['item_code'] ?? '',
       description: json['short_description'] ?? '',
       title: json['title'] ?? '',
-      itemGroup: json['category'] ?? '',
+      itemGroup: json['item_group'] ?? '',
       shortDescription: json['short_description'] ?? '',
       longDescription:
-          json['long_description'] is String
-              ? cleanHtml(json['long_description'])
+          json['web_long_description'] is String
+              ? cleanHtml(json['web_long_description'])
               : '',
       onBackorder: json['on_backorder'] == 1,
       published: json['published'] == 1,
-      price: (json['price'] ?? 0).toDouble(),
+      price: (json['price_list_rate'] ?? 0).toDouble(),
       inStock: json['in_stock'] ?? false,
       specifications:
           (json['specifications'] as List<dynamic>?)

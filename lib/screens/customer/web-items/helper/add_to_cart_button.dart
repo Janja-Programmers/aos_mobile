@@ -35,7 +35,8 @@ class _AddToCartButtonState extends State<AddToCartButton> {
           topSnackBar(
             context,
             '${widget.item.name} added to cart',
-            type: TopSnackType.success, // or `cart` if you prefer custom styling
+            type:
+                TopSnackType.success, // or `cart` if you prefer custom styling
           );
         }
       },
@@ -46,7 +47,7 @@ class _AddToCartButtonState extends State<AddToCartButton> {
         textStyle: const TextStyle(fontSize: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      icon: const Icon(Icons.shopping_cart),
+      icon: const Icon(Icons.shopping_bag_outlined, color: Colors.grey),
       label: Text(_added ? 'Go to Cart' : 'Add to Cart'),
     );
   }

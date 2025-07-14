@@ -18,8 +18,8 @@ class WebsiteRemoteDataSource {
   Future<Either<Failure, List<WebsiteItem>>> fetchItems() async {
     try {
       final res = await _client.client.get(WEB_ITEM_ENDPOINT);
-      print("✅ API Response of fetch ITEMS: ${res.data}");
-      final List<dynamic> list = res.data['message'];
+      appLogger.i("✅ API Response of fetch ITEMS: ${res.data}");
+      final List<dynamic> list = res.data['message']['items'];
 
       final items =
           list.map((item) {

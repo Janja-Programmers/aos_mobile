@@ -26,7 +26,7 @@ class ImageOrPlaceholder extends StatelessWidget {
           imageUrl!,
           width: double.infinity,
           height: height,
-          fit: BoxFit.cover,
+          fit: BoxFit.contain,
           errorBuilder: (_, _, _) => _buildPlaceholder(),
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) {

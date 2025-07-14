@@ -21,14 +21,18 @@ class ProductTitleAndPrice extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         Text(category, style: const TextStyle(color: Colors.grey)),
         const SizedBox(height: 8),
         Text(
           "Sh $price",
-          style: const TextStyle(fontSize: 20, color: Colors.green),
+          style: const TextStyle(
+            fontSize: 24,
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         if (oldPrice != null)
           Text(

@@ -137,8 +137,8 @@ class WebsiteItemModel extends Equatable {
       itemGroup: json['category'] ?? '',
       shortDescription: json['short_description'] ?? '',
       longDescription:
-          json['web_long_description'] is String
-              ? cleanHtml(json['web_long_description'])
+          json['long_description'] is String
+              ? cleanHtml(json['long_description'])
               : '',
       onBackorder: json['on_backorder'] == 1,
       published: json['published'] == 1,

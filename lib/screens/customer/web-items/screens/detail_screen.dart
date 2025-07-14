@@ -87,7 +87,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 12),
+                const SizedBox(height: 6),
                 const Text(
                   'Something went wrong',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
@@ -196,81 +196,100 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ProductImageWithVideo(
-                    imageUrls:
-                        product.images.isNotEmpty
-                            ? product.images
-                            : [product.imageUrl],
-                    videoUrl: product.demoVideoUrl ?? "",
-                  ),
+                  Card(
+                    elevation: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ProductImageWithVideo(
+                            imageUrls:
+                                product.images.isNotEmpty
+                                    ? product.images
+                                    : [product.imageUrl],
+                            videoUrl: product.demoVideoUrl ?? "",
+                          ),
 
-                  const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                  ProductTitleAndPrice(
-                    title: product.id,
-                    category: product.itemGroup,
-                    price: product.price,
-                  ),
-                  const SizedBox(height: 8),
+                          ProductTitleAndPrice(
+                            title: product.id,
+                            category: product.itemGroup,
+                            price: product.price,
+                          ),
+                          const SizedBox(height: 8),
 
-                  ProductAvailabilityAndRating(
-                    inStock: product.inStock,
-                    rating:
-                        product.reviews.isNotEmpty
-                            ? product.reviews
-                                    .map((e) => e.rating)
-                                    .reduce((a, b) => a + b) /
-                                product.reviews.length
-                            : 0.0,
-                    totalReviews: product.reviews.length,
-                  ),
+                          ProductAvailabilityAndRating(
+                            inStock: product.inStock,
+                            rating:
+                                product.reviews.isNotEmpty
+                                    ? product.reviews
+                                            .map((e) => e.rating)
+                                            .reduce((a, b) => a + b) /
+                                        product.reviews.length
+                                    : 0.0,
+                            totalReviews: product.reviews.length,
+                          ),
 
-                  const SizedBox(height: 12),
+                          const SizedBox(height: 6),
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child:
-                            product.inStock
-                                ? isInCart
-                                    ? ElevatedButton.icon(
-                                      onPressed: () => context.go('/cart'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.black,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 6,
-                                        ),
-                                        textStyle: const TextStyle(
-                                          fontSize: 14,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                      ),
-                                      icon: const Icon(Icons.shopping_cart),
-                                      label: const Text('View in Cart'),
-                                    )
-                                    : AddToCartButton(item: cartItem)
-                                : const SizedBox.shrink(),
+                          Row(
+                            children: [
+                              Expanded(
+                                child:
+                                    product.inStock
+                                        ? isInCart
+                                            ? ElevatedButton.icon(
+                                              onPressed:
+                                                  () => context.go('/cart'),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.black,
+                                                foregroundColor: Colors.white,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 6,
+                                                    ),
+                                                textStyle: const TextStyle(
+                                                  fontSize: 14,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                              ),
+                                              icon: const Icon(
+                                                Icons.shopping_cart,
+                                              ),
+                                              label: const Text('View in Cart'),
+                                            )
+                                            : AddToCartButton(item: cartItem)
+                                        : const SizedBox.shrink(),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ContactVendorButton(
+                                  onPressed: () {
+                                    print('🟡 ContactVendorButton pressed');
+
+                                    contactVendor(context, product);
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 6),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ContactVendorButton(
-                          onPressed: () {
-                            print('🟡 ContactVendorButton pressed');
-
-                            contactVendor(context, product);
-                          },
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-
-                  const SizedBox(height: 12),
 
                   // --- Conditional Description ---
                   if ((product.shortDescription.isNotEmpty) ||
@@ -279,19 +298,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       shortDesc: product.shortDescription,
                       longDesc: product.longDescription,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                   ],
 
                   // --- Conditional Specs ---
                   if (product.specifications.isNotEmpty) ...[
                     ProductSpecificationsList(specs: product.specifications),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                   ],
 
                   // --- Conditional Reviews ---
                   if (product.reviews.isNotEmpty) ...[
                     ProductReviews(reviews: product.reviews),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                   ],
                 ],
               ),

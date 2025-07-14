@@ -7,13 +7,8 @@ import '../utils/url_launcher.dart';
 import '../utils/vendor_prov.dart';
 
 void contactVendor(BuildContext context, WebsiteItem websiteItem) async {
-  print('🟢 contactVendor CALLED');
-
   final vendorName = websiteItem.owner.trim();
-  print('🟡 vendorName: "$vendorName"');
-
   if (vendorName.isEmpty) {
-    print('🔴 vendorName is empty, showing alert');
     showDialog(
       context: context,
       builder:
@@ -28,16 +23,13 @@ void contactVendor(BuildContext context, WebsiteItem websiteItem) async {
   }
 
   final vendorProvider = context.read<VendorProvider>();
-  print('🟠 calling loadVendor...');
   await vendorProvider.loadVendor(vendorName);
-  print('🟠 loadVendor finished');
 
   if (!context.mounted) return;
 
   showDialog(
     context: context,
     builder: (_) {
-      print('🟢 showing dialog with vendor info');
       return Consumer<VendorProvider>(
         builder: (context, provider, _) {
           if (provider.loading) {
@@ -58,14 +50,37 @@ void contactVendor(BuildContext context, WebsiteItem websiteItem) async {
           }
 
           return AlertDialog(
-            title: Text('Vendor: ${vendor.name}'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (vendor.email.isNotEmpty) Text('📧 ${vendor.email}'),
-                if (vendor.phone.isNotEmpty) Text('📞 ${vendor.phone}'),
-              ],
+            title: const Text('Vendor Contact Information'),
+            content: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05), // transparent feel
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (vendor.name.isNotEmpty)
+                    _InfoRow(
+                      icon: Icons.person,
+                      label: 'Name',
+                      value: vendor.name,
+                    ),
+                  if (vendor.email.isNotEmpty)
+                    _InfoRow(
+                      icon: Icons.email,
+                      label: 'Email',
+                      value: vendor.email,
+                    ),
+                  if (vendor.phone.isNotEmpty)
+                    _InfoRow(
+                      icon: Icons.phone,
+                      label: 'Phone',
+                      value: vendor.phone,
+                    ),
+                ],
+              ),
             ),
             actions: [
               if (vendor.phone.isNotEmpty)
@@ -83,4 +98,46 @@ void contactVendor(BuildContext context, WebsiteItem websiteItem) async {
       );
     },
   );
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: Colors.black54),
+          const SizedBox(width: 4),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: DefaultTextStyle.of(
+                  context,
+                ).style.copyWith(fontSize: 14),
+                children: [
+                  TextSpan(
+                    text: '$label: ',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  TextSpan(text: value),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

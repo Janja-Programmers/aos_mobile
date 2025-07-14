@@ -198,13 +198,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 children: [
                   Card(
                     elevation: 2,
-                    margin: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     color: Colors.white,
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -272,12 +271,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                             : AddToCartButton(item: cartItem)
                                         : const SizedBox.shrink(),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 6),
                               Expanded(
                                 child: ContactVendorButton(
                                   onPressed: () {
-                                    print('🟡 ContactVendorButton pressed');
-
                                     contactVendor(context, product);
                                   },
                                 ),

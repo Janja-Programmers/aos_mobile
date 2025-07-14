@@ -118,6 +118,7 @@ class WebsiteItemModel extends Equatable {
 
     return WebsiteItemModel(
       id: json['name'],
+      owner: json['owner'],
       name: json['name'] ?? '',
 
       // 👇 FIX: Fall back to `json['image']` if multi-image list is empty

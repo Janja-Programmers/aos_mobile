@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/colors.dart';
 
 class DrawerItem extends StatelessWidget {
   final IconData icon;
@@ -18,16 +17,17 @@ class DrawerItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: selected ? AppColors.white : Colors.grey[800]),
+      leading: Icon(icon, color: selected ? Colors.black : Colors.black),
       title: Text(
         title,
         style: TextStyle(
-          color: selected ? AppColors.white : Colors.grey[800],
+          color: Colors.black,
           fontWeight: selected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
       selected: selected,
-      selectedTileColor: Colors.black,
+      selectedTileColor: Colors.white,
+      tileColor: Colors.transparent,
       onTap: onTap,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       contentPadding: const EdgeInsets.symmetric(

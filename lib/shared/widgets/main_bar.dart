@@ -24,6 +24,7 @@ class MainBarScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       key: scaffoldKey,
       drawer: drawer,
       body: Column(

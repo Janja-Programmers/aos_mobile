@@ -47,13 +47,6 @@ class _SellerDashboardState extends State<SellerDashboard> {
           /// 👇 Sales Chart Card
           const SalesChartCard(),
 
-          const SizedBox(height: 20),
-
-          /// 👇 Dashboard Section Title
-          Text('Quick Access', style: Theme.of(context).textTheme.titleMedium),
-
-          const SizedBox(height: 10),
-
           /// 👇 Dashboard Grid Tiles
           GridView.count(
             shrinkWrap: true,
@@ -66,7 +59,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
               DashboardTile(
                 title: AppStrings.items,
                 icon: Icons.inventory_2,
-                color: Colors.white,
+                color: Colors.black,
                 onTap: () {
                   if (user != null) context.push('/items', extra: user!);
                 },
@@ -74,19 +67,19 @@ class _SellerDashboardState extends State<SellerDashboard> {
               DashboardTile(
                 title: AppStrings.stock,
                 icon: Icons.inventory,
-                color: Colors.white,
+                color: Colors.black,
                 onTap: () => context.push('/stock-entry'),
               ),
               DashboardTile(
                 title: AppStrings.orders,
                 icon: Icons.receipt_long,
-                color: Colors.white,
+                color: Colors.black,
                 onTap: () => context.push('/sales-orders'),
               ),
               DashboardTile(
                 title: AppStrings.deliveryNote,
                 icon: Icons.local_shipping,
-                color: Colors.white,
+                color: Colors.black,
                 onTap: () => context.push('/delivery-notes'),
               ),
             ],

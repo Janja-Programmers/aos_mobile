@@ -38,65 +38,60 @@ class ProductCard extends StatelessWidget {
                   fallbackText: item.name,
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: AppColors.black,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppColors.black,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item.itemGroup,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.black,
-                        ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.itemGroup,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.black,
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        formatCurrency(item.price),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.black,
-                        ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      formatCurrency(item.price),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.black,
                       ),
-                      const SizedBox(height: 4),
-                      item.inStock
-                          ? SizedBox(
-                            width: double.infinity,
-                            child: AddToCartButton(
-                              item: CartItem(
-                                code: item.itemCode,
-                                name: item.name,
-                                price: item.price.toDouble(),
-                                quantity: 1,
-                                image: item.imageUrl,
-                              ),
-                            ),
-                          )
-                          : const Text(
-                            'Out of Stock',
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 220, 71, 61),
-                              fontWeight: FontWeight.bold,
+                    ),
+                    const SizedBox(height: 4),
+                    item.inStock
+                        ? SizedBox(
+                          width: double.infinity,
+                          child: AddToCartButton(
+                            item: CartItem(
+                              code: item.itemCode,
+                              name: item.name,
+                              price: item.price.toDouble(),
+                              quantity: 1,
+                              image: item.imageUrl,
                             ),
                           ),
-                    ],
-                  ),
+                        )
+                        : const Text(
+                          'Out of Stock',
+                          style: TextStyle(
+                            color: Color.fromARGB(255, 220, 71, 61),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                  ],
                 ),
               ),
             ],

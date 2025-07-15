@@ -1,15 +1,21 @@
 import 'package:dartz/dartz.dart';
-import 'package:ownashop/core/errors/failures.dart';
-import 'package:ownashop/core/errors/exception.dart';
+import 'package:ownashop/core/utils/logger.dart';
+
+import '/core/errors/failures.dart';
+import '/core/errors/exception.dart';
 
 import '../domain/cart.dart';
 import '../domain/repo.dart';
+
 import 'local.dart';
 import 'model.dart';
+import 'remote.dart';
 
 class CartRepoImpl implements CartRepo {
   final CartLocalDataSource local;
-  CartRepoImpl(this.local);
+  final CartRemoteDataSource remote;
+
+  CartRepoImpl(this.local, this.remote);
 
   @override
   Future<Either<Failure, List<CartItem>>> addItem(CartItem item) async {
@@ -65,6 +71,18 @@ class CartRepoImpl implements CartRepo {
       return const Right(unit);
     } catch (e) {
       return Left(handleException('Failed to update quantity: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> updateRemoteCart(CartItem item) async {
+    try {
+      final model = CartItemModel.fromEntity(item);
+      appLogger.i('Syncing cart item to remote: ${model.toJson()}');
+      return await remote.updateCartItem(model);
+    } catch (e) {
+      appLogger.e('Failed to sync cart item', error: e);
+      return Left(handleException('Failed to sync cart item'));
     }
   }
 }

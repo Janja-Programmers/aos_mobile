@@ -1,4 +1,4 @@
-// ignore_for_file: constant_identifier_names
+// ignore_for_file: constant_identifier_names, non_constant_identifier_names
 const String BASE_URL = 'https://ownashop.com';
 const String LOGIN_ENDPOINT = '/api/method/login';
 const String LOGOUT_ENDPOINT = "/api/method/logout";
@@ -18,3 +18,5 @@ const String STOCK_ENTRY_ENDPOINT = '/api/resource/Stock Intake';
 const String ADDRESS_ENDPOINT = '/api/resource/Address';
 const String ALL_PRODUCTS_ENDPOINT = '/api/method/amani_mall.api.get_products';
 const String CREATE_PRODUCT_ENDPOINT = '/api/resource/Product';
+final String ADD_CART_ENDPOINT =
+    '/api/method/amani_mall.overrides.cart.update_cart';

@@ -69,6 +69,7 @@ import '/features/cart/domain/usecase.dart';
 import '/features/cart/domain/repo.dart';
 import '/features/cart/data/repo_impl.dart';
 import '/features/cart/data/local.dart';
+import '/features/cart/data/remote.dart';
 import '/features/cart/provider.dart';
 
 /***** ADDRESS ********/
@@ -257,8 +258,12 @@ Future<void> init() async {
   sl.registerLazySingleton<CartLocalDataSource>(
     () => CartLocalDataSource(sl()),
   );
+  sl.registerLazySingleton<CartRemoteDataSource>(
+    () => CartRemoteDataSource(sl()),
+  );
+
   // === Repository ===
-  sl.registerLazySingleton<CartRepo>(() => CartRepoImpl(sl()));
+  sl.registerLazySingleton<CartRepo>(() => CartRepoImpl(sl(), sl()));
   // === Domain ===
   sl.registerLazySingleton(() => GetCartItemsUseCase(sl()));
   sl.registerLazySingleton(() => AddToCartUseCase(sl()));

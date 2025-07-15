@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/core/utils/api_client.dart';
 
-import '/core/utils/logger.dart';
 import '/core/di/service_locator.dart';
+import '/core/utils/api_client.dart';
+import '/core/utils/logger.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
 import '/features/address/data/datasource/local.dart';
@@ -10,6 +10,7 @@ import '/features/address/data/datasource/local.dart';
 import '../order/domain/sales_order.dart';
 import '../order/domain/usecases.dart';
 
+import 'domain/repo.dart';
 import 'domain/cart.dart';
 import 'domain/usecase.dart';
 
@@ -32,6 +33,8 @@ class CartProvider with ChangeNotifier {
 
   final _authProvider = sl<AuthProvider>();
   final _localAddressRepo = sl<LocalAddressRepository>();
+
+  final CartRepo repo = sl<CartRepo>();
 
   List<CartItem> _items = [];
   List<CartItem> get items => _items;
@@ -82,15 +85,21 @@ class CartProvider with ChangeNotifier {
       updatedItems.add(item);
     }
 
-    // Now sync with your cart persistence layer (DB/storage/api)
+    // First, update local storage (DB/file/etc.)
     final result = await addToCart(item);
+
+    // Then, update remote cart (fire-and-forget or handle error optionally)
+    final remoteResult = await repo.updateRemoteCart(item);
+    remoteResult.fold(
+      (failure) => _setError("Remote sync failed: ${failure.message}"),
+      (_) {}, // ignore success
+    );
 
     return result.fold(
       (failure) {
         _setError(failure.message);
         return false;
       },
-
       (updatedItems) {
         _items = updatedItems;
         notifyListeners();

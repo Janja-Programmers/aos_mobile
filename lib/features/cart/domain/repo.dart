@@ -9,4 +9,7 @@ abstract class CartRepo {
   Future<Either<Failure, Unit>> removeItem(String code);
   Future<Either<Failure, Unit>> updateQuantity(String code, int quantity);
   Future<Either<Failure, Unit>> clearCart();
+
+  // 🔄 New: Remote sync
+  Future<Either<Failure, Unit>> updateRemoteCart(CartItem item);
 }

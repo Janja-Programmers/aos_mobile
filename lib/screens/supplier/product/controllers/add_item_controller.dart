@@ -204,11 +204,17 @@ class AddItemController extends ChangeNotifier {
     final sdkInt = androidInfo.version.sdkInt;
 
     if (sdkInt >= 33) {
-      // Use both for safety
-      final storageStatus = await Permission.storage.request();
+      final mediaPermission =
+          isImage
+              ? Permission
+                  .photos // For images
+              : Permission.videos; // For videos
+
+      final mediaStatus = await mediaPermission.request();
+
       return PermissionResult(
-        granted: storageStatus.isGranted,
-        permanentlyDenied: storageStatus.isPermanentlyDenied,
+        granted: mediaStatus.isGranted,
+        permanentlyDenied: mediaStatus.isPermanentlyDenied,
       );
     } else {
       final storageStatus = await Permission.storage.request();

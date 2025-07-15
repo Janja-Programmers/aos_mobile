@@ -66,7 +66,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
               DashboardTile(
                 title: AppStrings.items,
                 icon: Icons.inventory_2,
-                color: Colors.black,
+                color: Colors.white,
                 onTap: () {
                   if (user != null) context.push('/items', extra: user!);
                 },
@@ -74,19 +74,19 @@ class _SellerDashboardState extends State<SellerDashboard> {
               DashboardTile(
                 title: AppStrings.stock,
                 icon: Icons.inventory,
-                color: Colors.black,
+                color: Colors.white,
                 onTap: () => context.push('/stock-entry'),
               ),
               DashboardTile(
                 title: AppStrings.orders,
                 icon: Icons.receipt_long,
-                color: Colors.black,
+                color: Colors.white,
                 onTap: () => context.push('/sales-orders'),
               ),
               DashboardTile(
                 title: AppStrings.deliveryNote,
                 icon: Icons.local_shipping,
-                color: Colors.black,
+                color: Colors.white,
                 onTap: () => context.push('/delivery-notes'),
               ),
             ],

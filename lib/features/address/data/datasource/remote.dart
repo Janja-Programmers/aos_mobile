@@ -8,7 +8,8 @@ import '../../domain/address.dart';
 import '../model.dart';
 
 abstract class AddressRemoteDatasource {
-  Future<String> createAddress(Address address);
+  Future<Address> createAddress(Address address);
+  Future<void> updateCartShippingAddress(String addressName);
 }
 
 class AddressRemoteDatasourceImpl implements AddressRemoteDatasource {
@@ -17,17 +18,29 @@ class AddressRemoteDatasourceImpl implements AddressRemoteDatasource {
   AddressRemoteDatasourceImpl(this.apiClient);
 
   @override
-  Future<String> createAddress(Address address) async {
+  Future<Address> createAddress(Address address) async {
     final model = AddressModel.fromEntity(address);
 
-    final res = await apiClient.client.post(
-      ADDRESS_ENDPOINT,
-      data: model.toJson(),
-    );
+    final payload = {"doc": model.toJson()};
 
-    final name = res.data['data']?['name'];
-    if (name == null) throw Exception('Address creation failed');
-    appLogger.i('Address created: $name');
-    return name;
+    final res = await apiClient.client.post(ADDRESS_ENDPOINT, data: payload);
+
+    final data = res.data['message'];
+    if (data == null) throw Exception('Address creation failed');
+
+    final created = AddressModel.fromMap(data).toEntity();
+
+    appLogger.i('Address created: ${created.title}');
+    return created;
+  }
+
+  @override
+  Future<void> updateCartShippingAddress(String addressName) async {
+    final payload = {"address_type": "Shipping", "address_name": addressName};
+
+    await apiClient.client.post(
+      '/api/method/amani_mall.overrides.cart.update_cart_address',
+      data: payload,
+    );
   }
 }

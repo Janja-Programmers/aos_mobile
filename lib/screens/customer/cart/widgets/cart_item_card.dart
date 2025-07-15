@@ -26,6 +26,8 @@ class CartItemCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text("Items"),
+            const SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -78,11 +80,11 @@ class CartItemCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  'Subtotal: KES ${(item.price * item.quantity).toStringAsFixed(2)}',
+                  'Sh ${(item.price * item.quantity).toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Colors.green,
+                    fontSize: 12,
+                    color: Colors.black,
                   ),
                 ),
               ],

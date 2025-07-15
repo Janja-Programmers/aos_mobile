@@ -23,17 +23,15 @@ class AddressProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    try {
-      final name = await repository.createShippingAddress(address);
-      await fetchShippingAddresses(); // Optional: update local list
-      return name;
-    } catch (e) {
-      _error = e.toString();
+    final result = await repository.createShippingAddress(address);
+
+    _isLoading = false;
+    notifyListeners();
+
+    return result.fold((failure) {
+      _error = failure.message;
       return null;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+    }, (name) => name);
   }
 
   /// Get all saved shipping addresses (local)
@@ -42,13 +40,14 @@ class AddressProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    try {
-      _addresses = await repository.fetchShippingAddresses();
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+    final result = await repository.fetchShippingAddresses();
+
+    _isLoading = false;
+    result.fold(
+      (failure) => _error = failure.message,
+      (data) => _addresses = data,
+    );
+
+    notifyListeners();
   }
 }

@@ -140,11 +140,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                 controller: _scrollController,
                                 padding: const EdgeInsets.all(8),
                                 gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2,
+                                    const SliverGridDelegateWithMaxCrossAxisExtent(
+                                      maxCrossAxisExtent: 200,
                                       mainAxisSpacing: 12,
                                       crossAxisSpacing: 12,
-                                      childAspectRatio: 0.7,
+                                      childAspectRatio: 0.65,
                                     ),
                                 itemCount: items.length,
                                 itemBuilder: (context, index) {

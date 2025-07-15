@@ -33,3 +33,17 @@ class CartRemoteDataSource {
     }
   }
 }
+
+class OrderService {
+  final APIClient apiClient;
+
+  OrderService(this.apiClient);
+
+  Future<void> placeOrder() async {
+    final result = await apiClient.client.post(
+      '/api/method/amani_mall.overrides.cart.place_order',
+    );
+
+    appLogger.i('Order response: ${result.data}');
+  }
+}

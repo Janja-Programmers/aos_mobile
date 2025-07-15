@@ -10,8 +10,10 @@ import '/features/cart/provider.dart';
 import '/shared/widgets/app_bars.dart';
 
 import 'controllers/place_order.dart';
-import 'widgets/cart_item_card.dart';
-import 'widgets/cart_footer.dart';
+
+import 'widgets/cart_items_card.dart';
+import 'widgets/payment_summary_card.dart';
+import 'widgets/shipping_card.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -51,38 +53,16 @@ class CartScreen extends StatelessWidget {
             return const Center(child: Text('Your cart is empty.'));
           }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          final controller = PlaceOrderController(context);
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                color: Colors.white70,
-                child: const Text(
-                  'Shopping Cart',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder:
-                      (context, index) => CartItemCard(item: items[index]),
-                ),
-              ),
-              const Divider(height: 1),
-              CartFooter(
-                total: total,
-                onPlaceOrder: () async {
-                  final controller = PlaceOrderController(context);
-                  await controller.placeOrder();
-                },
-              ),
+              CartItemsCard(items: items),
+              const SizedBox(height: 16),
+              ShippingAddressCard(controller: controller),
+              const SizedBox(height: 16),
+              PaymentSummaryCard(total: total, controller: controller),
             ],
           );
         },

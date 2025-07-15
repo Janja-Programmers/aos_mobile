@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ownashop/core/di/service_locator.dart';
+import 'package:ownashop/core/utils/api_client.dart';
+import 'package:ownashop/core/utils/logger.dart';
+import 'package:ownashop/features/cart/data/remote.dart';
 import 'package:provider/provider.dart';
 
 import '/features/cart/provider.dart';
@@ -11,7 +15,7 @@ class PlaceOrderController {
 
   PlaceOrderController(this.context);
 
-  Future<void> placeOrder() async {
+  Future<void> createAdress() async {
     final cart = context.read<CartProvider>();
     final user = context.read<AuthProvider>().user;
 
@@ -47,6 +51,29 @@ class PlaceOrderController {
         _showSuccessDialog();
       },
     );
+  }
+
+  Future<void> placeOrder() async {
+    _showLoading();
+
+    try {
+      final orderService = OrderService(
+        sl<APIClient>(),
+      ); // Or inject if preferred
+
+      await orderService.placeOrder();
+
+      if (!context.mounted) return;
+      Navigator.of(context).pop(); // Close loading
+
+      _showSuccessDialog();
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.of(context).pop(); // Close loading
+
+      _showErrorDialog('Failed to place order. Please try again.');
+      appLogger.e('❌ Order placement error: $e');
+    }
   }
 
   void _showLoading() {

@@ -15,12 +15,6 @@ import 'features/product/provider.dart';
 import 'screens/customer/web-items/utils/vendor_prov.dart';
 import 'screens/customer/web-items/utils/vendor_utils.dart';
 
-// ITEM Feature
-import 'features/item/prov.dart';
-
-// ITEMPRICE Feature
-import 'features/itemPrice/prov.dart';
-
 // SALESORDER Feature
 import 'features/order/prov.dart';
 
@@ -54,8 +48,6 @@ class App extends StatelessWidget {
         ChangeNotifierProvider<AuthProvider>.value(value: auth),
         ChangeNotifierProvider(create: (_) => sl<WebsiteItemProv>()),
         ChangeNotifierProvider(create: (_) => sl<ProductProvider>()),
-        ChangeNotifierProvider(create: (_) => sl<ItemProv>()),
-        ChangeNotifierProvider(create: (_) => sl<ItemPriceProvider>()),
         ChangeNotifierProvider(create: (_) => sl<SalesOrderProvider>()),
         ChangeNotifierProvider(create: (_) => sl<DeliveryNoteProvider>()),
         ChangeNotifierProvider(create: (_) => sl<StockEntryProvider>()),

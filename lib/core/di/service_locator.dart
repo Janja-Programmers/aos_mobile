@@ -27,20 +27,6 @@ import '/features/product/domain/usecase.dart';
 import '/features/product/provider.dart';
 import '/screens/customer/web-items/utils/vendor_utils.dart';
 
-/*****  ITEMS *******/
-import '/features/item/domain/repo.dart';
-import '/features/item/domain/usecases.dart';
-import '/features/item/data/remote.dart';
-import '/features/item/data/repo_impl.dart';
-import '/features/item/prov.dart';
-
-/***** ITEMPRICE *******/
-import '/features/itemPrice/data/remote.dart';
-import '/features/itemPrice/data/repo_impl.dart';
-import '/features/itemPrice/domain/repo.dart';
-import '/features/itemPrice/domain/usecase.dart';
-import '/features/itemPrice/prov.dart';
-
 /***** SALESORDER *******/
 import '/features/order/data/remote.dart';
 import '/features/order/data/repo_impl.dart';
@@ -137,47 +123,6 @@ Future<void> init() async {
   sl.registerFactory(
     () => WebsiteItemProv(getAllItems: sl(), getSingleItem: sl()),
   );
-
-  // ITEMS Doctype
-
-  // 1. Remote data source
-  sl.registerLazySingleton(() => ItemRemoteDataSource(sl<APIClient>()));
-  // 2. Repository
-  sl.registerLazySingleton<ItemRepo>(
-    () => ItemRepoImpl(sl<ItemRemoteDataSource>()),
-  );
-  // 3. Use Cases
-  sl.registerLazySingleton(() => GetAllItemsUseCase(sl<ItemRepo>()));
-  sl.registerLazySingleton(() => GetItemByNameUseCase(sl<ItemRepo>()));
-  sl.registerLazySingleton(() => CreateItemUseCase(sl<ItemRepo>()));
-  sl.registerLazySingleton(() => UpdateItemUseCase(sl<ItemRepo>()));
-  // 4. Provider (State Management)
-  sl.registerFactory(
-    () => ItemProv(
-      getAllItems: sl(),
-      getItemByName: sl(),
-      createItem: sl(),
-      updateItem: sl(),
-    ),
-  );
-
-  // ITEMPRICE Doctype
-
-  // === Data ===
-  sl.registerLazySingleton<ItemPriceRemoteDS>(
-    () => ItemPriceRemoteDS(sl<APIClient>()),
-  );
-  // === Repository ===
-  sl.registerLazySingleton<ItemPriceRepo>(
-    () => ItemPriceRepoImpl(remote: sl()),
-  );
-
-  // === Domain ===
-  sl.registerLazySingleton(() => GetAllItemPrices(sl()));
-  sl.registerLazySingleton(() => CreateItemPrice(sl()));
-
-  // === PROVIDER ===
-  sl.registerFactory(() => ItemPriceProvider(getAll: sl(), create: sl()));
 
   // SALESORDER Doctype
   // === Data Layer ===

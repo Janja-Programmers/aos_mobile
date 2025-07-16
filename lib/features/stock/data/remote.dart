@@ -1,5 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:flutter/material.dart';
 
 import '/core/constants/const.dart';
 import '/core/errors/failures.dart';
@@ -19,11 +18,7 @@ class StockEntryRemoteDS {
     try {
       final res = await _client.client.get(
         STOCK_ENTRY_ENDPOINT,
-        queryParameters: {
-          'fields': '["name", "owner", "docstatus", "modified", "vendor"]',
-          'limit_page_length': 100,
-          'order_by': 'creation desc',
-        },
+        queryParameters: {'fields': '["name", "docstatus", "modified"]'},
       );
 
       final data = res.data['data'];
@@ -43,8 +38,7 @@ class StockEntryRemoteDS {
               .toList();
 
       return Right(entries);
-    } catch (e, stack) {
-      debugPrint('❌ StockEntryRemoteDS.getAll failed: $e\n$stack');
+    } catch (e) {
       return Left(handleException(e));
     }
   }

@@ -5,13 +5,13 @@ import 'stock_item.dart';
 class StockEntryModel {
   final String id;
   final int docstatus;
-  final String vendor;
+  final DateTime? modified;
   final List<StockEntryItemModel> items;
 
   StockEntryModel({
     required this.id,
     required this.docstatus,
-    required this.vendor,
+    this.modified,
     required this.items,
   });
 
@@ -19,7 +19,8 @@ class StockEntryModel {
     return StockEntryModel(
       id: json['name'] ?? '',
       docstatus: json['docstatus'] ?? 0,
-      vendor: json['vendor'] ?? '',
+      modified:
+          json['modified'] != null ? DateTime.parse(json['modified']) : null,
       items:
           (json['items'] as List<dynamic>? ?? [])
               .map((e) => StockEntryItemModel.fromJson(e))
@@ -31,7 +32,7 @@ class StockEntryModel {
     return {
       'name': id,
       'docstatus': docstatus,
-      'vendor': vendor,
+      'modified': modified?.toIso8601String(),
       'items': items.map((e) => e.toJson()).toList(),
     };
   }
@@ -39,14 +40,14 @@ class StockEntryModel {
   StockEntry toEntity() => StockEntry(
     id: id,
     docstatus: docstatus,
-    vendor: vendor,
+    modified: modified ?? DateTime.now(),
     items: items.map((e) => e.toEntity()).toList(),
   );
 
   static StockEntryModel fromEntity(StockEntry entry) => StockEntryModel(
     id: entry.id,
     docstatus: entry.docstatus,
-    vendor: entry.vendor,
+    modified: entry.modified,
     items: entry.items.map((e) => StockEntryItemModel.fromEntity(e)).toList(),
   );
 }

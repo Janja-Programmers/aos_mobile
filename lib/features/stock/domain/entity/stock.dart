@@ -3,31 +3,31 @@ import 'package:equatable/equatable.dart';
 import 'stock_item.dart';
 
 class StockEntry extends Equatable {
-  final String id; // name
-  final int docstatus; // 0 = Draft, 1 = Submitted, 2 = Cancelled
-  final String vendor;
+  final String id;
+  final int docstatus;
+  final DateTime? modified;
   final List<StockEntryItem> items;
 
   const StockEntry({
     required this.id,
     required this.docstatus,
-    required this.vendor,
+    this.modified,
     required this.items,
   });
 
   @override
-  List<Object?> get props => [id, docstatus, vendor, items];
+  List<Object?> get props => [id, docstatus, modified, items];
 
   StockEntry copyWith({
     String? id,
     int? docstatus,
-    String? vendor,
+    DateTime? modified,
     List<StockEntryItem>? items,
   }) {
     return StockEntry(
       id: id ?? this.id,
       docstatus: docstatus ?? this.docstatus,
-      vendor: vendor ?? this.vendor,
+      modified: modified ?? this.modified,
       items: items ?? this.items,
     );
   }

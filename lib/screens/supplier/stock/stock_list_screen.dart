@@ -65,7 +65,7 @@ class _StockEntryScreenState extends State<StockEntryScreen> {
       ),
 
       drawer: AppDrawer(selectedIndex: 2, onItemSelected: (_) {}),
-      subTitle: 'Stock Intake List',
+      subTitle: 'Stock Intake',
       scaffoldKey: _scaffoldKey,
       body: const StockListBody(),
     );

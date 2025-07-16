@@ -10,9 +10,6 @@ import 'utils/submit_stock.dart';
 import 'utils/cancel_stock.dart';
 import 'utils/action_button.dart';
 
-import 'widgets/item_tile.dart';
-import 'widgets/stock_detail_header.dart';
-
 class StockEntryDetailScreen extends StatefulWidget {
   final String stockEntryName;
 
@@ -41,7 +38,7 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 2, onItemSelected: (_) {}),
-      subTitle: 'Stock Intake Detail',
+      subTitle: entry?.id ?? 'Stock Entry',
       actionButton:
           entry == null
               ? null
@@ -67,36 +64,90 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
           }
 
           if (entry == null) {
-            return const Center(child: Text('Entry not found'));
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.inbox_outlined,
+                    size: 64,
+                    color: Colors.grey.shade400,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No items found',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Pull down to refresh or try again later.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
 
           return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                StockDetailHeader(entry: entry),
-                const SizedBox(height: 16),
-                const Text(
-                  'Products',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child:
-                      entry.items.isEmpty
-                          ? const Center(
-                            child: Text('No items found in this entry.'),
-                          )
-                          : ListView.separated(
-                            itemCount: entry.items.length,
-                            separatorBuilder:
-                                (_, _) => const SizedBox(height: 8),
-                            itemBuilder:
-                                (_, i) => StockItemTile(item: entry.items[i]),
-                          ),
-                ),
-              ],
+            padding: const EdgeInsets.all(6),
+            child: Card(
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: const Text(
+                      'Items',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child:
+                        entry.items.isEmpty
+                            ? const Center(
+                              child: Text('No items found in this entry.'),
+                            )
+                            : ListView.separated(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              itemCount: entry.items.length,
+                              separatorBuilder:
+                                  (_, _) => const SizedBox(height: 8),
+                              itemBuilder:
+                                  (_, i) => ListTile(
+                                    title: Text(
+                                      entry.items[i].itemName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      'Qty: ${entry.items[i].qty}   Rate: ${entry.items[i].valuationRate}',
+                                    ),
+                                    trailing: Text(
+                                      'Total: ${entry.items[i].totalValue.toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                            ),
+                  ),
+                ],
+              ),
             ),
           );
         },

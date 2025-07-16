@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/features/auth/presentation/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -89,13 +88,9 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
       return;
     }
 
-    // ✅ 4. Create entry and submit
-    final currentUser = context.read<AuthProvider>().user;
-
     final entry = StockEntry(
       id: widget.entry?.id ?? '',
       docstatus: docstatus,
-      vendor: currentUser!.username,
       items: items,
     );
 

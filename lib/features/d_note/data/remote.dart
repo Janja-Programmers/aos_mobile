@@ -20,6 +20,7 @@ class DeliveryNoteRemoteDS {
         queryParameters: {
           'fields':
               '["name", "customer_name", "status", "grand_total", "per_installed"]',
+          'order_by': 'modified desc',
         },
       );
 

@@ -31,14 +31,9 @@ class SalesOrderRemoteDS {
           'transaction_date',
           'items',
         ]),
+        'order_by': 'modified desc',
         'limit': 100,
       };
-
-      if (owner != null && owner.isNotEmpty) {
-        queryParams['filters'] = jsonEncode([
-          ['owner', '=', owner],
-        ]);
-      }
 
       final res = await client.client.get(
         _endpoint,
@@ -54,24 +49,6 @@ class SalesOrderRemoteDS {
   }
 
   // ✅ Fetch one by ID
-  // Future<Either<Failure, SalesOrderModel>> getById(String id) async {
-  //   try {
-  //     final res = await client.client.get('$_endpoint/$id');
-  //     final model = SalesOrderModel.fromJson(res.data['data']);
-  //     appLogger.i('Fetched $res single order and $model Model from remote');
-  //     return Right(model);
-  //   } catch (e) {
-  //     if (e is DioException && e.response?.statusCode == 403) {
-  //       appLogger.e(
-  //         'Permission error. ${e.response?.statusCode} and messge ${e.response?.statusMessage}',
-  //       );
-  //       return Left(ServerFailure('Server failure.'));
-  //     }
-  //     appLogger.e('Error fetching sales orders: $e');
-  //     return Left(handleException(e));
-  //   }
-  // }
-
   Future<Either<Failure, SalesOrderModel>> getById(String id) async {
     try {
       final queryParams = {

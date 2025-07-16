@@ -22,7 +22,10 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     try {
       final response = await client.client.get(
         PRODUCT_ENDPOINT,
-        queryParameters: {'fields': '["name","item_name","category"]'},
+        queryParameters: {
+          'fields': '["name","item_name","category"]',
+          'order_by': 'modified desc',
+        },
       );
 
       final List data = response.data['data'];

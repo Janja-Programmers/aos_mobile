@@ -18,7 +18,10 @@ class StockEntryRemoteDS {
     try {
       final res = await _client.client.get(
         STOCK_ENTRY_ENDPOINT,
-        queryParameters: {'fields': '["name", "docstatus", "modified"]'},
+        queryParameters: {
+          'fields': '["name", "docstatus", "modified"]',
+          'order_by': 'modified desc',
+        },
       );
 
       final data = res.data['data'];

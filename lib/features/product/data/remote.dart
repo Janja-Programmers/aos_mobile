@@ -1,16 +1,13 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 
 import '/core/constants/const.dart';
+import '/core/errors/exception.dart';
 import '/core/utils/api_client.dart';
-import '/core/utils/logger.dart';
 
 import 'model.dart';
 
 abstract class ProductRemoteDataSource {
   Future<List<ProductModel>> getProducts();
-  Future<List<ProductModel>> vendorProducts(String vendor);
   Future<ProductModel> createProduct(ProductModel model);
   Future<ProductModel> updateProduct(ProductModel model);
 }
@@ -22,25 +19,34 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
 
   @override
   Future<List<ProductModel>> getProducts() async {
-    final response = await client.client.get(ALL_PRODUCTS_ENDPOINT);
-    final List data = response.data['message'];
-    return data.map((json) => ProductModel.fromJson(json)).toList();
+    try {
+      final response = await client.client.get(
+        PRODUCT_ENDPOINT,
+        queryParameters: {'fields': '["name","item_name","category"]'},
+      );
+
+      final List data = response.data['data'];
+
+      return data.map((json) => ProductModel.fromJson(json)).toList();
+    } on DioException catch (e) {
+      handleException(e);
+      rethrow;
+    }
   }
 
-  @override
-  Future<List<ProductModel>> vendorProducts(String vendor) async {
-    final response = await client.client.get(
-      ALL_PRODUCTS_ENDPOINT,
-      queryParameters: {
-        'filters': jsonEncode([
-          ['Product', 'owner', '=', vendor],
-        ]),
-      },
-    );
+  Future<ProductModel> getProductByName(String name) async {
+    final endpoint = '$PRODUCT_ENDPOINT/$name';
 
-    final List data = response.data['message'];
-    appLogger.i('Fetched vendor products: ${data.map((e) => e.toString())}');
-    return data.map((json) => ProductModel.fromJson(json)).toList();
+    try {
+      final response = await client.client.get(endpoint);
+
+      final data = response.data['data'];
+
+      return ProductModel.fromJson(data);
+    } on DioException catch (e) {
+      handleException(e);
+      rethrow;
+    }
   }
 
   @override
@@ -77,7 +83,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       });
 
       final response = await client.client.post(
-        CREATE_PRODUCT_ENDPOINT,
+        PRODUCT_ENDPOINT,
         data: formData,
         options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
@@ -130,7 +136,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       });
 
       final response = await client.client.put(
-        '$CREATE_PRODUCT_ENDPOINT/${model.name}',
+        '$PRODUCT_ENDPOINT/${model.name}',
         data: formData,
         options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
@@ -147,12 +153,3 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     }
   }
 }
-
-
-
-// options: Options(
-//   headers: {
-//     'Authorization': 'Bearer your_token_here', // Replace with your token
-//   },
-// ),
-      

@@ -54,7 +54,7 @@ void contactVendor(BuildContext context, WebsiteItem websiteItem) async {
             content: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05), // transparent feel
+                color: const Color.fromARGB(232, 255, 255, 255),
                 border: Border.all(color: Colors.grey.shade300),
                 borderRadius: BorderRadius.circular(8),
               ),

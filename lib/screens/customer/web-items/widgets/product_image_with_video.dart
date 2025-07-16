@@ -120,7 +120,7 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: const Color.fromARGB(57, 0, 0, 0),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -135,7 +135,7 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
           fit:
               BoxFit
                   .contain, // ✅ Ensures full image is visible without cropping
-          errorBuilder: (_, __, ___) => _fallbackImage(),
+          errorBuilder: (_, _, _) => _fallbackImage(),
           loadingBuilder: (context, child, progress) {
             if (progress == null) return child;
             return Container(

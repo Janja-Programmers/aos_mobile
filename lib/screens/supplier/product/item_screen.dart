@@ -9,7 +9,6 @@ import '/shared/widgets/main_bar.dart';
 
 import '/shared/widgets/custom_button.dart';
 
-import '/features/auth/presentation/auth_provider.dart';
 import '/features/product/provider.dart';
 
 import 'widgets/item_tile.dart';
@@ -32,8 +31,7 @@ class _ItemScreenState extends State<ItemScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = context.read<AuthProvider>().user?.username;
-      context.read<ProductProvider>().fetchVendorProducts(user!);
+      context.read<ProductProvider>().fetchProducts();
     });
   }
 
@@ -48,13 +46,8 @@ class _ItemScreenState extends State<ItemScreen> {
   @override
   Widget build(BuildContext context) {
     final productProvider = context.watch<ProductProvider>();
-    final user = context.read<AuthProvider>().user;
-    final vendorUsername = user?.username;
 
-    final products =
-        productProvider.products
-            .where((prod) => prod.vendor == vendorUsername)
-            .toList();
+    final products = productProvider.products;
 
     final query = _searchController.text.trim().toLowerCase();
     final filteredproducts =
@@ -138,13 +131,7 @@ class _ItemScreenState extends State<ItemScreen> {
                   Expanded(
                     child: RefreshIndicator(
                       onRefresh: () async {
-                        final user =
-                            context.read<AuthProvider>().user?.username;
-                        if (user != null) {
-                          await context
-                              .read<ProductProvider>()
-                              .fetchVendorProducts(user);
-                        }
+                        await context.read<ProductProvider>().fetchProducts();
                       },
                       child: ListView.separated(
                         padding: EdgeInsets.zero,
@@ -154,7 +141,11 @@ class _ItemScreenState extends State<ItemScreen> {
                                 const Divider(height: 0.5, thickness: 0.5),
                         itemBuilder: (context, index) {
                           final product = filteredproducts[index];
-                          return ItemTile(product: product);
+                          return ProductTile(
+                            name: product.name,
+                            itemName: product.itemName,
+                            category: product.category,
+                          );
                         },
                       ),
                     ),
@@ -175,9 +166,7 @@ class _ItemScreenState extends State<ItemScreen> {
         onPressed: () async {
           final result = await context.push<bool>('/add-item');
           if (result == true && context.mounted) {
-            await context.read<ProductProvider>().fetchVendorProducts(
-              context.read<AuthProvider>().user!.username,
-            );
+            await context.read<ProductProvider>().fetchProducts();
           }
         },
       ),

@@ -17,11 +17,18 @@ class ImageVideoPickerSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final imageUrl =
-        product?.image != null ? 'https://ownashop.com${product!.image}' : null;
+        controller.uploadedImageUrl != null
+            ? 'https://ownashop.com${controller.uploadedImageUrl}'
+            : (product?.image != null
+                ? 'https://ownashop.com${product!.image}'
+                : null);
+
     final videoUrl =
-        product?.demoVideo != null
-            ? 'https://ownashop.com${product!.demoVideo}'
-            : null;
+        controller.uploadedVideoUrl != null
+            ? 'https://ownashop.com${controller.uploadedVideoUrl}'
+            : (product?.demoVideo != null
+                ? 'https://ownashop.com${product!.demoVideo}'
+                : null);
 
     return AnimatedBuilder(
       animation: controller,

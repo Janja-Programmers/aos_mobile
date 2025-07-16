@@ -179,7 +179,7 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
           // 🔶 Website Specifications
           Consumer<AddItemController>(
             builder:
-                (_, controller, __) =>
+                (_, controller, _) =>
                     WebsiteSpecificationsTable(controller: controller),
           ),
           const SizedBox(height: 10),

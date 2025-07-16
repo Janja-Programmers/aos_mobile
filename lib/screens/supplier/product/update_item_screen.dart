@@ -15,7 +15,9 @@ import 'sections/item_form_fields.dart';
 
 class AddItemScreen extends StatefulWidget {
   final Product? product;
-  const AddItemScreen({super.key, this.product});
+  final String? productName;
+
+  const AddItemScreen({super.key, this.product, this.productName});
 
   @override
   State<AddItemScreen> createState() => _AddItemScreenState();
@@ -27,11 +29,20 @@ class _AddItemScreenState extends State<AddItemScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    Future.microtask(() async {
       final ctrl = context.read<AddItemController>();
       ctrl.reset();
+
       if (widget.product != null) {
         ctrl.setInitialProduct(widget.product!);
+      } else if (widget.productName != null) {
+        final fetched = await ctrl.fetchSingleProduct(widget.productName!);
+        if (fetched != null && mounted) {
+          ctrl.setInitialProduct(fetched);
+        } else if (mounted) {
+          topSnackBar(context, 'Product not found', type: TopSnackType.error);
+          context.pop();
+        }
       }
     });
   }

@@ -25,7 +25,7 @@ import '/features/product/data/repo_impl.dart';
 import '/features/product/domain/repo.dart';
 import '/features/product/domain/usecase.dart';
 import '/features/product/provider.dart';
-import '../../screens/customer/web-items/utils/vendor_utils.dart';
+import '/screens/customer/web-items/utils/vendor_utils.dart';
 
 /*****  ITEMS *******/
 import '/features/item/domain/repo.dart';
@@ -292,12 +292,11 @@ Future<void> init() async {
   // === Domain ===
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));
   sl.registerLazySingleton(() => CreateProductUseCase(sl()));
-  sl.registerLazySingleton(() => GetVendorProductsUseCase(sl()));
   sl.registerLazySingleton(() => UpdateProductUseCase(sl()));
   sl.registerLazySingleton(() => VendorUtils(sl<APIClient>()));
 
   // === Provider ===
-  sl.registerFactory(() => ProductProvider(sl(), sl(), sl(), sl()));
+  sl.registerFactory(() => ProductProvider(sl(), sl(), sl()));
 
   // ADDRESS Feature
   // ✅ Remote datasource

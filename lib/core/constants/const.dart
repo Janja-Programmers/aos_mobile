@@ -17,7 +17,6 @@ const String DELIVERY_NOTE_ENDPOINT = '/api/resource/Delivery Note';
 const String STOCK_ENTRY_ENDPOINT = '/api/resource/Stock Intake';
 const String ADDRESS_ENDPOINT =
     '/api/method/amani_mall.overrides.cart.add_new_address';
-const String ALL_PRODUCTS_ENDPOINT = '/api/method/amani_mall.api.get_products';
-const String CREATE_PRODUCT_ENDPOINT = '/api/resource/Product';
+const String PRODUCT_ENDPOINT = '/api/resource/Product';
 final String ADD_CART_ENDPOINT =
     '/api/method/amani_mall.overrides.cart.update_cart';

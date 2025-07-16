@@ -45,10 +45,6 @@ class DrawerItem extends StatelessWidget {
           ),
         ),
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12.0,
-          vertical: 6.0, // ↓ Less internal vertical padding
-        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );

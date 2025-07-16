@@ -33,7 +33,7 @@ class CartItemsCard extends StatelessWidget {
                   if (!isLast) const Divider(height: 20),
                 ],
               );
-            }).toList(),
+            }),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

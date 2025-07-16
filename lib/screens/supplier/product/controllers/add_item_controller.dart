@@ -65,6 +65,15 @@ class AddItemController extends ChangeNotifier {
     }
   }
 
+  Future<Product?> fetchSingleProduct(String name) async {
+    try {
+      final product = await provider.getProductByName(name);
+      return product;
+    } catch (e) {
+      return null;
+    }
+  }
+
   void setInitialProduct(Product newProduct) {
     if (product != null) return;
 
@@ -337,6 +346,7 @@ class AddItemController extends ChangeNotifier {
 
   Map<String, dynamic> _buildPayloadFromProduct(Product p) {
     return {
+      "name": p.name,
       "item_name": p.itemName,
       "item_price": p.itemPrice,
       "category": p.category,

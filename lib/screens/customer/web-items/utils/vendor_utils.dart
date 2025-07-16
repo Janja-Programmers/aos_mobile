@@ -13,7 +13,6 @@ class VendorUtils {
 
       final data = res.data['message'];
       if (data == null) {
-        print('⚠️ No "message" field in response');
         return null;
       }
 
@@ -23,7 +22,6 @@ class VendorUtils {
         phone: data['phone'] ?? '',
       );
     } catch (e) {
-      print('❌ Error fetching vendor: $e');
       return null;
     }
   }

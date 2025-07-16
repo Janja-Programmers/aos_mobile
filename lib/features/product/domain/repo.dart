@@ -7,6 +7,5 @@ import 'product.dart';
 abstract class ProductRepo {
   Future<Either<Failure, List<Product>>> getProducts();
   Future<Either<Failure, Product>> createProduct(Product product);
-  Future<Either<Failure, List<Product>>> getProductsByVendor(String vendor);
   Future<Either<Failure, Product>> updateProduct(Product product);
 }

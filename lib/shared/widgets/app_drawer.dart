@@ -24,76 +24,94 @@ class AppDrawer extends StatelessWidget {
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.user;
 
-    return Drawer(
-      child: Container(
-        color: AppColors.background, // ✅ Set background for drawer items
-        child: SafeArea(
-          // ✅ Wrap entire drawer content in SafeArea
-          bottom: false, // header is already safe
-          child: Column(
-            children: [
-              DrawerHeader(
-                decoration: const BoxDecoration(color: AppColors.white),
-                margin: const EdgeInsets.only(bottom: 2.0, top: 0.0),
-                padding: const EdgeInsets.all(8.0),
-                child: Center(
-                  child: Text(
-                    user?.username ?? AppStrings.sellerPanel,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.headlineSmall?.copyWith(color: Colors.black),
+    return SizedBox(
+      width: MediaQuery.of(context).size.width * 0.65,
+      child: Drawer(
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(16),
+            bottomRight: Radius.circular(16),
+          ),
+        ),
+        child: Container(
+          color: AppColors.background,
+          child: SafeArea(
+            top: false,
+            bottom: false,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 180,
+                  child: UserAccountsDrawerHeader(
+                    decoration: const BoxDecoration(color: AppColors.white),
+                    margin: EdgeInsets.zero,
+                    accountName: Text(
+                      user?.fullName ?? "Guest",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    accountEmail: Text(
+                      user?.email ?? 'Email',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.normal,
+                        color: Colors.black87,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              _buildDrawerItem(
-                context,
-                Icons.dashboard,
-                AppStrings.dashboard,
-                0,
-                '/dashboard',
-              ),
-              _buildDrawerItem(
-                context,
-                Icons.widgets_outlined,
-                AppStrings.items,
-                1,
-                '/items',
-                extra: user,
-              ),
-              _buildDrawerItem(
-                context,
-                Icons.inventory_2_outlined,
-                AppStrings.stock,
-                2,
-                '/stock-entry',
-              ),
-              _buildDrawerItem(
-                context,
-                Icons.receipt_long_outlined,
-                AppStrings.orders,
-                3,
-                '/sales-orders',
-              ),
-              _buildDrawerItem(
-                context,
-                Icons.local_shipping_outlined,
-                AppStrings.deliveryNote,
-                4,
-                '/delivery-notes',
-              ),
 
-              const Spacer(),
-              const Divider(),
-
-              SafeArea(
-                top: false,
-                child: DrawerItem(
-                  icon: Icons.public,
-                  title: "View in website",
-                  onTap: () => context.push('/'),
+                _buildDrawerItem(
+                  context,
+                  Icons.dashboard,
+                  AppStrings.dashboard,
+                  0,
+                  '/dashboard',
                 ),
-              ),
-            ],
+                _buildDrawerItem(
+                  context,
+                  Icons.widgets_outlined,
+                  AppStrings.items,
+                  1,
+                  '/items',
+                  extra: user,
+                ),
+                _buildDrawerItem(
+                  context,
+                  Icons.inventory_2_outlined,
+                  AppStrings.stock,
+                  2,
+                  '/stock-entry',
+                ),
+                _buildDrawerItem(
+                  context,
+                  Icons.receipt_long_outlined,
+                  AppStrings.orders,
+                  3,
+                  '/sales-orders',
+                ),
+                _buildDrawerItem(
+                  context,
+                  Icons.local_shipping_outlined,
+                  AppStrings.deliveryNote,
+                  4,
+                  '/delivery-notes',
+                ),
+
+                const Spacer(),
+                const Divider(),
+
+                SafeArea(
+                  top: false,
+                  child: DrawerItem(
+                    icon: Icons.public,
+                    title: "View in website",
+                    onTap: () => context.push('/'),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ownashop/screens/customer/address/shipping_address_form.dart';
 
 import '../controllers/place_order.dart';
 
@@ -22,7 +23,7 @@ class ShippingAddressCard extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             TextButton(
-              onPressed: () => controller.createAdress(),
+              onPressed: () => ShippingAddressForm(),
               child: const Text('Add New Address'),
             ),
           ],

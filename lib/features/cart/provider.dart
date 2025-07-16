@@ -67,34 +67,25 @@ class CartProvider with ChangeNotifier {
   Future<bool> add(CartItem item) async {
     final existingIndex = _items.indexWhere((e) => e.code == item.code);
 
-    // Prepare the updated list locally
-    List<CartItem> updatedItems = List.from(_items);
+    final CartItem updatedItem =
+        existingIndex != -1
+            ? _items[existingIndex].copyWith(
+              quantity: _items[existingIndex].quantity + item.quantity,
+              image: item.image ?? _items[existingIndex].image,
+            )
+            : item;
 
-    if (existingIndex != -1) {
-      // 🛠 Update quantity if item exists
-      final existingItem = updatedItems[existingIndex];
-      updatedItems[existingIndex] = CartItem(
-        code: existingItem.code,
-        name: existingItem.name,
-        price: existingItem.price,
-        quantity: existingItem.quantity + item.quantity,
-        image: existingItem.image,
-      );
-    } else {
-      // ✅ Add new item
-      updatedItems.add(item);
-    }
+    // Try remote sync first
+    final remoteResult = await repo.updateRemoteCart(updatedItem);
+    final remoteFailed = remoteResult.fold((failure) {
+      _setError("Remote sync failed: ${failure.message}");
+      return true;
+    }, (_) => false);
 
-    // First, update local storage (DB/file/etc.)
-    final result = await addToCart(item);
+    if (remoteFailed) return false;
 
-    // Then, update remote cart (fire-and-forget or handle error optionally)
-    final remoteResult = await repo.updateRemoteCart(item);
-    remoteResult.fold(
-      (failure) => _setError("Remote sync failed: ${failure.message}"),
-      (_) {}, // ignore success
-    );
-
+    // Update local cart if remote sync succeeded
+    final result = await addToCart(updatedItem);
     return result.fold(
       (failure) {
         _setError(failure.message);

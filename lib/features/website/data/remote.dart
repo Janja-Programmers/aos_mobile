@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
 import 'package:ownashop/core/utils/logger.dart';
 
@@ -15,11 +17,20 @@ class WebsiteRemoteDataSource {
 
   WebsiteRemoteDataSource(this._client);
 
-  Future<Either<Failure, List<WebsiteItem>>> fetchItems() async {
+  Future<Either<Failure, List<WebsiteItem>>> fetchItems({
+    required int start,
+  }) async {
     try {
-      final res = await _client.client.get(WEB_ITEM_ENDPOINT);
+      final res = await _client.client.get(
+        WEB_ITEM_ENDPOINT,
+        queryParameters: {
+          'query_args': jsonEncode({'start': start}),
+        },
+      );
+
       appLogger.i("✅ API Response of fetch ITEMS: ${res.data}");
-      final List<dynamic> list = res.data['message']['items'];
+
+      final List<dynamic> list = res.data['message']['items'] ?? [];
 
       final items =
           list.map((item) {

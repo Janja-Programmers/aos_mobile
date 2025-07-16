@@ -23,12 +23,17 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       final response = await client.client.get(
         PRODUCT_ENDPOINT,
         queryParameters: {
-          'fields': '["name","item_name","category"]',
-          'order_by': 'modified desc',
+          'fields': '["name","item_name","category", "modified", "creation"]',
         },
       );
 
       final List data = response.data['data'];
+
+      data.sort((a, b) {
+        final aDate = DateTime.parse(a['modified'] ?? a['creation']);
+        final bDate = DateTime.parse(b['modified'] ?? b['creation']);
+        return bDate.compareTo(aDate);
+      });
 
       return data.map((json) => ProductModel.fromJson(json)).toList();
     } on DioException catch (e) {

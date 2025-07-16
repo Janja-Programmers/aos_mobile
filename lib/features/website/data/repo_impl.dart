@@ -1,9 +1,10 @@
 import 'package:dartz/dartz.dart';
-import 'package:ownashop/core/utils/logger.dart';
 
 import '/core/errors/failures.dart';
+
 import '../domain/repo.dart';
 import '../domain/webitem.dart';
+
 import 'remote.dart';
 
 class WebsiteRepoImpl implements WebsiteRepo {
@@ -12,17 +13,12 @@ class WebsiteRepoImpl implements WebsiteRepo {
   WebsiteRepoImpl(this.remote);
 
   @override
-  Future<Either<Failure, List<WebsiteItem>>> getAllItems() =>
-      remote.fetchItems();
+  Future<Either<Failure, List<WebsiteItem>>> getAllItems({required int start}) {
+    return remote.fetchItems(start: start);
+  }
 
   @override
   Future<Either<Failure, WebsiteItem>> getOne(String id) {
-    appLogger.i("Fetching product detail for ID: $id");
-    appLogger.i(
-      remote
-          .fetchProductDetail(id)
-          .then((either) => either.map((model) => model.toEntity())),
-    );
     return remote
         .fetchProductDetail(id)
         .then((either) => either.map((model) => model.toEntity()));

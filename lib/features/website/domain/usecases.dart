@@ -10,8 +10,8 @@ class GetAllWebItemsUseCase {
 
   GetAllWebItemsUseCase(this.repo);
 
-  Future<Either<Failure, List<WebsiteItem>>> call() async {
-    return await repo.getAllItems();
+  Future<Either<Failure, List<WebsiteItem>>> call({required int start}) {
+    return repo.getAllItems(start: start);
   }
 }
 

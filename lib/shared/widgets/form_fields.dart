@@ -52,8 +52,8 @@ class AppTextField extends StatelessWidget {
           ),
         ),
         border: const OutlineInputBorder(),
-        fillColor: readOnly ? Colors.grey.shade100 : null,
-        filled: readOnly,
+        fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
+        filled: true,
       ),
       validator: validator,
     );

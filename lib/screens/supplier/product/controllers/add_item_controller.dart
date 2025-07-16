@@ -43,6 +43,10 @@ class AddItemController extends ChangeNotifier {
 
   File? selectedImage;
   File? selectedVideo;
+
+  bool isPickingImage = false;
+  bool isPickingVideo = false;
+
   String? uploadedImageUrl;
   String? uploadedVideoUrl;
 
@@ -155,37 +159,66 @@ class AddItemController extends ChangeNotifier {
     BuildContext context, {
     required bool isImage,
   }) async {
-    final permissionResult = await _requestPermissions(isImage: isImage);
-    if (!permissionResult.granted) {
-      if (permissionResult.permanentlyDenied) {
-        await openAppSettings();
-      }
-      return null;
-    }
-
-    final result = await FilePicker.platform.pickFiles(
-      type: isImage ? FileType.image : FileType.video,
-      allowMultiple: false,
-    );
-
-    if (result != null && result.files.single.path != null) {
-      final path = result.files.single.path!;
-      debugPrint("✅ Picked ${isImage ? "image" : "video"}: $path");
-
-      final file = File(path);
+    try {
+      // Start loading
       if (isImage) {
-        selectedImage = file;
-        uploadedImageUrl = await uploadFile(file);
-        notifyListeners();
-        return uploadedImageUrl;
+        isPickingImage = true;
       } else {
-        selectedVideo = file;
-        uploadedVideoUrl = await uploadFile(file);
-        notifyListeners();
-        return uploadedVideoUrl;
+        isPickingVideo = true;
       }
-    } else {
-      debugPrint("❌ No file picked or path is null.");
+      notifyListeners();
+
+      // Request permission
+      final permissionResult = await _requestPermissions(isImage: isImage);
+      if (!permissionResult.granted) {
+        if (permissionResult.permanentlyDenied) {
+          await openAppSettings();
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Permission denied')));
+        }
+        return null;
+      }
+
+      // Pick file
+      final result = await FilePicker.platform.pickFiles(
+        type: isImage ? FileType.image : FileType.video,
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final path = result.files.single.path!;
+        debugPrint("✅ Picked ${isImage ? "image" : "video"}: $path");
+
+        final file = File(path);
+
+        if (isImage) {
+          selectedImage = file;
+          uploadedImageUrl = await uploadFile(file);
+        } else {
+          selectedVideo = file;
+          uploadedVideoUrl = await uploadFile(file);
+        }
+
+        notifyListeners();
+
+        return isImage ? uploadedImageUrl : uploadedVideoUrl;
+      } else {
+        debugPrint("❌ No file picked or path is null.");
+        topSnackBar(context, 'No file selected', type: TopSnackType.info);
+      }
+    } catch (e) {
+      debugPrint("❌ File pick/upload error: $e");
+      topSnackBar(context, 'Error: ${e.toString()}', type: TopSnackType.error);
+    } finally {
+      // Stop loading
+      if (isImage) {
+        isPickingImage = false;
+      } else {
+        isPickingVideo = false;
+      }
+      notifyListeners();
     }
 
     return null;

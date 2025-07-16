@@ -14,79 +14,79 @@ class ItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: AppColors.white,
-      shadowColor: AppColors.accent,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListTile(
-        title: Text(product.itemName),
-        subtitle: Text(product.category),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Edit button
-            IconButton(
-              icon: const Icon(Icons.edit, color: AppColors.primary),
-              onPressed: () async {
-                final shouldRefresh = await context.push<bool>(
-                  '/edit-item/${product.name}',
-                  extra: product,
-                );
+    return ListTile(
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      title: Text(
+        product.itemName,
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      subtitle: Text(
+        product.category,
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit, color: AppColors.primary),
+            onPressed: () async {
+              final shouldRefresh = await context.push<bool>(
+                '/edit-item/${product.name}',
+                extra: product,
+              );
 
-                if (shouldRefresh == true && context.mounted) {
-                  await context.read<ProductProvider>().fetchProducts();
-                }
-              },
-            ),
-
-            // Delete button
-            IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder:
-                      (_) => AlertDialog(
-                        title: const Text("Delete Product"),
-                        content: const Text(
-                          "Are you sure you want to delete this product?",
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text("Cancel"),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text("Delete"),
-                          ),
-                        ],
+              if (shouldRefresh == true && context.mounted) {
+                await context.read<ProductProvider>().fetchProducts();
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder:
+                    (_) => AlertDialog(
+                      title: const Text("Delete Product"),
+                      content: const Text(
+                        "Are you sure you want to delete this product?",
                       ),
-                );
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text("Cancel"),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text("Delete"),
+                        ),
+                      ],
+                    ),
+              );
 
-                if (confirm == true) {
-                  try {
-                    await context.read<ProductProvider>().deleteProduct(
-                      product.name,
+              if (confirm == true) {
+                try {
+                  await context.read<ProductProvider>().deleteProduct(
+                    product.name,
+                  );
+                  if (context.mounted) {
+                    topSnackBar(context, 'Deleted successfully');
+                    await context.read<ProductProvider>().fetchProducts();
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    topSnackBar(
+                      context,
+                      'Error: Unable to delete product',
+                      type: TopSnackType.error,
                     );
-                    if (context.mounted) {
-                      topSnackBar(context, 'Deleted successfully');
-                      await context.read<ProductProvider>().fetchProducts();
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      topSnackBar(
-                        context,
-                        'Error: Unable to delete product',
-                        type: TopSnackType.error,
-                      );
-                    }
                   }
                 }
-              },
-            ),
-          ],
-        ),
+              }
+            },
+          ),
+        ],
       ),
     );
   }

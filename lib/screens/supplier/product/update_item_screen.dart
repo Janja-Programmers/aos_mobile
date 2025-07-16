@@ -69,18 +69,21 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   }
                 },
       ),
-      body: AbsorbPointer(
-        absorbing: controller.isSubmitting,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              ItemFormFields(
-                controller: controller,
-                isUpdate: isUpdate,
-                formKey: controller.formKey,
-              ),
-            ],
+      body: Container(
+        color: Colors.white,
+        child: AbsorbPointer(
+          absorbing: controller.isSubmitting,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                ItemFormFields(
+                  controller: controller,
+                  isUpdate: isUpdate,
+                  formKey: controller.formKey,
+                ),
+              ],
+            ),
           ),
         ),
       ),

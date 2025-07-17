@@ -72,7 +72,7 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
-      subTitle: 'Order Detail',
+      subTitle: Text('Order Detail'),
       body: Builder(
         builder: (_) {
           if (provider.detailLoading || order == null) {

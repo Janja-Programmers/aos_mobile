@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '/core/constants/const.dart';
+import '/core/utils/snackbar.dart';
+
 import '/features/stock/domain/entity/stock.dart';
-import '/features/stock/providers/create.dart';
 import '/features/stock/providers/read.dart';
+
+import '/core/di/service_locator.dart';
+import '/core/utils/api_client.dart';
 
 Future<void> cancelStockEntry(
   BuildContext context,
@@ -13,19 +19,54 @@ Future<void> cancelStockEntry(
     context: context,
     builder:
         (ctx) => AlertDialog(
-          title: const Text('Cancel Entry?'),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Cancel Entry?',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.black87,
+            ),
+          ),
           content: const Text(
             'This action cannot be undone. Are you sure you want to cancel this stock entry?',
+            style: TextStyle(fontSize: 16, color: Colors.black54),
           ),
+          actionsPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
+          actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('No'),
+              child: const Text(
+                'No',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Yes, Cancel'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text(
+                'Yes, Cancel',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
@@ -33,24 +74,36 @@ Future<void> cancelStockEntry(
 
   if (confirmed != true) return;
 
-  final provider = context.read<CreateStockEntryProvider>();
+  final apiClient = sl<APIClient>();
   final detailProvider = context.read<StockEntryDetailProvider>();
 
-  final cancelled = submitted.copyWith(docstatus: 2);
-  await provider.update(cancelled);
+  try {
+    print("Cancelling Stock Entry: ${submitted.id}");
+    await apiClient.client.post(
+      CANCEL_DOCTYPE_ENDPOINT,
+      data: {"doctype": "Stock Intake", "name": submitted.id},
+    );
+    print("Stock Entry cancelled successfully: ${submitted.id}");
 
-  if (!context.mounted) return;
+    if (!context.mounted) return;
 
-  if (provider.hasError) {
-    ScaffoldMessenger.of(
+    topSnackBar(
       context,
-    ).showSnackBar(SnackBar(content: Text(provider.failure!.message)));
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Stock Entry cancelled successfully')),
+      'Stock Entry cancelled successfully',
+      type: TopSnackType.success,
     );
 
-    // Refresh the detail view
     await detailProvider.fetchById(submitted.id);
+    context.pop(true);
+  } catch (e) {
+    debugPrint('❌ Cancel Stock Entry error: $e');
+
+    if (!context.mounted) return;
+
+    topSnackBar(
+      context,
+      'Failed to cancel entry. Please try again.',
+      type: TopSnackType.error,
+    );
   }
 }

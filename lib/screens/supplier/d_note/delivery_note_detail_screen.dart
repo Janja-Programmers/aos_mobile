@@ -33,7 +33,7 @@ class _DeliveryNoteDetailScreenState extends State<DeliveryNoteDetailScreen> {
 
     return MainBarScaffold(
       drawer: AppDrawer(selectedIndex: 4, onItemSelected: (_) {}),
-      subTitle: 'Delivery Note Detail',
+      subTitle: Text('Delivery Note Detail'),
       scaffoldKey: scaffoldKey,
       body: Builder(
         builder: (_) {

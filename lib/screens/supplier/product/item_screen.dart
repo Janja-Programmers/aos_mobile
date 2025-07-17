@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '/core/constants/colors.dart';
 
 import '/shared/widgets/app_drawer.dart';
+import '/shared/widgets/build_subtitle.dart';
 import '/shared/widgets/main_bar.dart';
 
 import '/shared/widgets/custom_button.dart';
@@ -161,7 +162,7 @@ class _ItemScreenState extends State<ItemScreen> {
     return MainBarScaffold(
       drawer: AppDrawer(selectedIndex: 1, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
-      subTitle: "Products",
+      subTitle: buildSubTitle(title: 'Products'),
       actionButton: CustomButton(
         onPressed: () async {
           final result = await context.push<bool>('/add-item');

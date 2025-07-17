@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/screens/supplier/stock/utils/print_stock_entry.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
 
 import '/features/stock/providers/read.dart';
+
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
 
 import 'utils/failure_display.dart';
 import 'utils/cancel_stock.dart';
+import 'utils/print_stock_entry.dart';
 import 'utils/reload_stock.dart';
 import 'utils/submit_stock.dart';
 
+import '../../../shared/widgets/build_subtitle.dart';
 import 'widgets/stock_entry_actions.dart';
 
 class StockEntryDetailScreen extends StatefulWidget {
@@ -40,20 +42,30 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
     final prov = context.watch<StockEntryDetailProvider>();
     final entry = prov.data;
 
+    if (prov.loading || entry == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 2, onItemSelected: (_) {}),
-      subTitle: entry?.id ?? 'Stock Entry',
-      actionButton:
-          entry == null
-              ? null
-              : StockEntryActions(
-                docstatus: entry.docstatus,
-                onSubmit: () => submitStockEntry(context, entry),
-                onCancel: () => cancelStockEntry(context, entry),
-                onReload: () => reloadStockEntry(context, entry),
-                onPrint: () => printStockIntake(context, entry),
-              ),
+      subTitle: buildSubTitle(title: entry.id, docstatus: entry.docstatus),
+      actionButton: StockEntryActions(
+        docstatus: entry.docstatus,
+        onSubmit: () async {
+          await submitStockEntry(context, entry);
+          await context.read<StockEntryDetailProvider>().fetchById(entry.id);
+        },
+        onCancel: () async {
+          await cancelStockEntry(context, entry);
+          if (context.mounted) {
+            await context.read<StockEntryDetailProvider>().fetchById(entry.id);
+            Navigator.pop(context, true);
+          }
+        },
+        onReload: () => reloadStockEntry(context, entry),
+        onPrint: () => printStockIntake(context, entry),
+      ),
       body: Builder(
         builder: (_) {
           if (prov.loading) {
@@ -70,7 +82,7 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
             );
           }
 
-          if (entry == null) {
+          if (entry.items.isEmpty) {
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,

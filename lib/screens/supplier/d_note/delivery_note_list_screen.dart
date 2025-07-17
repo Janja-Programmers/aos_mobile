@@ -33,7 +33,7 @@ class _DeliveryNoteListScreenState extends State<DeliveryNoteListScreen> {
   @override
   Widget build(BuildContext context) {
     return MainBarScaffold(
-      subTitle: 'Delivery Notes',
+      subTitle: Text('Delivery Notes'),
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 4, onItemSelected: (_) {}),
       body: Consumer<DeliveryNoteProvider>(

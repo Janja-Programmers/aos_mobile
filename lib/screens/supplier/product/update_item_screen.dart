@@ -55,7 +55,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
     return MainBarScaffold(
       drawer: AppDrawer(selectedIndex: 1, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
-      subTitle: isUpdate ? 'Update Product' : 'Create Product',
+      subTitle: Text(
+        isUpdate ? 'Update Product' : 'Create Product',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
       actionButton: CustomButton(
         label: isUpdate ? 'Update' : 'Save',
         icon: Icons.save,

@@ -36,7 +36,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
     return MainBarScaffold(
       drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
-      subTitle: 'Sales Order',
+      subTitle: Text('Sales Order'),
       body: Consumer<SalesOrderProvider>(
         builder: (context, provider, _) {
           if (provider.listLoading) {

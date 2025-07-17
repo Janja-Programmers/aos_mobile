@@ -49,7 +49,7 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class SubAppBar extends StatelessWidget {
-  final String title;
+  final Widget title;
   final VoidCallback onMenuPressed;
   final VoidCallback? onSavePressed;
   final bool showSaveButton;
@@ -78,15 +78,11 @@ class SubAppBar extends StatelessWidget {
                 onPressed: onMenuPressed,
                 icon: const Icon(Icons.menu),
               ),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              const SizedBox(width: 4),
+              title,
             ],
           ),
+
           Row(
             children: [
               if (actionButton != null) actionButton!,

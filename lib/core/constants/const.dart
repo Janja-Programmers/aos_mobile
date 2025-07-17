@@ -20,3 +20,4 @@ const String ADDRESS_ENDPOINT =
 const String PRODUCT_ENDPOINT = '/api/resource/Product';
 final String ADD_CART_ENDPOINT =
     '/api/method/amani_mall.overrides.cart.update_cart';
+final String CANCEL_DOCTYPE_ENDPOINT = '/api/method/frappe.client.cancel';

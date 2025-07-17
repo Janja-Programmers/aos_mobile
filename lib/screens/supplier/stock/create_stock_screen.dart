@@ -135,7 +135,11 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
 
     return MainBarScaffold(
       drawer: AppDrawer(selectedIndex: 2, onItemSelected: (_) {}),
-      subTitle: isEditing ? 'Edit Stock Intake' : 'Create Stock Intake',
+      subTitle: Text(
+        isEditing ? 'Edit Stock Intake' : 'Create Stock Intake',
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+
       body: Form(
         key: _formKey,
         child: ListView(

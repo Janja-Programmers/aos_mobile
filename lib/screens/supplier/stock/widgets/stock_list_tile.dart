@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
+import '/features/stock/providers/all.dart';
+
 import '/shared/widgets/docstatus_chip.dart';
 
 class StockListTile extends StatelessWidget {
@@ -18,8 +22,15 @@ class StockListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    void navigateToEntryDetail(BuildContext context, String id) async {
+      final result = await context.push('/stock-entry/$id');
+      if (result == true && context.mounted) {
+        context.read<StockEntryProvider>().fetchAll();
+      }
+    }
+
     return InkWell(
-      onTap: () => context.push('/stock-entry/$id'),
+      onTap: () => navigateToEntryDetail(context, id),
       borderRadius: BorderRadius.circular(4),
       splashColor: theme.colorScheme.primary.withOpacity(0.1),
       highlightColor: Colors.transparent,

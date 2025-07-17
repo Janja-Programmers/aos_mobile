@@ -40,7 +40,10 @@ class _SellerDashboardState extends State<SellerDashboard> {
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 0, onItemSelected: (_) {}),
-      subTitle: AppStrings.dashboard,
+      subTitle: Text(
+        AppStrings.dashboard,
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [

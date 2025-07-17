@@ -107,8 +107,8 @@ class AddItemController extends ChangeNotifier {
   }
 
   void removeSpecification(int index) {
-    if (specControllers.length <= 1) return;
     if (index >= 0 && index < specControllers.length) {
+      specControllers[index].dispose();
       specControllers.removeAt(index);
       notifyListeners();
     }
@@ -183,9 +183,7 @@ class AddItemController extends ChangeNotifier {
         if (permissionResult.permanentlyDenied) {
           await openAppSettings();
         } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Permission denied')));
+          topSnackBar(context, "Permission Denied!", type: TopSnackType.error);
         }
         return null;
       }
@@ -198,7 +196,6 @@ class AddItemController extends ChangeNotifier {
 
       if (result != null && result.files.single.path != null) {
         final path = result.files.single.path!;
-        debugPrint("✅ Picked ${isImage ? "image" : "video"}: $path");
 
         final file = File(path);
 
@@ -214,11 +211,9 @@ class AddItemController extends ChangeNotifier {
 
         return isImage ? uploadedImageUrl : uploadedVideoUrl;
       } else {
-        debugPrint("❌ No file picked or path is null.");
         topSnackBar(context, 'No file selected', type: TopSnackType.info);
       }
     } catch (e) {
-      debugPrint("❌ File pick/upload error: $e");
       topSnackBar(context, 'Error: ${e.toString()}', type: TopSnackType.error);
     } finally {
       // Stop loading

@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:ownashop/screens/supplier/stock/utils/print_stock_entry.dart';
 import 'package:provider/provider.dart';
+
+import '/core/constants/colors.dart';
 
 import '/features/stock/providers/read.dart';
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
 
 import 'utils/failure_display.dart';
-import 'utils/submit_stock.dart';
 import 'utils/cancel_stock.dart';
-import 'utils/action_button.dart';
+import 'utils/reload_stock.dart';
+import 'utils/submit_stock.dart';
+
+import 'widgets/stock_entry_actions.dart';
 
 class StockEntryDetailScreen extends StatefulWidget {
   final String stockEntryName;
@@ -46,6 +51,8 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
                 docstatus: entry.docstatus,
                 onSubmit: () => submitStockEntry(context, entry),
                 onCancel: () => cancelStockEntry(context, entry),
+                onReload: () => reloadStockEntry(context, entry),
+                onPrint: () => printStockIntake(context, entry),
               ),
       body: Builder(
         builder: (_) {
@@ -103,17 +110,27 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // List Header
                   Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: const Text(
-                      'Items',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: const Text(
+                        'Items',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+
+                  const Divider(
+                    height: 0,
+                    thickness: 1.2,
+                    color: AppColors.background,
+                  ),
+
                   Expanded(
                     child:
                         entry.items.isEmpty

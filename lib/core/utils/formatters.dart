@@ -56,3 +56,8 @@ String cleanHtml(String? input) {
   if (input == null) return '';
   return input.replaceAll(RegExp(r'[^\x20-\x7E\r\n\t]'), '').trim();
 }
+
+String formatCompactDateTime(DateTime dateTime) {
+  final formatter = DateFormat('MMM d h:mm a');
+  return formatter.format(dateTime);
+}

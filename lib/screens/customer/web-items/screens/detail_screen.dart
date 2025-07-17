@@ -2,31 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../utils/vendor_card.dart';
 import '/core/constants/colors.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
-import '/features/cart/domain/cart.dart';
-import '/features/cart/provider.dart';
 import '/features/website/prov.dart';
 
 import '/shared/widgets/app_bars.dart';
 import '/shared/widgets/cart_button.dart';
 
+import '../widgets/product_action_bar.dart';
 import '../widgets/product_availability_and_rating.dart';
 import '../widgets/product_description.dart';
 import '../widgets/product_image_with_video.dart';
 import '../widgets/product_review_section.dart';
 import '../widgets/product_specification_list.dart';
 import '../widgets/product_tile_and_price.dart';
+
 import '../helper/empty_page.dart';
-import '../helper/contact_vendor.dart';
-import '../helper/add_to_cart_button.dart';
 
 class ProductDetailScreen extends StatefulWidget {
-  final String productName;
+  final String itemCode;
 
-  const ProductDetailScreen({super.key, required this.productName});
+  const ProductDetailScreen({super.key, required this.itemCode});
 
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
@@ -37,9 +34,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.read<WebsiteItemProv>().selectedProduct?.name !=
-          widget.productName) {
-        context.read<WebsiteItemProv>().loadProductDetail(widget.productName);
+      if (context.read<WebsiteItemProv>().selectedProduct?.itemCode !=
+          widget.itemCode) {
+        context.read<WebsiteItemProv>().loadProductDetail(widget.itemCode);
       }
     });
   }
@@ -75,7 +72,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
     }
     if (error != null) {
-      debugPrint('❌ Failed to load product "${widget.productName}"');
+      debugPrint('❌ Failed to load product "${widget.itemCode}"');
 
       return Scaffold(
         backgroundColor: AppColors.background,
@@ -105,7 +102,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   children: [
                     ElevatedButton.icon(
                       onPressed:
-                          () => provider.loadProductDetail(widget.productName),
+                          () => provider.loadProductDetail(widget.itemCode),
                       icon: const Icon(Icons.refresh),
                       label: const Text('Retry'),
                       style: ElevatedButton.styleFrom(
@@ -148,17 +145,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     if (product == null) {
       return const EmptyProductPage();
     }
-
-    final cartProvider = context.watch<CartProvider>();
-    final isInCart = cartProvider.containsProduct(product.name);
-
-    final cartItem = CartItem(
-      code: product.itemCode,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image: product.imageUrl,
-    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -238,50 +224,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                           const SizedBox(height: 6),
 
-                          Row(
-                            children: [
-                              Expanded(
-                                child:
-                                    product.inStock
-                                        ? isInCart
-                                            ? ElevatedButton.icon(
-                                              onPressed:
-                                                  () => context.go('/cart'),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.black,
-                                                foregroundColor: Colors.white,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 16,
-                                                      vertical: 6,
-                                                    ),
-                                                textStyle: const TextStyle(
-                                                  fontSize: 14,
-                                                ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                              ),
-                                              icon: const Icon(
-                                                Icons.shopping_cart,
-                                              ),
-                                              label: const Text('View in Cart'),
-                                            )
-                                            : AddToCartButton(item: cartItem)
-                                        : const SizedBox.shrink(),
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: ContactVendorButton(
-                                  onPressed: () {
-                                    contactVendor(context, product);
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-
+                          ProductActionBar(product: product),
                           const SizedBox(height: 6),
                         ],
                       ),

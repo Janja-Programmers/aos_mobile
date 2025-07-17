@@ -50,19 +50,85 @@ class CartScreen extends StatelessWidget {
           final total = provider.grandTotal;
 
           if (items.isEmpty) {
-            return const Center(child: Text('Your cart is empty.'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.remove_shopping_cart,
+                    size: 64,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Your cart is empty.',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => context.go('/'),
+                    child: const Text(
+                      'Start Shopping',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
 
           final controller = PlaceOrderController(context);
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(0),
             children: [
-              CartItemsCard(items: items),
-              const SizedBox(height: 16),
-              ShippingAddressCard(controller: controller),
-              const SizedBox(height: 16),
-              PaymentSummaryCard(total: total, controller: controller),
+              // 🛒 Top Header Section
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 20,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  '🛒 My Cart',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Main body padding starts here
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    CartItemsCard(items: items),
+                    const SizedBox(height: 16),
+                    ShippingAddressCard(controller: controller),
+                    const SizedBox(height: 16),
+                    PaymentSummaryCard(total: total, controller: controller),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
             ],
           );
         },

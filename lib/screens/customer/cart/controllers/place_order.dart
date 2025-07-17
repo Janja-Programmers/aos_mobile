@@ -1,13 +1,16 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/core/di/service_locator.dart';
-import 'package:ownashop/core/utils/api_client.dart';
-import 'package:ownashop/core/utils/logger.dart';
-import 'package:ownashop/features/cart/data/remote.dart';
 import 'package:provider/provider.dart';
 
-import '/features/cart/provider.dart';
+import '/core/di/service_locator.dart';
+import '/core/utils/api_client.dart';
+import '/core/utils/snackbar.dart';
+
 import '/features/auth/presentation/auth_provider.dart';
+import '/features/cart/data/remote.dart';
+import '/features/cart/provider.dart';
+
 import '/screens/customer/address/shipping_address_form.dart';
 
 class PlaceOrderController {
@@ -57,22 +60,46 @@ class PlaceOrderController {
     _showLoading();
 
     try {
-      final orderService = OrderService(
-        sl<APIClient>(),
-      ); // Or inject if preferred
+      final orderService = OrderService(sl<APIClient>());
 
       await orderService.placeOrder();
 
       if (!context.mounted) return;
-      Navigator.of(context).pop(); // Close loading
+      Navigator.of(context).pop();
 
+      // ✅ Clear the cart
+      final cartProvider = context.read<CartProvider>();
+      await cartProvider.clear();
+
+      // Show success dialog
       _showSuccessDialog();
     } catch (e) {
       if (!context.mounted) return;
-      Navigator.of(context).pop(); // Close loading
+      Navigator.of(context).pop();
 
-      _showErrorDialog('Failed to place order. Please try again.');
-      appLogger.e('❌ Order placement error: $e');
+      String message = 'Failed to place order. Please try again.';
+      bool shouldClearCart = false;
+
+      if (e is DioException) {
+        final data = e.response?.data;
+
+        // Check for missing customer (vendor case)
+        if (data is Map &&
+            data['exception']?.toString().contains('MandatoryError') == true &&
+            data['exception']?.toString().contains('customer') == true) {
+          message = 'Vendors cannot place orders';
+          shouldClearCart = true;
+        }
+      }
+
+      // ✅ Clear the cart if needed
+      if (shouldClearCart) {
+        final cartProvider = context.read<CartProvider>();
+        await cartProvider.clear();
+      }
+
+      // ✅ Show error via topSnackbar
+      topSnackBar(context, message, type: TopSnackType.error);
     }
   }
 
@@ -85,6 +112,11 @@ class PlaceOrderController {
   }
 
   void _showSuccessDialog() {
+    topSnackBar(
+      context,
+      'Order placed successfully!',
+      type: TopSnackType.success,
+    );
     showDialog(
       context: context,
       builder:

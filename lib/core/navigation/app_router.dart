@@ -151,10 +151,11 @@ class AppRouter {
       ),
       // Product Details
       GoRoute(
-        path: '/product/:name',
-        builder:
-            (context, state) =>
-                ProductDetailScreen(productName: state.pathParameters['name']!),
+        path: '/product/:itemCode',
+        builder: (context, state) {
+          final itemCode = state.pathParameters['itemCode']!;
+          return ProductDetailScreen(itemCode: itemCode);
+        },
       ),
 
       // Shipping Address

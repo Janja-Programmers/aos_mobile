@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:ownashop/core/utils/snackbar.dart';
+import 'package:provider/provider.dart';
+
+import '/features/address/provider.dart';
+import '/features/auth/presentation/auth_provider.dart';
+import '/screens/customer/address/shipping_address_form.dart';
 
 import '../controllers/place_order.dart';
 
@@ -11,6 +17,48 @@ class PaymentSummaryCard extends StatelessWidget {
     required this.total,
     required this.controller,
   });
+
+  Future<void> _handlePlaceOrder(BuildContext context) async {
+    final addressProvider = context.read<AddressProvider>();
+    final authProvider = context.read<AuthProvider>();
+    final user = authProvider.user;
+
+    if (user == null) return;
+
+    await addressProvider.fetchShippingAddresses();
+
+    final hasShippingAddress = addressProvider.addresses.isNotEmpty;
+
+    if (!hasShippingAddress) {
+      // Show warning
+      topSnackBar(
+        context,
+        'Please add a shipping address first.',
+        type: TopSnackType.error,
+      );
+
+      // Launch address form modal
+      final result = await showModalBottomSheet<String>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (_) => const ShippingAddressForm(),
+      );
+
+      // If user saved an address, refresh and re-validate
+      if (result != null) {
+        await addressProvider.fetchShippingAddresses();
+        if (addressProvider.addresses.isNotEmpty) {
+          controller.placeOrder();
+        }
+      }
+
+      return;
+    }
+
+    // Proceed if address exists
+    controller.placeOrder();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +83,7 @@ class PaymentSummaryCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => controller.placeOrder(),
+                onPressed: () => _handlePlaceOrder(context),
                 child: const Text('Place Order'),
               ),
             ),

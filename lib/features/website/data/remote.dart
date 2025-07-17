@@ -54,7 +54,11 @@ class WebsiteRemoteDataSource {
       );
 
       final data = res.data['message'];
+      appLogger.i("✅ API Response of fetch PRODUCT DETAIL: ${data}");
       final product = WebsiteItemModel.fromDetailJson(data);
+      appLogger.i(
+        "✅ API Response of fetch PRODUCT DETAIL: ${product.toJson()}",
+      );
 
       return Right(product);
     } catch (e) {

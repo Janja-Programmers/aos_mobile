@@ -112,9 +112,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
               ? Center(
                 child: Builder(
                   builder: (context) {
-                    debugPrint(
-                      '❌ Error loading product: ${productProvider.error}',
-                    );
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -161,43 +158,34 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       child:
                           items.isEmpty
                               ? const Center(child: Text('No products found'))
-                              : Expanded(
-                                child: RefreshIndicator(
-                                  onRefresh: () async {
-                                    await context
-                                        .read<WebsiteItemProv>()
-                                        .loadInitialItems();
-                                  },
-                                  child: Column(
-                                    children: [
-                                      Expanded(
-                                        child: GridView.builder(
-                                          controller: _scrollController,
-                                          padding: const EdgeInsets.all(8),
-                                          gridDelegate:
-                                              const SliverGridDelegateWithMaxCrossAxisExtent(
-                                                maxCrossAxisExtent: 200,
-                                                mainAxisSpacing: 12,
-                                                crossAxisSpacing: 12,
-                                                childAspectRatio: 0.65,
-                                              ),
-                                          itemCount: items.length,
-                                          itemBuilder: (context, index) {
-                                            final item = items[index];
-                                            return ProductCard(item: item);
-                                          },
-                                        ),
-                                      ),
-                                      if (productProvider.isLoadingMore)
-                                        const Padding(
-                                          padding: EdgeInsets.symmetric(
-                                            vertical: 16,
+                              : Column(
+                                children: [
+                                  Expanded(
+                                    child: GridView.builder(
+                                      controller: _scrollController,
+                                      padding: const EdgeInsets.all(8),
+                                      gridDelegate:
+                                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                                            maxCrossAxisExtent: 200,
+                                            mainAxisSpacing: 12,
+                                            crossAxisSpacing: 12,
+                                            childAspectRatio: 0.65,
                                           ),
-                                          child: CircularProgressIndicator(),
-                                        ),
-                                    ],
+                                      itemCount: items.length,
+                                      itemBuilder: (context, index) {
+                                        final item = items[index];
+                                        return ProductCard(item: item);
+                                      },
+                                    ),
                                   ),
-                                ),
+                                  if (productProvider.isLoadingMore)
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 16,
+                                      ),
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                ],
                               ),
                     ),
                   ),

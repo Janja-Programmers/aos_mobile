@@ -1,13 +1,14 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
-import 'package:ownashop/core/di/service_locator.dart';
-import 'package:ownashop/features/auth/domain/auth_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '/core/db/clean_db.dart';
+import '/core/di/service_locator.dart';
+import '/core/errors/failures.dart';
 import '/core/utils/api_client.dart';
 import '/core/utils/logger.dart';
-import '/core/errors/failures.dart';
 
+import '../domain/auth_repository.dart';
 import '../domain/usecases/register.dart';
 import '../domain/usecases/login.dart';
 import '../domain/user.dart';
@@ -156,11 +157,15 @@ class AuthProvider with ChangeNotifier {
       },
     );
 
-    // Clear local session regardless of API call success
+    // Clear local shared preferences
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('username');
     await prefs.remove('password');
 
+    // Clear local DB or cache (if using Hive, Isar, Drift, etc.)
+    await clearAllTables();
+
+    // Reset provider state
     user = null;
     _defaultHome = null;
     _returnTo = null;

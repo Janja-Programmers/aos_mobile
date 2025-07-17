@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 
 import '/core/errors/failures.dart';
+
 import '../domain/user.dart';
 import '../domain/auth_repository.dart';
 import '../data/auth_remote_datasource.dart';
@@ -19,7 +20,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<List<dynamic>> register(
+  Future<Either<Failure, List<dynamic>>> register(
     String username,
     String email,
     String fullName,
@@ -36,14 +37,12 @@ class AuthRepositoryImpl implements AuthRepository {
       password,
     );
 
-    return result.fold((failure) => throw Exception(failure.toString()), (
-      data,
-    ) {
+    return result.fold((failure) => Left(failure), (data) {
       final message = data['message'];
       if (message is List) {
-        return message;
+        return Right(message);
       } else {
-        throw Exception("Unexpected response structure");
+        return Left(ServerFailure("Unexpected response format from server"));
       }
     });
   }

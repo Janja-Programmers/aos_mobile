@@ -18,7 +18,7 @@ class RegisterUser {
     String password,
   ) async {
     try {
-      final result = await repository.register(
+      return await repository.register(
         username,
         email,
         fullName,
@@ -26,7 +26,6 @@ class RegisterUser {
         phone,
         password,
       );
-      return Right(result);
     } catch (e) {
       return Left(handleException(e));
     }

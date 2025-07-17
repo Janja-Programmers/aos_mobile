@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '/core/constants/colors.dart';
+
 class AppInputField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
@@ -28,9 +30,10 @@ class AppInputField extends StatelessWidget {
       controller: controller,
       obscureText: isPassword && obscure,
       validator: validator,
+      textInputAction: textInputAction,
       decoration: InputDecoration(
         filled: true,
-        fillColor: const Color(0xFFF2F2F2),
+        fillColor: AppColors.background,
         prefixIcon: Icon(icon),
         suffixIcon:
             isPassword
@@ -47,12 +50,15 @@ class AppInputField extends StatelessWidget {
                 )
                 : null,
         hintText: hint,
+        hintStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Colors.black54,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide.none,
         ),
       ),
-      textInputAction: textInputAction,
     );
   }
 }

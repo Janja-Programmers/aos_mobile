@@ -107,6 +107,51 @@ class AuthProvider with ChangeNotifier {
     return '/';
   }
 
+  String? _registerError;
+  String? get registerError => _registerError;
+
+  Future<bool> signUp(
+    String username,
+    String email,
+    String fullName,
+    String userType,
+    String phone,
+    String password,
+  ) async {
+    _registerError = null;
+    notifyListeners();
+
+    final result = await register(
+      username,
+      email,
+      fullName,
+      userType,
+      phone,
+      password,
+    );
+
+    final success = result.fold(
+      (failure) {
+        _registerError = failure.message;
+        return false;
+      },
+      (responseList) {
+        final statusCode = responseList[0];
+        final message = responseList[1].toString();
+
+        if (statusCode == 0) {
+          _registerError = message;
+          return false;
+        }
+
+        return true;
+      },
+    );
+
+    notifyListeners();
+    return success;
+  }
+
   Future<Either<Failure, List<dynamic>>> register(
     String username,
     String email,

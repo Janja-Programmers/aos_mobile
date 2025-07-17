@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ownashop/core/constants/colors.dart';
 import 'package:ownashop/core/utils/snackbar.dart';
 import 'package:provider/provider.dart';
 
@@ -29,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = Provider.of<AuthProvider>(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F2),
+      backgroundColor: AppColors.background,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -163,7 +164,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 20),
                   TextButton(
                     onPressed: () => context.push('/register'),
-                    child: const Text("Don't have an account? Sign up"),
+                    child: const Text(
+                      "Don't have an account? Sign up",
+                      style: TextStyle(
+                        decoration: TextDecoration.underline,
+                        color: AppColors.black,
+                      ),
+                    ),
                   ),
                 ],
               ),

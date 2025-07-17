@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '/core/constants/colors.dart';
+
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
@@ -27,9 +29,13 @@ class CustomTextField extends StatelessWidget {
       textInputAction: txtInputAction,
       decoration: InputDecoration(
         filled: true,
-        fillColor: const Color(0xFFF2F2F2),
+        fillColor: AppColors.background,
         prefixIcon: Icon(icon),
         hintText: hint,
+        hintStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Colors.black54,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide.none,

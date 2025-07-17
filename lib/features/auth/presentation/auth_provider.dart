@@ -32,67 +32,48 @@ class AuthProvider with ChangeNotifier {
 
   final authRepo = sl<AuthRepository>();
 
+  bool _isLoading = false;
+  String? _loginError;
+
+  bool get isLoading => _isLoading;
+  String? get loginError => _loginError;
+
   bool get isLoggedIn => user != null;
-
   String get defaultHome => _defaultHome ?? '/';
-
-  /// Home to navigate to (returnTo > default > fallback)
   String get home => _returnTo ?? _defaultHome ?? '/';
 
-  /// Used by login screen to set redirect path
   void setReturnTo(String path) {
     _returnTo = path;
-    appLogger.i('💡 ⤴️ returnTo set to: $path');
   }
 
-  /// Used by login screen after successful login
   String consumeReturnTo() {
     final path = _returnTo;
     _returnTo = null;
-    appLogger.i('💡 🧭 Consuming returnTo: $path');
     return path ?? _defaultHome ?? '/';
   }
 
-  Future<void> _restoreSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    final username = prefs.getString('username');
-    final password = prefs.getString('password');
+  // ✅ Wraps login + manages UI state
+  Future<bool> signIn(String username, String password) async {
+    _isLoading = true;
+    _loginError = null;
+    notifyListeners();
 
-    if (username == null || password == null) {
-      appLogger.w('⚠️ No persisted credentials found.');
-      return;
-    }
+    final result = await login(username, password);
 
-    appLogger.i('🔄 Attempting session restore for: $username');
-    final result = await login(username, password, persist: false);
-
-    result.fold(
-      (failure) => appLogger.w('⚠️ Failed to auto-restore session'),
-      (_) => appLogger.i(
-        '🪄 Session auto-restored: ${user?.username}, home: $_defaultHome',
-      ),
+    final success = result.fold(
+      (failure) {
+        _loginError = failure.message;
+        return false;
+      },
+      (_) {
+        consumeReturnTo();
+        return true;
+      },
     );
-  }
 
-  Future<void> loadUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final username = prefs.getString('username');
-    final password = prefs.getString('password');
-
-    if (username != null && password != null) {
-      final result = await login(username, password, persist: false);
-
-      result.fold(
-        (failure) {
-          appLogger.w('⚠️ Failed to load user from persisted credentials');
-        },
-        (_) {
-          appLogger.i('✅ User loaded via `loadUser()`');
-        },
-      );
-    } else {
-      appLogger.w('⚠️ No stored credentials to load user');
-    }
+    _isLoading = false;
+    notifyListeners();
+    return success;
   }
 
   Future<Either<Failure, void>> login(
@@ -109,12 +90,11 @@ class AuthProvider with ChangeNotifier {
     user = loginResult.user;
     _defaultHome = _mapHomePage(loginResult.homePage);
 
-    appLogger.i('💡 Logged in as: ${user?.username}, home: $_defaultHome');
-
     if (persist) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('username', username);
       await prefs.setString('password', password);
+      await prefs.setString('userType', user?.userType ?? 'N/A');
     }
 
     notifyListeners();
@@ -145,27 +125,59 @@ class AuthProvider with ChangeNotifier {
     );
   }
 
+  Future<void> _restoreSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final username = prefs.getString('username');
+    final password = prefs.getString('password');
+    final userType = prefs.getString('userType');
+
+    if (username == null || password == null) {
+      return;
+    }
+
+    final result = await login(username, password, persist: false);
+
+    result.fold((failure) => appLogger.w('⚠️ Failed to auto-restore session'), (
+      _,
+    ) {
+      if (user != null) {
+        user = user!.copyWith(userType: userType);
+      }
+      appLogger.i(
+        '🪄 Session auto-restored: ${user?.username}, home: $_defaultHome',
+      );
+    });
+  }
+
+  Future<void> loadUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final username = prefs.getString('username');
+    final password = prefs.getString('password');
+
+    if (username != null && password != null) {
+      final result = await login(username, password, persist: false);
+      result.fold(
+        (failure) =>
+            appLogger.w('⚠️ Failed to load user from persisted credentials'),
+        (_) => appLogger.i('✅ User loaded via `loadUser()`'),
+      );
+    }
+  }
+
   Future<void> logout() async {
     final result = await authRepo.logout();
-
     result.fold(
-      (failure) {
-        appLogger.e('❌ Logout API call failed: ${failure.message}');
-      },
-      (_) {
-        appLogger.i('✅ Successfully logged out from Frappe');
-      },
+      (failure) => appLogger.e('❌ Logout API call failed: ${failure.message}'),
+      (_) => appLogger.i('✅ Successfully logged out from Frappe'),
     );
 
-    // Clear local shared preferences
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('username');
     await prefs.remove('password');
-
-    // Clear local DB or cache (if using Hive, Isar, Drift, etc.)
+    await prefs.remove('userType');
     await clearAllTables();
+    clearRedirect();
 
-    // Reset provider state
     user = null;
     _defaultHome = null;
     _returnTo = null;

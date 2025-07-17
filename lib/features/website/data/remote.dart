@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:dartz/dartz.dart';
-import 'package:ownashop/core/utils/logger.dart';
 
 import '/core/constants/const.dart';
 import '/core/errors/exception.dart';
@@ -28,8 +27,6 @@ class WebsiteRemoteDataSource {
         },
       );
 
-      appLogger.i("✅ API Response of fetch ITEMS: ${res.data}");
-
       final List<dynamic> list = res.data['message']['items'] ?? [];
 
       final items =
@@ -54,11 +51,7 @@ class WebsiteRemoteDataSource {
       );
 
       final data = res.data['message'];
-      appLogger.i("✅ API Response of fetch PRODUCT DETAIL: ${data}");
       final product = WebsiteItemModel.fromDetailJson(data);
-      appLogger.i(
-        "✅ API Response of fetch PRODUCT DETAIL: ${product.toJson()}",
-      );
 
       return Right(product);
     } catch (e) {

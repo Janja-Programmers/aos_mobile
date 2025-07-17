@@ -1,12 +1,17 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '/core/constants/const.dart';
+import '/core/db/clean_db.dart';
 import '/core/errors/exception.dart';
 import '/core/errors/failures.dart';
+import '/core/utils/api_client.dart';
+
+import '../domain/user.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<Either<Failure, Map<String, dynamic>>> login(String usr, String pwd);
+  Future<Either<Failure, LoginResult>> login(String usr, String pwd);
   Future<Either<Failure, Map<String, dynamic>>> register(
     String username,
     String email,
@@ -19,27 +24,38 @@ abstract class AuthRemoteDataSource {
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  final Dio dio;
+  final APIClient apiClient;
 
-  AuthRemoteDataSourceImpl(this.dio);
+  AuthRemoteDataSourceImpl(this.apiClient);
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> login(
-    String usr,
-    String pwd,
+  Future<Either<Failure, LoginResult>> login(
+    String username,
+    String password,
   ) async {
     try {
-      final response = await dio.post(
+      final response = await apiClient.client.post(
         LOGIN_ENDPOINT,
-        data: {'usr': usr, 'pwd': pwd},
+        data: {'usr': username, 'pwd': password},
       );
 
-      // Extract and save session cookie
       _setSessionCookie(response);
 
-      return Right(response.data);
-    } catch (e) {
-      return Left(handleException(e));
+      final message = response.data['message'];
+      final homePage = response.data['home_page'];
+      final userType = message == "No App" ? "Buyer" : "Vendor";
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_type', userType);
+
+      final user = User(
+        username: response.data['full_name'] ?? 'Guest',
+        userType: userType,
+      );
+
+      return Right(LoginResult(user: user, homePage: homePage));
+    } catch (error) {
+      return Left(handleException(error));
     }
   }
 
@@ -53,7 +69,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     String password,
   ) async {
     try {
-      final response = await dio.post(
+      final response = await apiClient.client.post(
         REGISTER_ENDPOINT,
         data: {
           'username': username,
@@ -77,11 +93,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<Either<Failure, void>> logout() async {
     try {
-      final response = await dio.get(LOGOUT_ENDPOINT);
+      final response = await apiClient.client.get(LOGOUT_ENDPOINT);
 
-      dio.options.headers.remove('Cookie'); // clear session
+      apiClient.client.options.headers.remove('Cookie');
 
       if (response.statusCode == 200) {
+        await clearAllTables();
         return const Right(null);
       } else {
         return Left(ServerFailure('Logout failed'));
@@ -101,7 +118,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final sid = sidCookie.split(';').first.split('=').last;
 
       if (sid.isNotEmpty) {
-        dio.options.headers['Cookie'] = 'sid=$sid';
+        apiClient.client.options.headers['Cookie'] = 'sid=$sid';
       }
     }
   }

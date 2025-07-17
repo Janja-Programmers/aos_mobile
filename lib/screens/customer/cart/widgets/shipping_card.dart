@@ -47,7 +47,7 @@ class _ShippingAddressCardState extends State<ShippingAddressCard> {
   @override
   Widget build(BuildContext context) {
     return Consumer<AddressProvider>(
-      builder: (_, addressProv, __) {
+      builder: (_, addressProv, _) {
         if (addressProv.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }

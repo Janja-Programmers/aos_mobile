@@ -7,21 +7,21 @@ abstract class Failure {
 }
 
 class ServerFailure extends Failure {
-  const ServerFailure(super.message);
+  const ServerFailure([super.message = 'Server error']);
 }
 
 class NetworkFailure extends Failure {
-  const NetworkFailure() : super('No internet connection.');
+  const NetworkFailure([super.message = 'No internet connection.']);
 }
 
 class TimeoutFailure extends Failure {
-  const TimeoutFailure() : super('Request timed out.');
+  const TimeoutFailure([super.message = 'Request timed out.']);
 }
 
 class ParsingFailure extends Failure {
-  const ParsingFailure() : super('Data could not be parsed.');
+  const ParsingFailure([super.message = 'Data could not be parsed.']);
 }
 
 class UnknownFailure extends Failure {
-  const UnknownFailure() : super('Unknown error occurred.');
+  const UnknownFailure([super.message = 'Unknown error occurred.']);
 }

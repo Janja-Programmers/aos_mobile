@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/core/utils/logger.dart';
-import 'package:ownashop/features/auth/presentation/widgets/app_input.dart';
+import 'package:ownashop/core/utils/snackbar.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/errors/failures.dart';
+
+import '/core/utils/validators.dart';
+
 import '../auth_provider.dart';
+
+import '../widgets/app_input.dart';
 import '../widgets/text_widget.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -20,8 +23,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool obscurePass = true;
-  bool _isLoading = false;
-  String? _error;
 
   @override
   Widget build(BuildContext context) {
@@ -55,14 +56,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   CustomTextField(
                     controller: userCtrl,
                     hint: 'Email',
-                    icon: Icons.person,
+                    icon: Icons.email,
                     inputType: TextInputType.emailAddress,
-                    validator:
-                        (value) =>
-                            value == null || value.isEmpty
-                                ? 'Please enter your email'
-                                : null,
+                    validator: (value) => AppValidator.isEmail(value),
                   ),
+
                   const SizedBox(height: 12),
 
                   // Password
@@ -96,18 +94,34 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
 
                   const SizedBox(height: 10),
-                  if (_error != null)
-                    Text(
-                      _error!,
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-
-                  const SizedBox(height: 10),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _isLoading ? null : () => _handleLogin(auth),
+                      onPressed:
+                          auth.isLoading
+                              ? null
+                              : () async {
+                                if (!_formKey.currentState!.validate()) return;
+
+                                final success = await auth.signIn(
+                                  userCtrl.text.trim(),
+                                  passCtrl.text.trim(),
+                                );
+
+                                if (success) {
+                                  context.go(auth.consumeReturnTo());
+                                } else {
+                                  if (context.mounted &&
+                                      auth.loginError != null) {
+                                    topSnackBar(
+                                      context,
+                                      auth.loginError!,
+                                      type: TopSnackType.error,
+                                    );
+                                  }
+                                }
+                              },
+
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -116,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       child: Text(
-                        _isLoading ? 'Verifying...' : 'Log in',
+                        auth.isLoading ? 'Verifying...' : 'Log in',
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),
@@ -158,43 +172,5 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _handleLogin(AuthProvider auth) async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    final result = await auth.login(userCtrl.text.trim(), passCtrl.text.trim());
-
-    result.fold(
-      (failure) {
-        appLogger.e('❌ Login failed: $failure');
-        setState(() {
-          _error =
-              failure is ServerFailure && failure.message.contains("403")
-                  ? 'Access denied. Check your user permissions.'
-                  : 'Invalid email or password';
-        });
-      },
-
-      (_) {
-        final goTo = auth.consumeReturnTo();
-        appLogger.i('✅ Navigating to: $goTo from login screen');
-        context.go(goTo);
-      },
-    );
-
-    setState(() => _isLoading = false);
-  }
-
-  @override
-  void dispose() {
-    userCtrl.dispose();
-    passCtrl.dispose();
-    super.dispose();
   }
 }

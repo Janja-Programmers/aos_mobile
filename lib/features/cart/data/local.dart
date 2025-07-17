@@ -16,7 +16,6 @@ class CartLocalDataSource {
     try {
       final db = await dbHelper.database;
       final model = CartItemModel.fromEntity(item);
-      print('[DB INSERT] ${model.code} x${model.quantity}');
 
       await db.insert(
         'cart',
@@ -36,9 +35,6 @@ class CartLocalDataSource {
       final maps = await db.query('cart');
       final items =
           maps.map((e) => CartItemModel.fromMap(e).toEntity()).toList();
-      for (final item in items) {
-        print('[CART ITEM] ${item.code} x${item.quantity}');
-      }
 
       return Right(items);
     } catch (e) {

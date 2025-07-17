@@ -1,9 +1,8 @@
 import 'package:equatable/equatable.dart';
-import 'package:ownashop/core/utils/logger.dart';
-import 'package:ownashop/features/reviews/entity.dart';
 
 import '/core/utils/formatters.dart';
 
+import '/features/reviews/entity.dart';
 import '/features/reviews/model.dart';
 
 import '/shared/models/specifications.dart';
@@ -116,8 +115,6 @@ class WebsiteItemModel extends Equatable {
     } else if (rawImages is String && rawImages.trim().isNotEmpty) {
       images = [rawImages];
     }
-
-    appLogger.wtf('DEBUG: fromDetailJson: ${json}');
 
     return WebsiteItemModel(
       id: json['name'],

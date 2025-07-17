@@ -10,6 +10,11 @@ class SalesOrderModel {
   final double percentBilled;
   final List<SalesOrderItemModel> items;
 
+  // 👇 New fields for customer info
+  final String? contactEmail;
+  final String? customerPhone;
+  final String shippingAddress;
+
   SalesOrderModel({
     required this.id,
     required this.customerName,
@@ -19,6 +24,9 @@ class SalesOrderModel {
     required this.percentDelivered,
     required this.percentBilled,
     required this.items,
+    required this.shippingAddress,
+    this.contactEmail,
+    this.customerPhone,
   });
 
   factory SalesOrderModel.fromJson(Map<String, dynamic> json) {
@@ -33,17 +41,12 @@ class SalesOrderModel {
       percentDelivered: (json["per_delivered"] as num).toDouble(),
       percentBilled: (json["per_billed"] as num).toDouble(),
       items:
-          itemsJson.map((item) {
-            // Add fallback if certain fields are missing
-            return SalesOrderItemModel.fromJson({
-              ...item,
-              'qty': item['qty'] ?? 0,
-              'rate': item['rate'] ?? 0,
-              'amount': item['amount'] ?? 0,
-              'item_code': item['item_code'] ?? '',
-              'item_name': item['item_name'] ?? '',
-            });
-          }).toList(),
+          itemsJson.map((item) => SalesOrderItemModel.fromJson(item)).toList(),
+
+      // 👇 Get from JSON response directly
+      contactEmail: json['contact_email'],
+      customerPhone: _extractPhone(json['shipping_address']),
+      shippingAddress: json['shipping_address'] ?? '',
     );
   }
 
@@ -56,7 +59,26 @@ class SalesOrderModel {
     percentDelivered: percentDelivered,
     percentBilled: percentBilled,
     items: items.map((e) => e.toEntity()).toList(),
+    shippingAddress: shippingAddress,
+    contactEmail: contactEmail,
+    contactPhone: customerPhone,
   );
+
+  // 👇 Simple phone extraction from <br> string
+  static String? _extractPhone(String? addressHtml) {
+    if (addressHtml == null) return null;
+
+    final lines = addressHtml.split('<br>');
+    for (final line in lines) {
+      final cleanLine = line.trim();
+      if (cleanLine.toLowerCase().startsWith('phone')) {
+        final parts = cleanLine.split(':');
+        if (parts.length > 1) return parts[1].trim();
+      }
+    }
+
+    return null;
+  }
 }
 
 class SalesOrderItemModel {

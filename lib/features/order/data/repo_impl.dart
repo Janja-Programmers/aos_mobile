@@ -27,8 +27,7 @@ class SalesOrderRepoImpl implements SalesOrderRepo {
 
   @override
   Future<Either<Failure, SalesOrder>> getById(String id) async {
-    final result = await remote.getById(id);
-    return result.map((model) => model.toEntity());
+    return await remote.getById(id);
   }
 
   @override

@@ -68,7 +68,6 @@ class SalesOrderProvider with ChangeNotifier {
   }
 
   /// Mark sales order as delivered
-  // ignore: non_constant_identifier_names
   Future<Either<Failure, Unit>> deliverOrder(String id) async {
     _setDetailLoading(true);
 

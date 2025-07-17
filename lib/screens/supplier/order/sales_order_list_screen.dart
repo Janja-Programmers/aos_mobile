@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '/core/constants/colors.dart';
+
 import '/features/order/prov.dart';
 
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
 
-import 'widgets/sales_order_tile.dart';
+import 'widgets/so_card_row.dart';
 
 class SalesOrderListScreen extends StatefulWidget {
   const SalesOrderListScreen({super.key});
@@ -36,7 +38,10 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
     return MainBarScaffold(
       drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
-      subTitle: Text('Sales Order'),
+      subTitle: Text(
+        'Sales Order',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
       body: Consumer<SalesOrderProvider>(
         builder: (context, provider, _) {
           if (provider.listLoading) {
@@ -75,14 +80,30 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
 
           return RefreshIndicator(
             onRefresh: _refresh,
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: provider.orders.length,
-              itemBuilder: (context, index) {
-                final order = provider.orders[index];
-                return SalesOrderTile(order: order);
-              },
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                color: Colors.white,
+                elevation: 2,
+                child: Column(
+                  children:
+                      provider.orders.map((order) {
+                        return Column(
+                          children: [
+                            SalesOrderCardRow(order: order),
+                            const Divider(
+                              height: 2,
+                              color: AppColors.background,
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                ),
+              ),
             ),
           );
         },

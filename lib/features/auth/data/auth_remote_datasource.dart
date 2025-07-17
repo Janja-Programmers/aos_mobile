@@ -84,8 +84,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       _setSessionCookie(response);
 
-      print("REGISTER API response: ${response.data}");
-
       return Right(response.data);
     } catch (e) {
       return Left(handleException(e));

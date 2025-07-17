@@ -9,6 +9,9 @@ class SalesOrder {
   final double percentDelivered;
   final double percentBilled;
   final List<SalesOrderItem> items;
+  final String? contactEmail;
+  final String? contactPhone;
+  final String shippingAddress;
 
   SalesOrder({
     required this.id,
@@ -19,6 +22,9 @@ class SalesOrder {
     required this.percentDelivered,
     required this.percentBilled,
     required this.items,
+    this.contactEmail,
+    this.contactPhone,
+    required this.shippingAddress,
   });
 }
 

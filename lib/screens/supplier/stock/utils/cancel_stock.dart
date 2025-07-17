@@ -78,12 +78,10 @@ Future<void> cancelStockEntry(
   final detailProvider = context.read<StockEntryDetailProvider>();
 
   try {
-    print("Cancelling Stock Entry: ${submitted.id}");
     await apiClient.client.post(
       CANCEL_DOCTYPE_ENDPOINT,
       data: {"doctype": "Stock Intake", "name": submitted.id},
     );
-    print("Stock Entry cancelled successfully: ${submitted.id}");
 
     if (!context.mounted) return;
 

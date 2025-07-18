@@ -75,11 +75,12 @@ Future<void> cancelStockEntry(
   if (confirmed != true) return;
 
   final apiClient = sl<APIClient>();
+  const cancelDocApi = ApiRoutes.cancelDoc;
   final detailProvider = context.read<StockEntryDetailProvider>();
 
   try {
     await apiClient.client.post(
-      CANCEL_DOCTYPE_ENDPOINT,
+      cancelDocApi,
       data: {"doctype": "Stock Intake", "name": submitted.id},
     );
 

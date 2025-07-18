@@ -10,7 +10,7 @@ import '/core/utils/api_client.dart';
 import '../constants/const.dart';
 import '../errors/failures.dart';
 
-const String baseUrl = BASE_URL;
+const String baseUrl = ApiRoutes.baseUrl;
 
 String resolveImageUrl(String? relativePath) {
   if (relativePath == null || relativePath.isEmpty) return '';

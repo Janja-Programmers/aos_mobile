@@ -26,6 +26,8 @@ import '/screens/customer/web-items/screens/list_screen.dart';
 import '/screens/customer/wishlist/presentation/wishlist_screen.dart';
 import '/screens/customer/cart/cart_screen.dart';
 import '/screens/customer/address/shipping_address_form.dart';
+import '/screens/customer/orders/order_detail.dart';
+import '/screens/customer/orders/order_list.dart';
 
 class AppRouter {
   final AuthProvider auth;
@@ -162,6 +164,16 @@ class AppRouter {
       GoRoute(
         path: '/shipping-address',
         builder: (_, _) => const ShippingAddressForm(),
+      ),
+
+      // Past Orders
+      GoRoute(path: '/past-orders', builder: (_, _) => const OrderScreen()),
+      GoRoute(
+        path: '/order-detail',
+        builder: (context, state) {
+          final order = state.extra as Map<String, dynamic>;
+          return OrderDetailScreen(order: order);
+        },
       ),
     ],
   );

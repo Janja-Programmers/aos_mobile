@@ -15,7 +15,12 @@ import 'model.dart';
 
 class SalesOrderRemoteDS {
   final APIClient client;
-  static const _endpoint = SALES_ORDER_ENDPOINT;
+  static const _endpoint = ApiRoutes.salesOrder;
+  static const deliver = ApiRoutes.deliver;
+  static const deliveryNote = ApiRoutes.deliveryNote;
+  static const bill = ApiRoutes.bill;
+  static const salesInvoice = ApiRoutes.salesInvoice;
+  static const viewPastOrders = ApiRoutes.viewPastOrders;
 
   SalesOrderRemoteDS(this.client);
 
@@ -50,6 +55,30 @@ class SalesOrderRemoteDS {
     }
   }
 
+  // ✅ Fetch orders for customer
+  Future<Either<Failure, List<SalesOrderModel>>> getCustomerOrders() async {
+    try {
+      final res = await client.client.post(
+        viewPastOrders,
+        data: {"doctype": "Sales Order"},
+      );
+
+      final rawResultString = res.data['message']?['raw_result'];
+
+      final data = jsonDecode(rawResultString ?? '[]');
+
+      if (data is! List) {
+        throw Exception('Expected a list but got: $data');
+      }
+
+      final models = data.map((e) => SalesOrderModel.fromJson(e)).toList();
+
+      return Right(models);
+    } catch (e) {
+      return Left(handleException(e));
+    }
+  }
+
   // ✅ Fetch one by ID
   Future<Either<Failure, SalesOrder>> getById(String id) async {
     try {
@@ -73,14 +102,14 @@ class SalesOrderRemoteDS {
 
     try {
       final response = await client.client.post(
-        DELIVER_ENDPOINT,
+        deliver,
         data: {"source_name": id},
       );
       final draftDN = response.data['message'];
       if (draftDN == null) throw Exception('Failed to create delivery note');
 
       final saveResponse = await client.client.post(
-        DELIVERY_NOTE_ENDPOINT,
+        deliveryNote,
         data: draftDN,
       );
 
@@ -88,7 +117,7 @@ class SalesOrderRemoteDS {
       if (dnName == null) throw Exception('Delivery Note save failed');
 
       await client.client.put(
-        '$DELIVERY_NOTE_ENDPOINT/$dnName',
+        '$deliveryNote/$dnName',
         data: {"docstatus": docstatusSubmitted},
       );
       return const Right(unit);
@@ -105,7 +134,7 @@ class SalesOrderRemoteDS {
     try {
       // Step 1: Create Sales Invoice draft from Sales Order
       final response = await client.client.post(
-        BILL_ENDPOINT,
+        bill,
         data: {"source_name": id},
       );
 
@@ -116,7 +145,7 @@ class SalesOrderRemoteDS {
 
       // Step 2: Save the Sales Invoice
       final saveResponse = await client.client.post(
-        SALES_INVOICE_ENDPOINT,
+        salesInvoice,
         data: draftInvoice,
       );
 
@@ -127,7 +156,7 @@ class SalesOrderRemoteDS {
 
       // Step 3: Submit the invoice (docstatus = 1)
       await client.client.put(
-        '$SALES_INVOICE_ENDPOINT/$invoiceName',
+        '$salesInvoice/$invoiceName',
         data: {"docstatus": 1},
       );
 
@@ -141,16 +170,38 @@ class SalesOrderRemoteDS {
 
 class SalesOrderPayloadRemoteDS {
   final APIClient client;
+  static const placeOrderEndpoint = ApiRoutes.placeOrder;
 
   SalesOrderPayloadRemoteDS(this.client);
 
   Future<Either<Failure, Unit>> placeOrder(OrderPayloadModel order) async {
     try {
-      await client.client.post(PLACE_ORDER_ENDPOINT, data: order.toJson());
+      await client.client.post(placeOrderEndpoint, data: order.toJson());
 
       return const Right(unit);
     } catch (e) {
       return Left(handleException('Failed to place order: $e'));
     }
   }
+}
+
+Map<String, dynamic> toCustomerOrderMap(SalesOrderModel model) {
+  return {
+    'id': model.id,
+    'buyer': model.customerName,
+    'date': model.deliveryDate,
+    'status': model.status,
+    'items':
+        model.items
+            .map(
+              (i) => {
+                'name': i.itemName,
+                'qty': i.qty,
+                'rate': i.rate,
+                'amount': i.amount,
+              },
+            )
+            .toList(),
+    'total': model.grandTotal,
+  };
 }

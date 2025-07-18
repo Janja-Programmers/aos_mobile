@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '/core/constants/const.dart';
 import '/core/di/service_locator.dart';
 import '/core/utils/api_client.dart';
+import '/core/utils/logger.dart';
 
 import '/features/product/domain/product.dart';
 import '/features/product/domain/usecase.dart';
@@ -21,6 +22,7 @@ class ProductProvider with ChangeNotifier {
   );
 
   final apiClient = sl<APIClient>();
+  static const productApi = ApiRoutes.product;
 
   List<Product> _products = [];
   bool _isLoading = false;
@@ -52,7 +54,7 @@ class ProductProvider with ChangeNotifier {
       final model = await remoteDataSource.getProductByName(name);
       return model.toEntity();
     } catch (e) {
-      debugPrint('❌ Failed to fetch product "$name": $e');
+      appLogger.e('❌ Failed to fetch product "$name": $e');
       return null;
     }
   }
@@ -109,24 +111,19 @@ class ProductProvider with ChangeNotifier {
 
   Future<bool> createProductFromRaw(Map<String, dynamic> payload) async {
     try {
-      debugPrint('📤 Creating product with payload: $payload');
-      final response = await apiClient.client.post(
-        PRODUCT_ENDPOINT,
-        data: payload,
-      );
+      await apiClient.client.post(productApi, data: payload);
 
-      debugPrint('✅ Product created from provider: ${response.data}');
       await fetchProducts();
       return true;
     } catch (e, stack) {
-      debugPrint('❌ Failed to create product: $e\n$stack');
+      appLogger.e('❌ Failed to create product: $e\n$stack');
       return false;
     }
   }
 
   Future<void> deleteProduct(String name) async {
     try {
-      await apiClient.client.delete('$PRODUCT_ENDPOINT/$name');
+      await apiClient.client.delete('$productApi/$name');
       _products.removeWhere((p) => p.name == name);
       notifyListeners();
     } catch (e) {

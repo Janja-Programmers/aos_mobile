@@ -14,6 +14,7 @@ abstract class ProductRemoteDataSource {
 
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   final APIClient client;
+  static const productApi = ApiRoutes.product;
 
   ProductRemoteDataSourceImpl(this.client);
 
@@ -21,7 +22,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   Future<List<ProductModel>> getProducts() async {
     try {
       final response = await client.client.get(
-        PRODUCT_ENDPOINT,
+        productApi,
         queryParameters: {
           'fields': '["name","item_name","category", "modified", "creation"]',
         },
@@ -43,7 +44,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   }
 
   Future<ProductModel> getProductByName(String name) async {
-    final endpoint = '$PRODUCT_ENDPOINT/$name';
+    final endpoint = '$productApi/$name';
 
     try {
       final response = await client.client.get(endpoint);
@@ -91,7 +92,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       });
 
       final response = await client.client.post(
-        PRODUCT_ENDPOINT,
+        productApi,
         data: formData,
         options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
@@ -144,7 +145,7 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       });
 
       final response = await client.client.put(
-        '$PRODUCT_ENDPOINT/${model.name}',
+        '$productApi/${model.name}',
         data: formData,
         options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );

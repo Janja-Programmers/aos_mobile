@@ -36,7 +36,7 @@ Future<void> handleUserMenuSelection(BuildContext context, String value) async {
   final authProvider = context.read<AuthProvider>();
   switch (value) {
     case 'orders':
-      context.go('/');
+      context.go('/past-orders');
       break;
     case 'logout':
       await authProvider.logout();

@@ -19,7 +19,7 @@ class CartRemoteDataSource {
       appLogger.i("✅ API data ${model.toJson()}");
 
       final res = await client.client.post(
-        ADD_CART_ENDPOINT,
+        ApiRoutes.addToCart,
         data: model.toJson(),
       );
 
@@ -40,9 +40,7 @@ class OrderService {
   OrderService(this.apiClient);
 
   Future<void> placeOrder() async {
-    final result = await apiClient.client.post(
-      '/api/method/amani_mall.overrides.cart.place_order',
-    );
+    final result = await apiClient.client.post(ApiRoutes.placeOrder);
 
     appLogger.i('Order response: ${result.data}');
   }

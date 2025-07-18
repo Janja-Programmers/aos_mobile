@@ -114,6 +114,6 @@ Future<void> showProfileMenu(BuildContext context, Offset offset) async {
     await authProvider.logout();
     context.go('/login');
   } else if (selected == 'orders') {
-    context.go('/orders');
+    context.go('/past-orders');
   }
 }

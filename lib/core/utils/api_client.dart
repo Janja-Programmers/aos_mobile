@@ -1,7 +1,6 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:dio/dio.dart';
-// import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '/core/constants/const.dart';
@@ -24,7 +23,7 @@ class APIClient {
     );
 
     client._dio.options
-      ..baseUrl = BASE_URL
+      ..baseUrl = ApiRoutes.baseUrl
       ..connectTimeout = const Duration(seconds: 25)
       ..receiveTimeout = const Duration(seconds: 25);
 
@@ -36,17 +35,6 @@ class APIClient {
         onError: (DioException e, handler) => handler.next(e),
       ),
     ]);
-
-    // if (kDebugMode) {
-    //   client._dio.interceptors.add(
-    //     LogInterceptor(
-    //       request: true,
-    //       responseBody: true,
-    //       error: true,
-    //       logPrint: (obj) => debugPrint('📦 $obj'),
-    //     ),
-    //   );
-    // }
 
     return client;
   }

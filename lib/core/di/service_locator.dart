@@ -33,6 +33,7 @@ import '/features/order/data/repo_impl.dart';
 import '/features/order/domain/repo.dart';
 import '/features/order/domain/usecases.dart';
 import '/features/order/prov.dart';
+import '/screens/customer/orders/provider.dart';
 
 /*****  DELIVERYNOTE *******/
 import '/features/d_note/data/remote.dart';
@@ -158,6 +159,7 @@ Future<void> init() async {
       placeOrder: sl(),
     ),
   );
+  sl.registerLazySingleton(() => CustomerOrderProvider(sl()));
 
   // DELIVERYNOTE Doctype
   // === Data ===

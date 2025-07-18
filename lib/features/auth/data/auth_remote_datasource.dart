@@ -35,7 +35,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   ) async {
     try {
       final response = await apiClient.client.post(
-        LOGIN_ENDPOINT,
+        ApiRoutes.login,
         data: {'usr': username, 'pwd': password},
       );
 
@@ -70,7 +70,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   ) async {
     try {
       final response = await apiClient.client.post(
-        REGISTER_ENDPOINT,
+        ApiRoutes.register,
         data: {
           'username': username,
           'email': email,
@@ -93,7 +93,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<Either<Failure, void>> logout() async {
     try {
-      final response = await apiClient.client.get(LOGOUT_ENDPOINT);
+      final response = await apiClient.client.get(ApiRoutes.logout);
 
       apiClient.client.options.headers.remove('Cookie');
 

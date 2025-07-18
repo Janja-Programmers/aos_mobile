@@ -30,7 +30,7 @@ class MediaPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final resolvedUrl =
         filePath != null && filePath!.startsWith('/files/')
-            ? "$BASE_URL$filePath"
+            ? "${ApiRoutes.baseUrl}$filePath"
             : filePath;
 
     Widget preview;

@@ -17,6 +17,7 @@ import 'screens/customer/web-items/utils/vendor_utils.dart';
 
 // SALESORDER Feature
 import 'features/order/prov.dart';
+import '/screens/customer/orders/provider.dart';
 
 // DELIVERYNOTE Feature
 import 'features/d_note/prov.dart';
@@ -49,6 +50,7 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => sl<WebsiteItemProv>()),
         ChangeNotifierProvider(create: (_) => sl<ProductProvider>()),
         ChangeNotifierProvider(create: (_) => sl<SalesOrderProvider>()),
+        ChangeNotifierProvider(create: (_) => sl<CustomerOrderProvider>()),
         ChangeNotifierProvider(create: (_) => sl<DeliveryNoteProvider>()),
         ChangeNotifierProvider(create: (_) => sl<StockEntryProvider>()),
         ChangeNotifierProvider(create: (_) => sl<CreateStockEntryProvider>()),

@@ -13,6 +13,8 @@ import 'model.dart';
 
 class WebsiteRemoteDataSource {
   final APIClient _client;
+  static const webItemApi = ApiRoutes.webItem;
+  static const singleWebItemApi = ApiRoutes.singleWebItem;
 
   WebsiteRemoteDataSource(this._client);
 
@@ -21,7 +23,7 @@ class WebsiteRemoteDataSource {
   }) async {
     try {
       final res = await _client.client.get(
-        WEB_ITEM_ENDPOINT,
+        webItemApi,
         queryParameters: {
           'query_args': jsonEncode({'start': start}),
         },
@@ -46,7 +48,7 @@ class WebsiteRemoteDataSource {
   ) async {
     try {
       final res = await _client.client.get(
-        SINGLE_WEB_ITEM_ENDPOINT,
+        singleWebItemApi,
         queryParameters: {'item_code': itemCode},
       );
 

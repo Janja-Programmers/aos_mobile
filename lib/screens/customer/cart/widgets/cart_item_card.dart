@@ -37,7 +37,7 @@ class CartItemCard extends StatelessWidget {
                       resolvedImage,
                       fit: BoxFit.cover,
                       errorBuilder:
-                          (ctx, _, __) => const Icon(Icons.broken_image),
+                          (ctx, _, _) => const Icon(Icons.broken_image),
                     ),
                   ),
                 ),
@@ -78,11 +78,11 @@ class CartItemCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  'Subtotal: KES ${(item.price * item.quantity).toStringAsFixed(2)}',
+                  'Sh ${(item.price * item.quantity).toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: Colors.green,
+                    fontSize: 12,
+                    color: Colors.black,
                   ),
                 ),
               ],

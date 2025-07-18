@@ -37,19 +37,6 @@ class ProductRepoImpl implements ProductRepo {
   }
 
   @override
-  Future<Either<Failure, List<Product>>> getProductsByVendor(
-    String vendor,
-  ) async {
-    try {
-      final models = await remote.vendorProducts(vendor);
-      final entities = models.map((e) => e.toEntity()).toList();
-      return Right(entities);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
   Future<Either<Failure, Product>> updateProduct(Product product) async {
     try {
       final model = ProductModel.fromEntity(product);

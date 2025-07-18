@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 
+import '/core/constants/const.dart';
+import '/core/di/service_locator.dart';
+import '/core/utils/api_client.dart';
 import '/core/utils/logger.dart';
+
 import '/features/product/domain/product.dart';
 import '/features/product/domain/usecase.dart';
+
+import 'data/remote.dart';
 
 class ProductProvider with ChangeNotifier {
   final GetProductsUseCase getProductsUseCase;
   final CreateProductUseCase createProductUseCase;
-  final GetVendorProductsUseCase getVendorProductsUseCase;
   final UpdateProductUseCase updateProductUseCase;
 
   ProductProvider(
     this.getProductsUseCase,
     this.createProductUseCase,
-    this.getVendorProductsUseCase,
     this.updateProductUseCase,
   );
+
+  final apiClient = sl<APIClient>();
+  static const productApi = ApiRoutes.product;
 
   List<Product> _products = [];
   bool _isLoading = false;
@@ -41,20 +48,15 @@ class ProductProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchVendorProducts(String vendor) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    final result = await getVendorProductsUseCase(vendor);
-
-    result.fold(
-      (failure) => _error = failure.message,
-      (data) => _products = data,
-    );
-
-    _isLoading = false;
-    notifyListeners();
+  Future<Product?> getProductByName(String name) async {
+    try {
+      final remoteDataSource = ProductRemoteDataSourceImpl(apiClient);
+      final model = await remoteDataSource.getProductByName(name);
+      return model.toEntity();
+    } catch (e) {
+      appLogger.e('❌ Failed to fetch product "$name": $e');
+      return null;
+    }
   }
 
   Future<bool> createProduct(Product product) async {
@@ -101,10 +103,31 @@ class ProductProvider with ChangeNotifier {
         if (index != -1) {
           _products[index] = updated;
         }
-        appLogger.i('Product updated: ${updated.itemName}');
         notifyListeners();
         return true;
       },
     );
+  }
+
+  Future<bool> createProductFromRaw(Map<String, dynamic> payload) async {
+    try {
+      await apiClient.client.post(productApi, data: payload);
+
+      await fetchProducts();
+      return true;
+    } catch (e, stack) {
+      appLogger.e('❌ Failed to create product: $e\n$stack');
+      return false;
+    }
+  }
+
+  Future<void> deleteProduct(String name) async {
+    try {
+      await apiClient.client.delete('$productApi/$name');
+      _products.removeWhere((p) => p.name == name);
+      notifyListeners();
+    } catch (e) {
+      rethrow;
+    }
   }
 }

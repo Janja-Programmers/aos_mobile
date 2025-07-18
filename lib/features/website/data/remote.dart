@@ -1,5 +1,6 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
-import 'package:ownashop/core/utils/logger.dart';
 
 import '/core/constants/const.dart';
 import '/core/errors/exception.dart';
@@ -12,13 +13,23 @@ import 'model.dart';
 
 class WebsiteRemoteDataSource {
   final APIClient _client;
+  static const webItemApi = ApiRoutes.webItem;
+  static const singleWebItemApi = ApiRoutes.singleWebItem;
 
   WebsiteRemoteDataSource(this._client);
 
-  Future<Either<Failure, List<WebsiteItem>>> fetchItems() async {
+  Future<Either<Failure, List<WebsiteItem>>> fetchItems({
+    required int start,
+  }) async {
     try {
-      final res = await _client.client.get(WEB_ITEM_ENDPOINT);
-      final List<dynamic> list = res.data['message'];
+      final res = await _client.client.get(
+        webItemApi,
+        queryParameters: {
+          'query_args': jsonEncode({'start': start}),
+        },
+      );
+
+      final List<dynamic> list = res.data['message']['items'] ?? [];
 
       final items =
           list.map((item) {
@@ -37,13 +48,12 @@ class WebsiteRemoteDataSource {
   ) async {
     try {
       final res = await _client.client.get(
-        SINGLE_WEB_ITEM_ENDPOINT,
+        singleWebItemApi,
         queryParameters: {'item_code': itemCode},
       );
 
       final data = res.data['message'];
-      appLogger.i('Raw product detail response: $data'); // ADD THIS
-      final product = WebsiteItemModel.fromJson(data);
+      final product = WebsiteItemModel.fromDetailJson(data);
 
       return Right(product);
     } catch (e) {

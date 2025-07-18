@@ -1,21 +1,16 @@
 import 'package:go_router/go_router.dart';
+
 // Auth
-import '/features/product/domain/product.dart';
 import '/features/auth/presentation/auth_provider.dart';
 import '/features/auth/presentation/screens/login_screen.dart';
 import '/features/auth/presentation/screens/register_screen.dart';
 
-// Customer
-import '../../screens/customer/web-items/screens/list_screen.dart';
-import '/screens/customer/wishlist/presentation/wishlist_screen.dart';
-import '/screens/customer/cart/cart_screen.dart';
-import '/screens/customer/address/shipping_address_form.dart';
-
 // Seller
-import '../../screens/customer/web-items/screens/detail_screen.dart';
-import '/screens/supplier/product/add_item_screen.dart';
-import '/screens/supplier/dashboard/dashboard.dart';
+import '/features/product/domain/product.dart';
 import '/screens/supplier/product/item_screen.dart';
+import '/screens/supplier/dashboard/dashboard.dart';
+import '/screens/supplier/product/update_item_screen.dart';
+import '/screens/customer/web-items/screens/detail_screen.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';
 import '/screens/supplier/d_note/delivery_note_list_screen.dart';
 import '/screens/supplier/order/order_detail_screen.dart';
@@ -25,6 +20,14 @@ import '/features/stock/domain/entity/stock.dart';
 import '/screens/supplier/stock/create_stock_screen.dart';
 import '/screens/supplier/stock/stock_list_screen.dart';
 import '/screens/supplier/stock/stock_detail_screen.dart';
+
+// Customer
+import '/screens/customer/web-items/screens/list_screen.dart';
+import '/screens/customer/wishlist/presentation/wishlist_screen.dart';
+import '/screens/customer/cart/cart_screen.dart';
+import '/screens/customer/address/shipping_address_form.dart';
+import '/screens/customer/orders/order_detail.dart';
+import '/screens/customer/orders/order_list.dart';
 
 class AppRouter {
   final AuthProvider auth;
@@ -36,19 +39,27 @@ class AppRouter {
     initialLocation: '/login',
     redirect: (context, state) {
       final loggedIn = auth.isLoggedIn;
+
+      // Checks if the current path is /login or /register
       final loggingIn =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register';
 
-      if (!loggedIn && !loggingIn) return '/login';
-      if (loggedIn && loggingIn) {
-        final target = auth.redirectPath ?? '/';
-        auth.clearRedirect();
-        return target;
+      // 🚫 Not logged in, and trying to go to any protected page
+      if (!loggedIn && !loggingIn) {
+        auth.setReturnTo(
+          state.matchedLocation,
+        ); // remember where they wanted to go
+        return '/login';
       }
 
+      // ✅ Logged in, but trying to go to /login or /register → redirect to home
+      if (loggedIn && loggingIn) return auth.defaultHome;
+
+      // ✅ No redirect needed
       return null;
     },
+
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
@@ -65,15 +76,34 @@ class AppRouter {
         path: '/dashboard',
         builder: (context, state) => const SellerDashboard(),
       ),
-      // Items
-      GoRoute(path: '/items', builder: (context, state) => ItemScreen()),
-      // Item Detail
 
-      // Sales Order
+      // PRODUCTS ROUTES
+      // CREATE ROUTE
+      GoRoute(
+        path: '/add-item',
+        builder: (context, state) => const AddItemScreen(),
+      ),
+
+      // READ ROUTE
+      GoRoute(path: '/items', builder: (context, state) => ItemScreen()),
+
+      // UPDATE ROUTE
+      GoRoute(
+        path: '/edit-item/:name',
+        builder: (context, state) {
+          final product = state.extra as Product;
+          return AddItemScreen(product: product);
+        },
+      ),
+
+      // SALES ORDER ROUTES
+      // Sales Order List
       GoRoute(
         path: '/sales-orders',
         builder: (context, state) => const SalesOrderListScreen(),
       ),
+
+      // Sales Order Detail
       GoRoute(
         path: '/sales-order/:id',
         builder: (context, state) {
@@ -123,18 +153,10 @@ class AppRouter {
       ),
       // Product Details
       GoRoute(
-        path: '/product/:id',
+        path: '/product/:itemCode',
         builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return ProductDetailScreen(productId: id);
-        },
-      ),
-
-      GoRoute(
-        path: '/add-item',
-        builder: (context, state) {
-          final product = state.extra as Product?;
-          return AddItemScreen(product: product);
+          final itemCode = state.pathParameters['itemCode']!;
+          return ProductDetailScreen(itemCode: itemCode);
         },
       ),
 
@@ -142,6 +164,16 @@ class AppRouter {
       GoRoute(
         path: '/shipping-address',
         builder: (_, _) => const ShippingAddressForm(),
+      ),
+
+      // Past Orders
+      GoRoute(path: '/past-orders', builder: (_, _) => const OrderScreen()),
+      GoRoute(
+        path: '/order-detail',
+        builder: (context, state) {
+          final order = state.extra as Map<String, dynamic>;
+          return OrderDetailScreen(order: order);
+        },
       ),
     ],
   );

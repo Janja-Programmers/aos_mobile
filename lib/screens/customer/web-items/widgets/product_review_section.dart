@@ -15,14 +15,8 @@ class ProductReviews extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Customer Reviews",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
         ...reviews.map((review) {
           return Card(
-            margin: const EdgeInsets.symmetric(vertical: 6),
             elevation: 1,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -32,6 +26,11 @@ class ProductReviews extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const Text(
+                    "Customer Reviews",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
                   // Title and stars
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

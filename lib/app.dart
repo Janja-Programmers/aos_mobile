@@ -12,15 +12,12 @@ import 'features/auth/presentation/auth_provider.dart';
 // PRODUCT Feature
 import 'features/charts/presentation/provider.dart';
 import 'features/product/provider.dart';
-
-// ITEM Feature
-import 'features/item/prov.dart';
-
-// ITEMPRICE Feature
-import 'features/itemPrice/prov.dart';
+import 'screens/customer/web-items/utils/vendor_prov.dart';
+import 'screens/customer/web-items/utils/vendor_utils.dart';
 
 // SALESORDER Feature
 import 'features/order/prov.dart';
+import '/screens/customer/orders/provider.dart';
 
 // DELIVERYNOTE Feature
 import 'features/d_note/prov.dart';
@@ -38,6 +35,7 @@ import '/features/address/provider.dart';
 
 // WEBSITE Feature
 import 'features/website/prov.dart';
+import 'screens/supplier/product/controllers/add_item_controller.dart';
 
 class App extends StatelessWidget {
   final AuthProvider auth;
@@ -51,9 +49,8 @@ class App extends StatelessWidget {
         ChangeNotifierProvider<AuthProvider>.value(value: auth),
         ChangeNotifierProvider(create: (_) => sl<WebsiteItemProv>()),
         ChangeNotifierProvider(create: (_) => sl<ProductProvider>()),
-        ChangeNotifierProvider(create: (_) => sl<ItemProv>()),
-        ChangeNotifierProvider(create: (_) => sl<ItemPriceProvider>()),
         ChangeNotifierProvider(create: (_) => sl<SalesOrderProvider>()),
+        ChangeNotifierProvider(create: (_) => sl<CustomerOrderProvider>()),
         ChangeNotifierProvider(create: (_) => sl<DeliveryNoteProvider>()),
         ChangeNotifierProvider(create: (_) => sl<StockEntryProvider>()),
         ChangeNotifierProvider(create: (_) => sl<CreateStockEntryProvider>()),
@@ -62,6 +59,16 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => sl<AddressProvider>()),
         ChangeNotifierProvider(
           create: (_) => sl<SalesChartProvider>()..fetchChart(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => VendorProvider(utils: sl<VendorUtils>()),
+        ),
+        ChangeNotifierProvider(
+          create:
+              (_) => AddItemController(
+                provider: sl<ProductProvider>(),
+                apiClient: sl(),
+              ),
         ),
       ],
       child: MaterialApp.router(

@@ -33,8 +33,13 @@ class Product {
 }
 
 class WebsiteSpecification {
+  final String? name;
   final String label;
   final String description;
 
-  WebsiteSpecification({required this.label, required this.description});
+  WebsiteSpecification({
+    this.name,
+    required this.label,
+    required this.description,
+  });
 }

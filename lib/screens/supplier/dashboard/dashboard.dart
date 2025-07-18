@@ -40,19 +40,15 @@ class _SellerDashboardState extends State<SellerDashboard> {
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 0, onItemSelected: (_) {}),
-      subTitle: AppStrings.dashboard,
+      subTitle: Text(
+        AppStrings.dashboard,
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
           /// 👇 Sales Chart Card
           const SalesChartCard(),
-
-          const SizedBox(height: 20),
-
-          /// 👇 Dashboard Section Title
-          Text('Quick Access', style: Theme.of(context).textTheme.titleMedium),
-
-          const SizedBox(height: 10),
 
           /// 👇 Dashboard Grid Tiles
           GridView.count(

@@ -4,7 +4,7 @@ import '../../core/constants/colors.dart';
 import 'app_bars.dart';
 
 class MainBarScaffold extends StatelessWidget {
-  final String subTitle;
+  final Widget subTitle;
   final Widget body;
   final VoidCallback? onSave;
   final GlobalKey<ScaffoldState> scaffoldKey;
@@ -24,6 +24,7 @@ class MainBarScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       key: scaffoldKey,
       drawer: drawer,
       body: Column(

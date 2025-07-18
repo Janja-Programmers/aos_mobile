@@ -35,6 +35,7 @@ class CartLocalDataSource {
       final maps = await db.query('cart');
       final items =
           maps.map((e) => CartItemModel.fromMap(e).toEntity()).toList();
+
       return Right(items);
     } catch (e) {
       return Left(handleException('Failed to get cart items: $e'));

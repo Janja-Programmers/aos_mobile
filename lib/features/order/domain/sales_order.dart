@@ -9,6 +9,9 @@ class SalesOrder {
   final double percentDelivered;
   final double percentBilled;
   final List<SalesOrderItem> items;
+  final String? contactEmail;
+  final String? contactPhone;
+  final String shippingAddress;
 
   SalesOrder({
     required this.id,
@@ -19,6 +22,9 @@ class SalesOrder {
     required this.percentDelivered,
     required this.percentBilled,
     required this.items,
+    this.contactEmail,
+    this.contactPhone,
+    required this.shippingAddress,
   });
 }
 
@@ -44,7 +50,7 @@ class OrderPayload {
   final int docstatus;
   final List<CartItem> items;
   final String shippingAddress;
-  final String customerAddress;
+  final String? customerAddress;
   final String addressType;
 
   OrderPayload({
@@ -52,7 +58,7 @@ class OrderPayload {
     required this.deliveryDate,
     required this.items,
     required this.shippingAddress,
-    required this.customerAddress,
+    this.customerAddress,
     required this.addressType,
     this.docstatus = 1,
   });
@@ -65,7 +71,6 @@ class OrderPayload {
     "docstatus": docstatus,
     "items": items.map((item) => item.toJson()).toList(),
     "shipping_address": shippingAddress,
-    "customer_address": customerAddress,
     "address_type": addressType,
   };
 }

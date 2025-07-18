@@ -48,3 +48,12 @@ class UpdateCartItemQuantityUseCase {
     return repo.updateQuantity(code, quantity);
   }
 }
+
+class UpdateRemoteCartUseCase {
+  final CartRepo repo;
+  UpdateRemoteCartUseCase(this.repo);
+
+  Future<Either<Failure, Unit>> call(CartItem item) {
+    return repo.updateRemoteCart(item);
+  }
+}

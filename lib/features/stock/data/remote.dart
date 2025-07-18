@@ -5,22 +5,43 @@ import '/core/errors/failures.dart';
 import '/core/errors/exception.dart';
 import '/core/utils/api_client.dart';
 
+import '../domain/entity/stock.dart';
+
 import 'models/stock.dart';
 
 class StockEntryRemoteDS {
   final APIClient _client;
+  static const stockIntakeApi = ApiRoutes.stockIntake;
 
   StockEntryRemoteDS(this._client);
 
-  Future<Either<Failure, List<String>>> getAllNames() async {
+  Future<Either<Failure, List<StockEntry>>> getAll() async {
     try {
       final res = await _client.client.get(
-        STOCK_ENTRY_ENDPOINT,
-        queryParameters: {'order_by': 'creation desc'},
+        stockIntakeApi,
+        queryParameters: {
+          'fields': '["name", "docstatus", "modified"]',
+          'order_by': 'modified desc',
+        },
       );
-      final List<dynamic> list = res.data['data'];
-      final names = list.map((e) => e['name'] as String).toList();
-      return Right(names);
+
+      final data = res.data['data'];
+      if (data is! List) throw Exception("Expected a list, got: $data");
+
+      final entries =
+          data
+              .map((e) {
+                try {
+                  return StockEntryModel.fromJson(e).toEntity();
+                } catch (e) {
+                  handleException('Error parsing stock entry');
+                  return null;
+                }
+              })
+              .whereType<StockEntry>()
+              .toList();
+
+      return Right(entries);
     } catch (e) {
       return Left(handleException(e));
     }
@@ -28,7 +49,7 @@ class StockEntryRemoteDS {
 
   Future<Either<Failure, StockEntryModel>> getById(String name) async {
     try {
-      final res = await _client.client.get('$STOCK_ENTRY_ENDPOINT/$name');
+      final res = await _client.client.get('$stockIntakeApi/$name');
       final model = StockEntryModel.fromJson(res.data['data']);
       return Right(model);
     } catch (e) {
@@ -38,7 +59,7 @@ class StockEntryRemoteDS {
 
   Future<Either<Failure, void>> add(StockEntryModel entry) async {
     try {
-      await _client.client.post(STOCK_ENTRY_ENDPOINT, data: entry.toJson());
+      await _client.client.post(stockIntakeApi, data: entry.toJson());
       return const Right(null);
     } catch (e) {
       return Left(handleException(e));
@@ -52,10 +73,7 @@ class StockEntryRemoteDS {
         return Left(handleException('Missing Stock Entry ID for update.'));
       }
 
-      await _client.client.put(
-        '$STOCK_ENTRY_ENDPOINT/$id',
-        data: entry.toJson(),
-      );
+      await _client.client.put('$stockIntakeApi/$id', data: entry.toJson());
       return const Right(null);
     } catch (e) {
       return Left(handleException(e));

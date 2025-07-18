@@ -48,5 +48,9 @@ class CreateStockEntryProvider with ChangeNotifier, AsyncState<void> {
     notifyListeners();
   }
 
+  void clearError() {
+    reset();
+  }
+
   void reset() => clearState();
 }

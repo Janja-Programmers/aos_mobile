@@ -7,7 +7,7 @@ import 'user.dart';
 abstract class AuthRepository {
   Future<Either<Failure, LoginResult>> login(String username, String password);
 
-  Future<List<dynamic>> register(
+  Future<Either<Failure, List<dynamic>>> register(
     String username,
     String email,
     String fullName,
@@ -15,4 +15,6 @@ abstract class AuthRepository {
     String phone,
     String password,
   );
+
+  Future<Either<Failure, void>> logout();
 }

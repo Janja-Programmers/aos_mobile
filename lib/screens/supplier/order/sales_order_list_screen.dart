@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '/core/constants/colors.dart';
+
 import '/features/order/prov.dart';
 
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
 
-import 'widgets/sales_order_tile.dart';
+import 'widgets/so_card_row.dart';
 
 class SalesOrderListScreen extends StatefulWidget {
   const SalesOrderListScreen({super.key});
@@ -34,37 +36,74 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
   @override
   Widget build(BuildContext context) {
     return MainBarScaffold(
-      drawer: AppDrawer(selectedIndex: 5, onItemSelected: (_) {}),
+      drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
-      subTitle: 'Sales Order',
+      subTitle: Text(
+        'Sales Order',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
       body: Consumer<SalesOrderProvider>(
         builder: (context, provider, _) {
-          if (provider.loading) {
-            return const Center(child: CircularProgressIndicator());
+          if (provider.listLoading) {
+            return const Center(
+              child: SizedBox(
+                width: 32,
+                height: 32,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+            );
           }
 
           if (provider.failure != null) {
             return Center(
-              child: Text(
-                'Error: ${provider.failure!.message}',
-                style: const TextStyle(color: Colors.red),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Error: Could not load orders',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                    onPressed: _refresh,
+                  ),
+                ],
               ),
             );
           }
 
           if (provider.orders.isEmpty) {
-            return const Center(child: Text('No sales orders found.'));
+            return const Center(child: Text('No orders found.'));
           }
 
           return RefreshIndicator(
             onRefresh: _refresh,
-            child: ListView.builder(
+            child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: provider.orders.length,
-              itemBuilder: (context, index) {
-                final order = provider.orders[index];
-                return SalesOrderTile(order: order);
-              },
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                color: Colors.white,
+                elevation: 2,
+                child: Column(
+                  children:
+                      provider.orders.map((order) {
+                        return Column(
+                          children: [
+                            SalesOrderCardRow(order: order),
+                            const Divider(
+                              height: 2,
+                              color: AppColors.background,
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                ),
+              ),
             ),
           );
         },

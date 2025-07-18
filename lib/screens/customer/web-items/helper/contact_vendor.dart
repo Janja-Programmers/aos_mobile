@@ -7,7 +7,7 @@ class ContactVendorButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton.icon(
+    return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
@@ -17,8 +17,7 @@ class ContactVendorButton extends StatelessWidget {
         textStyle: const TextStyle(fontSize: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      icon: const Icon(Icons.phone),
-      label: const Text('Contact Vendor'),
+      child: const Text('Contact Vendor'),
     );
   }
 }

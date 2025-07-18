@@ -2,9 +2,13 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '/core/utils/logger.dart';
+import '/core/db/clean_db.dart';
+import '/core/di/service_locator.dart';
 import '/core/errors/failures.dart';
+import '/core/utils/api_client.dart';
+import '/core/utils/logger.dart';
 
+import '../domain/auth_repository.dart';
 import '../domain/usecases/register.dart';
 import '../domain/usecases/login.dart';
 import '../domain/user.dart';
@@ -12,35 +16,140 @@ import '../domain/user.dart';
 class AuthProvider with ChangeNotifier {
   final LoginUser loginUser;
   final RegisterUser registerUser;
+  final APIClient apiClient;
 
   User? user;
-  String? _redirectPath;
+  String? _defaultHome;
+  String? _returnTo;
 
-  AuthProvider({required this.loginUser, required this.registerUser});
+  AuthProvider({
+    required this.loginUser,
+    required this.registerUser,
+    required this.apiClient,
+  }) {
+    Future.microtask(() => _restoreSession());
+  }
+
+  final authRepo = sl<AuthRepository>();
+
+  bool _isLoading = false;
+  String? _loginError;
+
+  bool get isLoading => _isLoading;
+  String? get loginError => _loginError;
 
   bool get isLoggedIn => user != null;
-  String? get redirectPath => _redirectPath;
+  String get defaultHome => _defaultHome ?? '/';
+  String get home => _returnTo ?? _defaultHome ?? '/';
 
-  Future<Either<Failure, void>> login(String username, String password) async {
+  void setReturnTo(String path) {
+    _returnTo = path;
+  }
+
+  String consumeReturnTo() {
+    final path = _returnTo;
+    _returnTo = null;
+    return path ?? _defaultHome ?? '/';
+  }
+
+  // ✅ Wraps login + manages UI state
+  Future<bool> signIn(String username, String password) async {
+    _isLoading = true;
+    _loginError = null;
+    notifyListeners();
+
+    final result = await login(username, password);
+
+    final success = result.fold(
+      (failure) {
+        _loginError = failure.message;
+        return false;
+      },
+      (_) {
+        consumeReturnTo();
+        return true;
+      },
+    );
+
+    _isLoading = false;
+    notifyListeners();
+    return success;
+  }
+
+  Future<Either<Failure, void>> login(
+    String username,
+    String password, {
+    bool persist = true,
+  }) async {
     final result = await loginUser(username, password);
-
     if (result.isLeft()) return result;
 
     final loginResult = result.getOrElse(
       () => throw Exception('Unexpected null'),
     );
-
     user = loginResult.user;
-    appLogger.i('Logged in as: ${user?.username}, type: ${user?.userType}');
+    _defaultHome = _mapHomePage(loginResult.homePage);
 
-    // Redirect based on user type
-    _redirectPath = user?.userType == 'Vendor' ? '/dashboard' : '/';
-    appLogger.i('➡️ _redirectPath just set to: $_redirectPath');
-
-    await persistUser(user!.username, user!.userType ?? '');
+    if (persist) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('username', username);
+      await prefs.setString('password', password);
+      await prefs.setString('userType', user?.userType ?? 'N/A');
+    }
 
     notifyListeners();
     return const Right(null);
+  }
+
+  String _mapHomePage(String? homePage) {
+    if (homePage == null || homePage.contains('/all-products')) return '/';
+    if (homePage.contains('/app')) return '/dashboard';
+    return '/';
+  }
+
+  String? _registerError;
+  String? get registerError => _registerError;
+
+  Future<bool> signUp(
+    String username,
+    String email,
+    String fullName,
+    String userType,
+    String phone,
+    String password,
+  ) async {
+    _registerError = null;
+    notifyListeners();
+
+    final result = await register(
+      username,
+      email,
+      fullName,
+      userType,
+      phone,
+      password,
+    );
+
+    final success = result.fold(
+      (failure) {
+        _registerError = failure.message;
+        return false;
+      },
+      (responseList) {
+        final statusCode = responseList[0];
+        final message = responseList[1].toString();
+
+        if (statusCode == 0) {
+          _registerError = message;
+          return false;
+        }
+
+        return true;
+      },
+    );
+
+    notifyListeners();
+    return success;
   }
 
   Future<Either<Failure, List<dynamic>>> register(
@@ -61,30 +170,65 @@ class AuthProvider with ChangeNotifier {
     );
   }
 
-  Future<void> persistUser(String username, String userType) async {
+  Future<void> _restoreSession() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('username', username);
-    await prefs.setString('userType', userType);
+    final username = prefs.getString('username');
+    final password = prefs.getString('password');
+    final userType = prefs.getString('userType');
+
+    if (username == null || password == null) {
+      return;
+    }
+
+    final result = await login(username, password, persist: false);
+
+    result.fold((failure) => appLogger.w('⚠️ Failed to auto-restore session'), (
+      _,
+    ) {
+      if (user != null) {
+        user = user!.copyWith(userType: userType);
+      }
+      appLogger.i(
+        '🪄 Session auto-restored: ${user?.username}, home: $_defaultHome',
+      );
+    });
   }
 
   Future<void> loadUser() async {
     final prefs = await SharedPreferences.getInstance();
     final username = prefs.getString('username');
-    final userType = prefs.getString('userType');
+    final password = prefs.getString('password');
 
-    if (username != null) {
-      user = User(username: username, userType: userType);
-      notifyListeners();
+    if (username != null && password != null) {
+      final result = await login(username, password, persist: false);
+      result.fold(
+        (failure) =>
+            appLogger.w('⚠️ Failed to load user from persisted credentials'),
+        (_) => appLogger.i('✅ User loaded via `loadUser()`'),
+      );
     }
   }
 
   Future<void> logout() async {
+    final result = await authRepo.logout();
+    result.fold(
+      (failure) => appLogger.e('❌ Logout API call failed: ${failure.message}'),
+      (_) => appLogger.i('✅ Successfully logged out from Frappe'),
+    );
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('username');
+    await prefs.remove('password');
     await prefs.remove('userType');
+    await clearAllTables();
+    clearRedirect();
+
     user = null;
+    _defaultHome = null;
+    _returnTo = null;
+
     notifyListeners();
   }
 
-  void clearRedirect() => _redirectPath = null;
+  void clearRedirect() => _returnTo = null;
 }

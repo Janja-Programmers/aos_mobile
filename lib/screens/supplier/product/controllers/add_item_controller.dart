@@ -1,19 +1,23 @@
 import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:ownashop/core/utils/logger.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-import '/core/di/service_locator.dart';
 import '/core/utils/api_client.dart';
 import '/core/utils/snackbar.dart';
+import '/core/di/service_locator.dart';
+
 import '/features/product/domain/product.dart';
 import '/features/product/provider.dart';
 
 class AddItemController extends ChangeNotifier {
+  Product? product;
+
   final ProductProvider provider;
   final APIClient apiClient;
+
   final formKey = GlobalKey<FormState>();
 
   final nameController = TextEditingController();
@@ -23,10 +27,29 @@ class AddItemController extends ChangeNotifier {
   final descController = TextEditingController();
   final shortDescController = TextEditingController();
 
+  final List<WebsiteSpecificationEntry> specControllers = [];
+
+  List<WebsiteSpecification> getWebsiteSpecificationsFromControllers() {
+    return specControllers
+        .map(
+          (entry) => WebsiteSpecification(
+            label: entry.labelController.text.trim(),
+            description: entry.descriptionController.text.trim(),
+          ),
+        )
+        .where((spec) => spec.label.isNotEmpty || spec.description.isNotEmpty)
+        .toList();
+  }
+
   File? selectedImage;
   File? selectedVideo;
+
+  bool isPickingImage = false;
+  bool isPickingVideo = false;
+
   String? uploadedImageUrl;
   String? uploadedVideoUrl;
+
   bool isSubmitting = false;
 
   AddItemController({
@@ -35,73 +58,208 @@ class AddItemController extends ChangeNotifier {
     Product? initialProduct,
   }) {
     if (initialProduct != null) {
-      nameController.text = initialProduct.itemName;
-      groupController.text = initialProduct.category;
-      itemCodeController.text = initialProduct.name;
-      priceController.text = initialProduct.itemPrice.toString();
-      descController.text = initialProduct.websiteDescription ?? '';
-      shortDescController.text = initialProduct.shortWebsiteDescription ?? '';
-      uploadedImageUrl = initialProduct.image;
-      uploadedVideoUrl = initialProduct.demoVideo;
+      setInitialProduct(initialProduct);
+    } else {
+      // If creating new, start with one spec row
+      specControllers.add(WebsiteSpecificationEntry());
     }
   }
 
-  Future<void> pickFile(BuildContext context, {required bool isImage}) async {
-    final permissionResult = await _requestPermissions(isImage: isImage);
-    if (!permissionResult.granted) {
-      if (permissionResult.permanentlyDenied) {
-        await openAppSettings();
-      }
-      return;
+  Future<Product?> fetchSingleProduct(String name) async {
+    try {
+      final product = await provider.getProductByName(name);
+      return product;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  void setInitialProduct(Product newProduct) {
+    if (product != null) return;
+
+    product = newProduct;
+
+    nameController.text = product!.itemName;
+    groupController.text = product!.category;
+    itemCodeController.text = product!.name;
+    priceController.text = product!.itemPrice.toString();
+    descController.text = product!.websiteDescription ?? '';
+    shortDescController.text = product!.shortWebsiteDescription ?? '';
+    uploadedImageUrl = product!.image;
+    uploadedVideoUrl = product!.demoVideo;
+
+    specControllers.clear();
+    for (final spec in product!.websiteSpecifications ?? []) {
+      specControllers.add(
+        WebsiteSpecificationEntry(
+          label: spec.label,
+          description: spec.description,
+        ),
+      );
     }
 
-    final result = await FilePicker.platform.pickFiles(
-      type: isImage ? FileType.image : FileType.video,
-    );
+    notifyListeners();
+  }
 
-    if (result != null && result.files.single.path != null) {
-      final file = File(result.files.single.path!);
-      if (isImage) {
-        selectedImage = file;
-        uploadedImageUrl = await uploadFile(file);
-        if (uploadedImageUrl != null &&
-            formKey.currentState != null &&
-            !formKey.currentState!.validate()) {
-          topSnackBar(
-            context,
-            'Image uploaded, please fill all required fields',
-          );
-        }
-      } else {
-        selectedVideo = file;
-        uploadedVideoUrl = await uploadFile(file);
-        if (uploadedVideoUrl != null &&
-            formKey.currentState != null &&
-            !formKey.currentState!.validate()) {
-          topSnackBar(
-            context,
-            'Video uploaded, please fill all required fields',
-          );
-        }
-      }
+  void addSpecificationFromNewRow() {
+    specControllers.add(WebsiteSpecificationEntry());
+    notifyListeners();
+  }
+
+  void removeSpecification(int index) {
+    if (index >= 0 && index < specControllers.length) {
+      specControllers[index].dispose();
+      specControllers.removeAt(index);
       notifyListeners();
     }
   }
 
-  Future<PermissionResult> _requestPermissions({required bool isImage}) async {
-    Permission permission;
+  Future<bool> submit(BuildContext context, Product? existingProduct) async {
+    isSubmitting = true;
+    notifyListeners();
 
-    if (Platform.isAndroid) {
-      permission = Permission.storage;
-    } else {
-      permission = Permission.photos;
+    try {
+      if (formKey.currentState == null || !formKey.currentState!.validate()) {
+        topSnackBar(
+          context,
+          'Please fix form errors',
+          type: TopSnackType.error,
+        );
+        return false;
+      }
+
+      final specs = getWebsiteSpecificationsFromControllers();
+
+      final productToSubmit = Product(
+        name: existingProduct?.name ?? itemCodeController.text.trim(),
+        itemName: nameController.text.trim(),
+        itemPrice: double.tryParse(priceController.text.trim()) ?? 0.0,
+        category: groupController.text.trim(),
+        vendor: existingProduct?.vendor,
+        image: uploadedImageUrl,
+        demoVideo: uploadedVideoUrl,
+        websiteDescription: descController.text.trim(),
+        shortWebsiteDescription: shortDescController.text.trim(),
+        websiteSpecifications: specs,
+      );
+
+      final payload = _buildPayloadFromProduct(productToSubmit);
+
+      debugPrint('📤 Submitting payload from AddItemController: $payload');
+
+      final success =
+          await (existingProduct == null
+              ? provider.createProductFromRaw(payload)
+              : provider.updateExistingItem(productToSubmit));
+
+      return success;
+    } catch (e, stack) {
+      debugPrint('❌ Submit failed: $e\n$stack');
+      if (!context.mounted) return false;
+      topSnackBar(context, 'Error saving product', type: TopSnackType.error);
+      return false;
+    } finally {
+      isSubmitting = false;
+      notifyListeners();
+    }
+  }
+
+  Future<String?> pickFile(
+    BuildContext context, {
+    required bool isImage,
+  }) async {
+    try {
+      // Start loading
+      if (isImage) {
+        isPickingImage = true;
+      } else {
+        isPickingVideo = true;
+      }
+      notifyListeners();
+
+      // Request permission
+      final permissionResult = await _requestPermissions(isImage: isImage);
+      if (!permissionResult.granted) {
+        if (permissionResult.permanentlyDenied) {
+          await openAppSettings();
+        } else {
+          topSnackBar(context, "Permission Denied!", type: TopSnackType.error);
+        }
+        return null;
+      }
+
+      // Pick file
+      final result = await FilePicker.platform.pickFiles(
+        type: isImage ? FileType.image : FileType.video,
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final path = result.files.single.path!;
+
+        final file = File(path);
+
+        if (isImage) {
+          selectedImage = file;
+          uploadedImageUrl = await uploadFile(file);
+        } else {
+          selectedVideo = file;
+          uploadedVideoUrl = await uploadFile(file);
+        }
+
+        notifyListeners();
+
+        return isImage ? uploadedImageUrl : uploadedVideoUrl;
+      } else {
+        topSnackBar(context, 'No file selected', type: TopSnackType.info);
+      }
+    } catch (e) {
+      topSnackBar(context, 'Error: ${e.toString()}', type: TopSnackType.error);
+    } finally {
+      // Stop loading
+      if (isImage) {
+        isPickingImage = false;
+      } else {
+        isPickingVideo = false;
+      }
+      notifyListeners();
     }
 
-    var status = await permission.request();
-    return PermissionResult(
-      granted: status.isGranted,
-      permanentlyDenied: status.isPermanentlyDenied,
-    );
+    return null;
+  }
+
+  Future<PermissionResult> _requestPermissions({required bool isImage}) async {
+    if (!Platform.isAndroid) {
+      final status = await Permission.photos.request();
+      return PermissionResult(
+        granted: status.isGranted,
+        permanentlyDenied: status.isPermanentlyDenied,
+      );
+    }
+
+    final androidInfo = await DeviceInfoPlugin().androidInfo;
+    final sdkInt = androidInfo.version.sdkInt;
+
+    if (sdkInt >= 33) {
+      final mediaPermission =
+          isImage
+              ? Permission
+                  .photos // For images
+              : Permission.videos; // For videos
+
+      final mediaStatus = await mediaPermission.request();
+
+      return PermissionResult(
+        granted: mediaStatus.isGranted,
+        permanentlyDenied: mediaStatus.isPermanentlyDenied,
+      );
+    } else {
+      final storageStatus = await Permission.storage.request();
+      return PermissionResult(
+        granted: storageStatus.isGranted,
+        permanentlyDenied: storageStatus.isPermanentlyDenied,
+      );
+    }
   }
 
   Future<List<String>> fetchItemGroups() async {
@@ -132,95 +290,97 @@ class AddItemController extends ChangeNotifier {
         'file': await MultipartFile.fromFile(file.path, filename: fileName),
       });
 
-      final client = sl<APIClient>();
-
-      final response = await client.client.post(
+      final response = await apiClient.client.post(
         '/api/method/upload_file',
         data: formData,
       );
 
       debugPrint('Upload response: ${response.data}');
-      final fileUrl = response.data['message']['file_url'];
-      debugPrint('Uploaded file URL: $fileUrl');
-      return fileUrl;
+      return response.data['message']['file_url'];
     } catch (e, stack) {
       debugPrint('❌ Upload failed: $e\n$stack');
       return null;
     }
   }
 
-  Future<bool> submit(BuildContext context, Product? existingProduct) async {
-    isSubmitting = true;
-    notifyListeners();
-
-    try {
-      if (formKey.currentState == null || !formKey.currentState!.validate()) {
-        debugPrint("❌ Form validation failed");
-        topSnackBar(
-          context,
-          'Please fix form errors',
-          type: TopSnackType.error,
-        );
-        return false;
-      }
-
-      final product = Product(
-        name: existingProduct?.name ?? itemCodeController.text.trim(),
-        itemName: nameController.text.trim(),
-        itemPrice: double.tryParse(priceController.text.trim()) ?? 0.0,
-        category: groupController.text.trim(),
-        vendor: existingProduct?.vendor,
-        image: uploadedImageUrl,
-        demoVideo: uploadedVideoUrl,
-        websiteDescription: descController.text.trim(),
-        shortWebsiteDescription: shortDescController.text.trim(),
-        websiteSpecifications: existingProduct?.websiteSpecifications ?? [],
-      );
-
-      appLogger.i('📦 Submitting product: ${product.name}');
-      appLogger.i('📦 Submitting product: ${product.itemName}');
-      appLogger.i('📦 Submitting product: ${product.itemPrice}');
-      appLogger.i('Image URL: ${product.category}');
-      appLogger.i('Image URL: ${product.vendor}');
-      appLogger.i('Image URL: ${product.image}');
-      appLogger.i('Video URL: ${product.demoVideo}');
-
-      final success =
-          existingProduct == null
-              ? await provider.createProduct(product)
-              : await provider.updateExistingItem(product);
-      return success;
-    } catch (e) {
-      debugPrint('❌ Submit failed: $e');
-      String errorMessage = 'Error saving product';
-      if (e is DioException && e.response != null) {
-        errorMessage =
-            e.response!.data['exception']?.toString() ?? 'Error saving product';
-        if (errorMessage.contains('PermissionError')) {
-          errorMessage =
-              'You do not have permission to update this product. Contact an admin.';
-        }
-      }
-      topSnackBar(context, errorMessage, type: TopSnackType.error);
-      return false;
-    } finally {
-      isSubmitting = false;
-      notifyListeners();
-    }
-  }
-
-  void disposeControllers() {
+  @override
+  void dispose() {
+    super.dispose();
     nameController.dispose();
     groupController.dispose();
     itemCodeController.dispose();
     priceController.dispose();
     descController.dispose();
     shortDescController.dispose();
+    for (final entry in specControllers) {
+      entry.dispose();
+    }
+  }
+
+  void reset() {
+    product = null;
+    nameController.clear();
+    groupController.clear();
+    itemCodeController.clear();
+    priceController.clear();
+    descController.clear();
+    shortDescController.clear();
+    uploadedImageUrl = null;
+    uploadedVideoUrl = null;
+    selectedImage = null;
+    selectedVideo = null;
+
+    for (final entry in specControllers) {
+      entry.dispose();
+    }
+    specControllers.clear();
+    specControllers.add(WebsiteSpecificationEntry());
+
+    notifyListeners();
+  }
+
+  Map<String, dynamic> _buildPayloadFromProduct(Product p) {
+    return {
+      "name": p.name,
+      "item_name": p.itemName,
+      "item_price": p.itemPrice,
+      "category": p.category,
+      "vendor": p.vendor,
+      "web_long_description": p.websiteDescription,
+      "short_description": p.shortWebsiteDescription,
+      "image": p.image,
+      "demo_video": p.demoVideo,
+      "website_specifications":
+          p.websiteSpecifications
+              ?.map(
+                (e) => {
+                  "doctype": "Product Website Specification",
+                  "label": e.label,
+                  "description": e.description,
+                },
+              )
+              .toList(),
+    };
+  }
+}
+
+class WebsiteSpecificationEntry {
+  final TextEditingController labelController;
+  final TextEditingController descriptionController;
+
+  WebsiteSpecificationEntry({String? label, String? description})
+    : labelController = TextEditingController(text: label ?? ''),
+      descriptionController = TextEditingController(text: description ?? '');
+
+  void dispose() {
+    labelController.dispose();
+    descriptionController.dispose();
   }
 }
 
 class PermissionResult {
   final bool granted;
   final bool permanentlyDenied;
+
   PermissionResult({required this.granted, required this.permanentlyDenied});
 }

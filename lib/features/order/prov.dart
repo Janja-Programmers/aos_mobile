@@ -27,56 +27,68 @@ class SalesOrderProvider with ChangeNotifier {
   SalesOrder? _selectedOrder;
   SalesOrder? get selectedOrder => _selectedOrder;
 
-  bool _loading = false;
-  bool get loading => _loading;
+  bool _listLoading = false;
+  bool _detailLoading = false;
+
+  bool get listLoading => _listLoading;
+  bool get detailLoading => _detailLoading;
+  bool get hasError => _failure != null;
 
   Failure? _failure;
   Failure? get failure => _failure;
 
   /// Fetch all sales orders
   Future<void> fetchAll() async {
-    _setLoading(true);
+    _setListLoading(true);
+
     final result = await getAllSalesOrders();
-    result.fold((f) => _failure = f, (list) => _orders = list);
-    _setLoading(false);
+    result.fold(
+      (f) {
+        _failure = f;
+        _orders = [];
+      },
+      (list) {
+        _failure = null;
+        _orders = list;
+      },
+    );
+
+    _setListLoading(false);
   }
 
   /// Fetch single order by ID
   Future<void> fetchById(String id) async {
-    _setLoading(true);
+    _setDetailLoading(true);
     _failure = null;
+
     final result = await getById(id);
     result.fold((f) => _failure = f, (order) => _selectedOrder = order);
-    _setLoading(false);
+
+    _setDetailLoading(false);
   }
 
   /// Mark sales order as delivered
-  // ignore: non_constant_identifier_names
-  Future<Either<Failure, Unit>> deliver_order(String id) async {
-    _setLoading(true);
-    final result = await deliver(id);
+  Future<Either<Failure, Unit>> deliverOrder(String id) async {
+    _setDetailLoading(true);
 
+    final result = await deliver(id);
     if (result.isRight()) {
-      // refresh order
       await fetchById(id);
     }
 
-    _setLoading(false);
+    _setDetailLoading(false);
     return result;
   }
 
-  /// Mark sales order as billed
-  // ignore: non_constant_identifier_names
-  Future<Either<Failure, Unit>> bill_order(String id) async {
-    _setLoading(true);
-    final result = await bill(id);
+  Future<Either<Failure, Unit>> billOrder(String id) async {
+    _setDetailLoading(true);
 
+    final result = await bill(id);
     if (result.isRight()) {
-      // refresh order
       await fetchById(id);
     }
 
-    _setLoading(false);
+    _setDetailLoading(false);
     return result;
   }
 
@@ -84,33 +96,34 @@ class SalesOrderProvider with ChangeNotifier {
     _orders = [];
     _selectedOrder = null;
     _failure = null;
-    _loading = false;
+    _listLoading = false;
+    _detailLoading = false;
     notifyListeners();
   }
 
-  void _setLoading(bool value) {
-    _loading = value;
+  void _setListLoading(bool value) {
+    _listLoading = value;
     notifyListeners();
   }
+
+  void _setDetailLoading(bool value) {
+    _detailLoading = value;
+    notifyListeners();
+  }
+
+  Future<Either<Failure, Unit>> placeOrderRequest(OrderPayload payload) async {
+    _setListLoading(true);
+    _failure = null;
+
+    final result = await placeOrder(payload);
+
+    result.fold((f) => _failure = f, (_) async {
+      await fetchAll();
+    });
+
+    _setListLoading(false);
+    return result;
+  }
+
+  bool get hasOrders => _orders.isNotEmpty;
 }
-
- // Future<bool> placeOrder(OrderPayload payload) async {
-  //   _loading = true;
-  //   _failure = null;
-  //   notifyListeners();
-
-  //   final result = await placeOrderUseCase(payload);
-  //   final success = result.isRight();
-
-  //   result.fold((f) => _failure = f, (_) => null);
-
-  //   _loading = false;
-  //   notifyListeners();
-
-  //   if (success) {
-  //     await fetchAll();
-  //   }
-
-  //   return success;
-  // }
-

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/features/auth/presentation/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
+
+import '/features/auth/presentation/auth_provider.dart';
+
 import 'cart_button.dart';
+import 'user_menu_button.dart';
 
 class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onHomePressed;
@@ -14,6 +17,7 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final userType = context.read<AuthProvider>().user?.userType;
     return AppBar(
       backgroundColor: AppColors.white,
       elevation: 1,
@@ -31,35 +35,12 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
 
-      title: const Text('Own A Shop', style: TextStyle(color: AppColors.black)),
-      actions:
-          actions ??
-          [
-            const CartIconButton(),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.person, color: AppColors.black),
-              onSelected: (value) async {
-                if (value == 'logout') {
-                  final authProvider = context.read<AuthProvider>();
-                  await authProvider.logout();
-                  context.go('/login');
-                } else if (value == 'orders') {
-                  context.go('/');
-                }
-              },
-              itemBuilder:
-                  (context) => const [
-                    PopupMenuItem(value: 'orders', child: Text('My Orders')),
-                    PopupMenuItem(
-                      value: 'logout',
-                      child: Text(
-                        'Logout',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
-            ),
-          ],
+      title: Text('Own A Shop', style: const TextStyle(color: AppColors.black)),
+      actions: [
+        if (userType == 'Buyer') const CartIconButton(),
+        ...?actions,
+        UserMenuButton(userType: userType ?? 'Buyer'),
+      ],
     );
   }
 
@@ -68,7 +49,7 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class SubAppBar extends StatelessWidget {
-  final String title;
+  final Widget title;
   final VoidCallback onMenuPressed;
   final VoidCallback? onSavePressed;
   final bool showSaveButton;
@@ -87,7 +68,7 @@ class SubAppBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -97,15 +78,11 @@ class SubAppBar extends StatelessWidget {
                 onPressed: onMenuPressed,
                 icon: const Icon(Icons.menu),
               ),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              const SizedBox(width: 4),
+              title,
             ],
           ),
+
           Row(
             children: [
               if (actionButton != null) actionButton!,
@@ -137,6 +114,6 @@ Future<void> showProfileMenu(BuildContext context, Offset offset) async {
     await authProvider.logout();
     context.go('/login');
   } else if (selected == 'orders') {
-    context.go('/orders');
+    context.go('/past-orders');
   }
 }

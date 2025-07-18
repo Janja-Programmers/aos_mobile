@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/core/utils/logger.dart';
 
 import '/core/di/service_locator.dart';
+import '/core/utils/api_client.dart';
+import '/core/utils/logger.dart';
+
+import '/features/auth/presentation/auth_provider.dart';
+import '/features/address/data/datasource/local.dart';
 
 import '../order/domain/sales_order.dart';
 import '../order/domain/usecases.dart';
-import '../address/data/datasource/local.dart';
 
+import 'domain/repo.dart';
 import 'domain/cart.dart';
 import 'domain/usecase.dart';
 
@@ -27,64 +31,68 @@ class CartProvider with ChangeNotifier {
     required this.placeOrder,
   });
 
+  final _authProvider = sl<AuthProvider>();
+  final _localAddressRepo = sl<LocalAddressRepository>();
+
+  final CartRepo repo = sl<CartRepo>();
+
   List<CartItem> _items = [];
   List<CartItem> get items => _items;
 
   bool _isLoading = false;
-  String? _error;
-
   bool get isLoading => _isLoading;
+
+  String? _error;
   String? get error => _error;
 
   double get grandTotal =>
       _items.fold(0, (total, item) => total + item.price * item.quantity);
 
-  Future<void> loadCart() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+  final client = sl<APIClient>();
+  // ─────────────────────────────────────────────────────────────────────
 
-    final cartModels = await getCartItems();
-    cartModels.fold(
-      (failure) => _error = failure.message,
-      (items) => _items = items,
+  Future<void> loadCart() async {
+    _setLoading(true);
+    _setError(null);
+
+    final result = await getCartItems();
+    result.fold(
+      (failure) => _setError(failure.message),
+      (cartItems) => _items = cartItems,
     );
 
-    _isLoading = false;
-    notifyListeners();
+    _setLoading(false);
   }
 
   Future<bool> add(CartItem item) async {
     final existingIndex = _items.indexWhere((e) => e.code == item.code);
 
-    // Prepare the updated list locally
-    List<CartItem> updatedItems = List.from(_items);
+    final CartItem updatedItem =
+        existingIndex != -1
+            ? _items[existingIndex].copyWith(
+              quantity: _items[existingIndex].quantity + item.quantity,
+              image: item.image ?? _items[existingIndex].image,
+            )
+            : item;
 
-    if (existingIndex != -1) {
-      // 🛠 Update quantity if item exists
-      final existingItem = updatedItems[existingIndex];
-      updatedItems[existingIndex] = CartItem(
-        code: existingItem.code,
-        name: existingItem.name,
-        price: existingItem.price,
-        quantity: existingItem.quantity + item.quantity,
-        image: existingItem.image,
-      );
-    } else {
-      // ✅ Add new item
-      updatedItems.add(item);
-    }
+    // Try remote sync first
+    final remoteResult = await repo.updateRemoteCart(updatedItem);
+    final remoteFailed = remoteResult.fold((failure) {
+      _setError("Remote sync failed: ${failure.message}");
+      return true;
+    }, (_) => false);
 
-    // Now sync with your cart persistence layer (DB/storage/api)
-    final result = await addToCart(item);
+    if (remoteFailed) return false;
 
+    // Update local cart if remote sync succeeded
+    final result = await addToCart(updatedItem);
     return result.fold(
       (failure) {
-        _error = failure.message;
+        _setError(failure.message);
         return false;
       },
-      (newListFromStorageOrServer) {
-        _items = newListFromStorageOrServer;
+      (updatedItems) {
+        _items = updatedItems;
         notifyListeners();
         return true;
       },
@@ -95,7 +103,7 @@ class CartProvider with ChangeNotifier {
     final result = await removeFromCart(code);
     return result.fold(
       (failure) {
-        _error = failure.message;
+        _setError(failure.message);
         return false;
       },
       (_) {
@@ -108,7 +116,8 @@ class CartProvider with ChangeNotifier {
 
   Future<void> clear() async {
     await clearCart();
-    await loadCart();
+    _items = [];
+    notifyListeners();
   }
 
   Future<void> updateQuantity(String code, int qty) async {
@@ -116,58 +125,110 @@ class CartProvider with ChangeNotifier {
     await loadCart();
   }
 
-  Future<void> submitOrderWithExistingOrRedirect({
+  bool containsProduct(String productCode) {
+    return _items.any((item) => item.code == productCode);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────
+  /// Submit order directly using known shipping address
+  Future<void> submitCartAsSalesOrder({
+    required String shippingAddressName,
+  }) async {
+    final user = _authProvider.user;
+    if (user == null) {
+      _setError('You must be logged in to place an order.');
+      return;
+    }
+
+    final payload = _buildOrderPayload(
+      customer: user.username,
+      address: shippingAddressName,
+    );
+
+    appLogger.i('📦 SUBMITTING ORDER PAYLOAD: ${payload.toJson()}');
+
+    _setLoading(true);
+    final result = await placeOrder(payload);
+
+    _setLoading(false);
+
+    result.fold((failure) => _setError('❌ Order failed: ${failure.message}'), (
+      _,
+    ) {
+      appLogger.i('✅ Order placed successfully');
+      clear();
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────
+  /// Handles case where address may not yet exist
+  Future<void> submitCartWithAutoAddress({
     required String customer,
     required VoidCallback openShippingForm,
-    required Function(String addressName) onSuccess,
+    required void Function(String addressName) onSuccess,
   }) async {
-    _error = null;
-    notifyListeners();
+    _setLoading(true);
+    _setError(null);
 
     try {
-      final local = sl<LocalAddressRepository>();
-      final addresses = await local.getAddressesForCustomer(customer);
+      final addresses = await _localAddressRepo.getAddressesForCustomer(
+        customer,
+      );
 
       if (addresses.isEmpty) {
+        _setLoading(false);
         openShippingForm();
         return;
       }
 
-      final fullAddressName = "$customer-Shipping";
-
-      final payload = OrderPayload(
+      final selectedAddress = addresses.first.title;
+      final payload = _buildOrderPayload(
         customer: customer,
-        deliveryDate: DateTime.now().toIso8601String().split('T').first,
-        items: _items,
-        shippingAddress: fullAddressName,
-        customerAddress: fullAddressName,
-        addressType: "Shipping",
+        address: selectedAddress,
       );
 
-      appLogger.i(
-        'Placing order from PROVIDER.DART with $fullAddressName and PAYLOAD:$payload',
-      );
+      appLogger.i('🛒 AUTO-ORDER using address: $selectedAddress');
+      appLogger.i('📦 PAYLOAD: ${payload.toJson()}');
 
       final result = await placeOrder(payload);
 
-      result.fold(
-        (failure) {
-          _error = failure.message;
-          notifyListeners();
-        },
-        (_) {
-          appLogger.i('Placing order from PROVIDER.DART with RESULT:$result');
-          clear();
-          onSuccess(fullAddressName);
-        },
-      );
+      _setLoading(false);
+
+      result.fold((failure) => _setError(failure.message), (_) {
+        appLogger.i('✅ Order placed successfully');
+        clear();
+        onSuccess(selectedAddress);
+      });
     } catch (e) {
-      _error = e.toString();
-      notifyListeners();
+      _setError('Unexpected error: $e');
+      _setLoading(false);
     }
   }
 
-  bool containsProduct(String productCode) {
-    return _items.any((item) => item.code == productCode);
+  // ─────────────────────────────────────────────────────────────────────
+  OrderPayload _buildOrderPayload({
+    required String customer,
+    required String address,
+    int docstatus = 1,
+  }) {
+    return OrderPayload(
+      customer: customer,
+      deliveryDate: DateTime.now().toIso8601String().split('T').first,
+      docstatus: docstatus,
+      shippingAddress: address,
+      customerAddress: 'address-Shipping',
+      addressType: 'Shipping',
+      items: List<CartItem>.from(_items),
+    );
+  }
+
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
+  void _setError(String? message) {
+    _error = message;
+    notifyListeners();
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ownashop/core/utils/logger.dart';
 import '/core/constants/colors.dart';
 import '/core/utils/formatters.dart';
 import '/features/cart/domain/cart.dart';
@@ -18,7 +19,10 @@ class ProductCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        context.push('/product/${item.id}', extra: item);
+        appLogger.f(
+          'Tapped on product: ${item.name} with code ${item.itemCode}',
+        );
+        context.push('/product/${item.itemCode}');
       },
       child: AnimatedScale(
         scale: 1.0,
@@ -55,18 +59,19 @@ class ProductCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       item.itemGroup,
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         color: AppColors.black,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
                       formatCurrency(item.price),
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: AppColors.black,
                       ),

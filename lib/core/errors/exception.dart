@@ -4,6 +4,13 @@ import 'failures.dart';
 
 Failure handleException(dynamic e) {
   if (e is DioException) {
+    final response = e.response;
+
+    final message =
+        response?.data is Map<String, dynamic>
+            ? response?.data['message']?.toString() ?? e.message
+            : e.message;
+
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.receiveTimeout:
@@ -11,11 +18,11 @@ Failure handleException(dynamic e) {
       case DioExceptionType.connectionError:
         return NetworkFailure();
       default:
-        return ServerFailure(e.message ?? 'Server error');
+        return ServerFailure(message ?? 'Server error');
     }
   } else if (e is FormatException) {
-    return ParsingFailure();
+    return const ParsingFailure();
   } else {
-    return UnknownFailure();
+    return const UnknownFailure();
   }
 }

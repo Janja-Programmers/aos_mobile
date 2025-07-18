@@ -1,84 +1,81 @@
 import '../domain/address.dart';
 
 class AddressModel {
+  final String name;
   final String title;
   final String line1;
   final String city;
   final String country;
   final String phone;
   final String type;
-  final String customer;
 
   AddressModel({
+    required this.name,
     required this.title,
     required this.line1,
     required this.city,
     required this.country,
     required this.phone,
     required this.type,
-    required this.customer,
   });
 
-  /// Converts to JSON for remote API
+  /// Converts to JSON for remote API (for POST only — no 'name')
   Map<String, dynamic> toJson() => {
     "address_title": title,
-    "address_line1": line1.toString(),
+    "address_line1": line1,
     "city": city,
     "country": country,
     "phone": phone,
     "address_type": type,
-    "links": [
-      {"link_doctype": "Customer", "link_name": customer},
-    ],
   };
 
-  /// Converts to a map for local SQLite
+  /// Converts to a map for local SQLite (full object, including name)
   Map<String, dynamic> toMap() => {
+    'name': name,
     'address_title': title,
     'address_line1': line1,
     'city': city,
     'country': country,
     'phone': phone,
     'address_type': type,
-    'customer': customer,
   };
 
-  /// Create from local SQLite map
+  /// Create from local SQLite map or remote response
   factory AddressModel.fromMap(Map<String, dynamic> map) {
     return AddressModel(
+      name: map['name'] ?? '',
       title: map['address_title'],
       line1: map['address_line1'],
       city: map['city'],
       country: map['country'],
       phone: map['phone'],
       type: map['address_type'],
-      customer: map['customer'],
     );
   }
 
   /// Convert back to domain entity
   Address toEntity() {
     return Address(
+      name: name,
       title: title,
       line1: line1,
       city: city,
       country: country,
       phone: phone,
       type: type,
-      customer: customer,
     );
   }
 
-  /// Create from domain entity
-  factory AddressModel.fromEntity(Address entity) {
+  /// Create from domain entity (used before POST)
+  factory AddressModel.fromEntity(Address address) {
     return AddressModel(
-      title: entity.title,
-      line1: entity.line1,
-      city: entity.city,
-      country: entity.country,
-      phone: entity.phone,
-      type: entity.type,
-      customer: entity.customer,
+      name: address.name,
+      title: address.title,
+      line1: address.line1,
+      city: address.city,
+      country: "Kenya",
+      phone: address.phone,
+      type: "Shipping",
     );
   }
 }

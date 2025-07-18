@@ -16,10 +16,11 @@ class DeliveryNoteRemoteDS {
   Future<Either<Failure, List<DeliveryNoteModel>>> getAll() async {
     try {
       final res = await _client.client.get(
-        DELIVERY_NOTE_ENDPOINT,
+        ApiRoutes.deliveryNote,
         queryParameters: {
           'fields':
               '["name", "customer_name", "status", "grand_total", "per_installed"]',
+          'order_by': 'modified desc',
         },
       );
 
@@ -39,7 +40,7 @@ class DeliveryNoteRemoteDS {
   /// 2️⃣ Fetch a full record by ID
   Future<Either<Failure, DeliveryNoteModel>> getById(String id) async {
     try {
-      final res = await _client.client.get('$DELIVERY_NOTE_ENDPOINT/$id');
+      final res = await _client.client.get('${ApiRoutes.deliver}/$id');
       return Right(DeliveryNoteModel.fromJson(res.data['data']));
     } catch (e) {
       return Left(handleException(e));

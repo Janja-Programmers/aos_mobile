@@ -18,37 +18,22 @@ class ProductDescriptions extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Product Detail",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-
         Card(
           elevation: 2,
-          margin: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           color: Colors.white,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (shortDesc.trim().isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      shortDesc,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-
+                const Text(
+                  "Product Detail",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
                 if (cleanHtml.trim().isNotEmpty)
                   Html(
                     data: cleanHtml,
@@ -82,9 +67,7 @@ class ProductDescriptions extends StatelessWidget {
                         margin: Margins.zero,
                       ),
                     },
-                  )
-                else
-                  const Text("No additional product description available."),
+                  ),
               ],
             ),
           ),

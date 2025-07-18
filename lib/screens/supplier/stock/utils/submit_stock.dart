@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ownashop/core/utils/snackbar.dart';
 import 'package:provider/provider.dart';
 
 import '/features/stock/domain/entity/stock.dart';
@@ -15,12 +16,12 @@ Future<void> submitStockEntry(BuildContext context, StockEntry draft) async {
   if (!context.mounted) return;
 
   if (provider.hasError) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(provider.failure!.message)));
+    topSnackBar(context, provider.failure!.message, type: TopSnackType.error);
   } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Stock Entry submitted successfully')),
+    topSnackBar(
+      context,
+      'Stock Entry submitted successfully',
+      type: TopSnackType.success,
     );
 
     // Refresh detail

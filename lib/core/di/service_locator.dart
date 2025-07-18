@@ -25,20 +25,7 @@ import '/features/product/data/repo_impl.dart';
 import '/features/product/domain/repo.dart';
 import '/features/product/domain/usecase.dart';
 import '/features/product/provider.dart';
-
-/*****  ITEMS *******/
-import '/features/item/domain/repo.dart';
-import '/features/item/domain/usecases.dart';
-import '/features/item/data/remote.dart';
-import '/features/item/data/repo_impl.dart';
-import '/features/item/prov.dart';
-
-/***** ITEMPRICE *******/
-import '/features/itemPrice/data/remote.dart';
-import '/features/itemPrice/data/repo_impl.dart';
-import '/features/itemPrice/domain/repo.dart';
-import '/features/itemPrice/domain/usecase.dart';
-import '/features/itemPrice/prov.dart';
+import '/screens/customer/web-items/utils/vendor_utils.dart';
 
 /***** SALESORDER *******/
 import '/features/order/data/remote.dart';
@@ -46,6 +33,7 @@ import '/features/order/data/repo_impl.dart';
 import '/features/order/domain/repo.dart';
 import '/features/order/domain/usecases.dart';
 import '/features/order/prov.dart';
+import '/screens/customer/orders/provider.dart';
 
 /*****  DELIVERYNOTE *******/
 import '/features/d_note/data/remote.dart';
@@ -68,6 +56,7 @@ import '/features/cart/domain/usecase.dart';
 import '/features/cart/domain/repo.dart';
 import '/features/cart/data/repo_impl.dart';
 import '/features/cart/data/local.dart';
+import '/features/cart/data/remote.dart';
 import '/features/cart/provider.dart';
 
 /***** ADDRESS ********/
@@ -99,7 +88,7 @@ Future<void> init() async {
   // AUTH Feature
   // Data source
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(sl<Dio>()),
+    () => AuthRemoteDataSourceImpl(sl()),
   );
 
   // Repository
@@ -116,6 +105,7 @@ Future<void> init() async {
     () => AuthProvider(
       loginUser: sl<LoginUser>(),
       registerUser: sl<RegisterUser>(),
+      apiClient: sl<APIClient>(),
     ),
   );
 
@@ -134,47 +124,6 @@ Future<void> init() async {
   sl.registerFactory(
     () => WebsiteItemProv(getAllItems: sl(), getSingleItem: sl()),
   );
-
-  // ITEMS Doctype
-
-  // 1. Remote data source
-  sl.registerLazySingleton(() => ItemRemoteDataSource(sl<APIClient>()));
-  // 2. Repository
-  sl.registerLazySingleton<ItemRepo>(
-    () => ItemRepoImpl(sl<ItemRemoteDataSource>()),
-  );
-  // 3. Use Cases
-  sl.registerLazySingleton(() => GetAllItemsUseCase(sl<ItemRepo>()));
-  sl.registerLazySingleton(() => GetItemByNameUseCase(sl<ItemRepo>()));
-  sl.registerLazySingleton(() => CreateItemUseCase(sl<ItemRepo>()));
-  sl.registerLazySingleton(() => UpdateItemUseCase(sl<ItemRepo>()));
-  // 4. Provider (State Management)
-  sl.registerFactory(
-    () => ItemProv(
-      getAllItems: sl(),
-      getItemByName: sl(),
-      createItem: sl(),
-      updateItem: sl(),
-    ),
-  );
-
-  // ITEMPRICE Doctype
-
-  // === Data ===
-  sl.registerLazySingleton<ItemPriceRemoteDS>(
-    () => ItemPriceRemoteDS(sl<APIClient>()),
-  );
-  // === Repository ===
-  sl.registerLazySingleton<ItemPriceRepo>(
-    () => ItemPriceRepoImpl(remote: sl()),
-  );
-
-  // === Domain ===
-  sl.registerLazySingleton(() => GetAllItemPrices(sl()));
-  sl.registerLazySingleton(() => CreateItemPrice(sl()));
-
-  // === PROVIDER ===
-  sl.registerFactory(() => ItemPriceProvider(getAll: sl(), create: sl()));
 
   // SALESORDER Doctype
   // === Data Layer ===
@@ -210,6 +159,7 @@ Future<void> init() async {
       placeOrder: sl(),
     ),
   );
+  sl.registerLazySingleton(() => CustomerOrderProvider(sl()));
 
   // DELIVERYNOTE Doctype
   // === Data ===
@@ -236,23 +186,31 @@ Future<void> init() async {
   );
 
   // === Domain ===
-  sl.registerLazySingleton(() => GetAllStockEntryNames(sl()));
+  sl.registerLazySingleton(() => GetAllStockEntries(sl()));
   sl.registerLazySingleton(() => AddStockEntry(sl()));
-  sl.registerLazySingleton(() => UpdateStockEntry(sl())); // ✅ ADD THIS
+  sl.registerLazySingleton(() => UpdateStockEntry(sl()));
   sl.registerLazySingleton(() => GetStockEntryById(sl()));
 
   // === Providers ===
   sl.registerFactory(() => StockEntryProvider(getAll: sl()));
+  // sl.registerFactory(
+  //   () => StockEntryProvider(getAll: sl<GetAllStockEntries>()),
+  // );
   sl.registerFactory(() => StockEntryDetailProvider(getById: sl()));
   sl.registerFactory(() => CreateStockEntryProvider(add: sl(), update: sl()));
 
   // CART Feature
+
   // ==== Data ===
   sl.registerLazySingleton<CartLocalDataSource>(
     () => CartLocalDataSource(sl()),
   );
+  sl.registerLazySingleton<CartRemoteDataSource>(
+    () => CartRemoteDataSource(sl()),
+  );
+
   // === Repository ===
-  sl.registerLazySingleton<CartRepo>(() => CartRepoImpl(sl()));
+  sl.registerLazySingleton<CartRepo>(() => CartRepoImpl(sl(), sl()));
   // === Domain ===
   sl.registerLazySingleton(() => GetCartItemsUseCase(sl()));
   sl.registerLazySingleton(() => AddToCartUseCase(sl()));
@@ -267,7 +225,7 @@ Future<void> init() async {
       removeFromCart: sl(),
       clearCart: sl(),
       updateQty: sl(),
-      placeOrder: sl<PlaceOrderUseCase>(),
+      placeOrder: sl(),
     ),
   );
 
@@ -281,11 +239,11 @@ Future<void> init() async {
   // === Domain ===
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));
   sl.registerLazySingleton(() => CreateProductUseCase(sl()));
-  sl.registerLazySingleton(() => GetVendorProductsUseCase(sl()));
   sl.registerLazySingleton(() => UpdateProductUseCase(sl()));
+  sl.registerLazySingleton(() => VendorUtils(sl<APIClient>()));
 
   // === Provider ===
-  sl.registerFactory(() => ProductProvider(sl(), sl(), sl(), sl()));
+  sl.registerFactory(() => ProductProvider(sl(), sl(), sl()));
 
   // ADDRESS Feature
   // ✅ Remote datasource

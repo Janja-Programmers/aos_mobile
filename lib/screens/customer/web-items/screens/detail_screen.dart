@@ -5,27 +5,25 @@ import 'package:provider/provider.dart';
 import '/core/constants/colors.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
-import '/features/cart/domain/cart.dart';
-import '/features/cart/provider.dart';
 import '/features/website/prov.dart';
 
 import '/shared/widgets/app_bars.dart';
 import '/shared/widgets/cart_button.dart';
 
+import '../widgets/product_action_bar.dart';
 import '../widgets/product_availability_and_rating.dart';
 import '../widgets/product_description.dart';
 import '../widgets/product_image_with_video.dart';
 import '../widgets/product_review_section.dart';
 import '../widgets/product_specification_list.dart';
 import '../widgets/product_tile_and_price.dart';
+
 import '../helper/empty_page.dart';
-import '../helper/contact_vendor.dart';
-import '../helper/add_to_cart_button.dart';
 
 class ProductDetailScreen extends StatefulWidget {
-  final String productId;
+  final String itemCode;
 
-  const ProductDetailScreen({super.key, required this.productId});
+  const ProductDetailScreen({super.key, required this.itemCode});
 
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
@@ -36,7 +34,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<WebsiteItemProv>().loadProductDetail(widget.productId);
+      if (context.read<WebsiteItemProv>().selectedProduct?.itemCode !=
+          widget.itemCode) {
+        context.read<WebsiteItemProv>().loadProductDetail(widget.itemCode);
+      }
     });
   }
 
@@ -70,9 +71,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
     if (error != null) {
-      debugPrint('❌ Error loading product: ${provider.error}');
+      debugPrint('❌ Failed to load product "${widget.itemCode}"');
 
       return Scaffold(
         backgroundColor: AppColors.background,
@@ -84,7 +84,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 12),
+                const SizedBox(height: 6),
                 const Text(
                   'Something went wrong',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
@@ -102,7 +102,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   children: [
                     ElevatedButton.icon(
                       onPressed:
-                          () => provider.loadProductDetail(widget.productId),
+                          () => provider.loadProductDetail(widget.itemCode),
                       icon: const Icon(Icons.refresh),
                       label: const Text('Retry'),
                       style: ElevatedButton.styleFrom(
@@ -146,17 +146,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       return const EmptyProductPage();
     }
 
-    final cartProvider = context.watch<CartProvider>();
-    final isInCart = cartProvider.containsProduct(product.name);
-
-    final cartItem = CartItem(
-      code: product.itemCode,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      image: product.imageUrl,
-    );
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: TopAppBar(
@@ -181,13 +170,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
                 ]
-                : [
-                  const CartIconButton(),
-                  IconButton(
-                    icon: const Icon(Icons.person, color: AppColors.black),
-                    onPressed: () {},
-                  ),
-                ],
+                : [const CartIconButton()],
       ),
 
       body: Column(
@@ -199,83 +182,54 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ProductImageWithVideo(
-                    imageUrls:
-                        product.images.isNotEmpty
-                            ? product.images
-                            : [product.imageUrl],
-                    videoUrl: product.demoVideoUrl ?? "",
-                  ),
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ProductImageWithVideo(
+                            imageUrls:
+                                product.images.isNotEmpty
+                                    ? product.images
+                                    : [product.imageUrl],
+                            videoUrl: product.demoVideoUrl ?? "",
+                          ),
 
-                  const SizedBox(height: 16),
+                          const SizedBox(height: 16),
 
-                  ProductTitleAndPrice(
-                    title: product.id,
-                    category: product.itemGroup,
-                    price: product.price,
-                  ),
-                  const SizedBox(height: 8),
+                          ProductTitleAndPrice(
+                            title: product.id,
+                            category: product.itemGroup,
+                            price: product.price,
+                          ),
+                          const SizedBox(height: 8),
 
-                  ProductAvailabilityAndRating(
-                    inStock: product.inStock,
-                    rating:
-                        product.reviews.isNotEmpty
-                            ? product.reviews
-                                    .map((e) => e.rating)
-                                    .reduce((a, b) => a + b) /
-                                product.reviews.length
-                            : 0.0,
-                    totalReviews: product.reviews.length,
-                  ),
+                          ProductAvailabilityAndRating(
+                            inStock: product.inStock,
+                            rating:
+                                product.reviews.isNotEmpty
+                                    ? product.reviews
+                                            .map((e) => e.rating)
+                                            .reduce((a, b) => a + b) /
+                                        product.reviews.length
+                                    : 0.0,
+                            totalReviews: product.reviews.length,
+                          ),
 
-                  const SizedBox(height: 12),
+                          const SizedBox(height: 6),
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child:
-                            product.inStock
-                                ? isInCart
-                                    ? ElevatedButton.icon(
-                                      onPressed: () => context.go('/cart'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.black,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 6,
-                                        ),
-                                        textStyle: const TextStyle(
-                                          fontSize: 14,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                      ),
-                                      icon: const Icon(Icons.shopping_cart),
-                                      label: const Text('View in Cart'),
-                                    )
-                                    : AddToCartButton(item: cartItem)
-                                : const SizedBox.shrink(),
+                          ProductActionBar(product: product),
+                          const SizedBox(height: 6),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ContactVendorButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Contact Vendor tapped"),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-
-                  const SizedBox(height: 12),
 
                   // --- Conditional Description ---
                   if ((product.shortDescription.isNotEmpty) ||
@@ -284,19 +238,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       shortDesc: product.shortDescription,
                       longDesc: product.longDescription,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                   ],
 
                   // --- Conditional Specs ---
                   if (product.specifications.isNotEmpty) ...[
                     ProductSpecificationsList(specs: product.specifications),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                   ],
 
                   // --- Conditional Reviews ---
                   if (product.reviews.isNotEmpty) ...[
                     ProductReviews(reviews: product.reviews),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                   ],
                 ],
               ),

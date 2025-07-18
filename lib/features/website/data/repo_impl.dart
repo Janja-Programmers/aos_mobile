@@ -1,8 +1,10 @@
 import 'package:dartz/dartz.dart';
 
 import '/core/errors/failures.dart';
+
 import '../domain/repo.dart';
 import '../domain/webitem.dart';
+
 import 'remote.dart';
 
 class WebsiteRepoImpl implements WebsiteRepo {
@@ -11,8 +13,9 @@ class WebsiteRepoImpl implements WebsiteRepo {
   WebsiteRepoImpl(this.remote);
 
   @override
-  Future<Either<Failure, List<WebsiteItem>>> getAllItems() =>
-      remote.fetchItems();
+  Future<Either<Failure, List<WebsiteItem>>> getAllItems({required int start}) {
+    return remote.fetchItems(start: start);
+  }
 
   @override
   Future<Either<Failure, WebsiteItem>> getOne(String id) {

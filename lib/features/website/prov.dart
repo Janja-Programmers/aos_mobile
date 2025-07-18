@@ -9,30 +9,55 @@ class WebsiteItemProv with ChangeNotifier {
 
   WebsiteItemProv({required this.getAllItems, required this.getSingleItem});
 
-  List<WebsiteItem> _items = [];
+  final List<WebsiteItem> _items = [];
   WebsiteItem? _selectedProduct;
+
+  int _start = 0;
+  bool _hasMore = true;
   bool _isLoading = false;
+  bool _isLoadingMore = false;
   String? _error;
 
   List<WebsiteItem> get items => _items;
-
   WebsiteItem? get selectedProduct => _selectedProduct;
-
   bool get isLoading => _isLoading;
+  bool get isLoadingMore => _isLoadingMore;
+  bool get hasMore => _hasMore;
   String? get error => _error;
 
-  Future<void> loadItems() async {
-    _isLoading = true;
+  Future<void> loadInitialItems() async {
+    _start = 0;
+    _hasMore = true;
+    _items.clear();
     _error = null;
+    _isLoading = true;
     notifyListeners();
 
-    final result = await getAllItems();
-    result.fold(
-      (failure) => _error = failure.message,
-      (items) => _items = items,
-    );
+    final result = await getAllItems(start: _start);
+    result.fold((failure) => _error = failure.message, (fetchedItems) {
+      _items.addAll(fetchedItems);
+      _start += fetchedItems.length;
+      if (fetchedItems.length < 12) _hasMore = false;
+    });
 
     _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> loadMoreItems() async {
+    if (_isLoadingMore || !_hasMore) return;
+
+    _isLoadingMore = true;
+    notifyListeners();
+
+    final result = await getAllItems(start: _start);
+    result.fold((failure) => _error = failure.message, (fetchedItems) {
+      _items.addAll(fetchedItems);
+      _start += fetchedItems.length;
+      if (fetchedItems.length < 12) _hasMore = false;
+    });
+
+    _isLoadingMore = false;
     notifyListeners();
   }
 

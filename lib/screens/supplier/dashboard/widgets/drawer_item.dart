@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/colors.dart';
 
 class DrawerItem extends StatelessWidget {
   final IconData icon;
@@ -17,22 +16,36 @@ class DrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: selected ? AppColors.white : Colors.grey[800]),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: selected ? AppColors.white : Colors.grey[800],
-          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+    final textColor = selected ? Colors.black : Colors.black87;
+    final iconColor = selected ? Colors.black : Colors.black54;
+
+    return Container(
+      decoration:
+          selected
+              ? BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 2,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              )
+              : null,
+      child: ListTile(
+        leading: Icon(icon, color: iconColor),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: textColor,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+          ),
         ),
-      ),
-      selected: selected,
-      selectedTileColor: Colors.black,
-      onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 12.0,
-        vertical: 1.0,
+        onTap: onTap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

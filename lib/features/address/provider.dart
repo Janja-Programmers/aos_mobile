@@ -18,22 +18,20 @@ class AddressProvider with ChangeNotifier {
   String? get error => _error;
 
   /// Create and persist address (remote + local)
-  Future<bool> createShippingAddress(Address address) async {
+  Future<String?> createShippingAddress(Address address) async {
     _error = null;
     _isLoading = true;
     notifyListeners();
 
-    try {
-      await repository.createShippingAddress(address);
-      await fetchShippingAddresses(); // refresh local cache
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      return false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+    final result = await repository.createShippingAddress(address);
+
+    _isLoading = false;
+    notifyListeners();
+
+    return result.fold((failure) {
+      _error = failure.message;
+      return null;
+    }, (name) => name);
   }
 
   /// Get all saved shipping addresses (local)
@@ -42,13 +40,14 @@ class AddressProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    try {
-      _addresses = await repository.fetchShippingAddresses();
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+    final result = await repository.fetchShippingAddresses();
+
+    _isLoading = false;
+    result.fold(
+      (failure) => _error = failure.message,
+      (data) => _addresses = data,
+    );
+
+    notifyListeners();
   }
 }

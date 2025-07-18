@@ -25,20 +25,32 @@ class ProductActionButtons extends StatelessWidget {
             ),
             label: Text(isInCart ? 'View in Cart' : 'Add to Cart'),
             onPressed: isInCart ? onViewCart : onAddToCart,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
         ),
-        const SizedBox(width: 12),
-        if (onContact != null)
+        if (onContact != null) ...[
+          const SizedBox(width: 12),
           ElevatedButton.icon(
             icon: const Icon(Icons.chat),
             label: const Text('Contact Vendor'),
+            onPressed: onContact,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey,
+              backgroundColor: Colors.grey.shade300,
               foregroundColor: Colors.black87,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            onPressed: onContact,
           ),
+        ],
       ],
     );
   }

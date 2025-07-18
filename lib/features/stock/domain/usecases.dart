@@ -5,11 +5,14 @@ import '/core/errors/failures.dart';
 import 'entity/stock.dart';
 import 'repo.dart';
 
-class GetAllStockEntryNames {
+class GetAllStockEntries {
   final StockEntryRepo repo;
-  GetAllStockEntryNames(this.repo);
 
-  Future<Either<Failure, List<String>>> call() => repo.getAllNames();
+  GetAllStockEntries(this.repo);
+
+  Future<Either<Failure, List<StockEntry>>> call() {
+    return repo.getAll();
+  }
 }
 
 class GetStockEntryById {

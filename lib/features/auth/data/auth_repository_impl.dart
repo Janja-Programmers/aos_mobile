@@ -16,20 +16,11 @@ class AuthRepositoryImpl implements AuthRepository {
     String username,
     String password,
   ) async {
-    final result = await remote.login(username, password);
-
-    return result.map((data) {
-      final user = User(
-        username: data['full_name'] ?? 'Guest',
-        userType: data['user_type'] ?? 'Buyer',
-      );
-      final homePage = data['home_page'];
-      return LoginResult(user: user, homePage: homePage);
-    });
+    return await remote.login(username, password);
   }
 
   @override
-  Future<List<dynamic>> register(
+  Future<Either<Failure, List<dynamic>>> register(
     String username,
     String email,
     String fullName,
@@ -46,15 +37,18 @@ class AuthRepositoryImpl implements AuthRepository {
       password,
     );
 
-    return result.fold((failure) => throw Exception(failure.toString()), (
-      data,
-    ) {
+    return result.fold((failure) => Left(failure), (data) {
       final message = data['message'];
       if (message is List) {
-        return message;
+        return Right(message);
       } else {
-        throw Exception("Unexpected response structure");
+        return Left(ServerFailure("Unexpected response format from server"));
       }
     });
+  }
+
+  @override
+  Future<Either<Failure, void>> logout() async {
+    return await remote.logout();
   }
 }

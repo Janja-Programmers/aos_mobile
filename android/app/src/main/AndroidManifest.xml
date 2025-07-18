@@ -15,6 +15,9 @@
     <!-- Permissions for URL launching -->
     <uses-permission android:name="android.permission.CALL_PHONE"/>
 
+    <!-- Permission for internet -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    
 
     <application
         android:label="Own A Shop"

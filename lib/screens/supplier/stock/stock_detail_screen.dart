@@ -6,6 +6,7 @@ import '/core/constants/colors.dart';
 import '/features/stock/providers/read.dart';
 
 import '/shared/widgets/app_drawer.dart';
+import '/shared/widgets/build_subtitle.dart';
 import '/shared/widgets/main_bar.dart';
 
 import 'utils/failure_display.dart';
@@ -14,7 +15,6 @@ import 'utils/print_stock_entry.dart';
 import 'utils/reload_stock.dart';
 import 'utils/submit_stock.dart';
 
-import '../../../shared/widgets/build_subtitle.dart';
 import 'widgets/stock_entry_actions.dart';
 
 class StockEntryDetailScreen extends StatefulWidget {

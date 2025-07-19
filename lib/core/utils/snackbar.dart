@@ -60,7 +60,7 @@ void topSnackBar(
   _isSnackVisible = true;
 
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    final overlay = Overlay.of(context);
+    final overlay = Overlay.of(context, rootOverlay: true);
 
     final color = switch (type) {
       TopSnackType.success => Colors.green.shade600,

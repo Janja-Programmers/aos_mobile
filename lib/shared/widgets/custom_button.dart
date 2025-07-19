@@ -7,6 +7,7 @@ class CustomButton extends StatelessWidget {
   final Color backgroundColor;
   final Widget Function()? pageBuilder;
   final VoidCallback? onPressed;
+  final Widget? child;
 
   const CustomButton({
     super.key,
@@ -16,18 +17,17 @@ class CustomButton extends StatelessWidget {
     this.backgroundColor = Colors.black,
     this.pageBuilder,
     this.onPressed,
+    this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextButton.icon(
+    return TextButton(
       style: TextButton.styleFrom(
         foregroundColor: textColor,
         backgroundColor: backgroundColor,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       ),
-      icon: Icon(icon, size: 16),
-      label: Text(label, style: const TextStyle(fontSize: 13)),
       onPressed:
           onPressed ??
           () {
@@ -61,6 +61,16 @@ class CustomButton extends StatelessWidget {
               );
             }
           },
+      child:
+          child ??
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16),
+              const SizedBox(width: 8),
+              Text(label, style: const TextStyle(fontSize: 13)),
+            ],
+          ),
     );
   }
 }

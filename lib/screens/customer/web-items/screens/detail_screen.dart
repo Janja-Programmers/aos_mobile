@@ -4,11 +4,9 @@ import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
 
-import '/features/auth/presentation/auth_provider.dart';
 import '/features/website/prov.dart';
 
 import '/shared/widgets/app_bars.dart';
-import '/shared/widgets/cart_button.dart';
 
 import '../widgets/product_action_bar.dart';
 import '../widgets/product_availability_and_rating.dart';
@@ -57,7 +55,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<AuthProvider>().user;
     final provider = context.watch<WebsiteItemProv>();
 
     final product = provider.selectedProduct;
@@ -148,31 +145,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: TopAppBar(
-        actions:
-            user == null
-                ? [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: TextButton(
-                      onPressed: () => context.push('/login'),
-                      style: TextButton.styleFrom(
-                        backgroundColor: AppColors.black,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(color: AppColors.white),
-                      ),
-                    ),
-                  ),
-                ]
-                : [const CartIconButton()],
-      ),
-
+      appBar: TopAppBar(),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

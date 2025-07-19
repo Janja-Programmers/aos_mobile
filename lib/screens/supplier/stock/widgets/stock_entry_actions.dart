@@ -21,12 +21,17 @@ class StockEntryActions extends StatelessWidget {
     final items = <_MenuItem>[
       if (onSubmit != null && docstatus == 0)
         _MenuItem('submit', 'Submit', Colors.green),
-      if (onCancel != null && docstatus == 0 || docstatus == 1)
+
+      if (onCancel != null && docstatus == 1)
         _MenuItem('cancel', 'Cancel', Colors.red),
+
       if (onReload != null) _MenuItem('reload', 'Reload', Colors.blue),
+
       if (onPrint != null && docstatus == 1)
         _MenuItem('print', 'Print', Colors.orange),
     ];
+
+    if (items.isEmpty) return const SizedBox.shrink();
 
     return PopupMenuButton<String>(
       icon: const Icon(Icons.more_vert),
@@ -48,12 +53,17 @@ class StockEntryActions extends StatelessWidget {
       },
       itemBuilder:
           (context) =>
-              items.map((item) {
-                return PopupMenuItem<String>(
-                  value: item.value,
-                  child: Text(item.label, style: TextStyle(color: item.color)),
-                );
-              }).toList(),
+              items
+                  .map(
+                    (item) => PopupMenuItem<String>(
+                      value: item.value,
+                      child: Text(
+                        item.label,
+                        style: TextStyle(color: item.color),
+                      ),
+                    ),
+                  )
+                  .toList(),
     );
   }
 }

@@ -72,7 +72,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   );
                   if (!context.mounted) return;
                   if (success) {
-                    topSnackBar(context, 'Product saved successfully');
+                    if (isUpdate) {
+                      topSnackBar(context, 'Product updated successfully');
+                    } else {
+                      topSnackBar(context, 'Product created successfully');
+                    }
                     context.pop(true);
                   } else {
                     topSnackBar(
@@ -82,6 +86,18 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     );
                   }
                 },
+
+        child:
+            controller.isSubmitting
+                ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+                : null,
       ),
       body: Container(
         color: Colors.white,

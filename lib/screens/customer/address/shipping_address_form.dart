@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ownashop/core/utils/validators.dart';
 import 'package:provider/provider.dart';
 
 import '/features/address/provider.dart';
@@ -97,7 +98,7 @@ class _ShippingAddressFormState extends State<ShippingAddressForm> {
                 controller: _phoneController,
                 decoration: const InputDecoration(labelText: 'Phone'),
                 keyboardType: TextInputType.phone,
-                validator: (val) => val!.isEmpty ? 'Required' : null,
+                validator: AppValidator.isPhone,
               ),
               const SizedBox(height: 20),
 

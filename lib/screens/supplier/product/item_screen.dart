@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
+import '/core/utils/snackbar.dart';
 
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/build_subtitle.dart';
@@ -146,6 +147,20 @@ class _ItemScreenState extends State<ItemScreen> {
                             name: product.name,
                             itemName: product.itemName,
                             category: product.category,
+                            onDeleted: () async {
+                              await context
+                                  .read<ProductProvider>()
+                                  .fetchProducts();
+
+                              // ✅ Now it's safe to show snackbar here — from a stable context
+                              if (context.mounted) {
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  topSnackBar(context, 'Deleted successfully');
+                                });
+                              }
+                            },
                           );
                         },
                       ),

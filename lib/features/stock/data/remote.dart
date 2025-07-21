@@ -74,25 +74,14 @@ class StockEntryRemoteDS {
         return Left(handleException('Missing Stock Entry ID for update.'));
       }
 
-      print('Updating stock entry with ID: $id');
-      print('Entry data: ${entry.toJson()}');
 
       try {
-        final response = await _client.client.put(
-          '$stockIntakeApi/$id',
-          data: entry.toJson(),
-        );
-        print('Update successful: ${response.data}');
       } on DioException catch (e) {
-        print('Response data: ${e.response?.data}');
-        print('Headers: ${e.response?.headers}');
-        print('Status code: ${e.response?.statusCode}');
         return Left(handleException(e));
       }
 
       return const Right(null);
     } catch (e) {
-      print('Error during update: $e');
       return Left(handleException(e));
     }
   }

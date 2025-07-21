@@ -27,7 +27,8 @@ class PaymentSummaryCard extends StatelessWidget {
 
     await addressProvider.fetchShippingAddresses();
 
-    final hasShippingAddress = addressProvider.addresses.isNotEmpty;
+    final addresses = addressProvider.addresses;
+    final hasShippingAddress = addresses.isNotEmpty;
 
     if (!hasShippingAddress) {
       // Show warning
@@ -48,16 +49,17 @@ class PaymentSummaryCard extends StatelessWidget {
       // If user saved an address, refresh and re-validate
       if (result != null) {
         await addressProvider.fetchShippingAddresses();
-        if (addressProvider.addresses.isNotEmpty) {
-          controller.placeOrder();
+        final updatedList = addressProvider.addresses;
+        if (updatedList.isNotEmpty) {
+          controller.placeOrder(shippingAddress: updatedList.first.name);
         }
       }
 
       return;
     }
 
-    // Proceed if address exists
-    controller.placeOrder();
+    // Proceed if address exists — use first one by default
+    controller.placeOrder(shippingAddress: addresses.first.name);
   }
 
   @override

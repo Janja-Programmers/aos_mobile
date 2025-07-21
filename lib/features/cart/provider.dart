@@ -5,7 +5,6 @@ import '/core/utils/api_client.dart';
 import '/core/utils/logger.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
-import '/features/address/data/datasource/local.dart';
 
 import '../order/domain/sales_order.dart';
 import '../order/domain/usecases.dart';
@@ -32,7 +31,6 @@ class CartProvider with ChangeNotifier {
   });
 
   final _authProvider = sl<AuthProvider>();
-  final _localAddressRepo = sl<LocalAddressRepository>();
 
   final CartRepo repo = sl<CartRepo>();
 
@@ -158,51 +156,6 @@ class CartProvider with ChangeNotifier {
       appLogger.i('✅ Order placed successfully');
       clear();
     });
-  }
-
-  // ─────────────────────────────────────────────────────────────────────
-  /// Handles case where address may not yet exist
-  Future<void> submitCartWithAutoAddress({
-    required String customer,
-    required VoidCallback openShippingForm,
-    required void Function(String addressName) onSuccess,
-  }) async {
-    _setLoading(true);
-    _setError(null);
-
-    try {
-      final addresses = await _localAddressRepo.getAddressesForCustomer(
-        customer,
-      );
-
-      if (addresses.isEmpty) {
-        _setLoading(false);
-        openShippingForm();
-        return;
-      }
-
-      final selectedAddress = addresses.first.title;
-      final payload = _buildOrderPayload(
-        customer: customer,
-        address: selectedAddress,
-      );
-
-      appLogger.i('🛒 AUTO-ORDER using address: $selectedAddress');
-      appLogger.i('📦 PAYLOAD: ${payload.toJson()}');
-
-      final result = await placeOrder(payload);
-
-      _setLoading(false);
-
-      result.fold((failure) => _setError(failure.message), (_) {
-        appLogger.i('✅ Order placed successfully');
-        clear();
-        onSuccess(selectedAddress);
-      });
-    } catch (e) {
-      _setError('Unexpected error: $e');
-      _setLoading(false);
-    }
   }
 
   // ─────────────────────────────────────────────────────────────────────

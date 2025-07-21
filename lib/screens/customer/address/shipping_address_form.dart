@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/core/utils/validators.dart';
 import 'package:provider/provider.dart';
+
+import '/core/utils/validators.dart';
 
 import '/features/address/provider.dart';
 import '/features/address/domain/address.dart';
 import '/features/auth/presentation/auth_provider.dart';
 
 class ShippingAddressForm extends StatefulWidget {
-  const ShippingAddressForm({super.key});
+  final Address? initialData; // 👈 allow null
+
+  const ShippingAddressForm({super.key, this.initialData});
 
   @override
   State<ShippingAddressForm> createState() => _ShippingAddressFormState();
@@ -20,6 +23,18 @@ class _ShippingAddressFormState extends State<ShippingAddressForm> {
   final _addressLineController = TextEditingController();
   final _cityController = TextEditingController();
   final _phoneController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final data = widget.initialData;
+
+    if (data != null) {
+      _addressLineController.text = data.line1;
+      _cityController.text = data.city;
+      _phoneController.text = data.phone;
+    }
+  }
 
   @override
   void dispose() {
@@ -36,7 +51,7 @@ class _ShippingAddressFormState extends State<ShippingAddressForm> {
     final addressProv = context.read<AddressProvider>();
 
     final addressEntity = Address(
-      name: '',
+      name: widget.initialData?.name ?? '',
       title: user.username,
       line1: _addressLineController.text.trim(),
       city: _cityController.text.trim(),
@@ -45,12 +60,20 @@ class _ShippingAddressFormState extends State<ShippingAddressForm> {
       type: 'Shipping',
     );
 
-    final name = await addressProv.createShippingAddress(addressEntity);
+    String? resultName;
+
+    if (widget.initialData == null) {
+      // ➕ Create mode
+      resultName = await addressProv.createShippingAddress(addressEntity);
+    } else {
+      // 🔁 Update mode — to be implemented next
+      resultName = await addressProv.updateShippingAddress(addressEntity);
+    }
 
     if (!mounted) return;
 
-    if (name != null) {
-      context.pop(name);
+    if (resultName != null) {
+      context.pop(resultName);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(addressProv.error ?? 'Something went wrong')),
@@ -69,45 +92,63 @@ class _ShippingAddressFormState extends State<ShippingAddressForm> {
         top: 20,
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
-      child: Form(
-        key: _formKey,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 500),
         child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const Text(
-                'Shipping Address',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Text(
+                    widget.initialData == null
+                        ? 'Add Shipping Address'
+                        : 'Edit Shipping Address',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
 
-              TextFormField(
-                controller: _addressLineController,
-                decoration: const InputDecoration(labelText: 'Address Line'),
-                validator: (val) => val!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _addressLineController,
+                    decoration: const InputDecoration(
+                      labelText: 'Address Line',
+                    ),
+                    validator: (val) => val!.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 12),
 
-              TextFormField(
-                controller: _cityController,
-                decoration: const InputDecoration(labelText: 'City/Town'),
-                validator: (val) => val!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _cityController,
+                    decoration: const InputDecoration(labelText: 'City/Town'),
+                    validator: (val) => val!.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 12),
 
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Phone'),
-                keyboardType: TextInputType.phone,
-                validator: AppValidator.isPhone,
-              ),
-              const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _phoneController,
+                    decoration: const InputDecoration(labelText: 'Phone'),
+                    keyboardType: TextInputType.phone,
+                    validator: AppValidator.isPhone,
+                  ),
+                  const SizedBox(height: 20),
 
-              ElevatedButton.icon(
-                onPressed: isLoading ? null : _submitAddress,
-                icon: const Icon(Icons.check),
-                label: Text(isLoading ? 'Saving...' : 'Save Address'),
+                  ElevatedButton.icon(
+                    onPressed: isLoading ? null : _submitAddress,
+                    icon: const Icon(Icons.check),
+                    label: Text(
+                      isLoading
+                          ? 'Saving...'
+                          : widget.initialData == null
+                          ? 'Save Address'
+                          : 'Update Address',
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

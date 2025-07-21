@@ -3,12 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '/core/di/service_locator.dart';
-import '/core/utils/api_client.dart';
 import '/core/utils/snackbar.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
-import '/features/cart/data/remote.dart';
 import '/features/cart/provider.dart';
 
 import '/screens/customer/address/shipping_address_form.dart';
@@ -18,7 +15,8 @@ class PlaceOrderController {
 
   PlaceOrderController(this.context);
 
-  Future<void> createAdress() async {
+  /// If no address selected, prompt user to create one before proceeding
+  Future<void> createAddressAndPlaceOrder() async {
     final cart = context.read<CartProvider>();
     final user = context.read<AuthProvider>().user;
 
@@ -27,51 +25,38 @@ class PlaceOrderController {
       return;
     }
 
+    // 🔄 Show loading while checking/creating address
     _showLoading();
 
-    await cart.submitCartWithAutoAddress(
-      customer: user.username,
-      openShippingForm: () async {
-        Navigator.of(context).pop(); // Close loading dialog before bottom sheet
+    Navigator.of(context).pop();
 
-        final name = await showModalBottomSheet<String>(
-          context: context,
-          isScrollControlled: true,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          builder: (_) => const ShippingAddressForm(),
-        );
-
-        if (name != null) {
-          _showLoading();
-          await cart.submitCartAsSalesOrder(shippingAddressName: name);
-          Navigator.of(context).pop(); // Close loading
-        }
-      },
-      onSuccess: (addressUsed) {
-        Navigator.of(context).pop();
-        _showSuccessDialog();
-      },
+    final name = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => const ShippingAddressForm(),
     );
+
+    if (name != null) {
+      _showLoading();
+      await cart.submitCartAsSalesOrder(shippingAddressName: name);
+      if (context.mounted) Navigator.of(context).pop();
+      _showSuccessDialog();
+    }
   }
 
-  Future<void> placeOrder() async {
+  /// Called when address is already selected (normal flow)
+  Future<void> placeOrder({required String shippingAddress}) async {
     _showLoading();
 
     try {
-      final orderService = OrderService(sl<APIClient>());
-
-      await orderService.placeOrder();
+      await context.read<CartProvider>().submitCartAsSalesOrder(
+        shippingAddressName: shippingAddress,
+      );
 
       if (!context.mounted) return;
       Navigator.of(context).pop();
 
-      // ✅ Clear the cart
-      final cartProvider = context.read<CartProvider>();
-      await cartProvider.clear();
-
-      // Show success dialog
       _showSuccessDialog();
     } catch (e) {
       if (!context.mounted) return;
@@ -82,8 +67,6 @@ class PlaceOrderController {
 
       if (e is DioException) {
         final data = e.response?.data;
-
-        // Check for missing customer (vendor case)
         if (data is Map &&
             data['exception']?.toString().contains('MandatoryError') == true &&
             data['exception']?.toString().contains('customer') == true) {
@@ -92,17 +75,15 @@ class PlaceOrderController {
         }
       }
 
-      // ✅ Clear the cart if needed
       if (shouldClearCart) {
-        final cartProvider = context.read<CartProvider>();
-        await cartProvider.clear();
+        await context.read<CartProvider>().clear();
       }
 
-      // ✅ Show error via topSnackbar
       topSnackBar(context, message, type: TopSnackType.error);
     }
   }
 
+  // ──────────────────────────
   void _showLoading() {
     showDialog(
       context: context,
@@ -117,6 +98,7 @@ class PlaceOrderController {
       'Order placed successfully!',
       type: TopSnackType.success,
     );
+
     showDialog(
       context: context,
       builder:

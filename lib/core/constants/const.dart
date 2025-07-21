@@ -22,8 +22,12 @@ class ApiRoutes {
   static const String deliveryNote = '/api/resource/Delivery Note';
   static const String stockIntake = '/api/resource/Stock Intake';
 
-  static const String address =
+  static const String newAddress =
       '/api/method/amani_mall.overrides.cart.add_new_address';
+  static const String address = '/api/resource/Address';
+  static const String update = '/api/method/frappe.client.set_value';
+  static const String delete = '/api/method/frappe.client.delete';
+
   static const String product = '/api/resource/Product';
 
   static const String addToCart =

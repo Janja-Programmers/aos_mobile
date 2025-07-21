@@ -61,8 +61,7 @@ import '/features/cart/provider.dart';
 
 /***** ADDRESS ********/
 import '/features/address/data/repo_impl.dart';
-import '/features/address/data/datasource/remote.dart';
-import '/features/address/data/datasource/local.dart';
+import '/features/address/data/remote.dart';
 import '/features/address/domain/repo.dart';
 import '/features/address/provider.dart';
 
@@ -251,17 +250,9 @@ Future<void> init() async {
     () => AddressRemoteDatasourceImpl(sl()),
   );
 
-  // ✅ Local datasource
-  sl.registerLazySingleton<LocalAddressRepository>(
-    () => LocalAddressRepository(),
-  );
-
   // ✅ Repository
   sl.registerLazySingleton<AddressRepository>(
-    () => AddressRepositoryImpl(
-      remote: sl<AddressRemoteDatasource>(),
-      local: sl<LocalAddressRepository>(),
-    ),
+    () => AddressRepositoryImpl(remote: sl<AddressRemoteDatasource>()),
   );
 
   // ✅ Provider

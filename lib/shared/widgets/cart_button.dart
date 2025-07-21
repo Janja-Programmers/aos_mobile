@@ -53,3 +53,18 @@ class CartIconButton extends StatelessWidget {
     );
   }
 }
+
+class ViewWebsiteButton extends StatelessWidget {
+  const ViewWebsiteButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: 'View Website',
+      icon: const Icon(Icons.language, color: Colors.black87),
+      onPressed: () {
+        context.push('/');
+      },
+    );
+  }
+}

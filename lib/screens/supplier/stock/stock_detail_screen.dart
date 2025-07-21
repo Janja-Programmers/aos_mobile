@@ -9,6 +9,7 @@ import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/build_subtitle.dart';
 import '/shared/widgets/main_bar.dart';
 
+import 'utils/delete_stock_entry.dart';
 import 'utils/failure_display.dart';
 import 'utils/cancel_stock.dart';
 import 'utils/print_stock_entry.dart';
@@ -52,19 +53,11 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
       subTitle: buildSubTitle(title: entry.id, docstatus: entry.docstatus),
       actionButton: StockEntryActions(
         docstatus: entry.docstatus,
-        onSubmit: () async {
-          await submitStockEntry(context, entry);
-          await context.read<StockEntryDetailProvider>().fetchById(entry.id);
-        },
-        onCancel: () async {
-          await cancelStockEntry(context, entry);
-          if (context.mounted) {
-            await context.read<StockEntryDetailProvider>().fetchById(entry.id);
-            Navigator.pop(context, true);
-          }
-        },
+        onSubmit: () => submitStockEntry(context, entry),
+        onCancel: () => cancelStockEntry(context, entry),
         onReload: () => reloadStockEntry(context, entry),
         onPrint: () => printStockIntake(context, entry),
+        onDelete: () => deleteStockEntry(context, entry.id),
       ),
       body: Builder(
         builder: (_) {

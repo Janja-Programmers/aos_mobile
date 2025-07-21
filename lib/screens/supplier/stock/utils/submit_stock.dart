@@ -7,16 +7,20 @@ import '/features/stock/providers/create.dart';
 import '/features/stock/providers/read.dart';
 
 Future<void> submitStockEntry(BuildContext context, StockEntry draft) async {
-  final provider = context.read<CreateStockEntryProvider>();
+  final createProvider = context.read<CreateStockEntryProvider>();
   final detailProvider = context.read<StockEntryDetailProvider>();
 
   final updated = draft.copyWith(docstatus: 1);
-  await provider.update(updated);
+  await createProvider.updateDraft(updated);
 
   if (!context.mounted) return;
 
-  if (provider.hasError) {
-    topSnackBar(context, provider.failure!.message, type: TopSnackType.error);
+  if (createProvider.hasError) {
+    topSnackBar(
+      context,
+      createProvider.failure!.message,
+      type: TopSnackType.error,
+    );
   } else {
     topSnackBar(
       context,
@@ -24,7 +28,9 @@ Future<void> submitStockEntry(BuildContext context, StockEntry draft) async {
       type: TopSnackType.success,
     );
 
-    // Refresh detail
     await detailProvider.fetchById(draft.id);
+
+    // Pop and return true to refresh the previous screen
+    Navigator.pop(context, true);
   }
 }

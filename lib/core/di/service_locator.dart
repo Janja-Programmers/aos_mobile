@@ -50,6 +50,7 @@ import '/features/stock/domain/usecases.dart';
 import '/features/stock/providers/all.dart';
 import '/features/stock/providers/create.dart';
 import '/features/stock/providers/read.dart';
+import '/features/stock/providers/delete.dart';
 
 /***** CART *******/
 import '/features/cart/domain/usecase.dart';
@@ -189,14 +190,15 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddStockEntry(sl()));
   sl.registerLazySingleton(() => UpdateStockEntry(sl()));
   sl.registerLazySingleton(() => GetStockEntryById(sl()));
+  sl.registerLazySingleton(() => DeleteStockEntry(sl()));
 
   // === Providers ===
   sl.registerFactory(() => StockEntryProvider(getAll: sl()));
-  // sl.registerFactory(
-  //   () => StockEntryProvider(getAll: sl<GetAllStockEntries>()),
-  // );
   sl.registerFactory(() => StockEntryDetailProvider(getById: sl()));
-  sl.registerFactory(() => CreateStockEntryProvider(add: sl(), update: sl()));
+  sl.registerFactory(
+    () => CreateStockEntryProvider(add: sl(), update: sl(), getById: sl()),
+  );
+  sl.registerFactory(() => DeleteStockEntryProvider(delete: sl()));
 
   // CART Feature
 

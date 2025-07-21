@@ -38,6 +38,7 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Text('Own A Shop', style: const TextStyle(color: AppColors.black)),
       actions: [
         if (userType == 'Buyer') const CartIconButton(),
+        if (userType != 'Buyer') const ViewWebsiteButton(),
         ...?actions,
         UserMenuButton(userType: userType ?? 'Buyer'),
       ],

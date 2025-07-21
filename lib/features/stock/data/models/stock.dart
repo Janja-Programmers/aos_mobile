@@ -29,12 +29,17 @@ class StockEntryModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    final data = {
       'name': id,
       'docstatus': docstatus,
-      'modified': modified?.toIso8601String(),
       'items': items.map((e) => e.toJson()).toList(),
     };
+
+    if (modified != null) {
+      data['modified'] = modified!.toIso8601String();
+    }
+
+    return data;
   }
 
   StockEntry toEntity() => StockEntry(

@@ -73,6 +73,13 @@ import '/features/charts/domain/repo.dart';
 import '/features/charts/domain/usecase.dart';
 import '/features/charts/presentation/provider.dart';
 
+/***** WISHLIST ********/
+import '/features/wishlist/data/local_data_source.dart';
+import '/features/wishlist/data/repo_impl.dart';
+import '/features/wishlist/domain/usecases.dart';
+import '/features/wishlist/domain/wishlist_repo.dart';
+import '/features/wishlist/provider.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -267,4 +274,20 @@ Future<void> init() async {
   sl.registerLazySingleton<SalesChartRepo>(() => SalesChartRepoImpl(sl()));
   sl.registerLazySingleton(() => GetSalesChart(sl()));
   sl.registerFactory(() => SalesChartProvider(getChart: sl()));
+
+  // WISHLIST Feature
+  sl.registerLazySingleton(() => GetWishlist(sl()));
+  sl.registerLazySingleton(() => AddToWishlist(sl()));
+  sl.registerLazySingleton(() => RemoveFromWishlist(sl()));
+  sl.registerLazySingleton<WishlistRepo>(() => WishlistRepoImpl(sl()));
+  sl.registerLazySingleton<WishlistLocalDataSource>(
+    () => WishlistLocalDataSourceImpl(),
+  );
+  sl.registerLazySingleton(
+    () => WishlistProvider(
+      getWishlist: sl(),
+      addToWishlist: sl(),
+      removeFromWishlist: sl(),
+    ),
+  );
 }

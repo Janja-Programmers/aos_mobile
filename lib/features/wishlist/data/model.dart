@@ -21,3 +21,8 @@ class WishlistItemModel extends WishlistItem {
     return {'id': id, 'title': title, 'imageUrl': imageUrl, 'price': price};
   }
 }
+
+extension WishlistItemMapper on WishlistItem {
+  WishlistItemModel toModel() =>
+      WishlistItemModel(id: id, title: title, imageUrl: imageUrl, price: price);
+}

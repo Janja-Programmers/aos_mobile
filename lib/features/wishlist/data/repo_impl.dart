@@ -1,12 +1,13 @@
 import '../domain/wishlist_item.dart';
-import '../domain/wishlist_repository.dart';
-import 'wishlist_local_data_source.dart';
-import 'wishlist_item_model.dart';
+import '../domain/wishlist_repo.dart';
 
-class WishlistRepositoryImpl implements WishlistRepository {
+import 'local_data_source.dart';
+import 'model.dart';
+
+class WishlistRepoImpl implements WishlistRepo {
   final WishlistLocalDataSource localDataSource;
 
-  WishlistRepositoryImpl(this.localDataSource);
+  WishlistRepoImpl(this.localDataSource);
 
   @override
   Future<List<WishlistItem>> getWishlist() async {

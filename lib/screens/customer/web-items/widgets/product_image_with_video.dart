@@ -28,8 +28,8 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
   Widget build(BuildContext context) {
     final images =
         widget.imageUrls
-            .where((url) => url.trim().isNotEmpty)
             .map(resolveImageUrl)
+            .whereType<String>() // ✅ remove any nulls
             .toList();
 
     if (kDebugMode) {
@@ -71,7 +71,7 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
                   child: _buildImage(images.first),
                 ),
 
-            if (videoUrl.isNotEmpty)
+            if (videoUrl != null && videoUrl.isNotEmpty)
               Positioned(
                 bottom: 12,
                 right: 12,
@@ -112,7 +112,9 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
     );
   }
 
-  Widget _buildImage(String url) {
+  Widget _buildImage(String? url) {
+    if (url == null || url.isEmpty) return _fallbackImage();
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
@@ -132,9 +134,7 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
           url,
           width: double.infinity,
           height: 220,
-          fit:
-              BoxFit
-                  .contain, // ✅ Ensures full image is visible without cropping
+          fit: BoxFit.contain,
           errorBuilder: (_, _, _) => _fallbackImage(),
           loadingBuilder: (context, child, progress) {
             if (progress == null) return child;

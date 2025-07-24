@@ -23,7 +23,7 @@ import '/screens/supplier/stock/stock_detail_screen.dart';
 
 // Customer
 import '/screens/customer/web-items/screens/list_screen.dart';
-import '/screens/customer/wishlist/presentation/wishlist_screen.dart';
+import '/screens/customer/wishlist/wishlist_screen.dart';
 import '/screens/customer/cart/cart_screen.dart';
 import '/screens/customer/address/shipping_address_form.dart';
 import '/screens/customer/orders/order_detail.dart';

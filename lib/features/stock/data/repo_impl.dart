@@ -33,6 +33,12 @@ class StockEntryRepoImpl implements StockEntryRepo {
   @override
   Future<Either<Failure, void>> update(StockEntry entry) {
     final model = StockEntryModel.fromEntity(entry);
-    return remoteDS.update(model); // 🔁 call remote datasource
+    return remoteDS.update(model);
+  }
+
+  @override
+  Future<Either<Failure, void>> delete(String id) async {
+    await remoteDS.deleteEntry(id);
+    return right(null);
   }
 }

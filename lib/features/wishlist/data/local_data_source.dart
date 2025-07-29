@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'wishlist_item_model.dart';
+import 'model.dart';
 
 abstract class WishlistLocalDataSource {
   Future<List<WishlistItemModel>> getWishlistItems();

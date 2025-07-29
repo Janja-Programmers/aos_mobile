@@ -50,6 +50,7 @@ import '/features/stock/domain/usecases.dart';
 import '/features/stock/providers/all.dart';
 import '/features/stock/providers/create.dart';
 import '/features/stock/providers/read.dart';
+import '/features/stock/providers/delete.dart';
 
 /***** CART *******/
 import '/features/cart/domain/usecase.dart';
@@ -61,8 +62,7 @@ import '/features/cart/provider.dart';
 
 /***** ADDRESS ********/
 import '/features/address/data/repo_impl.dart';
-import '/features/address/data/datasource/remote.dart';
-import '/features/address/data/datasource/local.dart';
+import '/features/address/data/remote.dart';
 import '/features/address/domain/repo.dart';
 import '/features/address/provider.dart';
 
@@ -72,6 +72,13 @@ import '/features/charts/data/repo_impl.dart';
 import '/features/charts/domain/repo.dart';
 import '/features/charts/domain/usecase.dart';
 import '/features/charts/presentation/provider.dart';
+
+/***** WISHLIST ********/
+import '/features/wishlist/data/local_data_source.dart';
+import '/features/wishlist/data/repo_impl.dart';
+import '/features/wishlist/domain/usecases.dart';
+import '/features/wishlist/domain/wishlist_repo.dart';
+import '/features/wishlist/provider.dart';
 
 final sl = GetIt.instance;
 
@@ -190,14 +197,15 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddStockEntry(sl()));
   sl.registerLazySingleton(() => UpdateStockEntry(sl()));
   sl.registerLazySingleton(() => GetStockEntryById(sl()));
+  sl.registerLazySingleton(() => DeleteStockEntry(sl()));
 
   // === Providers ===
   sl.registerFactory(() => StockEntryProvider(getAll: sl()));
-  // sl.registerFactory(
-  //   () => StockEntryProvider(getAll: sl<GetAllStockEntries>()),
-  // );
   sl.registerFactory(() => StockEntryDetailProvider(getById: sl()));
-  sl.registerFactory(() => CreateStockEntryProvider(add: sl(), update: sl()));
+  sl.registerFactory(
+    () => CreateStockEntryProvider(add: sl(), update: sl(), getById: sl()),
+  );
+  sl.registerFactory(() => DeleteStockEntryProvider(delete: sl()));
 
   // CART Feature
 
@@ -251,17 +259,9 @@ Future<void> init() async {
     () => AddressRemoteDatasourceImpl(sl()),
   );
 
-  // ✅ Local datasource
-  sl.registerLazySingleton<LocalAddressRepository>(
-    () => LocalAddressRepository(),
-  );
-
   // ✅ Repository
   sl.registerLazySingleton<AddressRepository>(
-    () => AddressRepositoryImpl(
-      remote: sl<AddressRemoteDatasource>(),
-      local: sl<LocalAddressRepository>(),
-    ),
+    () => AddressRepositoryImpl(remote: sl<AddressRemoteDatasource>()),
   );
 
   // ✅ Provider
@@ -274,4 +274,20 @@ Future<void> init() async {
   sl.registerLazySingleton<SalesChartRepo>(() => SalesChartRepoImpl(sl()));
   sl.registerLazySingleton(() => GetSalesChart(sl()));
   sl.registerFactory(() => SalesChartProvider(getChart: sl()));
+
+  // WISHLIST Feature
+  sl.registerLazySingleton(() => GetWishlist(sl()));
+  sl.registerLazySingleton(() => AddToWishlist(sl()));
+  sl.registerLazySingleton(() => RemoveFromWishlist(sl()));
+  sl.registerLazySingleton<WishlistRepo>(() => WishlistRepoImpl(sl()));
+  sl.registerLazySingleton<WishlistLocalDataSource>(
+    () => WishlistLocalDataSourceImpl(),
+  );
+  sl.registerLazySingleton(
+    () => WishlistProvider(
+      getWishlist: sl(),
+      addToWishlist: sl(),
+      removeFromWishlist: sl(),
+    ),
+  );
 }

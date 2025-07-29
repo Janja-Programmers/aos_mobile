@@ -2,7 +2,7 @@ name: ownashop
 description: "Multivendor Application."
 publish_to: "none" # Set to "none" for private projects
 
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.7.2

@@ -11,5 +11,4 @@ Future<void> clearAllTables() async {
   await db.delete('cart');
   await db.delete('orders');
   await db.delete('order_items');
-  await db.delete('address');
 }

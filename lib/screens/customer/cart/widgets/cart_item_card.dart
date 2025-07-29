@@ -33,12 +33,15 @@ class CartItemCard extends StatelessWidget {
                   radius: 30,
                   backgroundColor: Colors.grey.shade200,
                   child: ClipOval(
-                    child: Image.network(
-                      resolvedImage,
-                      fit: BoxFit.cover,
-                      errorBuilder:
-                          (ctx, _, _) => const Icon(Icons.broken_image),
-                    ),
+                    child:
+                        resolvedImage != null && resolvedImage.isNotEmpty
+                            ? Image.network(
+                              resolvedImage,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (ctx, _, _) => const Icon(Icons.broken_image),
+                            )
+                            : const Icon(Icons.broken_image),
                   ),
                 ),
                 const SizedBox(width: 12),

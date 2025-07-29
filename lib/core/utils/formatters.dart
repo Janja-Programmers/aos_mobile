@@ -12,10 +12,15 @@ import '../errors/failures.dart';
 
 const String baseUrl = ApiRoutes.baseUrl;
 
-String resolveImageUrl(String? relativePath) {
-  if (relativePath == null || relativePath.isEmpty) return '';
-  if (relativePath.startsWith('http')) return relativePath;
-  return '$baseUrl$relativePath';
+String? resolveImageUrl(String? relativePath) {
+  if (relativePath == null) return null;
+
+  final trimmed = relativePath.trim();
+  if (trimmed.isEmpty) return null;
+
+  if (trimmed.startsWith('http')) return trimmed;
+
+  return '$baseUrl$trimmed';
 }
 
 Future<Either<Failure, List<Map<String, dynamic>>>> fetchFilteredList({

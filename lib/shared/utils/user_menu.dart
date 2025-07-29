@@ -18,6 +18,17 @@ List<PopupMenuEntry<String>> buildUserMenuItems(String userType) {
           ],
         ),
       ),
+    if (userType == 'Vendor')
+      PopupMenuItem(
+        value: 'view_website',
+        child: Row(
+          children: const [
+            Icon(Icons.language, color: Colors.black54),
+            SizedBox(width: 10),
+            Text('View Website', style: TextStyle(fontSize: 14)),
+          ],
+        ),
+      ),
     PopupMenuItem(
       value: 'logout',
       child: Row(
@@ -37,6 +48,9 @@ Future<void> handleUserMenuSelection(BuildContext context, String value) async {
   switch (value) {
     case 'orders':
       context.go('/past-orders');
+      break;
+    case 'view_website':
+      context.go('/');
       break;
     case 'logout':
       await authProvider.logout();

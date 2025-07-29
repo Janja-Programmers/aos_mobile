@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '/core/utils/snackbar.dart';
 
 import '/features/stock/providers/all.dart';
+import '/features/stock/providers/create.dart';
 
 import '/shared/widgets/docstatus_chip.dart';
 
@@ -22,15 +24,37 @@ class StockListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    void navigateToEntryDetail(BuildContext context, String id) async {
-      final result = await context.push('/stock-entry/$id');
-      if (result == true && context.mounted) {
-        context.read<StockEntryProvider>().fetchAll();
+    void navigateToEntryDetail(
+      BuildContext context,
+      String id,
+      int docstatus,
+    ) async {
+      if (docstatus == 0) {
+        final provider = context.read<CreateStockEntryProvider>();
+        final entry = await provider.getById(id);
+
+        if (context.mounted && entry != null) {
+          final result = await context.push('/stock/edit', extra: entry);
+          if (result == true && context.mounted) {
+            context.read<StockEntryProvider>().fetchAll();
+          }
+        } else {
+          topSnackBar(
+            context,
+            'Could not load draft.',
+            type: TopSnackType.error,
+          );
+        }
+      } else {
+        final result = await context.push('/stock-entry/$id');
+        if (result == true && context.mounted) {
+          context.read<StockEntryProvider>().fetchAll();
+        }
       }
     }
 
     return InkWell(
-      onTap: () => navigateToEntryDetail(context, id),
+      onTap: () => navigateToEntryDetail(context, id, docstatus),
       borderRadius: BorderRadius.circular(4),
       splashColor: theme.colorScheme.primary.withOpacity(0.1),
       highlightColor: Colors.transparent,

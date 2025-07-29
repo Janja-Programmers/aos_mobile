@@ -94,8 +94,8 @@ class AppDrawer extends StatelessWidget {
               SafeArea(
                 top: false,
                 child: DrawerItem(
-                  icon: Icons.public,
-                  title: "View in website",
+                  icon: Icons.language,
+                  title: "View website",
                   onTap: () => context.push('/'),
                 ),
               ),

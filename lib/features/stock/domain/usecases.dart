@@ -39,3 +39,13 @@ class UpdateStockEntry {
     return repo.update(entry);
   }
 }
+
+class DeleteStockEntry {
+  final StockEntryRepo repo;
+
+  DeleteStockEntry(this.repo);
+
+  Future<Either<Failure, void>> call(String id) {
+    return repo.delete(id);
+  }
+}

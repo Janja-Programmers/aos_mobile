@@ -5,9 +5,12 @@ import 'package:provider/provider.dart';
 import '/core/constants/colors.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
+import '/features/cart/provider.dart';
+import '/features/wishlist/provider.dart';
 
 import 'cart_button.dart';
 import 'user_menu_button.dart';
+import 'wishlist_icon_button.dart';
 
 class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onHomePressed;
@@ -18,6 +21,10 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final userType = context.read<AuthProvider>().user?.userType;
+
+    final cartCount = context.watch<CartProvider>().items.length;
+    final wishlistCount = context.watch<WishlistProvider>().items.length;
+
     return AppBar(
       backgroundColor: AppColors.white,
       elevation: 1,
@@ -27,17 +34,18 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
           onTap: () {
             context.go('/');
           },
-          child: CircleAvatar(
+          child: const CircleAvatar(
             backgroundImage: AssetImage('assets/logo.png'),
             radius: 22,
             backgroundColor: AppColors.transparent,
           ),
         ),
       ),
-
-      title: Text('Own A Shop', style: const TextStyle(color: AppColors.black)),
+      title: const Text('Own A Shop', style: TextStyle(color: AppColors.black)),
       actions: [
-        if (userType == 'Buyer') const CartIconButton(),
+        if (userType == 'Buyer' && cartCount > 0) const CartIconButton(),
+        if (userType == 'Buyer' && wishlistCount > 0)
+          const WishlistIconButton(),
         ...?actions,
         UserMenuButton(userType: userType ?? 'Buyer'),
       ],
@@ -96,24 +104,5 @@ class SubAppBar extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-Future<void> showProfileMenu(BuildContext context, Offset offset) async {
-  final selected = await showMenu<String>(
-    context: context,
-    position: RelativeRect.fromLTRB(offset.dx, offset.dy, 0, 0),
-    items: const [
-      PopupMenuItem(value: 'orders', child: Text('My Orders')),
-      PopupMenuItem(value: 'logout', child: Text('Logout')),
-    ],
-  );
-
-  if (selected == 'logout') {
-    final authProvider = context.read<AuthProvider>();
-    await authProvider.logout();
-    context.go('/login');
-  } else if (selected == 'orders') {
-    context.go('/past-orders');
   }
 }

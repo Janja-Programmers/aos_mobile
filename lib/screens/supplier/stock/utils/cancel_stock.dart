@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/const.dart';
 import '/core/utils/snackbar.dart';
+import '/core/di/service_locator.dart';
+import '/core/utils/api_client.dart';
 
 import '/features/stock/domain/entity/stock.dart';
 import '/features/stock/providers/read.dart';
-
-import '/core/di/service_locator.dart';
-import '/core/utils/api_client.dart';
 
 Future<void> cancelStockEntry(
   BuildContext context,
@@ -75,12 +73,11 @@ Future<void> cancelStockEntry(
   if (confirmed != true) return;
 
   final apiClient = sl<APIClient>();
-  const cancelDocApi = ApiRoutes.cancelDoc;
   final detailProvider = context.read<StockEntryDetailProvider>();
 
   try {
     await apiClient.client.post(
-      cancelDocApi,
+      ApiRoutes.cancelDoc,
       data: {"doctype": "Stock Intake", "name": submitted.id},
     );
 
@@ -89,11 +86,11 @@ Future<void> cancelStockEntry(
     topSnackBar(
       context,
       'Stock Entry cancelled successfully',
-      type: TopSnackType.success,
+      type: TopSnackType.info,
     );
 
     await detailProvider.fetchById(submitted.id);
-    context.pop(true);
+    Navigator.pop(context, true); // match delete & submit behavior
   } catch (e) {
     debugPrint('❌ Cancel Stock Entry error: $e');
 

@@ -3,8 +3,11 @@ import 'package:provider/provider.dart';
 
 import '/features/address/provider.dart';
 import '/features/auth/presentation/auth_provider.dart';
+import '/features/address/domain/address.dart';
 
 import '/screens/customer/address/shipping_address_form.dart';
+
+import '../../address/change_address_dialogue.dart';
 
 import '../controllers/place_order.dart';
 
@@ -44,6 +47,29 @@ class _ShippingAddressCardState extends State<ShippingAddressCard> {
     }
   }
 
+  Future<void> _selectAddress() async {
+    final selected = await showGeneralDialog<Address>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Select Address',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (_, _, _) => const ChangeAddressDialog(),
+    );
+
+    if (selected != null) {
+      final provider = context.read<AddressProvider>();
+      final remote = provider.repository;
+
+      await remote.updateShippingAddress(selected);
+
+      // 🩹 SET selected address locally to update UI
+      provider.setSelectedAddress(selected); // ✅ Add this line
+
+      await _fetchAddress(); // refresh from backend (optional)
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<AddressProvider>(
@@ -72,9 +98,7 @@ class _ShippingAddressCardState extends State<ShippingAddressCard> {
         }
 
         final address =
-            addressProv.addresses.isNotEmpty
-                ? addressProv.addresses.first
-                : null;
+            addressProv.selectedAddress ?? addressProv.addresses.firstOrNull;
 
         return Card(
           elevation: 2,
@@ -117,7 +141,9 @@ class _ShippingAddressCardState extends State<ShippingAddressCard> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: _openAddressForm,
+                            onPressed: () {
+                              _selectAddress();
+                            },
                             child: const Text('Change Address'),
                           ),
                         ),

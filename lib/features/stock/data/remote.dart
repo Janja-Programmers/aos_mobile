@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 
 import '/core/constants/const.dart';
 import '/core/errors/failures.dart';
@@ -73,7 +74,21 @@ class StockEntryRemoteDS {
         return Left(handleException('Missing Stock Entry ID for update.'));
       }
 
-      await _client.client.put('$stockIntakeApi/$id', data: entry.toJson());
+
+      try {
+      } on DioException catch (e) {
+        return Left(handleException(e));
+      }
+
+      return const Right(null);
+    } catch (e) {
+      return Left(handleException(e));
+    }
+  }
+
+  Future<Either<Failure, void>> deleteEntry(String id) async {
+    try {
+      await _client.client.delete('$stockIntakeApi/$id');
       return const Right(null);
     } catch (e) {
       return Left(handleException(e));

@@ -1,47 +1,74 @@
 import 'package:dartz/dartz.dart';
-import 'package:ownashop/core/errors/exception.dart';
-import 'package:ownashop/core/utils/logger.dart';
 
+import '/core/errors/exception.dart';
 import '/core/errors/failures.dart';
+import '/core/utils/logger.dart';
 
 import '../domain/address.dart';
 import '../domain/repo.dart';
 
-import 'datasource/local.dart';
-import 'datasource/remote.dart';
+import 'remote.dart';
 
 class AddressRepositoryImpl implements AddressRepository {
   final AddressRemoteDatasource remote;
-  final LocalAddressRepository local;
 
-  AddressRepositoryImpl({required this.remote, required this.local});
+  AddressRepositoryImpl({required this.remote});
 
   @override
   Future<Either<Failure, String>> createShippingAddress(Address address) async {
     try {
       final created = await remote.createAddress(address);
-      appLogger.i('Address from authrepoimpl: ${created.title}');
+      appLogger.i('✅ Address created remotely: ${created.title}');
 
-      // 🔁 Update the cart with the new shipping address
       await remote.updateCartShippingAddress(created.name);
-
-      await local.insertShippingAddress(created);
-      appLogger.i('Address saved locally: ${created.title}');
-      appLogger.i('Address created: ${created.name}');
+      appLogger.i('🛒 Cart updated with shipping address: ${created.name}');
 
       return Right(created.name);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      appLogger.e('❌ Failed to create shipping address: $e');
+      return Left(ServerFailure('Failed to create address'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> updateShippingAddress(Address address) async {
+    try {
+      if (address.name.isEmpty) {
+        throw Exception('Address name is required for update');
+      }
+
+      await remote.updateAddress(address);
+      appLogger.i('🔁 Address updated: ${address.name}');
+      return const Right(true);
+    } catch (e) {
+      appLogger.e('❌ Failed to update address: $e');
+      return Left(ServerFailure('Failed to update address'));
     }
   }
 
   @override
   Future<Either<Failure, List<Address>>> fetchShippingAddresses() async {
     try {
-      final list = await local.getAllShippingAddresses();
-      return Right(list);
+      final addresses = await remote.getAllShippingAddresses();
+      appLogger.i('📦 ${addresses.length} address(es) fetched remotely');
+      return Right(addresses);
     } catch (e) {
+      appLogger.e('❌ Error fetching addresses: $e');
       return Left(handleException("Shipping addresses fetch failed"));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> deleteShippingAddress(
+    String addressName,
+  ) async {
+    try {
+      await remote.deleteAddress(addressName);
+      appLogger.i('🗑️ Address deleted: $addressName');
+      return const Right(true);
+    } catch (e) {
+      appLogger.e('❌ Failed to delete address: $e');
+      return Left(ServerFailure('Failed to delete address'));
     }
   }
 }

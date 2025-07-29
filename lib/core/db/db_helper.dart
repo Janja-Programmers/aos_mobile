@@ -138,18 +138,5 @@ class DatabaseHelper {
       FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
     )
   ''');
-
-    await db.execute('''
-      CREATE TABLE address (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE,
-        address_title TEXT NOT NULL,
-        address_line1 TEXT NOT NULL,
-        city TEXT NOT NULL,
-        country TEXT NOT NULL,
-        phone TEXT NOT NULL,
-        address_type TEXT NOT NULL DEFAULT 'Shipping'
-      )
-    ''');
   }
 }

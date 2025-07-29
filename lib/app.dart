@@ -26,9 +26,13 @@ import 'features/d_note/prov.dart';
 import 'features/stock/providers/all.dart';
 import 'features/stock/providers/read.dart';
 import 'features/stock/providers/create.dart';
+import 'features/stock/providers/delete.dart';
 
 // CART Feature
 import 'package:ownashop/features/cart/provider.dart';
+
+// WISHLIST Feature
+import 'features/wishlist/provider.dart';
 
 // ADDRESS Feature
 import '/features/address/provider.dart';
@@ -55,7 +59,9 @@ class App extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => sl<StockEntryProvider>()),
         ChangeNotifierProvider(create: (_) => sl<CreateStockEntryProvider>()),
         ChangeNotifierProvider(create: (_) => sl<StockEntryDetailProvider>()),
+        ChangeNotifierProvider(create: (_) => sl<DeleteStockEntryProvider>()),
         ChangeNotifierProvider(create: (_) => sl<CartProvider>()),
+        ChangeNotifierProvider(create: (_) => sl<WishlistProvider>()),
         ChangeNotifierProvider(create: (_) => sl<AddressProvider>()),
         ChangeNotifierProvider(
           create: (_) => sl<SalesChartProvider>()..fetchChart(),

@@ -28,12 +28,19 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
 
   bool get isEditing => widget.entry != null;
 
+  late final CreateStockEntryProvider _provider;
+
   @override
   void initState() {
     super.initState();
+
+    // Wait for widget tree to build before accessing context
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CreateStockEntryProvider>().clearError();
     });
+
+    // Store the provider reference safely for later use in dispose()
+    _provider = context.read<CreateStockEntryProvider>();
 
     if (isEditing) {
       for (final item in widget.entry!.items) {
@@ -97,12 +104,16 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
     final provider = context.read<CreateStockEntryProvider>();
 
     if (isEditing) {
-      await provider.update(entry);
+      if (docstatus == 1) {
+        await provider.submitFinal(entry);
+      } else {
+        await provider.updateDraft(entry);
+      }
     } else {
-      await provider.submit(entry);
+      await provider.createDraft(entry);
     }
 
-    // ✅ 5. After submission, check UI still active
+    // ✅ 4. After submission, check UI still active
     if (!mounted) return;
 
     if (provider.hasError) {
@@ -125,7 +136,12 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
     for (final ctrl in _itemControllers) {
       ctrl.dispose();
     }
-    context.read<CreateStockEntryProvider>().reset();
+
+    // Defer the notifyListeners() call to avoid setState conflict
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _provider.reset();
+    });
+
     super.dispose();
   }
 

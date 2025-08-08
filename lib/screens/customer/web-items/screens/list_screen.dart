@@ -9,8 +9,10 @@ import '/shared/widgets/app_bars.dart';
 
 import '/features/auth/presentation/auth_provider.dart';
 import '/features/website/prov.dart';
+import '/features/website/slider_prov.dart';
 
 import '../widgets/product_card.dart';
+import '../widgets/slider.dart';
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
@@ -32,6 +34,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<WebsiteItemProv>().loadInitialItems();
+      context.read<SliderProv>().loadSlider();
     });
   }
 
@@ -52,8 +55,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   List filteredItems(List items) {
     return items.where((item) {
+      final name = item.name ?? '';
       return _searchQuery.isEmpty ||
-          item.name.toLowerCase().contains(_searchQuery.toLowerCase());
+          name.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
   }
 
@@ -84,7 +88,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     return WillPopScope(
       onWillPop: () async {
         context.read<WebsiteItemProv>().clearProductDetail();
-        return true; // allow pop
+        return true;
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
@@ -110,6 +114,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 )
                 : Column(
                   children: [
+                    const SliderCarousel(),
                     Padding(
                       padding: const EdgeInsets.all(8),
                       child: TextField(

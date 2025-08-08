@@ -51,6 +51,12 @@ class AddItemController extends ChangeNotifier {
   String? uploadedVideoUrl;
 
   bool isSubmitting = false;
+  bool isLoading = false;
+
+  void setLoading(bool value) {
+    isLoading = value;
+    notifyListeners();
+  }
 
   AddItemController({
     required this.provider,

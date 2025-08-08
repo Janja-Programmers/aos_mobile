@@ -18,6 +18,7 @@ import '/features/website/domain/usecases.dart';
 import '/features/website/data/remote.dart';
 import '/features/website/data/repo_impl.dart';
 import '/features/website/prov.dart';
+import '/features/website/slider_prov.dart';
 
 /***** PRODUCT *******/
 import '/features/product/data/remote.dart';
@@ -131,6 +132,7 @@ Future<void> init() async {
   sl.registerFactory(
     () => WebsiteItemProv(getAllItems: sl(), getSingleItem: sl()),
   );
+  sl.registerFactory(() => SliderProv(sl<APIClient>()));
 
   // SALESORDER Doctype
   // === Data Layer ===

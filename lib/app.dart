@@ -39,6 +39,7 @@ import '/features/address/provider.dart';
 
 // WEBSITE Feature
 import 'features/website/prov.dart';
+import 'features/website/slider_prov.dart';
 import 'screens/supplier/product/controllers/add_item_controller.dart';
 
 class App extends StatelessWidget {
@@ -52,6 +53,7 @@ class App extends StatelessWidget {
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: auth),
         ChangeNotifierProvider(create: (_) => sl<WebsiteItemProv>()),
+        ChangeNotifierProvider(create: (_) => sl<SliderProv>()),
         ChangeNotifierProvider(create: (_) => sl<ProductProvider>()),
         ChangeNotifierProvider(create: (_) => sl<SalesOrderProvider>()),
         ChangeNotifierProvider(create: (_) => sl<CustomerOrderProvider>()),

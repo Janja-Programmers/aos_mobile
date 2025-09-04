@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '/core/constants/colors.dart';
 import '/core/utils/validators.dart';
@@ -28,6 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool obscurePass = true;
   bool isLoading = false;
+  bool _acceptTerms = false;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +52,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Logo
-                  Image.asset('assets/logo_transparent.png', height: 80),
+                  Image.asset('assets/logo_transparent.png', height: 60),
                   const SizedBox(height: 10),
 
                   const Text(
@@ -58,7 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
 
                   CustomTextField(
                     controller: userCtrl,
@@ -66,7 +68,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     icon: Icons.person,
                     validator: (value) => value!.isEmpty ? 'Required' : null,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   CustomTextField(
                     controller: emailCtrl,
@@ -74,7 +76,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     icon: Icons.email,
                     validator: AppValidator.isEmail,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   DropdownButtonFormField<String>(
                     decoration: InputDecoration(
@@ -107,7 +109,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   CustomTextField(
                     controller: numCtrl,
@@ -116,7 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     inputType: TextInputType.phone,
                     validator: AppValidator.isPhone,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   AppInputField(
                     controller: passCtrl,
@@ -128,7 +130,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     validator: AppValidator.isPassword,
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   AppInputField(
                     controller: confirmPassCtrl,
@@ -146,7 +148,96 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
+
+                  FormField<bool>(
+                    initialValue: _acceptTerms,
+                    validator: (value) {
+                      if (value != true) {
+                        return 'You must accept Terms & Conditions';
+                      }
+                      return null;
+                    },
+                    builder: (formFieldState) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _acceptTerms,
+                                onChanged: (val) {
+                                  setState(() {
+                                    _acceptTerms = val ?? false;
+                                    formFieldState.didChange(_acceptTerms);
+                                  });
+                                },
+                              ),
+                              Expanded(
+                                child: Wrap(
+                                  children: [
+                                    const Text(
+                                      "I agree to the ",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap:
+                                          () => launchUrl(
+                                            Uri.parse(
+                                              "https://ownashop.com/tac",
+                                            ),
+                                          ),
+                                      child: const Text(
+                                        "Terms & Conditions",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.blue,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ),
+                                    const Text(" and "),
+                                    GestureDetector(
+                                      onTap:
+                                          () => launchUrl(
+                                            Uri.parse(
+                                              "https://ownashop.com/privacy",
+                                            ),
+                                          ),
+                                      child: const Text(
+                                        "Privacy Policy",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.blue,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (formFieldState.hasError)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12, top: 2),
+                              child: Text(
+                                formFieldState.errorText!,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
 
                   SizedBox(
                     width: double.infinity,
@@ -161,26 +252,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed:
                           isLoading
                               ? null
-                              : () => RegisterController.signUp(
-                                context: context,
-                                auth: auth,
-                                formKey: _formKey,
-                                userCtrl: userCtrl,
-                                emailCtrl: emailCtrl,
-                                passCtrl: passCtrl,
-                                confirmPassCtrl: confirmPassCtrl,
-                                phoneCtrl: numCtrl,
-                                userTypeCtrl: userTypeCtrl,
-                                onStart: () => setState(() => isLoading = true),
-                                onEnd: () => setState(() => isLoading = false),
-                              ),
+                              : () {
+                                if (_formKey.currentState!.validate()) {
+                                  RegisterController.signUp(
+                                    context: context,
+                                    auth: auth,
+                                    formKey: _formKey,
+                                    userCtrl: userCtrl,
+                                    emailCtrl: emailCtrl,
+                                    passCtrl: passCtrl,
+                                    confirmPassCtrl: confirmPassCtrl,
+                                    phoneCtrl: numCtrl,
+                                    userTypeCtrl: userTypeCtrl,
+                                    onStart:
+                                        () => setState(() => isLoading = true),
+                                    onEnd:
+                                        () => setState(() => isLoading = false),
+                                  );
+                                }
+                              },
                       child: Text(
                         isLoading ? 'Verifying...' : 'Sign Up',
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
 
                   TextButton(
                     onPressed: () => context.push('/login'),

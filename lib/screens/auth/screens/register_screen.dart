@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '/core/constants/colors.dart';
 import '/core/utils/validators.dart';
@@ -10,6 +9,8 @@ import '../auth_provider.dart';
 import '../controllers/register_controller.dart';
 import '../widgets/app_input.dart';
 import '../widgets/text_widget.dart';
+import '../widgets/privacy_policy_dialog.dart';
+import '../widgets/terms_dialog.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -56,7 +57,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 10),
 
                   const Text(
-                    'Create a Own A Shop Account',
+                    'Create an account for Africa Online Stores',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
@@ -184,12 +185,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       ),
                                     ),
                                     GestureDetector(
-                                      onTap:
-                                          () => launchUrl(
-                                            Uri.parse(
-                                              "https://ownashop.com/tac",
-                                            ),
-                                          ),
+                                      onTap: () {
+                                        showTermsDialog(
+                                          context,
+                                          onAcceptCheck: () {
+                                            setState(() {
+                                              _acceptTerms = true;
+                                            });
+                                            formFieldState.didChange(true);
+                                          },
+                                        );
+                                      },
+
                                       child: const Text(
                                         "Terms & Conditions",
                                         style: TextStyle(
@@ -202,10 +209,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     const Text(" and "),
                                     GestureDetector(
                                       onTap:
-                                          () => launchUrl(
-                                            Uri.parse(
-                                              "https://ownashop.com/privacy",
-                                            ),
+                                          () => showPrivacyPolicyDialog(
+                                            context,
+                                            onAccept: () {
+                                              setState(
+                                                () => _acceptTerms = true,
+                                              );
+                                              formFieldState.didChange(true);
+                                            },
                                           ),
                                       child: const Text(
                                         "Privacy Policy",

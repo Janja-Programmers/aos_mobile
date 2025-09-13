@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/core/utils/snackbar.dart';
-import 'package:ownashop/features/order/domain/sales_order.dart';
-import 'package:ownashop/features/order/prov.dart';
+import '/core/utils/snackbar.dart';
+import '/features/order/domain/sales_order.dart';
+import '/features/order/prov.dart';
 import 'package:provider/provider.dart';
 
 import '../utils/print_order.dart';

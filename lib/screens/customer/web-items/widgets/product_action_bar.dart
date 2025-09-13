@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/core/utils/logger.dart';
+import '/core/utils/logger.dart';
 import 'package:provider/provider.dart';
 
 import '/features/cart/domain/cart.dart';

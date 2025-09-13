@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/core/constants/colors.dart';
+import '/core/constants/colors.dart';
 
 class DashboardTile extends StatelessWidget {
   final String title;

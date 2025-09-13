@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/core/constants/colors.dart';
 import 'package:provider/provider.dart';
 
+import '/core/constants/colors.dart';
 import '/core/constants/strings.dart';
 
-import '/features/auth/presentation/auth_provider.dart';
-
+import '/screens/auth/auth_provider.dart';
 import '/screens/supplier/dashboard/widgets/drawer_item.dart';
 
 class AppDrawer extends StatelessWidget {

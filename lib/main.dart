@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'features/cart/provider.dart';
-import 'features/auth/presentation/auth_provider.dart';
+import 'screens/auth/auth_provider.dart';
 
 import 'core/di/service_locator.dart';
 

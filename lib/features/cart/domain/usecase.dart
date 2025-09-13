@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
-import 'package:ownashop/core/errors/failures.dart';
+
+import '/core/errors/failures.dart';
 
 import 'cart.dart';
 import 'repo.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/core/constants/colors.dart';
+import '/core/constants/colors.dart';
 import 'package:provider/provider.dart';
 
 import '/features/stock/providers/all.dart';

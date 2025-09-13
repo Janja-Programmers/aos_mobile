@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/core/utils/snackbar.dart';
+import '/core/utils/snackbar.dart';
 import 'package:provider/provider.dart';
 
 import '/features/stock/domain/entity/stock.dart';

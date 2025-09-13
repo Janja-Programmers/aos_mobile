@@ -113,7 +113,7 @@ class DatabaseHelper {
       customer_name TEXT NOT NULL,
       order_type TEXT NOT NULL DEFAULT 'Sales',
       order_date TEXT NOT NULL,
-      company TEXT NOT NULL DEFAULT 'Ownashop',
+      company TEXT NOT NULL DEFAULT 'Africa Online Stores',
       grand_total REAL NOT NULL,
       shipping_address TEXT NOT NULL,
       contact_name TEXT NOT NULL,

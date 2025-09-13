@@ -2,9 +2,9 @@
 import 'dart:convert';
 
 import 'package:dartz/dartz.dart';
-import 'package:ownashop/core/utils/logger.dart';
 
-import '../../../core/errors/exception.dart';
+import '/core/utils/logger.dart';
+import '/core/errors/exception.dart';
 import '/core/errors/failures.dart';
 
 import '../domain/repo.dart';

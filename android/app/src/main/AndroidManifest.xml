@@ -20,7 +20,7 @@
     
 
     <application
-        android:label="Own A Shop"
+        android:label="Africa Online Stores"
         android:icon="@mipmap/ic_launcher">
 
         <activity

@@ -6,7 +6,7 @@ import '/core/utils/validators.dart';
 
 import '/features/address/provider.dart';
 import '/features/address/domain/address.dart';
-import '/features/auth/presentation/auth_provider.dart';
+import '../../auth/auth_provider.dart';
 
 class ShippingAddressForm extends StatefulWidget {
   final Address? initialData; // 👈 allow null

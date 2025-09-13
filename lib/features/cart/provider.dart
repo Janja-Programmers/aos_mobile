@@ -4,7 +4,7 @@ import '/core/di/service_locator.dart';
 import '/core/utils/api_client.dart';
 import '/core/utils/logger.dart';
 
-import '/features/auth/presentation/auth_provider.dart';
+import '../../screens/auth/auth_provider.dart';
 
 import '../order/domain/sales_order.dart';
 import '../order/domain/usecases.dart';

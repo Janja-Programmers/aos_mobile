@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/features/d_note/domain/entity/delivery_note.dart';
+import '/features/d_note/domain/entity/delivery_note.dart';
 
 import 'item_table.dart';
 

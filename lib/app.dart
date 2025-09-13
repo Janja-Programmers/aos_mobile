@@ -7,7 +7,7 @@ import 'core/constants/strings.dart';
 import 'core/di/service_locator.dart';
 
 // AUTH Feature
-import 'features/auth/presentation/auth_provider.dart';
+import 'screens/auth/auth_provider.dart';
 
 // PRODUCT Feature
 import 'features/charts/presentation/provider.dart';
@@ -29,7 +29,7 @@ import 'features/stock/providers/create.dart';
 import 'features/stock/providers/delete.dart';
 
 // CART Feature
-import 'package:ownashop/features/cart/provider.dart';
+import '/features/cart/provider.dart';
 
 // WISHLIST Feature
 import 'features/wishlist/provider.dart';

@@ -1,4 +1,4 @@
-package com.ownashop.app
+package com.africaonlinestores.app
 
 import io.flutter.embedding.android.FlutterActivity
 

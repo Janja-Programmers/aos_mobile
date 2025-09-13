@@ -1,5 +1,5 @@
 class ApiRoutes {
-  static const String baseUrl = 'https://ownashop.com';
+  static const String baseUrl = 'https://africaonlinestores.com';
 
   static const String login = '/api/method/login';
   static const String logout = '/api/method/logout';

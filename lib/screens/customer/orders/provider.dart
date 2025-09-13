@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/features/order/data/remote.dart';
+import '/features/order/data/remote.dart';
 
 class CustomerOrderProvider extends ChangeNotifier {
   final SalesOrderRemoteDS remoteDS;

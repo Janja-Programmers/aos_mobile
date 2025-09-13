@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../core/constants/colors.dart';
+import '/core/constants/colors.dart';
+
 import 'app_bars.dart';
 
 class MainBarScaffold extends StatelessWidget {

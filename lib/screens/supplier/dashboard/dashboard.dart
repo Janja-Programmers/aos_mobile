@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/features/charts/presentation/chart_card.dart';
+import '/features/charts/presentation/chart_card.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/strings.dart';
 import '/features/auth/domain/user.dart';
-import '/features/auth/presentation/auth_provider.dart';
+import '../../auth/auth_provider.dart';
 
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';

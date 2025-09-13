@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:ownashop/core/utils/snackbar.dart';
+import '/core/utils/snackbar.dart';
 import 'package:provider/provider.dart';
 
 import '/features/address/provider.dart';
-import '/features/auth/presentation/auth_provider.dart';
+import '../../../auth/auth_provider.dart';
 import '/screens/customer/address/shipping_address_form.dart';
 
 import '../controllers/place_order.dart';

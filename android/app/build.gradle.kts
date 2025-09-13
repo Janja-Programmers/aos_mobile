@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.ownashop.app"
+    namespace = "com.africaonlinestores.app"
     compileSdk = flutter.compileSdkVersion
 
     compileOptions {
@@ -22,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.ownashop.app"
+        applicationId = "com.africaonlinestores.app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

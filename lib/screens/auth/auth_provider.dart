@@ -8,10 +8,10 @@ import '/core/errors/failures.dart';
 import '/core/utils/api_client.dart';
 import '/core/utils/logger.dart';
 
-import '../domain/auth_repository.dart';
-import '../domain/usecases/register.dart';
-import '../domain/usecases/login.dart';
-import '../domain/user.dart';
+import '../../features/auth/domain/auth_repository.dart';
+import '../../features/auth/domain/usecases/register.dart';
+import '../../features/auth/domain/usecases/login.dart';
+import '../../features/auth/domain/user.dart';
 
 class AuthProvider with ChangeNotifier {
   final LoginUser loginUser;

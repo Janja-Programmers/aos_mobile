@@ -7,7 +7,7 @@ import '/core/constants/colors.dart';
 
 import '/shared/widgets/app_bars.dart';
 
-import '/features/auth/presentation/auth_provider.dart';
+import '../../../auth/auth_provider.dart';
 import '/features/website/prov.dart';
 import '/features/website/slider_prov.dart';
 

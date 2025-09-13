@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '/core/utils/snackbar.dart';
 
-import '/features/auth/presentation/auth_provider.dart';
+import '../../../auth/auth_provider.dart';
 import '/features/cart/provider.dart';
 
 import '/screens/customer/address/shipping_address_form.dart';

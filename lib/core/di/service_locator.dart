@@ -6,7 +6,7 @@ import '../utils/api_client.dart';
 
 /***** Auth *******/
 import '/features/auth/data/auth_remote_datasource.dart';
-import '/features/auth/presentation/auth_provider.dart';
+import '../../screens/auth/auth_provider.dart';
 import '/features/auth/data/auth_repository_impl.dart';
 import '/features/auth/domain/auth_repository.dart';
 import '/features/auth/domain/usecases/login.dart';

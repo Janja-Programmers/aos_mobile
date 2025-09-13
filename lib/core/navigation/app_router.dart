@@ -1,9 +1,13 @@
 import 'package:go_router/go_router.dart';
 
+import '/screens/core/settings/about_page.dart';
+import '/screens/core/settings/settings_page.dart';
+import '/screens/core/settings/terms_page.dart';
+
 // Auth
-import '/features/auth/presentation/auth_provider.dart';
-import '/features/auth/presentation/screens/login_screen.dart';
-import '/features/auth/presentation/screens/register_screen.dart';
+import '/screens/auth/auth_provider.dart';
+import '/screens/auth/screens/login_screen.dart';
+import '/screens/auth/screens/register_screen.dart';
 
 // Seller
 import '/features/product/domain/product.dart';
@@ -174,6 +178,17 @@ class AppRouter {
           final order = state.extra as Map<String, dynamic>;
           return OrderDetailScreen(order: order);
         },
+      ),
+
+      // Core Routes
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsPage(),
+      ),
+      GoRoute(path: '/about', builder: (context, state) => const AboutPage()),
+      GoRoute(
+        path: '/about/terms',
+        builder: (context, state) => const TermsPage(),
       ),
     ],
   );

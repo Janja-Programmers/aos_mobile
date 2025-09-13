@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:ownashop/core/utils/logger.dart';
 
 import '/core/provider/base_prov.dart';
+import '/core/utils/logger.dart';
 
 import '../domain/usecases.dart';
 import '../domain/entity/stock.dart';

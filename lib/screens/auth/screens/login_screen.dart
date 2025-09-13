@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ownashop/core/constants/colors.dart';
-import 'package:ownashop/core/utils/snackbar.dart';
 import 'package:provider/provider.dart';
 
+import '/core/constants/colors.dart';
+import '/core/utils/snackbar.dart';
 import '/core/utils/validators.dart';
 
 import '../auth_provider.dart';
@@ -48,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Image.asset('assets/logo_transparent.png', height: 80),
                   const SizedBox(height: 10),
                   const Text(
-                    'Login to Own A Shop',
+                    'Login to Africa Online Stores',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 20),
@@ -79,21 +79,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                 : null,
                     textInputAction: TextInputAction.done,
                   ),
-                  const SizedBox(height: 10),
 
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        // Add forgot password logic
-                      },
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ),
-                  ),
+                  // const SizedBox(height: 10),
 
+                  // Align(
+                  //   alignment: Alignment.centerRight,
+                  //   child: TextButton(
+                  //     onPressed: () {
+                  //       // Add forgot password logic
+                  //     },
+                  //     child: const Text(
+                  //       'Forgot Password?',
+                  //       style: TextStyle(fontSize: 13),
+                  //     ),
+                  //   ),
+                  // ),
                   const SizedBox(height: 10),
                   SizedBox(
                     width: double.infinity,
@@ -133,30 +133,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         auth.isLoading ? 'Verifying...' : 'Log in',
                         style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-                  const Text('or'),
-                  const SizedBox(height: 10),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Email link login
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEFEFEF),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        'Login with Email Link',
-                        style: TextStyle(color: Colors.black),
                       ),
                     ),
                   ),

@@ -5,7 +5,7 @@ import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '/core/utils/formatters.dart';
-import '/features/auth/presentation/auth_provider.dart';
+import '../../../auth/auth_provider.dart';
 import '/features/stock/domain/entity/stock.dart';
 
 Future<void> printStockIntake(BuildContext context, StockEntry entry) async {

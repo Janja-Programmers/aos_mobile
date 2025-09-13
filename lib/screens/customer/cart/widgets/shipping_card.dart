@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/features/address/provider.dart';
-import '/features/auth/presentation/auth_provider.dart';
+import '../../../auth/auth_provider.dart';
 import '/features/address/domain/address.dart';
 
 import '/screens/customer/address/shipping_address_form.dart';

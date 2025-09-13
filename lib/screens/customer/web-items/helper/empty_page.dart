@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
 
-import '/features/auth/presentation/auth_provider.dart';
+import '../../../auth/auth_provider.dart';
 
 import '/shared/widgets/app_bars.dart';
 import '/shared/widgets/cart_button.dart';

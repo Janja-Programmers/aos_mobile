@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
 
-import '/features/auth/presentation/auth_provider.dart';
+import '/screens/auth/auth_provider.dart';
 import '/features/cart/provider.dart';
 import '/features/wishlist/provider.dart';
 

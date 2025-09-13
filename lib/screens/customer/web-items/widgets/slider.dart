@@ -1,6 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:ownashop/core/constants/colors.dart';
+import '/core/constants/colors.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 

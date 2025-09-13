@@ -83,8 +83,8 @@ flutter run
 - ✅ Compliant with **Google Play Developer Policy** (permissions, Data Safety, privacy disclosure)
 - ✅ In-app **Terms & Conditions** and **Privacy Policy** (scrollable, accessible, linked to web versions):
 
-  - [Terms & Conditions](https://ownashop.com/terms_and_conditions)
-  - [Privacy Policy](https://ownashop.com/privacy_policy)
+  - [Terms & Conditions](https://africaonlinestores.com/terms_and_conditions)
+  - [Privacy Policy](https://africaonlinestores.com/privacy_policy)
 
 ---
 

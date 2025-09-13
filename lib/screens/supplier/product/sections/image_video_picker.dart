@@ -18,16 +18,16 @@ class ImageVideoPickerSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final imageUrl =
         controller.uploadedImageUrl != null
-            ? 'https://ownashop.com${controller.uploadedImageUrl}'
+            ? 'https://africaonlinestores.com${controller.uploadedImageUrl}'
             : (product?.image != null
-                ? 'https://ownashop.com${product!.image}'
+                ? 'https://africaonlinestores.com${product!.image}'
                 : null);
 
     final videoUrl =
         controller.uploadedVideoUrl != null
-            ? 'https://ownashop.com${controller.uploadedVideoUrl}'
+            ? 'https://africaonlinestores.com${controller.uploadedVideoUrl}'
             : (product?.demoVideo != null
-                ? 'https://ownashop.com${product!.demoVideo}'
+                ? 'https://africaonlinestores.com${product!.demoVideo}'
                 : null);
 
     return AnimatedBuilder(

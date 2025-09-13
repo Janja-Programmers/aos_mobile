@@ -271,7 +271,7 @@ class AddItemController extends ChangeNotifier {
   Future<List<String>> fetchItemGroups() async {
     try {
       final res = await sl<APIClient>().client.get(
-        'https://ownashop.com/api/resource/Item Group',
+        'https://africaonlinestores.com/api/resource/Item Group',
         queryParameters: {
           'fields': '["name"]',
           'limit_page_length': 20,

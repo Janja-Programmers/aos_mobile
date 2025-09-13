@@ -34,7 +34,7 @@ class _ItemRowState extends State<ItemRow> {
   Future<void> _fetchItemCodes() async {
     try {
       final res = await sl<APIClient>().client.get(
-        'https://ownashop.com/api/resource/Product',
+        'https://africaonlinestores.com/api/resource/Product',
         queryParameters: {
           'fields': '["item_code", "item_name"]',
           'limit_page_length': 100,

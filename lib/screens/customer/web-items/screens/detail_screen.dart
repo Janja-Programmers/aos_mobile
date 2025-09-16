@@ -185,6 +185,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                           ProductAvailabilityAndRating(
                             inStock: product.inStock,
+                            productName: product.name,
                             rating:
                                 product.reviews.isNotEmpty
                                     ? product.reviews
@@ -193,6 +194,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                         product.reviews.length
                                     : 0.0,
                             totalReviews: product.reviews.length,
+                            onWriteReview: () {
+                              // TODO: show review form dialog
+                            },
+                            onReport: () {
+                              // TODO: show confirmation/snackbar
+                            },
                           ),
 
                           const SizedBox(height: 6),

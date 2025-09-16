@@ -1,9 +1,5 @@
 import 'package:go_router/go_router.dart';
 
-import '/screens/core/settings/about_page.dart';
-import '/screens/core/settings/settings_page.dart';
-import '/screens/core/settings/terms_page.dart';
-
 // Auth
 import '/screens/auth/auth_provider.dart';
 import '/screens/auth/screens/login_screen.dart';
@@ -32,6 +28,9 @@ import '/screens/customer/cart/cart_screen.dart';
 import '/screens/customer/address/shipping_address_form.dart';
 import '/screens/customer/orders/order_detail.dart';
 import '/screens/customer/orders/order_list.dart';
+
+// Helper Pages
+import '/screens/settings/settings_page.dart';
 
 class AppRouter {
   final AuthProvider auth;
@@ -184,11 +183,6 @@ class AppRouter {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsPage(),
-      ),
-      GoRoute(path: '/about', builder: (context, state) => const AboutPage()),
-      GoRoute(
-        path: '/about/terms',
-        builder: (context, state) => const TermsPage(),
       ),
     ],
   );

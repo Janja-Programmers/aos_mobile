@@ -132,7 +132,7 @@ class AuthProvider with ChangeNotifier {
 
     final success = result.fold(
       (failure) {
-        _registerError = failure.message;
+        _registerError = "Registration failed";
         return false;
       },
       (responseList) {

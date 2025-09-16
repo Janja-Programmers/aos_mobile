@@ -42,4 +42,11 @@ class ApiRoutes {
   static const String viewPastOrders = '/api/method/frappe.www.list.get';
   static const String slideshowEndpoint =
       '/api/method/amani_mall.api.get_slider';
+
+  static const String addReview =
+      '/api/method/webshop.webshop.doctype.item_review.item_review.add_item_review';
+
+  static const String reportProduct = '/api/resource/Reported Product';
+
+  static var deleteUserAccount = '/api/method/amani_mall.api.delete_account';
 }

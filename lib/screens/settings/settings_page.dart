@@ -3,69 +3,14 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
 import '/core/constants/colors.dart';
-import '/core/utils/snackbar.dart';
-import '/core/utils/api_client.dart';
-import '/core/constants/const.dart';
 import '/shared/widgets/app_bars.dart';
 
 import '../auth/auth_provider.dart';
 
+import '../widgets/confirm_account_delete.dart';
+
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
-
-  void _confirmDeleteAccount(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            title: const Text("Delete Account"),
-            content: const Text(
-              "Are you sure you want to permanently delete your account? "
-              "This action cannot be undone.",
-              style: TextStyle(fontSize: 14),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => ctx.pop(),
-                child: const Text("Cancel"),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: () async {
-                  ctx.pop();
-
-                  try {
-                    final apiClient = await APIClient.create();
-                    await apiClient.client.delete(ApiRoutes.deleteUserAccount);
-
-                    topSnackBar(
-                      context,
-                      "Your account has been permanently deleted. So sad to see you gone",
-                      type: TopSnackType.success,
-                    );
-                    context.go("/login");
-                  } catch (e) {
-                    topSnackBar(
-                      context,
-                      "Failed to delete account. Please try again.",
-                      type: TopSnackType.error,
-                    );
-                  }
-                },
-                child: const Text("Delete"),
-              ),
-            ],
-          ),
-    );
-  }
 
   void _showAboutDialog(BuildContext context) {
     showDialog(
@@ -154,7 +99,7 @@ class SettingsPage extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      user?.userType ?? "Email Address",
+                      user?.email ?? "Email Address",
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 14,
@@ -197,14 +142,16 @@ class SettingsPage extends StatelessWidget {
             ),
             child: Column(
               children: [
+                // inside SettingsPage ListTile:
                 ListTile(
                   leading: const Icon(Icons.delete_forever, color: Colors.red),
                   title: const Text(
                     "Delete Account",
                     style: TextStyle(color: Colors.red),
                   ),
-                  onTap: () => _confirmDeleteAccount(context),
+                  onTap: () => ConfirmDeleteAccountDialog.show(context),
                 ),
+
                 const Divider(height: 0),
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.red),

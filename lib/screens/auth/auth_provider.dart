@@ -53,12 +53,12 @@ class AuthProvider with ChangeNotifier {
   }
 
   // ✅ Wraps login + manages UI state
-  Future<bool> signIn(String username, String password) async {
+  Future<bool> signIn(String fullName, String password) async {
     _isLoading = true;
     _loginError = null;
     notifyListeners();
 
-    final result = await login(username, password);
+    final result = await login(fullName, password);
 
     final success = result.fold(
       (failure) {
@@ -77,11 +77,11 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<Either<Failure, void>> login(
-    String username,
+    String fullName,
     String password, {
     bool persist = true,
   }) async {
-    final result = await loginUser(username, password);
+    final result = await loginUser(fullName, password);
     if (result.isLeft()) return result;
 
     final loginResult = result.getOrElse(
@@ -92,7 +92,7 @@ class AuthProvider with ChangeNotifier {
 
     if (persist) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('username', username);
+      await prefs.setString('full_name', fullName);
       await prefs.setString('password', password);
       await prefs.setString('userType', user?.userType ?? 'N/A');
     }
@@ -111,7 +111,6 @@ class AuthProvider with ChangeNotifier {
   String? get registerError => _registerError;
 
   Future<bool> signUp(
-    String username,
     String email,
     String fullName,
     String userType,
@@ -121,18 +120,11 @@ class AuthProvider with ChangeNotifier {
     _registerError = null;
     notifyListeners();
 
-    final result = await register(
-      username,
-      email,
-      fullName,
-      userType,
-      phone,
-      password,
-    );
+    final result = await register(email, fullName, userType, phone, password);
 
     final success = result.fold(
       (failure) {
-        _registerError = "Registration failed";
+        _registerError = failure.message;
         return false;
       },
       (responseList) {
@@ -153,34 +145,26 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<Either<Failure, List<dynamic>>> register(
-    String username,
     String email,
     String fullName,
     String userType,
     String phone,
     String password,
   ) async {
-    return await registerUser(
-      username,
-      email,
-      fullName,
-      userType,
-      phone,
-      password,
-    );
+    return await registerUser(email, fullName, userType, phone, password);
   }
 
   Future<void> _restoreSession() async {
     final prefs = await SharedPreferences.getInstance();
-    final username = prefs.getString('username');
+    final fullName = prefs.getString('full_name');
     final password = prefs.getString('password');
     final userType = prefs.getString('userType');
 
-    if (username == null || password == null) {
+    if (fullName == null || password == null) {
       return;
     }
 
-    final result = await login(username, password, persist: false);
+    final result = await login(fullName, password, persist: false);
 
     result.fold((failure) => appLogger.w('⚠️ Failed to auto-restore session'), (
       _,
@@ -189,18 +173,18 @@ class AuthProvider with ChangeNotifier {
         user = user!.copyWith(userType: userType);
       }
       appLogger.i(
-        '🪄 Session auto-restored: ${user?.username}, home: $_defaultHome',
+        '🪄 Session auto-restored: ${user?.fullName}, home: $_defaultHome',
       );
     });
   }
 
   Future<void> loadUser() async {
     final prefs = await SharedPreferences.getInstance();
-    final username = prefs.getString('username');
+    final fullName = prefs.getString('full_name');
     final password = prefs.getString('password');
 
-    if (username != null && password != null) {
-      final result = await login(username, password, persist: false);
+    if (fullName != null && password != null) {
+      final result = await login(fullName, password, persist: false);
       result.fold(
         (failure) =>
             appLogger.w('⚠️ Failed to load user from persisted credentials'),
@@ -217,7 +201,7 @@ class AuthProvider with ChangeNotifier {
     );
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('username');
+    await prefs.remove('full_name');
     await prefs.remove('password');
     await prefs.remove('userType');
     await clearAllTables();

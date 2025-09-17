@@ -77,51 +77,49 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
             future: controller.fetchItemGroups(),
             builder: (context, snapshot) {
               final groups = snapshot.data ?? [];
-              return Expanded(
-                child: DropdownButtonFormField<String>(
-                  value:
-                      controller.groupController.text.isNotEmpty
-                          ? controller.groupController.text
-                          : null,
-                  onChanged:
-                      (val) => controller.groupController.text = val ?? '',
-                  items:
-                      groups
-                          .map(
-                            (g) => DropdownMenuItem(
-                              value: g,
-                              child: Text(g, overflow: TextOverflow.ellipsis),
-                            ),
-                          )
-                          .toList(),
-                  decoration: InputDecoration(
-                    label: FittedBox(
-                      alignment: Alignment.centerLeft,
-                      child: RichText(
-                        text: TextSpan(
-                          text: 'Category',
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: Colors.grey[700]),
-                          children: const [
-                            TextSpan(
-                              text: ' *',
-                              style: TextStyle(
-                                color: Colors.red,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+              return DropdownButtonFormField<String>(
+                value:
+                    controller.groupController.text.isNotEmpty
+                        ? controller.groupController.text
+                        : null,
+                onChanged: (val) => controller.groupController.text = val ?? '',
+                items:
+                    groups
+                        .map(
+                          (g) => DropdownMenuItem(
+                            value: g,
+                            child: Text(g, overflow: TextOverflow.ellipsis),
+                          ),
+                        )
+                        .toList(),
+                decoration: InputDecoration(
+                  label: FittedBox(
+                    alignment: Alignment.centerLeft,
+                    child: RichText(
+                      text: TextSpan(
+                        text: 'Category',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.grey[700],
                         ),
+                        children: const [
+                          TextSpan(
+                            text: ' *',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    border: const OutlineInputBorder(),
                   ),
-                  validator:
-                      (value) =>
-                          (value == null || value.isEmpty)
-                              ? 'Category is required'
-                              : null,
+                  border: const OutlineInputBorder(),
                 ),
+                validator:
+                    (value) =>
+                        (value == null || value.isEmpty)
+                            ? 'Category is required'
+                            : null,
               );
             },
           ),

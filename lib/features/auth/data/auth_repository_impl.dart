@@ -21,30 +21,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, List<dynamic>>> register(
-    String username,
     String email,
     String fullName,
     String userType,
     String phone,
     String password,
   ) async {
-    final result = await remote.register(
-      username,
-      email,
-      fullName,
-      userType,
-      phone,
-      password,
-    );
-
-    return result.fold((failure) => Left(failure), (data) {
-      final message = data['message'];
-      if (message is List) {
-        return Right(message);
-      } else {
-        return Left(ServerFailure("Unexpected response format from server"));
-      }
-    });
+    return await remote.register(email, fullName, userType, phone, password);
   }
 
   @override

@@ -12,8 +12,7 @@ import '../domain/user.dart';
 
 abstract class AuthRemoteDataSource {
   Future<Either<Failure, LoginResult>> login(String usr, String pwd);
-  Future<Either<Failure, Map<String, dynamic>>> register(
-    String username,
+  Future<Either<Failure, List<dynamic>>> register(
     String email,
     String fullName,
     String userType,
@@ -30,13 +29,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<Either<Failure, LoginResult>> login(
-    String username,
+    String fullName,
     String password,
   ) async {
     try {
       final response = await apiClient.client.post(
         ApiRoutes.login,
-        data: {'usr': username, 'pwd': password},
+        data: {'usr': fullName, 'pwd': password},
       );
 
       _setSessionCookie(response);
@@ -47,10 +46,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_type', userType);
+      await prefs.setString('email', fullName);
 
       final user = User(
         username: response.data['full_name'] ?? 'Guest',
         userType: userType,
+        email: fullName,
       );
 
       return Right(LoginResult(user: user, homePage: homePage));
@@ -60,8 +61,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> register(
-    String username,
+  Future<Either<Failure, List<dynamic>>> register(
     String email,
     String fullName,
     String userType,
@@ -72,19 +72,32 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final response = await apiClient.client.post(
         ApiRoutes.register,
         data: {
-          'username': username,
-          'email': email,
-          'full_name': fullName,
-          'user_type': userType,
-          'phone': phone,
-          'password': password,
-          'redirect_to': "/dashboard",
+          "email": email,
+          "full_name": fullName,
+          "user_type": userType,
+          "phone": phone,
+          "password": password,
         },
       );
 
       _setSessionCookie(response);
 
-      return Right(response.data);
+      final data = response.data;
+
+      // ✅ Normalize into [status, message]
+      if (data is Map<String, dynamic>) {
+        final status = data["status"] ?? 0; // default to failure
+        final message = data["message"]?.toString() ?? "Unknown response";
+
+        // 0 → failure, 1 → success (verify email), 2 → success (ready to login)
+        return Right([status, message]);
+      }
+
+      if (data is List && data.length >= 2) {
+        return Right([data[0], data[1].toString()]);
+      }
+
+      return Left(ServerFailure("Unexpected response format"));
     } catch (e) {
       return Left(handleException(e));
     }

@@ -26,6 +26,7 @@ List<PopupMenuEntry<String>> buildUserMenuItems(String userType) {
           ],
         ),
       ),
+    
     PopupMenuItem(
       value: 'settings',
       child: Row(
@@ -35,6 +36,20 @@ List<PopupMenuEntry<String>> buildUserMenuItems(String userType) {
           Text(
             'Settings',
             style: TextStyle(color: Colors.black54, fontSize: 14),
+          ),
+        ],
+      ),
+    ),
+    
+   PopupMenuItem(
+      value: 'logout',
+      child: Row(
+        children: const [
+          Icon(Icons.logout, color: Colors.red),
+          SizedBox(width: 10),
+          Text(
+            'Logout',
+            style: TextStyle(color: Colors.red, fontSize: 14),
           ),
         ],
       ),
@@ -53,6 +68,9 @@ Future<void> handleUserMenuSelection(BuildContext context, String value) async {
       break;
     case 'settings':
       context.go('/settings');
+      break;
+    case 'logout':
+      context.go('/login');
       break;
   }
 }

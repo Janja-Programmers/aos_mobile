@@ -156,7 +156,8 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
 
-      body: Form(
+     SingleChildScrollView(
+  child: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -219,10 +220,11 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
               label: const Text('Add Another entry'),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
             const Divider(),
-            const SizedBox(height: 16),
-            Row(
+            const SizedBox(height: 12),
+           SafeArea(
+            child: Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
@@ -240,6 +242,7 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
                 ),
               ],
             ),
+
             if (provider.failure != null) ...[
               const SizedBox(height: 16),
               Text(
@@ -247,6 +250,8 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
                 style: const TextStyle(color: Colors.red),
               ),
             ],
+                         ),
+            ),
           ],
         ),
       ),

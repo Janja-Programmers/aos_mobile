@@ -6,10 +6,6 @@ import '/core/constants/colors.dart';
 import '/shared/widgets/app_bars.dart';
 
 import '../auth/auth_provider.dart';
-
-import '../auth/widgets/privacy_policy_dialog.dart';
-import '../auth/widgets/terms_dialog.dart';
-
 import '../widgets/confirm_account_delete.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -140,17 +136,22 @@ class SettingsPage extends StatelessWidget {
                   ),
                   title: const Text("Terms & Conditions"),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => showTermsDialog(context, onAcceptCheck: () {}),
+                  onTap: () {
+                    context.push('/terms');
+                  },
                 ),
+
                 const Divider(height: 0),
                 ListTile(
                   leading: const Icon(
-                    Icons.privacy_tip_outlined,
-                    color: Colors.green,
+                    Icons.lock_outline,
+                    color: Colors.blueAccent,
                   ),
                   title: const Text("Privacy Policy"),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => showPrivacyPolicyDialog(context),
+                  onTap: () {
+                    context.push('/privacy');
+                  },
                 ),
               ],
             ),

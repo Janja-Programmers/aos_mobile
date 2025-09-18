@@ -12,7 +12,9 @@ class UserMenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       icon: const Icon(Icons.person, color: AppColors.black),
-      onSelected: (value) => handleUserMenuSelection(context, value),
+      onSelected: (value) async {
+        await handleUserMenuSelection(context, value);
+      },
       itemBuilder: (_) => buildUserMenuItems(userType),
     );
   }

@@ -1,6 +1,8 @@
 import 'package:go_router/go_router.dart';
 
 // Auth
+import '../../screens/settings/privacy.dart';
+import '../../screens/settings/tac.dart';
 import '/screens/auth/auth_provider.dart';
 import '/screens/auth/screens/login_screen.dart';
 import '/screens/auth/screens/register_screen.dart';
@@ -183,6 +185,13 @@ class AppRouter {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsPage(),
+      ),
+
+      GoRoute(path: '/terms', builder: (context, state) => const TermsPage()),
+
+      GoRoute(
+        path: '/privacy',
+        builder: (context, state) => const PrivacyPage(),
       ),
     ],
   );

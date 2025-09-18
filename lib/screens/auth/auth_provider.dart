@@ -202,6 +202,7 @@ class AuthProvider with ChangeNotifier {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('full_name');
+    await prefs.remove('username');
     await prefs.remove('password');
     await prefs.remove('userType');
     await clearAllTables();

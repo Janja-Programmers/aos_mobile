@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-import '/core/di/service_locator.dart';
+import 'package:provider/provider.dart';
 
 import '../../screens/auth/auth_provider.dart';
 
@@ -71,10 +70,11 @@ Future<void> handleUserMenuSelection(BuildContext context, String value) async {
       context.go('/settings');
       break;
     case 'logout':
-      final authProvider = sl<AuthProvider>();
+      final authProvider = context.read<AuthProvider>();
       await authProvider.logout();
+
       if (context.mounted) {
-        context.go('/login');
+        Future.microtask(() => context.go('/login'));
       }
       break;
   }

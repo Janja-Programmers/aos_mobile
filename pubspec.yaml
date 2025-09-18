@@ -77,12 +77,12 @@ flutter:
     - assets/logo.png
     - assets/logo_transparent.png
 
-flutter_icons:
+flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icon.jpg"
+  image_path: "assets/dark_logo.png"
   adaptive_icon_background: "#ffffff"
-  adaptive_icon_foreground: "assets/icon.jpg"
+  adaptive_icon_foreground: "assets/dark_logo.png"
 
 flutter_native_splash:
   color: "#ffffff"

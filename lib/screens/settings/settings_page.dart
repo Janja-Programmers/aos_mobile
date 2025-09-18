@@ -7,6 +7,9 @@ import '/shared/widgets/app_bars.dart';
 
 import '../auth/auth_provider.dart';
 
+import '../auth/widgets/privacy_policy_dialog.dart';
+import '../auth/widgets/terms_dialog.dart';
+
 import '../widgets/confirm_account_delete.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -129,6 +132,26 @@ class SettingsPage extends StatelessWidget {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => _showAboutDialog(context),
                 ),
+                const Divider(height: 0),
+                ListTile(
+                  leading: const Icon(
+                    Icons.description_outlined,
+                    color: Colors.blueAccent,
+                  ),
+                  title: const Text("Terms & Conditions"),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => showTermsDialog(context, onAcceptCheck: () {}),
+                ),
+                const Divider(height: 0),
+                ListTile(
+                  leading: const Icon(
+                    Icons.privacy_tip_outlined,
+                    color: Colors.green,
+                  ),
+                  title: const Text("Privacy Policy"),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => showPrivacyPolicyDialog(context),
+                ),
               ],
             ),
           ),
@@ -142,7 +165,6 @@ class SettingsPage extends StatelessWidget {
             ),
             child: Column(
               children: [
-                // inside SettingsPage ListTile:
                 ListTile(
                   leading: const Icon(Icons.delete_forever, color: Colors.red),
                   title: const Text(
@@ -151,7 +173,6 @@ class SettingsPage extends StatelessWidget {
                   ),
                   onTap: () => ConfirmDeleteAccountDialog.show(context),
                 ),
-
                 const Divider(height: 0),
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.red),

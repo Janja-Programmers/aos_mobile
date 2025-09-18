@@ -156,47 +156,47 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
 
-     SingleChildScrollView(
-  child: Form(
+      body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: _itemControllers.length,
-              itemBuilder: (_, index) {
-                final ctrl = _itemControllers[index];
-                final usedCodes =
-                    _itemControllers
-                        .where((c) => c != ctrl)
-                        .map((c) => c.itemCode.text)
-                        .where((code) => code.isNotEmpty)
-                        .toList();
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: ItemRow(
-                        controller: ctrl,
-                        usedItemCodes: usedCodes,
-                        onRemove:
-                            _itemControllers.length == 1
-                                ? null
-                                : () => setState(
-                                  () => _itemControllers.removeAt(index),
-                                ),
-                      ),
+            // ✅ Item rows
+            ..._itemControllers.asMap().entries.map((entry) {
+              final index = entry.key;
+              final ctrl = entry.value;
+
+              final usedCodes =
+                  _itemControllers
+                      .where((c) => c != ctrl)
+                      .map((c) => c.itemCode.text)
+                      .where((code) => code.isNotEmpty)
+                      .toList();
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Card(
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: ItemRow(
+                      controller: ctrl,
+                      usedItemCodes: usedCodes,
+                      onRemove:
+                          _itemControllers.length == 1
+                              ? null
+                              : () => setState(
+                                () => _itemControllers.removeAt(index),
+                              ),
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            }),
 
             const SizedBox(height: 16),
+
+            // ✅ Add another row button
             OutlinedButton.icon(
               onPressed: () {
                 final usedCodes =
@@ -212,49 +212,49 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
                   return;
                 }
 
-                setState(() {
-                  _itemControllers.add(ItemRowController());
-                });
+                setState(() => _itemControllers.add(ItemRowController()));
               },
               icon: const Icon(Icons.add),
-              label: const Text('Add Another entry'),
+              label: const Text('Add Another Entry'),
             ),
 
             const SizedBox(height: 12),
             const Divider(),
             const SizedBox(height: 12),
-           SafeArea(
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: provider.loading ? null : _saveDraft,
-                    child: const Text('Save Draft'),
+
+            // ✅ Actions
+            SafeArea(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: provider.loading ? null : _saveDraft,
+                      child: const Text('Save Draft'),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ActionButton(
-                    label: provider.loading ? 'Submitting...' : 'Submit',
-                    isLoading: provider.loading,
-                    onPressed: _submitFinal,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ActionButton(
+                      label: provider.loading ? 'Submitting...' : 'Submit',
+                      isLoading: provider.loading,
+                      onPressed: _submitFinal,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
 
             if (provider.failure != null) ...[
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 "Unable to create entry",
-                style: const TextStyle(color: Colors.red),
+                style: TextStyle(color: Colors.red),
               ),
             ],
-                         ),
-            ),
           ],
         ),
       ),
+
       scaffoldKey: scaffoldKey,
     );
   }

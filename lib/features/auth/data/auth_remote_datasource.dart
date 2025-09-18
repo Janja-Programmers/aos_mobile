@@ -77,6 +77,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           "user_type": userType,
           "phone": phone,
           "password": password,
+          "redirect_to": "/dashboard",
         },
       );
 

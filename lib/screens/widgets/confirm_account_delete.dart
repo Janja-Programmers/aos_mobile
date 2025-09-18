@@ -56,7 +56,7 @@ class ConfirmDeleteAccountDialog extends StatelessWidget {
           builder: (ctx, setState) {
             bool isLoading = false;
 
-            Future<void> _handleDelete() async {
+            Future<void> handleDelete() async {
               setState(() => isLoading = true);
 
               final prefs = await SharedPreferences.getInstance();
@@ -90,7 +90,7 @@ class ConfirmDeleteAccountDialog extends StatelessWidget {
 
             return ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: isLoading ? null : _handleDelete,
+              onPressed: isLoading ? null : handleDelete,
               child:
                   isLoading
                       ? const SizedBox(

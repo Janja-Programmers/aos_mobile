@@ -54,7 +54,7 @@ class _ReportProductDialogState extends State<ReportProductDialog> {
 
       final response = await client.post(
         ApiRoutes.reportProduct,
-        data: {
+        queryParameters: {
           "product": widget.productName,
           "reason": _selectedReason,
           "comment": _commentController.text,

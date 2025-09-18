@@ -109,7 +109,7 @@ class PlaceOrderController {
             ),
             actions: [
               TextButton(
-                onPressed: () => context.go('/orders'),
+                onPressed: () => context.go('/past-orders'),
                 child: const Text('View Orders'),
               ),
               TextButton(

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '/core/di/service_locator.dart';
+
+import '../../screens/auth/auth_provider.dart';
+
 /// Builds user-specific popup menu items with styling and icons.
 List<PopupMenuEntry<String>> buildUserMenuItems(String userType) {
   return [
@@ -26,7 +30,7 @@ List<PopupMenuEntry<String>> buildUserMenuItems(String userType) {
           ],
         ),
       ),
-    
+
     PopupMenuItem(
       value: 'settings',
       child: Row(
@@ -40,17 +44,14 @@ List<PopupMenuEntry<String>> buildUserMenuItems(String userType) {
         ],
       ),
     ),
-    
-   PopupMenuItem(
+
+    PopupMenuItem(
       value: 'logout',
       child: Row(
         children: const [
           Icon(Icons.logout, color: Colors.red),
           SizedBox(width: 10),
-          Text(
-            'Logout',
-            style: TextStyle(color: Colors.red, fontSize: 14),
-          ),
+          Text('Logout', style: TextStyle(color: Colors.red, fontSize: 14)),
         ],
       ),
     ),
@@ -70,7 +71,11 @@ Future<void> handleUserMenuSelection(BuildContext context, String value) async {
       context.go('/settings');
       break;
     case 'logout':
-      context.go('/login');
+      final authProvider = sl<AuthProvider>();
+      await authProvider.logout();
+      if (context.mounted) {
+        context.go('/login');
+      }
       break;
   }
 }

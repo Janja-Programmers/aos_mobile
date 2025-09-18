@@ -40,7 +40,6 @@ class RegisterController {
     onStart();
 
     final success = await auth.signUp(
-      userCtrl.text.trim(),
       emailCtrl.text.trim(),
       userCtrl.text.trim(),
       userTypeCtrl.text.trim(),

@@ -10,7 +10,6 @@ class RegisterUser {
   RegisterUser(this.repository);
 
   Future<Either<Failure, List<dynamic>>> call(
-    String username,
     String email,
     String fullName,
     String userType,
@@ -19,7 +18,6 @@ class RegisterUser {
   ) async {
     try {
       return await repository.register(
-        username,
         email,
         fullName,
         userType,

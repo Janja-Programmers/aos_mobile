@@ -7,7 +7,7 @@ class VendorUtils {
   Future<VendorDetails?> fetchVendor(String vendorName) async {
     try {
       final res = await client.client.post(
-        '/api/method/amani_mall.overrides.item.get_supplier_details',
+        '/api/method/aos.overrides.item.get_supplier_details',
         data: {"vendor_name": vendorName},
       );
 

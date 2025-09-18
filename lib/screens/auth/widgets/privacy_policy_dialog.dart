@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 Future<void> showPrivacyPolicyDialog(
   BuildContext context, {
@@ -17,74 +18,79 @@ Future<void> showPrivacyPolicyDialog(
           height: 400,
           child: SingleChildScrollView(
             child: SelectableText('''
-Privacy Policy for Africa Online Stores
+Privacy Policy
+Effective Date: 1st September, 2025
 
-1. Data Controller
-Africa Online Stores
-Contact: support@africaonlinestores.com
+Africa Online Stores ("we", "our", "us") operates a multi-vendor platform that connects buyers and vendors. This Privacy Policy explains how we collect, use, and protect information when you use our application and related services.
 
-2. Data We Collect
-- Username, email, phone number, user type, password (securely hashed).
-- Vendor uploads: images and videos (via CAMERA and MEDIA permissions).
-- Shipping addresses provided by Buyers.
-- Vendor phone numbers displayed for contact purposes.
+1. Information We Collect
+- Account Information: Name, email address, phone number, and password when you create an account.
+- Product Information: Images, descriptions, and files uploaded by vendors for their listings.
+- Usage Data: Automatically collected through our servers and analytics tools, such as device type, operating system, app activity, and log data (error and crash reports).
+- Optional Information: If you grant permission at runtime, we may access your camera and files only when you upload product images or related content.
+We do not collect payment details, as all transactions occur directly between buyers and vendors outside our platform. We do not access location, contacts, or collect data in the background.
 
-3. Purpose of Processing
-- Account registration and authentication.
-- Product listing and order management.
-- Buyer–Vendor communication.
-- Compliance with applicable laws.
+2. How We Use Information
+- Provide and improve our marketplace services.
+- Facilitate communication between buyers and vendors.
+- Personalize user experience and display relevant content.
+- Ensure platform security and prevent fraud or misuse.
+- Comply with legal obligations.
 
-4. Legal Basis
-Processing is based on:
-- Consent (checkbox acceptance of this Policy and Terms).
-- Contract (provision of marketplace services).
+3. Sharing of Information
+We do not sell or rent personal data. Information may be shared only:
+- With Vendors/Buyers: contact details necessary to connect buyers and vendors.
+- With Service Providers: trusted providers (hosting, storage, analytics) under confidentiality agreements.
+- For Legal Reasons: if required by law, regulation, or legal process.
 
-5. Data Hosting
-Data is processed and stored via ERPNext hosted on Frappe Cloud.  
-See also: ERPNext’s Privacy Policy (TODO: link Frappe policy when available).
+4. Account Deletion & Data Retention
+You may request deletion of your account at any time. Certain information (such as log data or security records) may be retained for a limited period, not exceeding 12 months.
 
-6. Data Sharing
-We do not sell or share personal data with third parties. Limited processing may occur within ERPNext’s infrastructure.
+5. User-Generated Content
+Vendors are responsible for their uploads. We may remove content that violates Terms or laws.
 
-7. Retention & Deletion
-- Accounts may be deleted at any time via the app.  
-- Upon deletion, all personal data is permanently erased. This action cannot be undone.  
-- No data export is currently available.
+6. Your Rights
+- Access and update your account info anytime.
+- Request deletion of your account.
+- Contact us for data access, correction, or portability.
 
-8. Permissions
-- CAMERA / MEDIA access: to upload vendor product photos/videos.  
-- CALL_PHONE: to enable direct calls to vendors upon user action.  
+7. Data Security
+We use HTTPS encryption, access controls, monitoring, and safeguards. However, no system is 100% secure.
 
-9. User Rights
-Under Kenya’s Data Protection Act, you have the right to:
-- Access your data.
-- Correct inaccuracies.
-- Request deletion (available directly in the app).
-- Withdraw consent at any time.
+8. Children and Age Restrictions
+For users aged 18+. If under 18 data is discovered, we delete it immediately.
 
-10. Data Breaches
-We maintain safeguards to protect your information. If a breach occurs, we will notify affected users and the Office of the Data Protection Commissioner in accordance with Kenyan law.
+9. Changes
+We may update this Policy. Any changes will be posted in-app and dated.
 
-11. Age Restriction
-This service is intended for users aged 18 and above.
+10. Contact Us
+Kalutu Daniel
+Changamwe, Mombasa - 80100, Kenya
+Email: kalutudaniel@gmail.com
 
-12. Updates
-We may update this Policy from time to time. Users will be notified of material changes.
+This policy applies to Africa Online Stores.
 
-13. Contact
-Questions? Contact us at:
-support@africaonlinestores.com
-
-For a full version online, please visit:
-https://africaonlinestores.com/privacy_policy
-              ''', style: const TextStyle(fontSize: 12, height: 1.4)),
+Read the full policy online:
+https://africaonlinestores.com/privacy
+''', style: const TextStyle(fontSize: 12, height: 1.4)),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text("Decline"),
+          ),
+          TextButton(
+            onPressed: () async {
+              final url = Uri.parse("https://africaonlinestores.com/privacy");
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: const Text(
+              "View Online",
+              style: TextStyle(color: Colors.blue),
+            ),
           ),
           ElevatedButton(
             onPressed: () {

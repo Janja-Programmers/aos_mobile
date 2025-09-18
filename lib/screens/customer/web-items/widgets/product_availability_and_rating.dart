@@ -49,11 +49,13 @@ class ProductAvailabilityAndRating extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(
-          inStock ? 'In Stock' : 'Out of Stock',
-          style: TextStyle(
-            color: inStock ? Colors.green : Colors.red,
-            fontWeight: FontWeight.w600,
+        Chip(
+          label: Text(inStock ? "In Stock" : "Out of Stock"),
+          backgroundColor:
+              inStock ? Colors.green.shade100 : Colors.red.shade100,
+          labelStyle: TextStyle(
+            color: inStock ? Colors.green.shade800 : Colors.red.shade800,
+            fontWeight: FontWeight.bold,
           ),
         ),
         const Spacer(),
@@ -70,8 +72,11 @@ class ProductAvailabilityAndRating extends StatelessWidget {
           },
           itemBuilder:
               (context) => const [
-                PopupMenuItem(value: 'rate', child: Text('Write a Review')),
-                PopupMenuItem(value: 'report', child: Text('Report Product')),
+                PopupMenuItem(value: 'rate', child: Text('✍️ Write a Review')),
+                PopupMenuItem(
+                  value: 'report',
+                  child: Text('🚩 Report Product'),
+                ),
               ],
         ),
       ],

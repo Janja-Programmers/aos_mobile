@@ -43,5 +43,5 @@ class ApiRoutes {
 
   static const String reportProduct = '/api/resource/Reported Product';
 
-  static var deleteUserAccount = '/api/method/aos.api.delete_user';
+  static var deleteUserAccount = '/api/method/aos.api.delete_account';
 }

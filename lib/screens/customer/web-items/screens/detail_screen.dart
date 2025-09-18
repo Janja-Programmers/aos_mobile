@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../widgets/rate_product.dart';
+import '../../../widgets/report_product.dart';
 import '/core/constants/colors.dart';
 
 import '/features/website/prov.dart';
@@ -194,11 +196,31 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                         product.reviews.length
                                     : 0.0,
                             totalReviews: product.reviews.length,
-                            onWriteReview: () {
-                              // TODO: show review form dialog
+                            onWriteReview: () async {
+                              final result = await showDialog<bool>(
+                                context: context,
+                                builder:
+                                    (_) => RateProductDialog(
+                                      productName: product.name,
+                                    ),
+                              );
+                              if (result == true) {
+                                // e.g. refresh product reviews after successful submission
+                                setState(() {});
+                              }
                             },
-                            onReport: () {
-                              // TODO: show confirmation/snackbar
+                            onReport: () async {
+                              final result = await showDialog<bool>(
+                                context: context,
+                                builder:
+                                    (_) => ReportProductDialog(
+                                      productName: product.name,
+                                    ),
+                              );
+                              if (result == true) {
+                                // e.g. refresh product data or just acknowledge
+                                setState(() {});
+                              }
                             },
                           ),
 

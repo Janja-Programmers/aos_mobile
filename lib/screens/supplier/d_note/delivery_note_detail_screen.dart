@@ -44,12 +44,8 @@ class _DeliveryNoteDetailScreenState extends State<DeliveryNoteDetailScreen> {
       subTitle: Row(
         children: [
           const Text(
-            'Delivery Note / ',
+            'Delivery Note',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            widget.noteId,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ],
       ),

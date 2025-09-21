@@ -30,15 +30,12 @@ class DeliveryNoteCardRow extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        context.push('/delivery-note/${note.id}'); // Adjust route
+        context.push('/delivery-note/${note.id}');
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8),
         child: Row(
           children: [
-            const Icon(Icons.local_shipping_outlined, color: Colors.blueGrey),
-            const SizedBox(width: 12),
-
             // Content
             Expanded(
               child: Column(
@@ -78,28 +75,15 @@ class DeliveryNoteCardRow extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-
-                  // Installed and Total
-                  Text(
-                    '% Installed: ${note.percentInstalled.toStringAsFixed(1)}%',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                  ),
-                  Text(
-                    'Total: Sh ${note.grandTotal.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
 
                   const SizedBox(height: 4),
                   Text(
-                    'Delivery Note ID: ${note.id}',
+                    note.id,
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey.shade500,
                       fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],

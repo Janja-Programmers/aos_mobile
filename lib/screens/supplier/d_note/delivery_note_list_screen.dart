@@ -16,6 +16,7 @@ class DeliveryNoteListScreen extends StatefulWidget {
 
 class _DeliveryNoteListScreenState extends State<DeliveryNoteListScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -23,6 +24,12 @@ class _DeliveryNoteListScreenState extends State<DeliveryNoteListScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DeliveryNoteProvider>().fetchAll();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _refresh() async {
@@ -74,28 +81,73 @@ class _DeliveryNoteListScreenState extends State<DeliveryNoteListScreen> {
             return const Center(child: Text('No delivery notes found.'));
           }
 
+          // 🔍 Filter notes by search query (customerName + status)
+          final query = _searchController.text.trim().toLowerCase();
+          final filteredNotes =
+              provider.notes.where((note) {
+                return query.isEmpty ||
+                    note.customerName.toLowerCase().contains(query) ||
+                    note.status.toLowerCase().contains(query);
+              }).toList();
+
           return RefreshIndicator(
             onRefresh: _refresh,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                color: Colors.white,
-                elevation: 2,
-                child: Column(
-                  children:
-                      provider.notes.map((note) {
-                        return Column(
-                          children: [
-                            DeliveryNoteCardRow(note: note),
-                            const Divider(height: 2),
-                          ],
-                        );
-                      }).toList(),
-                ),
+              child: Column(
+                children: [
+                  // 🔍 Search bar
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.search),
+                        hintText: 'Search by customer or status',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                        fillColor: Colors.white,
+                        filled: true,
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+
+                  // Notes list
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    color: Colors.white,
+                    elevation: 2,
+                    child: Column(
+                      children:
+                          filteredNotes.isEmpty
+                              ? [
+                                const Padding(
+                                  padding: EdgeInsets.all(24.0),
+                                  child: Text(
+                                    "No delivery notes match your search.",
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                              ]
+                              : filteredNotes
+                                  .map(
+                                    (note) => Column(
+                                      children: [
+                                        DeliveryNoteCardRow(note: note),
+                                        const Divider(height: 2),
+                                      ],
+                                    ),
+                                  )
+                                  .toList(),
+                    ),
+                  ),
+                ],
               ),
             ),
           );

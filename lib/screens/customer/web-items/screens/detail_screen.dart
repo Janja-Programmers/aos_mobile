@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../widgets/rate_product.dart';
-import '../../../widgets/report_product.dart';
 import '/core/constants/colors.dart';
 
 import '/features/website/prov.dart';
@@ -11,11 +9,10 @@ import '/features/website/prov.dart';
 import '/shared/widgets/app_bars.dart';
 
 import '../widgets/product_action_bar.dart';
-import '../widgets/product_availability_and_rating.dart';
+import '../widgets/product_availability.dart';
 import '../widgets/product_description.dart';
 import '../widgets/product_image_with_video.dart';
-import '../widgets/product_review_section.dart';
-import '../widgets/product_specification_list.dart';
+import '../widgets/product_detail_card.dart';
 import '../widgets/product_tile_and_price.dart';
 
 import '../helper/empty_page.dart';
@@ -70,6 +67,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
+
     if (error != null) {
       debugPrint('❌ Failed to load product "${widget.itemCode}"');
 
@@ -84,18 +82,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               children: [
                 const Icon(Icons.error_outline, size: 48, color: Colors.red),
                 const SizedBox(height: 6),
+
                 const Text(
                   'Something went wrong',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
+
                 Text(
                   'Oops! Product escaped from us. Please try again later.',
                   style: TextStyle(color: Colors.grey.shade600),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -175,7 +176,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                     : [product.imageUrl],
                             videoUrl: product.demoVideoUrl ?? "",
                           ),
-
                           const SizedBox(height: 16),
 
                           ProductTitleAndPrice(
@@ -185,75 +185,30 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           ),
                           const SizedBox(height: 8),
 
-                          ProductAvailabilityAndRating(
+                          ProductAvailability(
                             inStock: product.inStock,
                             productName: product.name,
-                            rating:
-                                product.reviews.isNotEmpty
-                                    ? product.reviews
-                                            .map((e) => e.rating)
-                                            .reduce((a, b) => a + b) /
-                                        product.reviews.length
-                                    : 0.0,
-                            totalReviews: product.reviews.length,
-                            onWriteReview: () async {
-                              final result = await showDialog<bool>(
-                                context: context,
-                                builder:
-                                    (_) => RateProductDialog(
-                                      productName: product.name,
-                                    ),
-                              );
-                              if (result == true) {
-                                // e.g. refresh product reviews after successful submission
-                                setState(() {});
-                              }
-                            },
-                            onReport: () async {
-                              final result = await showDialog<bool>(
-                                context: context,
-                                builder:
-                                    (_) => ReportProductDialog(
-                                      productName: product.name,
-                                    ),
-                              );
-                              if (result == true) {
-                                // e.g. refresh product data or just acknowledge
-                                setState(() {});
-                              }
-                            },
                           ),
-
                           const SizedBox(height: 6),
 
                           ProductActionBar(product: product),
+                          const SizedBox(height: 6),
+
+                          ProductDescription(
+                            shortDesc: product.shortDescription,
+                            longDesc: product.longDescription,
+                          ),
                           const SizedBox(height: 6),
                         ],
                       ),
                     ),
                   ),
 
-                  // --- Conditional Description ---
-                  if ((product.shortDescription.isNotEmpty) ||
-                      (product.longDescription.isNotEmpty)) ...[
-                    ProductDescriptions(
-                      shortDesc: product.shortDescription,
-                      longDesc: product.longDescription,
-                    ),
-                    const SizedBox(height: 6),
-                  ],
-
-                  // --- Conditional Specs ---
-                  if (product.specifications.isNotEmpty) ...[
-                    ProductSpecificationsList(specs: product.specifications),
-                    const SizedBox(height: 6),
-                  ],
-
-                  // --- Conditional Reviews ---
-                  if (product.reviews.isNotEmpty) ...[
-                    ProductReviews(reviews: product.reviews),
-                    const SizedBox(height: 6),
-                  ],
+                  // --- Product Details and Reviews ---
+                  ProductDetailAndReviews(
+                    specs: product.specifications,
+                    reviews: product.reviews,
+                  ),
                 ],
               ),
             ),

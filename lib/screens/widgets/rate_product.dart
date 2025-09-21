@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '/core/constants/const.dart';
 import '/core/di/service_locator.dart';
 import '/core/utils/api_client.dart';
+import '/core/utils/logger.dart';
 import '/core/utils/snackbar.dart';
 
 import 'ratings_selector.dart';
@@ -23,7 +24,6 @@ class _RateProductDialogState extends State<RateProductDialog> {
   int _rating = 3;
 
   bool _loading = false;
-
   Future<void> _submit() async {
     if (_titleController.text.isEmpty) return;
 
@@ -31,29 +31,32 @@ class _RateProductDialogState extends State<RateProductDialog> {
 
     try {
       final client = sl<APIClient>().client;
-      await client.post(
+      final res = await client.post(
         ApiRoutes.addReview,
         data: {
           "web_item": widget.productName,
           "title": _titleController.text,
-          "rating": _rating,
+          "rating": _rating, // keep as int
           "comment": _commentController.text,
         },
       );
+
+      appLogger.d("Res: ${res.data}");
 
       if (mounted) {
         context.pop(true);
         topSnackBar(
           context,
-          "Review submitted successfully!",
+          res.data['message'] ?? "Review submitted successfully!",
           type: TopSnackType.success,
         );
       }
-    } catch (e) {
+    } catch (e, s) {
+      appLogger.e("Review submission failed", error: e, stackTrace: s);
       if (mounted) {
         topSnackBar(
           context,
-          "Failed to submit review: $e",
+          "Failed to submit review",
           type: TopSnackType.error,
         );
       }

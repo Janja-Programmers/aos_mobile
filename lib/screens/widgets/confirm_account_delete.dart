@@ -59,31 +59,28 @@ class ConfirmDeleteAccountDialog extends StatelessWidget {
             Future<void> handleDelete() async {
               setState(() => isLoading = true);
 
-              final prefs = await SharedPreferences.getInstance();
-              final savedPassword = prefs.getString('password');
+              final authProvider = context.read<AuthProvider>();
+              final result = await authProvider.deleteAccount(
+                passwordController.text,
+              );
 
-              await Future.delayed(const Duration(milliseconds: 500)); // UX
+              result.fold(
+                (failure) {
+                  topSnackBar(
+                    context,
+                    failure.message,
+                    type: TopSnackType.error,
+                  );
+                },
+                (message) async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.clear(); // ✅ clear all local session data
 
-              if (passwordController.text == savedPassword) {
-                // ✅ clear saved credentials
-                await prefs.remove('full_name');
-                await prefs.remove('password');
-                await prefs.remove('userType');
+                  topSnackBar(context, message, type: TopSnackType.success);
 
-                topSnackBar(
-                  context,
-                  "Your account has been permanently deleted 💔",
-                  type: TopSnackType.success,
-                );
-
-                context.pop(true); // will trigger logout+redirect
-              } else {
-                topSnackBar(
-                  context,
-                  "Incorrect password. Please try again.",
-                  type: TopSnackType.error,
-                );
-              }
+                  context.pop(true); // triggers logout+redirect
+                },
+              );
 
               setState(() => isLoading = false);
             }

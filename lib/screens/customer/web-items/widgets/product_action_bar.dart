@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '/core/utils/logger.dart';
 import 'package:provider/provider.dart';
 
+import '/core/utils/logger.dart';
 import '/features/cart/domain/cart.dart';
 import '/features/cart/provider.dart';
 import '/features/website/domain/webitem.dart';
@@ -52,13 +52,7 @@ class ProductActionBar extends StatelessWidget {
                         ),
                       )
                       : AddToCartButton(item: cartItem)
-                  : const Text(
-                    'Out of Stock',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  : const SizedBox.shrink(),
         ),
         const SizedBox(width: 6),
         Expanded(

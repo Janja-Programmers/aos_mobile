@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '/core/utils/snackbar.dart';
 
-import '../../../widgets/rate_product.dart';
-import '../../../widgets/report_product.dart';
+import '/screens/widgets/rate_product.dart';
+import '/screens/widgets/report_product.dart';
 
-class ProductAvailabilityAndRating extends StatelessWidget {
+class ProductRating extends StatelessWidget {
   final bool inStock;
   final double rating;
   final int totalReviews;
@@ -13,7 +13,7 @@ class ProductAvailabilityAndRating extends StatelessWidget {
   final VoidCallback? onWriteReview;
   final VoidCallback? onReport;
 
-  const ProductAvailabilityAndRating({
+  const ProductRating({
     super.key,
     required this.inStock,
     required this.rating,

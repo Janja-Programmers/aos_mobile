@@ -2,16 +2,18 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '/core/constants/const.dart';
+import '/core/errors/exception.dart';
 import '/core/db/clean_db.dart';
 import '/core/di/service_locator.dart';
 import '/core/errors/failures.dart';
 import '/core/utils/api_client.dart';
 import '/core/utils/logger.dart';
 
-import '../../features/auth/domain/auth_repository.dart';
-import '../../features/auth/domain/usecases/register.dart';
-import '../../features/auth/domain/usecases/login.dart';
-import '../../features/auth/domain/user.dart';
+import '/features/auth/domain/auth_repository.dart';
+import '/features/auth/domain/usecases/register.dart';
+import '/features/auth/domain/usecases/login.dart';
+import '/features/auth/domain/user.dart';
 
 class AuthProvider with ChangeNotifier {
   final LoginUser loginUser;
@@ -41,6 +43,11 @@ class AuthProvider with ChangeNotifier {
   bool get isLoggedIn => user != null;
   String get defaultHome => _defaultHome ?? '/';
   String get home => _returnTo ?? _defaultHome ?? '/';
+
+  String? _registerError;
+  String? get registerError => _registerError;
+  String? _registerSuccess;
+  String? get registerSuccess => _registerSuccess;
 
   void setReturnTo(String path) {
     _returnTo = path;
@@ -107,9 +114,6 @@ class AuthProvider with ChangeNotifier {
     return '/';
   }
 
-  String? _registerError;
-  String? get registerError => _registerError;
-
   Future<bool> signUp(
     String email,
     String fullName,
@@ -118,6 +122,7 @@ class AuthProvider with ChangeNotifier {
     String password,
   ) async {
     _registerError = null;
+    _registerSuccess = null;
     notifyListeners();
 
     final result = await register(email, fullName, userType, phone, password);
@@ -128,15 +133,26 @@ class AuthProvider with ChangeNotifier {
         return false;
       },
       (responseList) {
-        final statusCode = responseList[0];
+        final statusCode = responseList[0] as int;
         final message = responseList[1].toString();
 
-        if (statusCode == 0) {
-          _registerError = message;
-          return false;
-        }
+        switch (statusCode) {
+          case 0:
+            _registerError = message;
+            return false;
 
-        return true;
+          case 1:
+            _registerSuccess = message;
+            return true;
+
+          case 2:
+            _registerSuccess = message;
+            return true;
+
+          default:
+            _registerError = "Unexpected status: $statusCode";
+            return false;
+        }
       },
     );
 
@@ -213,6 +229,35 @@ class AuthProvider with ChangeNotifier {
     _returnTo = null;
 
     notifyListeners();
+  }
+
+  Future<Either<Failure, String>> deleteAccount(String password) async {
+    try {
+      final response = await apiClient.client.post(
+        ApiRoutes.deleteUserAccount,
+        data: {"password": password},
+      );
+
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final success = data["success"] == true;
+        final message = data["message"]?.toString() ?? "Unknown response";
+
+        if (success) {
+          // optional: clear user state here too
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.clear();
+          notifyListeners();
+          return Right(message);
+        }
+
+        return Left(ServerFailure(message));
+      }
+
+      return Left(ServerFailure("Unexpected response format"));
+    } catch (e) {
+      return Left(handleException(e));
+    }
   }
 
   void clearRedirect() => _returnTo = null;

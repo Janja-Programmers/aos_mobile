@@ -64,12 +64,11 @@ class RegisterController {
 
     if (success) {
       if (context.mounted) {
-        topSnackBar(
-          context,
-          'Registration successful!',
-          type: TopSnackType.success,
-        );
+        final message = auth.registerSuccess ?? 'Registration successful!';
+        topSnackBar(context, message, type: TopSnackType.success);
+
         clearForm();
+
         context.go('/login');
       }
     } else {

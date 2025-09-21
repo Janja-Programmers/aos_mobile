@@ -12,31 +12,33 @@ class APIClient {
   APIClient._internal(Dio? dio) : _dio = dio ?? Dio();
 
   static Future<APIClient> create({Dio? dio}) async {
-    // 🔐 Private internal constructor
     final client = APIClient._internal(dio);
+    await client._setup();
+    return client;
+  }
 
-    // Get a directory to store cookies
+  Future<void> _setup() async {
+    // Prepare cookie storage
     final dir = await getApplicationDocumentsDirectory();
-    client._cookieJar = PersistCookieJar(
+    _cookieJar = PersistCookieJar(
       storage: FileStorage('${dir.path}/.cookies/'),
-      ignoreExpires: false,
     );
 
-    client._dio.options
+    _dio.options
       ..baseUrl = ApiRoutes.baseUrl
       ..connectTimeout = const Duration(seconds: 25)
       ..receiveTimeout = const Duration(seconds: 25);
 
-    client._dio.interceptors.addAll([
-      CookieManager(client._cookieJar),
+    final interceptors = <Interceptor>[
+      CookieManager(_cookieJar),
       InterceptorsWrapper(
         onRequest: (options, handler) => handler.next(options),
         onResponse: (response, handler) => handler.next(response),
-        onError: (DioException e, handler) => handler.next(e),
+        onError: (error, handler) => handler.next(error),
       ),
-    ]);
+    ];
 
-    return client;
+    _dio.interceptors.addAll(interceptors);
   }
 
   Dio get client => _dio;

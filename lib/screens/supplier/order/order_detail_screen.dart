@@ -6,9 +6,9 @@ import '/features/order/prov.dart';
 import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/app_drawer.dart';
 
-import 'widgets/action_buttons_card.dart';
-import 'widgets/customer_card.dart';
-import 'widgets/order_summary_card.dart';
+import 'widgets/deliver_order_button.dart';
+import 'widgets/so_info_card.dart';
+import 'widgets/print_order_button.dart';
 import 'widgets/product_table_card.dart';
 
 class SalesOrderDetailScreen extends StatefulWidget {
@@ -42,34 +42,26 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
       subTitle: Row(
         children: [
           Text(
-            'Sales Order / ',
+            'Sales Order',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            order?.id ?? '',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ],
       ),
+      actionButton: DeliverOrderButton(order: order!),
       body: Builder(
         builder: (_) {
-          if (provider.detailLoading || order == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
           return Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: ListView(
               children: [
-                CustomerCard(order: order),
-                OrderSummaryCard(order: order),
-                ActionButtonsCard(order: order),
+                SalesOrderInfoCard(order: order),
                 ProductTableCard(order: order),
               ],
             ),
           );
         },
       ),
+      floatingActionButton: PrintSalesOrder(order: order),
     );
   }
 }

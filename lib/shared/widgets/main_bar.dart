@@ -11,6 +11,7 @@ class MainBarScaffold extends StatelessWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
   final Widget drawer;
   final Widget? actionButton;
+  final Widget? floatingActionButton;
 
   const MainBarScaffold({
     super.key,
@@ -20,6 +21,7 @@ class MainBarScaffold extends StatelessWidget {
     required this.drawer,
     this.onSave,
     this.actionButton,
+    this.floatingActionButton,
   });
 
   @override
@@ -45,6 +47,7 @@ class MainBarScaffold extends StatelessWidget {
           Expanded(child: body),
         ],
       ),
+      floatingActionButton: floatingActionButton,
     );
   }
 }

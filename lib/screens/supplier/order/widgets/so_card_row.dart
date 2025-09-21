@@ -33,9 +33,6 @@ class SalesOrderCardRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8),
         child: Row(
           children: [
-            const Icon(Icons.receipt_long_rounded, color: Colors.blueGrey),
-            const SizedBox(width: 12),
-
             // Expanded Column for content
             Expanded(
               child: Column(
@@ -77,28 +74,12 @@ class SalesOrderCardRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
 
-                  // Delivery date
-                  Text(
-                    'Delivery: ${order.deliveryDate.toLocal().toString().split(' ').first}',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                  ),
-
                   // Total
                   Text(
-                    'Total: Sh ${order.grandTotal.toStringAsFixed(2)}',
+                    order.id,
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-                  Text(
-                    'Order ID: ${order.id}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade500,
-                      fontStyle: FontStyle.italic,
                     ),
                   ),
                 ],

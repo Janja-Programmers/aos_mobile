@@ -18,7 +18,7 @@ class ProductTableCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Products',
+              'Items',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -42,6 +42,7 @@ class ProductTableCard extends StatelessWidget {
         inside: BorderSide(color: Colors.grey.shade300),
       ),
       children: [
+        // Header row
         TableRow(
           decoration: BoxDecoration(color: Colors.grey.shade100),
           children: const [
@@ -52,6 +53,8 @@ class ProductTableCard extends StatelessWidget {
             Padding(padding: EdgeInsets.all(6), child: Text('Amount (Sh.)')),
           ],
         ),
+
+        // Items
         ...order.items.asMap().entries.map((entry) {
           final i = entry.key + 1;
           final item = entry.value;
@@ -77,6 +80,30 @@ class ProductTableCard extends StatelessWidget {
             ],
           );
         }),
+
+        // Footer row → Grand Total
+        TableRow(
+          decoration: BoxDecoration(color: Colors.grey.shade200),
+          children: [
+            const SizedBox.shrink(),
+            const SizedBox.shrink(),
+            const SizedBox.shrink(),
+            const Padding(
+              padding: EdgeInsets.all(6),
+              child: Text(
+                'Grand Total',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(6),
+              child: Text(
+                order.grandTotal.toStringAsFixed(2),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }

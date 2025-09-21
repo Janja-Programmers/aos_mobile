@@ -19,14 +19,20 @@ class SalesOrderListScreen extends StatefulWidget {
 
 class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Fetch orders on first load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SalesOrderProvider>().fetchAll();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _refresh() async {
@@ -38,7 +44,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
     return MainBarScaffold(
       drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
-      subTitle: Text(
+      subTitle: const Text(
         'Sales Order',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
@@ -59,9 +65,9 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
+                  const Text(
                     'Error: Could not load orders',
-                    style: const TextStyle(color: Colors.red),
+                    style: TextStyle(color: Colors.red),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
@@ -78,31 +84,77 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
             return const Center(child: Text('No orders found.'));
           }
 
+          // 🔍 Filter by search
+          final query = _searchController.text.trim().toLowerCase();
+          final filteredOrders =
+              provider.orders.where((order) {
+                return query.isEmpty ||
+                    order.customerName.toLowerCase().contains(query) ||
+                    order.status.toLowerCase().contains(query) ||
+                    order.id.toLowerCase().contains(query);
+              }).toList();
+
           return RefreshIndicator(
             onRefresh: _refresh,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                color: Colors.white,
-                elevation: 2,
-                child: Column(
-                  children:
-                      provider.orders.map((order) {
-                        return Column(
-                          children: [
-                            SalesOrderCardRow(order: order),
-                            const Divider(
-                              height: 2,
-                              color: AppColors.background,
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                ),
+              child: Column(
+                children: [
+                  // 🔍 Search bar
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.search),
+                        hintText: 'Search by customer, status, or order ID',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                        fillColor: Colors.white,
+                        filled: true,
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
+
+                  // Orders list
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    color: Colors.white,
+                    elevation: 2,
+                    child: Column(
+                      children:
+                          filteredOrders.isEmpty
+                              ? [
+                                const Padding(
+                                  padding: EdgeInsets.all(24.0),
+                                  child: Text(
+                                    "No sales orders match your search.",
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                              ]
+                              : filteredOrders
+                                  .map(
+                                    (order) => Column(
+                                      children: [
+                                        SalesOrderCardRow(order: order),
+                                        const Divider(
+                                          height: 2,
+                                          color: AppColors.background,
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                  .toList(),
+                    ),
+                  ),
+                ],
               ),
             ),
           );

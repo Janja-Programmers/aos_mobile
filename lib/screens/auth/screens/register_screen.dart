@@ -278,25 +278,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed:
                           isLoading
                               ? null
-                              : () {
-                                if (_formKey.currentState!.validate()) {
-                                  RegisterController.signUp(
-                                    context: context,
-                                    auth: auth,
-                                    formKey: _formKey,
-                                    userCtrl: userCtrl,
-                                    emailCtrl: emailCtrl,
-                                    passCtrl: passCtrl,
-                                    confirmPassCtrl: confirmPassCtrl,
-                                    phoneCtrl: numCtrl,
-                                    userTypeCtrl: userTypeCtrl,
-                                    onStart:
-                                        () => setState(() => isLoading = true),
-                                    onEnd:
-                                        () => setState(() => isLoading = false),
-                                  );
-                                }
-                              },
+                              : () => RegisterController.signUp(
+                                context: context,
+                                auth: auth,
+                                formKey: _formKey,
+                                userCtrl: userCtrl,
+                                emailCtrl: emailCtrl,
+                                passCtrl: passCtrl,
+                                confirmPassCtrl: confirmPassCtrl,
+                                phoneCtrl: numCtrl,
+                                userTypeCtrl: userTypeCtrl,
+                                onStart: () => setState(() => isLoading = true),
+                                onEnd: () => setState(() => isLoading = false),
+                              ),
                       child: Text(
                         isLoading ? 'Verifying...' : 'Sign Up',
                         style: const TextStyle(color: Colors.white),

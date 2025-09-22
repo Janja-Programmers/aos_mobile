@@ -35,7 +35,7 @@ class _ProductTileState extends State<ProductTile> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       title: Text(
         widget.itemName,
-        style: const TextStyle(fontWeight: FontWeight.bold),
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
       ),
       subtitle: Text(
         widget.category,

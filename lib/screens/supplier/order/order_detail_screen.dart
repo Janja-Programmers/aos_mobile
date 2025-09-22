@@ -36,30 +36,35 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
     final provider = context.watch<SalesOrderProvider>();
     final order = provider.selectedOrder;
 
+    if (provider.detailLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (order == null) {
+      return const Center(
+        child: Text(
+          "Error: Order not found",
+          style: TextStyle(color: Colors.red),
+        ),
+      );
+    }
+
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
-      subTitle: Row(
-        children: [
-          Text(
-            'Sales Order',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ],
+      subTitle: const Text(
+        'Sales Order',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      actionButton: DeliverOrderButton(order: order!),
-      body: Builder(
-        builder: (_) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: ListView(
-              children: [
-                SalesOrderInfoCard(order: order),
-                ProductTableCard(order: order),
-              ],
-            ),
-          );
-        },
+      actionButton: DeliverOrderButton(order: order),
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: ListView(
+          children: [
+            SalesOrderInfoCard(order: order),
+            ProductTableCard(order: order),
+          ],
+        ),
       ),
       floatingActionButton: PrintSalesOrder(order: order),
     );

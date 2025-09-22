@@ -68,7 +68,6 @@ class RegisterController {
         topSnackBar(context, message, type: TopSnackType.success);
 
         clearForm();
-
         context.go('/login');
       }
     } else {

@@ -36,49 +36,67 @@ class _DeliveryNoteDetailScreenState extends State<DeliveryNoteDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DeliveryNoteProvider>();
+
+    if (provider.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (provider.failure != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Error: ${provider.failure!.message}",
+              style: const TextStyle(color: Colors.red),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              onPressed: () {
+                provider.fetchById(widget.noteId);
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
     final note = provider.selectedNote;
+    if (note == null) {
+      return const Center(child: Text("Delivery note not found"));
+    }
 
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 4, onItemSelected: (_) {}),
-      subTitle: Row(
-        children: [
-          const Text(
-            'Delivery Note',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ],
+      subTitle: const Text(
+        'Delivery Note',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
       actionButton: IconButton(
         icon: const Icon(Icons.print),
         onPressed: () async {
-          if (note != null) {
-            topSnackBar(context, 'Printing...');
-            await printDeliveryNote(note);
-          }
+          topSnackBar(context, 'Printing...');
+          await printDeliveryNote(note);
         },
       ),
-      body: Builder(
-        builder: (_) {
-          if (provider.loading || note == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: ListView(
-              children: [
-                DetailCard(
-                  title: note.customerName,
-                  subtitle: 'ID: ${note.id}',
-                  status: note.status,
-                ),
-                const SizedBox(height: 16),
-                ItemsCard(note: note),
-              ],
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            DetailCard(
+              title: note.customerName,
+              subtitle: note.id,
+              status: note.status,
             ),
-          );
-        },
+
+            const SizedBox(height: 16),
+            ItemsCard(note: note),
+          ],
+        ),
       ),
     );
   }

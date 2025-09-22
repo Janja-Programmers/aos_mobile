@@ -17,25 +17,37 @@ class StockEntryActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (docstatus == DocStatus.draft && onSubmit != null) {
-      return IconButton(
-        icon: const Icon(Icons.check_circle, color: Colors.green),
-        tooltip: 'Submit',
+      return ElevatedButton.icon(
+        icon: const Icon(Icons.check_circle, color: Colors.white),
+        label: const Text("Submit"),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+        ),
         onPressed: onSubmit,
       );
     }
 
     if (docstatus == DocStatus.submitted && onCancel != null) {
-      return IconButton(
-        icon: const Icon(Icons.cancel, color: Colors.red),
-        tooltip: 'Cancel',
+      return ElevatedButton.icon(
+        icon: const Icon(Icons.cancel, color: Colors.white),
+        label: const Text("Cancel"),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+        ),
         onPressed: onCancel,
       );
     }
 
     if (docstatus == DocStatus.cancelled && onDelete != null) {
-      return IconButton(
-        icon: const Icon(Icons.delete, color: Colors.red),
-        tooltip: 'Delete',
+      return ElevatedButton.icon(
+        icon: const Icon(Icons.delete, color: Colors.white),
+        label: const Text("Delete"),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+        ),
         onPressed: onDelete,
       );
     }

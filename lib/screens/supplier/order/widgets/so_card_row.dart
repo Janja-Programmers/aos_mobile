@@ -75,13 +75,7 @@ class SalesOrderCardRow extends StatelessWidget {
                   const SizedBox(height: 6),
 
                   // Total
-                  Text(
-                    order.id,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
+                  Text(order.id, style: const TextStyle(fontSize: 13)),
                 ],
               ),
             ),

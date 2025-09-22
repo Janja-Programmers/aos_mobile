@@ -46,6 +46,7 @@ class AuthProvider with ChangeNotifier {
 
   String? _registerError;
   String? get registerError => _registerError;
+
   String? _registerSuccess;
   String? get registerSuccess => _registerSuccess;
 
@@ -133,21 +134,17 @@ class AuthProvider with ChangeNotifier {
         return false;
       },
       (responseList) {
-        final statusCode = int.tryParse(responseList[0].toString()) ?? 0;
+        final statusCode = responseList[0];
         final message = responseList[1].toString();
 
-        switch (statusCode) {
-          case 0:
-            _registerError = message;
-            return false;
-          case 1:
-          case 2:
-            _registerSuccess = message;
-            return true;
-          default:
-            _registerError = "Unexpected status: $statusCode";
-            return false;
+        if (statusCode == 0) {
+          _registerError = message;
+          return false;
         }
+
+        // ✅ status 1 or 2 → treat as success
+        _registerSuccess = message;
+        return true;
       },
     );
 

@@ -55,7 +55,10 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 2, onItemSelected: (_) {}),
-      subTitle: const Text('Stock Intake'),
+      subTitle: const Text(
+        'Stock Intake',
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+      ),
       actionButton: StockEntryActions(
         docstatus: entry.docstatus,
         onSubmit: () => submitStockEntry(context, entry),

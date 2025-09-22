@@ -23,6 +23,28 @@ class ProductTableCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _buildProductTable(),
+
+            const SizedBox(height: 12),
+            const Divider(thickness: 1),
+            const SizedBox(height: 8),
+
+            // 🟢 Grand Total Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Grand Total',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  order.grandTotal.toStringAsFixed(2),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -38,9 +60,7 @@ class ProductTableCard extends StatelessWidget {
         3: FlexColumnWidth(1.5),
         4: FlexColumnWidth(1.5),
       },
-      border: TableBorder.symmetric(
-        inside: BorderSide(color: Colors.grey.shade300),
-      ),
+      border: TableBorder.symmetric(inside: BorderSide(color: Colors.grey)),
       children: [
         // Header row
         TableRow(
@@ -54,7 +74,7 @@ class ProductTableCard extends StatelessWidget {
           ],
         ),
 
-        // Items
+        // Item rows
         ...order.items.asMap().entries.map((entry) {
           final i = entry.key + 1;
           final item = entry.value;
@@ -80,30 +100,6 @@ class ProductTableCard extends StatelessWidget {
             ],
           );
         }),
-
-        // Footer row → Grand Total
-        TableRow(
-          decoration: BoxDecoration(color: Colors.grey.shade200),
-          children: [
-            const SizedBox.shrink(),
-            const SizedBox.shrink(),
-            const SizedBox.shrink(),
-            const Padding(
-              padding: EdgeInsets.all(6),
-              child: Text(
-                'Grand Total',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(6),
-              child: Text(
-                order.grandTotal.toStringAsFixed(2),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }

@@ -14,44 +14,44 @@ class SalesChartCard extends StatefulWidget {
 class _SalesChartCardState extends State<SalesChartCard> {
   double _minFilterValue = 0;
 
-  void _showFilterDialog(SalesChartProvider provider) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        double tempFilter = _minFilterValue;
-        return AlertDialog(
-          title: const Text('Filter Minimum Sales'),
-          content: Slider(
-            min: 0,
-            max: provider.chart!.values.reduce((a, b) => a > b ? a : b),
-            divisions: 20,
-            value: tempFilter,
-            label: tempFilter.toStringAsFixed(0),
-            onChanged: (val) {
-              setState(() {
-                tempFilter = val;
-              });
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _minFilterValue = tempFilter;
-                });
-                Navigator.pop(context);
-              },
-              child: const Text('Apply'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // void _showFilterDialog(SalesChartProvider provider) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       double tempFilter = _minFilterValue;
+  //       return AlertDialog(
+  //         title: const Text('Filter Minimum Sales'),
+  //         content: Slider(
+  //           min: 0,
+  //           max: provider.chart!.values.reduce((a, b) => a > b ? a : b),
+  //           divisions: 20,
+  //           value: tempFilter,
+  //           label: tempFilter.toStringAsFixed(0),
+  //           onChanged: (val) {
+  //             setState(() {
+  //               tempFilter = val;
+  //             });
+  //           },
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () => Navigator.pop(context),
+  //             child: const Text('Cancel'),
+  //           ),
+  //           ElevatedButton(
+  //             onPressed: () {
+  //               setState(() {
+  //                 _minFilterValue = tempFilter;
+  //               });
+  //               Navigator.pop(context);
+  //             },
+  //             child: const Text('Apply'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -111,10 +111,10 @@ class _SalesChartCardState extends State<SalesChartCard> {
                   'Item-wise Sales',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.filter_alt),
-                  onPressed: () => _showFilterDialog(provider),
-                ),
+                // IconButton(
+                //   icon: const Icon(Icons.filter_alt),
+                //   onPressed: () => _showFilterDialog(provider),
+                // ),
               ],
             ),
             const SizedBox(height: 12),

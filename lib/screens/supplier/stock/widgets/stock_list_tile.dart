@@ -17,13 +17,8 @@ class StockListTile extends StatelessWidget {
 
   const StockListTile({super.key, required this.id, required this.docstatus});
 
-  Future<void> _navigateToEntryDetail(
-    BuildContext context,
-    String id,
-    int docstatus,
-  ) async {
+  Future<void> _navigateToEntryDetail(BuildContext context) async {
     if (docstatus == 0) {
-      // Draft → open edit
       final provider = context.read<CreateStockEntryProvider>();
       final entry = await provider.getById(id);
 
@@ -36,7 +31,6 @@ class StockListTile extends StatelessWidget {
         topSnackBar(context, 'Could not load draft.', type: TopSnackType.error);
       }
     } else {
-      // Submitted or cancelled → detail page
       final result = await context.push('/stock-entry/$id');
       if (result == true && context.mounted) {
         context.read<StockEntryProvider>().fetchAll();
@@ -49,7 +43,7 @@ class StockListTile extends StatelessWidget {
     final theme = Theme.of(context);
 
     return InkWell(
-      onTap: () => _navigateToEntryDetail(context, id, docstatus),
+      onTap: () => _navigateToEntryDetail(context),
       borderRadius: BorderRadius.circular(6),
       splashColor: theme.colorScheme.primary.withOpacity(0.08),
       highlightColor: Colors.transparent,
@@ -58,22 +52,21 @@ class StockListTile extends StatelessWidget {
         child: Row(
           children: [
             // Left: ID
-            Text(
-              id,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                overflow: TextOverflow.ellipsis,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-
-            // Middle: Docstatus
-            Expanded(
-              flex: 2,
-              child: Align(
-                alignment: Alignment.center,
-                child: DocstatusChip(docstatus: docstatus),
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  id,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14, // reduced from 16 → 14
+                    overflow: TextOverflow.ellipsis,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                DocstatusChip(docstatus: docstatus),
+              ],
             ),
 
             // Right: Actions
@@ -88,9 +81,7 @@ class StockListTile extends StatelessWidget {
                       IconButton(
                         icon: const Icon(Icons.edit, color: Colors.blue),
                         tooltip: 'Edit Draft',
-                        onPressed:
-                            () =>
-                                _navigateToEntryDetail(context, id, docstatus),
+                        onPressed: () => _navigateToEntryDetail(context),
                       ),
                     if (docstatus == 1) // Submitted → view
                       IconButton(
@@ -99,9 +90,7 @@ class StockListTile extends StatelessWidget {
                           color: Colors.green,
                         ),
                         tooltip: 'View',
-                        onPressed:
-                            () =>
-                                _navigateToEntryDetail(context, id, docstatus),
+                        onPressed: () => _navigateToEntryDetail(context),
                       ),
                     if (docstatus == 2) // Cancelled → delete
                       IconButton(
@@ -110,7 +99,6 @@ class StockListTile extends StatelessWidget {
                         onPressed: () async {
                           final success = await deleteStockEntry(context, id);
                           if (success == true) {
-                            // Refresh list after deletion
                             context.read<StockEntryProvider>().fetchAll();
                           }
                         },

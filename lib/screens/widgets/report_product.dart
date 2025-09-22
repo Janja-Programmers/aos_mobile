@@ -51,6 +51,7 @@ class _ReportProductDialogState extends State<ReportProductDialog> {
       final loggedInEmail = authProvider.user?.username ?? "anonymous";
 
       appLogger.i("Logged in as: $loggedInEmail");
+      appLogger.i("Product name: ${widget.productName}");
 
       final response = await client.post(
         ApiRoutes.reportProduct,
@@ -58,7 +59,7 @@ class _ReportProductDialogState extends State<ReportProductDialog> {
           "product": widget.productName,
           "reason": _selectedReason,
           "comment": _commentController.text,
-          "reported_by": loggedInEmail,
+          // "reported_by": loggedInEmail,
         },
       );
 

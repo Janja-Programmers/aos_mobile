@@ -41,7 +41,8 @@ class ApiRoutes {
   static const String addReview =
       '/api/method/webshop.webshop.doctype.item_review.item_review.add_item_review';
 
-  static const String reportProduct = '/api/resource/Reported Product';
+  static const String reportProduct =
+      '/api/method/aos.africa_online_stores.doctype.reported_product.reported_product.report_product';
 
   static var deleteUserAccount = '/api/method/aos.api.delete_account';
 }

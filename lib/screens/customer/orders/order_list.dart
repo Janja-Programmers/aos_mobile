@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/utils/formatters.dart';
 import '/core/constants/colors.dart';
 
 import '/shared/widgets/app_bars.dart';
@@ -67,7 +66,8 @@ class _OrderScreenState extends State<OrderScreen> {
       );
     }
 
-    final query = _searchController.text.toLowerCase();
+    // Inside build:
+    final query = _searchController.text.trim().toLowerCase();
     final filteredOrders =
         provider.orders.where((order) {
           final items = (order['items'] ?? []).join(' ').toLowerCase();
@@ -87,12 +87,13 @@ class _OrderScreenState extends State<OrderScreen> {
       appBar: TopAppBar(),
       body: Column(
         children: [
-          // Search field
+          // 🔍 Search field with controller + consistent padding
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(12), // ✅ same margin all around
             child: TextField(
+              controller: _searchController, // ✅ attach controller
               decoration: InputDecoration(
-                hintText: 'Search past orders by name',
+                hintText: 'Search past orders by name, id, or status',
                 prefixIcon: const Icon(Icons.search),
                 fillColor: AppColors.white,
                 border: OutlineInputBorder(
@@ -101,8 +102,7 @@ class _OrderScreenState extends State<OrderScreen> {
                 ),
                 filled: true,
               ),
-
-              onChanged: (value) {
+              onChanged: (_) {
                 if (debounce?.isActive ?? false) debounce!.cancel();
                 debounce = Timer(const Duration(milliseconds: 300), () {
                   setState(() {});
@@ -111,88 +111,90 @@ class _OrderScreenState extends State<OrderScreen> {
             ),
           ),
 
-          const SizedBox(height: 12),
-
           // Orders list
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
-                await Future.delayed(const Duration(milliseconds: 300));
+                await provider.fetchOrders();
               },
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                itemCount: filteredOrders.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final order = filteredOrders[index];
-
-                  return InkWell(
-                    onTap: () {
-                      context.push('/order-detail', extra: order);
-                    },
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 1.5,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Item name (highlighted)
-                            Text(
-                              getFirstItemName(order['items']),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  color: Colors.white,
+                  elevation: 2,
+                  child:
+                      filteredOrders.isEmpty
+                          ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(24.0),
+                              child: Text(
+                                "No orders match your search.",
+                                style: TextStyle(color: Colors.grey),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            // Order ID as subtitle
-                            Text(
-                              order['id'],
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                            const SizedBox(height: 8),
-                            // Bottom Row: date, status, total
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    order['date'] is String
-                                        ? order['date']
-                                        : formatCompactDateTime(
-                                          order['date'] as DateTime,
+                          )
+                          : ListView.separated(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            itemCount: filteredOrders.length,
+                            separatorBuilder:
+                                (_, _) => const Divider(height: 2),
+                            itemBuilder: (context, index) {
+                              final order = filteredOrders[index];
+
+                              return InkWell(
+                                onTap: () {
+                                  context.push('/order-detail', extra: order);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      // Left: Item name + id
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              getFirstItemName(order['items']),
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              order['id'],
+                                              style: const TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                    style: const TextStyle(fontSize: 14),
+                                      ),
+                                      // Right: status chip
+                                      Chip(
+                                        label: Text(order['status']),
+                                        backgroundColor: Colors.orange[100],
+                                        labelStyle: TextStyle(
+                                          color: Colors.orange[800],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                Chip(
-                                  label: Text(order['status']),
-                                  backgroundColor: Colors.orange[100],
-                                  labelStyle: TextStyle(
-                                    color: Colors.orange[800],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  "Sh ${order['total']}",
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
+                              );
+                            },
+                          ),
+                ),
               ),
             ),
           ),

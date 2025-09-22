@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '/core/constants/colors.dart';
-import '/core/utils/formatters.dart';
 import '/shared/widgets/app_bars.dart';
 
 class OrderDetailScreen extends StatelessWidget {
@@ -20,24 +19,18 @@ class OrderDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final String buyer = order['buyer'] ?? 'N/A';
     final String status = order['status'] ?? 'N/A';
+    final String orderId = order['id'] ?? 'N/A';
 
     final double total = _parseToDouble(order['total']);
-
-    final String date =
-        order['date'] is String
-            ? order['date']
-            : formatCompactDateTime(order['date'] as DateTime);
 
     // Ensure items are List<Map<String, dynamic>>
     final List<Map<String, dynamic>> items =
         (order['items'] as List).map<Map<String, dynamic>>((item) {
-          if (item is Map<String, dynamic>) {
-            return item;
-          } else if (item is String) {
+          if (item is Map<String, dynamic>) return item;
+          if (item is String) {
             return {'name': item, 'qty': 1, 'rate': null, 'amount': null};
-          } else {
-            return {'name': '-', 'qty': 1, 'rate': null, 'amount': null};
           }
+          return {'name': '-', 'qty': 1, 'rate': null, 'amount': null};
         }).toList();
 
     return Scaffold(
@@ -48,94 +41,137 @@ class OrderDetailScreen extends StatelessWidget {
         child: ListView(
           children: [
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(date, style: const TextStyle(fontSize: 16)),
-                Chip(
-                  label: Text(status),
-                  backgroundColor: Colors.orange[100],
-                  labelStyle: TextStyle(color: Colors.orange[800]),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                buyer,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
+
+            // 🟢 Order Info Card
             Card(
-              elevation: 2,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(12),
               ),
+              elevation: 2,
+              margin: const EdgeInsets.only(bottom: 16),
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Left → buyer + date
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            buyer,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            orderId,
+                            style: const TextStyle(color: Colors.black87),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Right → order id + status
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Chip(
+                          label: Text(
+                            status,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          backgroundColor: Colors.grey.shade200,
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // 🟢 Items Table Card
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      'Items',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Table(
                       columnWidths: const {
-                        0: FlexColumnWidth(2.5),
-                        1: FlexColumnWidth(1),
-                        2: FlexColumnWidth(2),
-                        3: FlexColumnWidth(2.5),
+                        0: FixedColumnWidth(30),
+                        1: FlexColumnWidth(3),
+                        2: FlexColumnWidth(1),
+                        3: FlexColumnWidth(1.5),
+                        4: FlexColumnWidth(1.5),
                       },
-                      defaultVerticalAlignment:
-                          TableCellVerticalAlignment.middle,
+                      border: TableBorder.symmetric(
+                        inside: BorderSide(color: Colors.grey.shade300),
+                      ),
                       children: [
-                        const TableRow(
-                          children: [
+                        // Header row
+                        TableRow(
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                          ),
+                          children: const [
                             Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                'Item',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
+                              padding: EdgeInsets.all(6),
+                              child: Text('#'),
                             ),
-                            Text(
-                              'Qty',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            Padding(
+                              padding: EdgeInsets.all(6),
+                              child: Text('Item'),
                             ),
-                            Text(
-                              'Rate (Sh.)',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            Padding(
+                              padding: EdgeInsets.all(6),
+                              child: Text('Qty'),
                             ),
-                            Text(
-                              'Amount (Sh.)',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            Padding(
+                              padding: EdgeInsets.all(6),
+                              child: Text('Rate (Sh.)'),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.all(6),
+                              child: Text('Amount (Sh.)'),
                             ),
                           ],
                         ),
-                        ...items.map((item) {
+
+                        // Items
+                        ...items.asMap().entries.map((entry) {
+                          final i = entry.key + 1;
+                          final item = entry.value;
                           return TableRow(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                child: Text(
-                                  item['name'] ?? '-',
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                padding: const EdgeInsets.all(6),
+                                child: Text('$i'),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
+                                padding: const EdgeInsets.all(6),
+                                child: Text(item['name'] ?? '-'),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(6),
                                 child: Text('${item['qty'] ?? 1}'),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
+                                padding: const EdgeInsets.all(6),
                                 child: Text(
                                   item['rate'] != null
                                       ? _parseToDouble(
@@ -145,9 +181,7 @@ class OrderDetailScreen extends StatelessWidget {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
+                                padding: const EdgeInsets.all(6),
                                 child: Text(
                                   item['amount'] != null
                                       ? _parseToDouble(
@@ -161,28 +195,28 @@ class OrderDetailScreen extends StatelessWidget {
                         }),
                       ],
                     ),
+
+                    // After the Table widget
+                    const SizedBox(height: 12),
                     const Divider(thickness: 1),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            const Text(
-                              'Grand Total: ',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              'Sh ${total.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
+                    const SizedBox(height: 8),
+
+                    // 🟢 Grand Total Row (outside the table)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Grand Total',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                      ),
+                        Text(
+                          total.toStringAsFixed(2),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

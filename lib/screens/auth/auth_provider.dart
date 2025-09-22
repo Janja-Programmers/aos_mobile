@@ -133,22 +133,17 @@ class AuthProvider with ChangeNotifier {
         return false;
       },
       (responseList) {
-        final statusCode = responseList[0] as int;
+        final statusCode = int.tryParse(responseList[0].toString()) ?? 0;
         final message = responseList[1].toString();
 
         switch (statusCode) {
           case 0:
             _registerError = message;
             return false;
-
           case 1:
-            _registerSuccess = message;
-            return true;
-
           case 2:
             _registerSuccess = message;
             return true;
-
           default:
             _registerError = "Unexpected status: $statusCode";
             return false;

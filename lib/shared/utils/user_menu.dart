@@ -61,13 +61,13 @@ List<PopupMenuEntry<String>> buildUserMenuItems(String userType) {
 Future<void> handleUserMenuSelection(BuildContext context, String value) async {
   switch (value) {
     case 'orders':
-      context.go('/past-orders');
+      context.push('/past-orders');
       break;
     case 'view_website':
       context.go('/');
       break;
     case 'settings':
-      context.go('/settings');
+      context.push('/settings');
       break;
     case 'logout':
       final authProvider = context.read<AuthProvider>();

@@ -73,7 +73,10 @@ class ProductDetailAndReviews extends StatelessWidget {
                 const Divider(thickness: 1),
 
                 // Reviews Section
-                ProductReviews(reviews: reviews),
+                ProductReviews(
+                  reviews: reviews,
+                  productName: specs.isNotEmpty ? specs.first.label : "Product",
+                ),
               ],
             ),
           ),

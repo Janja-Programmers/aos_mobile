@@ -1,23 +1,52 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/snackbar.dart';
+import '../../../widgets/rate_product.dart';
+import '../../../widgets/report_product.dart';
 import '/features/reviews/entity.dart';
 
 class ProductReviews extends StatelessWidget {
   final List<Review> reviews;
+  final String productName;
 
-  const ProductReviews({super.key, required this.reviews});
+  const ProductReviews({
+    super.key,
+    required this.reviews,
+    required this.productName,
+  });
 
   double _averageRating() {
     if (reviews.isEmpty) return 0;
-    return reviews.map((e) => e.rating).reduce((a, b) => a + b) /
+    return reviews.map((e) => e.rating.toDouble()).reduce((a, b) => a + b) /
         reviews.length;
   }
 
   Map<int, int> _ratingDistribution() {
     final dist = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
     for (final r in reviews) {
-      dist[r.rating.round()] = dist[r.rating.round()]! + 1;
+      final ratingInt = r.rating.toInt();
+      dist[ratingInt] = dist[ratingInt]! + 1;
     }
     return dist;
+  }
+
+  void _openRateDialog(BuildContext context) async {
+    final result = await showDialog(
+      context: context,
+      builder: (_) => RateProductDialog(productName: productName),
+    );
+    if (result == true) {
+      topSnackBar(context, "Review submitted successfully ✅");
+    }
+  }
+
+  void _openReportDialog(BuildContext context) async {
+    final result = await showDialog(
+      context: context,
+      builder: (_) => ReportProductDialog(productName: productName),
+    );
+    if (result == true) {
+      topSnackBar(context, "Report submitted successfully 🚨");
+    }
   }
 
   @override
@@ -30,14 +59,57 @@ class ProductReviews extends StatelessWidget {
     final dist = _ratingDistribution();
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(top: 16, bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Customer Reviews",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          // Title + Actions
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Customer Reviews",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == "review") {
+                      _openRateDialog(context);
+                    } else if (value == "report") {
+                      _openReportDialog(context);
+                    }
+                  },
+                  itemBuilder:
+                      (context) => [
+                        const PopupMenuItem(
+                          value: "review",
+                          child: Text("✍️ Review product"),
+                        ),
+                        const PopupMenuItem(
+                          value: "report",
+                          child: Text("🚩 Report product"),
+                        ),
+                      ],
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: Text(
+                      "Action",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
+
           const SizedBox(height: 12),
 
           // Average rating + star row
@@ -81,7 +153,7 @@ class ProductReviews extends StatelessWidget {
           // Rating distribution bars
           Column(
             children: List.generate(5, (i) {
-              final star = 5 - i; // show 5 down to 1
+              final star = 5 - i;
               final count = dist[star] ?? 0;
               final percent = count / reviews.length;
               return Padding(

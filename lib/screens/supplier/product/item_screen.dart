@@ -3,13 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
-import '/core/utils/snackbar.dart';
 
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/build_subtitle.dart';
-import '/shared/widgets/main_bar.dart';
-
 import '/shared/widgets/custom_button.dart';
+import '/shared/widgets/main_bar.dart';
 
 import '/features/product/provider.dart';
 
@@ -81,7 +79,7 @@ class _ItemScreenState extends State<ItemScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search),
                 hintText: 'Search products by name',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -116,7 +114,7 @@ class _ItemScreenState extends State<ItemScreen> {
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "${filteredproducts.length} of ${filteredproducts.length}",
+                          "${filteredproducts.length} of ${products.length}",
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -129,42 +127,63 @@ class _ItemScreenState extends State<ItemScreen> {
                     color: AppColors.background,
                   ),
 
-                  // List
+                  // List or empty placeholder inside the Card
                   Expanded(
-                    child: RefreshIndicator(
-                      onRefresh: () async {
-                        await context.read<ProductProvider>().fetchProducts();
-                      },
-                      child: ListView.separated(
-                        padding: EdgeInsets.zero,
-                        itemCount: filteredproducts.length,
-                        separatorBuilder:
-                            (_, _) =>
-                                const Divider(height: 0.5, thickness: 0.5),
-                        itemBuilder: (context, index) {
-                          final product = filteredproducts[index];
-                          return ProductTile(
-                            name: product.name,
-                            itemName: product.itemName,
-                            category: product.category,
-                            onDeleted: () async {
-                              await context
-                                  .read<ProductProvider>()
-                                  .fetchProducts();
-
-                              // ✅ Now it's safe to show snackbar here — from a stable context
-                              if (context.mounted) {
-                                WidgetsBinding.instance.addPostFrameCallback((
-                                  _,
-                                ) {
-                                  topSnackBar(context, 'Deleted successfully');
-                                });
-                              }
-                            },
-                          );
-                        },
-                      ),
-                    ),
+                    child:
+                        filteredproducts.isEmpty
+                            ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.search_off,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'No products match your search.',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextButton(
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() {});
+                                    },
+                                    child: const Text('Clear search'),
+                                  ),
+                                ],
+                              ),
+                            )
+                            : RefreshIndicator(
+                              onRefresh: () async {
+                                await context
+                                    .read<ProductProvider>()
+                                    .fetchProducts();
+                              },
+                              child: ListView.separated(
+                                padding: EdgeInsets.zero,
+                                itemCount: filteredproducts.length,
+                                separatorBuilder:
+                                    (_, __) => const Divider(
+                                      height: 0.5,
+                                      thickness: 0.5,
+                                    ),
+                                itemBuilder: (context, index) {
+                                  final product = filteredproducts[index];
+                                  return ProductTile(
+                                    name: product.name,
+                                    itemName: product.itemName,
+                                    category: product.category,
+                                  );
+                                },
+                              ),
+                            ),
                   ),
                 ],
               ),

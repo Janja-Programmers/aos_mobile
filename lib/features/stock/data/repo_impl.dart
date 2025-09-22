@@ -14,8 +14,9 @@ class StockEntryRepoImpl implements StockEntryRepo {
   StockEntryRepoImpl(this.remoteDS);
 
   @override
-  Future<Either<Failure, List<StockEntry>>> getAll() {
-    return remoteDS.getAll();
+  Future<Either<Failure, List<StockEntry>>> getAll() async {
+    final result = await remoteDS.getAll();
+    return result.map((list) => list.map((m) => m.toEntity()).toList());
   }
 
   @override
@@ -25,15 +26,17 @@ class StockEntryRepoImpl implements StockEntryRepo {
   }
 
   @override
-  Future<Either<Failure, void>> add(StockEntry entry) {
+  Future<Either<Failure, StockEntry>> add(StockEntry entry) async {
     final model = StockEntryModel.fromEntity(entry);
-    return remoteDS.add(model);
+    final result = await remoteDS.add(model);
+    return result.map((m) => m.toEntity());
   }
 
   @override
-  Future<Either<Failure, void>> update(StockEntry entry) {
+  Future<Either<Failure, StockEntry>> update(StockEntry entry) async {
     final model = StockEntryModel.fromEntity(entry);
-    return remoteDS.update(model);
+    final result = await remoteDS.update(model);
+    return result.map((m) => m.toEntity());
   }
 
   @override

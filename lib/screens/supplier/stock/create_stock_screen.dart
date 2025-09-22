@@ -5,13 +5,13 @@ import 'package:go_router/go_router.dart';
 import '/core/utils/snackbar.dart';
 import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/app_drawer.dart';
-import '/shared/widgets/action_button.dart';
 
 import '/features/stock/providers/create.dart';
 import '/features/stock/domain/entity/stock.dart';
 
 import 'controllers/item_row_controller.dart';
 import 'widgets/item_row.dart';
+import 'widgets/stock_action_buttons.dart';
 
 class CreateStockEntryScreen extends StatefulWidget {
   final StockEntry? entry;
@@ -34,12 +34,10 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
   void initState() {
     super.initState();
 
-    // Wait for widget tree to build before accessing context
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CreateStockEntryProvider>().clearError();
     });
 
-    // Store the provider reference safely for later use in dispose()
     _provider = context.read<CreateStockEntryProvider>();
 
     if (isEditing) {
@@ -48,24 +46,13 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
         controller.populateFromItem(item);
         _itemControllers.add(controller);
       }
-      if (_itemControllers.length > 1) {
-        _itemControllers.removeAt(0);
-      }
+      if (_itemControllers.length > 1) _itemControllers.removeAt(0);
     }
   }
 
-  void _saveDraft() => _submitEntry(docstatus: 0);
-  void _submitFinal() => _submitEntry(docstatus: 1);
-
   void _submitEntry({required int docstatus}) async {
-    // ✅ 1. Validate item controllers
-    bool allValid = true;
-    for (final ctrl in _itemControllers) {
-      if (!ctrl.validate()) allValid = false;
-    }
-    if (!allValid) return;
+    if (_itemControllers.any((ctrl) => !ctrl.validate())) return;
 
-    // ✅ 2. Validate form
     if (!_formKey.currentState!.validate()) {
       if (mounted) {
         topSnackBar(
@@ -77,7 +64,6 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
       return;
     }
 
-    // ✅ 3. Ensure at least one item
     final items =
         _itemControllers
             .map((ctrl) => ctrl.entry)
@@ -102,18 +88,8 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
     );
 
     final provider = context.read<CreateStockEntryProvider>();
+    await provider.saveOrSubmit(entry);
 
-    if (isEditing) {
-      if (docstatus == 1) {
-        await provider.submitFinal(entry);
-      } else {
-        await provider.updateDraft(entry);
-      }
-    } else {
-      await provider.createDraft(entry);
-    }
-
-    // ✅ 4. After submission, check UI still active
     if (!mounted) return;
 
     if (provider.hasError) {
@@ -122,12 +98,11 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
       final action = docstatus == 1 ? 'submitted' : 'saved';
       topSnackBar(
         context,
-        type: TopSnackType.success,
         'Stock Intake $action successfully',
+        type: TopSnackType.success,
       );
       await Future.delayed(const Duration(milliseconds: 400));
-      if (!mounted) return;
-      context.pop(true);
+      if (mounted) context.pop(true);
     }
   }
 
@@ -137,7 +112,6 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
       ctrl.dispose();
     }
 
-    // Defer the notifyListeners() call to avoid setState conflict
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _provider.reset();
     });
@@ -156,12 +130,31 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
 
+      /// ✅ Top action button
+      actionButton: StockActionButton(
+        label:
+            isEditing && provider.data?.docstatus == 0
+                ? 'Submit'
+                : 'Save Draft',
+        onPressed:
+            provider.loading
+                ? null
+                : () {
+                  if (isEditing && provider.data?.docstatus == 0) {
+                    _submitEntry(docstatus: 1);
+                  } else {
+                    _submitEntry(docstatus: 0);
+                  }
+                },
+        isLoading: provider.loading,
+      ),
+
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // ✅ Item rows
+            // Item rows
             ..._itemControllers.asMap().entries.map((entry) {
               final index = entry.key;
               final ctrl = entry.value;
@@ -196,8 +189,9 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
 
             const SizedBox(height: 16),
 
-            // ✅ Add another row button
-            OutlinedButton.icon(
+            // Add another row button
+            StockActionButton(
+              label: 'Add Another Entry',
               onPressed: () {
                 final usedCodes =
                     _itemControllers
@@ -214,47 +208,10 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
 
                 setState(() => _itemControllers.add(ItemRowController()));
               },
-              icon: const Icon(Icons.add),
-              label: const Text('Add Another Entry'),
             ),
-
-            const SizedBox(height: 12),
-            const Divider(),
-            const SizedBox(height: 12),
-
-            // ✅ Actions
-            SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: provider.loading ? null : _saveDraft,
-                      child: const Text('Save Draft'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ActionButton(
-                      label: provider.loading ? 'Submitting...' : 'Submit',
-                      isLoading: provider.loading,
-                      onPressed: _submitFinal,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            if (provider.failure != null) ...[
-              const SizedBox(height: 16),
-              const Text(
-                "Unable to create entry",
-                style: TextStyle(color: Colors.red),
-              ),
-            ],
           ],
         ),
       ),
-
       scaffoldKey: scaffoldKey,
     );
   }

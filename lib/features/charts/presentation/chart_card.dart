@@ -4,8 +4,54 @@ import 'package:fl_chart/fl_chart.dart';
 
 import 'provider.dart';
 
-class SalesChartCard extends StatelessWidget {
+class SalesChartCard extends StatefulWidget {
   const SalesChartCard({super.key});
+
+  @override
+  State<SalesChartCard> createState() => _SalesChartCardState();
+}
+
+class _SalesChartCardState extends State<SalesChartCard> {
+  double _minFilterValue = 0;
+
+  void _showFilterDialog(SalesChartProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        double tempFilter = _minFilterValue;
+        return AlertDialog(
+          title: const Text('Filter Minimum Sales'),
+          content: Slider(
+            min: 0,
+            max: provider.chart!.values.reduce((a, b) => a > b ? a : b),
+            divisions: 20,
+            value: tempFilter,
+            label: tempFilter.toStringAsFixed(0),
+            onChanged: (val) {
+              setState(() {
+                tempFilter = val;
+              });
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _minFilterValue = tempFilter;
+                });
+                Navigator.pop(context);
+              },
+              child: const Text('Apply'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +73,7 @@ class SalesChartCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            "Error:Can't load chart",
+            "Error: Can't load chart",
             style: const TextStyle(color: Colors.red),
           ),
         ),
@@ -36,6 +82,16 @@ class SalesChartCard extends StatelessWidget {
 
     if (chart == null) {
       return const SizedBox.shrink();
+    }
+
+    // Apply filter
+    final filteredLabels = <String>[];
+    final filteredValues = <double>[];
+    for (int i = 0; i < chart.values.length; i++) {
+      if (chart.values[i] >= _minFilterValue) {
+        filteredLabels.add(chart.labels[i]);
+        filteredValues.add(chart.values[i]);
+      }
     }
 
     return Card(
@@ -47,9 +103,19 @@ class SalesChartCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Sales Summary Chart',
-              style: Theme.of(context).textTheme.titleMedium,
+            // Title with filter icon
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Item-wise Sales',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.filter_alt),
+                  onPressed: () => _showFilterDialog(provider),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             AspectRatio(
@@ -59,17 +125,21 @@ class SalesChartCard extends StatelessWidget {
                   alignment: BarChartAlignment.spaceAround,
                   barTouchData: BarTouchData(enabled: true),
                   titlesData: FlTitlesData(
+                    show: true,
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
                           final index = value.toInt();
-                          return index < chart.labels.length
+                          return index < filteredLabels.length
                               ? SideTitleWidget(
                                 meta: meta,
-                                child: Text(
-                                  chart.labels[index],
-                                  style: const TextStyle(fontSize: 10),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    filteredLabels[index],
+                                    style: const TextStyle(fontSize: 10),
+                                  ),
                                 ),
                               )
                               : const SizedBox.shrink();
@@ -77,16 +147,34 @@ class SalesChartCard extends StatelessWidget {
                       ),
                     ),
                     leftTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: true),
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 50,
+                        getTitlesWidget: (value, meta) {
+                          return SideTitleWidget(
+                            meta: meta,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                value.toInt().toString(),
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    rightTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
                     ),
                   ),
                   borderData: FlBorderData(show: false),
-                  barGroups: List.generate(chart.values.length, (i) {
+                  barGroups: List.generate(filteredValues.length, (i) {
                     return BarChartGroupData(
                       x: i,
                       barRods: [
                         BarChartRodData(
-                          toY: chart.values[i],
+                          toY: filteredValues[i],
                           width: 18,
                           color: Colors.blueAccent,
                           borderRadius: BorderRadius.circular(6),

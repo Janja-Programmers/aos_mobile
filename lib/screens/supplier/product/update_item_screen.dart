@@ -90,8 +90,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                           } else {
                             topSnackBar(
                               context,
-                              controller.provider.error ??
-                                  'Error saving product',
+                              'Error saving product',
                               type: TopSnackType.error,
                             );
                           }

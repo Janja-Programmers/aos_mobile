@@ -1,8 +1,8 @@
 import 'package:go_router/go_router.dart';
 
 // Auth
-import '../../screens/settings/privacy.dart';
-import '../../screens/settings/tac.dart';
+import '/screens/settings/privacy.dart';
+import '/screens/settings/tac.dart';
 import '/screens/auth/auth_provider.dart';
 import '/screens/auth/screens/login_screen.dart';
 import '/screens/auth/screens/register_screen.dart';
@@ -102,6 +102,11 @@ class AppRouter {
       ),
 
       // SALES ORDER ROUTES
+      GoRoute(
+        path: '/create-stock-entry',
+        builder: (context, state) => const CreateStockEntryScreen(),
+      ),
+
       // Sales Order List
       GoRoute(
         path: '/sales-orders',

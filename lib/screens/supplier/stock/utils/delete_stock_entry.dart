@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '/core/utils/snackbar.dart';
 import 'package:provider/provider.dart';
 
 import '/features/stock/providers/delete.dart';
 
-Future<void> deleteStockEntry(BuildContext context, String id) async {
+Future<bool?> deleteStockEntry(BuildContext context, String id) async {
   final confirmed = await showDialog<bool>(
     context: context,
     builder:
@@ -13,23 +14,23 @@ Future<void> deleteStockEntry(BuildContext context, String id) async {
           content: const Text('Are you sure you want to delete this entry?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => context.pop(false),
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => context.pop(true),
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
             ),
           ],
         ),
   );
 
-  if (confirmed != true) return;
+  if (confirmed != true) return false;
 
   final deleteProvider = context.read<DeleteStockEntryProvider>();
   await deleteProvider.deleteEntry(id);
 
-  if (!context.mounted) return;
+  if (!context.mounted) return false;
 
   if (deleteProvider.failure != null) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -38,14 +39,14 @@ Future<void> deleteStockEntry(BuildContext context, String id) async {
         backgroundColor: Colors.red,
       ),
     );
+    return false;
   } else {
-    // Show success message
     topSnackBar(
       context,
       'Stock entry deleted successfully.',
       type: TopSnackType.info,
     );
-    // Go back and signal success to previous screen
-    Navigator.pop(context, true);
+    context.pop(true);
+    return true;
   }
 }

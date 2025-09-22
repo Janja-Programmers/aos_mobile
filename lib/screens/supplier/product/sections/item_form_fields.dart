@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../widgets/web_spec_table.dart';
-import '/features/product/domain/product.dart';
 import '/core/utils/validators.dart';
+import '/features/product/domain/product.dart';
+import '/shared/widgets/form_fields.dart';
 
 import '../controllers/add_item_controller.dart';
+import '../widgets/web_spec_table.dart';
 
-import '/shared/widgets/form_fields.dart';
 import 'image_video_picker.dart';
 
 class ItemFormFields extends StatefulWidget {
@@ -33,7 +33,7 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
-    final isUpdate = widget.isUpdate;
+    // final isUpdate = widget.isUpdate;
 
     return Form(
       key: widget.formKey,
@@ -41,14 +41,12 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Only show Item Code in update mode
-          if (isUpdate) ...[
-            const Divider(),
-            AppTextField(
-              label: 'Item Code',
-              controller: controller.itemCodeController,
-              readOnly: true,
-            ),
-          ],
+          // if (isUpdate) ...[
+          //  SizedBox.shrink(
+          //    child: AppTextField(
+          //    controller: controller.itemCodeController,
+          //  ),
+          //),
           const SizedBox(height: 10),
 
           // 🔷 Item Name
@@ -56,6 +54,7 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
             label: 'Item Name',
             controller: controller.nameController,
             isRequired: true,
+            maxLength: 100,
             validator:
                 (val) => AppValidator.required(val, fieldName: 'Item Name'),
           ),
@@ -65,6 +64,7 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
           AppTextField(
             label: 'Item Price',
             controller: controller.priceController,
+            maxLength: 10,
             isRequired: true,
             keyboardType: TextInputType.number,
             validator:
@@ -156,6 +156,8 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
                   label: 'Website Description',
                   controller: controller.descController,
                   maxLines: 6,
+                  maxLength: 1000, // prevents unbounded input
+                  keyboardType: TextInputType.multiline,
                 )
               else
                 Container(

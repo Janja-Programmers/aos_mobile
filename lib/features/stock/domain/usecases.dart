@@ -26,7 +26,8 @@ class AddStockEntry {
   final StockEntryRepo repo;
   AddStockEntry(this.repo);
 
-  Future<Either<Failure, void>> call(StockEntry entry) {
+  /// Returns the newly created StockEntry (with ID from backend)
+  Future<Either<Failure, StockEntry>> call(StockEntry entry) {
     return repo.add(entry);
   }
 }
@@ -35,7 +36,8 @@ class UpdateStockEntry {
   final StockEntryRepo repo;
   UpdateStockEntry(this.repo);
 
-  Future<Either<Failure, void>> call(StockEntry entry) {
+  /// Returns the updated StockEntry (with docstatus, timestamps, etc.)
+  Future<Either<Failure, StockEntry>> call(StockEntry entry) {
     return repo.update(entry);
   }
 }

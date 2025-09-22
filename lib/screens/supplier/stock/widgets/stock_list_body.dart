@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '/core/constants/colors.dart';
 import 'package:provider/provider.dart';
 
+import '/core/constants/colors.dart';
 import '/features/stock/providers/all.dart';
+
 import '../utils/failure_display.dart';
 import 'stock_list_tile.dart';
 
@@ -39,26 +40,11 @@ class StockListBody extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.inbox_outlined,
-                        size: 64,
-                        color: Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 16),
                       Text(
                         'No stock entries found',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleMedium?.copyWith(
-                          color: Colors.grey.shade600,
+                        style: TextStyle(
+                          color: Colors.black,
                           fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Pull down to refresh or try again later.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade500,
                         ),
                       ),
                     ],
@@ -83,7 +69,6 @@ class StockListBody extends StatelessWidget {
                       return StockListTile(
                         id: entry.id,
                         docstatus: entry.docstatus,
-                        date: entry.modified!.toIso8601String(),
                       );
                     },
                   ),

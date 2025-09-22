@@ -119,31 +119,38 @@ class _ProductTileState extends State<ProductTile> {
                             ),
                       );
 
-                      if (confirm == true && mounted) {
-                        setState(() => _isLoading = true);
+                      if (confirm != true || !mounted) return;
 
-                        try {
-                          await context.read<ProductProvider>().deleteProduct(
-                            widget.name,
+                      setState(() => _isLoading = true);
+
+                      try {
+                        await context.read<ProductProvider>().deleteProduct(
+                          widget.name,
+                        );
+
+                        // ✅ Show snackbar immediately after successful deletion
+                        if (mounted) {
+                          topSnackBar(
+                            context,
+                            'Deleted successfully',
+                            type: TopSnackType.success,
                           );
-                          if (context.mounted) {
-                            await context
-                                .read<ProductProvider>()
-                                .fetchProducts();
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            topSnackBar(
-                              context,
-                              'Error: Unable to delete product',
-                              type: TopSnackType.error,
-                            );
-                          }
-                        } finally {
-                          if (mounted) {
-                            setState(() => _isLoading = false);
-                          }
                         }
+
+                        // Refresh list after showing snackbar
+                        if (mounted) {
+                          await context.read<ProductProvider>().fetchProducts();
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          topSnackBar(
+                            context,
+                            'Error: Unable to delete product',
+                            type: TopSnackType.error,
+                          );
+                        }
+                      } finally {
+                        if (mounted) setState(() => _isLoading = false);
                       }
                     },
           ),

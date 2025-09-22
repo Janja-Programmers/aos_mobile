@@ -5,6 +5,8 @@ import '/core/utils/api_client.dart';
 
 import '../controllers/item_row_controller.dart';
 
+import 'item_dropdown_field.dart';
+
 class ItemRow extends StatefulWidget {
   final ItemRowController controller;
   final VoidCallback? onRemove;
@@ -66,62 +68,15 @@ class _ItemRowState extends State<ItemRow> {
       key: widget.controller.formKey,
       child: Column(
         children: [
-          DropdownButtonFormField<String>(
-            value: currentCode.isEmpty ? null : currentCode,
-            items:
-                availableCodes.map((code) {
-                  return DropdownMenuItem<String>(
-                    value: code,
-                    child: SizedBox(
-                      height: 48,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            _itemsMap[code] ?? '',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            code,
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-
-            selectedItemBuilder: (context) {
-              return availableCodes.map((code) {
-                return Text(
-                  _itemsMap[code] ?? '',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                );
-              }).toList();
-            },
-
-            onChanged:
-                availableCodes.isEmpty
-                    ? null // 🔒 Disable the dropdown
-                    : (val) {
-                      widget.controller.itemCode.text = val!;
-                      widget.controller.itemName.text = _itemsMap[val] ?? '';
-                    },
-
-            decoration: InputDecoration(
-              labelText: 'Item Code',
-              hintText: availableCodes.isEmpty ? 'All items selected' : null,
-            ),
-
-            validator: (val) {
-              if (availableCodes.isEmpty) {
-                return null; // No items left to select
-              }
-              return val == null || val.isEmpty ? 'Required' : null;
+          ItemDropdownField(
+            currentCode: currentCode,
+            itemsMap: _itemsMap,
+            availableCodes: availableCodes,
+            onChanged: (val) {
+              widget.controller.itemCode.text = val!;
+              widget.controller.itemName.text = _itemsMap[val] ?? '';
             },
           ),
-
           const SizedBox(height: 10),
 
           TextFormField(

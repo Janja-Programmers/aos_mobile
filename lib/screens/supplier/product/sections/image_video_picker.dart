@@ -75,6 +75,35 @@ class ImageVideoPickerSection extends StatelessWidget {
                                 ? null
                                 : () =>
                                     controller.pickFile(context, isImage: true),
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.resolveWith<
+                            Color
+                          >((states) {
+                            if (states.contains(MaterialState.disabled)) {
+                              return Colors
+                                  .grey[600]!; // slightly lighter for disabled
+                            } else if (states.contains(MaterialState.pressed)) {
+                              return Colors.grey[900]!; // darker on press
+                            } else if (states.contains(MaterialState.hovered)) {
+                              return Colors.grey[700]!; // lighter on hover
+                            }
+                            return Colors.grey[800]!; // default
+                          }),
+                          foregroundColor: MaterialStateProperty.all(
+                            Colors.white,
+                          ),
+                          padding: MaterialStateProperty.all(
+                            const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                          ),
+                          shape: MaterialStateProperty.all(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -119,6 +148,34 @@ class ImageVideoPickerSection extends StatelessWidget {
                                   context,
                                   isImage: false,
                                 ),
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.resolveWith<
+                            Color
+                          >((states) {
+                            if (states.contains(MaterialState.disabled)) {
+                              return Colors.grey[600]!;
+                            } else if (states.contains(MaterialState.pressed)) {
+                              return Colors.grey[900]!;
+                            } else if (states.contains(MaterialState.hovered)) {
+                              return Colors.grey[700]!;
+                            }
+                            return Colors.grey[800]!;
+                          }),
+                          foregroundColor: MaterialStateProperty.all(
+                            Colors.white,
+                          ),
+                          padding: MaterialStateProperty.all(
+                            const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                          ),
+                          shape: MaterialStateProperty.all(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

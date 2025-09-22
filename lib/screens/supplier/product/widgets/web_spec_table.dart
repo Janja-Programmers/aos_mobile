@@ -69,10 +69,30 @@ class WebsiteSpecificationsTable extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: controller.addSpecificationFromNewRow,
-                icon: const Icon(Icons.add, size: 18, color: Colors.black),
+                icon: const Icon(Icons.add, size: 18, color: Colors.white),
                 label: const Text(
                   'Add Row',
-                  style: TextStyle(color: Colors.black),
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.resolveWith<Color>((
+                    states,
+                  ) {
+                    if (states.contains(MaterialState.pressed)) {
+                      return Colors.grey[900]!;
+                    } else if (states.contains(MaterialState.hovered)) {
+                      return Colors.grey[700]!;
+                    }
+                    return Colors.grey[800]!;
+                  }),
+                  padding: MaterialStateProperty.all(
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                  shape: MaterialStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
               ),
             ),

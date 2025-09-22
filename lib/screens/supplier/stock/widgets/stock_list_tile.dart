@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
 import '/core/utils/snackbar.dart';
 
 import '/features/stock/providers/all.dart';
@@ -8,87 +9,116 @@ import '/features/stock/providers/create.dart';
 
 import '/shared/widgets/docstatus_chip.dart';
 
+import '../utils/delete_stock_entry.dart';
+
 class StockListTile extends StatelessWidget {
   final String id;
   final int docstatus;
-  final String date;
 
-  const StockListTile({
-    super.key,
-    required this.id,
-    required this.docstatus,
-    required this.date,
-  });
+  const StockListTile({super.key, required this.id, required this.docstatus});
+
+  Future<void> _navigateToEntryDetail(
+    BuildContext context,
+    String id,
+    int docstatus,
+  ) async {
+    if (docstatus == 0) {
+      // Draft → open edit
+      final provider = context.read<CreateStockEntryProvider>();
+      final entry = await provider.getById(id);
+
+      if (context.mounted && entry != null) {
+        final result = await context.push('/stock/edit', extra: entry);
+        if (result == true && context.mounted) {
+          context.read<StockEntryProvider>().fetchAll();
+        }
+      } else {
+        topSnackBar(context, 'Could not load draft.', type: TopSnackType.error);
+      }
+    } else {
+      // Submitted or cancelled → detail page
+      final result = await context.push('/stock-entry/$id');
+      if (result == true && context.mounted) {
+        context.read<StockEntryProvider>().fetchAll();
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    void navigateToEntryDetail(
-      BuildContext context,
-      String id,
-      int docstatus,
-    ) async {
-      if (docstatus == 0) {
-        final provider = context.read<CreateStockEntryProvider>();
-        final entry = await provider.getById(id);
-
-        if (context.mounted && entry != null) {
-          final result = await context.push('/stock/edit', extra: entry);
-          if (result == true && context.mounted) {
-            context.read<StockEntryProvider>().fetchAll();
-          }
-        } else {
-          topSnackBar(
-            context,
-            'Could not load draft.',
-            type: TopSnackType.error,
-          );
-        }
-      } else {
-        final result = await context.push('/stock-entry/$id');
-        if (result == true && context.mounted) {
-          context.read<StockEntryProvider>().fetchAll();
-        }
-      }
-    }
-
     return InkWell(
-      onTap: () => navigateToEntryDetail(context, id, docstatus),
-      borderRadius: BorderRadius.circular(4),
-      splashColor: theme.colorScheme.primary.withOpacity(0.1),
+      onTap: () => _navigateToEntryDetail(context, id, docstatus),
+      borderRadius: BorderRadius.circular(6),
+      splashColor: theme.colorScheme.primary.withOpacity(0.08),
       highlightColor: Colors.transparent,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Left column: ID + date
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    id,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.primary,
-                      decoration: TextDecoration.underline,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    date,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
+            // Left: ID
+            Text(
+              id,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                overflow: TextOverflow.ellipsis,
+                decoration: TextDecoration.underline,
               ),
             ),
-            const SizedBox(width: 12),
-            DocstatusChip(docstatus: docstatus),
+
+            // Middle: Docstatus
+            Expanded(
+              flex: 2,
+              child: Align(
+                alignment: Alignment.center,
+                child: DocstatusChip(docstatus: docstatus),
+              ),
+            ),
+
+            // Right: Actions
+            Expanded(
+              flex: 2,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (docstatus == 0) // Draft → edit
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        tooltip: 'Edit Draft',
+                        onPressed:
+                            () =>
+                                _navigateToEntryDetail(context, id, docstatus),
+                      ),
+                    if (docstatus == 1) // Submitted → view
+                      IconButton(
+                        icon: const Icon(
+                          Icons.remove_red_eye,
+                          color: Colors.green,
+                        ),
+                        tooltip: 'View',
+                        onPressed:
+                            () =>
+                                _navigateToEntryDetail(context, id, docstatus),
+                      ),
+                    if (docstatus == 2) // Cancelled → delete
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        tooltip: 'Delete',
+                        onPressed: () async {
+                          final success = await deleteStockEntry(context, id);
+                          if (success == true) {
+                            // Refresh list after deletion
+                            context.read<StockEntryProvider>().fetchAll();
+                          }
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

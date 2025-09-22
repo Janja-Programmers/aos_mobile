@@ -5,6 +5,7 @@ class AppTextField extends StatelessWidget {
   final TextEditingController controller;
   final bool isRequired;
   final int maxLines;
+  final int? maxLength;
   final TextInputType keyboardType;
   final bool readOnly;
   final void Function(String)? onChanged;
@@ -16,6 +17,7 @@ class AppTextField extends StatelessWidget {
     required this.controller,
     this.isRequired = false,
     this.maxLines = 1,
+    this.maxLength, // new
     this.keyboardType = TextInputType.text,
     this.readOnly = false,
     this.onChanged,
@@ -28,6 +30,7 @@ class AppTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      maxLength: maxLength,
       readOnly: readOnly,
       onChanged: readOnly ? null : onChanged,
       decoration: InputDecoration(

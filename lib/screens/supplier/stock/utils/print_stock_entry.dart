@@ -5,8 +5,10 @@ import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '/core/utils/formatters.dart';
-import '../../../auth/auth_provider.dart';
+
 import '/features/stock/domain/entity/stock.dart';
+
+import '/screens//auth/auth_provider.dart';
 
 Future<void> printStockIntake(BuildContext context, StockEntry entry) async {
   final username = context.read<AuthProvider>().user!.username;

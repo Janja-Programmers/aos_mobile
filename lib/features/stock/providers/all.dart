@@ -13,16 +13,6 @@ class StockEntryProvider with ChangeNotifier, AsyncState<List<StockEntry>> {
 
   List<StockEntry> get entries => data ?? [];
 
-  // Future<void> fetchAll() async {
-  //   if (loading) return;
-
-  //   setLoading();
-
-  //   final result = await _getAll();
-
-  //   result.fold(setFailure, setSuccess);
-  // }
-
   Future<void> fetchAll() async {
     if (loading) return;
 
@@ -38,9 +28,7 @@ class StockEntryProvider with ChangeNotifier, AsyncState<List<StockEntry>> {
       (entries) {
         appLogger.i('Fetched ${entries.length} stock entries:');
         for (final entry in entries) {
-          appLogger.i(
-            entry.toString(),
-          ); // Ensure StockEntry has a good toString()
+          appLogger.i(entry.toString());
         }
         setSuccess(entries);
       },

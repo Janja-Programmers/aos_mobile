@@ -52,16 +52,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Logo
-                  Image.asset('assets/logo_transparent.png', height: 60),
-                  const SizedBox(height: 10),
-
-                  const Text(
-                    'Create an account for Africa Online Stores',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
+                  Row(
+                    children: [
+                      // Logo
+                      Image.asset('assets/logo_transparent.png', height: 60),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Create an account for',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const Text(
+                        'Africa Online Stores',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
 
                   CustomTextField(
                     controller: userCtrl,

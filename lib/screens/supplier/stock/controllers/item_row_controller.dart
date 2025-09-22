@@ -27,8 +27,8 @@ class ItemRowController {
   void populateFromItem(StockEntryItem item) {
     itemCode.text = item.itemCode;
     itemName.text = item.itemName;
-    qty.text = item.qty.toString();
-    valuationRate.text = item.valuationRate.toString();
+    qty.text = item.qty.toStringAsFixed(2);
+    valuationRate.text = item.valuationRate.toStringAsFixed(2);
   }
 
   bool validate() => formKey.currentState?.validate() ?? false;

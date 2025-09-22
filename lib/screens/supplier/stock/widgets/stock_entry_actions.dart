@@ -4,8 +4,6 @@ class StockEntryActions extends StatelessWidget {
   final int? docstatus;
   final VoidCallback? onSubmit;
   final VoidCallback? onCancel;
-  final VoidCallback? onReload;
-  final VoidCallback? onPrint;
   final VoidCallback? onDelete;
 
   const StockEntryActions({
@@ -13,72 +11,37 @@ class StockEntryActions extends StatelessWidget {
     this.docstatus,
     this.onSubmit,
     this.onCancel,
-    this.onReload,
-    this.onPrint,
     this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    final items = <_MenuItem>[
-      if (onSubmit != null && docstatus == DocStatus.draft)
-        _MenuItem('submit', 'Submit', Colors.green),
+    if (docstatus == DocStatus.draft && onSubmit != null) {
+      return IconButton(
+        icon: const Icon(Icons.check_circle, color: Colors.green),
+        tooltip: 'Submit',
+        onPressed: onSubmit,
+      );
+    }
 
-      if (onCancel != null && docstatus == DocStatus.submitted)
-        _MenuItem('cancel', 'Cancel', Colors.red),
+    if (docstatus == DocStatus.submitted && onCancel != null) {
+      return IconButton(
+        icon: const Icon(Icons.cancel, color: Colors.red),
+        tooltip: 'Cancel',
+        onPressed: onCancel,
+      );
+    }
 
-      if (onReload != null) _MenuItem('reload', 'Reload', Colors.blue),
+    if (docstatus == DocStatus.cancelled && onDelete != null) {
+      return IconButton(
+        icon: const Icon(Icons.delete, color: Colors.red),
+        tooltip: 'Delete',
+        onPressed: onDelete,
+      );
+    }
 
-      if (onPrint != null && docstatus == DocStatus.submitted)
-        _MenuItem('print', 'Print', Colors.orange),
-
-      if (onDelete != null && docstatus == DocStatus.cancelled)
-        _MenuItem('delete', 'Delete', Colors.red),
-    ];
-
-    if (items.isEmpty) return const SizedBox.shrink();
-
-    return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_vert),
-      onSelected: (value) {
-        switch (value) {
-          case 'submit':
-            onSubmit?.call();
-            break;
-          case 'cancel':
-            onCancel?.call();
-            break;
-          case 'reload':
-            onReload?.call();
-            break;
-          case 'print':
-            onPrint?.call();
-            break;
-          case 'delete':
-            onDelete?.call();
-            break;
-        }
-      },
-      itemBuilder: (context) {
-        return items
-            .map(
-              (item) => PopupMenuItem<String>(
-                value: item.value,
-                child: Text(item.label, style: TextStyle(color: item.color)),
-              ),
-            )
-            .toList();
-      },
-    );
+    return const SizedBox.shrink();
   }
-}
-
-class _MenuItem {
-  final String value;
-  final String label;
-  final Color color;
-
-  _MenuItem(this.value, this.label, this.color);
 }
 
 class DocStatus {

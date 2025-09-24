@@ -28,4 +28,5 @@ class AppColors {
   static const Color overlay = Color(0x80000000); // Semi-transparent black
   static const Color accent = Colors.pinkAccent;
   static const Color divider = Colors.grey;
+  static const Color greyButton = Color(0xFFF1F3F8);
 }

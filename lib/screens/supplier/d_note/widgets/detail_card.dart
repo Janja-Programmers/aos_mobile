@@ -14,8 +14,8 @@ class DetailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color statusColor = Colors.grey.shade300;
-    Color statusTextColor = Colors.grey.shade700;
+    Color statusColor = Colors.grey.shade200;
+    Color statusTextColor = Colors.grey.shade800;
 
     switch (status.toLowerCase()) {
       case 'completed':
@@ -33,29 +33,18 @@ class DetailCard extends StatelessWidget {
     }
 
     return Card(
+      margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 1.5,
+      elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            const Icon(
-              Icons.local_shipping_outlined,
-              size: 28,
-              color: Colors.blueGrey,
-            ),
-            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text(title, style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,

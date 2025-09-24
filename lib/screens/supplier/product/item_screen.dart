@@ -36,6 +36,10 @@ class _ItemScreenState extends State<ItemScreen> {
     });
   }
 
+  Future<void> _refresh() async {
+    await context.read<ProductProvider>().fetchProducts();
+  }
+
   @override
   void dispose() {
     _itemNameController.dispose();
@@ -63,19 +67,24 @@ class _ItemScreenState extends State<ItemScreen> {
       content = const Center(child: CircularProgressIndicator());
     } else if (productProvider.error != null) {
       content = Center(
-        child: Text(
-          'Error: ${productProvider.error}',
-          style: const TextStyle(color: Colors.red),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Error: Could not load products',
+              style: TextStyle(color: Colors.red),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              onPressed: _refresh,
+            ),
+          ],
         ),
       );
     } else if (productProvider.products.isEmpty) {
-      content = Center(
-        child: Text(
-          'No products found.',
-          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          textAlign: TextAlign.center,
-        ),
-      );
+      content = EmptyState(message: 'No products found');
     } else {
       content = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +165,7 @@ class _ItemScreenState extends State<ItemScreen> {
                                 padding: EdgeInsets.zero,
                                 itemCount: filteredproducts.length,
                                 separatorBuilder:
-                                    (_, __) => const Divider(
+                                    (_, _) => const Divider(
                                       height: 0.5,
                                       thickness: 0.5,
                                     ),

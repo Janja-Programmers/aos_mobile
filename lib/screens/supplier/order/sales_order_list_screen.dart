@@ -1,13 +1,11 @@
+import 'package:africaonlinestores/shared/widgets/empty_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
-
 import '/features/order/prov.dart';
-
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
-
 import 'widgets/so_card_row.dart';
 
 class SalesOrderListScreen extends StatefulWidget {
@@ -42,14 +40,15 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
   @override
   Widget build(BuildContext context) {
     return MainBarScaffold(
-      drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
+      drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
       subTitle: const Text(
-        'Sales Order',
+        'Sales Orders',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
       body: Consumer<SalesOrderProvider>(
         builder: (context, provider, _) {
+          // Loading state
           if (provider.listLoading) {
             return const Center(
               child: SizedBox(
@@ -60,6 +59,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
             );
           }
 
+          // Failure state
           if (provider.failure != null) {
             return Center(
               child: Column(
@@ -80,11 +80,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
             );
           }
 
-          if (provider.orders.isEmpty) {
-            return const Center(child: Text('No orders found.'));
-          }
-
-          // 🔍 Filter by search
+          // Filter by search
           final query = _searchController.text.trim().toLowerCase();
           final filteredOrders =
               provider.orders.where((order) {
@@ -94,73 +90,105 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
                     order.id.toLowerCase().contains(query);
               }).toList();
 
+          // No orders at all
+          if (provider.orders.isEmpty) {
+            return const Center(child: Text('No sales orders found.'));
+          }
+
           return RefreshIndicator(
             onRefresh: _refresh,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-              child: Column(
-                children: [
-                  // 🔍 Search bar
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.search),
-                        hintText: 'Search by customer, status, or order ID',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
-                        ),
-                        fillColor: Colors.white,
-                        filled: true,
+            child: Column(
+              children: [
+                // Search bar
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      hintText: 'Search by customer, ID, or status',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
                       ),
-                      onChanged: (_) => setState(() {}),
+                      fillColor: Colors.white,
+                      filled: true,
                     ),
+                    onChanged: (_) => setState(() {}),
                   ),
+                ),
 
-                  // Orders list
-                  Card(
+                // Card with list
+                Expanded(
+                  child: Card(
+                    margin: const EdgeInsets.all(10),
+                    elevation: 2,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    color: Colors.white,
-                    elevation: 2,
                     child: Column(
-                      children:
-                          filteredOrders.isEmpty
-                              ? [
-                                Padding(
-                                  padding: const EdgeInsets.all(24.0),
-
-                                  child: Text(
-                                    "No sales orders match your search.",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey[600],
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header with count
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Sales Orders",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "${filteredOrders.length} of ${provider.orders.length}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              ]
-                              : filteredOrders
-                                  .map(
-                                    (order) => Column(
-                                      children: [
-                                        SalesOrderCardRow(order: order),
-                                        const Divider(
-                                          height: 2,
-                                          color: AppColors.background,
-                                        ),
-                                      ],
-                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const Divider(
+                          height: 0,
+                          thickness: 1.2,
+                          color: AppColors.background,
+                        ),
+
+                        // List
+                        Expanded(
+                          child:
+                              filteredOrders.isEmpty
+                                  ? EmptyState(
+                                    message:
+                                        'No sales orders match your search.',
+                                    actionLabel: 'Clear search',
+                                    onAction: () {
+                                      _searchController.clear();
+                                      setState(() {});
+                                    },
                                   )
-                                  .toList(),
+                                  : ListView.separated(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    padding: EdgeInsets.zero,
+                                    itemCount: filteredOrders.length,
+                                    separatorBuilder:
+                                        (_, _) => const Divider(
+                                          height: 0.5,
+                                          thickness: 0.5,
+                                        ),
+                                    itemBuilder: (_, i) {
+                                      final order = filteredOrders[i];
+                                      return SalesOrderCardRow(order: order);
+                                    },
+                                  ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },

@@ -9,6 +9,7 @@ import 'model.dart';
 
 class DeliveryNoteRemoteDS {
   final APIClient _client;
+  static const getDeliveryNote = ApiRoutes.deliveryNote;
 
   DeliveryNoteRemoteDS(this._client);
 
@@ -40,8 +41,9 @@ class DeliveryNoteRemoteDS {
   /// 2️⃣ Fetch a full record by ID
   Future<Either<Failure, DeliveryNoteModel>> getById(String id) async {
     try {
-      final res = await _client.client.get('${ApiRoutes.deliver}/$id');
-      return Right(DeliveryNoteModel.fromJson(res.data['data']));
+      final res = await _client.client.get('$getDeliveryNote/$id');
+      final model = DeliveryNoteModel.fromJson(res.data['data']);
+      return Right(model);
     } catch (e) {
       return Left(handleException(e));
     }

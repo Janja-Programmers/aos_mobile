@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/core/utils/snackbar.dart';
-
 import '/features/d_note/prov.dart';
 
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
-
-import 'utils/print_note.dart';
+import '/shared/widgets/empty_state.dart';
 
 import 'widgets/detail_card.dart';
 import 'widgets/item_card.dart';
+import 'utils/print_note.dart';
 
 class DeliveryNoteDetailScreen extends StatefulWidget {
   final String noteId;
@@ -36,36 +35,34 @@ class _DeliveryNoteDetailScreenState extends State<DeliveryNoteDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<DeliveryNoteProvider>();
+    final note = provider.selectedNote;
 
-    if (provider.loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    Widget body;
 
-    if (provider.failure != null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    if (provider.detailLoading) {
+      body = const Center(
+        child: SizedBox(
+          width: 32,
+          height: 32,
+          child: CircularProgressIndicator(strokeWidth: 2.5),
+        ),
+      );
+    } else if (note == null) {
+      body = const EmptyState(message: "Error: Delivery note not found");
+    } else {
+      body = Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: ListView(
           children: [
-            Text(
-              "Error: ${provider.failure!.message}",
-              style: const TextStyle(color: Colors.red),
+            DetailCard(
+              title: note.customerName,
+              subtitle: note.id,
+              status: note.status,
             ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-              onPressed: () {
-                provider.fetchById(widget.noteId);
-              },
-            ),
+            ItemsCard(note: note),
           ],
         ),
       );
-    }
-
-    final note = provider.selectedNote;
-    if (note == null) {
-      return const Center(child: Text("Delivery note not found"));
     }
 
     return MainBarScaffold(
@@ -75,29 +72,20 @@ class _DeliveryNoteDetailScreenState extends State<DeliveryNoteDetailScreen> {
         'Delivery Note',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      actionButton: IconButton(
-        icon: const Icon(Icons.print),
-        onPressed: () async {
-          topSnackBar(context, 'Printing...');
-          await printDeliveryNote(note);
-        },
-      ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            DetailCard(
-              title: note.customerName,
-              subtitle: note.id,
-              status: note.status,
-            ),
-
-            const SizedBox(height: 16),
-            ItemsCard(note: note),
-          ],
-        ),
-      ),
+      actionButton: null,
+      body: body,
+      floatingActionButton:
+          note != null
+              ? FloatingActionButton(
+                backgroundColor: Colors.grey.shade900,
+                foregroundColor: Colors.white,
+                child: const Icon(Icons.print),
+                onPressed: () async {
+                  topSnackBar(context, '🖨️ Printing...');
+                  await printDeliveryNote(note);
+                },
+              )
+              : null,
     );
   }
 }

@@ -17,7 +17,7 @@ class StockListTile extends StatelessWidget {
   const StockListTile({super.key, required this.id, required this.docstatus});
 
   Future<void> _navigateToEntryDetail(BuildContext context) async {
-    if (docstatus == 0) {
+    if (docstatus == DocStatus.draft) {
       final provider = context.read<CreateStockEntryProvider>();
       final entry = await provider.getById(id);
 

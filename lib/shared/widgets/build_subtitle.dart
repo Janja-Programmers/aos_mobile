@@ -11,7 +11,10 @@ Widget buildSubTitle({required String title, DocStatus? docstatus}) {
         title,
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      ...[const SizedBox(width: 8), DocstatusChip(docstatus: docstatus!)],
+      if (docstatus != null) ...[
+        const SizedBox(width: 8),
+        DocstatusChip(docstatus: docstatus),
+      ],
     ],
   );
 }

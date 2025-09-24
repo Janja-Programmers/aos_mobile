@@ -1,9 +1,8 @@
-import 'package:africaonlinestores/shared/utils/doc_status.dart';
 import 'package:flutter/material.dart';
 
-import '../data/models/stock.dart';
 import '/core/errors/exception.dart';
 import '/core/provider/base_prov.dart';
+import '/shared/utils/doc_status.dart';
 
 import '../domain/entity/stock.dart';
 import '../domain/usecases.dart';
@@ -21,8 +20,8 @@ class CreateStockEntryProvider with ChangeNotifier, AsyncState<StockEntry> {
        _update = update,
        _getById = getById;
 
-  bool get isDraft => data?.docstatus == 0;
-  bool get isSubmitted => data?.docstatus == 1;
+  bool get isDraft => data?.docstatus == DocStatus.draft;
+  bool get isSubmitted => data?.docstatus == DocStatus.submitted;
 
   /// Fetch and set entry
   Future<StockEntry?> getById(String id) async {
@@ -86,10 +85,6 @@ class CreateStockEntryProvider with ChangeNotifier, AsyncState<StockEntry> {
     final updated = entry.copyWith(
       docstatus: submit ? DocStatus.submitted : DocStatus.draft,
     );
-
-    // Debug log: confirm payload
-    final payload = StockEntryModel.fromEntity(updated).toJson();
-    print('🚀 Submitting payload: $payload');
 
     final result = await _update(updated);
 

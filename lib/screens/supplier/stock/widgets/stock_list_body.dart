@@ -17,6 +17,10 @@ class StockListBody extends StatefulWidget {
 class _StockListBodyState extends State<StockListBody> {
   final TextEditingController _searchController = TextEditingController();
 
+  Future<void> _refresh() async {
+    await context.read<StockEntryProvider>().fetchAll();
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -38,9 +42,22 @@ class _StockListBodyState extends State<StockListBody> {
     if (prov.loading) {
       content = const Center(child: CircularProgressIndicator());
     } else if (prov.failure != null) {
-      content = Text(
-        "Failed to load entries",
-        style: TextStyle(color: Colors.red),
+      content = Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Error: Could not load stock intake entries',
+              style: TextStyle(color: Colors.red),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              onPressed: _refresh,
+            ),
+          ],
+        ),
       );
     } else if (prov.entries.isEmpty) {
       // No stock entries at all
@@ -123,7 +140,7 @@ class _StockListBodyState extends State<StockListBody> {
                                 padding: EdgeInsets.zero,
                                 itemCount: filteredEntries.length,
                                 separatorBuilder:
-                                    (_, __) => const Divider(
+                                    (_, _) => const Divider(
                                       height: 0.5,
                                       thickness: 0.5,
                                     ),

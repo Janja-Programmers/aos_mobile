@@ -11,27 +11,35 @@ class DeliveryNoteItemsTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return Table(
       columnWidths: const {
-        0: FlexColumnWidth(2.5),
-        1: FlexColumnWidth(1),
-        2: FlexColumnWidth(1.5),
-        3: FlexColumnWidth(1.5),
+        0: FixedColumnWidth(30), // # column
+        1: FlexColumnWidth(3), // Item name
+        2: FlexColumnWidth(1), // Qty
+        3: FlexColumnWidth(1.5), // Rate
+        4: FlexColumnWidth(1.5), // Amount
       },
       border: TableBorder.symmetric(
-        inside: BorderSide(color: Colors.grey.shade300),
+        inside: const BorderSide(color: Colors.grey),
       ),
       children: [
+        // Header row
         TableRow(
           decoration: BoxDecoration(color: Colors.grey.shade100),
           children: const [
+            Padding(padding: EdgeInsets.all(6), child: Text('#')),
             Padding(padding: EdgeInsets.all(6), child: Text('Item')),
             Padding(padding: EdgeInsets.all(6), child: Text('Qty')),
-            Padding(padding: EdgeInsets.all(6), child: Text('Rate')),
-            Padding(padding: EdgeInsets.all(6), child: Text('Amount')),
+            Padding(padding: EdgeInsets.all(6), child: Text('Rate (Sh.)')),
+            Padding(padding: EdgeInsets.all(6), child: Text('Amount (Sh.)')),
           ],
         ),
-        ...items.map((item) {
+
+        // Item rows
+        ...items.asMap().entries.map((entry) {
+          final i = entry.key + 1;
+          final item = entry.value;
           return TableRow(
             children: [
+              Padding(padding: const EdgeInsets.all(6), child: Text('$i')),
               Padding(
                 padding: const EdgeInsets.all(6),
                 child: Text(

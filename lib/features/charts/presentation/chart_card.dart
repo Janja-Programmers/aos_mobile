@@ -12,7 +12,7 @@ class SalesChartCard extends StatefulWidget {
 }
 
 class _SalesChartCardState extends State<SalesChartCard> {
-  double _minFilterValue = 0;
+  final double _minFilterValue = 0;
 
   // void _showFilterDialog(SalesChartProvider provider) {
   //   showDialog(

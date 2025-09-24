@@ -5,6 +5,7 @@ import '/features/order/prov.dart';
 
 import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/app_drawer.dart';
+import '/shared/widgets/empty_state.dart';
 
 import 'widgets/deliver_order_button.dart';
 import 'widgets/so_info_card.dart';
@@ -36,15 +37,26 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
     final provider = context.watch<SalesOrderProvider>();
     final order = provider.selectedOrder;
 
-    if (provider.detailLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    Widget body;
 
-    if (order == null) {
-      return const Center(
-        child: Text(
-          "Error: Order not found",
-          style: TextStyle(color: Colors.red),
+    if (provider.detailLoading) {
+      body = const Center(
+        child: SizedBox(
+          width: 32,
+          height: 32,
+          child: CircularProgressIndicator(strokeWidth: 2.5),
+        ),
+      );
+    } else if (order == null) {
+      body = const EmptyState(message: 'Error: Order not found');
+    } else {
+      body = Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: ListView(
+          children: [
+            SalesOrderInfoCard(order: order),
+            ProductTableCard(order: order),
+          ],
         ),
       );
     }
@@ -56,17 +68,10 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
         'Sales Order',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      actionButton: DeliverOrderButton(order: order),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: ListView(
-          children: [
-            SalesOrderInfoCard(order: order),
-            ProductTableCard(order: order),
-          ],
-        ),
-      ),
-      floatingActionButton: PrintSalesOrder(order: order),
+      actionButton: order != null ? DeliverOrderButton(order: order) : null,
+      body: body,
+      floatingActionButton:
+          order != null ? PrintSalesOrder(order: order) : null,
     );
   }
 }

@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+
+import '/core/constants/colors.dart';
 
 import '/features/d_note/prov.dart';
 
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
+import '/shared/widgets/empty_state.dart';
+
 import 'widgets/card_row.dart';
 
 class DeliveryNoteListScreen extends StatefulWidget {
@@ -39,15 +44,15 @@ class _DeliveryNoteListScreenState extends State<DeliveryNoteListScreen> {
   @override
   Widget build(BuildContext context) {
     return MainBarScaffold(
-      drawer: AppDrawer(selectedIndex: 4, onItemSelected: (_) {}),
       scaffoldKey: _scaffoldKey,
+      drawer: AppDrawer(selectedIndex: 4, onItemSelected: (_) {}),
       subTitle: const Text(
-        'Delivery Note',
+        'Delivery Notes',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
       body: Consumer<DeliveryNoteProvider>(
         builder: (context, provider, _) {
-          if (provider.loading) {
+          if (provider.listLoading) {
             return const Center(
               child: SizedBox(
                 width: 32,
@@ -77,78 +82,118 @@ class _DeliveryNoteListScreenState extends State<DeliveryNoteListScreen> {
             );
           }
 
-          if (provider.notes.isEmpty) {
-            return const Center(child: Text('No delivery notes found.'));
-          }
-
-          // 🔍 Filter notes by search query (customerName + status)
           final query = _searchController.text.trim().toLowerCase();
           final filteredNotes =
               provider.notes.where((note) {
                 return query.isEmpty ||
                     note.customerName.toLowerCase().contains(query) ||
-                    note.status.toLowerCase().contains(query);
+                    note.status.toLowerCase().contains(query) ||
+                    note.id.toLowerCase().contains(query);
               }).toList();
+
+          if (provider.notes.isEmpty) {
+            return const Center(child: Text('No delivery notes found.'));
+          }
 
           return RefreshIndicator(
             onRefresh: _refresh,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-              child: Column(
-                children: [
-                  // 🔍 Search bar
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        prefixIcon: const Icon(Icons.search),
-                        hintText: 'Search by customer or status',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
-                        ),
-                        fillColor: Colors.white,
-                        filled: true,
+            child: Column(
+              children: [
+                // Search bar
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      hintText: 'Search by customer, ID, or status',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
                       ),
-                      onChanged: (_) => setState(() {}),
+                      fillColor: Colors.white,
+                      filled: true,
                     ),
+                    onChanged: (_) => setState(() {}),
                   ),
+                ),
 
-                  // Notes list
-                  Card(
+                // List card
+                Expanded(
+                  child: Card(
+                    margin: const EdgeInsets.all(10),
+                    elevation: 2,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    color: Colors.white,
-                    elevation: 2,
                     child: Column(
-                      children:
-                          filteredNotes.isEmpty
-                              ? [
-                                const Padding(
-                                  padding: EdgeInsets.all(24.0),
-                                  child: Text(
-                                    "No delivery notes match your search.",
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Delivery Notes",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "${filteredNotes.length} of ${provider.notes.length}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              ]
-                              : filteredNotes
-                                  .map(
-                                    (note) => Column(
-                                      children: [
-                                        DeliveryNoteCardRow(note: note),
-                                        const Divider(height: 2),
-                                      ],
-                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(
+                          height: 0,
+                          thickness: 1.2,
+                          color: AppColors.background,
+                        ),
+
+                        // List
+                        Expanded(
+                          child:
+                              filteredNotes.isEmpty
+                                  ? EmptyState(
+                                    message:
+                                        'No delivery notes match your search.',
+                                    actionLabel: 'Clear search',
+                                    onAction: () {
+                                      _searchController.clear();
+                                      setState(() {});
+                                    },
                                   )
-                                  .toList(),
+                                  : ListView.separated(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    padding: EdgeInsets.zero,
+                                    itemCount: filteredNotes.length,
+                                    separatorBuilder:
+                                        (_, __) => const Divider(
+                                          height: 0.5,
+                                          thickness: 0.5,
+                                        ),
+                                    itemBuilder: (_, i) {
+                                      final note = filteredNotes[i];
+                                      return InkWell(
+                                        onTap:
+                                            () => context.push(
+                                              '/delivery-note/${note.id}',
+                                            ),
+                                        child: DeliveryNoteCardRow(note: note),
+                                      );
+                                    },
+                                  ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },

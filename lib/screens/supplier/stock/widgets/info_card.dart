@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '/shared/widgets/docstatus_chip.dart';
+import '/shared/utils/doc_status.dart';
 
 class StockEntryInfoCard extends StatelessWidget {
   final String entryId;
-  final int docstatus;
+  final DocStatus docstatus;
 
   const StockEntryInfoCard({
     super.key,

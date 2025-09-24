@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '/shared/utils/doc_status.dart';
 import '/core/utils/snackbar.dart';
 
 import '/features/stock/providers/all.dart';
@@ -13,7 +14,7 @@ import '../utils/delete_stock_entry.dart';
 
 class StockListTile extends StatelessWidget {
   final String id;
-  final int docstatus;
+  final DocStatus docstatus;
 
   const StockListTile({super.key, required this.id, required this.docstatus});
 

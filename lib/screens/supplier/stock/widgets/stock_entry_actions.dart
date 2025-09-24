@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../shared/utils/doc_status.dart';
+
 class StockEntryActions extends StatelessWidget {
-  final int? docstatus;
+  final DocStatus? docstatus;
   final VoidCallback? onSubmit;
   final VoidCallback? onCancel;
   final VoidCallback? onDelete;
@@ -16,48 +18,54 @@ class StockEntryActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (docstatus == DocStatus.draft && onSubmit != null) {
-      return ElevatedButton.icon(
-        icon: const Icon(Icons.check_circle, color: Colors.white),
-        label: const Text("Submit"),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-        ),
-        onPressed: onSubmit,
-      );
-    }
+    final status = docstatus ?? DocStatus.draft;
 
-    if (docstatus == DocStatus.submitted && onCancel != null) {
-      return ElevatedButton.icon(
-        icon: const Icon(Icons.cancel, color: Colors.white),
-        label: const Text("Cancel"),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
-        ),
-        onPressed: onCancel,
-      );
-    }
+    final actionMap = {
+      DocStatus.draft: _ActionConfig(
+        label: "Submit",
+        icon: Icons.check_circle,
+        color: Colors.blue,
+        callback: onSubmit,
+      ),
+      DocStatus.submitted: _ActionConfig(
+        label: "Cancel",
+        icon: Icons.cancel,
+        color: Colors.orange,
+        callback: onCancel,
+      ),
+      DocStatus.cancelled: _ActionConfig(
+        label: "Delete",
+        icon: Icons.delete,
+        color: Colors.red,
+        callback: onDelete,
+      ),
+    };
 
-    if (docstatus == DocStatus.cancelled && onDelete != null) {
-      return ElevatedButton.icon(
-        icon: const Icon(Icons.delete, color: Colors.white),
-        label: const Text("Delete"),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
-        ),
-        onPressed: onDelete,
-      );
-    }
+    final config = actionMap[status];
+    if (config?.callback == null) return const SizedBox.shrink();
 
-    return const SizedBox.shrink();
+    return ElevatedButton.icon(
+      icon: Icon(config!.icon, color: Colors.white),
+      label: Text(config.label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: config.color,
+        foregroundColor: Colors.white,
+      ),
+      onPressed: config.callback,
+    );
   }
 }
 
-class DocStatus {
-  static const int draft = 0;
-  static const int submitted = 1;
-  static const int cancelled = 2;
+class _ActionConfig {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback? callback;
+
+  const _ActionConfig({
+    required this.label,
+    required this.icon,
+    required this.color,
+    this.callback,
+  });
 }

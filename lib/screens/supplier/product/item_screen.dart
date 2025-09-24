@@ -68,7 +68,13 @@ class _ItemScreenState extends State<ItemScreen> {
         ),
       );
     } else if (productProvider.products.isEmpty) {
-      content = const Center(child: Text('No products found.'));
+      content = Center(
+        child: Text(
+          'No products found.',
+          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+          textAlign: TextAlign.center,
+        ),
+      );
     } else {
       content = Column(
         crossAxisAlignment: CrossAxisAlignment.start,

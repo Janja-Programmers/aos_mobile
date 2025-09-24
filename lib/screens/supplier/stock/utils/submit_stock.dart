@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '/core/utils/snackbar.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+
+import '/core/utils/snackbar.dart';
 
 import '/features/stock/domain/entity/stock.dart';
 import '/features/stock/providers/create.dart';
@@ -10,15 +12,16 @@ Future<void> submitStockEntry(BuildContext context, StockEntry draft) async {
   final createProvider = context.read<CreateStockEntryProvider>();
   final detailProvider = context.read<StockEntryDetailProvider>();
 
-  final updated = draft.copyWith(docstatus: 1);
-  await createProvider.updateDraft(updated);
+  // Call saveOrSubmit with submit = true
+  final updated = await createProvider.saveOrSubmit(draft, submit: true);
 
   if (!context.mounted) return;
 
-  if (createProvider.hasError) {
+  if (updated == null) {
+    // failure already set inside provider
     topSnackBar(
       context,
-      createProvider.failure!.message,
+      createProvider.errorMessage ?? 'Failed to submit Stock Entry',
       type: TopSnackType.error,
     );
   } else {
@@ -28,9 +31,10 @@ Future<void> submitStockEntry(BuildContext context, StockEntry draft) async {
       type: TopSnackType.success,
     );
 
-    await detailProvider.fetchById(draft.id);
+    await detailProvider.fetchById(updated.id);
 
-    // Pop and return true to refresh the previous screen
-    Navigator.pop(context, true);
+    if (context.mounted) {
+      context.pop(true);
+    }
   }
 }

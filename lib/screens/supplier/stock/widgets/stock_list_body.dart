@@ -42,10 +42,8 @@ class StockListBody extends StatelessWidget {
                     children: [
                       Text(
                         'No stock entries found',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),

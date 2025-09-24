@@ -1,33 +1,31 @@
 import 'package:flutter/material.dart';
 
+import '../utils/doc_status.dart';
+
 class DocstatusChip extends StatelessWidget {
-  final int docstatus;
+  final DocStatus docstatus;
 
   const DocstatusChip({super.key, required this.docstatus});
 
-  Color getStatusColor(int status) {
-    switch (status) {
-      case 0:
+  Color get statusColor {
+    switch (docstatus) {
+      case DocStatus.draft:
         return Colors.grey;
-      case 1:
+      case DocStatus.submitted:
         return Colors.blue;
-      case 2:
+      case DocStatus.cancelled:
         return const Color.fromARGB(255, 215, 116, 109);
-      default:
-        return Colors.orange;
     }
   }
 
-  String getStatusLabel(int status) {
-    switch (status) {
-      case 0:
+  String get statusLabel {
+    switch (docstatus) {
+      case DocStatus.draft:
         return 'Draft';
-      case 1:
+      case DocStatus.submitted:
         return 'Submitted';
-      case 2:
+      case DocStatus.cancelled:
         return 'Cancelled';
-      default:
-        return 'Unknown';
     }
   }
 
@@ -35,13 +33,13 @@ class DocstatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Chip(
       label: Text(
-        getStatusLabel(docstatus),
+        statusLabel,
         style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.w500,
         ),
       ),
-      backgroundColor: getStatusColor(docstatus),
+      backgroundColor: statusColor,
       visualDensity: VisualDensity.compact,
       padding: const EdgeInsets.symmetric(horizontal: 8),
     );

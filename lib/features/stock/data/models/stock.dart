@@ -1,3 +1,4 @@
+import '../../../../shared/utils/doc_status.dart';
 import '../../domain/entity/stock.dart';
 
 import 'stock_item.dart';
@@ -44,14 +45,14 @@ class StockEntryModel {
 
   StockEntry toEntity() => StockEntry(
     id: id,
-    docstatus: docstatus,
+    docstatus: DocStatus.fromInt(docstatus),
     modified: modified ?? DateTime.now(),
     items: items.map((e) => e.toEntity()).toList(),
   );
 
   static StockEntryModel fromEntity(StockEntry entry) => StockEntryModel(
     id: entry.id,
-    docstatus: entry.docstatus,
+    docstatus: entry.docstatus.asInt,
     modified: entry.modified,
     items: entry.items.map((e) => StockEntryItemModel.fromEntity(e)).toList(),
   );

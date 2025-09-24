@@ -11,11 +11,13 @@ class ItemRow extends StatefulWidget {
   final ItemRowController controller;
   final VoidCallback? onRemove;
   final List<String> usedItemCodes;
+  final bool? readOnly;
 
   const ItemRow({
     super.key,
     required this.controller,
     this.onRemove,
+    this.readOnly,
     required this.usedItemCodes,
   });
 

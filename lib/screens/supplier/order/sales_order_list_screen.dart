@@ -131,11 +131,16 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
                       children:
                           filteredOrders.isEmpty
                               ? [
-                                const Padding(
-                                  padding: EdgeInsets.all(24.0),
+                                Padding(
+                                  padding: const EdgeInsets.all(24.0),
+
                                   child: Text(
                                     "No sales orders match your search.",
-                                    style: TextStyle(color: Colors.grey),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
                                 ),
                               ]

@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/shared/utils/doc_status.dart';
 import 'package:flutter/material.dart';
 
 import '/core/errors/exception.dart';
@@ -38,10 +39,12 @@ class CreateStockEntryProvider with ChangeNotifier, AsyncState<StockEntry> {
     );
   }
 
-  /// Create a new draft entry
-  Future<StockEntry?> createDraft(StockEntry entry) async {
+  /// Create a new entry (defaults to draft)
+  Future<StockEntry?> _create(StockEntry entry, {required bool submit}) async {
     setLoading();
-    final draft = entry.copyWith(docstatus: 0);
+    final draft = entry.copyWith(
+      docstatus: submit ? DocStatus.submitted : DocStatus.draft,
+    );
     final result = await _add(draft);
     return result.fold(
       (failure) {
@@ -55,47 +58,27 @@ class CreateStockEntryProvider with ChangeNotifier, AsyncState<StockEntry> {
     );
   }
 
-  /// Update an existing draft
-  Future<StockEntry?> updateDraft(StockEntry entry) async {
+  /// Update an existing entry
+  Future<StockEntry?> _updateEntry(
+    StockEntry entry, {
+    required bool submit,
+  }) async {
     if (entry.id.isEmpty) {
       final failure = handleException("Cannot update without Stock Entry ID.");
       setFailure(failure);
       return null;
     }
 
-    if (entry.docstatus == 1) {
+    if (entry.docstatus == 1 && !submit) {
       final failure = handleException("Cannot update a submitted Stock Entry.");
       setFailure(failure);
       return null;
     }
 
     setLoading();
-    final draft = entry.copyWith(docstatus: 0);
-    final result = await _update(draft);
-    return result.fold(
-      (failure) {
-        setFailure(failure);
-        return null;
-      },
-      (savedEntry) {
-        setSuccess(savedEntry);
-        return savedEntry;
-      },
+    final updated = entry.copyWith(
+      docstatus: submit ? DocStatus.submitted : DocStatus.draft,
     );
-  }
-
-  /// Final submission (only allowed on existing drafts)
-  Future<StockEntry?> submitFinal(StockEntry entry) async {
-    if (entry.id.isEmpty) {
-      final failure = handleException(
-        "Missing Stock Entry ID for final submission.",
-      );
-      setFailure(failure);
-      return null;
-    }
-
-    final updated = entry.copyWith(docstatus: 1);
-    setLoading();
     final result = await _update(updated);
     return result.fold(
       (failure) {
@@ -109,13 +92,19 @@ class CreateStockEntryProvider with ChangeNotifier, AsyncState<StockEntry> {
     );
   }
 
+  /// Save or submit
   Future<StockEntry?> saveOrSubmit(StockEntry entry, {bool submit = false}) {
-    return submit
-        ? submitFinal(entry)
-        : (entry.id.isEmpty ? createDraft(entry) : updateDraft(entry));
+    return entry.id.isEmpty
+        ? _create(entry, submit: submit)
+        : _updateEntry(entry, submit: submit);
   }
 
+  /// Clear error state
   void clearError() => clearState();
 
+  /// Reset entire provider state
   void reset() => clearState();
+
+  /// A convenience getter for showing proper error messages
+  String? get errorMessage => failure?.message;
 }

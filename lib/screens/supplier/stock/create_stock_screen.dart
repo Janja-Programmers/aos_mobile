@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
 import '/core/utils/snackbar.dart';
+import '/shared/utils/doc_status.dart';
 import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/app_drawer.dart';
 
@@ -33,12 +34,10 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CreateStockEntryProvider>().clearError();
-    });
-
     _provider = context.read<CreateStockEntryProvider>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _provider.clearError();
+    });
 
     if (isEditing) {
       for (final item in widget.entry!.items) {
@@ -50,7 +49,7 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
     }
   }
 
-  void _submitEntry({required int docstatus}) async {
+  Future<void> _submitEntry({required bool submit}) async {
     if (_itemControllers.any((ctrl) => !ctrl.validate())) return;
 
     if (!_formKey.currentState!.validate()) {
@@ -83,19 +82,23 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
 
     final entry = StockEntry(
       id: widget.entry?.id ?? '',
-      docstatus: docstatus,
+      docstatus: widget.entry?.docstatus ?? DocStatus.draft,
       items: items,
     );
 
     final provider = context.read<CreateStockEntryProvider>();
-    await provider.saveOrSubmit(entry);
+    await provider.saveOrSubmit(entry, submit: submit);
 
     if (!mounted) return;
 
     if (provider.hasError) {
-      topSnackBar(context, "Unauthorized action", type: TopSnackType.error);
+      topSnackBar(
+        context,
+        provider.errorMessage ?? "Something went wrong",
+        type: TopSnackType.error,
+      );
     } else {
-      final action = docstatus == 1 ? 'submitted' : 'saved';
+      final action = submit ? 'submitted' : 'saved';
       topSnackBar(
         context,
         'Stock Intake $action successfully',
@@ -111,17 +114,14 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
     for (final ctrl in _itemControllers) {
       ctrl.dispose();
     }
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _provider.reset();
-    });
-
+    _provider.reset();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CreateStockEntryProvider>();
+    final isReadOnly = provider.isSubmitted;
 
     return MainBarScaffold(
       drawer: AppDrawer(selectedIndex: 2, onItemSelected: (_) {}),
@@ -131,23 +131,20 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
       ),
 
       /// ✅ Top action button
-      actionButton: StockActionButton(
-        label:
-            isEditing && provider.data?.docstatus == 0
-                ? 'Submit'
-                : 'Save Draft',
-        onPressed:
-            provider.loading
-                ? null
-                : () {
-                  if (isEditing && provider.data?.docstatus == 0) {
-                    _submitEntry(docstatus: 1);
-                  } else {
-                    _submitEntry(docstatus: 0);
-                  }
-                },
-        isLoading: provider.loading,
-      ),
+      actionButton:
+          isReadOnly
+              ? null
+              : StockActionButton(
+                label: isEditing && provider.isDraft ? 'Submit' : 'Save',
+                onPressed:
+                    provider.loading
+                        ? null
+                        : () {
+                          final submit = isEditing && provider.isDraft;
+                          _submitEntry(submit: submit);
+                        },
+                isLoading: provider.loading,
+              ),
 
       body: Form(
         key: _formKey,
@@ -169,14 +166,15 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Card(
-                  elevation: 2,
+                  elevation: 3,
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
                     child: ItemRow(
                       controller: ctrl,
                       usedItemCodes: usedCodes,
+                      readOnly: isReadOnly, // ✅ disable fields if submitted
                       onRemove:
-                          _itemControllers.length == 1
+                          isReadOnly || _itemControllers.length == 1
                               ? null
                               : () => setState(
                                 () => _itemControllers.removeAt(index),
@@ -190,25 +188,26 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
             const SizedBox(height: 16),
 
             // Add another row button
-            StockActionButton(
-              label: 'Add Another Entry',
-              onPressed: () {
-                final usedCodes =
-                    _itemControllers
-                        .map((c) => c.itemCode.text)
-                        .where((code) => code.isNotEmpty)
-                        .toSet();
+            if (!isReadOnly)
+              StockActionButton(
+                label: 'Add Another Entry',
+                onPressed: () {
+                  final usedCodes =
+                      _itemControllers
+                          .map((c) => c.itemCode.text)
+                          .where((code) => code.isNotEmpty)
+                          .toSet();
 
-                if (usedCodes.length >= 100) {
-                  if (mounted) {
-                    topSnackBar(context, 'All products have been added');
+                  if (usedCodes.length >= 100) {
+                    if (mounted) {
+                      topSnackBar(context, 'All products have been added');
+                    }
+                    return;
                   }
-                  return;
-                }
 
-                setState(() => _itemControllers.add(ItemRowController()));
-              },
-            ),
+                  setState(() => _itemControllers.add(ItemRowController()));
+                },
+              ),
           ],
         ),
       ),

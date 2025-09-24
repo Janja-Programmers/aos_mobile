@@ -1,10 +1,11 @@
 import 'package:equatable/equatable.dart';
 
+import '/shared/utils/doc_status.dart';
 import 'stock_item.dart';
 
 class StockEntry extends Equatable {
   final String id;
-  final int docstatus;
+  final DocStatus docstatus;
   final DateTime? modified;
   final List<StockEntryItem> items;
 
@@ -20,7 +21,7 @@ class StockEntry extends Equatable {
 
   StockEntry copyWith({
     String? id,
-    int? docstatus,
+    DocStatus? docstatus,
     DateTime? modified,
     List<StockEntryItem>? items,
   }) {

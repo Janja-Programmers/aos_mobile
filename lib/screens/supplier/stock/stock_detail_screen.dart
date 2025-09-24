@@ -65,6 +65,7 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
         onCancel: () => cancelStockEntry(context, entry),
         onDelete: () => deleteStockEntry(context, entry.id),
       ),
+
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: Builder(

@@ -7,6 +7,7 @@ import '/core/constants/colors.dart';
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/build_subtitle.dart';
 import '/shared/widgets/custom_button.dart';
+import '/shared/widgets/empty_state.dart';
 import '/shared/widgets/main_bar.dart';
 
 import '/features/product/provider.dart';
@@ -137,34 +138,13 @@ class _ItemScreenState extends State<ItemScreen> {
                   Expanded(
                     child:
                         filteredproducts.isEmpty
-                            ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.search_off,
-                                    size: 64,
-                                    color: Colors.grey[400],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    'No products match your search.',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey[600],
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextButton(
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      setState(() {});
-                                    },
-                                    child: const Text('Clear search'),
-                                  ),
-                                ],
-                              ),
+                            ? EmptyState(
+                              message: 'No products match your search.',
+                              actionLabel: 'Clear search',
+                              onAction: () {
+                                _searchController.clear();
+                                setState(() {});
+                              },
                             )
                             : RefreshIndicator(
                               onRefresh: () async {

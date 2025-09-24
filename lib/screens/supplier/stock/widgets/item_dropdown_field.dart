@@ -5,6 +5,7 @@ class ItemDropdownField extends StatelessWidget {
   final Map<String, String> itemsMap;
   final List<String> availableCodes;
   final ValueChanged<String?> onChanged;
+  final Widget? label;
 
   const ItemDropdownField({
     super.key,
@@ -12,6 +13,7 @@ class ItemDropdownField extends StatelessWidget {
     required this.itemsMap,
     required this.availableCodes,
     required this.onChanged,
+    this.label,
   });
 
   @override
@@ -55,7 +57,7 @@ class ItemDropdownField extends StatelessWidget {
         },
         onChanged: availableCodes.isEmpty ? null : onChanged,
         decoration: InputDecoration(
-          labelText: 'Item Name',
+          label: label ?? const Text('Item Name'), // 👈 supports required
           hintText: availableCodes.isEmpty ? 'All items selected' : null,
         ),
         validator: (val) {

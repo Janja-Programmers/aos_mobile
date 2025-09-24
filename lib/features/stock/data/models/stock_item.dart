@@ -1,4 +1,4 @@
-import '../../domain/entity/stock_item.dart';
+import '/features/stock/domain/entity/stock_item.dart';
 
 class StockEntryItemModel {
   final String itemCode;

@@ -25,9 +25,12 @@ mixin AsyncState<T> on ChangeNotifier {
     notifyListeners();
   }
 
-  void setSuccess(T newData) {
+  void setSuccess(T? newData) {
+    if (newData == null) return;
+
     _data = newData;
     _loading = false;
+    _failure = null;
     _lastFetched = DateTime.now();
     notifyListeners();
   }

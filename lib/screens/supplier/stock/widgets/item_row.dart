@@ -58,6 +58,16 @@ class _ItemRowState extends State<ItemRow> {
     }
   }
 
+  Widget buildRequiredLabel(String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label),
+        const Text(' *', style: TextStyle(color: Colors.red)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentCode = widget.controller.itemCode.text;
@@ -74,6 +84,13 @@ class _ItemRowState extends State<ItemRow> {
             currentCode: currentCode,
             itemsMap: _itemsMap,
             availableCodes: availableCodes,
+            label: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Text('Product'),
+                Text(' *', style: TextStyle(color: Colors.red)),
+              ],
+            ),
             onChanged: (val) {
               widget.controller.itemCode.text = val!;
               widget.controller.itemName.text = _itemsMap[val] ?? '';
@@ -84,14 +101,15 @@ class _ItemRowState extends State<ItemRow> {
           TextFormField(
             controller: widget.controller.qty,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Quantity'),
+            decoration: InputDecoration(label: buildRequiredLabel('Quantity')),
             validator: (val) {
-              if (val == null || val.trim().isEmpty) return 'Required';
+              if (val == null || val.trim().isEmpty) return 'Required field';
               final parsed = double.tryParse(val);
               if (parsed == null || parsed < 1) return 'Invalid quantity';
               return null;
             },
           ),
+
           const SizedBox(height: 10),
 
           TextFormField(

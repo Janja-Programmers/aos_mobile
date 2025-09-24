@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/shared/utils/doc_status.dart';
 import 'package:flutter/material.dart';
 
+import '../data/models/stock.dart';
 import '/core/errors/exception.dart';
 import '/core/provider/base_prov.dart';
 
@@ -69,17 +70,29 @@ class CreateStockEntryProvider with ChangeNotifier, AsyncState<StockEntry> {
       return null;
     }
 
-    if (entry.docstatus == 1 && !submit) {
-      final failure = handleException("Cannot update a submitted Stock Entry.");
+    // Prevent editing submitted or cancelled entries unless submitting action
+    if ((entry.docstatus == DocStatus.submitted ||
+            entry.docstatus == DocStatus.cancelled) &&
+        !submit) {
+      final failure = handleException(
+        "Cannot update a ${entry.docstatus.name} Stock Entry.",
+      );
       setFailure(failure);
       return null;
     }
 
     setLoading();
+
     final updated = entry.copyWith(
       docstatus: submit ? DocStatus.submitted : DocStatus.draft,
     );
+
+    // Debug log: confirm payload
+    final payload = StockEntryModel.fromEntity(updated).toJson();
+    print('🚀 Submitting payload: $payload');
+
     final result = await _update(updated);
+
     return result.fold(
       (failure) {
         setFailure(failure);

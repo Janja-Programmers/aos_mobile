@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '/core/utils/snackbar.dart';
 import '/shared/utils/doc_status.dart';
@@ -104,8 +104,14 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
         'Stock Intake $action successfully',
         type: TopSnackType.success,
       );
-      await Future.delayed(const Duration(milliseconds: 400));
-      if (mounted) context.pop(true);
+
+      final savedEntry = provider.data;
+      if (savedEntry != null && savedEntry.id.isNotEmpty) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        if (mounted) {
+          context.push('/stock-entry/${savedEntry.id}');
+        }
+      }
     }
   }
 
@@ -172,7 +178,7 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
                     child: ItemRow(
                       controller: ctrl,
                       usedItemCodes: usedCodes,
-                      readOnly: isReadOnly, // ✅ disable fields if submitted
+                      readOnly: isReadOnly,
                       onRemove:
                           isReadOnly || _itemControllers.length == 1
                               ? null

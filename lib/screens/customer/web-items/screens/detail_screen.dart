@@ -149,71 +149,73 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: TopAppBar(),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    color: Colors.white,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ProductImageWithVideo(
-                            imageUrls:
-                                product.images.isNotEmpty
-                                    ? product.images
-                                    : [product.imageUrl],
-                            videoUrl: product.demoVideoUrl ?? "",
-                          ),
-                          const SizedBox(height: 16),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      color: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ProductImageWithVideo(
+                              imageUrls:
+                                  product.images.isNotEmpty
+                                      ? product.images
+                                      : [product.imageUrl],
+                              videoUrl: product.demoVideoUrl ?? "",
+                            ),
+                            const SizedBox(height: 16),
 
-                          ProductTitleAndPrice(
-                            title: product.id,
-                            category: product.itemGroup,
-                            price: product.price,
-                          ),
-                          const SizedBox(height: 8),
+                            ProductTitleAndPrice(
+                              title: product.id,
+                              category: product.itemGroup,
+                              price: product.price,
+                            ),
+                            const SizedBox(height: 8),
 
-                          ProductAvailability(
-                            inStock: product.inStock,
-                            productName: product.name,
-                          ),
-                          const SizedBox(height: 6),
+                            ProductAvailability(
+                              inStock: product.inStock,
+                              productName: product.name,
+                            ),
+                            const SizedBox(height: 6),
 
-                          ProductActionBar(product: product),
-                          const SizedBox(height: 6),
+                            ProductActionBar(product: product),
+                            const SizedBox(height: 6),
 
-                          ProductDescription(
-                            shortDesc: product.shortDescription,
-                            longDesc: product.longDescription,
-                          ),
-                          const SizedBox(height: 6),
-                        ],
+                            ProductDescription(
+                              shortDesc: product.shortDescription,
+                              longDesc: product.longDescription,
+                            ),
+                            const SizedBox(height: 6),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
 
-                  // --- Product Details and Reviews ---
-                  ProductDetailAndReviews(
-                    specs: product.specifications,
-                    reviews: product.reviews,
-                  ),
-                ],
+                    // --- Product Details and Reviews ---
+                    ProductDetailAndReviews(
+                      specs: product.specifications,
+                      reviews: product.reviews,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

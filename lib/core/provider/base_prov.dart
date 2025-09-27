@@ -42,11 +42,19 @@ mixin AsyncState<T> on ChangeNotifier {
     notifyListeners();
   }
 
-  void clearState() {
+  void _clearFields() {
     _data = null;
     _failure = null;
     _loading = false;
     _lastFetched = null;
+  }
+
+  /// Reset entire provider state (without notify)
+  void resetSilently() => _clearFields();
+
+  /// Internal reusable clear with notify
+  void clearState() {
+    _clearFields();
     notifyListeners();
   }
 }

@@ -57,7 +57,7 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
       drawer: AppDrawer(selectedIndex: 2, onItemSelected: (_) {}),
       subTitle: const Text(
         'Stock Intake',
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
       actionButton: StockEntryActions(
         docstatus: entry.docstatus,

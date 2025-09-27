@@ -19,7 +19,10 @@ Future<bool?> deleteStockEntry(BuildContext context, String id) async {
             ),
             TextButton(
               onPressed: () => context.pop(true),
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.black),
+              ),
             ),
           ],
         ),
@@ -33,18 +36,17 @@ Future<bool?> deleteStockEntry(BuildContext context, String id) async {
   if (!context.mounted) return false;
 
   if (deleteProvider.failure != null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(deleteProvider.failure!.message),
-        backgroundColor: Colors.red,
-      ),
+    topSnackBar(
+      context,
+      'Unable to delete Stock entry.',
+      type: TopSnackType.error,
     );
     return false;
   } else {
     topSnackBar(
       context,
       'Stock entry deleted successfully.',
-      type: TopSnackType.info,
+      type: TopSnackType.success,
     );
     context.pop(true);
     return true;

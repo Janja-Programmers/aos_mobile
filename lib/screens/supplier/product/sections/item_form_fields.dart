@@ -40,15 +40,6 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Only show Item Code in update mode
-          // if (isUpdate) ...[
-          //  SizedBox.shrink(
-          //    child: AppTextField(
-          //    controller: controller.itemCodeController,
-          //  ),
-          //),
-          const SizedBox(height: 10),
-
           // 🔷 Item Name
           AppTextField(
             label: 'Item Name',

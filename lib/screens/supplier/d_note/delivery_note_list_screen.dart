@@ -173,7 +173,7 @@ class _DeliveryNoteListScreenState extends State<DeliveryNoteListScreen> {
                                     padding: EdgeInsets.zero,
                                     itemCount: filteredNotes.length,
                                     separatorBuilder:
-                                        (_, __) => const Divider(
+                                        (_, _) => const Divider(
                                           height: 0.5,
                                           thickness: 0.5,
                                         ),

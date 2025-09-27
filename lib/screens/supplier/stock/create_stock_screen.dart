@@ -7,6 +7,7 @@ import '/shared/utils/doc_status.dart';
 import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/app_drawer.dart';
 
+import '/features/stock/providers/all.dart';
 import '/features/stock/providers/create.dart';
 import '/features/stock/domain/entity/stock.dart';
 
@@ -50,19 +51,18 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
   }
 
   Future<void> _submitEntry({required bool submit}) async {
+    // Step 1: validate form
     if (_itemControllers.any((ctrl) => !ctrl.validate())) return;
-
     if (!_formKey.currentState!.validate()) {
-      if (mounted) {
-        topSnackBar(
-          context,
-          'Please fix the form errors.',
-          type: TopSnackType.error,
-        );
-      }
+      topSnackBar(
+        context,
+        'Please fix the form errors.',
+        type: TopSnackType.error,
+      );
       return;
     }
 
+    // Step 2: collect items
     final items =
         _itemControllers
             .map((ctrl) => ctrl.entry)
@@ -70,27 +70,28 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
             .toList();
 
     if (items.isEmpty) {
-      if (mounted) {
-        topSnackBar(
-          context,
-          'Please add at least one product.',
-          type: TopSnackType.error,
-        );
-      }
+      topSnackBar(
+        context,
+        'Please add at least one product.',
+        type: TopSnackType.error,
+      );
       return;
     }
 
+    // Step 3: build entry
     final entry = StockEntry(
       id: widget.entry?.id ?? '',
       docstatus: widget.entry?.docstatus ?? DocStatus.draft,
       items: items,
     );
 
+    // Step 4: save/submit via provider
     final provider = context.read<CreateStockEntryProvider>();
     await provider.saveOrSubmit(entry, submit: submit);
 
     if (!mounted) return;
 
+    // Step 5: handle result
     if (provider.hasError) {
       topSnackBar(
         context,
@@ -109,7 +110,8 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
       if (savedEntry != null && savedEntry.id.isNotEmpty) {
         await Future.delayed(const Duration(milliseconds: 400));
         if (mounted) {
-          context.push('/stock-entry/${savedEntry.id}');
+          await context.read<StockEntryProvider>().fetchAll();
+          context.pop();
         }
       }
     }
@@ -120,7 +122,7 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
     for (final ctrl in _itemControllers) {
       ctrl.dispose();
     }
-    _provider.reset();
+    _provider.resetSilently();
     super.dispose();
   }
 
@@ -141,12 +143,12 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
           isReadOnly
               ? null
               : StockActionButton(
-                label: isEditing && provider.isDraft ? 'Submit' : 'Save',
+                label: isEditing ? 'Submit' : 'Save',
                 onPressed:
                     provider.loading
                         ? null
                         : () {
-                          final submit = isEditing && provider.isDraft;
+                          final submit = isEditing;
                           _submitEntry(submit: submit);
                         },
                 isLoading: provider.loading,

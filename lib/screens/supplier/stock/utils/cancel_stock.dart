@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/const.dart';
@@ -50,9 +51,9 @@ Future<void> cancelStockEntry(
               ),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, true),
+              onPressed: () => ctx.pop(true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

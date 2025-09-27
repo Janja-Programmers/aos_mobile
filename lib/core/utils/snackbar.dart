@@ -54,10 +54,17 @@ void topSnackBar(
   BuildContext context,
   String message, {
   TopSnackType type = TopSnackType.success,
-  Duration duration = const Duration(seconds: 3),
+  Duration? duration,
 }) {
   if (_isSnackVisible) return;
   _isSnackVisible = true;
+
+  final effectiveDuration =
+      duration ??
+      switch (type) {
+        TopSnackType.error => const Duration(seconds: 6),
+        _ => const Duration(seconds: 3),
+      };
 
   WidgetsBinding.instance.addPostFrameCallback((_) {
     final overlay = Overlay.of(context, rootOverlay: true);
@@ -88,7 +95,7 @@ void topSnackBar(
                 child: Material(
                   color: Colors.transparent,
                   child: _TopSnackBar(
-                    duration: duration,
+                    duration: effectiveDuration,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -127,7 +134,7 @@ void topSnackBar(
 
     overlay.insert(overlayEntry);
 
-    Future.delayed(duration + const Duration(milliseconds: 300), () {
+    Future.delayed(effectiveDuration + const Duration(milliseconds: 300), () {
       overlayEntry.remove();
       _isSnackVisible = false;
     });

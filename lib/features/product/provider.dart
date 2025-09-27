@@ -123,11 +123,18 @@ class ProductProvider with ChangeNotifier {
 
   Future<void> deleteProduct(String name) async {
     try {
-      await apiClient.client.delete('$productApi/$name');
+      final encodedName = Uri.encodeComponent(name);
+      await apiClient.client.delete('$productApi/$encodedName');
       _products.removeWhere((p) => p.name == name);
       notifyListeners();
     } catch (e) {
-      rethrow;
+      if (e.toString().contains("LinkExistsError")) {
+        throw Exception(
+          "This product is linked to stock records and cannot be deleted. You can disable it instead.",
+        );
+      } else {
+        rethrow;
+      }
     }
   }
 }

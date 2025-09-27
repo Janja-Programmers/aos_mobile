@@ -1,36 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '/features/address/provider.dart';
+import '/features/address/domain/address.dart';
 
 class DetailCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
+  final String customerName;
+  final String orderId;
   final String status;
 
   const DetailCard({
     super.key,
-    required this.title,
-    required this.subtitle,
+    required this.customerName,
+    required this.orderId,
     required this.status,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    Color statusColor = Colors.grey.shade200;
-    Color statusTextColor = Colors.grey.shade800;
-
+  Color _statusColor(String status) {
     switch (status.toLowerCase()) {
       case 'completed':
-        statusColor = Colors.green.shade100;
-        statusTextColor = Colors.green.shade800;
-        break;
+        return Colors.green.shade100;
       case 'submitted':
-        statusColor = Colors.blue.shade100;
-        statusTextColor = Colors.blue.shade800;
-        break;
+        return Colors.blue.shade100;
       case 'draft':
-        statusColor = Colors.orange.shade100;
-        statusTextColor = Colors.orange.shade800;
-        break;
+        return Colors.orange.shade100;
+      default:
+        return Colors.grey.shade200;
     }
+  }
+
+  Color _statusTextColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green.shade800;
+      case 'submitted':
+        return Colors.blue.shade800;
+      case 'draft':
+        return Colors.orange.shade800;
+      default:
+        return Colors.grey.shade800;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final addressProv = context.watch<AddressProvider>();
+    Address? address =
+        addressProv.selectedAddress ?? addressProv.addresses.firstOrNull;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -39,34 +55,62 @@ class DetailCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Left: Customer & Address
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 4),
                   Text(
-                    subtitle,
-                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                    customerName,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
+                  const SizedBox(height: 4),
+                  if (address != null) ...[
+                    Text(address.line1),
+                    Text('${address.city}, ${address.country}'),
+                    Text(
+                      '📞 ${address.phone}',
+                      style: const TextStyle(color: Colors.black87),
+                    ),
+                  ] else
+                    const Text(
+                      'No shipping address',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: statusColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                status,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: statusTextColor,
-                  fontWeight: FontWeight.w600,
+
+            // Right: Order ID + Status
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  orderId,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-              ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _statusColor(status),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    status,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _statusTextColor(status),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

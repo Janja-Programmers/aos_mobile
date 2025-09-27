@@ -145,7 +145,7 @@ class _ProductTileState extends State<ProductTile> {
                         if (mounted) {
                           topSnackBar(
                             context,
-                            'Error: Unable to delete product',
+                            'This product is linked to stock records and cannot be deleted. Cancel stock intake entry first.',
                             type: TopSnackType.error,
                           );
                         }

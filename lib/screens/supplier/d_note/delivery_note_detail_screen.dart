@@ -55,8 +55,8 @@ class _DeliveryNoteDetailScreenState extends State<DeliveryNoteDetailScreen> {
         child: ListView(
           children: [
             DetailCard(
-              title: note.customerName,
-              subtitle: note.id,
+              customerName: note.customerName,
+              orderId: note.id,
               status: note.status,
             ),
             ItemsCard(note: note),

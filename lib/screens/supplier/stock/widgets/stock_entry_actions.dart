@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../../shared/utils/doc_status.dart';
+import '/shared/utils/doc_status.dart';
 
 class StockEntryActions extends StatelessWidget {
   final DocStatus? docstatus;
-  final VoidCallback? onSubmit;
-  final VoidCallback? onCancel;
-  final VoidCallback? onDelete;
+  final Future<void> Function()? onSubmit;
+  final Future<void> Function()? onCancel;
+  final Future<void> Function()? onDelete;
 
   const StockEntryActions({
     super.key,
@@ -30,7 +30,7 @@ class StockEntryActions extends StatelessWidget {
       DocStatus.submitted: _ActionConfig(
         label: "Cancel",
         icon: Icons.cancel,
-        color: Colors.orange,
+        color: Colors.red,
         callback: onCancel,
       ),
       DocStatus.cancelled: _ActionConfig(
@@ -51,7 +51,7 @@ class StockEntryActions extends StatelessWidget {
         backgroundColor: config.color,
         foregroundColor: Colors.white,
       ),
-      onPressed: config.callback,
+      onPressed: () async => await config.callback?.call(),
     );
   }
 }
@@ -60,7 +60,7 @@ class _ActionConfig {
   final String label;
   final IconData icon;
   final Color color;
-  final VoidCallback? callback;
+  final Future<void> Function()? callback;
 
   const _ActionConfig({
     required this.label,

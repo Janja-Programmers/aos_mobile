@@ -30,6 +30,7 @@ class ProductCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         appLogger.f('Tapped on product: ${item.name}');
+        context.read<WishlistProvider>().loadWishlist();
         context.push('/product/${item.itemCode}');
       },
       child: Card(

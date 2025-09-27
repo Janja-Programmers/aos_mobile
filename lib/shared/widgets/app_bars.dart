@@ -41,7 +41,10 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
-      title: const Text('Africa Online Stores', style: TextStyle(color: AppColors.black)),
+      title: const Text(
+        'Africa Online Stores',
+        style: TextStyle(color: AppColors.black),
+      ),
       actions: [
         if (userType == 'Buyer' && cartCount > 0) const CartIconButton(),
         if (userType == 'Buyer' && wishlistCount > 0)

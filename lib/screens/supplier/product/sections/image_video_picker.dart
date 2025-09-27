@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/core/constants/colors.dart';
 import '/features/product/domain/product.dart';
 
 import '../controllers/add_item_controller.dart';
@@ -87,7 +88,7 @@ class ImageVideoPickerSection extends StatelessWidget {
                             } else if (states.contains(MaterialState.hovered)) {
                               return Colors.grey[700]!; // lighter on hover
                             }
-                            return Colors.grey[800]!; // default
+                            return AppColors.greyButton; // default
                           }),
                           foregroundColor: MaterialStateProperty.all(
                             Colors.white,

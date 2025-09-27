@@ -7,7 +7,7 @@ import '/core/constants/colors.dart';
 
 import '/shared/widgets/app_bars.dart';
 
-import '../../../auth/auth_provider.dart';
+import '/screens/auth/auth_provider.dart';
 import '/features/website/prov.dart';
 import '/features/website/slider_prov.dart';
 
@@ -84,7 +84,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.user;
     final items = filteredItems(productProvider.items);
-
     return WillPopScope(
       onWillPop: () async {
         context.read<WebsiteItemProv>().clearProductDetail();
@@ -93,87 +92,91 @@ class _ProductListScreenState extends State<ProductListScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: TopAppBar(),
-        body:
-            productProvider.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : productProvider.error != null
-                ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+        body: SafeArea(
+          child:
+              productProvider.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : productProvider.error != null
+                  ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text("Oops! We ran into a problem."),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<WebsiteItemProv>().loadInitialItems();
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  )
+                  : Column(
                     children: [
-                      const Text("Oops! We ran into a problem."),
-                      const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          context.read<WebsiteItemProv>().loadInitialItems();
-                        },
-                        child: const Text('Retry'),
+                      const SliderCarousel(),
+                      Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Search for products',
+                            prefixIcon: const Icon(Icons.search),
+                            fillColor: AppColors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                          ),
+                          onChanged: _onSearchChanged,
+                        ),
+                      ),
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh:
+                              () =>
+                                  context
+                                      .read<WebsiteItemProv>()
+                                      .loadInitialItems(),
+                          child:
+                              items.isEmpty
+                                  ? const Center(
+                                    child: Text('No products found'),
+                                  )
+                                  : Column(
+                                    children: [
+                                      Expanded(
+                                        child: GridView.builder(
+                                          controller: _scrollController,
+                                          padding: const EdgeInsets.all(8),
+                                          gridDelegate:
+                                              const SliverGridDelegateWithMaxCrossAxisExtent(
+                                                maxCrossAxisExtent: 200,
+                                                mainAxisSpacing: 12,
+                                                crossAxisSpacing: 12,
+                                                childAspectRatio: 0.65,
+                                              ),
+                                          itemCount: items.length,
+                                          itemBuilder: (context, index) {
+                                            final item = items[index];
+                                            return ProductCard(item: item);
+                                          },
+                                        ),
+                                      ),
+                                      if (productProvider.isLoadingMore)
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: 16,
+                                          ),
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                    ],
+                                  ),
+                        ),
                       ),
                     ],
                   ),
-                )
-                : Column(
-                  children: [
-                    const SliderCarousel(),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Search for products',
-                          prefixIcon: const Icon(Icons.search),
-                          fillColor: AppColors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                        ),
-                        onChanged: _onSearchChanged,
-                      ),
-                    ),
-                    Expanded(
-                      child: RefreshIndicator(
-                        onRefresh:
-                            () =>
-                                context
-                                    .read<WebsiteItemProv>()
-                                    .loadInitialItems(),
-                        child:
-                            items.isEmpty
-                                ? const Center(child: Text('No products found'))
-                                : Column(
-                                  children: [
-                                    Expanded(
-                                      child: GridView.builder(
-                                        controller: _scrollController,
-                                        padding: const EdgeInsets.all(8),
-                                        gridDelegate:
-                                            const SliverGridDelegateWithMaxCrossAxisExtent(
-                                              maxCrossAxisExtent: 200,
-                                              mainAxisSpacing: 12,
-                                              crossAxisSpacing: 12,
-                                              childAspectRatio: 0.65,
-                                            ),
-                                        itemCount: items.length,
-                                        itemBuilder: (context, index) {
-                                          final item = items[index];
-                                          return ProductCard(item: item);
-                                        },
-                                      ),
-                                    ),
-                                    if (productProvider.isLoadingMore)
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 16,
-                                        ),
-                                        child: CircularProgressIndicator(),
-                                      ),
-                                  ],
-                                ),
-                      ),
-                    ),
-                  ],
-                ),
+        ),
         floatingActionButton:
             user?.userType == 'Vendor'
                 ? FloatingActionButton(

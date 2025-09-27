@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '/core/constants/colors.dart';
+
 import '../controllers/add_item_controller.dart';
 
 class WebsiteSpecificationsTable extends StatelessWidget {
@@ -83,7 +85,7 @@ class WebsiteSpecificationsTable extends StatelessWidget {
                     } else if (states.contains(MaterialState.hovered)) {
                       return Colors.grey[700]!;
                     }
-                    return Colors.grey[800]!;
+                    return AppColors.greyButton;
                   }),
                   padding: MaterialStateProperty.all(
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

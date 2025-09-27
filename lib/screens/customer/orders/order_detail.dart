@@ -17,7 +17,6 @@ class OrderDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String buyer = order['buyer'] ?? 'N/A';
     final String status = order['status'] ?? 'N/A';
     final String orderId = order['id'] ?? 'N/A';
 
@@ -37,11 +36,9 @@ class OrderDetailScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: TopAppBar(),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            const SizedBox(height: 16),
-
             // 🟢 Order Info Card
             Card(
               shape: RoundedRectangleBorder(
@@ -54,19 +51,17 @@ class OrderDetailScreen extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left → buyer + date
+                    // Order ID
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            buyer,
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
                             orderId,
-                            style: const TextStyle(color: Colors.black87),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                         ],
                       ),

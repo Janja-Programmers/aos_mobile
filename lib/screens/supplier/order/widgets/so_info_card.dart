@@ -7,6 +7,32 @@ class SalesOrderInfoCard extends StatelessWidget {
 
   const SalesOrderInfoCard({super.key, required this.order});
 
+  Color _statusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green.shade100;
+      case 'submitted':
+        return Colors.blue.shade100;
+      case 'draft':
+        return Colors.orange.shade100;
+      default:
+        return Colors.grey.shade200;
+    }
+  }
+
+  Color _statusTextColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green.shade800;
+      case 'submitted':
+        return Colors.blue.shade800;
+      case 'draft':
+        return Colors.orange.shade800;
+      default:
+        return Colors.grey.shade800;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -25,17 +51,16 @@ class SalesOrderInfoCard extends StatelessWidget {
                 children: [
                   Text(
                     order.customerName,
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    order.contactEmail ?? '-',
-                    style: const TextStyle(color: Colors.grey),
-                  ),
+
+                  Text(order.contactEmail ?? '-'),
                   const SizedBox(height: 4),
+
                   Text(
                     order.contactPhone ?? '-',
-                    style: const TextStyle(color: Colors.grey),
+                    style: const TextStyle(color: Colors.black87),
                   ),
                 ],
               ),
@@ -53,14 +78,24 @@ class SalesOrderInfoCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Chip(
-                  label: Text(
-                    order.status,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
                   ),
-                  backgroundColor: Colors.grey.shade200,
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
+                  decoration: BoxDecoration(
+                    color: _statusColor(order.status),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    order.status,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _statusTextColor(order.status),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),

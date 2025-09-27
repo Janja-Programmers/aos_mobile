@@ -22,7 +22,7 @@ class ReviewModel extends Equatable {
       title: json['review_title'] ?? '',
       customer: json['customer'] ?? '',
       comment: json['comment']?.trim() ?? '',
-      rating: (json['rating'] ?? 0).toDouble(),
+      rating: double.tryParse(json['rating'].toString()) ?? 0.0,
       publishedOn: json['published_on'] ?? '',
     );
   }

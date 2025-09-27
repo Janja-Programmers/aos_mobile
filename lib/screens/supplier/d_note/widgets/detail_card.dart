@@ -69,7 +69,11 @@ class DetailCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   if (address != null) ...[
                     Text(address.line1),
+                    const SizedBox(height: 4),
+
                     Text('${address.city}, ${address.country}'),
+                    const SizedBox(height: 4),
+
                     Text(
                       '📞 ${address.phone}',
                       style: const TextStyle(color: Colors.black87),
@@ -89,9 +93,13 @@ class DetailCard extends StatelessWidget {
               children: [
                 Text(
                   orderId,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
                 const SizedBox(height: 6),
+
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,

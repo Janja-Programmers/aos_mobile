@@ -163,15 +163,15 @@ class _OrderScreenState extends State<OrderScreen> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              getFirstItemName(order['items']),
+                                              order['id'],
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
-                                                fontSize: 16,
+                                                fontSize: 15,
                                               ),
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              order['id'],
+                                              getFirstItemName(order['items']),
                                               style: const TextStyle(
                                                 color: Colors.grey,
                                                 fontSize: 13,

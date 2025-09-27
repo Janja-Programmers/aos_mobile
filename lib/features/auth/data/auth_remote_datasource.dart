@@ -85,17 +85,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       final data = response.data;
 
-      // ✅ Normalize into [status, message]
       if (data is Map<String, dynamic>) {
-        final status = data["status"] ?? 0; // default to failure
+        if (data["message"] is List && data["message"].length >= 2) {
+          final status = data["message"][0];
+          final message = data["message"][1].toString();
+          return Right([status, message]);
+        }
+
+        final status = data["status"] ?? 0;
         final message = data["message"]?.toString() ?? "Unknown response";
 
-        // 0 → failure, 1 → success (verify email), 2 → success (ready to login)
         return Right([status, message]);
-      }
-
-      if (data is List && data.length >= 2) {
-        return Right([data[0], data[1].toString()]);
       }
 
       return Left(ServerFailure("Unexpected response format"));

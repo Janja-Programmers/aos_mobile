@@ -18,12 +18,18 @@ class ProductReviewsController {
   }
 
   /// Distribution map: keys 1..5 -> counts
-  Map<int, int> get ratingDistribution {
-    final dist = <int, int>{1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
-    for (final r in reviews) {
-      final ratingInt = r.rating.round().clamp(1, 5);
-      dist[ratingInt] = (dist[ratingInt] ?? 0) + 1;
-    }
-    return dist;
+  /// Distribution map: keys 0.5, 1.0, ..., 5.0 -> counts
+Map<double, int> get ratingDistribution {
+  final dist = {
+    for (var i = 1; i <= 10; i++) i * 0.5: 0,
+  };
+
+  for (final r in reviews) {
+    // Round to nearest 0.5
+    final bucket = (r.rating * 2).round() / 2.0;
+    dist[bucket] = (dist[bucket] ?? 0) + 1;
   }
+  return dist;
+}
+
 }

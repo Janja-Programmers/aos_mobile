@@ -56,10 +56,9 @@ class _ReportProductDialogState extends State<ReportProductDialog> {
       final response = await client.post(
         ApiRoutes.reportProduct,
         queryParameters: {
-          "product": widget.productName,
+          "web_item": widget.productName,
           "reason": _selectedReason,
           "comment": _commentController.text,
-          // "reported_by": loggedInEmail,
         },
       );
 
@@ -109,50 +108,75 @@ class _ReportProductDialogState extends State<ReportProductDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text("Report Product"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DropdownButtonFormField<String>(
-            value: _selectedReason,
-            decoration: const InputDecoration(
-              labelText: "Reason *",
-              border: OutlineInputBorder(),
-            ),
-            items:
-                _reasons
-                    .map(
-                      (reason) =>
-                          DropdownMenuItem(value: reason, child: Text(reason)),
-                    )
-                    .toList(),
-            onChanged: (value) => setState(() => _selectedReason = value),
+      content: SingleChildScrollView(
+        child: SizedBox(
+          width: 400, // keeps dialog width consistent
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DropdownButtonFormField<String>(
+                value: _selectedReason,
+                decoration: const InputDecoration(
+                  labelText: "Reason *",
+                  border: InputBorder.none,
+                  filled: true,
+                  fillColor: Color(0xFFF5F5F5),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+                items:
+                    _reasons
+                        .map(
+                          (reason) => DropdownMenuItem(
+                            value: reason,
+                            child: Text(reason),
+                          ),
+                        )
+                        .toList(),
+                onChanged: (value) => setState(() => _selectedReason = value),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _commentController,
+                decoration: const InputDecoration(
+                  labelText: "Additional Details",
+                  alignLabelWithHint: true,
+                  border: InputBorder.none,
+                  filled: true,
+                  fillColor: Color(0xFFF5F5F5),
+                  contentPadding: EdgeInsets.all(12),
+                ),
+                maxLines: 4,
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _commentController,
-            decoration: const InputDecoration(
-              labelText: "Additional Details *",
-              border: OutlineInputBorder(),
-              alignLabelWithHint: true,
-            ),
-            maxLines: 4,
-          ),
-        ],
+        ),
       ),
       actions: [
         TextButton(onPressed: () => context.pop(), child: const Text("Cancel")),
         ElevatedButton(
           onPressed: _loading ? null : _submit,
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
           child:
               _loading
                   ? const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
-                  : const Text("Report"),
+                  : const Text("Submit"),
         ),
       ],
     );

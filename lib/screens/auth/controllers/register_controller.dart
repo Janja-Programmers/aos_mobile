@@ -68,7 +68,10 @@ class RegisterController {
         topSnackBar(context, message, type: TopSnackType.success);
 
         clearForm();
-        context.go('/login');
+
+        if (auth.registerStatus == 2) {
+          context.go('/login');
+        }
       }
     } else {
       if (context.mounted && auth.registerError != null) {

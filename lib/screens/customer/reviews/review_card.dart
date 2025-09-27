@@ -141,39 +141,42 @@ class ProductReviewsCard extends StatelessWidget {
   }
 
   Widget _buildDistributionRow(BuildContext context) {
-    final dist = controller.ratingDistribution;
-    final total = controller.totalReviews == 0 ? 1 : controller.totalReviews;
+  final dist = controller.ratingDistribution;
+  final total = controller.totalReviews == 0 ? 1 : controller.totalReviews;
 
-    return Column(
-      children: List.generate(5, (i) {
-        final star = 5 - i;
-        final count = dist[star] ?? 0;
-        final percent = count / total;
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(
-            children: [
-              SizedBox(width: 40, child: Text("$star star")),
-              const SizedBox(width: 8),
-              Expanded(
-                child: LinearProgressIndicator(
-                  value: percent,
-                  backgroundColor: Colors.grey.shade200,
-                  color: Colors.black87,
-                  minHeight: 6,
-                ),
+  // Highest (5.0) down to 0.5
+  final buckets = dist.keys.toList()..sort((a, b) => b.compareTo(a));
+
+  return Column(
+    children: buckets.map((star) {
+      final count = dist[star] ?? 0;
+      final percent = count / total;
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            SizedBox(width: 40, child: Text("${star.toStringAsFixed(1)}★")),
+            const SizedBox(width: 8),
+            Expanded(
+              child: LinearProgressIndicator(
+                value: percent,
+                backgroundColor: Colors.grey.shade200,
+                color: Colors.black87,
+                minHeight: 6,
               ),
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 50,
-                child: Text("${(percent * 100).toStringAsFixed(1)}%"),
-              ),
-            ],
-          ),
-        );
-      }),
-    );
-  }
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 50,
+              child: Text("${(percent * 100).toStringAsFixed(1)}%"),
+            ),
+          ],
+        ),
+      );
+    }).toList(),
+  );
+}
+
 
   Widget _buildReviewTile(Review review) {
     return Padding(
@@ -192,16 +195,14 @@ class ProductReviewsCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Row(
-                children: List.generate(
-                  5,
-                  (index) => Icon(
-                    index < review.rating ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                    size: 16,
-                  ),
-                ),
-              ),
+              RatingBarIndicator(
+  rating: review.rating,
+  itemBuilder: (context, _) => const Icon(Icons.star, color: Colors.amber),
+  itemCount: 5,
+  itemSize: 16.0,
+  direction: Axis.horizontal,
+),
+
             ],
           ),
           const SizedBox(height: 6),

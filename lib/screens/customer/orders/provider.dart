@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '/features/order/data/remote.dart';
+import '/features/order/domain/sales_order.dart';
 
 class CustomerOrderProvider extends ChangeNotifier {
   final SalesOrderRemoteDS remoteDS;
@@ -33,5 +35,20 @@ class CustomerOrderProvider extends ChangeNotifier {
 
     _loading = false;
     notifyListeners();
+  }
+
+  Future<SalesOrder?> fetchOrderById(String id) async {
+    final result = await remoteDS.getById(id);
+    return result.fold(
+      (failure) {
+        _error = failure.message;
+        notifyListeners();
+        return null;
+      },
+      (order) {
+        _error = null;
+        return order;
+      },
+    );
   }
 }

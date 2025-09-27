@@ -50,6 +50,9 @@ class AuthProvider with ChangeNotifier {
   String? _registerSuccess;
   String? get registerSuccess => _registerSuccess;
 
+  int? _registerStatus;
+  int? get registerStatus => _registerStatus;
+
   void setReturnTo(String path) {
     _returnTo = path;
   }
@@ -124,6 +127,7 @@ class AuthProvider with ChangeNotifier {
   ) async {
     _registerError = null;
     _registerSuccess = null;
+    _registerStatus = null;
     notifyListeners();
 
     final result = await register(email, fullName, userType, phone, password);
@@ -137,13 +141,14 @@ class AuthProvider with ChangeNotifier {
         final statusCode = responseList[0];
         final message = responseList[1].toString();
 
+        _registerStatus = statusCode;
+
         if (statusCode == 0) {
           _registerError = message;
           return false;
         }
 
-        // ✅ status 1 or 2 → treat as success
-        _registerSuccess = message;
+        _registerSuccess = message; // ✅ only message goes to UI
         return true;
       },
     );

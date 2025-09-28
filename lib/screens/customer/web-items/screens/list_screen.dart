@@ -180,7 +180,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
         floatingActionButton:
             user?.userType == 'Vendor'
                 ? FloatingActionButton(
-                  onPressed: () => context.go('/dashboard'),
+                  onPressed: () => context.push('/dashboard'),
                   child: const Icon(Icons.dashboard, color: Colors.white),
                 )
                 : const SizedBox.shrink(),

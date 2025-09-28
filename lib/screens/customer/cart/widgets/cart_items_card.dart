@@ -39,11 +39,11 @@ class CartItemsCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 TextButton(
-                  onPressed: () => context.go('/past-orders'),
+                  onPressed: () => context.push('/past-orders'),
                   child: const Text('View Orders'),
                 ),
                 ElevatedButton(
-                  onPressed: () => context.go('/'),
+                  onPressed: () => context.push('/'),
                   child: const Text('Continue Shopping'),
                 ),
               ],

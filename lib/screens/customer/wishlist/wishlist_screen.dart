@@ -96,7 +96,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                     ),
                                     const SizedBox(height: 12),
                                     TextButton(
-                                      onPressed: () => context.go('/'),
+                                      onPressed: () => context.push('/'),
                                       child: const Text(
                                         'Start Shopping',
                                         style: TextStyle(

@@ -64,7 +64,7 @@ Future<void> handleUserMenuSelection(BuildContext context, String value) async {
       context.push('/past-orders');
       break;
     case 'view_website':
-      context.go('/');
+      context.push('/');
       break;
     case 'settings':
       context.push('/settings');

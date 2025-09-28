@@ -32,7 +32,7 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
         padding: const EdgeInsets.all(8.0),
         child: GestureDetector(
           onTap: () {
-            context.go('/');
+            context.push('/');
           },
           child: const CircleAvatar(
             backgroundImage: AssetImage('assets/logo.png'),

@@ -74,7 +74,7 @@ class EmptyProductPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               ElevatedButton.icon(
-                onPressed: () => context.go('/'),
+                onPressed: () => context.push('/'),
                 icon: const Icon(Icons.arrow_back),
                 label: const Text('Continue Shopping'),
                 style: ElevatedButton.styleFrom(

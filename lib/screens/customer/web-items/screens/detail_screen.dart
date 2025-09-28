@@ -118,7 +118,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                     const SizedBox(width: 12),
                     OutlinedButton.icon(
-                      onPressed: () => context.go('/'),
+                      onPressed: () => context.push('/'),
                       icon: const Icon(Icons.home_outlined),
                       label: const Text('Continue Shopping'),
                       style: OutlinedButton.styleFrom(

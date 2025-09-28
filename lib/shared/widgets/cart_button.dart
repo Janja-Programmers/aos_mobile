@@ -19,7 +19,7 @@ class CartIconButton extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.card_travel, color: AppColors.black),
               onPressed: () {
-                context.go('/cart');
+                context.push('/cart');
               },
             ),
             if (itemCount > 0)

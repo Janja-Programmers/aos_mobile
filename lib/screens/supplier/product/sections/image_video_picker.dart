@@ -76,43 +76,38 @@ class ImageVideoPickerSection extends StatelessWidget {
                                 ? null
                                 : () =>
                                     controller.pickFile(context, isImage: true),
-                        style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.resolveWith<
-                            Color
-                          >((states) {
-                            if (states.contains(MaterialState.disabled)) {
-                              return Colors
-                                  .grey[600]!; // slightly lighter for disabled
-                            } else if (states.contains(MaterialState.pressed)) {
-                              return Colors.grey[900]!; // darker on press
-                            } else if (states.contains(MaterialState.hovered)) {
-                              return Colors.grey[700]!; // lighter on hover
-                            }
-                            return AppColors.greyButton; // default
-                          }),
-                          foregroundColor: MaterialStateProperty.all(
-                            Colors.white,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.black,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
                           ),
-                          padding: MaterialStateProperty.all(
-                            const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                          ),
-                          shape: MaterialStateProperty.all(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.attach_file),
-                            SizedBox(width: 8),
-                            Text('Attach'),
-                          ],
-                        ),
+                        child:
+                            controller.isPickingImage ||
+                                    controller.isPickingVideo
+                                ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                                : const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.attach_file),
+                                    SizedBox(width: 8),
+                                    Text('Attach'),
+                                  ],
+                                ),
                       ),
                 ],
               ),

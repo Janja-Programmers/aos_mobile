@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter/foundation.dart';
 import '/core/errors/failures.dart';
 
@@ -83,7 +84,12 @@ class SalesOrderProvider with ChangeNotifier {
   Future<Either<Failure, Unit>> billOrder(String id) async {
     _setDetailLoading(true);
 
+    appLogger.i("You're at the billOrder prov");
+
     final result = await bill(id);
+
+    appLogger.i("Result: $result");
+
     if (result.isRight()) {
       await fetchById(id);
     }

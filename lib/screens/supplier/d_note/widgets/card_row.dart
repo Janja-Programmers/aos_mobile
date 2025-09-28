@@ -76,16 +76,9 @@ class DeliveryNoteCardRow extends StatelessWidget {
                     ],
                   ),
 
-                  const SizedBox(height: 4),
-                  Text(
-                    note.id,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade500,
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  const SizedBox(height: 6),
+
+                  Text(note.id, style: TextStyle(fontSize: 13)),
                 ],
               ),
             ),

@@ -7,6 +7,7 @@ import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/empty_state.dart';
 
+import 'widgets/bill_order_button.dart';
 import 'widgets/deliver_order_button.dart';
 import 'widgets/so_info_card.dart';
 import 'widgets/print_order_button.dart';
@@ -68,7 +69,12 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
         'Sales Order',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      actionButton: order != null ? DeliverOrderButton(order: order) : null,
+      actionButton:
+          order != null
+              ? (order.percentBilled < 100
+                  ? BIllOrderButton(order: order)
+                  : DeliverOrderButton(order: order))
+              : null,
       body: body,
       floatingActionButton:
           order != null ? PrintSalesOrder(order: order) : null,

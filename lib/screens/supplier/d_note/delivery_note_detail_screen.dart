@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/screens/supplier/order/widgets/bill_order_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -73,7 +72,6 @@ class _DeliveryNoteDetailScreenState extends State<DeliveryNoteDetailScreen> {
         'Delivery Note',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      actionButton: note != null ? BIllOrderButton(order: note) : null,
       body: body,
       floatingActionButton:
           note != null

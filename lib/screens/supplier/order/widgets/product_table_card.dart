@@ -83,7 +83,11 @@ class ProductTableCard extends StatelessWidget {
               Padding(padding: const EdgeInsets.all(6), child: Text('$i')),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(item.itemName),
+                child: Text(
+                  item.itemName,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.all(6),

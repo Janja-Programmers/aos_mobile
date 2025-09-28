@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '/features/order/domain/sales_order.dart';
 import '/core/utils/snackbar.dart';
 
-import '/features/d_note/domain/entity/delivery_note.dart';
 import '/features/d_note/prov.dart';
 
 import '/features/order/prov.dart';
 
 class BIllOrderButton extends StatelessWidget {
-  final DeliveryNote order;
+  final SalesOrder order;
 
   const BIllOrderButton({super.key, required this.order});
 
@@ -17,24 +17,24 @@ class BIllOrderButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
       onPressed:
-          order.percentInstalled >= 100
-              ? null
-              : () => _billOrder(context, order),
+          order.percentBilled >= 100 ? null : () => _billOrder(context, order),
       icon: Icon(
         Icons.receipt_long_outlined,
-        color: order.percentInstalled >= 100 ? Colors.grey : null,
+        color: order.percentBilled >= 100 ? Colors.grey : null,
       ),
       label: Text(
-        order.percentInstalled >= 100 ? 'Billed' : 'Bill',
+        order.percentBilled >= 100 ? 'Billed' : 'Bill',
         style: TextStyle(
-          color: order.percentInstalled >= 100 ? Colors.grey : null,
+          color: order.percentBilled >= 100 ? Colors.grey : null,
         ),
       ),
     );
   }
 
-  void _billOrder(BuildContext context, DeliveryNote order) async {
+  void _billOrder(BuildContext context, SalesOrder order) async {
     final prov = context.read<SalesOrderProvider>();
+
+    // 🔹 Pass the Sales Order ID, not the DN ID
     final result = await prov.billOrder(order.id);
 
     if (!context.mounted) return;
@@ -47,8 +47,6 @@ class BIllOrderButton extends StatelessWidget {
       ),
       (_) {
         topSnackBar(context, 'Order billed successfully');
-
-        // 🔹 Refresh the sales order list too
         context.read<DeliveryNoteProvider>().fetchAll();
       },
     );

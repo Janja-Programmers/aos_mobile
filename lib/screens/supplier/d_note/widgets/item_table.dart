@@ -43,7 +43,7 @@ class DeliveryNoteItemsTable extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(6),
                 child: Text(
-                  '${item.itemName} (${item.itemCode})',
+                  item.itemName,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),

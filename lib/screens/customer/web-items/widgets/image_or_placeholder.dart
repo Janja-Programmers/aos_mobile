@@ -36,11 +36,17 @@ class ImageOrPlaceholder extends StatelessWidget {
                 child: child,
               );
             }
+
             return Container(
               width: double.infinity,
               height: height,
+              color: Colors.grey[200],
               alignment: Alignment.center,
-              child: const CircularProgressIndicator(strokeWidth: 2),
+              child: const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             );
           },
         ),

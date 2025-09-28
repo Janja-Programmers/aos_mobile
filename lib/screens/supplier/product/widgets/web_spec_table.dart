@@ -76,24 +76,14 @@ class WebsiteSpecificationsTable extends StatelessWidget {
                   'Add Row',
                   style: TextStyle(color: Colors.white),
                 ),
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.resolveWith<Color>((
-                    states,
-                  ) {
-                    if (states.contains(MaterialState.pressed)) {
-                      return Colors.grey[900]!;
-                    } else if (states.contains(MaterialState.hovered)) {
-                      return Colors.grey[700]!;
-                    }
-                    return AppColors.greyButton;
-                  }),
-                  padding: MaterialStateProperty.all(
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                style: TextButton.styleFrom(
+                  backgroundColor: AppColors.black,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
                   ),
-                  shape: MaterialStateProperty.all(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ),

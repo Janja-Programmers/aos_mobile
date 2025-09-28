@@ -62,81 +62,79 @@ void topSnackBar(
   final effectiveDuration =
       duration ??
       switch (type) {
-        TopSnackType.error => const Duration(seconds: 6),
+        TopSnackType.error => const Duration(seconds: 4),
         _ => const Duration(seconds: 3),
       };
 
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final overlay = Overlay.of(context, rootOverlay: true);
+  // ✅ Use rootNavigator overlay instead of local context
+  final overlay = Navigator.of(context, rootNavigator: true).overlay;
 
-    final color = switch (type) {
-      TopSnackType.success => Colors.green.shade600,
-      TopSnackType.error => Colors.red.shade600,
-      TopSnackType.info => Colors.blue.shade600,
-      TopSnackType.cart => Colors.black,
-    };
+  if (overlay == null) {
+    _isSnackVisible = false;
+    return;
+  }
 
-    final icon = switch (type) {
-      TopSnackType.success => Icons.check_circle,
-      TopSnackType.error => Icons.error,
-      TopSnackType.info => Icons.info,
-      TopSnackType.cart => Icons.shopping_cart,
-    };
+  final color = switch (type) {
+    TopSnackType.success => Colors.green.shade600,
+    TopSnackType.error => Colors.red.shade600,
+    TopSnackType.info => Colors.blue.shade600,
+    TopSnackType.cart => Colors.black,
+  };
 
-    final overlayEntry = OverlayEntry(
-      builder:
-          (_) => Builder(
-            builder: (context) {
-              final paddingTop = MediaQuery.of(context).padding.top;
-              return Positioned(
-                top: paddingTop + 16,
-                left: 16,
-                right: 16,
-                child: Material(
-                  color: Colors.transparent,
-                  child: _TopSnackBar(
-                    duration: effectiveDuration,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 6,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(icon, color: Colors.white),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              message,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ],
-                      ),
+  final icon = switch (type) {
+    TopSnackType.success => Icons.check_circle,
+    TopSnackType.error => Icons.error,
+    TopSnackType.info => Icons.info,
+    TopSnackType.cart => Icons.shopping_cart,
+  };
+
+  final overlayEntry = OverlayEntry(
+    builder: (context) {
+      final paddingTop = MediaQuery.of(context).padding.top;
+      return Positioned(
+        top: paddingTop + 16,
+        left: 16,
+        right: 16,
+        child: Material(
+          color: Colors.transparent,
+          child: _TopSnackBar(
+            duration: effectiveDuration,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 6,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Icon(icon, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
-                ),
-              );
-            },
+                ],
+              ),
+            ),
           ),
-    );
+        ),
+      );
+    },
+  );
 
-    overlay.insert(overlayEntry);
+  overlay.insert(overlayEntry);
 
-    Future.delayed(effectiveDuration + const Duration(milliseconds: 300), () {
-      overlayEntry.remove();
-      _isSnackVisible = false;
-    });
+  Future.delayed(effectiveDuration + const Duration(milliseconds: 300), () {
+    overlayEntry.remove();
+    _isSnackVisible = false;
   });
 }

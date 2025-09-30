@@ -17,17 +17,23 @@ class SliderCarousel extends StatelessWidget {
     if (sliderProv.isLoading) {
       return SizedBox(
         height: 180,
-        child: Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
-          child: Container(
-            width: double.infinity,
-            height: 180,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Container(
+                width: double.infinity,
+                height: 180,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
-          ),
+            const CircularProgressIndicator(strokeWidth: 3),
+          ],
         ),
       );
     }
@@ -36,16 +42,58 @@ class SliderCarousel extends StatelessWidget {
       return SizedBox(
         height: 180,
         child: Center(
-          child: Text(
-            "Failed to load slider",
-            style: TextStyle(color: AppColors.error),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.redAccent,
+                size: 40,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Failed to load slider",
+                style: TextStyle(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              TextButton.icon(
+                onPressed: () => context.read<SliderProv>().loadSlider(),
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text("Retry"),
+              ),
+            ],
           ),
         ),
       );
     }
 
     if (sliderProv.images.isEmpty) {
-      return const SizedBox.shrink();
+      return SizedBox(
+        height: 180,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.photo_size_select_actual_outlined,
+                size: 40,
+                color: Colors.grey,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "No slider images available",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return Container(

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '/core/constants/colors.dart';
 import '/shared/widgets/app_bars.dart';
 
+import '/screens/supplier/order/widgets/print_order_button.dart';
+
 class OrderDetailScreen extends StatelessWidget {
   final Map<String, dynamic> order;
 
@@ -63,6 +65,7 @@ class OrderDetailScreen extends StatelessWidget {
                               fontSize: 16,
                             ),
                           ),
+                          Text("Date"),
                         ],
                       ),
                     ),
@@ -220,6 +223,7 @@ class OrderDetailScreen extends StatelessWidget {
           ],
         ),
       ),
+      floatingActionButton: PrintSalesOrder(order: order),
     );
   }
 }

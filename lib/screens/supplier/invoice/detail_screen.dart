@@ -7,21 +7,22 @@ import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/empty_state.dart';
 
-import 'widgets/deliver_order_button.dart';
-import 'widgets/so_info_card.dart';
-import 'widgets/print_order_button.dart';
+import 'widgets/bill_inv_btn.dart';
+import 'widgets/inv_info_card.dart';
+import 'widgets/inv_print_btn.dart';
 import 'widgets/product_table_card.dart';
 
-class SalesOrderDetailScreen extends StatefulWidget {
+class SalesInvoiceDetailScreen extends StatefulWidget {
   final String orderId;
 
-  const SalesOrderDetailScreen({super.key, required this.orderId});
+  const SalesInvoiceDetailScreen({super.key, required this.orderId});
 
   @override
-  State<SalesOrderDetailScreen> createState() => _SalesOrderDetailScreenState();
+  State<SalesInvoiceDetailScreen> createState() =>
+      _SalesInvoiceDetailScreenState();
 }
 
-class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
+class _SalesInvoiceDetailScreenState extends State<SalesInvoiceDetailScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -48,14 +49,14 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
         ),
       );
     } else if (order == null) {
-      body = const EmptyState(message: 'Error: Order not found');
+      body = const EmptyState(message: 'Error: Invoice not found');
     } else {
       body = Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: ListView(
           children: [
-            SalesOrderInfoCard(order: order),
-            ProductTableCard(order: order),
+            SalesInvoiceInfoCard(order: order),
+            InvoiceTableCard(order: order),
           ],
         ),
       );
@@ -63,15 +64,15 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
 
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
-      drawer: AppDrawer(selectedIndex: 3, onItemSelected: (_) {}),
+      drawer: AppDrawer(selectedIndex: 4, onItemSelected: (_) {}),
       subTitle: const Text(
-        'Sales Order',
+        'Sales Invoice',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      actionButton: order != null ? DeliverOrderButton(order: order) : null,
+      actionButton: order != null ? BIllInvoiceButton(order: order) : null,
       body: body,
       floatingActionButton:
-          order != null ? PrintSalesOrder(order: order) : null,
+          order != null ? PrintSalesInvoice(order: order) : null,
     );
   }
 }

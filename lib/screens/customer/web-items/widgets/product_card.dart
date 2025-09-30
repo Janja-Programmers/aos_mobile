@@ -32,6 +32,7 @@ class ProductCard extends StatelessWidget {
         appLogger.f('Tapped on product: ${item.name}');
         context.read<WishlistProvider>().loadWishlist();
         context.push('/product/${item.itemCode}');
+        appLogger.f('Tapped on product: ${item.itemCode}');
       },
       child: Card(
         color: AppColors.white,

@@ -6,7 +6,7 @@ import '/core/constants/colors.dart';
 import '/shared/widgets/app_bars.dart';
 
 import '../auth/auth_provider.dart';
-import '../widgets/confirm_account_delete.dart';
+import '../../shared/utils/confirm_account_delete.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});

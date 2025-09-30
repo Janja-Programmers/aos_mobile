@@ -59,7 +59,7 @@ class AppDrawer extends StatelessWidget {
               ),
               _buildDrawerItem(
                 context,
-                Icons.widgets_outlined,
+                Icons.shopping_bag,
                 AppStrings.items,
                 1,
                 '/items',
@@ -67,24 +67,31 @@ class AppDrawer extends StatelessWidget {
               ),
               _buildDrawerItem(
                 context,
-                Icons.inventory_2_outlined,
+                Icons.warehouse,
                 AppStrings.stock,
                 2,
                 '/stock-entry',
               ),
               _buildDrawerItem(
                 context,
-                Icons.receipt_long_outlined,
+                Icons.assignment,
                 AppStrings.orders,
                 3,
                 '/sales-orders',
               ),
               _buildDrawerItem(
                 context,
-                Icons.local_shipping_outlined,
+                Icons.local_shipping,
                 AppStrings.deliveryNote,
                 4,
                 '/delivery-notes',
+              ),
+              _buildDrawerItem(
+                context,
+                Icons.request_quote,
+                AppStrings.invoice,
+                5,
+                '/invoices',
               ),
 
               const Spacer(),

@@ -30,8 +30,8 @@ class StarRatingSelector extends StatelessWidget {
       children: List.generate(5, (index) {
         final starIndex = index + 1;
         return IconButton(
-          padding: EdgeInsets.zero, // remove default padding
-          constraints: const BoxConstraints(), // shrink tap target
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
           onPressed: () => onChanged(starIndex),
           icon: Icon(
             starIndex <= rating ? Icons.star : Icons.star_border,

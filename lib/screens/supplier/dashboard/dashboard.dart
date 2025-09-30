@@ -42,51 +42,58 @@ class _SellerDashboardState extends State<SellerDashboard> {
       drawer: AppDrawer(selectedIndex: 0, onItemSelected: (_) {}),
       subTitle: Text(
         AppStrings.dashboard,
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          /// 👇 Sales Chart Card
-          const SalesChartCard(),
-
-          /// 👇 Dashboard Grid Tiles
+          /// 👇 Dashboard Grid Tiles (3 per row)
           GridView.count(
             shrinkWrap: true,
-            crossAxisCount: 2,
+            crossAxisCount: 3,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.3,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 2.5,
             children: [
               DashboardTile(
-                title: AppStrings.items,
-                icon: Icons.inventory_2,
-                color: Colors.black,
-                onTap: () {
-                  if (user != null) context.push('/items', extra: user!);
-                },
+                title: "Dashboard",
+                icon: Icons.dashboard,
+                highlight: true,
+                onTap: () {},
               ),
               DashboardTile(
-                title: AppStrings.stock,
-                icon: Icons.inventory,
-                color: Colors.black,
+                title: "Products",
+                icon: Icons.shopping_bag,
+                onTap: () => context.push('/items'),
+              ),
+              DashboardTile(
+                title: "Stock Intake",
+                icon: Icons.warehouse,
                 onTap: () => context.push('/stock-entry'),
               ),
               DashboardTile(
-                title: AppStrings.orders,
-                icon: Icons.receipt_long,
-                color: Colors.black,
+                title: "Sales Order",
+                icon: Icons.assignment,
                 onTap: () => context.push('/sales-orders'),
               ),
               DashboardTile(
-                title: AppStrings.deliveryNote,
+                title: "Delivery Note",
                 icon: Icons.local_shipping,
-                color: Colors.black,
                 onTap: () => context.push('/delivery-notes'),
+              ),
+              DashboardTile(
+                title: "Sales Invoice",
+                icon: Icons.request_quote,
+                onTap: () => context.push('/invoices'),
               ),
             ],
           ),
+
+          const SizedBox(height: 16),
+
+          /// 👇 Sales Chart Card moved below shortcuts
+          const SalesChartCard(),
         ],
       ),
     );

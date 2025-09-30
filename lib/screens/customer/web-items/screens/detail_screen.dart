@@ -48,7 +48,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   void dispose() {
-    _provider?.clearProductDetail();
+    _provider?.silentClearProductDetail();
     super.dispose();
   }
 
@@ -208,7 +208,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     // --- Product Details and Reviews ---
                     ProductDetailAndReviews(
                       specs: product.specifications,
-                      reviews: product.reviews,
+                      itemCode: product.itemCode,
                     ),
                   ],
                 ),

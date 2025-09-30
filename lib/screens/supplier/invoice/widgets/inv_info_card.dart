@@ -3,10 +3,10 @@ import 'package:intl/intl.dart';
 
 import '/features/order/domain/sales_order.dart';
 
-class SalesOrderInfoCard extends StatelessWidget {
+class SalesInvoiceInfoCard extends StatelessWidget {
   final SalesOrder order;
 
-  const SalesOrderInfoCard({super.key, required this.order});
+  const SalesInvoiceInfoCard({super.key, required this.order});
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
@@ -78,15 +78,6 @@ class SalesOrderInfoCard extends StatelessWidget {
               children: [
                 Text(
                   order.id,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 6),
-
-                Text(
-                  "12-Sep-2025",
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,

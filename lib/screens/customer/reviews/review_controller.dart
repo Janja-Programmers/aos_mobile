@@ -1,35 +1,32 @@
+import 'package:flutter/material.dart';
+
 import '/features/reviews/entity.dart';
+import '/features/reviews/remote.dart';
 
-/// Pure logic for the reviews UI.
-/// Keeps all calculations outside the widget so the widget only renders.
-class ProductReviewsController {
-  final List<Review> reviews;
-
-  ProductReviewsController({required this.reviews});
+class ProductReviewsController extends ChangeNotifier {
+  List<Review> reviews = [];
+  double averageRating = 0.0;
+  int totalReviews = 0;
+  List<int> reviewsPerRating = [0, 0, 0, 0, 0];
 
   bool get hasReviews => reviews.isNotEmpty;
-  int get totalReviews => reviews.length;
+  bool isLoading = false;
 
-  /// Average rating as double (0.0 - 5.0). Returns 0.0 when no reviews.
-  double get averageRating {
-    if (reviews.isEmpty) return 0.0;
-    final sum = reviews.fold<double>(0, (prev, r) => prev + r.rating);
-    return sum / reviews.length;
+  Future<void> loadReviews(String itemCode, BuildContext context) async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await fetchReviews(itemCode, context: context);
+
+      reviews = response.toEntities();
+
+      averageRating = response.averageRating;
+      totalReviews = response.totalReviews;
+      reviewsPerRating = response.reviewsPerRating;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
-
-  /// Distribution map: keys 1..5 -> counts
-  /// Distribution map: keys 0.5, 1.0, ..., 5.0 -> counts
-Map<double, int> get ratingDistribution {
-  final dist = {
-    for (var i = 1; i <= 10; i++) i * 0.5: 0,
-  };
-
-  for (final r in reviews) {
-    // Round to nearest 0.5
-    final bucket = (r.rating * 2).round() / 2.0;
-    dist[bucket] = (dist[bucket] ?? 0) + 1;
-  }
-  return dist;
-}
-
 }

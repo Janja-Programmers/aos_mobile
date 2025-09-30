@@ -1,9 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
-import '../auth/auth_provider.dart';
 import '/core/utils/logger.dart';
 import '/core/constants/const.dart';
 import '/core/di/service_locator.dart';
@@ -46,13 +44,6 @@ class _ReportProductDialogState extends State<ReportProductDialog> {
     try {
       final client = sl<APIClient>().client;
 
-      // get logged in user email from AuthProvider
-      final authProvider = context.read<AuthProvider>();
-      final loggedInEmail = authProvider.user?.username ?? "anonymous";
-
-      appLogger.i("Logged in as: $loggedInEmail");
-      appLogger.i("Product name: ${widget.productName}");
-
       final response = await client.post(
         ApiRoutes.reportProduct,
         queryParameters: {
@@ -63,8 +54,6 @@ class _ReportProductDialogState extends State<ReportProductDialog> {
       );
 
       final data = response.data['data'];
-
-      appLogger.i("Data: ${data.toString()}");
 
       if (mounted) {
         appLogger.i("Worked well");

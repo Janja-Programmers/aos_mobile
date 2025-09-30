@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '/core/utils/snackbar.dart';
 
-import '../auth/auth_provider.dart';
+import '../../screens/auth/auth_provider.dart';
 
 class ConfirmDeleteAccountDialog extends StatelessWidget {
   const ConfirmDeleteAccountDialog({super.key});

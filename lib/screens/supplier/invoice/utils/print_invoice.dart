@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 
 import '/features/order/domain/sales_order.dart';
 
-Future<void> printSalesOrder(SalesOrder order) async {
+Future<void> printSalesInvoice(SalesOrder order) async {
   final pdf = pw.Document();
 
   final now = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -18,8 +18,10 @@ Future<void> printSalesOrder(SalesOrder order) async {
       margin: const pw.EdgeInsets.all(24),
       build:
           (context) => [
+            // everything you already have in your Column
             pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
+
               children: [
                 /// Company header
                 pw.Row(
@@ -37,7 +39,7 @@ Future<void> printSalesOrder(SalesOrder order) async {
                           ),
                         ),
                         pw.Text(
-                          'Official Sales Order',
+                          'Official Sales Invoice',
                           style: const pw.TextStyle(fontSize: 12),
                         ),
                       ],
@@ -52,9 +54,9 @@ Future<void> printSalesOrder(SalesOrder order) async {
 
                 pw.SizedBox(height: 16),
 
-                /// Order title & ID
+                /// Invoice title & ID
                 pw.Text(
-                  'Sales Order',
+                  'Invoice',
                   style: pw.TextStyle(
                     fontSize: 18,
                     fontWeight: pw.FontWeight.bold,
@@ -62,7 +64,7 @@ Future<void> printSalesOrder(SalesOrder order) async {
                 ),
                 pw.SizedBox(height: 4),
                 pw.Text(
-                  'Order ID: ${order.id}',
+                  'Invoice ID: ${order.id}',
                   style: pw.TextStyle(
                     fontSize: 14,
                     fontWeight: pw.FontWeight.bold,
@@ -261,7 +263,7 @@ Future<void> printSalesOrder(SalesOrder order) async {
                   padding: const pw.EdgeInsets.only(top: 32),
                   child: pw.Center(
                     child: pw.Text(
-                      'This is an official sales order from Africa Online Stores.',
+                      'Thank you for shopping with Africa Online Stores!',
                       style: pw.TextStyle(
                         fontSize: 10,
                         fontStyle: pw.FontStyle.italic,

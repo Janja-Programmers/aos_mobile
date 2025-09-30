@@ -4,54 +4,8 @@ import 'package:fl_chart/fl_chart.dart';
 
 import 'provider.dart';
 
-class SalesChartCard extends StatefulWidget {
+class SalesChartCard extends StatelessWidget {
   const SalesChartCard({super.key});
-
-  @override
-  State<SalesChartCard> createState() => _SalesChartCardState();
-}
-
-class _SalesChartCardState extends State<SalesChartCard> {
-  final double _minFilterValue = 0;
-
-  // void _showFilterDialog(SalesChartProvider provider) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       double tempFilter = _minFilterValue;
-  //       return AlertDialog(
-  //         title: const Text('Filter Minimum Sales'),
-  //         content: Slider(
-  //           min: 0,
-  //           max: provider.chart!.values.reduce((a, b) => a > b ? a : b),
-  //           divisions: 20,
-  //           value: tempFilter,
-  //           label: tempFilter.toStringAsFixed(0),
-  //           onChanged: (val) {
-  //             setState(() {
-  //               tempFilter = val;
-  //             });
-  //           },
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () => Navigator.pop(context),
-  //             child: const Text('Cancel'),
-  //           ),
-  //           ElevatedButton(
-  //             onPressed: () {
-  //               setState(() {
-  //                 _minFilterValue = tempFilter;
-  //               });
-  //               Navigator.pop(context);
-  //             },
-  //             child: const Text('Apply'),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -70,29 +24,17 @@ class _SalesChartCardState extends State<SalesChartCard> {
     if (provider.failure != null) {
       return Card(
         color: Colors.red[50],
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+        child: const Padding(
+          padding: EdgeInsets.all(24),
           child: Text(
             "Error: Can't load chart",
-            style: const TextStyle(color: Colors.red),
+            style: TextStyle(color: Colors.red),
           ),
         ),
       );
     }
 
-    if (chart == null) {
-      return const SizedBox.shrink();
-    }
-
-    // Apply filter
-    final filteredLabels = <String>[];
-    final filteredValues = <double>[];
-    for (int i = 0; i < chart.values.length; i++) {
-      if (chart.values[i] >= _minFilterValue) {
-        filteredLabels.add(chart.labels[i]);
-        filteredValues.add(chart.values[i]);
-      }
-    }
+    if (chart == null) return const SizedBox.shrink();
 
     return Card(
       elevation: 4,
@@ -103,42 +45,47 @@ class _SalesChartCardState extends State<SalesChartCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title with filter icon
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Item-wise Sales',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                // IconButton(
-                //   icon: const Icon(Icons.filter_alt),
-                //   onPressed: () => _showFilterDialog(provider),
-                // ),
-              ],
+            Text(
+              'Item-wise Sales',
+              style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
             AspectRatio(
               aspectRatio: 1.6,
               child: BarChart(
                 BarChartData(
-                  alignment: BarChartAlignment.spaceAround,
-                  barTouchData: BarTouchData(enabled: true),
+                  alignment: BarChartAlignment.center,
+                  groupsSpace: 18,
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: BarTouchTooltipData(
+                      getTooltipColor: (group) => Colors.black,
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        return BarTooltipItem(
+                          rod.toY.toStringAsFixed(0),
+                          const TextStyle(color: Colors.white, fontSize: 12),
+                        );
+                      },
+                    ),
+                  ),
                   titlesData: FlTitlesData(
                     show: true,
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
+                        reservedSize: 40,
                         getTitlesWidget: (value, meta) {
                           final index = value.toInt();
-                          return index < filteredLabels.length
+                          return index < chart.labels.length
                               ? SideTitleWidget(
                                 meta: meta,
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
+                                child: Transform.rotate(
+                                  angle:
+                                      -0.6, // rotate ~ -35° so they don’t overlap
                                   child: Text(
-                                    filteredLabels[index],
-                                    style: const TextStyle(fontSize: 10),
+                                    chart.labels[index],
+                                    style: const TextStyle(fontSize: 9),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               )
@@ -149,35 +96,34 @@ class _SalesChartCardState extends State<SalesChartCard> {
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        reservedSize: 50,
-                        getTitlesWidget: (value, meta) {
-                          return SideTitleWidget(
-                            meta: meta,
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                value.toInt().toString(),
-                                style: const TextStyle(fontSize: 10),
+                        reservedSize: 40,
+                        getTitlesWidget:
+                            (value, meta) => SideTitleWidget(
+                              meta: meta,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  value.toInt().toString(),
+                                  style: const TextStyle(fontSize: 10),
+                                ),
                               ),
                             ),
-                          );
-                        },
                       ),
                     ),
-                    rightTitles: AxisTitles(
+                    rightTitles: const AxisTitles(
                       sideTitles: SideTitles(showTitles: false),
                     ),
                   ),
                   borderData: FlBorderData(show: false),
-                  barGroups: List.generate(filteredValues.length, (i) {
+                  barGroups: List.generate(chart.values.length, (i) {
                     return BarChartGroupData(
                       x: i,
                       barRods: [
                         BarChartRodData(
-                          toY: filteredValues[i],
-                          width: 18,
+                          toY: chart.values[i],
+                          width: 16,
                           color: Colors.blueAccent,
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ],
                     );

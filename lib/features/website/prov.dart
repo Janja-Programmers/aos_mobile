@@ -87,4 +87,9 @@ class WebsiteItemProv with ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  void silentClearProductDetail() {
+    _selectedProduct = null;
+    _error = null;
+  }
 }

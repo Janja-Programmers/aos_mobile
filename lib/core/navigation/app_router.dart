@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/screens/supplier/invoice/detail_screen.dart';
 import 'package:go_router/go_router.dart';
 
 // Auth
@@ -17,6 +18,7 @@ import '/screens/supplier/order/sales_order_list_screen.dart';
 import '/screens/supplier/d_note/delivery_note_list_screen.dart';
 import '/screens/supplier/order/order_detail_screen.dart';
 import '/screens/supplier/d_note/delivery_note_detail_screen.dart';
+import '/screens/supplier/invoice/list_screen.dart';
 
 import '/features/stock/domain/entity/stock.dart';
 import '/screens/supplier/stock/create_stock_screen.dart';
@@ -152,6 +154,20 @@ class AppRouter {
         builder: (_, state) {
           final stockEntry = state.extra as StockEntry;
           return CreateStockEntryScreen(entry: stockEntry);
+        },
+      ),
+
+      // INVOICE ROUTES
+      GoRoute(
+        path: '/invoices',
+        builder: (context, state) => const SalesInvoiceListScreen(),
+      ),
+
+      GoRoute(
+        path: '/invoice/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return SalesInvoiceDetailScreen(orderId: id);
         },
       ),
 

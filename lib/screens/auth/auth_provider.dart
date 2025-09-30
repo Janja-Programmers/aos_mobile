@@ -228,31 +228,39 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Either<Failure, String>> deleteAccount(String password) async {
+  Future<Either<Failure, String>> deleteAccount() async {
     try {
-      final response = await apiClient.client.post(
-        ApiRoutes.deleteUserAccount,
-        data: {"password": password},
-      );
+      final response = await apiClient.client.post(ApiRoutes.deleteUserAccount);
 
       final data = response.data;
+
       if (data is Map<String, dynamic>) {
-        final success = data["success"] == true;
-        final message = data["message"]?.toString() ?? "Unknown response";
+        final msgData = data["message"];
+        if (msgData is Map<String, dynamic>) {
+          final status = msgData["status"]?.toString();
+          final message = msgData["message"]?.toString() ?? "Unknown response";
 
-        if (success) {
-          // optional: clear user state here too
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.clear();
-          notifyListeners();
-          return Right(message);
+          if (status == "success") {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.clear();
+            user = null;
+            _defaultHome = null;
+            _returnTo = null;
+            notifyListeners();
+
+            appLogger.i('Account deleted successfully: $message');
+            return Right(message);
+          } else {
+            appLogger.w('Account deletion failed: $message');
+            return Left(ServerFailure(message));
+          }
         }
-
-        return Left(ServerFailure(message));
+        return Left(ServerFailure("Unexpected message format"));
       }
 
       return Left(ServerFailure("Unexpected response format"));
     } catch (e) {
+      appLogger.e('Exception deleting account: $e');
       return Left(handleException(e));
     }
   }

@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '/core/constants/colors.dart';
 
 import '/features/website/prov.dart';
+import '/features/wishlist/domain/wishlist_item.dart';
+import '/features/wishlist/provider.dart';
 
 import '/shared/widgets/app_bars.dart';
 
@@ -15,6 +17,7 @@ import '../widgets/product_image_with_video.dart';
 import '../widgets/product_detail_card.dart';
 import '../widgets/product_tile_and_price.dart';
 
+import '../helper/add_to_wishlist.dart';
 import '../helper/empty_page.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -170,12 +173,53 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            ProductImageWithVideo(
-                              imageUrls:
-                                  product.images.isNotEmpty
-                                      ? product.images
-                                      : [product.imageUrl],
-                              videoUrl: product.demoVideoUrl ?? "",
+                            Stack(
+                              children: [
+                                ProductImageWithVideo(
+                                  imageUrls:
+                                      product.images.isNotEmpty
+                                          ? product.images
+                                          : [product.imageUrl],
+                                  videoUrl: product.demoVideoUrl ?? "",
+                                ),
+                                Positioned(
+                                  top: 8,
+                                  left: 8,
+                                  child: Builder(
+                                    builder: (context) {
+                                      final wishlistProv =
+                                          context.watch<WishlistProvider>();
+                                      final isWished = wishlistProv
+                                          .isInWishlist(product.itemCode);
+
+                                      return InkWell(
+                                        onTap: () {
+                                          handleToggleWishlist(
+                                            context,
+                                            wishlistProv,
+                                            WishlistItem(
+                                              id: product.itemCode,
+                                              title: product.name,
+                                              imageUrl: product.imageUrl,
+                                              price: product.price.toDouble(),
+                                            ),
+                                          );
+                                        },
+                                        child: Icon(
+                                          isWished
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
+                                          color:
+                                              isWished
+                                                  ? Colors.red
+                                                  : Colors.grey,
+                                          size: 28,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 16),
 
@@ -208,7 +252,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     // --- Product Details and Reviews ---
                     ProductDetailAndReviews(
                       specs: product.specifications,
-                      itemCode: product.itemCode,
+                      itemCode: product.name,
                     ),
                   ],
                 ),

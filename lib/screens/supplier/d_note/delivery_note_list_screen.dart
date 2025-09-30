@@ -47,7 +47,7 @@ class _DeliveryNoteListScreenState extends State<DeliveryNoteListScreen> {
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 4, onItemSelected: (_) {}),
       subTitle: const Text(
-        'Delivery Notes',
+        'Delivery Note',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
       body: Consumer<DeliveryNoteProvider>(

@@ -4,103 +4,87 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '/core/utils/snackbar.dart';
-
 import '../../screens/auth/auth_provider.dart';
 
-class ConfirmDeleteAccountDialog extends StatelessWidget {
+class ConfirmDeleteAccountDialog extends StatefulWidget {
   const ConfirmDeleteAccountDialog({super.key});
 
+  /// Shows the dialog
   static Future<void> show(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    await showDialog(
       context: context,
-      builder: (ctx) => const ConfirmDeleteAccountDialog(),
+      barrierDismissible: false,
+      builder: (_) => const ConfirmDeleteAccountDialog(),
     );
+  }
 
-    if (confirmed == true && context.mounted) {
-      final authProvider = context.read<AuthProvider>();
-      await authProvider.logout();
-      context.go('/login');
-    }
+  @override
+  State<ConfirmDeleteAccountDialog> createState() =>
+      _ConfirmDeleteAccountDialogState();
+}
+
+class _ConfirmDeleteAccountDialogState
+    extends State<ConfirmDeleteAccountDialog> {
+  bool _isLoading = false;
+
+  Future<void> _handleDelete() async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    final authProvider = context.read<AuthProvider>();
+    // ✅ no password argument anymore
+    final result = await authProvider.deleteAccount();
+
+    result.fold(
+      (failure) {
+        topSnackBar(context, failure.message, type: TopSnackType.error);
+        setState(() => _isLoading = false);
+      },
+      (message) async {
+        // Clear local session & app state
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+
+        topSnackBar(context, message, type: TopSnackType.success);
+
+        if (!mounted) return;
+
+        // Close dialog, logout and redirect
+        context.pop();
+        await authProvider.logout();
+        context.go('/login');
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final passwordController = TextEditingController();
-
     return AlertDialog(
       title: const Text("Delete Account"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            "This will permanently delete your account and all data.\n"
-            "This action cannot be undone. Enter your password to confirm.",
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: passwordController,
-            obscureText: true,
-            decoration: const InputDecoration(
-              labelText: "Password",
-              border: OutlineInputBorder(),
-            ),
-          ),
-        ],
+      content: const Text(
+        "This will permanently delete your account and all data.\n"
+        "This action cannot be undone. Are you sure you want to continue?",
       ),
       actions: [
         TextButton(
-          onPressed: () => context.pop(false),
+          onPressed: _isLoading ? null : () => context.pop(),
           child: const Text("Cancel"),
         ),
-        StatefulBuilder(
-          builder: (ctx, setState) {
-            bool isLoading = false;
-
-            Future<void> handleDelete() async {
-              setState(() => isLoading = true);
-
-              final authProvider = context.read<AuthProvider>();
-              final result = await authProvider.deleteAccount(
-                passwordController.text,
-              );
-
-              result.fold(
-                (failure) {
-                  topSnackBar(
-                    context,
-                    failure.message,
-                    type: TopSnackType.error,
-                  );
-                },
-                (message) async {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.clear(); // ✅ clear all local session data
-
-                  topSnackBar(context, message, type: TopSnackType.success);
-
-                  context.pop(true); // triggers logout+redirect
-                },
-              );
-
-              setState(() => isLoading = false);
-            }
-
-            return ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              onPressed: isLoading ? null : handleDelete,
-              child:
-                  isLoading
-                      ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                      : const Text("Yes, Delete"),
-            );
-          },
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          onPressed: _isLoading ? null : _handleDelete,
+          child:
+              _isLoading
+                  ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                  : const Text("Yes, Delete"),
         ),
       ],
     );

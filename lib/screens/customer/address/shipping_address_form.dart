@@ -6,10 +6,11 @@ import '/core/utils/validators.dart';
 
 import '/features/address/provider.dart';
 import '/features/address/domain/address.dart';
-import '../../auth/auth_provider.dart';
+
+import '/screens/auth/auth_provider.dart';
 
 class ShippingAddressForm extends StatefulWidget {
-  final Address? initialData; // 👈 allow null
+  final Address? initialData;
 
   const ShippingAddressForm({super.key, this.initialData});
 
@@ -62,11 +63,10 @@ class _ShippingAddressFormState extends State<ShippingAddressForm> {
 
     String? resultName;
 
+    // 🔄 Provider handles isLoading toggle
     if (widget.initialData == null) {
-      // ➕ Create mode
       resultName = await addressProv.createShippingAddress(addressEntity);
     } else {
-      // 🔁 Update mode — to be implemented next
       resultName = await addressProv.updateShippingAddress(addressEntity);
     }
 
@@ -137,7 +137,17 @@ class _ShippingAddressFormState extends State<ShippingAddressForm> {
 
                   ElevatedButton.icon(
                     onPressed: isLoading ? null : _submitAddress,
-                    icon: const Icon(Icons.check),
+                    icon:
+                        isLoading
+                            ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Icon(Icons.check),
                     label: Text(
                       isLoading
                           ? 'Saving...'

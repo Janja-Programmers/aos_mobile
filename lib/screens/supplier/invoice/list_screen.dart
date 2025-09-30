@@ -1,11 +1,12 @@
-import 'package:africaonlinestores/shared/widgets/empty_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
-import '/features/order/prov.dart';
 import '/shared/widgets/app_drawer.dart';
+import '/shared/widgets/empty_state.dart';
 import '/shared/widgets/main_bar.dart';
+
+import 'prov.dart';
 import 'widgets/inv_card_row.dart';
 
 class SalesInvoiceListScreen extends StatefulWidget {
@@ -22,9 +23,9 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SalesOrderProvider>().fetchAll();
-    });
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => context.read<SalesInvoiceProvider>().fetchInvoices(),
+    );
   }
 
   @override
@@ -34,7 +35,7 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
   }
 
   Future<void> _refresh() async {
-    await context.read<SalesOrderProvider>().fetchAll();
+    await context.read<SalesInvoiceProvider>().fetchInvoices();
   }
 
   @override
@@ -43,13 +44,13 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 5, onItemSelected: (_) {}),
       subTitle: const Text(
-        'Sales Invoice',
+        'Sales Invoices',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      body: Consumer<SalesOrderProvider>(
+      body: Consumer<SalesInvoiceProvider>(
         builder: (context, provider, _) {
-          // Loading state
-          if (provider.listLoading) {
+          // 🔄 Loading state
+          if (provider.isLoading) {
             return const Center(
               child: SizedBox(
                 width: 32,
@@ -59,14 +60,14 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
             );
           }
 
-          // Failure state
+          // ⚠️ Error state
           if (provider.failure != null) {
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'Error: Could not load orders',
+                    'Error: Could not load invoices',
                     style: TextStyle(color: Colors.red),
                   ),
                   const SizedBox(height: 12),
@@ -80,28 +81,29 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
             );
           }
 
-          // Filter by search
+          // 🔎 Filter invoices by search query
           final query = _searchController.text.trim().toLowerCase();
-          final filteredOrders =
-              provider.orders.where((order) {
+          final filtered =
+              provider.invoices.where((invoice) {
                 return query.isEmpty ||
-                    order.customerName.toLowerCase().contains(query) ||
-                    order.status.toLowerCase().contains(query) ||
-                    order.id.toLowerCase().contains(query);
+                    invoice.customerName.toLowerCase().contains(query) ||
+                    invoice.status.toLowerCase().contains(query) ||
+                    invoice.id.toLowerCase().contains(query);
               }).toList();
 
-          // No orders at all
-          if (provider.orders.isEmpty) {
-            return const Center(child: Text('No sales invoice found.'));
+          // 📭 No invoices at all
+          if (provider.invoices.isEmpty) {
+            return const Center(child: Text('No sales invoices found.'));
           }
 
+          // ✅ Main content
           return RefreshIndicator(
             onRefresh: _refresh,
             child: Column(
               children: [
-                // Search bar
+                // 🔍 Search bar
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(8),
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
@@ -118,7 +120,7 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
                   ),
                 ),
 
-                // Card with list
+                // 📋 List of invoices
                 Expanded(
                   child: Card(
                     margin: const EdgeInsets.all(10),
@@ -127,20 +129,19 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header with count
+                        // Header with counts
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text(
-                                "Sales Invoice",
+                                "Sales Invoices",
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                               Text(
-                                "${filteredOrders.length} of ${provider.orders.length}",
+                                "${filtered.length} of ${provider.invoices.length}",
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -155,13 +156,13 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
                           color: AppColors.background,
                         ),
 
-                        // List
+                        // Body (list or empty state)
                         Expanded(
                           child:
-                              filteredOrders.isEmpty
+                              filtered.isEmpty
                                   ? EmptyState(
                                     message:
-                                        'No sales invoice match your search.',
+                                        'No sales invoice matches your search.',
                                     actionLabel: 'Clear search',
                                     onAction: () {
                                       _searchController.clear();
@@ -172,15 +173,17 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
                                     physics:
                                         const AlwaysScrollableScrollPhysics(),
                                     padding: EdgeInsets.zero,
-                                    itemCount: filteredOrders.length,
+                                    itemCount: filtered.length,
                                     separatorBuilder:
                                         (_, _) => const Divider(
                                           height: 0.5,
                                           thickness: 0.5,
                                         ),
                                     itemBuilder: (_, i) {
-                                      final order = filteredOrders[i];
-                                      return SalesInvoiceCardRow(order: order);
+                                      final invoice = filtered[i];
+                                      return SalesInvoiceCardRow(
+                                        invoice: invoice,
+                                      );
                                     },
                                   ),
                         ),

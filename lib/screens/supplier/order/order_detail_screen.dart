@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/screens/supplier/invoice/widgets/bill_inv_btn.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -68,7 +69,12 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
         'Sales Order',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      actionButton: order != null ? DeliverOrderButton(order: order) : null,
+      actionButton:
+          order != null
+              ? (order.percentDelivered < 100
+                  ? DeliverOrderButton(order: order)
+                  : BIllInvoiceButton(order: order))
+              : null,
       body: body,
       floatingActionButton:
           order != null ? PrintSalesOrder(order: order) : null,

@@ -13,20 +13,43 @@ class DeliverOrderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton.icon(
+    final prov = context.watch<SalesOrderProvider>();
+    final isDelivered = order.percentDelivered >= 100;
+    final isLoading = prov.detailLoading;
+
+    return ElevatedButton(
       onPressed:
-          order.percentDelivered >= 100
+          (isDelivered || isLoading)
               ? null
               : () => _deliverOrder(context, order),
-      icon: Icon(
-        Icons.local_shipping_outlined,
-        color: order.percentDelivered >= 100 ? Colors.grey : null,
-      ),
-      label: Text(
-        order.percentDelivered >= 100 ? 'Delivered' : 'Deliver',
-        style: TextStyle(
-          color: order.percentDelivered >= 100 ? Colors.grey : null,
-        ),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        transitionBuilder:
+            (child, anim) => FadeTransition(opacity: anim, child: child),
+        child:
+            isLoading
+                ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: Colors.white,
+                  ),
+                )
+                : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.local_shipping_outlined,
+                      color: isDelivered ? Colors.grey : null,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isDelivered ? 'Delivered' : 'Deliver',
+                      style: TextStyle(color: isDelivered ? Colors.grey : null),
+                    ),
+                  ],
+                ),
       ),
     );
   }

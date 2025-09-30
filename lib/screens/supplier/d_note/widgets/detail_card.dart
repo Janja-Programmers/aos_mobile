@@ -79,10 +79,7 @@ class DetailCard extends StatelessWidget {
                       style: const TextStyle(color: Colors.black87),
                     ),
                   ] else
-                    const Text(
-                      'No shipping address',
-                      style: TextStyle(color: Colors.grey),
-                    ),
+                    const Text('---', style: TextStyle(color: Colors.grey)),
                 ],
               ),
             ),

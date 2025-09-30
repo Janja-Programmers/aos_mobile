@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 
 class ProductNotReviewedCard extends StatelessWidget {
   final VoidCallback? onRate;
+  final Widget? titleRow;
 
-  const ProductNotReviewedCard({super.key, this.onRate});
+  const ProductNotReviewedCard({super.key, this.onRate, this.titleRow});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Use the passed title row if available
+        if (titleRow != null) titleRow!,
         const SizedBox(height: 16),
 
         // Average rating section

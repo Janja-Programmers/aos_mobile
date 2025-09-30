@@ -21,6 +21,8 @@ class ShippingAddressCard extends StatefulWidget {
 }
 
 class _ShippingAddressCardState extends State<ShippingAddressCard> {
+  bool _isSaving = false;
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +37,10 @@ class _ShippingAddressCardState extends State<ShippingAddressCard> {
   }
 
   Future<void> _openAddressForm() async {
+    if (_isSaving) return;
+
+    setState(() => _isSaving = true);
+
     final result = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -45,9 +51,15 @@ class _ShippingAddressCardState extends State<ShippingAddressCard> {
     if (result != null) {
       await _fetchAddress();
     }
+
+    setState(() => _isSaving = false);
   }
 
   Future<void> _selectAddress() async {
+    if (_isSaving) return;
+
+    setState(() => _isSaving = true);
+
     final selected = await showGeneralDialog<Address>(
       context: context,
       barrierDismissible: true,
@@ -63,11 +75,12 @@ class _ShippingAddressCardState extends State<ShippingAddressCard> {
 
       await remote.updateShippingAddress(selected);
 
-      // 🩹 SET selected address locally to update UI
-      provider.setSelectedAddress(selected); // ✅ Add this line
+      provider.setSelectedAddress(selected);
 
-      await _fetchAddress(); // refresh from backend (optional)
+      await _fetchAddress();
     }
+
+    setState(() => _isSaving = false);
   }
 
   @override
@@ -116,9 +129,25 @@ class _ShippingAddressCardState extends State<ShippingAddressCard> {
                           'No Shipping Address',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        TextButton(
-                          onPressed: _openAddressForm,
-                          child: const Text('Add Address'),
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            TextButton(
+                              onPressed:
+                                  _isSaving
+                                      ? null
+                                      : _openAddressForm, // disabled while saving
+                              child: const Text('Add Address'),
+                            ),
+                            if (_isSaving)
+                              const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     )
@@ -136,16 +165,23 @@ class _ShippingAddressCardState extends State<ShippingAddressCard> {
                         ),
                         Text(address.line1),
                         Text('${address.city}, ${address.country}'),
-                        Text('📞 ${address.phone}'),
+                        Text(address.phone),
                         const SizedBox(height: 8),
                         Align(
                           alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              _selectAddress();
-                            },
-                            child: const Text('Change Address'),
-                          ),
+                          child:
+                              _isSaving
+                                  ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : TextButton(
+                                    onPressed: _selectAddress,
+                                    child: const Text('Change Address'),
+                                  ),
                         ),
                       ],
                     ),

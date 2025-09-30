@@ -1,50 +1,42 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+// import 'package:go_router/go_router.dart';
 
 import '/features/order/domain/sales_order.dart';
 
 class SalesInvoiceCardRow extends StatelessWidget {
-  final SalesOrder order;
+  final SalesOrder invoice;
 
-  const SalesInvoiceCardRow({super.key, required this.order});
+  const SalesInvoiceCardRow({super.key, required this.invoice});
 
   @override
   Widget build(BuildContext context) {
-    Color statusColor;
-    Color statusTextColor;
+    final status = invoice.status.toLowerCase();
 
-    switch (order.status.toLowerCase()) {
-      case 'completed':
-        statusColor = Colors.green.shade100;
-        statusTextColor = Colors.green.shade800;
-        break;
-      case 'to deliver and bill':
-        statusColor = Colors.orange.shade100;
-        statusTextColor = Colors.orange.shade800;
-        break;
-      default:
-        statusColor = Colors.grey.shade300;
-        statusTextColor = Colors.grey.shade700;
-    }
+    final Map<String, (Color bg, Color text)> statusStyles = {
+      'completed': (Colors.green.shade100, Colors.green.shade800),
+      'to deliver and bill': (Colors.orange.shade100, Colors.orange.shade800),
+    };
+
+    final (statusColor, statusTextColor) =
+        statusStyles[status] ?? (Colors.grey.shade300, Colors.grey.shade700);
 
     return InkWell(
-      onTap: () => context.push('/invoice/${order.id}'),
+      // onTap: () => context.push('/invoice/${invoice.id}'),
+      onTap: () {},
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         child: Row(
           children: [
-            // Expanded Column for content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Customer name and status
+                  /// Customer name + Status chip
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
                         child: Text(
-                          order.customerName,
+                          invoice.customerName,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
@@ -62,7 +54,7 @@ class SalesInvoiceCardRow extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          order.status,
+                          invoice.status,
                           style: TextStyle(
                             fontSize: 12,
                             color: statusTextColor,
@@ -74,8 +66,8 @@ class SalesInvoiceCardRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
 
-                  // Total
-                  Text(order.id, style: const TextStyle(fontSize: 13)),
+                  /// Invoice ID
+                  Text(invoice.id, style: const TextStyle(fontSize: 13)),
                 ],
               ),
             ),

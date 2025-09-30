@@ -86,6 +86,9 @@ class ProductReviewsCard extends StatelessWidget {
                 await openRateDialog(context, itemCode);
                 controller.loadReviews(itemCode, context);
               },
+              titleRow: _buildTitleRow(
+                context,
+              ), // <-- inject the same title row
             );
           }
 

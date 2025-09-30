@@ -28,9 +28,9 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
   final List<ItemRowController> _itemControllers = [ItemRowController()];
 
-  bool get isEditing => widget.entry != null;
-
   late final CreateStockEntryProvider _provider;
+  late bool _isEditing;
+  StockEntry? _savedEntry;
 
   @override
   void initState() {
@@ -40,7 +40,10 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
       _provider.clearError();
     });
 
-    if (isEditing) {
+    _isEditing = widget.entry != null;
+    _savedEntry = widget.entry;
+
+    if (_isEditing) {
       for (final item in widget.entry!.items) {
         final controller = ItemRowController();
         controller.populateFromItem(item);
@@ -51,7 +54,7 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
   }
 
   Future<void> _submitEntry({required bool submit}) async {
-    // Step 1: validate form
+    // 1️⃣ Validate form
     if (_itemControllers.any((ctrl) => !ctrl.validate())) return;
     if (!_formKey.currentState!.validate()) {
       topSnackBar(
@@ -62,7 +65,7 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
       return;
     }
 
-    // Step 2: collect items
+    // 2️⃣ Collect items
     final items =
         _itemControllers
             .map((ctrl) => ctrl.entry)
@@ -78,42 +81,55 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
       return;
     }
 
-    // Step 3: build entry
+    // 3️⃣ Build entry
     final entry = StockEntry(
-      id: widget.entry?.id ?? '',
-      docstatus: widget.entry?.docstatus ?? DocStatus.draft,
+      id: _savedEntry?.id ?? '',
+      docstatus: _savedEntry?.docstatus ?? DocStatus.draft,
       items: items,
     );
 
-    // Step 4: save/submit via provider
+    // 4️⃣ Save or submit via provider
     final provider = context.read<CreateStockEntryProvider>();
     await provider.saveOrSubmit(entry, submit: submit);
 
     if (!mounted) return;
 
-    // Step 5: handle result
+    // 5️⃣ Handle result
     if (provider.hasError) {
       topSnackBar(
         context,
         provider.errorMessage ?? "Something went wrong",
         type: TopSnackType.error,
       );
-    } else {
-      final action = submit ? 'submitted' : 'saved';
-      topSnackBar(
-        context,
-        'Stock Intake $action successfully',
-        type: TopSnackType.success,
-      );
+      return;
+    }
 
-      final savedEntry = provider.data;
-      if (savedEntry != null && savedEntry.id.isNotEmpty) {
-        await Future.delayed(const Duration(milliseconds: 400));
-        if (mounted) {
-          await context.read<StockEntryProvider>().fetchAll();
-          context.pop();
-        }
-      }
+    final savedEntry = provider.data;
+    if (savedEntry == null) return;
+
+    // ✅ Update local state to editing mode
+    if (!_isEditing) {
+      setState(() {
+        _isEditing = true;
+        _savedEntry = savedEntry;
+      });
+    } else {
+      _savedEntry = savedEntry; // update savedEntry after edits
+    }
+
+    // 6️⃣ Show feedback
+    topSnackBar(
+      context,
+      submit
+          ? 'Stock Intake submitted successfully'
+          : 'Draft saved! You can now submit.',
+      type: TopSnackType.success,
+    );
+
+    // 7️⃣ Refresh list only if submitting or editing
+    if (_isEditing || submit) {
+      await context.read<StockEntryProvider>().fetchAll();
+      if (submit) context.pop(); // Only pop after real submission
     }
   }
 
@@ -134,7 +150,7 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
     return MainBarScaffold(
       drawer: AppDrawer(selectedIndex: 2, onItemSelected: (_) {}),
       subTitle: Text(
-        isEditing ? 'Edit Stock Intake' : 'Create Stock Intake',
+        _isEditing ? 'Edit Stock Intake' : 'Create Stock Intake',
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
 
@@ -143,13 +159,12 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
           isReadOnly
               ? null
               : StockActionButton(
-                label: isEditing ? 'Submit' : 'Save',
+                label: _isEditing ? 'Submit' : 'Save',
                 onPressed:
                     provider.loading
                         ? null
                         : () {
-                          final submit = isEditing;
-                          _submitEntry(submit: submit);
+                          _submitEntry(submit: _isEditing);
                         },
                 isLoading: provider.loading,
               ),

@@ -34,6 +34,7 @@ import '/features/order/data/repo_impl.dart';
 import '/features/order/domain/repo.dart';
 import '/features/order/domain/usecases.dart';
 import '/features/order/prov.dart';
+import '/screens/supplier/invoice/prov.dart';
 import '/screens/customer/orders/provider.dart';
 
 /*****  DELIVERYNOTE *******/
@@ -169,6 +170,7 @@ Future<void> init() async {
     ),
   );
   sl.registerLazySingleton(() => CustomerOrderProvider(sl()));
+  sl.registerLazySingleton(() => SalesInvoiceProvider(sl()));
 
   // DELIVERYNOTE Doctype
   // === Data ===

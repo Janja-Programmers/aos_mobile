@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import '/core/utils/snackbar.dart';
 import 'package:provider/provider.dart';
 
+import '/core/utils/snackbar.dart';
 import '/features/address/provider.dart';
-import '../../../auth/auth_provider.dart';
+
+import '/screens/auth/auth_provider.dart';
 import '/screens/customer/address/shipping_address_form.dart';
 
 import '../controllers/place_order.dart';
 
-class PaymentSummaryCard extends StatelessWidget {
+class PaymentSummaryCard extends StatefulWidget {
   final double total;
   final PlaceOrderController controller;
 
@@ -18,48 +19,58 @@ class PaymentSummaryCard extends StatelessWidget {
     required this.controller,
   });
 
+  @override
+  State<PaymentSummaryCard> createState() => _PaymentSummaryCardState();
+}
+
+class _PaymentSummaryCardState extends State<PaymentSummaryCard> {
+  bool _isPlacingOrder = false;
+
   Future<void> _handlePlaceOrder(BuildContext context) async {
+    if (_isPlacingOrder) return;
+
+    setState(() => _isPlacingOrder = true);
+
     final addressProvider = context.read<AddressProvider>();
     final authProvider = context.read<AuthProvider>();
     final user = authProvider.user;
 
-    if (user == null) return;
+    if (user == null) {
+      setState(() => _isPlacingOrder = false);
+      return;
+    }
 
+    // Always refresh address list before attempting
     await addressProvider.fetchShippingAddresses();
-
     final addresses = addressProvider.addresses;
-    final hasShippingAddress = addresses.isNotEmpty;
 
-    if (!hasShippingAddress) {
-      // Show warning
+    if (addresses.isEmpty) {
+      // ❌ No address → warn & open form, but DO NOT place order
       topSnackBar(
         context,
-        'Please add a shipping address first.',
+        'No shipping address found. Please add one first.',
         type: TopSnackType.error,
       );
 
-      // Launch address form modal
-      final result = await showModalBottomSheet<String>(
+      await showModalBottomSheet<String>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
         builder: (_) => const ShippingAddressForm(),
       );
 
-      // If user saved an address, refresh and re-validate
-      if (result != null) {
-        await addressProvider.fetchShippingAddresses();
-        final updatedList = addressProvider.addresses;
-        if (updatedList.isNotEmpty) {
-          controller.placeOrder(shippingAddress: updatedList.first.name);
-        }
-      }
+      // Refresh after user attempts to add
+      await addressProvider.fetchShippingAddresses();
 
+      // ✅ Still do not place order here. User must tap again.
+      setState(() => _isPlacingOrder = false);
       return;
     }
 
-    // Proceed if address exists — use first one by default
-    controller.placeOrder(shippingAddress: addresses.first.name);
+    // ✅ Only place order if address exists
+    await widget.controller.placeOrder(shippingAddress: addresses.first.name);
+
+    setState(() => _isPlacingOrder = false);
   }
 
   @override
@@ -78,15 +89,26 @@ class PaymentSummaryCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Grand Total: Sh ${total.toStringAsFixed(2)}',
+              'Grand Total: Sh ${widget.total.toStringAsFixed(2)}',
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => _handlePlaceOrder(context),
-                child: const Text('Place Order'),
+                onPressed:
+                    _isPlacingOrder ? null : () => _handlePlaceOrder(context),
+                child:
+                    _isPlacingOrder
+                        ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                        : const Text('Place Order'),
               ),
             ),
           ],

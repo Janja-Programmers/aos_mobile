@@ -138,7 +138,7 @@ class _ChangeAddressDialogState extends State<ChangeAddressDialog> {
                                 children: [
                                   Text(addr.line1),
                                   Text('${addr.city}, ${addr.country}'),
-                                  Text('📞 ${addr.phone}'),
+                                  Text(addr.phone),
                                 ],
                               ),
                               trailing: TextButton(

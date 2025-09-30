@@ -63,11 +63,6 @@ class SalesOrderInfoCard extends StatelessWidget {
                     order.contactPhone ?? '-',
                     style: const TextStyle(color: Colors.black87),
                   ),
-
-                  Text(
-                    DateFormat('yyyy-MM-dd').format(order.deliveryDate),
-                    style: const TextStyle(color: Colors.black87),
-                  ),
                 ],
               ),
             ),
@@ -86,7 +81,7 @@ class SalesOrderInfoCard extends StatelessWidget {
                 const SizedBox(height: 6),
 
                 Text(
-                  "12-Sep-2025",
+                  DateFormat('yyyy-MM-dd').format(order.deliveryDate),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,

@@ -17,7 +17,7 @@ class ImageVideoPickerSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl =
+    final _ =
         controller.uploadedImageUrl != null
             ? 'https://africaonlinestores.com${controller.uploadedImageUrl}'
             : (product?.image != null
@@ -43,30 +43,34 @@ class ImageVideoPickerSection extends StatelessWidget {
                 children: [
                   Text('Image', style: Theme.of(context).textTheme.bodyLarge),
                   const SizedBox(height: 8),
-                  controller.selectedImage != null
-                      ? Image.file(
-                        controller.selectedImage!,
-                        height: 100,
-                        width: 100,
-                        fit: BoxFit.cover,
-                      )
-                      : imageUrl != null
-                      ? Image.network(
-                        imageUrl,
-                        height: 100,
-                        width: 100,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return const SizedBox(
-                            height: 100,
-                            width: 100,
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        },
-                      )
-                      : const Text('No image selected'),
+
+                  Container(
+                    height: 100,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.grey.shade200,
+                    ),
+                    child: Center(
+                      child:
+                          controller.selectedImage != null
+                              ? Image.file(
+                                controller.selectedImage!,
+                                fit: BoxFit.cover,
+                                width: 100,
+                                height: 100,
+                              )
+                              : const Icon(
+                                Icons.broken_image,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
+                    ),
+                  ),
                   const SizedBox(height: 8),
+
+                  // Attach button
                   controller.isPickingImage
                       ? const CircularProgressIndicator()
                       : ElevatedButton(
@@ -87,27 +91,14 @@ class ImageVideoPickerSection extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child:
-                            controller.isPickingImage ||
-                                    controller.isPickingVideo
-                                ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                                : const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.attach_file),
-                                    SizedBox(width: 8),
-                                    Text('Attach'),
-                                  ],
-                                ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.attach_file),
+                            SizedBox(width: 8),
+                            Text('Attach'),
+                          ],
+                        ),
                       ),
                 ],
               ),
@@ -125,14 +116,71 @@ class ImageVideoPickerSection extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   const SizedBox(height: 8),
+
+                  // Preview / filename
                   controller.selectedVideo != null
-                      ? Text(
-                        'Selected: ${controller.selectedVideo!.path.split('/').last}',
+                      ? Stack(
+                        children: [
+                          Container(
+                            height: 100,
+                            width: 100,
+                            color: Colors.black12,
+                            child: Center(
+                              child: Icon(
+                                Icons.videocam,
+                                color: Colors.white,
+                                size: 40,
+                              ),
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap:
+                                    () => controller.pickFile(
+                                      context,
+                                      isImage: false,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ],
                       )
                       : videoUrl != null
-                      ? Text('Video: $videoUrl')
+                      ? Stack(
+                        children: [
+                          Container(
+                            height: 100,
+                            width: 100,
+                            color: Colors.black12,
+                            child: Center(
+                              child: Icon(
+                                Icons.play_arrow,
+                                color: Colors.white,
+                                size: 40,
+                              ),
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap:
+                                    () => controller.pickFile(
+                                      context,
+                                      isImage: false,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
                       : const Text('No video selected'),
+
                   const SizedBox(height: 8),
+
+                  // Attach button
                   controller.isPickingVideo
                       ? const CircularProgressIndicator()
                       : ElevatedButton(

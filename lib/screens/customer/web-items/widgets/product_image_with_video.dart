@@ -1,10 +1,11 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:flutter/foundation.dart';
+import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:video_player/video_player.dart';
 
 import '/core/utils/formatters.dart';
+
 import 'mini_video_player.dart';
 
 class ProductImageWithVideo extends StatefulWidget {
@@ -27,27 +28,20 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
   @override
   Widget build(BuildContext context) {
     final images =
-        widget.imageUrls
-            .map(resolveImageUrl)
-            .whereType<String>() // ✅ remove any nulls
-            .toList();
-
-    if (kDebugMode) {
-      print('🖼 Resolved image URLs: $images');
-    }
+        widget.imageUrls.map(resolveImageUrl).whereType<String>().toList();
 
     final videoUrl = resolveImageUrl(widget.videoUrl);
 
-    if (images.isEmpty) {
-      return _fallbackImage();
-    }
-
     final isCarousel = images.length > 1;
+
+    // Always show the first image or fallback
+    final mainImage = images.isNotEmpty ? images.first : null;
 
     return Column(
       children: [
         Stack(
           children: [
+            // Image area
             isCarousel
                 ? CarouselSlider(
                   items:
@@ -67,10 +61,11 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
                   ),
                 )
                 : GestureDetector(
-                  onTap: () => _openFullscreen(context, images.first),
-                  child: _buildImage(images.first),
+                  onTap: () => _openFullscreen(context, mainImage ?? ""),
+                  child: _buildImage(mainImage),
                 ),
 
+            // Video button overlay
             if (videoUrl != null && videoUrl.isNotEmpty)
               Positioned(
                 bottom: 12,
@@ -86,6 +81,7 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
           ],
         ),
 
+        // Carousel indicators
         if (isCarousel)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -193,7 +189,6 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
 
 class FullScreenVideoPlayer extends StatefulWidget {
   final String videoUrl;
-
   const FullScreenVideoPlayer({super.key, required this.videoUrl});
 
   @override
@@ -201,24 +196,31 @@ class FullScreenVideoPlayer extends StatefulWidget {
 }
 
 class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
-  late VideoPlayerController _controller;
-  bool _isReady = false;
+  late VideoPlayerController _videoController;
+  ChewieController? _chewieController;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() => _isReady = true);
-          _controller.play();
-        }
-      });
+    _videoController = VideoPlayerController.network(widget.videoUrl);
+    _videoController.initialize().then((_) {
+      _chewieController = ChewieController(
+        videoPlayerController: _videoController,
+        autoPlay: true,
+        looping: false,
+        allowedScreenSleep: false,
+        allowFullScreen: true,
+        allowMuting: true,
+        showControls: true,
+      );
+      setState(() {});
+    });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _chewieController?.dispose();
+    _videoController.dispose();
     super.dispose();
   }
 
@@ -228,11 +230,8 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
       backgroundColor: Colors.black,
       body: Center(
         child:
-            _isReady
-                ? AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: VideoPlayer(_controller),
-                )
+            _chewieController != null
+                ? Chewie(controller: _chewieController!)
                 : const CircularProgressIndicator(),
       ),
     );

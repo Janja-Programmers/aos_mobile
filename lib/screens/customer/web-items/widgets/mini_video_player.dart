@@ -3,15 +3,7 @@ import 'package:video_player/video_player.dart';
 
 class MiniVideoPlayer extends StatefulWidget {
   final String videoUrl;
-  final double width;
-  final double height;
-
-  const MiniVideoPlayer({
-    super.key,
-    required this.videoUrl,
-    this.width = 80,
-    this.height = 80,
-  });
+  const MiniVideoPlayer({super.key, required this.videoUrl});
 
   @override
   State<MiniVideoPlayer> createState() => _MiniVideoPlayerState();
@@ -19,19 +11,14 @@ class MiniVideoPlayer extends StatefulWidget {
 
 class _MiniVideoPlayerState extends State<MiniVideoPlayer> {
   late VideoPlayerController _controller;
-  bool _isInitialized = false;
+  bool _isReady = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+    _controller = VideoPlayerController.network(widget.videoUrl)
       ..initialize().then((_) {
-        if (mounted) {
-          setState(() => _isInitialized = true);
-          _controller.setLooping(true);
-          _controller.setVolume(0); // Mute for preview
-          _controller.play();
-        }
+        if (mounted) setState(() => _isReady = true);
       });
   }
 
@@ -43,16 +30,33 @@ class _MiniVideoPlayerState extends State<MiniVideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isInitialized) {
-      return const SizedBox.shrink();
-    }
+    return Container(
+      width: 60, // size of the mini player
+      height: 60,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.black.withOpacity(0.6),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (_isReady)
+            AspectRatio(
+              aspectRatio: _controller.value.aspectRatio,
+              child: VideoPlayer(_controller),
+            )
+          else
+            const Icon(Icons.videocam, color: Colors.white, size: 30),
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(6),
-      child: SizedBox(
-        width: widget.width,
-        height: widget.height,
-        child: VideoPlayer(_controller),
+          // Play icon overlay
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.black.withOpacity(0.4),
+            ),
+            child: const Icon(Icons.play_arrow, color: Colors.white, size: 32),
+          ),
+        ],
       ),
     );
   }

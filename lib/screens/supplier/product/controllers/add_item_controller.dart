@@ -1,9 +1,7 @@
 import 'dart:io';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '/core/utils/api_client.dart';
 import '/core/utils/snackbar.dart';
@@ -175,96 +173,36 @@ class AddItemController extends ChangeNotifier {
     required bool isImage,
   }) async {
     try {
-      // Start loading
-      if (isImage) {
-        isPickingImage = true;
-      } else {
-        isPickingVideo = true;
-      }
-      notifyListeners();
+      final picker = ImagePicker();
+      XFile? pickedFile;
 
-      // Request permission
-      final permissionResult = await _requestPermissions(isImage: isImage);
-      if (!permissionResult.granted) {
-        if (permissionResult.permanentlyDenied) {
-          await openAppSettings();
-        } else {
-          topSnackBar(context, "Permission Denied!", type: TopSnackType.error);
-        }
+      if (isImage) {
+        pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      } else {
+        pickedFile = await picker.pickVideo(source: ImageSource.gallery);
+      }
+
+      if (pickedFile == null) {
+        topSnackBar(context, 'No file selected', type: TopSnackType.info);
         return null;
       }
 
-      // Pick file
-      final result = await FilePicker.platform.pickFiles(
-        type: isImage ? FileType.image : FileType.video,
-        allowMultiple: false,
-      );
+      final file = File(pickedFile.path);
 
-      if (result != null && result.files.single.path != null) {
-        final path = result.files.single.path!;
-
-        final file = File(path);
-
-        if (isImage) {
-          selectedImage = file;
-          uploadedImageUrl = await uploadFile(file);
-        } else {
-          selectedVideo = file;
-          uploadedVideoUrl = await uploadFile(file);
-        }
-
+      if (isImage) {
+        selectedImage = file;
+        uploadedImageUrl = await uploadFile(file);
         notifyListeners();
-
-        return isImage ? uploadedImageUrl : uploadedVideoUrl;
+        return uploadedImageUrl;
       } else {
-        topSnackBar(context, 'No file selected', type: TopSnackType.info);
+        selectedVideo = file;
+        uploadedVideoUrl = await uploadFile(file);
+        notifyListeners();
+        return uploadedVideoUrl;
       }
     } catch (e) {
       topSnackBar(context, 'Error: ${e.toString()}', type: TopSnackType.error);
-    } finally {
-      // Stop loading
-      if (isImage) {
-        isPickingImage = false;
-      } else {
-        isPickingVideo = false;
-      }
-      notifyListeners();
-    }
-
-    return null;
-  }
-
-  Future<PermissionResult> _requestPermissions({required bool isImage}) async {
-    if (!Platform.isAndroid) {
-      final status = await Permission.photos.request();
-      return PermissionResult(
-        granted: status.isGranted,
-        permanentlyDenied: status.isPermanentlyDenied,
-      );
-    }
-
-    final androidInfo = await DeviceInfoPlugin().androidInfo;
-    final sdkInt = androidInfo.version.sdkInt;
-
-    if (sdkInt >= 33) {
-      final mediaPermission =
-          isImage
-              ? Permission
-                  .photos // For images
-              : Permission.videos; // For videos
-
-      final mediaStatus = await mediaPermission.request();
-
-      return PermissionResult(
-        granted: mediaStatus.isGranted,
-        permanentlyDenied: mediaStatus.isPermanentlyDenied,
-      );
-    } else {
-      final storageStatus = await Permission.storage.request();
-      return PermissionResult(
-        granted: storageStatus.isGranted,
-        permanentlyDenied: storageStatus.isPermanentlyDenied,
-      );
+      return null;
     }
   }
 
@@ -382,11 +320,4 @@ class WebsiteSpecificationEntry {
     labelController.dispose();
     descriptionController.dispose();
   }
-}
-
-class PermissionResult {
-  final bool granted;
-  final bool permanentlyDenied;
-
-  PermissionResult({required this.granted, required this.permanentlyDenied});
 }

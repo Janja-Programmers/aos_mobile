@@ -1,23 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- For Android 13+ -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
+    <!-- ✅ Scoped read access for Android 12 and below -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
 
-
-    <!-- Fallback for Android 12 and below -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-
-    <!-- Optional: Only needed if you write to external storage manually -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28"/>
-
-    <!-- Permissions for URL launching -->
+    <!-- ✅ Other required permissions -->
     <uses-permission android:name="android.permission.CALL_PHONE"/>
-
-    <!-- Permission for internet -->
     <uses-permission android:name="android.permission.INTERNET" />
-    
 
     <application
         android:label="Africa Online Stores"
@@ -53,6 +42,5 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
-
 
 </manifest>

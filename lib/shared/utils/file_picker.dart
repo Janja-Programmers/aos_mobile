@@ -1,24 +1,18 @@
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
+
+final _picker = ImagePicker();
 
 Future<File?> pickImageFile() async {
-  final result = await FilePicker.platform.pickFiles(
-    type: FileType.image,
-    allowMultiple: false,
+  final XFile? pickedFile = await _picker.pickImage(
+    source: ImageSource.gallery,
   );
-  if (result != null && result.files.isNotEmpty) {
-    return File(result.files.first.path!);
-  }
-  return null;
+  return pickedFile != null ? File(pickedFile.path) : null;
 }
 
 Future<File?> pickVideoFile() async {
-  final result = await FilePicker.platform.pickFiles(
-    type: FileType.video,
-    allowMultiple: false,
+  final XFile? pickedFile = await _picker.pickVideo(
+    source: ImageSource.gallery,
   );
-  if (result != null && result.files.isNotEmpty) {
-    return File(result.files.first.path!);
-  }
-  return null;
+  return pickedFile != null ? File(pickedFile.path) : null;
 }

@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/screens/supplier/invoice/detail_screen.dart';
 import 'package:go_router/go_router.dart';
 
 // Auth
@@ -15,6 +14,7 @@ import '/screens/supplier/dashboard/dashboard.dart';
 import '/screens/supplier/product/update_item_screen.dart';
 import '/screens/customer/web-items/screens/detail_screen.dart';
 import '/screens/supplier/order/sales_order_list_screen.dart';
+import '/screens/supplier/invoice/detail_screen.dart';
 import '/screens/supplier/d_note/delivery_note_list_screen.dart';
 import '/screens/supplier/order/order_detail_screen.dart';
 import '/screens/supplier/d_note/delivery_note_detail_screen.dart';
@@ -26,6 +26,7 @@ import '/screens/supplier/stock/stock_list_screen.dart';
 import '/screens/supplier/stock/stock_detail_screen.dart';
 
 // Customer
+import '/features/order/domain/sales_order.dart';
 import '/screens/customer/web-items/screens/list_screen.dart';
 import '/screens/customer/wishlist/wishlist_screen.dart';
 import '/screens/customer/cart/cart_screen.dart';
@@ -197,8 +198,8 @@ class AppRouter {
       GoRoute(
         path: '/order-detail',
         builder: (context, state) {
-          final order = state.extra as Map<String, dynamic>;
-          return OrderDetailScreen(order: order);
+          final order = state.extra as SalesOrder;
+          return CustomerSalesOrderDetailScreen(order: order);
         },
       ),
 

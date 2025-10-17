@@ -1,11 +1,9 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
-
 import '/shared/widgets/app_bars.dart';
 
 import 'provider.dart';
@@ -25,8 +23,7 @@ class _OrderScreenState extends State<OrderScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<CustomerOrderProvider>();
-      provider.fetchOrders();
+      context.read<CustomerOrderProvider>().fetchOrders();
     });
   }
 
@@ -35,15 +32,6 @@ class _OrderScreenState extends State<OrderScreen> {
     debounce?.cancel();
     _searchController.dispose();
     super.dispose();
-  }
-
-  String getFirstItemName(dynamic items) {
-    if (items is List && items.isNotEmpty) {
-      final first = items.first;
-      if (first is Map<String, dynamic>) return first['name'] ?? 'Item';
-      if (first is String) return first;
-    }
-    return 'Item';
   }
 
   @override
@@ -66,20 +54,19 @@ class _OrderScreenState extends State<OrderScreen> {
       );
     }
 
-    // Inside build:
     final query = _searchController.text.trim().toLowerCase();
+
+    // ✅ Use typed filtering
     final filteredOrders =
         provider.orders.where((order) {
-          final items = (order['items'] ?? []).join(' ').toLowerCase();
-          final id = (order['id'] ?? '').toString().toLowerCase();
-          final buyer = (order['buyer'] ?? '').toString().toLowerCase();
-          final status = (order['status'] ?? '').toString().toLowerCase();
-
+          final itemsText = order.items
+              .map((i) => i.itemName.toLowerCase())
+              .join(' ');
           return query.isEmpty ||
-              items.contains(query) ||
-              id.contains(query) ||
-              buyer.contains(query) ||
-              status.contains(query);
+              order.id.toLowerCase().contains(query) ||
+              order.status.toLowerCase().contains(query) ||
+              order.customerName.toLowerCase().contains(query) ||
+              itemsText.contains(query);
         }).toList();
 
     return Scaffold(
@@ -87,23 +74,23 @@ class _OrderScreenState extends State<OrderScreen> {
       appBar: TopAppBar(),
       body: Column(
         children: [
-          // 🔍 Search field with controller + consistent padding
+          // 🔍 Search
           Padding(
-            padding: const EdgeInsets.all(12), // ✅ same margin all around
+            padding: const EdgeInsets.all(12),
             child: TextField(
-              controller: _searchController, // ✅ attach controller
+              controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search past orders by name, id, or status',
+                hintText: 'Search by order ID, item, or status',
                 prefixIcon: const Icon(Icons.search),
                 fillColor: AppColors.white,
+                filled: true,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
                 ),
-                filled: true,
               ),
               onChanged: (_) {
-                if (debounce?.isActive ?? false) debounce!.cancel();
+                debounce?.cancel();
                 debounce = Timer(const Duration(milliseconds: 300), () {
                   setState(() {});
                 });
@@ -111,19 +98,16 @@ class _OrderScreenState extends State<OrderScreen> {
             ),
           ),
 
-          // Orders list
+          // 📋 Orders
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () async {
-                await provider.fetchOrders();
-              },
+              onRefresh: provider.fetchOrders,
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Card(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  color: Colors.white,
                   elevation: 2,
                   child:
                       filteredOrders.isEmpty
@@ -144,11 +128,43 @@ class _OrderScreenState extends State<OrderScreen> {
                                 (_, _) => const Divider(height: 2),
                             itemBuilder: (context, index) {
                               final order = filteredOrders[index];
+                              final firstItem =
+                                  order.items.isNotEmpty
+                                      ? order.items.first.itemName
+                                      : 'Item';
+
+                              // 🎨 Status chip colors
+                              late Color statusColor;
+                              late Color statusTextColor;
+
+                              switch (order.status.toLowerCase()) {
+                                case 'completed':
+                                  statusColor = Colors.green.shade100;
+                                  statusTextColor = Colors.green.shade800;
+                                  break;
+                                case 'to deliver':
+                                  statusColor = Colors.orange.shade100;
+                                  statusTextColor = Colors.orange.shade800;
+                                  break;
+                                case 'to bill':
+                                  statusColor = Colors.amber.shade100;
+                                  statusTextColor = Colors.amber.shade800;
+                                  break;
+                                case 'to deliver and bill':
+                                  statusColor = Colors.grey.shade100;
+                                  statusTextColor = Colors.grey.shade800;
+                                  break;
+                                default:
+                                  statusColor = Colors.grey.shade200;
+                                  statusTextColor = Colors.grey.shade700;
+                              }
 
                               return InkWell(
-                                onTap: () {
-                                  context.push('/order-detail', extra: order);
-                                },
+                                onTap:
+                                    () => context.push(
+                                      '/order-detail',
+                                      extra: order,
+                                    ),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
@@ -156,14 +172,13 @@ class _OrderScreenState extends State<OrderScreen> {
                                   ),
                                   child: Row(
                                     children: [
-                                      // Left: Item name + id
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              order['id'],
+                                              order.id,
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 15,
@@ -171,7 +186,7 @@ class _OrderScreenState extends State<OrderScreen> {
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              getFirstItemName(order['items']),
+                                              firstItem,
                                               style: const TextStyle(
                                                 color: Colors.grey,
                                                 fontSize: 13,
@@ -180,12 +195,11 @@ class _OrderScreenState extends State<OrderScreen> {
                                           ],
                                         ),
                                       ),
-                                      // Right: status chip
                                       Chip(
-                                        label: Text(order['status']),
-                                        backgroundColor: Colors.orange[100],
+                                        label: Text(order.status),
+                                        backgroundColor: statusColor,
                                         labelStyle: TextStyle(
-                                          color: Colors.orange[800],
+                                          color: statusTextColor,
                                         ),
                                       ),
                                     ],

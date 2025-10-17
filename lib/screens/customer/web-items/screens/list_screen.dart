@@ -4,9 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
-
 import '/shared/widgets/app_bars.dart';
-
 import '/screens/auth/auth_provider.dart';
 import '/features/website/prov.dart';
 import '/features/website/slider_prov.dart';
@@ -23,15 +21,11 @@ class ProductListScreen extends StatefulWidget {
 
 class _ProductListScreenState extends State<ProductListScreen> {
   String _searchQuery = '';
-  late ScrollController _scrollController;
   Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<WebsiteItemProv>().loadInitialItems();
       context.read<SliderProv>().loadSlider();
@@ -40,8 +34,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   @override
   void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
     _debounce?.cancel();
     super.dispose();
   }
@@ -61,29 +53,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
     }).toList();
   }
 
-  void _onScroll() {
-    final provider = context.read<WebsiteItemProv>();
-
-    if (!_scrollController.hasClients ||
-        provider.isLoadingMore ||
-        !provider.hasMore) {
-      return;
-    }
-
-    final threshold = 300.0;
-    final position = _scrollController.position;
-
-    if (position.pixels + threshold >= position.maxScrollExtent) {
-      provider.loadMoreItems();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final productProvider = context.watch<WebsiteItemProv>();
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.user;
     final items = filteredItems(productProvider.items);
+
     return WillPopScope(
       onWillPop: () async {
         context.read<WebsiteItemProv>().clearProductDetail();
@@ -104,77 +80,114 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         const Text("Oops! We ran into a problem."),
                         const SizedBox(height: 8),
                         ElevatedButton(
-                          onPressed: () {
-                            context.read<WebsiteItemProv>().loadInitialItems();
-                          },
+                          onPressed:
+                              () =>
+                                  context
+                                      .read<WebsiteItemProv>()
+                                      .loadInitialItems(),
                           child: const Text('Retry'),
                         ),
                       ],
                     ),
                   )
-                  : Column(
-                    children: [
-                      const SliderCarousel(),
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: 'Search for products',
-                            prefixIcon: const Icon(Icons.search),
-                            fillColor: AppColors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide.none,
+                  : RefreshIndicator(
+                    onRefresh:
+                        () =>
+                            context.read<WebsiteItemProv>().loadInitialItems(),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          const SliderCarousel(),
+                          Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: TextField(
+                              enabled:
+                                  !productProvider.isLoading &&
+                                  productProvider.items.isNotEmpty,
+                              decoration: InputDecoration(
+                                hintText:
+                                    productProvider.isLoading
+                                        ? 'Loading products...'
+                                        : 'Search for products',
+                                prefixIcon: const Icon(Icons.search),
+                                fillColor: AppColors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide.none,
+                                ),
+                                filled: true,
+                              ),
+                              onChanged: _onSearchChanged,
                             ),
-                            filled: true,
                           ),
-                          onChanged: _onSearchChanged,
-                        ),
-                      ),
-                      Expanded(
-                        child: RefreshIndicator(
-                          onRefresh:
-                              () =>
-                                  context
-                                      .read<WebsiteItemProv>()
-                                      .loadInitialItems(),
-                          child:
-                              items.isEmpty
-                                  ? const Center(
-                                    child: Text('No products found'),
-                                  )
-                                  : Column(
-                                    children: [
-                                      Expanded(
-                                        child: GridView.builder(
-                                          controller: _scrollController,
-                                          padding: const EdgeInsets.all(8),
-                                          gridDelegate:
-                                              const SliverGridDelegateWithMaxCrossAxisExtent(
-                                                maxCrossAxisExtent: 200,
-                                                mainAxisSpacing: 12,
-                                                crossAxisSpacing: 12,
-                                                childAspectRatio: 0.65,
-                                              ),
-                                          itemCount: items.length,
-                                          itemBuilder: (context, index) {
-                                            final item = items[index];
-                                            return ProductCard(item: item);
-                                          },
-                                        ),
-                                      ),
-                                      if (productProvider.isLoadingMore)
-                                        const Padding(
-                                          padding: EdgeInsets.symmetric(
-                                            vertical: 16,
-                                          ),
-                                          child: CircularProgressIndicator(),
-                                        ),
-                                    ],
+
+                          items.isEmpty
+                              ? const Center(child: Text('No products found'))
+                              : GridView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                padding: const EdgeInsets.all(8),
+                                gridDelegate:
+                                    const SliverGridDelegateWithMaxCrossAxisExtent(
+                                      maxCrossAxisExtent: 200,
+                                      mainAxisSpacing: 12,
+                                      crossAxisSpacing: 12,
+                                      childAspectRatio: 0.65,
+                                    ),
+                                itemCount: items.length,
+                                itemBuilder: (context, index) {
+                                  final item = items[index];
+                                  return ProductCard(item: item);
+                                },
+                              ),
+                          if (productProvider.error == null)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 16,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // Prev button
+                                  ElevatedButton.icon(
+                                    onPressed:
+                                        productProvider.currentPage > 1
+                                            ? () => productProvider.prevPage()
+                                            : null,
+                                    icon: const Icon(
+                                      Icons.arrow_back_ios_new,
+                                      size: 16,
+                                    ),
+                                    label: const Text('Prev'),
                                   ),
-                        ),
+                                  // Page indicator
+                                  Text(
+                                    'Page ${productProvider.currentPage}',
+                                    // 'Page ${productProvider.currentPage} of ${productProvider.totalPages}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  // Next button
+                                  ElevatedButton.icon(
+                                    onPressed:
+                                        productProvider.hasMore
+                                            ? () => productProvider.nextPage()
+                                            : null,
+                                    icon: const Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16,
+                                    ),
+                                    label: const Text('Next'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
         ),
         floatingActionButton:

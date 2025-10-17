@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-
 import 'domain/webitem.dart';
 import 'domain/usecases.dart';
 
@@ -9,58 +8,87 @@ class WebsiteItemProv with ChangeNotifier {
 
   WebsiteItemProv({required this.getAllItems, required this.getSingleItem});
 
+  // --- Core Data ---
   final List<WebsiteItem> _items = [];
   WebsiteItem? _selectedProduct;
 
-  int _start = 0;
+  // --- Pagination State ---
+  int _currentPage = 1;
+  final int _itemsPerPage = 12;
+  int _totalItems = 0;
   bool _hasMore = true;
+
+  // --- Loading & Error State ---
   bool _isLoading = false;
-  bool _isLoadingMore = false;
   String? _error;
 
+  // --- Getters ---
   List<WebsiteItem> get items => _items;
   WebsiteItem? get selectedProduct => _selectedProduct;
   bool get isLoading => _isLoading;
-  bool get isLoadingMore => _isLoadingMore;
   bool get hasMore => _hasMore;
   String? get error => _error;
+  int get currentPage => _currentPage;
+  int get totalPages => (_totalItems / _itemsPerPage).ceil();
 
+  // --- Initial Load ---
   Future<void> loadInitialItems() async {
-    _start = 0;
-    _hasMore = true;
+    _currentPage = 1;
     _items.clear();
     _error = null;
+    _hasMore = true;
     _isLoading = true;
     notifyListeners();
 
-    final result = await getAllItems(start: _start);
-    result.fold((failure) => _error = failure.message, (fetchedItems) {
-      _items.addAll(fetchedItems);
-      _start += fetchedItems.length;
-      if (fetchedItems.length < 12) _hasMore = false;
-    });
+    await _fetchItems(page: _currentPage);
+  }
+
+  // --- Core Fetch Logic (used by next/prev) ---
+  Future<void> _fetchItems({required int page}) async {
+    final offset = (page - 1) * _itemsPerPage;
+    final result = await getAllItems(start: offset);
+
+    result.fold(
+      (failure) {
+        _error = failure.message;
+      },
+      (fetchedItems) {
+        _items
+          ..clear()
+          ..addAll(fetchedItems);
+
+        _totalItems =
+            _totalItems == 0
+                ? (fetchedItems.length < _itemsPerPage
+                    ? fetchedItems.length
+                    : _itemsPerPage * (page + 2))
+                : _totalItems;
+
+        _currentPage = page;
+        _hasMore = fetchedItems.length == _itemsPerPage;
+      },
+    );
 
     _isLoading = false;
     notifyListeners();
   }
 
-  Future<void> loadMoreItems() async {
-    if (_isLoadingMore || !_hasMore) return;
-
-    _isLoadingMore = true;
+  // --- Pagination Controls ---
+  Future<void> nextPage() async {
+    if (!_hasMore || _isLoading) return;
+    _isLoading = true;
     notifyListeners();
-
-    final result = await getAllItems(start: _start);
-    result.fold((failure) => _error = failure.message, (fetchedItems) {
-      _items.addAll(fetchedItems);
-      _start += fetchedItems.length;
-      if (fetchedItems.length < 12) _hasMore = false;
-    });
-
-    _isLoadingMore = false;
-    notifyListeners();
+    await _fetchItems(page: _currentPage + 1);
   }
 
+  Future<void> prevPage() async {
+    if (_currentPage <= 1 || _isLoading) return;
+    _isLoading = true;
+    notifyListeners();
+    await _fetchItems(page: _currentPage - 1);
+  }
+
+  // --- Product Details ---
   Future<void> loadProductDetail(String productId) async {
     _error = null;
     _selectedProduct = null;
@@ -82,6 +110,7 @@ class WebsiteItemProv with ChangeNotifier {
     notifyListeners();
   }
 
+  // --- Utilities ---
   void clearProductDetail() {
     _selectedProduct = null;
     _error = null;

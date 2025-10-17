@@ -1,38 +1,51 @@
 import 'package:flutter/material.dart';
 
 import '/core/constants/colors.dart';
+import '/core/utils/formatters.dart';
+import '/features/order/domain/sales_order.dart';
 import '/shared/widgets/app_bars.dart';
 
 import '/screens/supplier/order/widgets/print_order_button.dart';
 
-class OrderDetailScreen extends StatelessWidget {
-  final Map<String, dynamic> order;
+class CustomerSalesOrderDetailScreen extends StatelessWidget {
+  final SalesOrder order;
 
-  const OrderDetailScreen({super.key, required this.order});
+  const CustomerSalesOrderDetailScreen({super.key, required this.order});
 
-  double _parseToDouble(dynamic value) {
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'to bill':
+      case 'to deliver':
+        return AppColors.warning.withOpacity(0.2);
+      case 'completed':
+        return AppColors.success.withOpacity(0.2);
+      default:
+        return Colors.grey.shade200;
+    }
+  }
+
+  Color _getTextColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+      case 'awaiting':
+        return AppColors.warning;
+      case 'processing':
+      case 'in progress':
+        return AppColors.info;
+      case 'completed':
+      case 'delivered':
+        return AppColors.success;
+      case 'cancelled':
+      case 'rejected':
+        return AppColors.danger;
+      default:
+        return Colors.grey.shade700;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final String status = order['status'] ?? 'N/A';
-    final String orderId = order['id'] ?? 'N/A';
-
-    final double total = _parseToDouble(order['total']);
-
-    // Ensure items are List<Map<String, dynamic>>
-    final List<Map<String, dynamic>> items =
-        (order['items'] as List).map<Map<String, dynamic>>((item) {
-          if (item is Map<String, dynamic>) return item;
-          if (item is String) {
-            return {'name': item, 'qty': 1, 'rate': null, 'amount': null};
-          }
-          return {'name': '-', 'qty': 1, 'rate': null, 'amount': null};
-        }).toList();
+    final items = order.items;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -41,7 +54,7 @@ class OrderDetailScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            // 🟢 Order Info Card
+            // 🟢 Order Info
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -53,44 +66,51 @@ class OrderDetailScreen extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Order ID
+                    // Order ID & Customer
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            orderId,
+                            order.id,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
                           ),
-                          Text("Date"),
+                          const SizedBox(height: 4),
+                          Text(
+                            order.customerName,
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Delivery Date: ${formatCompactDateTime(order.deliveryDate)}',
+                            style: const TextStyle(fontSize: 13),
+                          ),
                         ],
                       ),
                     ),
 
-                    // Right → order id + status
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Chip(
-                          label: Text(
-                            status,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          backgroundColor: Colors.grey.shade200,
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.zero,
+                    // 🟡 Status Chip
+                    Chip(
+                      label: Text(
+                        order.status,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: _getTextColor(order.status),
                         ),
-                      ],
+                      ),
+                      backgroundColor: _getStatusColor(order.status),
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
                     ),
                   ],
                 ),
               ),
             ),
 
-            // 🟢 Items Table Card
+            // 🟢 Items Table
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -121,7 +141,7 @@ class OrderDetailScreen extends StatelessWidget {
                         inside: BorderSide(color: Colors.grey.shade300),
                       ),
                       children: [
-                        // Header row
+                        // Header
                         TableRow(
                           decoration: BoxDecoration(
                             color: Colors.grey.shade100,
@@ -150,7 +170,7 @@ class OrderDetailScreen extends StatelessWidget {
                           ],
                         ),
 
-                        // Items
+                        // Rows
                         ...items.asMap().entries.map((entry) {
                           final i = entry.key + 1;
                           final item = entry.value;
@@ -162,31 +182,19 @@ class OrderDetailScreen extends StatelessWidget {
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(6),
-                                child: Text(item['name'] ?? '-'),
+                                child: Text(item.itemName),
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(6),
-                                child: Text('${item['qty'] ?? 1}'),
+                                child: Text('${item.qty}'),
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(6),
-                                child: Text(
-                                  item['rate'] != null
-                                      ? _parseToDouble(
-                                        item['rate'],
-                                      ).toStringAsFixed(2)
-                                      : '-',
-                                ),
+                                child: Text(item.rate.toStringAsFixed(2)),
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(6),
-                                child: Text(
-                                  item['amount'] != null
-                                      ? _parseToDouble(
-                                        item['amount'],
-                                      ).toStringAsFixed(2)
-                                      : '-',
-                                ),
+                                child: Text(item.amount.toStringAsFixed(2)),
                               ),
                             ],
                           );
@@ -194,12 +202,11 @@ class OrderDetailScreen extends StatelessWidget {
                       ],
                     ),
 
-                    // After the Table widget
                     const SizedBox(height: 12),
                     const Divider(thickness: 1),
                     const SizedBox(height: 8),
 
-                    // 🟢 Grand Total Row (outside the table)
+                    // 🧾 Total
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -208,7 +215,7 @@ class OrderDetailScreen extends StatelessWidget {
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          total.toStringAsFixed(2),
+                          order.grandTotal.toStringAsFixed(2),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,

@@ -30,25 +30,36 @@ class _AddItemScreenState extends State<AddItemScreen> {
   void initState() {
     super.initState();
     Future.microtask(() async {
-      final ctrl = context.read<AddItemController>();
-      ctrl.reset();
-      ctrl.setLoading(true);
+      try {
+        final ctrl = context.read<AddItemController>();
+        ctrl.reset();
+        ctrl.setLoading(true);
 
-      if (widget.product != null) {
-        ctrl.setInitialProduct(widget.product!);
-      } else if (widget.productName != null) {
-        final fetched = await ctrl.fetchSingleProduct(widget.productName!);
-        if (fetched != null && mounted) {
-          ctrl.setInitialProduct(fetched);
-        } else if (mounted) {
-          topSnackBar(context, 'Product not found', type: TopSnackType.error);
-          context.pop();
-          ctrl.setLoading(false);
-          return;
+        if (widget.product != null) {
+          ctrl.setInitialProduct(widget.product!);
+        } else if (widget.productName != null) {
+          final fetched = await ctrl.fetchSingleProduct(widget.productName!);
+          if (fetched != null && mounted) {
+            ctrl.setInitialProduct(fetched);
+          } else if (mounted) {
+            topSnackBar(context, 'Product not found', type: TopSnackType.error);
+            context.pop();
+            return;
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          topSnackBar(
+            context,
+            'Error loading product',
+            type: TopSnackType.error,
+          );
+        }
+      } finally {
+        if (mounted) {
+          context.read<AddItemController>().setLoading(false);
         }
       }
-
-      ctrl.setLoading(false);
     });
   }
 
@@ -113,7 +124,22 @@ class _AddItemScreenState extends State<AddItemScreen> {
         color: Colors.white,
         child:
             controller.isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    const Text("Loading product details... Please wait"),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {});
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text("Retry"),
+                    ),
+                  ],
+                )
                 : AbsorbPointer(
                   absorbing: controller.isSubmitting,
                   child: SingleChildScrollView(

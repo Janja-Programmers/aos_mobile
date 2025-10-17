@@ -63,6 +63,6 @@ String cleanHtml(String? input) {
 }
 
 String formatCompactDateTime(DateTime dateTime) {
-  final formatter = DateFormat('MMM d h:mm a');
+  final formatter = DateFormat('yyyy-MM-dd');
   return formatter.format(dateTime);
 }

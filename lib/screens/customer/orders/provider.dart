@@ -8,16 +8,17 @@ class CustomerOrderProvider extends ChangeNotifier {
 
   CustomerOrderProvider(this.remoteDS);
 
-  List<Map<String, dynamic>> _orders = [];
+  List<SalesOrder> _orders = [];
   bool _loading = false;
   String? _error;
 
-  List<Map<String, dynamic>> get orders => _orders;
+  List<SalesOrder> get orders => _orders;
   bool get loading => _loading;
   String? get error => _error;
 
   Future<void> fetchOrders() async {
     _loading = true;
+    _error = null;
     notifyListeners();
 
     final result = await remoteDS.getCustomerOrders();
@@ -28,8 +29,7 @@ class CustomerOrderProvider extends ChangeNotifier {
         _orders = [];
       },
       (models) {
-        _error = null;
-        _orders = models.map(toCustomerOrderMap).toList();
+        _orders = models.map((m) => m.toEntity()).toList();
       },
     );
 

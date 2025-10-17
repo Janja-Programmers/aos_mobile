@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/colors.dart';
+import '../../../../core/utils/formatters.dart';
+
 class ProductTitleAndPrice extends StatelessWidget {
   final String title;
   final String category;
@@ -27,17 +30,22 @@ class ProductTitleAndPrice extends StatelessWidget {
         Text(category, style: const TextStyle(color: Colors.grey)),
         const SizedBox(height: 8),
         Text(
-          "Sh $price",
+          formatCurrency(price),
           style: const TextStyle(
-            fontSize: 24,
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppColors.black,
           ),
         ),
         if (oldPrice != null)
           Text(
-            "Sh $oldPrice",
-            style: const TextStyle(decoration: TextDecoration.lineThrough),
+            formatCurrency(oldPrice!),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.red,
+              decoration: TextDecoration.lineThrough,
+            ),
           ),
       ],
     );

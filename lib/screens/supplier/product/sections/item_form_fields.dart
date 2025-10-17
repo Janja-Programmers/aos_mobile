@@ -67,7 +67,20 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
           FutureBuilder<List<String>>(
             future: controller.fetchItemGroups(),
             builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Text(
+                  "Error loading categories",
+                  style: TextStyle(color: Colors.red),
+                );
+              }
+
               final groups = snapshot.data ?? [];
+              if (groups.isEmpty) {
+                return const Text("No categories available");
+              }
+
               return DropdownButtonFormField<String>(
                 value:
                     controller.groupController.text.isNotEmpty
@@ -76,36 +89,9 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
                 onChanged: (val) => controller.groupController.text = val ?? '',
                 items:
                     groups
-                        .map(
-                          (g) => DropdownMenuItem(
-                            value: g,
-                            child: Text(g, overflow: TextOverflow.ellipsis),
-                          ),
-                        )
+                        .map((g) => DropdownMenuItem(value: g, child: Text(g)))
                         .toList(),
-                decoration: InputDecoration(
-                  label: FittedBox(
-                    alignment: Alignment.centerLeft,
-                    child: RichText(
-                      text: TextSpan(
-                        text: 'Category',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[700],
-                        ),
-                        children: const [
-                          TextSpan(
-                            text: ' *',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  border: const OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: "Category"),
                 validator:
                     (value) =>
                         (value == null || value.isEmpty)
@@ -114,6 +100,7 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
               );
             },
           ),
+
           const SizedBox(height: 10),
 
           const Align(

@@ -1,3 +1,5 @@
+import '/features/address/data/model.dart';
+
 import '../domain/sales_order.dart';
 
 class SalesOrderModel {
@@ -30,7 +32,55 @@ class SalesOrderModel {
   });
 
   factory SalesOrderModel.fromJson(Map<String, dynamic> json) {
+    AddressModel parseAddressHtml(String? html) {
+      if (html == null || html.trim().isEmpty) {
+        return AddressModel(
+          name: '',
+          title: '',
+          line1: '',
+          city: '',
+          country: '',
+          phone: '',
+          type: 'Shipping',
+        );
+      }
+
+      // Split HTML by <br> and clean each line
+      final lines =
+          html
+              .split('<br>')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+
+      // Find phone line if present
+      String phone = '';
+      for (final line in lines) {
+        if (line.toLowerCase().startsWith('phone')) {
+          phone = line.split(':').last.trim();
+        }
+      }
+
+      // Heuristic: assume first non-phone line is address/city
+      String line1 = lines.isNotEmpty ? lines.first : '';
+      String city = lines.length > 1 ? lines[1] : '';
+      String country = lines.length > 2 ? lines[2] : '';
+
+      return AddressModel(
+        name: '',
+        title: '',
+        line1: line1,
+        city: city,
+        country: country,
+        phone: phone,
+        type: 'Shipping',
+      );
+    }
+
     final List<dynamic> itemsJson = json['items'] ?? [];
+    final addressHtml =
+        json['shipping_address_display'] ?? json['shipping_address'];
+    final addressModel = parseAddressHtml(addressHtml);
 
     return SalesOrderModel(
       id: json["name"],
@@ -42,11 +92,12 @@ class SalesOrderModel {
       percentBilled: (json["per_billed"] as num).toDouble(),
       items:
           itemsJson.map((item) => SalesOrderItemModel.fromJson(item)).toList(),
-
-      // 👇 Get from JSON response directly
       contactEmail: json['contact_email'],
-      customerPhone: _extractPhone(json['shipping_address']),
-      shippingAddress: json['shipping_address'] ?? '',
+      customerPhone: addressModel.phone,
+      shippingAddress:
+          addressModel.line1.isNotEmpty
+              ? '${addressModel.line1}, ${addressModel.city}, ${addressModel.country}'
+              : addressHtml ?? '',
     );
   }
 
@@ -63,22 +114,6 @@ class SalesOrderModel {
     contactEmail: contactEmail,
     contactPhone: customerPhone,
   );
-
-  // 👇 Simple phone extraction from <br> string
-  static String? _extractPhone(String? addressHtml) {
-    if (addressHtml == null) return null;
-
-    final lines = addressHtml.split('<br>');
-    for (final line in lines) {
-      final cleanLine = line.trim();
-      if (cleanLine.toLowerCase().startsWith('phone')) {
-        final parts = cleanLine.split(':');
-        if (parts.length > 1) return parts[1].trim();
-      }
-    }
-
-    return null;
-  }
 }
 
 class SalesOrderItemModel {

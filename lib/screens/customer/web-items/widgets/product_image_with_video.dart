@@ -109,7 +109,9 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
   }
 
   Widget _buildImage(String? url) {
-    if (url == null || url.isEmpty) return _fallbackImage();
+    if (url == null || url.isEmpty || !url.contains('/files/')) {
+      return _fallbackImage();
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -118,7 +120,7 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: const Color.fromARGB(57, 0, 0, 0),
+            color: Colors.black.withOpacity(0.07),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -146,13 +148,13 @@ class _ProductImageWithVideoState extends State<ProductImageWithVideo> {
     );
   }
 
-  Widget _fallbackImage() {
+  Widget _fallbackImage({double height = 220}) {
     return Container(
-      color: Colors.grey.shade200,
-      height: 220,
-      width: double.infinity,
-      alignment: Alignment.center,
-      child: const Icon(Icons.broken_image, size: 64, color: Colors.grey),
+      height: height,
+      color: Colors.grey.shade100,
+      child: const Center(
+        child: Icon(Icons.broken_image_outlined, size: 40, color: Colors.grey),
+      ),
     );
   }
 

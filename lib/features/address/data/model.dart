@@ -78,4 +78,9 @@ class AddressModel {
       type: "Shipping",
     );
   }
+
+  @override
+  String toString() {
+    return 'AddressModel(line1: $line1, city: $city, country: $country, phone: $phone)';
+  }
 }

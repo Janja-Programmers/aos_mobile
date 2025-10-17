@@ -11,9 +11,16 @@ import 'not_reviewed_card.dart';
 import 'review_controller.dart';
 
 class ProductReviewsCard extends StatelessWidget {
+  final String itemName;
+  final String webItem;
   final String itemCode;
 
-  const ProductReviewsCard({super.key, required this.itemCode});
+  const ProductReviewsCard({
+    super.key,
+    required this.itemName,
+    required this.webItem,
+    required this.itemCode,
+  });
 
   Widget _buildTitleRow(BuildContext context) {
     return Row(
@@ -31,9 +38,9 @@ class ProductReviewsCard extends StatelessWidget {
           child: PopupMenuButton<String>(
             onSelected: (value) {
               if (value == "review") {
-                openRateDialog(context, itemCode);
+                openRateDialog(context, itemName);
               } else if (value == "report") {
-                openReportDialog(context, itemCode);
+                openReportDialog(context, webItem, itemCode);
               }
             },
             itemBuilder:

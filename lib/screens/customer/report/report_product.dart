@@ -9,9 +9,14 @@ import '/core/utils/api_client.dart';
 import '/core/utils/snackbar.dart';
 
 class ReportProductDialog extends StatefulWidget {
-  final String productName;
+  final String webItem;
+  final String itemCode;
 
-  const ReportProductDialog({super.key, required this.productName});
+  const ReportProductDialog({
+    super.key,
+    required this.webItem,
+    required this.itemCode,
+  });
 
   @override
   State<ReportProductDialog> createState() => _ReportProductDialogState();
@@ -47,9 +52,10 @@ class _ReportProductDialogState extends State<ReportProductDialog> {
       final response = await client.post(
         ApiRoutes.reportProduct,
         queryParameters: {
-          "web_item": widget.productName,
+          "web_item": widget.webItem,
           "reason": _selectedReason,
           "comment": _commentController.text,
+          "item": widget.itemCode,
         },
       );
 

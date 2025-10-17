@@ -252,7 +252,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     // --- Product Details and Reviews ---
                     ProductDetailAndReviews(
                       specs: product.specifications,
-                      itemCode: product.name,
+                      itemName: product.name,
+                      webItem: product.title,
+                      itemCode: product.itemCode,
                     ),
                   ],
                 ),

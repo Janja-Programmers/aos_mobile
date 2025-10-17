@@ -81,7 +81,7 @@ class WebsiteItemModel extends Equatable {
       demoVideoUrl: json['demo_video'],
       itemCode: json['item_code'] ?? '',
       description: json['short_description'] ?? '',
-      title: json['title'] ?? '',
+      title: json['web_item_id'] ?? '',
       itemGroup: json['item_group'] ?? '',
       shortDescription: json['short_description'] ?? '',
       longDescription:
@@ -134,7 +134,7 @@ class WebsiteItemModel extends Equatable {
       demoVideoUrl: json['demo_video'],
       itemCode: json['item_code'] ?? '',
       description: json['short_description'] ?? '',
-      title: json['title'] ?? '',
+      title: json['web_item_id'] ?? '',
       itemGroup: json['category'] ?? '',
       shortDescription: json['short_description'] ?? '',
       longDescription:

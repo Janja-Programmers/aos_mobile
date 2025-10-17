@@ -51,6 +51,8 @@ class AddItemController extends ChangeNotifier {
   bool isSubmitting = false;
   bool isLoading = false;
 
+  bool get isUploading => isPickingImage || isPickingVideo;
+
   void setLoading(bool value) {
     isLoading = value;
     notifyListeners();
@@ -173,14 +175,17 @@ class AddItemController extends ChangeNotifier {
     required bool isImage,
   }) async {
     try {
+      isPickingImage = true;
+      isPickingVideo = true;
+      notifyListeners();
+
       final picker = ImagePicker();
       XFile? pickedFile;
 
-      if (isImage) {
-        pickedFile = await picker.pickImage(source: ImageSource.gallery);
-      } else {
-        pickedFile = await picker.pickVideo(source: ImageSource.gallery);
-      }
+      pickedFile =
+          isImage
+              ? await picker.pickImage(source: ImageSource.gallery)
+              : await picker.pickVideo(source: ImageSource.gallery);
 
       if (pickedFile == null) {
         topSnackBar(context, 'No file selected', type: TopSnackType.info);
@@ -189,20 +194,26 @@ class AddItemController extends ChangeNotifier {
 
       final file = File(pickedFile.path);
 
+      final uploadedUrl = await uploadFile(file);
+
       if (isImage) {
         selectedImage = file;
-        uploadedImageUrl = await uploadFile(file);
-        notifyListeners();
-        return uploadedImageUrl;
+        uploadedImageUrl = uploadedUrl;
       } else {
         selectedVideo = file;
-        uploadedVideoUrl = await uploadFile(file);
-        notifyListeners();
-        return uploadedVideoUrl;
+        uploadedVideoUrl = uploadedUrl;
       }
+
+      notifyListeners();
+      return uploadedUrl;
     } catch (e) {
       topSnackBar(context, 'Error: ${e.toString()}', type: TopSnackType.error);
       return null;
+    } finally {
+      // ✅ Reset both flags together
+      isPickingImage = false;
+      isPickingVideo = false;
+      notifyListeners();
     }
   }
 

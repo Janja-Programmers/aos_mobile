@@ -5,11 +5,15 @@ import '/screens/customer/reviews/review_card.dart';
 
 class ProductDetailAndReviews extends StatelessWidget {
   final List<Specification> specs;
+  final String itemName;
+  final String webItem;
   final String itemCode;
 
   const ProductDetailAndReviews({
     super.key,
     required this.specs,
+    required this.itemName,
+    required this.webItem,
     required this.itemCode,
   });
 
@@ -67,7 +71,11 @@ class ProductDetailAndReviews extends StatelessWidget {
                 ],
 
                 // ✅ Reviews card handles its own state/fetching
-                ProductReviewsCard(itemCode: itemCode),
+                ProductReviewsCard(
+                  itemName: itemName,
+                  webItem: webItem,
+                  itemCode: itemCode,
+                ),
               ],
             ),
           ),

@@ -75,7 +75,7 @@ class DetailCard extends StatelessWidget {
                     const SizedBox(height: 4),
 
                     Text(
-                      '📞 ${address.phone}',
+                      address.phone,
                       style: const TextStyle(color: Colors.black87),
                     ),
                   ] else

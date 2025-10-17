@@ -25,12 +25,13 @@ Future<void> openRateDialog(
 
 Future<void> openReportDialog(
   BuildContext context,
+  String webItem,
   String itemCode, {
   Future<void> Function()? onAfterReport,
 }) async {
   final result = await showDialog<bool>(
     context: context,
-    builder: (_) => ReportProductDialog(productName: itemCode),
+    builder: (_) => ReportProductDialog(webItem: webItem, itemCode: itemCode),
   );
 
   if (result == true) {

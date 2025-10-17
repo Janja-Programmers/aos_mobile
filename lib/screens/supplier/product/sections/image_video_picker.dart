@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 
+import 'package:flutter/material.dart';
 import '/core/constants/colors.dart';
 import '/features/product/domain/product.dart';
-
 import '../controllers/add_item_controller.dart';
 
 class ImageVideoPickerSection extends StatelessWidget {
@@ -15,9 +15,39 @@ class ImageVideoPickerSection extends StatelessWidget {
     required this.product,
   });
 
+  Widget _buildImagePreview(String? imageUrl, File? localFile) {
+    // 1️⃣ Local file (if picked)
+    if (localFile != null) {
+      return Image.file(localFile, fit: BoxFit.cover, width: 100, height: 100);
+    }
+
+    // 2️⃣ Remote file (ensure it’s not just base URL)
+    if (imageUrl != null &&
+        Uri.tryParse(imageUrl)?.isAbsolute == true &&
+        imageUrl != 'https://africaonlinestores.com') {
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        width: 100,
+        height: 100,
+        errorBuilder:
+            (_, _, _) => const Text(
+              'Invalid image',
+              style: TextStyle(color: Colors.grey),
+            ),
+      );
+    }
+
+    // 3️⃣ Nothing valid — show fallback
+    return const Text(
+      'No image selected',
+      style: TextStyle(color: Colors.grey),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final _ =
+    final imageUrl =
         controller.uploadedImageUrl != null
             ? 'https://africaonlinestores.com${controller.uploadedImageUrl}'
             : (product?.image != null
@@ -31,12 +61,14 @@ class ImageVideoPickerSection extends StatelessWidget {
                 ? 'https://africaonlinestores.com${product!.demoVideo}'
                 : null);
 
+    final isLoading = controller.isPickingImage || controller.isPickingVideo;
+
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
         return Row(
           children: [
-            // IMAGE SECTION
+            // 🖼️ IMAGE SECTION
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,39 +76,35 @@ class ImageVideoPickerSection extends StatelessWidget {
                   Text('Image', style: Theme.of(context).textTheme.bodyLarge),
                   const SizedBox(height: 8),
 
+                  // Image preview
                   Container(
                     height: 100,
                     width: 100,
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey.shade400),
                       borderRadius: BorderRadius.circular(8),
-                      color: Colors.grey.shade200,
+                      color: Colors.grey.shade100,
                     ),
                     child: Center(
-                      child:
-                          controller.selectedImage != null
-                              ? Image.file(
-                                controller.selectedImage!,
-                                fit: BoxFit.cover,
-                                width: 100,
-                                height: 100,
-                              )
-                              : const Icon(
-                                Icons.broken_image,
-                                size: 40,
-                                color: Colors.grey,
-                              ),
+                      child: _buildImagePreview(
+                        imageUrl,
+                        controller.selectedImage,
+                      ),
                     ),
                   ),
+
                   const SizedBox(height: 8),
 
                   // Attach button
-                  controller.isPickingImage
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
+                  isLoading
+                      ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : ElevatedButton.icon(
                         onPressed:
-                            controller.isPickingImage ||
-                                    controller.isPickingVideo
+                            isLoading
                                 ? null
                                 : () =>
                                     controller.pickFile(context, isImage: true),
@@ -91,14 +119,8 @@ class ImageVideoPickerSection extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.attach_file),
-                            SizedBox(width: 8),
-                            Text('Attach'),
-                          ],
-                        ),
+                        icon: const Icon(Icons.attach_file),
+                        label: const Text('Attach'),
                       ),
                 ],
               ),
@@ -106,7 +128,7 @@ class ImageVideoPickerSection extends StatelessWidget {
 
             const SizedBox(width: 16),
 
-            // VIDEO SECTION
+            // 🎥 VIDEO SECTION
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,76 +139,36 @@ class ImageVideoPickerSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
 
-                  // Preview / filename
-                  controller.selectedVideo != null
-                      ? Stack(
-                        children: [
-                          Container(
-                            height: 100,
-                            width: 100,
-                            color: Colors.black12,
-                            child: Center(
-                              child: Icon(
-                                Icons.videocam,
-                                color: Colors.white,
-                                size: 40,
+                  Container(
+                    height: 100,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.grey.shade100,
+                    ),
+                    child: Center(
+                      child:
+                          controller.selectedVideo != null || videoUrl != null
+                              ? const Icon(Icons.videocam, size: 40)
+                              : const Text(
+                                'No video selected',
+                                style: TextStyle(color: Colors.grey),
                               ),
-                            ),
-                          ),
-                          Positioned.fill(
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap:
-                                    () => controller.pickFile(
-                                      context,
-                                      isImage: false,
-                                    ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                      : videoUrl != null
-                      ? Stack(
-                        children: [
-                          Container(
-                            height: 100,
-                            width: 100,
-                            color: Colors.black12,
-                            child: Center(
-                              child: Icon(
-                                Icons.play_arrow,
-                                color: Colors.white,
-                                size: 40,
-                              ),
-                            ),
-                          ),
-                          Positioned.fill(
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap:
-                                    () => controller.pickFile(
-                                      context,
-                                      isImage: false,
-                                    ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                      : const Text('No video selected'),
+                    ),
+                  ),
 
                   const SizedBox(height: 8),
 
-                  // Attach button
-                  controller.isPickingVideo
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
+                  isLoading
+                      ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : ElevatedButton.icon(
                         onPressed:
-                            controller.isPickingImage ||
-                                    controller.isPickingVideo
+                            isLoading
                                 ? null
                                 : () => controller.pickFile(
                                   context,
@@ -203,14 +185,8 @@ class ImageVideoPickerSection extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.video_file),
-                            SizedBox(width: 8),
-                            Text('Attach'),
-                          ],
-                        ),
+                        icon: const Icon(Icons.video_file),
+                        label: const Text('Attach'),
                       ),
                 ],
               ),

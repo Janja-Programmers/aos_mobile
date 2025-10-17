@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
+import '/features/address/domain/address.dart';
+import '/features/address/provider.dart';
 import '/features/order/domain/sales_order.dart';
 
 class SalesOrderInfoCard extends StatelessWidget {
@@ -36,6 +39,25 @@ class SalesOrderInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final addressProv = context.watch<AddressProvider>();
+
+    // Try to find a matching address from the provider
+    Address? shippingAddress = addressProv.addresses.firstWhere(
+      (a) => a.type.toLowerCase() == 'shipping',
+      orElse:
+          () =>
+              addressProv.selectedAddress ??
+              Address(
+                name: '',
+                title: '',
+                line1: '',
+                city: '',
+                country: '',
+                phone: '',
+                type: 'Shipping',
+              ),
+    );
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -60,7 +82,19 @@ class SalesOrderInfoCard extends StatelessWidget {
                   const SizedBox(height: 4),
 
                   Text(
-                    order.contactPhone ?? '-',
+                    shippingAddress.phone.isNotEmpty
+                        ? shippingAddress.phone
+                        : (order.contactPhone ?? '-'),
+                    style: const TextStyle(color: Colors.black87),
+                  ),
+
+                  const SizedBox(height: 6),
+                  Text(
+                    shippingAddress.line1.isNotEmpty
+                        ? '${shippingAddress.line1}, ${shippingAddress.city}, ${shippingAddress.country}'
+                        : (order.shippingAddress.isNotEmpty
+                            ? order.shippingAddress
+                            : 'No address found'),
                     style: const TextStyle(color: Colors.black87),
                   ),
                 ],

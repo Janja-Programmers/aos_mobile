@@ -48,6 +48,23 @@ class _ShippingAddressFormState extends State<ShippingAddressForm> {
   void _submitAddress() async {
     if (_formKey.currentState?.validate() != true) return;
 
+    // show full-screen loader before saving
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (_) => const Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Saving address...'),
+              ],
+            ),
+          ),
+    );
+
     final user = context.read<AuthProvider>().user!;
     final addressProv = context.read<AddressProvider>();
 
@@ -63,12 +80,14 @@ class _ShippingAddressFormState extends State<ShippingAddressForm> {
 
     String? resultName;
 
-    // 🔄 Provider handles isLoading toggle
     if (widget.initialData == null) {
       resultName = await addressProv.createShippingAddress(addressEntity);
     } else {
       resultName = await addressProv.updateShippingAddress(addressEntity);
     }
+
+    // dismiss preloader
+    if (mounted) Navigator.of(context).pop();
 
     if (!mounted) return;
 

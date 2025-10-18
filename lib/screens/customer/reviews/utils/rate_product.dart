@@ -9,9 +9,14 @@ import '/core/utils/snackbar.dart';
 import 'ratings_selector.dart';
 
 class RateProductDialog extends StatefulWidget {
-  final String productName;
+  final String webItem;
+  final String itemCode;
 
-  const RateProductDialog({super.key, required this.productName});
+  const RateProductDialog({
+    super.key,
+    required this.webItem,
+    required this.itemCode,
+  });
 
   @override
   State<RateProductDialog> createState() => _RateProductDialogState();
@@ -45,19 +50,37 @@ class _RateProductDialogState extends State<RateProductDialog> {
       final res = await client.post(
         ApiRoutes.addReview,
         data: {
-          "web_item": widget.productName,
+          "web_item": widget.webItem,
           "title": _titleController.text.trim(),
           "rating": _rating,
           "comment": _commentController.text.trim(),
+          "item": widget.itemCode,
         },
       );
 
-      if (mounted) {
-        context.pop(true);
+      if (!mounted) return;
+
+      // ✅ Treat success based on HTTP status
+      if (res.statusCode == 200 ||
+          res.statusCode == 201 ||
+          res.statusCode == 204) {
+        if (mounted) {
+          // Close dialog and notify caller
+          context.pop(true);
+
+          // Show success toast
+          topSnackBar(
+            context,
+            "Review submitted successfully!",
+            type: TopSnackType.success,
+          );
+        }
+      } else {
+        // Non-success status
         topSnackBar(
           context,
-          res.data['message'] ?? "Review submitted successfully!",
-          type: TopSnackType.success,
+          "Unexpected response (${res.statusCode}).",
+          type: TopSnackType.error,
         );
       }
     } catch (e) {

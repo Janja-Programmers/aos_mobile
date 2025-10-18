@@ -3,6 +3,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
 
+import '/core/utils/formatters.dart';
 import '/features/order/domain/sales_order.dart';
 
 Future<void> printSalesInvoice(SalesOrder order) async {
@@ -213,7 +214,7 @@ Future<void> printSalesInvoice(SalesOrder order) async {
                           pw.Padding(
                             padding: const pw.EdgeInsets.all(4),
                             child: pw.Text(
-                              'KES ${item.rate.toStringAsFixed(2)}',
+                              formatCurrency(item.rate),
                               textAlign: pw.TextAlign.right,
                               style: const pw.TextStyle(fontSize: 10),
                             ),
@@ -221,7 +222,7 @@ Future<void> printSalesInvoice(SalesOrder order) async {
                           pw.Padding(
                             padding: const pw.EdgeInsets.all(4),
                             child: pw.Text(
-                              'KES ${item.amount.toStringAsFixed(2)}',
+                              formatCurrency(item.amount),
                               textAlign: pw.TextAlign.right,
                               style: const pw.TextStyle(fontSize: 10),
                             ),
@@ -249,7 +250,7 @@ Future<void> printSalesInvoice(SalesOrder order) async {
                       ),
                     ),
                     pw.Text(
-                      'KES ${order.grandTotal.toStringAsFixed(2)}',
+                      formatCurrency(order.grandTotal),
                       style: pw.TextStyle(
                         fontWeight: pw.FontWeight.bold,
                         fontSize: 13,

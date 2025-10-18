@@ -29,8 +29,8 @@ class BIllInvoiceButton extends StatelessWidget {
         child:
             isLoading
                 ? const SizedBox(
-                  width: 20,
-                  height: 20,
+                  width: 15,
+                  height: 15,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.2,
                     color: Colors.white,

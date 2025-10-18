@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/core/utils/formatters.dart';
 import '/features/order/domain/sales_order.dart';
 
 class ProductTableCard extends StatelessWidget {
@@ -37,7 +38,7 @@ class ProductTableCard extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  order.grandTotal.toStringAsFixed(2),
+                  formatCurrency(order.grandTotal),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -95,11 +96,11 @@ class ProductTableCard extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(item.rate.toStringAsFixed(2)),
+                child: Text(formatCurrency(item.rate)),
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text((item.qty * item.rate).toStringAsFixed(2)),
+                child: Text(formatCurrency(item.qty * item.rate)),
               ),
             ],
           );

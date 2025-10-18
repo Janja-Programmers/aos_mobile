@@ -36,11 +36,22 @@ class ProductReviewsCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
           ),
           child: PopupMenuButton<String>(
-            onSelected: (value) {
+            onSelected: (value) async {
+              final controller = context.read<ProductReviewsController>();
+
               if (value == "review") {
-                openRateDialog(context, itemName);
+                final success = await openRateDialog(
+                  context,
+                  itemCode,
+                  webItem,
+                );
+
+                // ✅ Reload reviews immediately after successful review
+                if (success == true && context.mounted) {
+                  await controller.loadReviews(itemCode, context);
+                }
               } else if (value == "report") {
-                openReportDialog(context, webItem, itemCode);
+                await openReportDialog(context, webItem, itemCode);
               }
             },
             itemBuilder:
@@ -84,28 +95,49 @@ class ProductReviewsCard extends StatelessWidget {
       child: Consumer<ProductReviewsController>(
         builder: (context, controller, _) {
           if (controller.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: CircularProgressIndicator(),
+              ),
+            );
           }
 
           if (!controller.hasReviews) {
             return ProductNotReviewedCard(
               onRate: () async {
-                await openRateDialog(context, itemCode);
-                controller.loadReviews(itemCode, context);
+                final success = await openRateDialog(
+                  context,
+                  itemCode,
+                  webItem,
+                );
+
+                if (success == true && context.mounted) {
+                  await controller.loadReviews(itemCode, context);
+                }
               },
-              titleRow: _buildTitleRow(
-                context,
-              ), // <-- inject the same title row
+              titleRow: _buildTitleRow(context),
             );
           }
 
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildTitleRow(context),
               const SizedBox(height: 12),
               ReviewsAverageSection(controller: controller),
               ReviewsDistributionRow(controller: controller),
-              ...controller.reviews.map((r) => ReviewsTile(review: r)),
+              const Divider(thickness: 1),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                child: Column(
+                  key: ValueKey(controller.reviews.length),
+                  children:
+                      controller.reviews
+                          .map((r) => ReviewsTile(review: r))
+                          .toList(),
+                ),
+              ),
             ],
           );
         },

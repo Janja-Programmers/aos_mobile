@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/core/utils/formatters.dart';
 import '/features/stock/domain/entity/stock.dart';
 
 class StockTableCard extends StatelessWidget {
@@ -63,11 +64,11 @@ class StockTableCard extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(item.qty.toStringAsFixed(2)),
+                child: Text(formatCurrency(item.qty)),
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(item.valuationRate.toStringAsFixed(2)),
+                child: Text(formatCurrency(item.valuationRate)),
               ),
             ],
           );

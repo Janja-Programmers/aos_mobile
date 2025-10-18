@@ -1,9 +1,8 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import '/core/constants/colors.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
 
+import '/core/constants/colors.dart';
 import '/core/utils/formatters.dart';
 import '/features/website/slider_prov.dart';
 
@@ -14,30 +13,15 @@ class SliderCarousel extends StatelessWidget {
   Widget build(BuildContext context) {
     final sliderProv = context.watch<SliderProv>();
 
+    // 🔹 Loading state — simple spinner
     if (sliderProv.isLoading) {
-      return SizedBox(
+      return const SizedBox(
         height: 180,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
-              child: Container(
-                width: double.infinity,
-                height: 180,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            const CircularProgressIndicator(strokeWidth: 3),
-          ],
-        ),
+        child: Center(child: CircularProgressIndicator()),
       );
     }
 
+    // 🔹 Error state — retry button
     if (sliderProv.error != null) {
       return SizedBox(
         height: 180,
@@ -70,6 +54,7 @@ class SliderCarousel extends StatelessWidget {
       );
     }
 
+    // 🔹 Empty state
     if (sliderProv.images.isEmpty) {
       return SizedBox(
         height: 180,
@@ -96,6 +81,7 @@ class SliderCarousel extends StatelessWidget {
       );
     }
 
+    // 🔹 Success state — show carousel
     return Container(
       decoration: BoxDecoration(
         color: Colors.transparent,
@@ -123,9 +109,8 @@ class SliderCarousel extends StatelessWidget {
         items:
             sliderProv.images.map((imageUrl) {
               final resolvedImgUrl = resolveImageUrl(imageUrl);
-              if (resolvedImgUrl == null) {
-                return const SizedBox.shrink();
-              }
+              if (resolvedImgUrl == null) return const SizedBox.shrink();
+
               return Container(
                 color: Colors.transparent,
                 child: Center(

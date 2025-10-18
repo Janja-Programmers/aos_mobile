@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/core/utils/formatters.dart';
 import '/features/stock/domain/entity/stock_item.dart';
 
 class ItemRowController {
@@ -27,8 +28,8 @@ class ItemRowController {
   void populateFromItem(StockEntryItem item) {
     itemCode.text = item.itemCode;
     itemName.text = item.itemName;
-    qty.text = item.qty.toStringAsFixed(2);
-    valuationRate.text = item.valuationRate.toStringAsFixed(2);
+    qty.text = formatCurrency(item.qty);
+    valuationRate.text = formatCurrency(item.valuationRate);
   }
 
   bool validate() => formKey.currentState?.validate() ?? false;

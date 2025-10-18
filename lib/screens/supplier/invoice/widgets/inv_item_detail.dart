@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/core/utils/formatters.dart';
 import '/features/order/domain/sales_order.dart';
 
 class SalesInvoiceTile extends StatelessWidget {
@@ -47,10 +48,10 @@ class SalesInvoiceTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _infoTile('Qty', item.qty.toStringAsFixed(0)),
-                _infoTile('Rate', 'Sh ${item.rate.toStringAsFixed(2)}'),
+                _infoTile('Rate', formatCurrency(item.rate)),
                 _infoTile(
                   'Amount',
-                  'Sh ${item.amount.toStringAsFixed(2)}',
+                  formatCurrency(item.amount),
                   highlight: true,
                 ),
               ],

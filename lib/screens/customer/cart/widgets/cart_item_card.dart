@@ -81,7 +81,7 @@ class CartItemCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  'Sh ${(item.price * item.quantity).toStringAsFixed(2)}',
+                  formatCurrency(item.price * item.quantity),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 12,

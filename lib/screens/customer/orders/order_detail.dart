@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '/core/constants/colors.dart';
 import '/core/utils/formatters.dart';
+
 import '/features/order/domain/sales_order.dart';
 import '/shared/widgets/app_bars.dart';
 
@@ -85,7 +86,7 @@ class CustomerSalesOrderDetailScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Delivery Date: ${formatCompactDateTime(order.deliveryDate)}',
+                            'Order Date: ${formatCompactDateTime(order.deliveryDate)}',
                             style: const TextStyle(fontSize: 13),
                           ),
                         ],
@@ -190,11 +191,11 @@ class CustomerSalesOrderDetailScreen extends StatelessWidget {
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(6),
-                                child: Text(item.rate.toStringAsFixed(2)),
+                                child: Text(formatCurrency(item.rate)),
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(6),
-                                child: Text(item.amount.toStringAsFixed(2)),
+                                child: Text(formatCurrency(item.amount)),
                               ),
                             ],
                           );
@@ -215,7 +216,7 @@ class CustomerSalesOrderDetailScreen extends StatelessWidget {
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          order.grandTotal.toStringAsFixed(2),
+                          formatCurrency(order.grandTotal),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,

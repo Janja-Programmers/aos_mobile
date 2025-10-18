@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/formatters.dart';
 import 'package:flutter/material.dart';
 
 import '/features/d_note/domain/entity/delivery_note_item.dart';
@@ -14,8 +15,8 @@ class DeliveryNoteItemsTable extends StatelessWidget {
         0: FixedColumnWidth(30), // # column
         1: FlexColumnWidth(3), // Item name
         2: FlexColumnWidth(1), // Qty
-        3: FlexColumnWidth(1.5), // Rate
-        4: FlexColumnWidth(1.5), // Amount
+        3: FlexColumnWidth(2), // Rate
+        4: FlexColumnWidth(2), // Amount
       },
       border: TableBorder.symmetric(
         inside: const BorderSide(color: Colors.grey),
@@ -54,11 +55,11 @@ class DeliveryNoteItemsTable extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(item.rate.toStringAsFixed(2)),
+                child: Text(formatCurrency(item.rate)),
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(item.amount.toStringAsFixed(2)),
+                child: Text(formatCurrency(item.amount)),
               ),
             ],
           );

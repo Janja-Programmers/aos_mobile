@@ -159,6 +159,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetSalesOrderById(sl()));
   sl.registerLazySingleton(() => DeliverSalesOrder(sl()));
   sl.registerLazySingleton(() => BillSalesOrder(sl()));
+  sl.registerLazySingleton(() => MarkSalesInvoiceAsPaid(sl()));
   sl.registerLazySingleton(() => PlaceOrderUseCase(sl()));
 
   // === Provider Layer ===
@@ -168,6 +169,7 @@ Future<void> init() async {
       getById: sl(),
       deliver: sl(),
       bill: sl(),
+      markPaid: sl(),
       placeOrder: sl(),
     ),
   );

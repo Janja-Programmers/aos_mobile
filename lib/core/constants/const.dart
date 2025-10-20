@@ -16,6 +16,7 @@ class ApiRoutes {
 
   static const String salesOrder = '/api/resource/Sales Order';
   static const String salesInvoice = '/api/resource/Sales Invoice';
+  static const String payInvoice = '/api/method/frappe.client.insert';
   static const String placeOrder = '/api/method/aos.overrides.cart.place_order';
 
   static const String deliveryNote = '/api/resource/Delivery Note';

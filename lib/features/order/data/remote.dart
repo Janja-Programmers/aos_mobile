@@ -20,6 +20,7 @@ class SalesOrderRemoteDS {
   static const deliveryNote = ApiRoutes.deliveryNote;
   static const bill = ApiRoutes.bill;
   static const salesInvoice = ApiRoutes.salesInvoice;
+  static const payInvoice = ApiRoutes.payInvoice;
   static const viewPastOrders = ApiRoutes.viewPastOrders;
 
   SalesOrderRemoteDS(this.client);
@@ -163,6 +164,54 @@ class SalesOrderRemoteDS {
       return const Right(unit);
     } catch (e) {
       appLogger.e('⛔ Error marking order as billed: $e');
+      return Left(handleException(e));
+    }
+  }
+
+  // ✅ Mark as paid
+  Future<Either<Failure, Unit>> markAsPaid({
+    required String invoiceName,
+    required String customerName,
+    required double amount,
+    required String referenceNo,
+    required String referenceDate,
+  }) async {
+    try {
+      final response = await client.client.post(
+        payInvoice,
+        data: {
+          "doc": {
+            "doctype": "Payment Entry",
+            "payment_type": "Receive",
+            "company": "Africa Online Stores",
+            "party_type": "Customer",
+            "party": customerName,
+            "paid_from": "Debtors - AOS",
+            "paid_to": "Bank Account - AOS",
+            "paid_amount": amount,
+            "received_amount": amount,
+            "reference_no": referenceNo,
+            "reference_date": referenceDate,
+            "references": [
+              {
+                "reference_doctype": "Sales Invoice",
+                "reference_name": invoiceName,
+                "allocated_amount": amount,
+              },
+            ],
+          },
+          "submit_after_insert": 1,
+        },
+      );
+
+      final paymentEntry = response.data['message'];
+      if (paymentEntry == null) {
+        throw Exception('Failed to create Payment Entry');
+      }
+
+      return const Right(unit);
+    } catch (e) {
+      appLogger.e('⛔ Error marking invoice as paid: $e');
       return Left(handleException(e));
     }
   }

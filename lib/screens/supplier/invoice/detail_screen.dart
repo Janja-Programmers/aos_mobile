@@ -7,9 +7,9 @@ import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/empty_state.dart';
 
-import 'widgets/bill_inv_btn.dart';
 import 'widgets/inv_info_card.dart';
 import 'widgets/inv_print_btn.dart';
+import 'widgets/mark_invoice_paid.dart';
 import 'widgets/product_table_card.dart';
 
 class SalesInvoiceDetailScreen extends StatefulWidget {
@@ -69,7 +69,10 @@ class _SalesInvoiceDetailScreenState extends State<SalesInvoiceDetailScreen> {
         'Sales Invoice',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      actionButton: order != null ? BIllInvoiceButton(order: order) : null,
+      actionButton:
+          order != null && order.percentBilled >= 100
+              ? PayInvoiceButton(order: order)
+              : null,
       body: body,
       floatingActionButton:
           order != null ? PrintSalesInvoice(order: order) : null,

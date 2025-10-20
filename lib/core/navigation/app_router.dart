@@ -49,32 +49,38 @@ class AppRouter {
     redirect: (context, state) {
       final loggedIn = auth.isLoggedIn;
 
-      // Checks if the current path is /login or /register
-      final loggingIn =
-          state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register';
+      // Identify public auth-related routes
+      final isAuthRoute = [
+        '/login',
+        '/register',
+        '/forgot-password',
+      ].contains(state.matchedLocation);
 
-      // 🚫 Not logged in, and trying to go to any protected page
-      if (!loggedIn && !loggingIn) {
-        auth.setReturnTo(
-          state.matchedLocation,
-        ); // remember where they wanted to go
+      // Not logged in → trying to visit a protected route
+      if (!loggedIn && !isAuthRoute) {
+        // Remember where they wanted to go
+        auth.setReturnTo(state.matchedLocation);
         return '/login';
       }
 
-      // ✅ Logged in, but trying to go to /login or /register → redirect to home
-      if (loggedIn && loggingIn) return auth.defaultHome;
+      // Logged in → trying to go to login/register/forgot-password
+      if (loggedIn && isAuthRoute) {
+        return auth.defaultHome; // e.g., '/home'
+      }
 
-      // ✅ No redirect needed
+      // No redirect needed
       return null;
     },
 
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
-      GoRoute(path: '/forgot-password', builder: (_, _) => const ForgotPasswordScreen()),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (_, _) => const ForgotPasswordScreen(),
+      ),
 
-
+      // 🔒 Add protected routes here
       GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
 
       GoRoute(
@@ -172,7 +178,7 @@ class AppRouter {
         path: '/invoice/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return SalesInvoiceDetailScreen(orderId: id);
+          return SalesInvoiceDetailScreen(invoiceId: id);
         },
       ),
 

@@ -1,7 +1,7 @@
-import 'package:africaonlinestores/screens/supplier/invoice/widgets/bill_inv_btn.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '/features/order/domain/sales_order.dart';
 import '/features/order/prov.dart';
 
 import '/shared/widgets/main_bar.dart';
@@ -69,15 +69,56 @@ class _SalesOrderDetailScreenState extends State<SalesOrderDetailScreen> {
         'Sales Order',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      actionButton:
-          order != null
-              ? (order.percentDelivered < 100
-                  ? DeliverOrderButton(order: order)
-                  : BIllInvoiceButton(order: order))
-              : null,
+      actionButton: _buildActionButton(order),
       body: body,
       floatingActionButton:
           order != null ? PrintSalesOrder(order: order) : null,
     );
+  }
+
+  Widget _buildActionButton(SalesOrder? order) {
+    if (order == null) {
+      return ElevatedButton.icon(
+        onPressed: null,
+        icon: const Icon(Icons.hourglass_empty, color: Colors.grey),
+        label: const Text('Loading...', style: TextStyle(color: Colors.grey)),
+        style: ElevatedButton.styleFrom(
+          disabledBackgroundColor: Colors.grey.shade200,
+          disabledForegroundColor: Colors.grey,
+        ),
+      );
+    }
+
+    final status = order.status.toLowerCase();
+
+    switch (status) {
+      case 'delivered':
+        return ElevatedButton.icon(
+          onPressed: null,
+          icon: const Icon(Icons.local_shipping_outlined, color: Colors.grey),
+          label: const Text('Delivered', style: TextStyle(color: Colors.grey)),
+          style: ElevatedButton.styleFrom(
+            disabledBackgroundColor: Colors.grey.shade200,
+            disabledForegroundColor: Colors.grey,
+          ),
+        );
+
+      case 'cancelled':
+        return ElevatedButton.icon(
+          onPressed: null,
+          icon: const Icon(Icons.cancel_outlined, color: Colors.red),
+          label: const Text(
+            'Cancelled',
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+          ),
+          style: ElevatedButton.styleFrom(
+            disabledBackgroundColor: Colors.grey.shade200,
+            disabledForegroundColor: Colors.red,
+          ),
+        );
+
+      default:
+        return DeliverOrderButton(order: order);
+    }
   }
 }

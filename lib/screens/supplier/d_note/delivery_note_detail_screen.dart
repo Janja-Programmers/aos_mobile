@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/core/utils/snackbar.dart';
+
+import '/features/d_note/domain/entity/delivery_note.dart';
 import '/features/d_note/prov.dart';
+import '/screens/supplier/d_note/widgets/bill_inv_btn.dart';
 
 import '/shared/widgets/app_drawer.dart';
-import '/shared/widgets/main_bar.dart';
+import '/shared/widgets/disabled_btn.dart';
 import '/shared/widgets/empty_state.dart';
+import '/shared/widgets/main_bar.dart';
 
 import 'widgets/detail_card.dart';
 import 'widgets/item_card.dart';
@@ -72,6 +76,7 @@ class _DeliveryNoteDetailScreenState extends State<DeliveryNoteDetailScreen> {
         'Delivery Note',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
+      actionButton: _buildActionButton(note),
       body: body,
       floatingActionButton:
           note != null
@@ -86,5 +91,44 @@ class _DeliveryNoteDetailScreenState extends State<DeliveryNoteDetailScreen> {
               )
               : null,
     );
+  }
+
+  Widget _buildActionButton(DeliveryNote? note) {
+    if (note == null) {
+      return buildDisabledButton(
+        label: 'Loading...',
+        icon: Icons.hourglass_empty,
+        color: Colors.grey,
+      );
+    }
+
+    final status = note.status.toLowerCase();
+
+    switch (status) {
+      case 'todeliver':
+        return buildDisabledButton(
+          label: 'To Deliver',
+          icon: Icons.local_shipping_outlined,
+          color: Colors.orange,
+        );
+
+      case 'cancelled':
+        return buildDisabledButton(
+          label: 'Cancelled',
+          icon: Icons.cancel_outlined,
+          color: Colors.red,
+          fontWeight: FontWeight.w600,
+        );
+
+      case 'completed':
+        return buildDisabledButton(
+          label: 'Completed',
+          icon: Icons.check_circle_outline,
+          color: Colors.green,
+        );
+
+      default:
+        return BillInvoiceButton(note: note);
+    }
   }
 }

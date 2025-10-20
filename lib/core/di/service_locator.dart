@@ -35,8 +35,14 @@ import '/features/order/data/repo_impl.dart';
 import '/features/order/domain/repo.dart';
 import '/features/order/domain/usecases.dart';
 import '/features/order/prov.dart';
-import '/screens/supplier/invoice/prov.dart';
 import '/screens/customer/orders/provider.dart';
+
+/***** SALESINVOICE *******/
+import '/features/invoice/data/remote.dart';
+import '/features/invoice/data/repo_impl.dart';
+import '/features/invoice/domain/repo.dart';
+import '/features/invoice/domain/usecases.dart';
+import '/features/invoice/prov.dart';
 
 /*****  DELIVERYNOTE *******/
 import '/features/d_note/data/remote.dart';
@@ -109,6 +115,7 @@ Future<void> init() async {
   // Use cases
   sl.registerLazySingleton(() => LoginUser(sl<AuthRepository>()));
   sl.registerLazySingleton(() => RegisterUser(sl<AuthRepository>()));
+  sl.registerLazySingleton(() => ResetPassword(sl<AuthRepository>()));
 
   // Provider
   sl.registerFactory(
@@ -159,7 +166,6 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetSalesOrderById(sl()));
   sl.registerLazySingleton(() => DeliverSalesOrder(sl()));
   sl.registerLazySingleton(() => BillSalesOrder(sl()));
-  sl.registerLazySingleton(() => MarkSalesInvoiceAsPaid(sl()));
   sl.registerLazySingleton(() => PlaceOrderUseCase(sl()));
 
   // === Provider Layer ===
@@ -169,12 +175,35 @@ Future<void> init() async {
       getById: sl(),
       deliver: sl(),
       bill: sl(),
-      markPaid: sl(),
       placeOrder: sl(),
     ),
   );
   sl.registerLazySingleton(() => CustomerOrderProvider(sl()));
-  sl.registerLazySingleton(() => SalesInvoiceProvider(sl()));
+
+  // SALESINVOICE Doctype
+  // === Data Layer ===
+  sl.registerLazySingleton<SalesInvoiceRemoteDS>(
+    () => SalesInvoiceRemoteDS(sl<APIClient>()),
+  );
+
+  // === Repository Layer ===
+  sl.registerLazySingleton<SalesInvoiceRepo>(
+    () => SalesInvoiceRepoImpl(remote: sl<SalesInvoiceRemoteDS>()),
+  );
+
+  // === Domain Layer ===
+  sl.registerLazySingleton(() => GetAllSalesInvoices(sl()));
+  sl.registerLazySingleton(() => GetSalesInvoiceById(sl()));
+  sl.registerLazySingleton(() => MarkSalesInvoiceAsPaid(sl()));
+
+  // === Provider Layer ===
+  sl.registerFactory(
+    () => SalesInvoiceProvider(
+      getAllSalesInvoices: sl(),
+      getById: sl(),
+      markPaid: sl(),
+    ),
+  );
 
   // DELIVERYNOTE Doctype
   // === Data ===

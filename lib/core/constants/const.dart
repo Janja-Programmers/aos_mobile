@@ -37,7 +37,7 @@ class ApiRoutes {
   static const String deliver =
       '/api/method/erpnext.selling.doctype.sales_order.sales_order.make_delivery_note';
   static const String bill =
-      '/api/method/erpnext.selling.doctype.sales_order.sales_order.make_sales_invoice';
+      '/api/method/erpnext.stock.doctype.delivery_note.delivery_note.make_sales_invoice';
   static const String viewPastOrders = '/api/method/frappe.www.list.get';
   static const String slideshowEndpoint = '/api/method/aos.api.get_slider';
 

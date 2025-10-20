@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import '/features/charts/presentation/chart_card.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/strings.dart';
+
 import '/features/auth/domain/user.dart';
-import '../../auth/auth_provider.dart';
+import '/features/d_note/prov.dart';
+import '/features/invoice/prov.dart';
+import '/features/order/prov.dart';
+import '/features/product/provider.dart';
+import '/features/stock/providers/all.dart';
+
+import '/screens/auth/auth_provider.dart';
 
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
 
-import 'widgets/dashboard_tile.dart';
+import 'widgets/hero.dart';
+import 'widgets/shortcuts.dart';
 
 class SellerDashboard extends StatefulWidget {
   const SellerDashboard({super.key});
@@ -27,8 +33,22 @@ class _SellerDashboardState extends State<SellerDashboard> {
   @override
   void initState() {
     super.initState();
+
+    // Schedule after first frame so context is ready
     Future.microtask(() {
       authProvider = context.read<AuthProvider>();
+      final productProvider = context.read<ProductProvider>();
+      final stockProvider = context.read<StockEntryProvider>();
+      final orderProvider = context.read<SalesOrderProvider>();
+      final deliveryProvider = context.read<DeliveryNoteProvider>();
+      final invoiceProvider = context.read<SalesInvoiceProvider>();
+
+      productProvider.fetchProducts();
+      stockProvider.fetchAll();
+      orderProvider.fetchAll();
+      deliveryProvider.fetchAll();
+      invoiceProvider.fetchAll();
+
       setState(() {
         user = authProvider.user;
       });
@@ -37,6 +57,19 @@ class _SellerDashboardState extends State<SellerDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final productProvider = context.watch<ProductProvider>();
+    final stockProvider = context.watch<StockEntryProvider>();
+    final orderProvider = context.watch<SalesOrderProvider>();
+    final deliveryProvider = context.watch<DeliveryNoteProvider>();
+    final invoiceProvider = context.watch<SalesInvoiceProvider>();
+
+    // Safe to read counts now
+    final products = productProvider.products.length;
+    final stockIntakes = stockProvider.entries.length;
+    final orders = orderProvider.orders.length;
+    final deliveries = deliveryProvider.notes.length;
+    final invoices = invoiceProvider.invoices.length;
+
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
       drawer: AppDrawer(selectedIndex: 0, onItemSelected: (_) {}),
@@ -47,53 +80,33 @@ class _SellerDashboardState extends State<SellerDashboard> {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          /// 👇 Dashboard Grid Tiles (3 per row)
-          GridView.count(
-            shrinkWrap: true,
-            crossAxisCount: 3,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 2.5,
-            children: [
-              DashboardTile(
-                title: "Dashboard",
-                icon: Icons.dashboard,
-                highlight: true,
-                onTap: () {},
+          DashboardHero(bannerImage: const AssetImage('assets/dash.png')),
+          const SizedBox(height: 16),
+          DashboardShortcuts(
+            items: [
+              ShortcutItem(title: 'Products', route: '/items', count: products),
+              ShortcutItem(
+                title: 'Stock Intake',
+                route: '/stock-entry',
+                count: stockIntakes,
               ),
-              DashboardTile(
-                title: "Products",
-                icon: Icons.shopping_bag,
-                onTap: () => context.push('/items'),
+              ShortcutItem(
+                title: 'Sales Order',
+                route: '/sales-orders',
+                count: orders,
               ),
-              DashboardTile(
-                title: "Stock Intake",
-                icon: Icons.warehouse,
-                onTap: () => context.push('/stock-entry'),
+              ShortcutItem(
+                title: 'Delivery Note',
+                route: '/delivery-notes',
+                count: deliveries,
               ),
-              DashboardTile(
-                title: "Sales Order",
-                icon: Icons.assignment,
-                onTap: () => context.push('/sales-orders'),
-              ),
-              DashboardTile(
-                title: "Delivery Note",
-                icon: Icons.local_shipping,
-                onTap: () => context.push('/delivery-notes'),
-              ),
-              DashboardTile(
-                title: "Sales Invoice",
-                icon: Icons.request_quote,
-                onTap: () => context.push('/invoices'),
+              ShortcutItem(
+                title: 'Sales Invoice',
+                route: '/invoices',
+                count: invoices,
               ),
             ],
           ),
-
-          const SizedBox(height: 16),
-
-          /// 👇 Sales Chart Card moved below shortcuts
-          const SalesChartCard(),
         ],
       ),
     );

@@ -1,27 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '/features/order/domain/sales_order.dart';
 import '/core/utils/snackbar.dart';
-
+import '/features/d_note/domain/entity/delivery_note.dart';
 import '/features/d_note/prov.dart';
 import '/features/order/prov.dart';
 
-class BIllInvoiceButton extends StatelessWidget {
-  final SalesOrder order;
+class BillInvoiceButton extends StatelessWidget {
+  final DeliveryNote note;
 
-  const BIllInvoiceButton({super.key, required this.order});
+  const BillInvoiceButton({super.key, required this.note});
 
   @override
   Widget build(BuildContext context) {
     final prov = context.watch<SalesOrderProvider>();
-    final isBilled = order.percentBilled >= 100;
+    final isBilled = note.percentInstalled >= 100;
     final isLoading = prov.detailLoading;
 
     return ElevatedButton(
       onPressed:
-          (isBilled || isLoading) ? null : () => _billInvoice(context, order),
-      style: ElevatedButton.styleFrom(minimumSize: const Size(140, 48)),
+          (isBilled || isLoading) ? null : () => _billInvoice(context, note),
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size(120, 40),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        textStyle: const TextStyle(fontSize: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      ),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
         transitionBuilder:
@@ -29,8 +33,8 @@ class BIllInvoiceButton extends StatelessWidget {
         child:
             isLoading
                 ? const SizedBox(
-                  width: 15,
-                  height: 15,
+                  width: 18,
+                  height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.2,
                     color: Colors.white,
@@ -41,12 +45,16 @@ class BIllInvoiceButton extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.receipt_long_outlined,
+                      size: 18,
                       color: isBilled ? Colors.grey : null,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       isBilled ? 'Billed' : 'Bill',
-                      style: TextStyle(color: isBilled ? Colors.grey : null),
+                      style: TextStyle(
+                        color: isBilled ? Colors.grey : null,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
@@ -54,11 +62,9 @@ class BIllInvoiceButton extends StatelessWidget {
     );
   }
 
-  void _billInvoice(BuildContext context, SalesOrder order) async {
+  void _billInvoice(BuildContext context, DeliveryNote note) async {
     final prov = context.read<SalesOrderProvider>();
-
-    // 🔹 Pass the Sales Order ID
-    final result = await prov.billOrder(order.id);
+    final result = await prov.billOrder(note.id);
 
     if (!context.mounted) return;
 

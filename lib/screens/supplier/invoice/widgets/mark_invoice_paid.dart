@@ -1,29 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '/features/order/domain/sales_order.dart';
 import '/core/utils/snackbar.dart';
-
-import '/features/order/prov.dart';
+import '/features/invoice/domain/sales_invoice.dart';
+import '/features/invoice/prov.dart';
 
 class PayInvoiceButton extends StatelessWidget {
-  final SalesOrder order;
+  final SalesInvoice invoice;
 
-  const PayInvoiceButton({super.key, required this.order});
+  const PayInvoiceButton({super.key, required this.invoice});
 
   @override
   Widget build(BuildContext context) {
-    final prov = context.watch<SalesOrderProvider>();
+    final prov = context.watch<SalesInvoiceProvider>();
 
-    final isPaid = order.percentBilled >= 100;
+    // Use the refreshed invoice if available
+    final currentInvoice =
+        prov.selectedinvoice?.id == invoice.id ? prov.selectedinvoice : invoice;
+
+    final isPaid = (currentInvoice?.outstandingAmount ?? 0) == 0;
     final isLoading = prov.detailLoading;
 
     return ElevatedButton(
       onPressed:
           (isPaid || isLoading)
               ? null
-              : () => _payInvoice(context: context, order: order),
-      style: ElevatedButton.styleFrom(minimumSize: const Size(140, 48)),
+              : () => _payInvoice(context: context, invoice: invoice),
+      style: ElevatedButton.styleFrom(minimumSize: const Size(120, 40)),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 250),
         transitionBuilder:
@@ -38,19 +41,9 @@ class PayInvoiceButton extends StatelessWidget {
                     color: Colors.white,
                   ),
                 )
-                : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.attach_money,
-                      color: isPaid ? Colors.grey : null,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      isPaid ? 'Paid' : 'Pay',
-                      style: TextStyle(color: isPaid ? Colors.grey : null),
-                    ),
-                  ],
+                : Text(
+                  isPaid ? 'Paid' : 'Mark as Paid',
+                  style: TextStyle(color: isPaid ? Colors.grey : null),
                 ),
       ),
     );
@@ -58,23 +51,16 @@ class PayInvoiceButton extends StatelessWidget {
 
   Future<void> _payInvoice({
     required BuildContext context,
-    required SalesOrder order,
+    required SalesInvoice invoice,
   }) async {
-    final prov = context.read<SalesOrderProvider>();
-
-    // 🔸 Extract required data
-    final invoiceName = "ACC-SINV-${order.id}";
-    final customerName = order.customerName;
-    final amount = order.grandTotal;
-    final referenceNo = "TXN-${DateTime.now().millisecondsSinceEpoch}";
-    final referenceDate = DateTime.now().toIso8601String().split('T').first;
+    final prov = context.read<SalesInvoiceProvider>();
 
     final result = await prov.markInvoiceAsPaid(
-      invoiceName: invoiceName,
-      customerName: customerName,
-      amount: amount,
-      referenceNo: referenceNo,
-      referenceDate: referenceDate,
+      invoiceName: invoice.id,
+      customerName: invoice.customerName,
+      amount: invoice.grandTotal,
+      referenceNo: "TXN-${DateTime.now().millisecondsSinceEpoch}",
+      referenceDate: DateTime.now().toIso8601String().split('T').first,
     );
 
     if (!context.mounted) return;
@@ -86,10 +72,12 @@ class PayInvoiceButton extends StatelessWidget {
         type: TopSnackType.error,
       ),
       (_) {
-        topSnackBar(context, 'Invoice marked as paid');
-        prov.fetchById(order.id);
+        topSnackBar(
+          context,
+          'Invoice ${invoice.id} marked as paid (${invoice.grandTotal.toStringAsFixed(2)})',
+        );
+        prov.fetchById(invoice.id);
       },
     );
   }
 }
-

@@ -19,6 +19,9 @@ import 'screens/customer/web-items/utils/vendor_utils.dart';
 import 'features/order/prov.dart';
 import '/screens/customer/orders/provider.dart';
 
+// SALESINVOICE Feature
+import 'features/invoice/prov.dart';
+
 // DELIVERYNOTE Feature
 import 'features/d_note/prov.dart';
 
@@ -40,7 +43,6 @@ import '/features/address/provider.dart';
 // WEBSITE Feature
 import 'features/website/prov.dart';
 import 'features/website/slider_prov.dart';
-import 'screens/supplier/invoice/prov.dart';
 import 'screens/supplier/product/controllers/add_item_controller.dart';
 
 class App extends StatelessWidget {

@@ -41,23 +41,6 @@ class SalesOrderRepoImpl implements SalesOrderRepo {
   }
 
   @override
-  Future<Either<Failure, Unit>> markAsPaid({
-    required String invoiceName,
-    required String customerName,
-    required double amount,
-    required String referenceNo,
-    required String referenceDate,
-  }) {
-    return remote.markAsPaid(
-      invoiceName: invoiceName,
-      customerName: customerName,
-      amount: amount,
-      referenceNo: referenceNo,
-      referenceDate: referenceDate,
-    );
-  }
-
-  @override
   Future<Either<Failure, Unit>> placeOrder(OrderPayload payload) async {
     try {
       appLogger.i(

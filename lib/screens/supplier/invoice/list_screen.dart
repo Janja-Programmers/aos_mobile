@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
+import '/features/invoice/prov.dart';
+
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/empty_state.dart';
 import '/shared/widgets/main_bar.dart';
 
-import 'prov.dart';
-import 'widgets/inv_card_row.dart';
+import 'widgets/invoice_card_row.dart';
 
 class SalesInvoiceListScreen extends StatefulWidget {
   const SalesInvoiceListScreen({super.key});
@@ -24,7 +25,7 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => context.read<SalesInvoiceProvider>().fetchInvoices(),
+      (_) => context.read<SalesInvoiceProvider>().fetchAll(),
     );
   }
 
@@ -35,7 +36,7 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
   }
 
   Future<void> _refresh() async {
-    await context.read<SalesInvoiceProvider>().fetchInvoices();
+    await context.read<SalesInvoiceProvider>().fetchAll();
   }
 
   @override
@@ -50,7 +51,7 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
       body: Consumer<SalesInvoiceProvider>(
         builder: (context, provider, _) {
           // 🔄 Loading state
-          if (provider.isLoading) {
+          if (provider.listLoading) {
             return const Center(
               child: SizedBox(
                 width: 32,

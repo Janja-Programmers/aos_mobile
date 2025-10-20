@@ -55,25 +55,3 @@ class BillSalesOrder {
     return repo.markAsBilled(id);
   }
 }
-
-class MarkSalesInvoiceAsPaid {
-  final SalesOrderRepo repo;
-
-  MarkSalesInvoiceAsPaid(this.repo);
-
-  Future<Either<Failure, Unit>> call({
-    required String invoiceName,
-    required String customerName,
-    required double amount,
-    required String referenceNo,
-    required String referenceDate,
-  }) {
-    return repo.markAsPaid(
-      invoiceName: invoiceName,
-      customerName: customerName,
-      amount: amount,
-      referenceNo: referenceNo,
-      referenceDate: referenceDate,
-    );
-  }
-}

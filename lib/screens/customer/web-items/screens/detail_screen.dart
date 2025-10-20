@@ -72,8 +72,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
 
     if (error != null) {
-      debugPrint('❌ Failed to load product "${widget.itemCode}"');
-
       return Scaffold(
         backgroundColor: AppColors.background,
         appBar: TopAppBar(),

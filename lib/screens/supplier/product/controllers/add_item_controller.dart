@@ -151,16 +151,13 @@ class AddItemController extends ChangeNotifier {
 
       final payload = _buildPayloadFromProduct(productToSubmit);
 
-      debugPrint('📤 Submitting payload from AddItemController: $payload');
-
       final success =
           await (existingProduct == null
               ? provider.createProductFromRaw(payload)
               : provider.updateExistingItem(productToSubmit));
 
       return success;
-    } catch (e, stack) {
-      debugPrint('❌ Submit failed: $e\n$stack');
+    } catch (e) {
       if (!context.mounted) return false;
       topSnackBar(context, 'Error saving product', type: TopSnackType.error);
       return false;
@@ -231,7 +228,6 @@ class AddItemController extends ChangeNotifier {
           .map((e) => e['name'] as String)
           .toList();
     } catch (e) {
-      debugPrint('Group fetch error: $e');
       return [];
     }
   }
@@ -250,10 +246,8 @@ class AddItemController extends ChangeNotifier {
         data: formData,
       );
 
-      debugPrint('Upload response: ${response.data}');
       return response.data['message']['file_url'];
-    } catch (e, stack) {
-      debugPrint('❌ Upload failed: $e\n$stack');
+    } catch (e) {
       return null;
     }
   }

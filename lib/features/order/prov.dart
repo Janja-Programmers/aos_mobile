@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter/foundation.dart';
 import '/core/errors/failures.dart';
 
@@ -12,7 +11,6 @@ class SalesOrderProvider with ChangeNotifier {
   final GetSalesOrderById getById;
   final DeliverSalesOrder deliver;
   final BillSalesOrder bill;
-  final MarkSalesInvoiceAsPaid markPaid;
   final PlaceOrderUseCase placeOrder;
 
   SalesOrderProvider({
@@ -20,7 +18,6 @@ class SalesOrderProvider with ChangeNotifier {
     required this.getById,
     required this.deliver,
     required this.bill,
-    required this.markPaid,
     required this.placeOrder,
   });
 
@@ -86,45 +83,10 @@ class SalesOrderProvider with ChangeNotifier {
   Future<Either<Failure, Unit>> billOrder(String id) async {
     _setDetailLoading(true);
 
-    appLogger.i("You're at the billOrder prov");
-
     final result = await bill(id);
-
-    appLogger.i("Result: $result");
 
     if (result.isRight()) {
       await fetchById(id);
-    }
-
-    _setDetailLoading(false);
-    return result;
-  }
-
-  /// Mark sales invoice as paid
-  Future<Either<Failure, Unit>> markInvoiceAsPaid({
-    required String invoiceName,
-    required String customerName,
-    required double amount,
-    required String referenceNo,
-    required String referenceDate,
-  }) async {
-    _setDetailLoading(true);
-    _failure = null;
-
-    appLogger.i("🔁 markInvoiceAsPaid called for invoice $invoiceName");
-
-    final result = await markPaid(
-      invoiceName: invoiceName,
-      customerName: customerName,
-      amount: amount,
-      referenceNo: referenceNo,
-      referenceDate: referenceDate,
-    );
-
-    appLogger.i("✅ Result from markPaid: $result");
-
-    if (result.isRight() && _selectedOrder != null) {
-      await fetchById(_selectedOrder!.id);
     }
 
     _setDetailLoading(false);

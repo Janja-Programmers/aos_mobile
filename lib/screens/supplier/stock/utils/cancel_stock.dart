@@ -91,10 +91,8 @@ Future<void> cancelStockEntry(
     );
 
     await detailProvider.fetchById(submitted.id);
-    Navigator.pop(context, true); // match delete & submit behavior
+    Navigator.pop(context, true);
   } catch (e) {
-    debugPrint('❌ Cancel Stock Entry error: $e');
-
     if (!context.mounted) return;
 
     topSnackBar(

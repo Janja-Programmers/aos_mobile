@@ -16,13 +16,4 @@ abstract class SalesOrderRepo {
 
   // NEW: Mark as Billed
   Future<Either<Failure, Unit>> markAsBilled(String id);
-
-  // NEW: Mark as Paid
-  Future<Either<Failure, Unit>> markAsPaid({
-    required String invoiceName,
-    required String customerName,
-    required double amount,
-    required String referenceNo,
-    required String referenceDate,
-  });
 }

@@ -54,7 +54,7 @@ class _ItemRowState extends State<ItemRow> {
         };
       });
     } catch (e) {
-      debugPrint('Failed to fetch item codes: $e');
+      return;
     }
   }
 

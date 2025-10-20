@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '/features/order/prov.dart';
-
-import '/shared/widgets/main_bar.dart';
+import '/features/invoice/prov.dart';
 import '/shared/widgets/app_drawer.dart';
+import '/shared/widgets/disabled_btn.dart';
 import '/shared/widgets/empty_state.dart';
+import '/shared/widgets/main_bar.dart';
 
-import 'widgets/inv_info_card.dart';
+import 'widgets/invoice_info_card.dart';
 import 'widgets/inv_print_btn.dart';
 import 'widgets/mark_invoice_paid.dart';
-import 'widgets/product_table_card.dart';
+import 'widgets/invoice_product_table_card.dart';
 
 class SalesInvoiceDetailScreen extends StatefulWidget {
-  final String orderId;
+  final String invoiceId;
 
-  const SalesInvoiceDetailScreen({super.key, required this.orderId});
+  const SalesInvoiceDetailScreen({super.key, required this.invoiceId});
 
   @override
   State<SalesInvoiceDetailScreen> createState() =>
@@ -29,14 +29,14 @@ class _SalesInvoiceDetailScreenState extends State<SalesInvoiceDetailScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      context.read<SalesOrderProvider>().fetchById(widget.orderId);
+      context.read<SalesInvoiceProvider>().fetchById(widget.invoiceId);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<SalesOrderProvider>();
-    final order = provider.selectedOrder;
+    final provider = context.watch<SalesInvoiceProvider>();
+    final invoice = provider.selectedinvoice;
 
     Widget body;
 
@@ -48,18 +48,35 @@ class _SalesInvoiceDetailScreenState extends State<SalesInvoiceDetailScreen> {
           child: CircularProgressIndicator(strokeWidth: 2.5),
         ),
       );
-    } else if (order == null) {
+    } else if (invoice == null) {
       body = const EmptyState(message: 'Error: Invoice not found');
     } else {
       body = Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: ListView(
           children: [
-            SalesInvoiceInfoCard(order: order),
-            InvoiceTableCard(order: order),
+            SalesInvoiceInfoCard(invoice: invoice),
+            InvoiceTableCard(order: invoice),
           ],
         ),
       );
+    }
+
+    // Determine action button
+    Widget? actionButton;
+    if (invoice != null) {
+      final status = invoice.status.toLowerCase();
+      if (status != 'paid' && status != 'cancelled') {
+        // Show action button when not paid/cancelled
+        actionButton = PayInvoiceButton(invoice: invoice);
+      } else {
+        // Show disabled button labeled with the current status
+        actionButton = buildDisabledButton(
+          label: status[0].toUpperCase() + status.substring(1),
+          icon: status == 'paid' ? Icons.check_circle : Icons.cancel,
+          color: status == 'paid' ? Colors.green : Colors.red,
+        );
+      }
     }
 
     return MainBarScaffold(
@@ -69,13 +86,10 @@ class _SalesInvoiceDetailScreenState extends State<SalesInvoiceDetailScreen> {
         'Sales Invoice',
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      actionButton:
-          order != null && order.percentBilled >= 100
-              ? PayInvoiceButton(order: order)
-              : null,
+      actionButton: actionButton,
       body: body,
       floatingActionButton:
-          order != null ? PrintSalesInvoice(order: order) : null,
+          invoice != null ? PrintSalesInvoice(order: invoice) : null,
     );
   }
 }

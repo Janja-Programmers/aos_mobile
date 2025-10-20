@@ -34,4 +34,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, void>> logout() async {
     return await remote.logout();
   }
+
+  @override
+  Future<Either<Failure, String>> resetPassword(String email) async {
+    return await remote.resetPassword(email);
+  }
 }

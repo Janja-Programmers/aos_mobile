@@ -8,22 +8,18 @@ import '/core/utils/validators.dart';
 
 import '../auth_provider.dart';
 
-import '../widgets/app_input.dart';
 import '../widgets/text_widget.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController userCtrl = TextEditingController();
-  final TextEditingController passCtrl = TextEditingController();
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final TextEditingController emailCtrl = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  bool obscurePass = true;
 
   @override
   Widget build(BuildContext context) {
@@ -48,55 +44,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   Image.asset('assets/logo_transparent.png', height: 80),
                   const SizedBox(height: 10),
                   const Text(
-                    'Login to Africa Online Stores',
+                    'Forgot Password',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 20),
 
-                  // Username or email
+                  // Email input
                   CustomTextField(
-                    controller: userCtrl,
-                    hint: 'Email',
+                    controller: emailCtrl,
+                    hint: 'Email Address',
                     icon: Icons.email,
                     inputType: TextInputType.emailAddress,
                     validator: (value) => AppValidator.isEmail(value),
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
 
-                  // Password
-                  AppInputField(
-                    controller: passCtrl,
-                    hint: 'Password',
-                    icon: Icons.lock,
-                    isPassword: true,
-                    obscure: obscurePass,
-                    toggle: () => setState(() => obscurePass = !obscurePass),
-                    validator:
-                        (value) =>
-                            value == null || value.isEmpty
-                                ? 'Please enter your password'
-                                : null,
-                    textInputAction: TextInputAction.done,
-                  ),
-
-                  const SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () => context.push('/forgot-password'),
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.black,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
+                  // Reset password button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -106,22 +70,24 @@ class _LoginScreenState extends State<LoginScreen> {
                               : () async {
                                 if (!_formKey.currentState!.validate()) return;
 
-                                final success = await auth.signIn(
-                                  userCtrl.text.trim(),
-                                  passCtrl.text.trim(),
+                                final success = await auth.forgotPassword(
+                                  emailCtrl.text.trim(),
                                 );
 
                                 if (success) {
-                                  context.go(auth.consumeReturnTo());
+                                  topSnackBar(
+                                    context,
+                                    auth.forgotPasswordSuccess ??
+                                        'Instructions sent',
+                                    type: TopSnackType.success,
+                                  );
                                 } else {
-                                  if (context.mounted &&
-                                      auth.loginError != null) {
-                                    topSnackBar(
-                                      context,
-                                      auth.loginError!,
-                                      type: TopSnackType.error,
-                                    );
-                                  }
+                                  topSnackBar(
+                                    context,
+                                    auth.forgotPasswordError ??
+                                        'Something went wrong',
+                                    type: TopSnackType.error,
+                                  );
                                 }
                               },
 
@@ -133,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       child: Text(
-                        auth.isLoading ? 'Verifying...' : 'Log in',
+                        auth.isLoading ? 'Sending...' : 'Reset Password',
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),
@@ -141,9 +107,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 20),
                   TextButton(
-                    onPressed: () => context.push('/register'),
+                    onPressed: () => context.go('/login'),
                     child: const Text(
-                      "Don't have an account? Sign up",
+                      'Back to Login',
                       style: TextStyle(
                         decoration: TextDecoration.underline,
                         color: AppColors.black,

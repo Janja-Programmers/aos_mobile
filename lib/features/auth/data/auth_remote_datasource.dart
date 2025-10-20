@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,6 +22,7 @@ abstract class AuthRemoteDataSource {
     String password,
   );
   Future<Either<Failure, void>> logout();
+  Future<Either<Failure, String>> resetPassword(String email);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -134,6 +137,57 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (sid.isNotEmpty) {
         apiClient.client.options.headers['Cookie'] = 'sid=$sid';
       }
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> resetPassword(String email) async {
+    try {
+      final response = await apiClient.client.post(
+        ApiRoutes.resetPassword,
+        data: {"user": email},
+      );
+
+      // Successful response with _server_messages
+      if (response.statusCode == 200 &&
+          response.data.containsKey('_server_messages')) {
+        final serverMessages = response.data['_server_messages'];
+
+        // Decode the stringified JSON array
+        final decoded = jsonDecode(serverMessages);
+        if (decoded is List && decoded.isNotEmpty) {
+          final messageData = jsonDecode(decoded.first);
+          final message = messageData['message'] ?? 'Password reset email sent';
+          return Right(message);
+        }
+
+        return Right('Password reset email sent');
+      }
+
+      // Handle known error responses
+      final message = response.data['message'];
+      switch (message) {
+        case 'not found':
+          return Left(ServerFailure('Email not registered.'));
+        case 'not allowed':
+          return Left(ServerFailure('Admin password cannot be reset.'));
+        case 'disabled':
+          return Left(ServerFailure('User account is disabled.'));
+        default:
+          return Left(ServerFailure('Unknown error occurred.'));
+      }
+    } catch (error) {
+      // Fallback for usage limit HTML or network issues
+      if (error is DioError && error.response?.data is String) {
+        final data = error.response?.data as String;
+        if (data.contains('Daily Usage Limit Reached')) {
+          return Left(
+            ServerFailure('Daily reset limit reached. Try again tomorrow.'),
+          );
+        }
+      }
+
+      return Left(handleException(error));
     }
   }
 }

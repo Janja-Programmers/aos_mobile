@@ -1,14 +1,13 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '/core/utils/snackbar.dart';
 
-import '../../../auth/auth_provider.dart';
 import '/features/cart/provider.dart';
 
 import '/screens/customer/address/shipping_address_form.dart';
+import '/screens/auth/auth_provider.dart';
 
 class PlaceOrderController {
   final BuildContext context;
@@ -39,9 +38,22 @@ class PlaceOrderController {
 
     if (name != null) {
       _showLoading();
-      await cart.submitCartAsSalesOrder(shippingAddressName: name);
-      if (context.mounted) Navigator.of(context).pop();
-      _showSuccessDialog();
+      final success = await cart.submitCartAsSalesOrder(
+        shippingAddressName: name,
+      );
+
+      if (!context.mounted) return;
+      Navigator.of(context).pop();
+
+      if (success) {
+        _showSuccessDialog();
+      } else {
+        topSnackBar(
+          context,
+          'Failed to place order. Please try again.',
+          type: TopSnackType.error,
+        );
+      }
     }
   }
 
@@ -49,37 +61,23 @@ class PlaceOrderController {
   Future<void> placeOrder({required String shippingAddress}) async {
     _showLoading();
 
-    try {
-      await context.read<CartProvider>().submitCartAsSalesOrder(
-        shippingAddressName: shippingAddress,
-      );
+    final cart = context.read<CartProvider>();
 
-      if (!context.mounted) return;
-      Navigator.of(context).pop();
+    final success = await cart.submitCartAsSalesOrder(
+      shippingAddressName: shippingAddress,
+    );
 
+    if (!context.mounted) return;
+    Navigator.of(context).pop();
+
+    if (success) {
       _showSuccessDialog();
-    } catch (e) {
-      if (!context.mounted) return;
-      Navigator.of(context).pop();
-
-      String message = 'Failed to place order. Please try again.';
-      bool shouldClearCart = false;
-
-      if (e is DioException) {
-        final data = e.response?.data;
-        if (data is Map &&
-            data['exception']?.toString().contains('MandatoryError') == true &&
-            data['exception']?.toString().contains('customer') == true) {
-          message = 'Vendors cannot place orders';
-          shouldClearCart = true;
-        }
-      }
-
-      if (shouldClearCart) {
-        await context.read<CartProvider>().clear();
-      }
-
-      topSnackBar(context, message, type: TopSnackType.error);
+    } else {
+      topSnackBar(
+        context,
+        'Failed to place order. Please try again.',
+        type: TopSnackType.error,
+      );
     }
   }
 

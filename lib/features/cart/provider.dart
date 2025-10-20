@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '/core/di/service_locator.dart';
 import '/core/utils/api_client.dart';
-import '/core/utils/logger.dart';
 
 import '../../screens/auth/auth_provider.dart';
 
@@ -129,13 +128,13 @@ class CartProvider with ChangeNotifier {
 
   // ─────────────────────────────────────────────────────────────────────
   /// Submit order directly using known shipping address
-  Future<void> submitCartAsSalesOrder({
+  Future<bool> submitCartAsSalesOrder({
     required String shippingAddressName,
   }) async {
     final user = _authProvider.user;
     if (user == null) {
       _setError('You must be logged in to place an order.');
-      return;
+      return false;
     }
 
     final payload = _buildOrderPayload(
@@ -143,19 +142,20 @@ class CartProvider with ChangeNotifier {
       address: shippingAddressName,
     );
 
-    appLogger.i('📦 SUBMITTING ORDER PAYLOAD: ${payload.toJson()}');
-
     _setLoading(true);
     final result = await placeOrder(payload);
-
     _setLoading(false);
 
-    result.fold((failure) => _setError('❌ Order failed: ${failure.message}'), (
-      _,
-    ) {
-      appLogger.i('✅ Order placed successfully');
-      clear();
-    });
+    return result.fold(
+      (failure) {
+        _setError('❌ Order failed: ${failure.message}');
+        return false;
+      },
+      (_) {
+        clear();
+        return true;
+      },
+    );
   }
 
   // ─────────────────────────────────────────────────────────────────────

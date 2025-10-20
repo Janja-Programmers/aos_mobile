@@ -6,6 +6,7 @@ import '/screens/settings/tac.dart';
 import '/screens/auth/auth_provider.dart';
 import '/screens/auth/screens/login_screen.dart';
 import '/screens/auth/screens/register_screen.dart';
+import '/screens/auth/screens/reset_password.dart';
 
 // Seller
 import '/features/product/domain/product.dart';
@@ -71,6 +72,9 @@ class AppRouter {
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
+      GoRoute(path: '/forgot-password', builder: (_, _) => const ForgotPasswordScreen()),
+
+
       GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
 
       GoRoute(

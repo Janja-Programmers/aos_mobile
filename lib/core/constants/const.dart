@@ -4,6 +4,8 @@ class ApiRoutes {
   static const String login = '/api/method/login';
   static const String logout = '/api/method/logout';
   static const String register = '/api/method/aos.overrides.user.sign_up';
+  static const String resetPassword =
+      '/api/method/frappe.core.doctype.user.user.reset_password';
 
   static const String webItem =
       '/api/method/webshop.webshop.api.get_product_filter_data';

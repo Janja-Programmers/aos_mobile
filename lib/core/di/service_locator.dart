@@ -5,12 +5,13 @@ import '../db/db_helper.dart';
 import '../utils/api_client.dart';
 
 /***** Auth *******/
+import '/screens/auth/auth_provider.dart';
 import '/features/auth/data/auth_remote_datasource.dart';
-import '../../screens/auth/auth_provider.dart';
 import '/features/auth/data/auth_repository_impl.dart';
 import '/features/auth/domain/auth_repository.dart';
 import '/features/auth/domain/usecases/login.dart';
 import '/features/auth/domain/usecases/register.dart';
+import '/features/auth/domain/usecases/reset.dart';
 
 /***** WEBSITE ITEMS *******/
 import '/features/website/domain/repo.dart';
@@ -114,6 +115,7 @@ Future<void> init() async {
     () => AuthProvider(
       loginUser: sl<LoginUser>(),
       registerUser: sl<RegisterUser>(),
+      resetPass: sl<ResetPassword>(),
       apiClient: sl<APIClient>(),
     ),
   );

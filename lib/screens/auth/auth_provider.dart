@@ -13,11 +13,13 @@ import '/core/utils/logger.dart';
 import '/features/auth/domain/auth_repository.dart';
 import '/features/auth/domain/usecases/register.dart';
 import '/features/auth/domain/usecases/login.dart';
+import '/features/auth/domain/usecases/reset.dart';
 import '/features/auth/domain/user.dart';
 
 class AuthProvider with ChangeNotifier {
   final LoginUser loginUser;
   final RegisterUser registerUser;
+  final ResetPassword resetPass;
   final APIClient apiClient;
 
   User? user;
@@ -27,6 +29,7 @@ class AuthProvider with ChangeNotifier {
   AuthProvider({
     required this.loginUser,
     required this.registerUser,
+    required this.resetPass,
     required this.apiClient,
   }) {
     Future.microtask(() => _restoreSession());
@@ -52,6 +55,12 @@ class AuthProvider with ChangeNotifier {
 
   int? _registerStatus;
   int? get registerStatus => _registerStatus;
+
+  String? _forgotPasswordError;
+  String? _forgotPasswordSuccess;
+
+  String? get forgotPasswordError => _forgotPasswordError;
+  String? get forgotPasswordSuccess => _forgotPasswordSuccess;
 
   void setReturnTo(String path) {
     _returnTo = path;
@@ -263,6 +272,30 @@ class AuthProvider with ChangeNotifier {
       appLogger.e('Exception deleting account: $e');
       return Left(handleException(e));
     }
+  }
+
+  Future<bool> forgotPassword(String email) async {
+    _isLoading = true;
+    _forgotPasswordError = null;
+    _forgotPasswordSuccess = null;
+    notifyListeners();
+
+    final result = await resetPass(email);
+
+    final success = result.fold(
+      (failure) {
+        _forgotPasswordError = failure.message;
+        return false;
+      },
+      (message) {
+        _forgotPasswordSuccess = message;
+        return true;
+      },
+    );
+
+    _isLoading = false;
+    notifyListeners();
+    return success;
   }
 
   void clearRedirect() => _returnTo = null;

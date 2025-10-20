@@ -27,6 +27,7 @@ class CustomTextField extends StatelessWidget {
       validator: validator,
       keyboardType: inputType,
       textInputAction: txtInputAction,
+      autofocus: true,
       decoration: InputDecoration(
         filled: true,
         fillColor: AppColors.background,

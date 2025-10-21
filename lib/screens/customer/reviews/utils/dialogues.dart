@@ -1,28 +1,29 @@
 import 'package:flutter/material.dart';
 
 import '/core/utils/snackbar.dart';
+import '/features/reviews/entity.dart';
 
 import '/screens/customer/report/report_product.dart';
 
 import 'rate_product.dart';
 
-Future<bool?> openRateDialog(
+Future<Review?> openRateDialog(
   BuildContext context,
   String itemCode,
   String webItem, {
   Future<void> Function()? onAfterSubmit,
 }) async {
-  final result = await showDialog<bool>(
+  final result = await showDialog<Review?>(
     context: context,
     builder: (_) => RateProductDialog(webItem: webItem, itemCode: itemCode),
   );
 
-  if (result == true) {
+  if (result != null) {
     topSnackBar(context, "Review submitted successfully ✅");
     if (onAfterSubmit != null) await onAfterSubmit();
   }
 
-  return result; // ✅ Return the result so caller can act on it
+  return result;
 }
 
 Future<void> openReportDialog(

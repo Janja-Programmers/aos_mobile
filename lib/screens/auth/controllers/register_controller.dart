@@ -64,13 +64,13 @@ class RegisterController {
 
     if (success) {
       if (context.mounted) {
-        final message = auth.registerSuccess ?? 'Registration successful!';
-        topSnackBar(context, message, type: TopSnackType.success);
-
         clearForm();
 
-        if (auth.registerStatus == 2) {
-          context.go('/login');
+        if (auth.registerStatus != 0) {
+          await Future.delayed(const Duration(seconds: 1));
+          context.go(
+            '/login?from=register&msg=${Uri.encodeComponent(auth.registerSuccess ?? "Registration successful!")}',
+          );
         }
       }
     } else {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 Future<void> showTermsDialog(
   BuildContext context, {
@@ -101,7 +100,6 @@ Last updated: 1st September, 2025.
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              context.go('/login');
             },
             child: const Text("Decline"),
           ),

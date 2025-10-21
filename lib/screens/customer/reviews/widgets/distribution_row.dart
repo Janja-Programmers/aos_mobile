@@ -9,20 +9,19 @@ class ReviewsDistributionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = controller.totalReviews == 0 ? 1 : controller.totalReviews;
+    // final star = 5 - i; Reveresed star list
 
-    // Loop 5 → 1 stars
     return Column(
       children: List.generate(5, (i) {
-        final star = 5 - i; // 5, 4, 3, 2, 1 (int)
-        final count = controller.reviewsPerRating[star - 1].toInt();
-        final percent = total > 0 ? count / total : 0.0;
+        final star = i + 1;
+        final count = controller.reviewsPerRating[star - 1].toDouble();
+        final percent = count > 0 ? (count / 100) : 0.0;
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(
             children: [
-              SizedBox(width: 30, child: Text("$star★")),
+              SizedBox(width: 30, child: Text("$star ⭐")),
               const SizedBox(width: 8),
               Expanded(
                 child: LinearProgressIndicator(
@@ -33,7 +32,7 @@ class ReviewsDistributionRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              SizedBox(width: 40, child: Text("$count")),
+              SizedBox(width: 40, child: Text("$count %")),
             ],
           ),
         );

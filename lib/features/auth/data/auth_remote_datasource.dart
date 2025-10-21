@@ -85,19 +85,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       _setSessionCookie(response);
-
       final data = response.data;
 
       if (data is Map<String, dynamic>) {
+        if (data.isEmpty && response.headers['set-cookie'] != null) {
+          return Right([1, "Registration successful"]);
+        }
+
+        // ✅ Case 2: Frappe-style ["status", "message"]
         if (data["message"] is List && data["message"].length >= 2) {
           final status = data["message"][0];
           final message = data["message"][1].toString();
           return Right([status, message]);
         }
 
+        // ✅ Case 3: Normal map with fields
         final status = data["status"] ?? 0;
         final message = data["message"]?.toString() ?? "Unknown response";
-
         return Right([status, message]);
       }
 

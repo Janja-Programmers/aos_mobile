@@ -10,11 +10,15 @@ class ReviewsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final normalized = double.tryParse(review.rating.toString()) ?? 0.0;
+    final displayRating = (normalized * 5).clamp(0.0, 5.0);
+
     return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 16),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // --- Title + Stars ---
           Row(
             children: [
               Expanded(
@@ -27,18 +31,26 @@ class ReviewsTile extends StatelessWidget {
                 ),
               ),
               RatingBarIndicator(
-                rating: review.rating,
+                rating: displayRating,
                 itemBuilder:
                     (_, _) => const Icon(Icons.star, color: Colors.amber),
                 itemCount: 5,
                 itemSize: 16.0,
-                direction: Axis.horizontal,
+                unratedColor: Colors.grey.shade300,
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(review.comment),
-          const SizedBox(height: 6),
+
+          const SizedBox(height: 4),
+
+          // --- Comment ---
+          if (review.comment.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(review.comment, style: const TextStyle(fontSize: 14)),
+            ),
+
+          // --- Author + Date ---
           Row(
             children: [
               Text(
@@ -52,7 +64,9 @@ class ReviewsTile extends StatelessWidget {
               ),
             ],
           ),
-          const Divider(),
+
+          const SizedBox(height: 6),
+          Divider(height: 1, color: Colors.grey.shade300),
         ],
       ),
     );

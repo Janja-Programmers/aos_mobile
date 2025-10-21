@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'utils/dialogues.dart';
-
-import 'widgets/average_section.dart';
-import 'widgets/distribution_row.dart';
-import 'widgets/tile.dart';
+import '/core/di/service_locator.dart';
+import '/core/utils/api_client.dart';
+import '/features/reviews/remote.dart';
 
 import 'not_reviewed_card.dart';
 import 'review_controller.dart';
+import 'utils/dialogues.dart';
+import 'widgets/average_section.dart';
+import 'widgets/distribution_row.dart';
+import 'widgets/tile.dart';
 
 class ProductReviewsCard extends StatelessWidget {
   final String itemName;
@@ -22,6 +24,7 @@ class ProductReviewsCard extends StatelessWidget {
     required this.itemCode,
   });
 
+  /// --- Header Row with Action Menu ---
   Widget _buildTitleRow(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -40,15 +43,19 @@ class ProductReviewsCard extends StatelessWidget {
               final controller = context.read<ProductReviewsController>();
 
               if (value == "review") {
-                final success = await openRateDialog(
+                // ✅ Open dialog & receive Review instance
+                final newReview = await openRateDialog(
                   context,
                   itemCode,
                   webItem,
                 );
 
-                // ✅ Reload reviews immediately after successful review
-                if (success == true && context.mounted) {
-                  await controller.loadReviews(itemCode, context);
+                if (newReview != null && context.mounted) {
+                  // ✅ Optimistic local add
+                  controller.addLocalReview(newReview);
+
+                  // ✅ Background refresh
+                  controller.loadReviews(webItem);
                 }
               } else if (value == "report") {
                 await openReportDialog(context, webItem, itemCode);
@@ -91,9 +98,14 @@ class ProductReviewsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ProductReviewsController()..loadReviews(itemCode, context),
+      create:
+          (_) =>
+              ProductReviewsController(remote: ReviewsRemote(sl<APIClient>()))
+                ..loadReviews(webItem),
+
       child: Consumer<ProductReviewsController>(
         builder: (context, controller, _) {
+          /// --- Loading State ---
           if (controller.isLoading) {
             return const Center(
               child: Padding(
@@ -103,23 +115,26 @@ class ProductReviewsCard extends StatelessWidget {
             );
           }
 
+          /// --- No Reviews Yet ---
           if (!controller.hasReviews) {
             return ProductNotReviewedCard(
+              titleRow: _buildTitleRow(context),
               onRate: () async {
-                final success = await openRateDialog(
+                final newReview = await openRateDialog(
                   context,
                   itemCode,
                   webItem,
                 );
 
-                if (success == true && context.mounted) {
-                  await controller.loadReviews(itemCode, context);
+                if (newReview != null && context.mounted) {
+                  controller.addLocalReview(newReview);
+                  controller.loadReviews(webItem);
                 }
               },
-              titleRow: _buildTitleRow(context),
             );
           }
 
+          /// --- Reviews List View ---
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -128,6 +143,8 @@ class ProductReviewsCard extends StatelessWidget {
               ReviewsAverageSection(controller: controller),
               ReviewsDistributionRow(controller: controller),
               const Divider(thickness: 1),
+
+              /// Animated review list
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 400),
                 child: Column(

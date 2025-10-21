@@ -21,12 +21,34 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController userCtrl = TextEditingController();
   final TextEditingController passCtrl = TextEditingController();
+  final FocusNode emailFocus = FocusNode();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool obscurePass = true;
+  bool _shownSnack = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      emailFocus.requestFocus();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final uri = Uri.parse(GoRouterState.of(context).uri.toString());
+    final from = uri.queryParameters['from'];
+    final msg = uri.queryParameters['msg'];
+
+    // ✅ Show only once
+    if (!_shownSnack && from == 'register' && msg != null) {
+      _shownSnack = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        topSnackBar(context, msg, type: TopSnackType.success);
+      });
+    }
+
     final auth = Provider.of<AuthProvider>(context);
 
     return Scaffold(
@@ -53,13 +75,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Username or email
+                  // Email
                   CustomTextField(
                     controller: userCtrl,
                     hint: 'Email',
                     icon: Icons.email,
                     inputType: TextInputType.emailAddress,
                     validator: (value) => AppValidator.isEmail(value),
+                    focusNode: emailFocus, // 👈 new
                   ),
 
                   const SizedBox(height: 12),
@@ -157,5 +180,13 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    userCtrl.dispose();
+    passCtrl.dispose();
+    emailFocus.dispose();
+    super.dispose();
   }
 }

@@ -9,6 +9,8 @@ class CustomTextField extends StatelessWidget {
   final TextInputType inputType;
   final TextInputAction txtInputAction;
   final String? Function(String?)? validator;
+  final FocusNode? focusNode;
+  final bool autofocus;
 
   const CustomTextField({
     super.key,
@@ -18,16 +20,19 @@ class CustomTextField extends StatelessWidget {
     this.inputType = TextInputType.text,
     this.txtInputAction = TextInputAction.next,
     this.validator,
+    this.focusNode,
+    this.autofocus = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
       validator: validator,
       keyboardType: inputType,
       textInputAction: txtInputAction,
-      autofocus: true,
+      autofocus: autofocus,
       decoration: InputDecoration(
         filled: true,
         fillColor: AppColors.background,

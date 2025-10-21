@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '/core/constants/const.dart';
-import '/core/di/service_locator.dart';
-import '/core/utils/api_client.dart';
 import '/core/utils/snackbar.dart';
+import '/core/di/service_locator.dart';
+
+import '/features/reviews/entity.dart';
+import '/features/reviews/remote.dart';
 
 import 'ratings_selector.dart';
 
@@ -45,44 +46,36 @@ class _RateProductDialogState extends State<RateProductDialog> {
     setState(() => _loading = true);
 
     try {
-      final client = sl<APIClient>().client;
+      final remote = sl<ReviewsRemote>();
 
-      final res = await client.post(
-        ApiRoutes.addReview,
-        data: {
-          "web_item": widget.webItem,
-          "title": _titleController.text.trim(),
-          "rating": _rating,
-          "comment": _commentController.text.trim(),
-          "item": widget.itemCode,
-        },
+      final normalizedRating = (_rating / 5).clamp(0.0, 1.0);
+
+      await remote.postReview(
+        webItem: widget.webItem,
+        title: _titleController.text.trim(),
+        comment: _commentController.text.trim(),
+        rating: normalizedRating,
+      );
+
+      // Construct a Review entity to return
+      final newReview = Review(
+        title: _titleController.text.trim(),
+        comment: _commentController.text.trim(),
+        rating: _rating.toDouble(),
+        customer: '',
+        publishedOn: '',
       );
 
       if (!mounted) return;
 
-      // ✅ Treat success based on HTTP status
-      if (res.statusCode == 200 ||
-          res.statusCode == 201 ||
-          res.statusCode == 204) {
-        if (mounted) {
-          // Close dialog and notify caller
-          context.pop(true);
+      // Pass the Review back to caller
+      context.pop(newReview);
 
-          // Show success toast
-          topSnackBar(
-            context,
-            "Review submitted successfully!",
-            type: TopSnackType.success,
-          );
-        }
-      } else {
-        // Non-success status
-        topSnackBar(
-          context,
-          "Unexpected response (${res.statusCode}).",
-          type: TopSnackType.error,
-        );
-      }
+      topSnackBar(
+        context,
+        "Review submitted successfully!",
+        type: TopSnackType.success,
+      );
     } catch (e) {
       if (mounted) {
         topSnackBar(
@@ -116,24 +109,17 @@ class _RateProductDialogState extends State<RateProductDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Stars with label
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Overall rating",
-                      style: TextStyle(fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 8),
-                    StarRatingSelector(
-                      rating: _rating,
-                      onChanged: (val) => setState(() => _rating = val),
-                    ),
-                  ],
+                const Text(
+                  "Overall rating",
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 8),
+                StarRatingSelector(
+                  rating: _rating,
+                  onChanged: (val) => setState(() => _rating = val),
                 ),
                 const SizedBox(height: 16),
 
-                // Headline (required)
                 TextFormField(
                   controller: _titleController,
                   decoration: const InputDecoration(
@@ -151,7 +137,6 @@ class _RateProductDialogState extends State<RateProductDialog> {
                 ),
                 const SizedBox(height: 16),
 
-                // Comment (optional)
                 TextFormField(
                   controller: _commentController,
                   decoration: const InputDecoration(

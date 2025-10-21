@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
 import '/core/utils/formatters.dart';
-import '/core/utils/logger.dart';
 
 import '/features/cart/domain/cart.dart';
 import '/features/website/domain/webitem.dart';
@@ -29,10 +28,8 @@ class ProductCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        appLogger.f('Tapped on product: ${item.name}');
         context.read<WishlistProvider>().loadWishlist();
         context.push('/product/${item.itemCode}');
-        appLogger.f('Tapped on product: ${item.itemCode}');
       },
       child: Card(
         color: AppColors.white,

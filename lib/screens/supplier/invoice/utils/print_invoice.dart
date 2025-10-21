@@ -4,9 +4,9 @@ import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
 
 import '/core/utils/formatters.dart';
-import '/features/order/domain/sales_order.dart';
+import '/features/invoice/domain/sales_invoice.dart';
 
-Future<void> printSalesInvoice(SalesOrder order) async {
+Future<void> printSalesInvoice(SalesInvoice invoice) async {
   final pdf = pw.Document();
 
   final now = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -65,7 +65,7 @@ Future<void> printSalesInvoice(SalesOrder order) async {
                 ),
                 pw.SizedBox(height: 4),
                 pw.Text(
-                  'Invoice ID: ${order.id}',
+                  'Invoice ID: ${invoice.id}',
                   style: pw.TextStyle(
                     fontSize: 14,
                     fontWeight: pw.FontWeight.bold,
@@ -79,7 +79,7 @@ Future<void> printSalesInvoice(SalesOrder order) async {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'Order Date: ${DateFormat('yyyy-MM-dd').format(order.deliveryDate)}',
+                      'Order Date: ${DateFormat('yyyy-MM-dd').format(invoice.postingDate)}',
                     ),
                     pw.Text('Print Date: $now'),
                   ],
@@ -92,13 +92,13 @@ Future<void> printSalesInvoice(SalesOrder order) async {
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Text(
-                      'Customer: ${order.customerName}',
+                      'Customer: ${invoice.customerName}',
                       style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                     ),
-                    if (order.contactEmail != null)
-                      pw.Text('Email: ${order.contactEmail}'),
-                    if (order.contactPhone != null)
-                      pw.Text('Phone: ${order.contactPhone}'),
+                    if (invoice.contactEmail != null)
+                      pw.Text('Email: ${invoice.contactEmail}'),
+                    if (invoice.contactPhone != null)
+                      pw.Text('Phone: ${invoice.contactPhone}'),
                   ],
                 ),
 
@@ -178,7 +178,7 @@ Future<void> printSalesInvoice(SalesOrder order) async {
                     ),
 
                     // Data rows
-                    ...order.items.asMap().entries.map((entry) {
+                    ...invoice.items.asMap().entries.map((entry) {
                       final i = entry.key;
                       final item = entry.value;
                       return pw.TableRow(
@@ -250,7 +250,7 @@ Future<void> printSalesInvoice(SalesOrder order) async {
                       ),
                     ),
                     pw.Text(
-                      formatCurrency(order.grandTotal),
+                      formatCurrency(invoice.grandTotal),
                       style: pw.TextStyle(
                         fontWeight: pw.FontWeight.bold,
                         fontSize: 13,

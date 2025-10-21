@@ -157,7 +157,10 @@ class AuthProvider with ChangeNotifier {
           return false;
         }
 
-        _registerSuccess = message; // ✅ only message goes to UI
+        _registerSuccess =
+            (message.isEmpty || message == "Unknown response")
+                ? "Registration successful"
+                : message;
         return true;
       },
     );

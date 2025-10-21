@@ -8,7 +8,7 @@ import '/shared/widgets/empty_state.dart';
 import '/shared/widgets/main_bar.dart';
 
 import 'widgets/invoice_info_card.dart';
-import 'widgets/inv_print_btn.dart';
+import 'widgets/invoice_print_btn.dart';
 import 'widgets/mark_invoice_paid.dart';
 import 'widgets/invoice_product_table_card.dart';
 
@@ -89,7 +89,7 @@ class _SalesInvoiceDetailScreenState extends State<SalesInvoiceDetailScreen> {
       actionButton: actionButton,
       body: body,
       floatingActionButton:
-          invoice != null ? PrintSalesInvoice(order: invoice) : null,
+          invoice != null ? PrintSalesInvoice(invoice: invoice) : null,
     );
   }
 }

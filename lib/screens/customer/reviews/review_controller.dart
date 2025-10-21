@@ -4,29 +4,36 @@ import '/features/reviews/entity.dart';
 import '/features/reviews/remote.dart';
 
 class ProductReviewsController extends ChangeNotifier {
+  final ReviewsRemote remote;
+  ProductReviewsController({required this.remote});
+
   List<Review> reviews = [];
   double averageRating = 0.0;
   int totalReviews = 0;
   List<int> reviewsPerRating = [0, 0, 0, 0, 0];
-
-  bool get hasReviews => reviews.isNotEmpty;
   bool isLoading = false;
 
-  Future<void> loadReviews(String itemCode, BuildContext context) async {
+  bool get hasReviews => reviews.isNotEmpty;
+
+  Future<void> loadReviews(String webItem) async {
     isLoading = true;
     notifyListeners();
 
     try {
-      final response = await fetchReviews(itemCode, context: context);
-
-      reviews = response.toEntities();
-
-      averageRating = response.averageRating;
-      totalReviews = response.totalReviews;
-      reviewsPerRating = response.reviewsPerRating;
+      final res = await remote.fetchReviews(webItem);
+      reviews = res.toEntities();
+      averageRating = res.averageRating;
+      totalReviews = res.totalReviews;
+      reviewsPerRating = res.reviewsPerRating;
     } finally {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  void addLocalReview(Review review) {
+    reviews.insert(0, review);
+    totalReviews += 1;
+    notifyListeners();
   }
 }

@@ -20,6 +20,7 @@ import '/features/website/data/remote.dart';
 import '/features/website/data/repo_impl.dart';
 import '/features/website/prov.dart';
 import '/features/website/slider_prov.dart';
+import '/features/reviews/remote.dart';
 
 /***** PRODUCT *******/
 import '/features/product/data/remote.dart';
@@ -131,6 +132,8 @@ Future<void> init() async {
 
   // 1. Remote data source
   sl.registerLazySingleton(() => WebsiteRemoteDataSource(sl<APIClient>()));
+  sl.registerLazySingleton(() => ReviewsRemote(sl<APIClient>()));
+
   // 2. Repository
   sl.registerLazySingleton<WebsiteRepo>(
     () => WebsiteRepoImpl(sl<WebsiteRemoteDataSource>()),

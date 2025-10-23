@@ -67,10 +67,11 @@ class RegisterController {
         clearForm();
 
         if (auth.registerStatus != 0) {
-          await Future.delayed(const Duration(seconds: 1));
-          context.go(
-            '/login?from=register&msg=${Uri.encodeComponent(auth.registerSuccess ?? "Registration successful!")}',
+          topSnackBar(
+            context,
+            auth.registerSuccess ?? "Registration successful!",
           );
+          Future.microtask(() => context.go('/login?from=register'));
         }
       }
     } else {

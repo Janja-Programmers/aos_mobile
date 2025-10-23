@@ -30,8 +30,6 @@ class ReviewsRemote {
       if (comment.trim().isNotEmpty) "comment": comment.trim(),
     };
 
-    print("🧾 Sending payload: $payload");
-
     try {
       final res = await client.client.post(
         ApiRoutes.addReview,
@@ -44,8 +42,6 @@ class ReviewsRemote {
         ),
       );
 
-      print("✅ Response (${res.statusCode}): ${res.data}");
-
       if (res.statusCode == null ||
           res.statusCode! < 200 ||
           res.statusCode! >= 300) {
@@ -53,7 +49,6 @@ class ReviewsRemote {
       }
     } on DioException catch (e) {
       final message = e.response?.data ?? e.message;
-      print("💥 postReview error: $message");
       throw Exception("Failed to post review: $message");
     }
   }

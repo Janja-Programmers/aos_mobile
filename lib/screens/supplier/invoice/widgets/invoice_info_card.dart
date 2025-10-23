@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+
 import '/features/invoice/domain/sales_invoice.dart';
 
 class SalesInvoiceInfoCard extends StatelessWidget {
@@ -41,8 +41,6 @@ class SalesInvoiceInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('yyyy-MM-dd');
-
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -79,26 +77,6 @@ class SalesInvoiceInfoCard extends StatelessWidget {
                       invoice.contactPhone!,
                       style: const TextStyle(color: Colors.black87),
                     ),
-
-                  const SizedBox(height: 8),
-                  Text(
-                    'Posting: ${dateFormat.format(invoice.postingDate)}',
-                    style: const TextStyle(color: Colors.black54),
-                  ),
-                  if (invoice.dueDate != null)
-                    Text(
-                      'Due: ${dateFormat.format(invoice.dueDate!)}',
-                      style: const TextStyle(color: Colors.black54),
-                    ),
-                  const SizedBox(height: 4),
-
-                  Text(
-                    'Outstanding: ${invoice.outstandingAmount.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      color: Colors.redAccent,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -132,16 +110,6 @@ class SalesInvoiceInfoCard extends StatelessWidget {
                       color: _statusTextColor(invoice.status),
                       fontWeight: FontWeight.w600,
                     ),
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Total: ${invoice.grandTotal.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],

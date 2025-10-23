@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 
 import 'domain/address.dart';
@@ -89,6 +90,12 @@ class AddressProvider with ChangeNotifier {
       _addresses = data;
       _setSuccess(null); // silently return to idle if no message
     });
+  }
+
+  Address? getByCustomerName(String name) {
+    return _addresses.firstWhereOrNull(
+      (a) => a.name.toLowerCase() == name.toLowerCase(),
+    );
   }
 
   // Internal state helpers

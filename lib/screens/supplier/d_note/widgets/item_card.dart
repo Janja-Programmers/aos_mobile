@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '/core/utils/formatters.dart';
 import '/features/d_note/domain/entity/delivery_note.dart';
 
 import 'item_table.dart';
@@ -37,7 +38,7 @@ class ItemsCard extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  note.grandTotal.toStringAsFixed(2),
+                  formatCurrency(note.grandTotal),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/features/address/provider.dart';
-import '/features/address/domain/address.dart';
 
 class DetailCard extends StatelessWidget {
   final String customerName;
@@ -45,8 +44,16 @@ class DetailCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final addressProv = context.watch<AddressProvider>();
-    Address? address =
-        addressProv.selectedAddress ?? addressProv.addresses.firstOrNull;
+
+    final address = addressProv.getByCustomerName(customerName);
+
+    // Optional: fetch addresses if none loaded yet
+    if (addressProv.addresses.isEmpty &&
+        addressProv.status != AddressStatus.loading) {
+      Future.microtask(
+        () => context.read<AddressProvider>().fetchShippingAddresses(),
+      );
+    }
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -70,16 +77,22 @@ class DetailCard extends StatelessWidget {
                   if (address != null) ...[
                     Text(address.line1),
                     const SizedBox(height: 4),
-
                     Text('${address.city}, ${address.country}'),
                     const SizedBox(height: 4),
-
                     Text(
                       address.phone,
                       style: const TextStyle(color: Colors.black87),
                     ),
-                  ] else
-                    const Text('---', style: TextStyle(color: Colors.grey)),
+                  ] else if (addressProv.status == AddressStatus.loading)
+                    const Text(
+                      'Loading address...',
+                      style: TextStyle(color: Colors.grey),
+                    )
+                  else
+                    const Text(
+                      'No address found',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                 ],
               ),
             ),
@@ -96,7 +109,6 @@ class DetailCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,

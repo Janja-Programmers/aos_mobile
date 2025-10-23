@@ -64,7 +64,7 @@ class StockTableCard extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(formatCurrency(item.qty)),
+                child: Text(item.qty.toStringAsFixed(2)),
               ),
               Padding(
                 padding: const EdgeInsets.all(6),

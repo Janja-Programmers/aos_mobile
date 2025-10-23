@@ -3,6 +3,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
 
+import '/core/utils/formatters.dart';
 import '/features/d_note/domain/entity/delivery_note.dart';
 
 Future<void> printDeliveryNote(DeliveryNote note) async {
@@ -207,7 +208,7 @@ Future<void> printDeliveryNote(DeliveryNote note) async {
                           pw.Padding(
                             padding: const pw.EdgeInsets.all(4),
                             child: pw.Text(
-                              'KES ${item.rate.toStringAsFixed(2)}',
+                              formatCurrency(item.rate),
                               textAlign: pw.TextAlign.right,
                               style: const pw.TextStyle(fontSize: 10),
                             ),
@@ -215,7 +216,7 @@ Future<void> printDeliveryNote(DeliveryNote note) async {
                           pw.Padding(
                             padding: const pw.EdgeInsets.all(4),
                             child: pw.Text(
-                              'KES ${item.amount.toStringAsFixed(2)}',
+                              formatCurrency(item.amount),
                               textAlign: pw.TextAlign.right,
                               style: const pw.TextStyle(fontSize: 10),
                             ),
@@ -263,7 +264,7 @@ Future<void> printDeliveryNote(DeliveryNote note) async {
                       ),
                     ),
                     pw.Text(
-                      'KES ${note.grandTotal.toStringAsFixed(2)}',
+                      formatCurrency(note.grandTotal),
                       style: pw.TextStyle(
                         fontWeight: pw.FontWeight.bold,
                         fontSize: 13,

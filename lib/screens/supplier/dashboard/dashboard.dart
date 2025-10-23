@@ -63,12 +63,21 @@ class _SellerDashboardState extends State<SellerDashboard> {
     final deliveryProvider = context.watch<DeliveryNoteProvider>();
     final invoiceProvider = context.watch<SalesInvoiceProvider>();
 
-    // Safe to read counts now
     final products = productProvider.products.length;
     final stockIntakes = stockProvider.entries.length;
     final orders = orderProvider.orders.length;
     final deliveries = deliveryProvider.notes.length;
     final invoices = invoiceProvider.invoices.length;
+
+    Future<void> refreshAll() async {
+      await Future.wait([
+        productProvider.fetchProducts(),
+        stockProvider.fetchAll(),
+        orderProvider.fetchAll(),
+        deliveryProvider.fetchAll(),
+        invoiceProvider.fetchAll(),
+      ]);
+    }
 
     return MainBarScaffold(
       scaffoldKey: _scaffoldKey,
@@ -77,37 +86,45 @@ class _SellerDashboardState extends State<SellerDashboard> {
         AppStrings.dashboard,
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(12),
-        children: [
-          DashboardHero(bannerImage: const AssetImage('assets/dash.png')),
-          const SizedBox(height: 16),
-          DashboardShortcuts(
-            items: [
-              ShortcutItem(title: 'Products', route: '/items', count: products),
-              ShortcutItem(
-                title: 'Stock Intake',
-                route: '/stock-entry',
-                count: stockIntakes,
-              ),
-              ShortcutItem(
-                title: 'Sales Order',
-                route: '/sales-orders',
-                count: orders,
-              ),
-              ShortcutItem(
-                title: 'Delivery Note',
-                route: '/delivery-notes',
-                count: deliveries,
-              ),
-              ShortcutItem(
-                title: 'Sales Invoice',
-                route: '/invoices',
-                count: invoices,
-              ),
-            ],
-          ),
-        ],
+      body: RefreshIndicator(
+        onRefresh: refreshAll,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(12),
+          children: [
+            DashboardHero(bannerImage: const AssetImage('assets/dash.png')),
+            const SizedBox(height: 16),
+            DashboardShortcuts(
+              items: [
+                ShortcutItem(
+                  title: 'Products',
+                  route: '/items',
+                  count: products,
+                ),
+                ShortcutItem(
+                  title: 'Stock Intake',
+                  route: '/stock-entry',
+                  count: stockIntakes,
+                ),
+                ShortcutItem(
+                  title: 'Sales Order',
+                  route: '/sales-orders',
+                  count: orders,
+                ),
+                ShortcutItem(
+                  title: 'Delivery Note',
+                  route: '/delivery-notes',
+                  count: deliveries,
+                ),
+                ShortcutItem(
+                  title: 'Sales Invoice',
+                  route: '/invoices',
+                  count: invoices,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

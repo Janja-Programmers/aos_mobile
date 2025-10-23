@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '/core/utils/snackbar.dart';
 import '/features/stock/providers/read.dart';
+import '/screens/auth/auth_provider.dart';
 
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/main_bar.dart';
@@ -9,9 +11,9 @@ import '/shared/widgets/main_bar.dart';
 import 'utils/delete_stock_entry.dart';
 import 'utils/failure_display.dart';
 import 'utils/cancel_stock.dart';
+import 'utils/print_stock_intake.dart';
 import 'utils/submit_stock.dart';
 
-import 'widgets/floating_print.dart';
 import 'widgets/info_card.dart';
 import 'widgets/info_table.dart';
 import 'widgets/stock_entry_actions.dart';
@@ -130,7 +132,24 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
           },
         ),
       ),
-      floatingActionButton: PrintSO(entry: entry),
+      floatingActionButton: Builder(
+        builder: (context) {
+          return FloatingActionButton(
+            backgroundColor: Colors.grey.shade900,
+            foregroundColor: Colors.white,
+            child: const Icon(Icons.print),
+            onPressed: () async {
+              // ✅ safely read AuthProvider here (within the correct BuildContext)
+              final username =
+                  context.read<AuthProvider>().user?.username ?? 'Unknown User';
+              topSnackBar(context, '🖨️ Printing...');
+
+              // ✅ no Provider dependency inside the print function
+              await printStockIntake(username: username, entry: entry);
+            },
+          );
+        },
+      ),
     );
   }
 }

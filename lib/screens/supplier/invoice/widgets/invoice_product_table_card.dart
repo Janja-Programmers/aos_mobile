@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/formatters.dart';
 import 'package:flutter/material.dart';
 
 import '/features/invoice/domain/sales_invoice.dart';
@@ -37,7 +38,7 @@ class InvoiceTableCard extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  order.grandTotal.toStringAsFixed(2),
+                  formatCurrency(order.grandTotal),
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -95,11 +96,11 @@ class InvoiceTableCard extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(item.rate.toStringAsFixed(2)),
+                child: Text(formatCurrency(item.rate)),
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text((item.qty * item.rate).toStringAsFixed(2)),
+                child: Text(formatCurrency(item.qty * item.rate)),
               ),
             ],
           );

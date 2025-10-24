@@ -82,7 +82,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     controller: userCtrl,
                     hint: "Jane Doe",
                     icon: Icons.person,
-                    validator: (value) => value!.isEmpty ? 'Required' : null,
+                    validator: AppValidator.isName,
                   ),
                   const SizedBox(height: 10),
 
@@ -118,7 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     validator:
                         (value) =>
                             value == null || value.isEmpty
-                                ? 'Please select a user type'
+                                ? 'User type is required'
                                 : null,
                     onChanged: (value) {
                       setState(() => userTypeCtrl.text = value ?? '');
@@ -155,13 +155,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     isPassword: true,
                     obscure: obscurePass,
                     toggle: () => setState(() => obscurePass = !obscurePass),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
-                      if (value != passCtrl.text) {
-                        return 'Passwords do not match';
-                      }
-                      return null;
-                    },
+                    validator: AppValidator.isConfirmPassword,
                   ),
 
                   const SizedBox(height: 12),

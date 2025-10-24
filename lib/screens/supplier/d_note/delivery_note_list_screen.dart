@@ -7,8 +7,9 @@ import '/core/constants/colors.dart';
 import '/features/d_note/prov.dart';
 
 import '/shared/widgets/app_drawer.dart';
-import '/shared/widgets/main_bar.dart';
+import '/shared/widgets/error_state.dart';
 import '/shared/widgets/empty_state.dart';
+import '/shared/widgets/main_bar.dart';
 
 import 'widgets/card_row.dart';
 
@@ -63,22 +64,10 @@ class _DeliveryNoteListScreenState extends State<DeliveryNoteListScreen> {
           }
 
           if (provider.failure != null) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Error: ${provider.failure!.message}',
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
-                    onPressed: _refresh,
-                  ),
-                ],
-              ),
+            return ErrorState(
+              resource: 'delivery notes',
+              actionLabel: 'Retry',
+              onAction: _refresh,
             );
           }
 
@@ -92,7 +81,7 @@ class _DeliveryNoteListScreenState extends State<DeliveryNoteListScreen> {
               }).toList();
 
           if (provider.notes.isEmpty) {
-            return const Center(child: Text('No delivery notes found.'));
+            return EmptyState(message: 'No delivery notes found.');
           }
 
           return RefreshIndicator(

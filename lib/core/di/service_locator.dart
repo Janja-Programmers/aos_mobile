@@ -119,8 +119,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ResetPassword(sl<AuthRepository>()));
 
   // Provider
-  sl.registerFactory(
-    () => AuthProvider(
+  sl.registerSingleton<AuthProvider>(
+    AuthProvider(
       loginUser: sl<LoginUser>(),
       registerUser: sl<RegisterUser>(),
       resetPass: sl<ResetPassword>(),
@@ -274,6 +274,7 @@ Future<void> init() async {
       clearCart: sl(),
       updateQty: sl(),
       placeOrder: sl(),
+      authProvider: sl<AuthProvider>(),
     ),
   );
 

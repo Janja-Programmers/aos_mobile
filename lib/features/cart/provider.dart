@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '/core/di/service_locator.dart';
 import '/core/utils/api_client.dart';
 
-import '../../screens/auth/auth_provider.dart';
+import '/screens/auth/auth_provider.dart';
 
 import '../order/domain/sales_order.dart';
 import '../order/domain/usecases.dart';
@@ -19,6 +19,7 @@ class CartProvider with ChangeNotifier {
   final ClearCartUseCase clearCart;
   final UpdateCartItemQuantityUseCase updateQty;
   final PlaceOrderUseCase placeOrder;
+  final AuthProvider authProvider;
 
   CartProvider({
     required this.getCartItems,
@@ -27,9 +28,10 @@ class CartProvider with ChangeNotifier {
     required this.clearCart,
     required this.updateQty,
     required this.placeOrder,
+    required this.authProvider,
   });
 
-  final _authProvider = sl<AuthProvider>();
+  AuthProvider get _authProvider => authProvider;
 
   final CartRepo repo = sl<CartRepo>();
 
@@ -132,6 +134,7 @@ class CartProvider with ChangeNotifier {
     required String shippingAddressName,
   }) async {
     final user = _authProvider.user;
+
     if (user == null) {
       _setError('You must be logged in to place an order.');
       return false;

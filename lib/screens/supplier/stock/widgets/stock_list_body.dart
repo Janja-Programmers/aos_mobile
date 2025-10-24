@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
 import '/features/stock/providers/all.dart';
+import '/shared/widgets/error_state.dart';
 import '/shared/widgets/empty_state.dart';
 
 import 'stock_list_tile.dart';
@@ -42,26 +43,14 @@ class _StockListBodyState extends State<StockListBody> {
     if (prov.loading) {
       content = const Center(child: CircularProgressIndicator());
     } else if (prov.failure != null) {
-      content = Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Error: Could not load stock intake entries',
-              style: TextStyle(color: Colors.red),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-              onPressed: _refresh,
-            ),
-          ],
-        ),
+      content = ErrorState(
+        resource: 'stock intakes',
+        actionLabel: 'Retry',
+        onAction: _refresh,
       );
     } else if (prov.entries.isEmpty) {
       // No stock entries at all
-      content = const EmptyState(message: 'No stock entries found.');
+      content = const EmptyState(message: 'No stock intakes found.');
     } else {
       // Normal state with search + list
       content = Column(

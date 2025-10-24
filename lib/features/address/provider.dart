@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 
+import '/core/utils/logger.dart';
 import 'domain/address.dart';
 import 'domain/repo.dart';
 
@@ -84,18 +85,37 @@ class AddressProvider with ChangeNotifier {
   Future<void> fetchShippingAddresses() async {
     _setLoading();
 
+    final previousSelection = _selectedAddress;
+
     final result = await repository.fetchShippingAddresses();
 
     result.fold((failure) => _setError(failure.message), (data) {
       _addresses = data;
-      _setSuccess(null); // silently return to idle if no message
+
+      // ✅ Preserve previously selected address if still valid
+      if (previousSelection != null && _addresses.isNotEmpty) {
+        final found = _addresses.where((a) => a.name == previousSelection.name);
+        if (found.isNotEmpty) {
+          _selectedAddress = found.first;
+        } else {
+          _selectedAddress = _addresses.first;
+        }
+      } else if (_selectedAddress == null && _addresses.isNotEmpty) {
+        // ✅ Default to first address on first fetch
+        _selectedAddress = _addresses.first;
+      }
+
+      _setSuccess(null);
     });
   }
 
   Address? getByCustomerName(String name) {
-    return _addresses.firstWhereOrNull(
+    final address = _addresses.firstWhereOrNull(
       (a) => a.name.toLowerCase() == name.toLowerCase(),
     );
+
+    appLogger.i("Fetched address: $address");
+    return address;
   }
 
   // Internal state helpers

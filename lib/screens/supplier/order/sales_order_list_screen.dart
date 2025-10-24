@@ -1,11 +1,14 @@
-import 'package:africaonlinestores/shared/widgets/empty_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
 import '/features/order/prov.dart';
+
 import '/shared/widgets/app_drawer.dart';
+import '/shared/widgets/empty_state.dart';
+import '/shared/widgets/error_state.dart';
 import '/shared/widgets/main_bar.dart';
+
 import 'widgets/so_card_row.dart';
 
 class SalesOrderListScreen extends StatefulWidget {
@@ -61,22 +64,10 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
 
           // Failure state
           if (provider.failure != null) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Error: Could not load orders',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
-                    onPressed: _refresh,
-                  ),
-                ],
-              ),
+            return ErrorState(
+              resource: 'sales orders.',
+              actionLabel: 'Retry',
+              onAction: _refresh,
             );
           }
 
@@ -92,7 +83,7 @@ class _SalesOrderListScreenState extends State<SalesOrderListScreen> {
 
           // No orders at all
           if (provider.orders.isEmpty) {
-            return const Center(child: Text('No sales orders found.'));
+            return EmptyState(message: 'No sales orders found.');
           }
 
           return RefreshIndicator(

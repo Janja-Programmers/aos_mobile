@@ -40,11 +40,21 @@ class _PaymentSummaryCardState extends State<PaymentSummaryCard> {
       return;
     }
 
-    // Always refresh address list before attempting
+    // Always refresh, but keep current selection
+    final previouslySelected = addressProvider.selectedAddress;
     await addressProvider.fetchShippingAddresses();
-    final addresses = addressProvider.addresses;
 
-    if (addresses.isEmpty) {
+    // Restore selection if the provider didn’t preserve it
+    final selectedAddress =
+        addressProvider.selectedAddress ??
+        (previouslySelected != null
+            ? addressProvider.addresses.firstWhere(
+              (a) => a.name == previouslySelected.name,
+              orElse: () => addressProvider.addresses.first,
+            )
+            : addressProvider.addresses.firstOrNull);
+
+    if (selectedAddress == null) {
       // ❌ No address → warn & open form, but DO NOT place order
       topSnackBar(
         context,
@@ -67,8 +77,8 @@ class _PaymentSummaryCardState extends State<PaymentSummaryCard> {
       return;
     }
 
-    // ✅ Only place order if address exists
-    await widget.controller.placeOrder(shippingAddress: addresses.first.name);
+    // ✅ Use the actual selected address
+    await widget.controller.placeOrder(shippingAddress: selectedAddress.name);
 
     setState(() => _isPlacingOrder = false);
   }

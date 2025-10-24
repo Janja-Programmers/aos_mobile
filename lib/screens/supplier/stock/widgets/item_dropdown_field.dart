@@ -18,56 +18,83 @@ class ItemDropdownField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        dropdownMenuTheme: DropdownMenuThemeData(
-          menuStyle: MenuStyle(
-            padding: WidgetStateProperty.all(const EdgeInsets.only(top: 8)),
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16.0,
+      ), // 👈 left-right margin
+      child: Theme(
+        data: theme.copyWith(
+          dropdownMenuTheme: DropdownMenuThemeData(
+            menuStyle: MenuStyle(
+              backgroundColor: WidgetStateProperty.all(Colors.white),
+              padding: WidgetStateProperty.all(
+                const EdgeInsets.symmetric(vertical: 6.0),
+              ),
+            ),
           ),
         ),
-      ),
-      child: DropdownButtonFormField<String>(
-        value: currentCode?.isEmpty ?? true ? null : currentCode,
-        items:
-            availableCodes.map((code) {
-              return DropdownMenuItem<String>(
-                value: code,
-                child: SizedBox(
-                  height: 48,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        itemsMap[code] ?? '',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
+        child: DropdownButtonFormField<String>(
+          isExpanded: true,
+          alignment: AlignmentDirectional.centerStart,
+          dropdownColor: Colors.white,
+          menuMaxHeight: 300, // 👈 makes list scrollable
+          value:
+              (currentCode != null && currentCode!.isNotEmpty)
+                  ? currentCode
+                  : null,
+          onChanged: availableCodes.isEmpty ? null : onChanged,
+          items:
+              availableCodes.map((code) {
+                return DropdownMenuItem<String>(
+                  value: code,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      itemsMap[code] ?? code,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 15),
+                    ),
                   ),
-                ),
+                );
+              }).toList(),
+          selectedItemBuilder: (context) {
+            return availableCodes.map((code) {
+              return Text(
+                itemsMap[code] ?? code,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+                overflow: TextOverflow.ellipsis,
               );
-            }).toList(),
-        selectedItemBuilder: (context) {
-          return availableCodes.map((code) {
-            return Text(
-              itemsMap[code] ?? '',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            );
-          }).toList();
-        },
-        onChanged: availableCodes.isEmpty ? null : onChanged,
-        decoration: InputDecoration(
-          label: label ?? const Text('Item Name'), // 👈 supports required
-          hintText: availableCodes.isEmpty ? 'All items selected' : null,
+            }).toList();
+          },
+          decoration: InputDecoration(
+            label:
+                label ??
+                const Text(
+                  'Select Item',
+                  style: TextStyle(color: Colors.black87),
+                ),
+            border: const OutlineInputBorder(),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 14,
+            ),
+            hintText:
+                availableCodes.isEmpty
+                    ? 'No items available'
+                    : 'Select an item',
+          ),
+          validator: (val) {
+            if (availableCodes.isEmpty) return null; // skip validation
+            if (val == null || val.isEmpty) {
+              return 'Please select a product';
+            }
+            return null;
+          },
         ),
-        validator: (val) {
-          if (availableCodes.isEmpty) return null; // no items left
-          return val == null || val.isEmpty ? 'Required' : null;
-        },
-        dropdownColor: Colors.white,
-        menuMaxHeight: 300,
-        isExpanded: true,
-        alignment: AlignmentDirectional.topStart,
       ),
     );
   }

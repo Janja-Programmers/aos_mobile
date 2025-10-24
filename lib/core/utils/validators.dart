@@ -6,6 +6,14 @@ class AppValidator {
     return null;
   }
 
+  static String? isName(String? value, {String fieldName = 'Full name'}) {
+    if (value == null || value.trim().isEmpty) {
+      return '$fieldName is required';
+    }
+
+    return null;
+  }
+
   static String? isNumber(String? value, {String fieldName = 'This field'}) {
     if (value == null || value.trim().isEmpty) {
       return '$fieldName is required';
@@ -46,8 +54,14 @@ class AppValidator {
   }
 
   static String? isPassword(String? val) {
-    if (val == null || val.isEmpty) return 'Password required';
-    if (val.length < 6) return 'Must be at least 6 characters';
+    if (val == null || val.isEmpty) return 'Password is required';
+    if (val.length < 8) return 'Must be at least 6 characters';
+    return null;
+  }
+
+  static String? isConfirmPassword(String? val) {
+    if (val == null || val.isEmpty) return 'Confirm password required';
+    if (val.length < 8) return 'Must be at least 6 characters';
     return null;
   }
 }

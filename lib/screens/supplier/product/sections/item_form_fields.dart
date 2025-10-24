@@ -30,10 +30,12 @@ class ItemFormFields extends StatefulWidget {
 
 class _ItemFormFieldsState extends State<ItemFormFields> {
   bool showRawEditor = true;
+
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
-    // final isUpdate = widget.isUpdate;
+
+    const fieldSpacing = SizedBox(height: 16);
 
     return Form(
       key: widget.formKey,
@@ -49,7 +51,7 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
             validator:
                 (val) => AppValidator.required(val, fieldName: 'Item Name'),
           ),
-          const SizedBox(height: 10),
+          fieldSpacing,
 
           // 🔷 Item Price
           AppTextField(
@@ -61,16 +63,16 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
             validator:
                 (val) => AppValidator.isNumber(val, fieldName: 'Item Price'),
           ),
-          const SizedBox(height: 10),
+          fieldSpacing,
 
-          // 🔷 Category
+          // 🔷 Category Dropdown (styled like an HTML <select>)
           FutureBuilder<List<String>>(
             future: controller.fetchItemGroups(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               } else if (snapshot.hasError) {
-                return Text(
+                return const Text(
                   "Error loading categories",
                   style: TextStyle(color: Colors.red),
                 );
@@ -82,27 +84,67 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
               }
 
               return DropdownButtonFormField<String>(
+                isExpanded: true,
+                menuMaxHeight: 250,
                 value:
                     controller.groupController.text.isNotEmpty
                         ? controller.groupController.text
                         : null,
-                onChanged: (val) => controller.groupController.text = val ?? '',
+                onChanged: (val) {
+                  controller.groupController.text = val ?? '';
+                },
                 items:
                     groups
-                        .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                        .map(
+                          (g) => DropdownMenuItem(
+                            value: g,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                              ), // 👈 margin for dropdown item
+                              child: Text(
+                                g,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 15),
+                              ),
+                            ),
+                          ),
+                        )
                         .toList(),
-                decoration: const InputDecoration(labelText: "Category"),
+                decoration: InputDecoration(
+                  label: RichText(
+                    text: TextSpan(
+                      text: 'Category',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyLarge?.copyWith(color: Colors.grey[700]),
+                      children: const [
+                        TextSpan(
+                          text: ' *',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  border: const OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
+                ),
                 validator:
-                    (value) =>
-                        (value == null || value.isEmpty)
-                            ? 'Category is required'
-                            : null,
+                    (val) => AppValidator.required(val, fieldName: 'Category'),
               );
             },
           ),
+          fieldSpacing,
 
-          const SizedBox(height: 10),
-
+          // 🖼️ Display Images
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -110,51 +152,46 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
 
           ImageVideoPickerSection(
             controller: controller,
             product: widget.product,
           ),
-          const SizedBox(height: 10),
+          fieldSpacing,
 
           // ℹ️ Display Information
           const Text(
             'Display Information',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
 
           // 🔶 Website Description
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (showRawEditor)
-                AppTextField(
-                  label: 'Website Description',
-                  controller: controller.descController,
-                  maxLines: 6,
-                  maxLength: 1000, // prevents unbounded input
-                  keyboardType: TextInputType.multiline,
-                )
-              else
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade400),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    controller.descController.text.trim().isEmpty
-                        ? 'No description added.'
-                        : controller.descController.text.trim(),
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
+          if (showRawEditor)
+            AppTextField(
+              label: 'Website Description',
+              controller: controller.descController,
+              maxLines: 6,
+              maxLength: 1000,
+              keyboardType: TextInputType.multiline,
+            )
+          else
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade400),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                controller.descController.text.trim().isEmpty
+                    ? 'No description added.'
+                    : controller.descController.text.trim(),
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+          fieldSpacing,
 
           // 🔶 Short Website Description
           AppTextField(
@@ -162,15 +199,14 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
             controller: controller.shortDescController,
             maxLines: 2,
           ),
-          const SizedBox(height: 10),
+          fieldSpacing,
 
-          // 🔶 Website Specifications
+          // 🔶 Website Specifications Table
           Consumer<AddItemController>(
             builder:
-                (_, controller, _) =>
+                (_, controller, __) =>
                     WebsiteSpecificationsTable(controller: controller),
           ),
-          const SizedBox(height: 10),
         ],
       ),
     );

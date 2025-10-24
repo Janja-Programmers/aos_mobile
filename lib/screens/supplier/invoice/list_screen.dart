@@ -5,6 +5,7 @@ import '/core/constants/colors.dart';
 import '/features/invoice/prov.dart';
 
 import '/shared/widgets/app_drawer.dart';
+import '/shared/widgets/error_state.dart';
 import '/shared/widgets/empty_state.dart';
 import '/shared/widgets/main_bar.dart';
 
@@ -63,22 +64,10 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
 
           // ⚠️ Error state
           if (provider.failure != null) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Error: Could not load invoices',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
-                    onPressed: _refresh,
-                  ),
-                ],
-              ),
+            return ErrorState(
+              resource: 'sales invoices',
+              actionLabel: 'Retry',
+              onAction: _refresh,
             );
           }
 
@@ -94,7 +83,7 @@ class _SalesInvoiceListScreenState extends State<SalesInvoiceListScreen> {
 
           // 📭 No invoices at all
           if (provider.invoices.isEmpty) {
-            return const Center(child: Text('No sales invoices found.'));
+            return EmptyState(message: 'No sales invoices found.');
           }
 
           // ✅ Main content

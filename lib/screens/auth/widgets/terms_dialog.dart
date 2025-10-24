@@ -82,13 +82,7 @@ These Terms & Conditions are governed by and interpreted under the laws of Kenya
 We may update these Terms & Conditions from time to time. Continued use of the platform after changes indicates acceptance of the updated terms.
 
 13. Contact Us
-If you have questions about these Terms & Conditions, you may contact us at:
-
-Kalutu Daniel
-Changamwe
-Mombasa - 80100
-Kenya (KE)
-Email: kalutudaniel@gmail.com
+If you have questions about these Terms & Conditions, you may contact us at kalutudaniel@gmail.com . For information on how we collect, use, and protect your data, please review our Privacy Policy.
 
 These Terms & Conditions apply to the Africa Online Stores application and related services.
 

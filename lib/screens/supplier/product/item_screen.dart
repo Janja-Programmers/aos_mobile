@@ -9,6 +9,7 @@ import '/shared/widgets/build_subtitle.dart';
 import '/shared/widgets/custom_button.dart';
 import '/shared/widgets/empty_state.dart';
 import '/shared/widgets/main_bar.dart';
+import '/shared/widgets/error_state.dart';
 
 import '/features/product/provider.dart';
 
@@ -66,22 +67,10 @@ class _ItemScreenState extends State<ItemScreen> {
     if (productProvider.isLoading) {
       content = const Center(child: CircularProgressIndicator());
     } else if (productProvider.error != null) {
-      content = Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Error: Could not load products',
-              style: TextStyle(color: Colors.red),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-              onPressed: _refresh,
-            ),
-          ],
-        ),
+      content = ErrorState(
+        resource: 'products',
+        actionLabel: 'Retry',
+        onAction: _refresh,
       );
     } else if (productProvider.products.isEmpty) {
       content = EmptyState(message: 'No products found');

@@ -98,13 +98,13 @@ class SliderCarousel extends StatelessWidget {
       child: CarouselSlider(
         options: CarouselOptions(
           height: 180,
-          autoPlay: true,
-          viewportFraction: 1.0,
-          enlargeCenterPage: false,
-          enableInfiniteScroll: true,
+          autoPlay: sliderProv.images.isNotEmpty,
           autoPlayInterval: const Duration(seconds: 3),
           autoPlayAnimationDuration: const Duration(milliseconds: 800),
           autoPlayCurve: Curves.easeInOut,
+          viewportFraction: 1.0,
+          enlargeCenterPage: false,
+          enableInfiniteScroll: true,
         ),
         items:
             sliderProv.images.map((imageUrl) {
@@ -114,16 +114,12 @@ class SliderCarousel extends StatelessWidget {
               return Container(
                 color: Colors.transparent,
                 child: Center(
-                  child: Image.network(
-                    resolvedImgUrl,
-                    fit: BoxFit.contain,
+                  child: FadeInImage.assetNetwork(
+                    placeholder: 'assets/spinner.gif',
+                    image: resolvedImgUrl,
+                    fit: BoxFit.cover,
                     width: double.infinity,
                     height: double.infinity,
-                    errorBuilder:
-                        (context, error, stackTrace) => Container(
-                          color: Colors.grey[200],
-                          child: const Icon(Icons.broken_image, size: 48),
-                        ),
                   ),
                 ),
               );

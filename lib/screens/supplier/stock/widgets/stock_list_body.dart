@@ -63,7 +63,7 @@ class _StockListBodyState extends State<StockListBody> {
               controller: _searchController,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
-                hintText: 'Search stock entries by ID',
+                hintText: 'Search stock intake by ID',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
@@ -93,7 +93,7 @@ class _StockListBodyState extends State<StockListBody> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          "Stock Entries",
+                          "Stock Intakes",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
@@ -115,7 +115,7 @@ class _StockListBodyState extends State<StockListBody> {
                     child:
                         filteredEntries.isEmpty
                             ? EmptyState(
-                              message: 'No stock entries match your search.',
+                              message: 'No stock intakes match your search.',
                               actionLabel: 'Clear search',
                               onAction: () {
                                 _searchController.clear();

@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '/features/address/domain/address.dart';
 import '/features/address/provider.dart';
+import '/features/d_note/domain/entity/delivery_note.dart';
 
 class DetailCard extends StatelessWidget {
-  final String customerName;
-  final String orderId;
-  final String status;
+  final DeliveryNote note;
 
-  const DetailCard({
-    super.key,
-    required this.customerName,
-    required this.orderId,
-    required this.status,
-  });
+  const DetailCard({super.key, required this.note});
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
@@ -45,15 +40,21 @@ class DetailCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final addressProv = context.watch<AddressProvider>();
 
-    final address = addressProv.getByCustomerName(customerName);
-
-    // Optional: fetch addresses if none loaded yet
-    if (addressProv.addresses.isEmpty &&
-        addressProv.status != AddressStatus.loading) {
-      Future.microtask(
-        () => context.read<AddressProvider>().fetchShippingAddresses(),
-      );
-    }
+    Address? shippingAddress = addressProv.addresses.firstWhere(
+      (a) => a.type.toLowerCase() == 'shipping',
+      orElse:
+          () =>
+              addressProv.selectedAddress ??
+              Address(
+                name: '',
+                title: '',
+                line1: '',
+                city: '',
+                country: '',
+                phone: '',
+                type: 'Shipping',
+              ),
+    );
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -64,35 +65,31 @@ class DetailCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Left: Customer & Address
+            // LEFT SIDE → Customer Info
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    customerName,
+                    note.customerName,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
-                  if (address != null) ...[
-                    Text(address.line1),
-                    const SizedBox(height: 4),
-                    Text('${address.city}, ${address.country}'),
-                    const SizedBox(height: 4),
-                    Text(
-                      address.phone,
-                      style: const TextStyle(color: Colors.black87),
-                    ),
-                  ] else if (addressProv.status == AddressStatus.loading)
-                    const Text(
-                      'Loading address...',
-                      style: TextStyle(color: Colors.grey),
-                    )
-                  else
-                    const Text(
-                      'No address found',
-                      style: TextStyle(color: Colors.grey),
-                    ),
+
+                  // Text(note.contactEmail ?? '-'),
+                  // const SizedBox(height: 4),
+
+                  // Text(
+                  //   shippingAddress.phone.isNotEmpty
+                  //       ? shippingAddress.phone
+                  //       : (note.contactPhone ?? '-'),
+                  //   style: const TextStyle(color: Colors.black87),
+                  // ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${shippingAddress.line1}, ${shippingAddress.city}, ${shippingAddress.country}',
+                    style: TextStyle(color: Colors.black87),
+                  ),
                 ],
               ),
             ),
@@ -102,27 +99,37 @@ class DetailCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  orderId,
+                  note.id,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 6),
+
+                Text(
+                  'Date: ${DateTime.now()}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 6),
+
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: _statusColor(status),
+                    color: _statusColor(note.status),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    status,
+                    note.status,
                     style: TextStyle(
                       fontSize: 12,
-                      color: _statusTextColor(status),
+                      color: _statusTextColor(note.status),
                       fontWeight: FontWeight.w600,
                     ),
                   ),

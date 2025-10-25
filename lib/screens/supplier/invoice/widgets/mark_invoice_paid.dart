@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '/core/utils/snackbar.dart';
@@ -58,6 +59,7 @@ class PayInvoiceButton extends StatelessWidget {
     final result = await prov.markInvoiceAsPaid(
       invoiceName: invoice.id,
       customerName: invoice.customerName,
+      customer: invoice.customer,
       amount: invoice.grandTotal,
       referenceNo: "TXN-${DateTime.now().millisecondsSinceEpoch}",
       referenceDate: DateTime.now().toIso8601String().split('T').first,
@@ -76,7 +78,8 @@ class PayInvoiceButton extends StatelessWidget {
           context,
           'Invoice ${invoice.id} marked as paid (${invoice.grandTotal.toStringAsFixed(2)})',
         );
-        prov.fetchById(invoice.id);
+        context.push('/invoices');
+        prov.fetchAll();
       },
     );
   }

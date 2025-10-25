@@ -204,7 +204,7 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
           // 🔶 Website Specifications Table
           Consumer<AddItemController>(
             builder:
-                (_, controller, __) =>
+                (_, controller, _) =>
                     WebsiteSpecificationsTable(controller: controller),
           ),
         ],

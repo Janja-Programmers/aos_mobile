@@ -57,14 +57,7 @@ class _DeliveryNoteDetailScreenState extends State<DeliveryNoteDetailScreen> {
       body = Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: ListView(
-          children: [
-            DetailCard(
-              customerName: note.customerName,
-              orderId: note.id,
-              status: note.status,
-            ),
-            ItemsCard(note: note),
-          ],
+          children: [DetailCard(note: note), ItemsCard(note: note)],
         ),
       );
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '/core/utils/snackbar.dart';
@@ -76,6 +77,7 @@ class BillInvoiceButton extends StatelessWidget {
       ),
       (_) {
         topSnackBar(context, 'Order billed successfully');
+        context.push('/delivery-notes');
         context.read<DeliveryNoteProvider>().fetchAll();
       },
     );

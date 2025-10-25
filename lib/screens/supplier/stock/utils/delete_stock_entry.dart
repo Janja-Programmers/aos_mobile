@@ -10,18 +10,53 @@ Future<bool?> deleteStockEntry(BuildContext context, String id) async {
     context: context,
     builder:
         (_) => AlertDialog(
-          title: const Text('Confirm Deletion'),
-          content: const Text('Are you sure you want to delete this entry?'),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Confirm',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.black87,
+            ),
+          ),
+          content: const Text(
+            'Permanently delete stock intake?',
+            style: TextStyle(fontSize: 16, color: Colors.black54),
+          ),
+          actionsPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
+          actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
             TextButton(
-              onPressed: () => context.pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => context.pop(true),
+              onPressed: () => Navigator.pop(context, false),
               child: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.black),
+                'No',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => context.pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text(
+                'Yes, Delete',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -45,7 +80,7 @@ Future<bool?> deleteStockEntry(BuildContext context, String id) async {
   } else {
     topSnackBar(
       context,
-      'Stock entry deleted successfully.',
+      'Stock intake deleted successfully.',
       type: TopSnackType.success,
     );
     context.pop(true);

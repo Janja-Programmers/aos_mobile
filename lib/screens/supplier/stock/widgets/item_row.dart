@@ -7,6 +7,8 @@ import '../controllers/item_row_controller.dart';
 
 import 'item_dropdown_field.dart';
 
+import '/shared/widgets/form_fields.dart';
+
 class ItemRow extends StatefulWidget {
   final ItemRowController controller;
   final VoidCallback? onRemove;
@@ -53,19 +55,7 @@ class _ItemRowState extends State<ItemRow> {
             e['item_code'] as String: e['item_name'] as String,
         };
       });
-    } catch (e) {
-      return;
-    }
-  }
-
-  Widget buildRequiredLabel(String label) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(label),
-        const Text(' *', style: TextStyle(color: Colors.red)),
-      ],
-    );
+    } catch (_) {}
   }
 
   @override
@@ -76,32 +66,36 @@ class _ItemRowState extends State<ItemRow> {
           return code == currentCode || !widget.usedItemCodes.contains(code);
         }).toList();
 
+    final readOnly = widget.readOnly ?? false;
+
     return Form(
       key: widget.controller.formKey,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ItemDropdownField(
-            currentCode: currentCode,
+            currentCode: widget.controller.itemCode.text,
             itemsMap: _itemsMap,
             availableCodes: availableCodes,
-            label: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text('Product'),
-                Text(' *', style: TextStyle(color: Colors.red)),
-              ],
-            ),
+            label: 'Product',
+            isRequired: true,
+            readOnly: widget.readOnly ?? false,
             onChanged: (val) {
               widget.controller.itemCode.text = val!;
               widget.controller.itemName.text = _itemsMap[val] ?? '';
             },
           ),
+
           const SizedBox(height: 10),
 
-          TextFormField(
+          // ✅ Use AppTextField for consistency
+          AppTextField(
+            label: 'Quantity',
             controller: widget.controller.qty,
+            maxLength: 10,
+            isRequired: true,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(label: buildRequiredLabel('Quantity')),
+            readOnly: readOnly,
             validator: (val) {
               if (val == null || val.trim().isEmpty) return 'Required field';
               final parsed = double.tryParse(val);
@@ -112,23 +106,22 @@ class _ItemRowState extends State<ItemRow> {
 
           const SizedBox(height: 10),
 
-          TextFormField(
+          // ✅ Use AppTextField again
+          AppTextField(
+            label: 'Valuation Rate (Optional)',
             controller: widget.controller.valuationRate,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Valuation Rate (Optional)',
-            ),
+            maxLength: 10,
+            readOnly: readOnly,
             validator: (val) {
-              if (val == null || val.trim().isEmpty) {
-                return null;
-              }
+              if (val == null || val.trim().isEmpty) return null;
               final parsed = double.tryParse(val);
               if (parsed == null || parsed < 0) return 'Invalid rate';
               return null;
             },
           ),
 
-          if (widget.onRemove != null) ...[
+          if (widget.onRemove != null && !readOnly) ...[
             const SizedBox(height: 10),
             TextButton.icon(
               onPressed: widget.onRemove,

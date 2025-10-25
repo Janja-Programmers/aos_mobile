@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dartz/dartz.dart';
 
 import '/core/errors/failures.dart';
@@ -61,19 +62,38 @@ class CartRepoImpl implements CartRepo {
     }
   }
 
+  /// 🧩 Update quantity locally + sync remotely
   @override
   Future<Either<Failure, Unit>> updateQuantity(
     String code,
     int quantity,
   ) async {
     try {
+      // 1️⃣ Update locally first
       await local.updateQuantity(code, quantity);
+
+      // 2️⃣ Fire & forget remote sync
+      unawaited(() async {
+        final item = await local.getItemByCode(code);
+        if (item != null) {
+          final result = await updateRemoteCart(item);
+          result.fold(
+            (failure) =>
+                appLogger.w('Remote sync failed for $code: ${failure.message}'),
+            (_) => appLogger.i('Remote sync successful for $code'),
+          );
+        } else {
+          appLogger.w('Item $code not found locally after update');
+        }
+      }());
+
       return const Right(unit);
     } catch (e) {
       return Left(handleException('Failed to update quantity: $e'));
     }
   }
 
+  /// 🔁 Push cart updates to remote
   @override
   Future<Either<Failure, Unit>> updateRemoteCart(CartItem item) async {
     try {

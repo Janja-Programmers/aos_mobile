@@ -19,7 +19,7 @@ class StockTableCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Stock Items',
+              'Items',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -47,7 +47,7 @@ class StockTableCard extends StatelessWidget {
             Padding(padding: EdgeInsets.all(6), child: Text('#')),
             Padding(padding: EdgeInsets.all(6), child: Text('Item')),
             Padding(padding: EdgeInsets.all(6), child: Text('Qty')),
-            Padding(padding: EdgeInsets.all(6), child: Text('Valuation')),
+            Padding(padding: EdgeInsets.all(6), child: Text('Valuation (sh)')),
           ],
         ),
 
@@ -64,11 +64,11 @@ class StockTableCard extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(item.qty.toStringAsFixed(2)),
+                child: Text(humanizeNumber(item.qty)),
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(formatCurrency(item.valuationRate)),
+                child: Text(humanizeNumber(item.valuationRate)),
               ),
             ],
           );

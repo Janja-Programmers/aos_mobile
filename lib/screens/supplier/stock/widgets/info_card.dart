@@ -6,11 +6,13 @@ import '/shared/utils/doc_status.dart';
 class StockEntryInfoCard extends StatelessWidget {
   final String entryId;
   final DocStatus docstatus;
+  final String? date;
 
   const StockEntryInfoCard({
     super.key,
     required this.entryId,
     required this.docstatus,
+    this.date,
   });
 
   @override
@@ -25,21 +27,31 @@ class StockEntryInfoCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Row 1 → Entry ID
-            Text(
-              entryId,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.primary,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    entryId,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+                DocstatusChip(docstatus: docstatus),
+              ],
             ),
-            const SizedBox(height: 12),
 
-            // Row 2 → Docstatus Chip
-            Align(
-              alignment: Alignment.centerLeft,
-              child: DocstatusChip(docstatus: docstatus),
-            ),
+            const SizedBox(height: 8),
+
+            // Row 2 → Date (optional)
+            if (date != null)
+              Text(
+                'Date: ${date!}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.black,
+                ),
+              ),
           ],
         ),
       ),

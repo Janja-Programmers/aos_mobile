@@ -21,13 +21,13 @@ Future<void> submitStockEntry(BuildContext context, StockEntry draft) async {
     // failure already set inside provider
     topSnackBar(
       context,
-      createProvider.errorMessage ?? 'Failed to submit Stock Entry',
+      createProvider.errorMessage ?? 'Failed to submit Stock intake',
       type: TopSnackType.error,
     );
   } else {
     topSnackBar(
       context,
-      'Stock Entry submitted successfully',
+      'Stock intake submitted successfully',
       type: TopSnackType.success,
     );
 

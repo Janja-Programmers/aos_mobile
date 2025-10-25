@@ -5,6 +5,7 @@ import '../domain/sales_invoice.dart';
 class SalesInvoiceModel {
   final String id;
   final String customerName;
+  final String customer;
   final String status;
   final DateTime postingDate;
   final DateTime? dueDate;
@@ -19,6 +20,7 @@ class SalesInvoiceModel {
   SalesInvoiceModel({
     required this.id,
     required this.customerName,
+    required this.customer,
     required this.status,
     required this.postingDate,
     this.dueDate,
@@ -41,6 +43,7 @@ class SalesInvoiceModel {
     return SalesInvoiceModel(
       id: json["name"] ?? '',
       customerName: json["customer_name"] ?? '',
+      customer: json["customer"] ?? '',
       status: json["status"] ?? '',
       postingDate:
           DateTime.tryParse(json["posting_date"] ?? '') ?? DateTime.now(),
@@ -106,6 +109,7 @@ class SalesInvoiceModel {
   SalesInvoice toEntity() => SalesInvoice(
     id: id,
     customerName: customerName,
+    customer: customer,
     status: status,
     postingDate: postingDate,
     dueDate: dueDate,

@@ -68,6 +68,13 @@ class WishlistItemCard extends StatelessWidget {
 
                     SizedBox(
                       width: double.infinity,
+                      //  item.inStock ? card       : const Text(
+                      //                           'Out of Stock',
+                      //                           style: TextStyle(
+                      //                             color: Color.fromARGB(255, 220, 71, 61),
+                      //                             fontWeight: FontWeight.bold,
+                      //                           ),
+                      //                         ),
                       child: MoveToCartButton(
                         item: CartItem(
                           code: item.id,

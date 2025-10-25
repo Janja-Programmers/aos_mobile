@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '/core/utils/snackbar.dart';
@@ -66,10 +67,12 @@ class DeliverOrderButton extends StatelessWidget {
         "Error creating delivery note",
         type: TopSnackType.error,
       ),
-      (_) {
+      (_) async {
         topSnackBar(context, 'Delivery Note created successfully');
 
-        // 🔹 Refresh the sales order list too
+        context.push('/sales-orders');
+
+        // 🔹 Optional: refresh sales orders first
         context.read<SalesOrderProvider>().fetchAll();
       },
     );

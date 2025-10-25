@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/formatters.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -122,6 +123,7 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
                 // Info Card
                 StockEntryInfoCard(
                   entryId: entry.id,
+                  date: formatCompactDateTime(entry.modified!),
                   docstatus: entry.docstatus,
                 ),
 

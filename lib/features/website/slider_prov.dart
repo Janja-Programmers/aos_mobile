@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '/core/constants/const.dart';
 import '/core/utils/api_client.dart';
+import '/core/utils/formatters.dart';
 
 class SliderProv with ChangeNotifier {
   final APIClient _apiClient;
@@ -12,7 +13,7 @@ class SliderProv with ChangeNotifier {
 
   SliderProv(this._apiClient);
 
-  Future<void> loadSlider() async {
+  Future<void> loadSlider([BuildContext? context]) async {
     isLoading = true;
     error = null;
     images = [];
@@ -33,6 +34,16 @@ class SliderProv with ChangeNotifier {
                 .where((path) => path != null && path.trim().isNotEmpty)
                 .cast<String>()
                 .toList();
+
+        // 🔹 Pre-cache images before notifying UI
+        if (context != null && images.isNotEmpty) {
+          for (final img in images) {
+            final resolvedUrl = resolveImageUrl(img);
+            if (resolvedUrl != null) {
+              precacheImage(NetworkImage(resolvedUrl), context);
+            }
+          }
+        }
       } else {
         error = "Invalid slideshow data format";
       }

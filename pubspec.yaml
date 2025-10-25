@@ -76,6 +76,7 @@ flutter:
     - assets/dash.png
     - assets/logo.png
     - assets/logo_transparent.png
+    - assets/spinner.gif
 
 flutter_launcher_icons:
   android: true

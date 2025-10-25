@@ -57,6 +57,14 @@ String formatCurrency(num amount) {
   return format.format(amount);
 }
 
+String humanizeNumber(num value) {
+  final format =
+      NumberFormat.decimalPattern('en_KE')
+        ..maximumFractionDigits = 0
+        ..minimumFractionDigits = 0;
+  return format.format(value);
+}
+
 String cleanHtml(String? input) {
   if (input == null) return '';
   return input.replaceAll(RegExp(r'[^\x20-\x7E\r\n\t]'), '').trim();

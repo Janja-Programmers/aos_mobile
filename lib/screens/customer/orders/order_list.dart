@@ -139,21 +139,35 @@ class _OrderScreenState extends State<OrderScreen> {
 
                               switch (order.status.toLowerCase()) {
                                 case 'completed':
-                                  statusColor = Colors.green.shade100;
-                                  statusTextColor = Colors.green.shade800;
+                                  statusColor = AppColors.success.withOpacity(
+                                    0.2,
+                                  );
+                                  statusTextColor = AppColors.success;
                                   break;
+
                                 case 'to deliver':
-                                  statusColor = Colors.orange.shade100;
-                                  statusTextColor = Colors.orange.shade800;
-                                  break;
                                 case 'to bill':
-                                  statusColor = Colors.amber.shade100;
-                                  statusTextColor = Colors.amber.shade800;
-                                  break;
                                 case 'to deliver and bill':
-                                  statusColor = Colors.grey.shade100;
-                                  statusTextColor = Colors.grey.shade800;
+                                  statusColor = AppColors.warning.withOpacity(
+                                    0.2,
+                                  );
+                                  statusTextColor = AppColors.warning;
                                   break;
+
+                                case 'cancelled':
+                                case 'rejected':
+                                  statusColor = AppColors.danger.withOpacity(
+                                    0.2,
+                                  );
+                                  statusTextColor = AppColors.danger;
+                                  break;
+
+                                case 'processing':
+                                case 'in progress':
+                                  statusColor = AppColors.info.withOpacity(0.2);
+                                  statusTextColor = AppColors.info;
+                                  break;
+
                                 default:
                                   statusColor = Colors.grey.shade200;
                                   statusTextColor = Colors.grey.shade700;

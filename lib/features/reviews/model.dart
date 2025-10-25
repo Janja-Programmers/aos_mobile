@@ -20,7 +20,7 @@ class ReviewModel extends Equatable {
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
     return ReviewModel(
       title: json['review_title'] ?? '',
-      customer: json['customer'] ?? '',
+      customer: json['user'] ?? '',
       comment: json['comment']?.trim() ?? '',
       rating: double.tryParse(json['rating'].toString()) ?? 0.0,
       publishedOn: json['published_on'] ?? '',

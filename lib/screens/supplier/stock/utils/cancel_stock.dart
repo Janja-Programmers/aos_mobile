@@ -23,7 +23,7 @@ Future<void> cancelStockEntry(
             borderRadius: BorderRadius.circular(16),
           ),
           title: const Text(
-            'Cancel Entry?',
+            'Confirm',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 20,
@@ -31,7 +31,7 @@ Future<void> cancelStockEntry(
             ),
           ),
           content: const Text(
-            'This action cannot be undone. Are you sure you want to cancel this stock entry?',
+            'Permanently cancel stock intake?',
             style: TextStyle(fontSize: 16, color: Colors.black54),
           ),
           actionsPadding: const EdgeInsets.symmetric(
@@ -86,8 +86,8 @@ Future<void> cancelStockEntry(
 
     topSnackBar(
       context,
-      'Stock Entry cancelled successfully',
-      type: TopSnackType.info,
+      'Stock intake cancelled successfully',
+      type: TopSnackType.success,
     );
 
     await detailProvider.fetchById(submitted.id);

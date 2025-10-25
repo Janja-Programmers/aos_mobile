@@ -4,7 +4,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '/core/utils/formatters.dart';
-
 import '/features/stock/domain/entity/stock.dart';
 
 Future<void> printStockIntake({
@@ -19,21 +18,44 @@ Future<void> printStockIntake({
   pdf.addPage(
     pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.all(24),
+      margin: const pw.EdgeInsets.symmetric(horizontal: 32, vertical: 28),
       build:
           (context) => [
             pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
+                // Header: title + logo
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: pw.CrossAxisAlignment.center,
                   children: [
-                    pw.Text(
-                      '$username Stock Intake',
-                      style: pw.TextStyle(
-                        fontSize: 20,
-                        fontWeight: pw.FontWeight.bold,
-                      ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          'Stock Intake',
+                          style: pw.TextStyle(
+                            fontSize: 22,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                        pw.SizedBox(height: 6),
+                        pw.Text(
+                          entry.id,
+                          style: pw.TextStyle(
+                            fontSize: 14,
+                            color: PdfColors.grey700,
+                          ),
+                        ),
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          'Date: ${formatCompactDateTime(entry.modified!)}',
+                          style: pw.TextStyle(
+                            fontSize: 11,
+                            color: PdfColors.grey600,
+                          ),
+                        ),
+                      ],
                     ),
                     pw.SizedBox(
                       height: 50,
@@ -42,42 +64,72 @@ Future<void> printStockIntake({
                     ),
                   ],
                 ),
-                pw.SizedBox(height: 16),
-                pw.Text(
-                  'Entry ID: ${entry.id}',
-                  style: pw.TextStyle(fontSize: 12),
-                ),
-                pw.Text('Date: $now', style: pw.TextStyle(fontSize: 12)),
-                pw.SizedBox(height: 16),
 
-                pw.Table.fromTextArray(
-                  headers: ['#', 'Item Code', 'Item Name', 'Qty', 'Rate'],
+                pw.SizedBox(height: 20),
+
+                // Table Section
+                pw.TableHelper.fromTextArray(
+                  border: const pw.TableBorder(
+                    horizontalInside: pw.BorderSide(
+                      width: 0.3,
+                      color: PdfColors.grey400,
+                    ),
+                    verticalInside: pw.BorderSide(
+                      width: 0.3,
+                      color: PdfColors.grey400,
+                    ),
+                    top: pw.BorderSide(width: 0.5, color: PdfColors.grey500),
+                    bottom: pw.BorderSide(width: 0.5, color: PdfColors.grey500),
+                  ),
+                  headerDecoration: const pw.BoxDecoration(
+                    color: PdfColors.grey300,
+                  ),
+                  headerHeight: 25,
+                  cellHeight: 22,
+                  cellAlignments: {
+                    0: pw.Alignment.centerRight,
+                    1: pw.Alignment.centerLeft,
+                    2: pw.Alignment.centerRight,
+                    3: pw.Alignment.centerRight,
+                  },
+                  headerStyle: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                  cellStyle: const pw.TextStyle(fontSize: 10),
+                  headers: ['#', 'Item', 'Qty', 'Valuation Rate'],
                   data: List.generate(entry.items.length, (i) {
                     final item = entry.items[i];
                     return [
                       '${i + 1}',
-                      item.itemCode,
                       item.itemName,
-                      item.qty.toStringAsFixed(0),
+                      humanizeNumber(item.qty),
                       formatCurrency(item.valuationRate),
                     ];
                   }),
-                  headerDecoration: const pw.BoxDecoration(
-                    color: PdfColors.grey300,
-                  ),
-                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                  cellStyle: const pw.TextStyle(fontSize: 10),
                 ),
 
                 pw.SizedBox(height: 24),
                 pw.Divider(),
 
+                // Footer info
+                pw.SizedBox(height: 8),
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
                       'Printed on: $now',
-                      style: const pw.TextStyle(fontSize: 10),
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        color: PdfColors.grey600,
+                      ),
+                    ),
+                    pw.Text(
+                      'Generated by: $username',
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        color: PdfColors.grey600,
+                      ),
                     ),
                   ],
                 ),

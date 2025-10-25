@@ -12,40 +12,16 @@ class SalesInvoiceCardRow extends StatelessWidget {
     final status = invoice.status.toLowerCase().trim();
 
     // Define beautiful chips for each status
-    final Map<String, (Color bg, Color text, IconData? icon)> statusStyles = {
-      'paid': (
-        Colors.green.shade100,
-        Colors.green.shade800,
-        Icons.check_circle,
-      ),
-      'unpaid': (
-        Colors.orange.shade100,
-        Colors.orange.shade800,
-        Icons.hourglass_bottom,
-      ),
-      'overdue': (Colors.red.shade100, Colors.red.shade800, Icons.error),
-      'cancelled': (Colors.grey.shade300, Colors.grey.shade800, Icons.cancel),
-      'draft': (
-        Colors.blue.shade100,
-        Colors.blue.shade800,
-        Icons.edit_document,
-      ),
-      'return': (Colors.purple.shade100, Colors.purple.shade800, Icons.undo),
-      'partially paid': (
-        Colors.teal.shade100,
-        Colors.teal.shade800,
-        Icons.payments,
-      ),
-      'submitted': (
-        Colors.indigo.shade100,
-        Colors.indigo.shade800,
-        Icons.assignment_turned_in,
-      ),
+    final Map<String, (Color bg, Color text)> statusStyles = {
+      'paid': (Colors.green.shade100, Colors.green.shade800),
+      'unpaid': (Colors.orange.shade100, Colors.orange.shade800),
+      'draft': (Colors.blue.shade100, Colors.blue.shade800),
+      'partially paid': (Colors.teal.shade100, Colors.teal.shade800),
+      'submitted': (Colors.indigo.shade100, Colors.indigo.shade800),
     };
 
-    final (bgColor, textColor, icon) =
-        statusStyles[status] ??
-        (Colors.grey.shade200, Colors.grey.shade700, Icons.receipt_long);
+    final (bgColor, textColor) =
+        statusStyles[status] ?? (Colors.grey.shade200, Colors.grey.shade700);
 
     return InkWell(
       onTap: () => context.push('/invoice/${invoice.id}'),
@@ -76,7 +52,6 @@ class SalesInvoiceCardRow extends StatelessWidget {
                         label: invoice.status,
                         bgColor: bgColor,
                         textColor: textColor,
-                        icon: icon,
                       ),
                     ],
                   ),

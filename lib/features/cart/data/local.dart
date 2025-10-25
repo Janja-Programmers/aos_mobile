@@ -4,7 +4,9 @@ import 'package:sqflite/sqflite.dart';
 import '/core/db/db_helper.dart';
 import '/core/errors/failures.dart';
 import '/core/errors/exception.dart';
+
 import '../domain/cart.dart';
+
 import 'model.dart';
 
 class CartLocalDataSource {
@@ -35,7 +37,6 @@ class CartLocalDataSource {
       final maps = await db.query('cart');
       final items =
           maps.map((e) => CartItemModel.fromMap(e).toEntity()).toList();
-
       return Right(items);
     } catch (e) {
       return Left(handleException('Failed to get cart items: $e'));
@@ -77,6 +78,26 @@ class CartLocalDataSource {
       return const Right(null);
     } catch (e) {
       return Left(handleException('Failed to update quantity: $e'));
+    }
+  }
+
+  /// ✅ Added: Get single item by code (needed for remote sync)
+  Future<CartItem?> getItemByCode(String code) async {
+    try {
+      final db = await dbHelper.database;
+      final maps = await db.query(
+        'cart',
+        where: 'code = ?',
+        whereArgs: [code],
+        limit: 1,
+      );
+
+      if (maps.isNotEmpty) {
+        return CartItemModel.fromMap(maps.first).toEntity();
+      }
+      return null;
+    } catch (e) {
+      throw handleException('Failed to get item by code: $e');
     }
   }
 }

@@ -35,7 +35,7 @@ class ProductTableCard extends StatelessWidget {
               children: [
                 const Text(
                   'Grand Total',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 Text(
                   formatCurrency(order.grandTotal),
@@ -96,11 +96,11 @@ class ProductTableCard extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(formatCurrency(item.rate)),
+                child: Text(humanizeNumber(item.rate)),
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(formatCurrency(item.qty * item.rate)),
+                child: Text(humanizeNumber(item.qty * item.rate)),
               ),
             ],
           );

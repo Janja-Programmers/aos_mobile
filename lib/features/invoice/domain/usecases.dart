@@ -26,11 +26,12 @@ class GetSalesInvoiceById {
 class MarkSalesInvoiceAsPaid {
   final SalesInvoiceRepo repo;
 
-  MarkSalesInvoiceAsPaid(this.repo, {required });
+  MarkSalesInvoiceAsPaid(this.repo, {required});
 
   Future<Either<Failure, Unit>> call({
     required String invoiceName,
     required String customerName,
+    required String customer,
     required double amount,
     required String referenceNo,
     required String referenceDate,
@@ -38,6 +39,7 @@ class MarkSalesInvoiceAsPaid {
     return repo.markAsPaid(
       invoiceName: invoiceName,
       customerName: customerName,
+      customer: customer,
       amount: amount,
       referenceNo: referenceNo,
       referenceDate: referenceDate,

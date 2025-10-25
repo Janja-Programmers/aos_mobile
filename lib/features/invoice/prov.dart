@@ -68,6 +68,7 @@ class SalesInvoiceProvider with ChangeNotifier {
   Future<Either<Failure, Unit>> markInvoiceAsPaid({
     required String invoiceName,
     required String customerName,
+    required String customer,
     required double amount,
     required String referenceNo,
     required String referenceDate,
@@ -80,6 +81,7 @@ class SalesInvoiceProvider with ChangeNotifier {
     final result = await markPaid(
       invoiceName: invoiceName,
       customerName: customerName,
+      customer: customer,
       amount: amount,
       referenceNo: referenceNo,
       referenceDate: referenceDate,

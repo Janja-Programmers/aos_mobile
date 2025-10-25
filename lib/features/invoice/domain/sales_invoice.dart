@@ -1,6 +1,7 @@
 class SalesInvoice {
   final String id;
   final String customerName;
+  final String customer;
   final String status;
   final DateTime postingDate;
   final DateTime? dueDate;
@@ -14,6 +15,7 @@ class SalesInvoice {
   SalesInvoice({
     required this.id,
     required this.customerName,
+    required this.customer,
     required this.status,
     required this.postingDate,
     this.dueDate,

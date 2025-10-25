@@ -115,7 +115,7 @@ class SalesOrderInfoCard extends StatelessWidget {
                 const SizedBox(height: 6),
 
                 Text(
-                  DateFormat('yyyy-MM-dd').format(order.deliveryDate),
+                  'Date: ${DateFormat('yyyy-MM-dd').format(order.deliveryDate)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,

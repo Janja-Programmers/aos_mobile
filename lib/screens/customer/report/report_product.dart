@@ -75,10 +75,11 @@ class _ReportProductDialogState extends State<ReportProductDialog> {
     } on DioException catch (e, s) {
       appLogger.e("Report product API failed", error: e, stackTrace: s);
       if (mounted) {
+        context.pop(true);
         topSnackBar(
           context,
-          "Failed to report. Please try again later.",
-          type: TopSnackType.error,
+          "You have already reported this product.",
+          type: TopSnackType.info,
         );
       }
     } catch (e, s) {

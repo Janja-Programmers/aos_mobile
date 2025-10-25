@@ -27,6 +27,7 @@ class SalesInvoiceRepoImpl implements SalesInvoiceRepo {
   Future<Either<Failure, Unit>> markAsPaid({
     required String invoiceName,
     required String customerName,
+    required String customer,
     required double amount,
     required String referenceNo,
     required String referenceDate,
@@ -34,6 +35,7 @@ class SalesInvoiceRepoImpl implements SalesInvoiceRepo {
     return remote.markAsPaid(
       invoiceName: invoiceName,
       customerName: customerName,
+      customer: customer,
       amount: amount,
       referenceNo: referenceNo,
       referenceDate: referenceDate,

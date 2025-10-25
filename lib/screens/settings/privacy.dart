@@ -39,7 +39,9 @@ For Legal Reasons: If required by law, regulation, or legal process.
 No other third-party SDKs collect personal data beyond what is required to run our app.
 
 4. Data Deletion & Retention
-You can request deletion of your account and associated personal data at any time: Delete Your Account. Upon deletion, your data will be removed from active systems. Some data (such as logs or records needed for security or legal compliance) may be retained for up to 12 months.
+You can request the deletion of your account and associated personal data at any time. To learn more about how this process works, visit Delete Your Account.
+
+Once your account is deleted, your data will be removed from active systems. However, certain information (such as logs or records required for security or legal compliance) may be retained for up to 12 months.
 
 5. User-Generated Content
 Vendors are responsible for content they upload (product images, videos, descriptions). We may review and remove content violating our Terms & Conditions or applicable laws.
@@ -64,13 +66,7 @@ Our services are intended for users aged 18 and above. We do not knowingly allow
 We may update this Privacy Policy from time to time. Changes will be posted in the app and reflect a new "Effective Date."
 
 10. Contact Us
-If you have questions about this Privacy Policy or how we handle your data, please contact us at:
-
-Kalutu Daniel
-Changamwe
-Mombasa - 80100
-Kenya
-Email: kalutudaniel@gmail.com
+If you have questions about this Privacy Policy or how we handle your data, please contact us at: kalutudaniel@gmail.com
 
 This policy applies to the Africa Online Stores application and related services.
 

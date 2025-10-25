@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/screens/auth/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -79,7 +80,9 @@ class _DeliveryNoteDetailScreenState extends State<DeliveryNoteDetailScreen> {
                 child: const Icon(Icons.print),
                 onPressed: () async {
                   topSnackBar(context, '🖨️ Printing...');
-                  await printDeliveryNote(note);
+                  final username =
+                      context.read<AuthProvider>().user?.username ?? 'Guest';
+                  await printDeliveryNote(username: username, note: note);
                 },
               )
               : null,

@@ -125,6 +125,9 @@ class _WishlistScreenState extends State<WishlistScreen> {
                                   return WishlistItemCard(
                                     item: item,
                                     onRemove: () => provider.remove(item.id),
+                                    onTap:
+                                        () =>
+                                            context.push('/product/${item.id}'),
                                   );
                                 },
                               ),

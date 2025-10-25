@@ -147,11 +147,29 @@ class _OrderScreenState extends State<OrderScreen> {
 
                                 case 'to deliver':
                                 case 'to bill':
+                                  statusColor = const Color.fromARGB(
+                                    255,
+                                    154,
+                                    153,
+                                    147,
+                                  ).withOpacity(0.2);
+                                  statusTextColor = const Color.fromARGB(
+                                    255,
+                                    33,
+                                    33,
+                                    32,
+                                  );
+                                  break;
                                 case 'to deliver and bill':
                                   statusColor = AppColors.warning.withOpacity(
                                     0.2,
                                   );
-                                  statusTextColor = AppColors.warning;
+                                  statusTextColor = const Color.fromARGB(
+                                    255,
+                                    255,
+                                    119,
+                                    7,
+                                  );
                                   break;
 
                                 case 'cancelled':

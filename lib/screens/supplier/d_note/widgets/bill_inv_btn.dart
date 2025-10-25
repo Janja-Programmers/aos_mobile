@@ -76,7 +76,7 @@ class BillInvoiceButton extends StatelessWidget {
         type: TopSnackType.error,
       ),
       (_) {
-        topSnackBar(context, 'Order billed successfully');
+        topSnackBar(context, 'Sales Invoice created successfully');
         context.push('/delivery-notes');
         context.read<DeliveryNoteProvider>().fetchAll();
       },

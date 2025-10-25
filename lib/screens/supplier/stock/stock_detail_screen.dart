@@ -143,7 +143,7 @@ class _StockEntryDetailScreenState extends State<StockEntryDetailScreen> {
             onPressed: () async {
               // ✅ safely read AuthProvider here (within the correct BuildContext)
               final username =
-                  context.read<AuthProvider>().user?.username ?? 'Unknown User';
+                  context.read<AuthProvider>().user?.username ?? 'Guest';
               topSnackBar(context, '🖨️ Printing...');
 
               // ✅ no Provider dependency inside the print function

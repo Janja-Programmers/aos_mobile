@@ -94,6 +94,15 @@ class SalesInvoiceInfoCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
 
+                Text(
+                  'Date: ${invoice.postingDate}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 6),
+
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,

@@ -81,6 +81,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                         'Instructions sent',
                                     type: TopSnackType.success,
                                   );
+                                  context.go('/login');
                                 } else {
                                   topSnackBar(
                                     context,

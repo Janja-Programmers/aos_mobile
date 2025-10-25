@@ -19,8 +19,8 @@ void handleToggleWishlist(
   } else {
     topSnackBar(
       context,
-      '${item.title} removed to wishlist',
-      type: TopSnackType.error,
+      '${item.title} removed from wishlist',
+      type: TopSnackType.success,
     );
   }
 }

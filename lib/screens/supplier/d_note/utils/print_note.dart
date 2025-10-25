@@ -6,7 +6,10 @@ import 'package:intl/intl.dart';
 import '/core/utils/formatters.dart';
 import '/features/d_note/domain/entity/delivery_note.dart';
 
-Future<void> printDeliveryNote(DeliveryNote note) async {
+Future<void> printDeliveryNote({
+  required String username,
+  required DeliveryNote note,
+}) async {
   final pdf = pw.Document();
 
   final now = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -15,13 +18,13 @@ Future<void> printDeliveryNote(DeliveryNote note) async {
   pdf.addPage(
     pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.all(24),
+      margin: const pw.EdgeInsets.symmetric(horizontal: 32, vertical: 28),
       build:
           (context) => [
             pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                /// Company header
+                // Header: title + logo
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: pw.CrossAxisAlignment.center,
@@ -30,15 +33,27 @@ Future<void> printDeliveryNote(DeliveryNote note) async {
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
                         pw.Text(
-                          'Africa Online Stores',
+                          'Delivery note',
                           style: pw.TextStyle(
-                            fontSize: 20,
+                            fontSize: 22,
                             fontWeight: pw.FontWeight.bold,
                           ),
                         ),
+                        pw.SizedBox(height: 6),
                         pw.Text(
-                          'Official Delivery Note',
-                          style: const pw.TextStyle(fontSize: 12),
+                          note.id,
+                          style: pw.TextStyle(
+                            fontSize: 14,
+                            color: PdfColors.grey700,
+                          ),
+                        ),
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          'Date: $now}',
+                          style: pw.TextStyle(
+                            fontSize: 11,
+                            color: PdfColors.grey600,
+                          ),
                         ),
                       ],
                     ),
@@ -50,257 +65,81 @@ Future<void> printDeliveryNote(DeliveryNote note) async {
                   ],
                 ),
 
-                pw.SizedBox(height: 16),
+                pw.SizedBox(height: 20),
 
-                /// Delivery Note title & ID
-                pw.Text(
-                  'Delivery Note',
-                  style: pw.TextStyle(
-                    fontSize: 18,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
-                ),
-                pw.SizedBox(height: 4),
-                pw.Text(
-                  'Note ID: ${note.id}',
-                  style: pw.TextStyle(
-                    fontSize: 14,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
-                ),
-
-                pw.SizedBox(height: 16),
-
-                /// Delivery Date & Print Date
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Delivery date from the note (assumes a DateTime field `deliveryDate`)
-                    pw.Text('Delivery Date: $now'),
-                    // Print date (today)
-                    pw.Text('Print Date: $now'),
-                  ],
-                ),
-
-                pw.SizedBox(height: 12),
-
-                /// Customer details block
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text(
-                      'Customer: ${note.customerName}',
-                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                // Table Section
+                pw.TableHelper.fromTextArray(
+                  border: const pw.TableBorder(
+                    horizontalInside: pw.BorderSide(
+                      width: 0.3,
+                      color: PdfColors.grey400,
                     ),
-                    pw.Text('Status: ${note.status}'),
-                  ],
-                ),
-
-                pw.SizedBox(height: 24),
-
-                /// Items table
-                pw.Table(
-                  border: pw.TableBorder.all(
-                    width: 0.5,
-                    color: PdfColors.grey600,
+                    verticalInside: pw.BorderSide(
+                      width: 0.3,
+                      color: PdfColors.grey400,
+                    ),
+                    top: pw.BorderSide(width: 0.5, color: PdfColors.grey500),
+                    bottom: pw.BorderSide(width: 0.5, color: PdfColors.grey500),
                   ),
-                  columnWidths: {
-                    0: const pw.FixedColumnWidth(20),
-                    1: const pw.FlexColumnWidth(3),
-                    2: const pw.FixedColumnWidth(40),
-                    3: const pw.FixedColumnWidth(50),
-                    4: const pw.FixedColumnWidth(60),
+                  headerDecoration: const pw.BoxDecoration(
+                    color: PdfColors.grey300,
+                  ),
+                  headerHeight: 25,
+                  cellHeight: 22,
+                  cellAlignments: {
+                    0: pw.Alignment.centerRight,
+                    1: pw.Alignment.centerLeft,
+                    2: pw.Alignment.centerRight,
+                    3: pw.Alignment.centerRight,
+                    4: pw.Alignment.centerRight,
                   },
-                  children: [
-                    // Header row
-                    pw.TableRow(
-                      decoration: const pw.BoxDecoration(
-                        color: PdfColors.grey300,
-                      ),
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(
-                            '#',
-                            style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(
-                            'Item Code',
-                            style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(
-                            'Qty',
-                            style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(
-                            'Rate',
-                            style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(4),
-                          child: pw.Text(
-                            'Amount',
-                            style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // Data rows
-                    ...note.items.asMap().entries.map((entry) {
-                      final i = entry.key;
-                      final item = entry.value;
-                      return pw.TableRow(
-                        decoration:
-                            i % 2 == 0
-                                ? const pw.BoxDecoration(
-                                  color: PdfColors.grey100,
-                                )
-                                : null,
-                        children: [
-                          pw.Padding(
-                            padding: const pw.EdgeInsets.all(4),
-                            child: pw.Text(
-                              '${i + 1}',
-                              style: const pw.TextStyle(fontSize: 10),
-                            ),
-                          ),
-                          pw.Padding(
-                            padding: const pw.EdgeInsets.all(4),
-                            child: pw.Text(
-                              item.itemCode,
-                              style: const pw.TextStyle(fontSize: 10),
-                            ),
-                          ),
-                          pw.Padding(
-                            padding: const pw.EdgeInsets.all(4),
-                            child: pw.Text(
-                              '${item.qty}',
-                              textAlign: pw.TextAlign.right,
-                              style: const pw.TextStyle(fontSize: 10),
-                            ),
-                          ),
-                          pw.Padding(
-                            padding: const pw.EdgeInsets.all(4),
-                            child: pw.Text(
-                              formatCurrency(item.rate),
-                              textAlign: pw.TextAlign.right,
-                              style: const pw.TextStyle(fontSize: 10),
-                            ),
-                          ),
-                          pw.Padding(
-                            padding: const pw.EdgeInsets.all(4),
-                            child: pw.Text(
-                              formatCurrency(item.amount),
-                              textAlign: pw.TextAlign.right,
-                              style: const pw.TextStyle(fontSize: 10),
-                            ),
-                          ),
-                        ],
-                      );
-                    }),
-                  ],
+                  headerStyle: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                  cellStyle: const pw.TextStyle(fontSize: 10),
+                  headers: ['#', 'Item', 'Qty', 'Rate', 'Amount'],
+                  data: List.generate(note.items.length, (i) {
+                    final item = note.items[i];
+                    return [
+                      '${i + 1}',
+                      item.itemName,
+                      humanizeNumber(item.qty),
+                      formatCurrency(item.rate),
+                      formatCurrency(item.amount),
+                    ];
+                  }),
                 ),
 
                 pw.SizedBox(height: 24),
-
-                /// Divider before totals
                 pw.Divider(),
 
-                /// Totals
+                // Footer info
+                pw.SizedBox(height: 8),
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'Total Qty:',
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                    pw.Text(
-                      '${note.items.fold<double>(0, (sum, item) => sum + item.qty)}',
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-                pw.SizedBox(height: 4),
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text(
-                      'Grand Total:',
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                    pw.Text(
-                      formatCurrency(note.grandTotal),
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-
-                /// Footer note
-                pw.Padding(
-                  padding: const pw.EdgeInsets.only(top: 32),
-                  child: pw.Center(
-                    child: pw.Text(
-                      'This is an official delivery note from Africa Online Stores.',
+                      'Printed on: $now',
                       style: pw.TextStyle(
                         fontSize: 10,
-                        fontStyle: pw.FontStyle.italic,
+                        color: PdfColors.grey600,
                       ),
                     ),
-                  ),
+                    pw.Text(
+                      'Generated by: $username',
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        color: PdfColors.grey600,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ],
-      footer:
-          (context) => pw.Align(
-            alignment: pw.Alignment.centerRight,
-            child: pw.Text(
-              'Page ${context.pageNumber} of ${context.pagesCount}',
-              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
-            ),
-          ),
     ),
   );
 
-  await Printing.layoutPdf(
-    onLayout: (PdfPageFormat format) async => pdf.save(),
-  );
+  await Printing.layoutPdf(onLayout: (format) async => pdf.save());
 }

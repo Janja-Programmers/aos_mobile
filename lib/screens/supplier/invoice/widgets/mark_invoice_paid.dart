@@ -74,10 +74,7 @@ class PayInvoiceButton extends StatelessWidget {
         type: TopSnackType.error,
       ),
       (_) {
-        topSnackBar(
-          context,
-          'Invoice ${invoice.id} marked as paid (${invoice.grandTotal.toStringAsFixed(2)})',
-        );
+        topSnackBar(context, 'Invoice marked as paid');
         context.push('/invoices');
         prov.fetchAll();
       },

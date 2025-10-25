@@ -9,6 +9,10 @@ class DeliveryNote extends Equatable {
   final double grandTotal;
   final double percentInstalled;
   final List<DeliveryNoteItem> items;
+  final DateTime postingDate;
+  final String? contactEmail;
+  final String? contactPhone;
+  final String shippingAddress;
 
   const DeliveryNote({
     required this.id,
@@ -17,6 +21,10 @@ class DeliveryNote extends Equatable {
     required this.grandTotal,
     required this.percentInstalled,
     required this.items,
+    required this.postingDate,
+    this.contactEmail,
+    this.contactPhone,
+    this.shippingAddress = '',
   });
 
   @override
@@ -27,5 +35,9 @@ class DeliveryNote extends Equatable {
     grandTotal,
     percentInstalled,
     items,
+    postingDate,
+    contactEmail,
+    contactPhone,
+    shippingAddress,
   ];
 }

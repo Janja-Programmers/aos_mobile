@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
+import '/features/d_note/domain/entity/delivery_note.dart';
 
 import '/features/address/domain/address.dart';
 import '/features/address/provider.dart';
-import '/features/d_note/domain/entity/delivery_note.dart';
 
 class DetailCard extends StatelessWidget {
   final DeliveryNote note;
@@ -40,6 +42,7 @@ class DetailCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final addressProv = context.watch<AddressProvider>();
 
+    // Try to find a matching address from the provider
     Address? shippingAddress = addressProv.addresses.firstWhere(
       (a) => a.type.toLowerCase() == 'shipping',
       orElse:
@@ -76,25 +79,30 @@ class DetailCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Text(note.contactEmail ?? '-'),
-                  // const SizedBox(height: 4),
+                  Text(note.contactEmail ?? '-'),
+                  const SizedBox(height: 4),
 
-                  // Text(
-                  //   shippingAddress.phone.isNotEmpty
-                  //       ? shippingAddress.phone
-                  //       : (note.contactPhone ?? '-'),
-                  //   style: const TextStyle(color: Colors.black87),
-                  // ),
+                  Text(
+                    shippingAddress.phone.isNotEmpty
+                        ? shippingAddress.phone
+                        : (note.contactPhone ?? '-'),
+                    style: const TextStyle(color: Colors.black87),
+                  ),
+
                   const SizedBox(height: 6),
                   Text(
-                    '${shippingAddress.line1}, ${shippingAddress.city}, ${shippingAddress.country}',
-                    style: TextStyle(color: Colors.black87),
+                    shippingAddress.line1.isNotEmpty
+                        ? '${shippingAddress.line1}, ${shippingAddress.city}, ${shippingAddress.country}'
+                        : ((note.shippingAddress ?? '').isNotEmpty
+                            ? note.shippingAddress!
+                            : 'No address found'),
+                    style: const TextStyle(color: Colors.black87),
                   ),
                 ],
               ),
             ),
 
-            // Right: Order ID + Status
+            // RIGHT SIDE → Order Info
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -108,7 +116,7 @@ class DetailCard extends StatelessWidget {
                 const SizedBox(height: 6),
 
                 Text(
-                  'Date: ${DateTime.now()}',
+                  'Date: ${DateFormat('yyyy-MM-dd').format(note.postingDate)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,

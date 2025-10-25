@@ -19,7 +19,7 @@ class PrintSalesInvoice extends StatelessWidget {
       onPressed: () async {
         final username = context.read<AuthProvider>().user?.username ?? 'Guest';
         topSnackBar(context, '🖨️ Printing...');
-        await printSalesInvoice(username: username, invoice: invoice);
+        await printSalesInvoice(username: username, order: invoice);
       },
     );
   }

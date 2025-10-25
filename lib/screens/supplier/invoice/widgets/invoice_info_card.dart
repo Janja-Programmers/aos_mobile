@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/formatters.dart';
 import 'package:flutter/material.dart';
 
 import '/features/invoice/domain/sales_invoice.dart';
@@ -95,7 +96,7 @@ class SalesInvoiceInfoCard extends StatelessWidget {
                 const SizedBox(height: 6),
 
                 Text(
-                  'Date: ${invoice.postingDate}',
+                  'Date: ${formatCompactDateTime(invoice.postingDate)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,

@@ -8,7 +8,7 @@ import '/features/invoice/domain/sales_invoice.dart';
 
 Future<void> printSalesInvoice({
   required String username,
-  required SalesInvoice invoice,
+  required SalesInvoice order,
 }) async {
   final pdf = pw.Document();
 
@@ -33,7 +33,7 @@ Future<void> printSalesInvoice({
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
                         pw.Text(
-                          'Stock Intake',
+                          'Sales Invoice',
                           style: pw.TextStyle(
                             fontSize: 22,
                             fontWeight: pw.FontWeight.bold,
@@ -41,7 +41,7 @@ Future<void> printSalesInvoice({
                         ),
                         pw.SizedBox(height: 6),
                         pw.Text(
-                          invoice.id,
+                          order.id,
                           style: pw.TextStyle(
                             fontSize: 14,
                             color: PdfColors.grey700,
@@ -49,7 +49,7 @@ Future<void> printSalesInvoice({
                         ),
                         pw.SizedBox(height: 4),
                         pw.Text(
-                          'Date: ${formatCompactDateTime(invoice.postingDate)}',
+                          'Date: ${DateFormat('yyyy-MM-dd').format(order.postingDate)}',
                           style: pw.TextStyle(
                             fontSize: 11,
                             color: PdfColors.grey600,
@@ -67,7 +67,39 @@ Future<void> printSalesInvoice({
 
                 pw.SizedBox(height: 20),
 
-                // Table Section
+                // Customer Details
+                pw.Container(
+                  padding: const pw.EdgeInsets.all(8),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        'Customer: ${order.customerName}',
+                        style: pw.TextStyle(fontSize: 11),
+                      ),
+                      if (order.contactEmail != null)
+                        pw.Text(
+                          'Email: ${order.contactEmail}',
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            color: PdfColors.grey700,
+                          ),
+                        ),
+                      if (order.contactPhone != null)
+                        pw.Text(
+                          'Phone: ${order.contactPhone}',
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            color: PdfColors.grey700,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                pw.SizedBox(height: 20),
+
+                // Items Table
                 pw.TableHelper.fromTextArray(
                   border: const pw.TableBorder(
                     horizontalInside: pw.BorderSide(
@@ -99,8 +131,8 @@ Future<void> printSalesInvoice({
                   ),
                   cellStyle: const pw.TextStyle(fontSize: 10),
                   headers: ['#', 'Item', 'Qty', 'Rate', 'Amount'],
-                  data: List.generate(invoice.items.length, (i) {
-                    final item = invoice.items[i];
+                  data: List.generate(order.items.length, (i) {
+                    final item = order.items[i];
                     return [
                       '${i + 1}',
                       item.itemName,
@@ -114,7 +146,39 @@ Future<void> printSalesInvoice({
                 pw.SizedBox(height: 24),
                 pw.Divider(),
 
-                // Footer info
+                // Totals Section
+                pw.Align(
+                  alignment: pw.Alignment.centerRight,
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Row(
+                        mainAxisSize: pw.MainAxisSize.min,
+                        children: [
+                          pw.Text(
+                            'Grand Total: ',
+                            style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          pw.Text(
+                            formatCurrency(order.grandTotal),
+                            style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                pw.SizedBox(height: 24),
+                pw.Divider(),
+
+                // Footer Info
                 pw.SizedBox(height: 8),
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,

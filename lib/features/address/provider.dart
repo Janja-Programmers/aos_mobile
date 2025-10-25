@@ -2,6 +2,10 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 
 import '/core/utils/logger.dart';
+import '/core/di/service_locator.dart';
+
+import '/screens/auth/auth_provider.dart';
+
 import 'domain/address.dart';
 import 'domain/repo.dart';
 
@@ -86,13 +90,20 @@ class AddressProvider with ChangeNotifier {
     _setLoading();
 
     final previousSelection = _selectedAddress;
+    final userEmail = _getCurrentUserEmail();
 
     final result = await repository.fetchShippingAddresses();
 
     result.fold((failure) => _setError(failure.message), (data) {
-      _addresses = data;
+      // ✅ Filter addresses belonging only to the logged-in user
+      _addresses =
+          data.where((a) {
+            final owner = a.owner?.toLowerCase();
+            final user = userEmail?.toLowerCase();
+            return owner == user;
+          }).toList();
 
-      // ✅ Preserve previously selected address if still valid
+      // ✅ Preserve selection logic
       if (previousSelection != null && _addresses.isNotEmpty) {
         final found = _addresses.where((a) => a.name == previousSelection.name);
         if (found.isNotEmpty) {
@@ -101,12 +112,20 @@ class AddressProvider with ChangeNotifier {
           _selectedAddress = _addresses.first;
         }
       } else if (_selectedAddress == null && _addresses.isNotEmpty) {
-        // ✅ Default to first address on first fetch
         _selectedAddress = _addresses.first;
       }
 
       _setSuccess(null);
     });
+  }
+
+  String? _getCurrentUserEmail() {
+    try {
+      final auth = sl<AuthProvider>();
+      return auth.user?.email;
+    } catch (e) {
+      return null;
+    }
   }
 
   Address? getByCustomerName(String name) {

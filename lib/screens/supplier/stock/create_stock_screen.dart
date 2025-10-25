@@ -114,7 +114,7 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
         _savedEntry = savedEntry;
       });
     } else {
-      _savedEntry = savedEntry; // update savedEntry after edits
+      _savedEntry = savedEntry;
     }
 
     // 6️⃣ Show feedback
@@ -129,7 +129,7 @@ class _CreateStockEntryScreenState extends State<CreateStockEntryScreen> {
     // 7️⃣ Refresh list only if submitting or editing
     if (_isEditing || submit) {
       await context.read<StockEntryProvider>().fetchAll();
-      if (submit) context.pop(); // Only pop after real submission
+      if (submit) context.pop();
     }
   }
 

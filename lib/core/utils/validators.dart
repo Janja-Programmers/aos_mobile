@@ -55,13 +55,13 @@ class AppValidator {
 
   static String? isPassword(String? val) {
     if (val == null || val.isEmpty) return 'Password is required';
-    if (val.length < 8) return 'Must be at least 6 characters';
+    if (val.length < 8) return 'Must be at least 8 characters';
     return null;
   }
 
   static String? isConfirmPassword(String? val) {
     if (val == null || val.isEmpty) return 'Confirm password required';
-    if (val.length < 8) return 'Must be at least 6 characters';
+    if (val.length < 8) return 'Must be at least 8 characters';
     return null;
   }
 }

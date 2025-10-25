@@ -1,6 +1,9 @@
+
 import '/core/constants/const.dart';
+import '/core/di/service_locator.dart';
 import '/core/utils/api_client.dart';
 
+import '/screens/auth/auth_provider.dart';
 import '../domain/address.dart';
 import 'model.dart';
 
@@ -51,20 +54,32 @@ class AddressRemoteDatasourceImpl implements AddressRemoteDatasource {
 
   @override
   Future<List<Address>> getAllShippingAddresses() async {
+    final auth = sl<AuthProvider>(); // ✅ Moved inside the method
+    final ownerEmail = auth.user?.email;
+
+    if (ownerEmail == null) {
+      throw Exception('User not authenticated');
+    }
+
     final res = await apiClient.client.get(
       ApiRoutes.address,
       queryParameters: {
         'filters': '[["address_type","=","Shipping"]]',
         'fields':
-            '["name","address_title","address_line1","city","country","phone","address_type"]',
+            '["name","address_title","address_line1","city","country","phone","address_type","owner"]',
         'limit_page_length': 50,
       },
     );
 
     final data = res.data['data'] ?? [];
-    return List<Map<String, dynamic>>.from(
-      data,
-    ).map((json) => AddressModel.fromMap(json).toEntity()).toList();
+
+    final addresses =
+        List<Map<String, dynamic>>.from(data)
+            .where((json) => json['owner'] == ownerEmail)
+            .map((json) => AddressModel.fromMap(json).toEntity())
+            .toList();
+
+    return addresses;
   }
 
   @override

@@ -43,23 +43,19 @@ class DeliveryNoteItemsTable extends StatelessWidget {
               Padding(padding: const EdgeInsets.all(6), child: Text('$i')),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(
-                  item.itemName,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
+                child: Text(item.itemName),
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(item.qty.toStringAsFixed(0)),
+                child: Text(humanizeNumber(item.qty)),
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(formatCurrency(item.rate)),
+                child: Text(humanizeNumber(item.rate)),
               ),
               Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(formatCurrency(item.amount)),
+                child: Text(humanizeNumber(item.amount)),
               ),
             ],
           );

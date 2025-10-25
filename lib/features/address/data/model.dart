@@ -8,6 +8,7 @@ class AddressModel {
   final String country;
   final String phone;
   final String type;
+  final String? owner;
 
   AddressModel({
     required this.name,
@@ -17,6 +18,7 @@ class AddressModel {
     required this.country,
     required this.phone,
     required this.type,
+    this.owner,
   });
 
   /// Converts to JSON for remote API (for POST only — no 'name')
@@ -27,6 +29,7 @@ class AddressModel {
     "country": country,
     "phone": phone,
     "address_type": type,
+    if (owner != null) "owner": owner,
   };
 
   /// Converts to a map for local SQLite (full object, including name)
@@ -38,18 +41,20 @@ class AddressModel {
     'country': country,
     'phone': phone,
     'address_type': type,
+    'owner': owner,
   };
 
   /// Create from local SQLite map or remote response
   factory AddressModel.fromMap(Map<String, dynamic> map) {
     return AddressModel(
       name: map['name'] ?? '',
-      title: map['address_title'],
-      line1: map['address_line1'],
-      city: map['city'],
-      country: map['country'],
-      phone: map['phone'],
-      type: map['address_type'],
+      title: map['address_title'] ?? '',
+      line1: map['address_line1'] ?? '',
+      city: map['city'] ?? '',
+      country: map['country'] ?? '',
+      phone: map['phone'] ?? '',
+      type: map['address_type'] ?? '',
+      owner: map['owner'],
     );
   }
 
@@ -63,6 +68,7 @@ class AddressModel {
       country: country,
       phone: phone,
       type: type,
+      owner: owner,
     );
   }
 
@@ -73,14 +79,15 @@ class AddressModel {
       title: address.title,
       line1: address.line1,
       city: address.city,
-      country: "Kenya",
+      country: address.country.isNotEmpty ? address.country : "Kenya",
       phone: address.phone,
-      type: "Shipping",
+      type: address.type.isNotEmpty ? address.type : "Shipping",
+      owner: address.owner, // 👈 keep owner when posting back
     );
   }
 
   @override
   String toString() {
-    return 'AddressModel(line1: $line1, city: $city, country: $country, phone: $phone)';
+    return 'AddressModel(line1: $line1, city: $city, country: $country, phone: $phone, owner: $owner)';
   }
 }

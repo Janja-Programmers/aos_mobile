@@ -93,8 +93,8 @@ class DetailCard extends StatelessWidget {
                   Text(
                     shippingAddress.line1.isNotEmpty
                         ? '${shippingAddress.line1}, ${shippingAddress.city}, ${shippingAddress.country}'
-                        : ((note.shippingAddress ?? '').isNotEmpty
-                            ? note.shippingAddress!
+                        : ((note.shippingAddress).isNotEmpty
+                            ? note.shippingAddress
                             : 'No address found'),
                     style: const TextStyle(color: Colors.black87),
                   ),

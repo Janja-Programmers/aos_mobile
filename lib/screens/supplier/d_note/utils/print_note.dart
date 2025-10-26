@@ -1,7 +1,7 @@
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:intl/intl.dart';
 
 import '/core/utils/formatters.dart';
 import '/features/d_note/domain/entity/delivery_note.dart';
@@ -33,7 +33,7 @@ Future<void> printDeliveryNote({
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
                         pw.Text(
-                          'Delivery note',
+                          'Sales Order',
                           style: pw.TextStyle(
                             fontSize: 22,
                             fontWeight: pw.FontWeight.bold,
@@ -49,7 +49,7 @@ Future<void> printDeliveryNote({
                         ),
                         pw.SizedBox(height: 4),
                         pw.Text(
-                          'Date: $now}',
+                          'Date: ${DateFormat('yyyy-MM-dd').format(note.postingDate)}',
                           style: pw.TextStyle(
                             fontSize: 11,
                             color: PdfColors.grey600,
@@ -67,7 +67,39 @@ Future<void> printDeliveryNote({
 
                 pw.SizedBox(height: 20),
 
-                // Table Section
+                // Customer Details
+                pw.Container(
+                  padding: const pw.EdgeInsets.all(8),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        'Customer: ${note.customerName}',
+                        style: pw.TextStyle(fontSize: 11),
+                      ),
+                      if (note.contactEmail != null)
+                        pw.Text(
+                          'Email: ${note.contactEmail}',
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            color: PdfColors.grey700,
+                          ),
+                        ),
+                      if (note.contactPhone != null)
+                        pw.Text(
+                          'Phone: ${note.contactPhone}',
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            color: PdfColors.grey700,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                pw.SizedBox(height: 20),
+
+                // Items Table
                 pw.TableHelper.fromTextArray(
                   border: const pw.TableBorder(
                     horizontalInside: pw.BorderSide(
@@ -114,7 +146,39 @@ Future<void> printDeliveryNote({
                 pw.SizedBox(height: 24),
                 pw.Divider(),
 
-                // Footer info
+                // Totals Section
+                pw.Align(
+                  alignment: pw.Alignment.centerRight,
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Row(
+                        mainAxisSize: pw.MainAxisSize.min,
+                        children: [
+                          pw.Text(
+                            'Grand Total: ',
+                            style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          pw.Text(
+                            formatCurrency(note.grandTotal),
+                            style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                pw.SizedBox(height: 24),
+                pw.Divider(),
+
+                // Footer Info
                 pw.SizedBox(height: 8),
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,

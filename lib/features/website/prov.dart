@@ -73,10 +73,11 @@ class WebsiteItemProv with ChangeNotifier {
           _error = failure.message;
         },
         (fetchedItems) {
-          if (page == 1) {
-            _items.clear();
-          }
-          _items.addAll(fetchedItems);
+          // 🔥 Overwrite the list instead of appending
+          _items
+            ..clear()
+            ..addAll(fetchedItems);
+
           _currentPage = page;
           _hasMore = fetchedItems.length == _itemsPerPage;
           _error = null;

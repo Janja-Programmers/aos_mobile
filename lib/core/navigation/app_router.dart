@@ -45,34 +45,45 @@ class AppRouter {
 
   late final GoRouter router = GoRouter(
     refreshListenable: auth,
-    initialLocation: '/login',
+    initialLocation: '/',
+
     redirect: (context, state) {
       final loggedIn = auth.isLoggedIn;
+      final loc = state.matchedLocation;
 
-      // Identify public auth-related routes
-      final isAuthRoute = [
-        '/login',
-        '/register',
-        '/forgot-password',
-      ].contains(state.matchedLocation);
+      // ---------- PUBLIC ROUTES ----------
+      final publicRoutes = {
+        '/', // Home / product list
+        '/terms',
+        '/privacy',
+      };
 
-      // Not logged in → trying to visit a protected route
-      if (!loggedIn && !isAuthRoute) {
-        // Remember where they wanted to go
-        auth.setReturnTo(state.matchedLocation);
+      // Dynamic public routes
+      final isPublic =
+          publicRoutes.contains(loc) || loc.startsWith('/product/');
+
+      // ---------- AUTH ROUTES ----------
+      final authRoutes = {'/login', '/register', '/forgot-password'};
+      final isAuthRoute = authRoutes.contains(loc);
+
+      // ---------- REDIRECT RULES ----------
+
+      // 1) Not logged in & trying to access protected route → Go login
+      if (!loggedIn && !isPublic && !isAuthRoute) {
+        auth.setReturnTo(loc);
         return '/login';
       }
 
-      // Logged in → trying to go to login/register/forgot-password
+      // 2) Logged in & trying to access login/register → Send home
       if (loggedIn && isAuthRoute) {
-        return auth.defaultHome; // e.g., '/home'
+        return auth.defaultHome;
       }
 
-      // No redirect needed
       return null;
     },
 
     routes: [
+      // ========== AUTH ==========
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(
@@ -80,105 +91,34 @@ class AppRouter {
         builder: (_, _) => const ForgotPasswordScreen(),
       ),
 
-      // 🔒 Add protected routes here
-      GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
+      // ========== PUBLIC ==========
+      GoRoute(path: '/', builder: (_, _) => const ProductListScreen()),
 
       GoRoute(
-        path: '/wishlist',
-        builder: (context, state) => const WishlistScreen(),
-      ),
-
-      // SELLER ROUTES
-      // Dashboard
-      GoRoute(
-        path: '/dashboard',
-        builder: (context, state) => const SellerDashboard(),
-      ),
-
-      // PRODUCTS ROUTES
-      // CREATE ROUTE
-      GoRoute(
-        path: '/add-item',
-        builder: (context, state) => const AddItemScreen(),
-      ),
-
-      // READ ROUTE
-      GoRoute(path: '/items', builder: (context, state) => ItemScreen()),
-
-      // UPDATE ROUTE
-      GoRoute(
-        path: '/edit-item/:name',
-        builder: (context, state) {
-          final product = state.extra as Product;
-          return AddItemScreen(product: product);
-        },
-      ),
-
-      // SALES ORDER ROUTES
-      GoRoute(
-        path: '/create-stock-entry',
-        builder: (context, state) => const CreateStockEntryScreen(),
-      ),
-
-      // Sales Order List
-      GoRoute(
-        path: '/sales-orders',
-        builder: (context, state) => const SalesOrderListScreen(),
-      ),
-
-      // Sales Order Detail
-      GoRoute(
-        path: '/sales-order/:id',
-        builder: (context, state) {
-          final orderId = state.pathParameters['id']!;
-          return SalesOrderDetailScreen(orderId: orderId);
-        },
-      ),
-
-      // Delivery Note
-      GoRoute(
-        path: '/delivery-notes',
-        builder: (context, state) => const DeliveryNoteListScreen(),
-      ),
-      GoRoute(
-        path: '/delivery-note/:id',
-        builder: (context, state) {
-          final noteId = state.pathParameters['id']!;
-          return DeliveryNoteDetailScreen(noteId: noteId);
-        },
-      ),
-
-      // STOCK ROUTES
-      GoRoute(
-        path: '/stock-entry',
-        builder: (context, state) => const StockEntryScreen(),
-      ),
-      GoRoute(
-        path: '/stock-entry/:id',
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return StockEntryDetailScreen(stockEntryName: id);
-        },
-      ),
-      GoRoute(
-        path: '/stock/edit',
+        path: '/product/:itemCode',
         builder: (_, state) {
-          final stockEntry = state.extra as StockEntry;
-          return CreateStockEntryScreen(entry: stockEntry);
+          final code = state.pathParameters['itemCode']!;
+          return ProductDetailScreen(itemCode: code);
         },
       ),
 
-      // INVOICE ROUTES
+      GoRoute(path: '/terms', builder: (_, _) => const TermsPage()),
+      GoRoute(path: '/privacy', builder: (_, _) => const PrivacyPage()),
+
+      // ========== PROTECTED ==========
+      GoRoute(path: '/cart', builder: (_, _) => const CartScreen()),
+      GoRoute(path: '/wishlist', builder: (_, _) => const WishlistScreen()),
       GoRoute(
-        path: '/invoices',
-        builder: (context, state) => const SalesInvoiceListScreen(),
+        path: '/shipping-address',
+        builder: (_, _) => const ShippingAddressForm(),
       ),
+      GoRoute(path: '/past-orders', builder: (_, _) => const OrderScreen()),
 
       GoRoute(
-        path: '/invoice/:id',
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return SalesInvoiceDetailScreen(invoiceId: id);
+        path: '/order-detail',
+        builder: (_, state) {
+          final order = state.extra as SalesOrder;
+          return CustomerSalesOrderDetailScreen(order: order);
         },
       ),
 
@@ -219,11 +159,77 @@ class AppRouter {
         builder: (context, state) => const SettingsPage(),
       ),
 
-      GoRoute(path: '/terms', builder: (context, state) => const TermsPage()),
+      // ---------- Seller Routes ----------
+      GoRoute(path: '/dashboard', builder: (_, _) => const SellerDashboard()),
+      GoRoute(path: '/add-item', builder: (_, _) => const AddItemScreen()),
+      GoRoute(path: '/items', builder: (_, _) => ItemScreen()),
 
       GoRoute(
-        path: '/privacy',
-        builder: (context, state) => const PrivacyPage(),
+        path: '/edit-item/:name',
+        builder: (_, state) {
+          final product = state.extra as Product;
+          return AddItemScreen(product: product);
+        },
+      ),
+
+      GoRoute(
+        path: '/create-stock-entry',
+        builder: (_, _) => const CreateStockEntryScreen(),
+      ),
+
+      GoRoute(
+        path: '/sales-orders',
+        builder: (_, _) => const SalesOrderListScreen(),
+      ),
+      GoRoute(
+        path: '/sales-order/:id',
+        builder: (_, state) {
+          final id = state.pathParameters['id']!;
+          return SalesOrderDetailScreen(orderId: id);
+        },
+      ),
+
+      GoRoute(
+        path: '/delivery-notes',
+        builder: (_, _) => const DeliveryNoteListScreen(),
+      ),
+      GoRoute(
+        path: '/delivery-note/:id',
+        builder: (_, state) {
+          final id = state.pathParameters['id']!;
+          return DeliveryNoteDetailScreen(noteId: id);
+        },
+      ),
+
+      GoRoute(
+        path: '/stock-entry',
+        builder: (_, _) => const StockEntryScreen(),
+      ),
+      GoRoute(
+        path: '/stock-entry/:id',
+        builder: (_, state) {
+          final id = state.pathParameters['id']!;
+          return StockEntryDetailScreen(stockEntryName: id);
+        },
+      ),
+      GoRoute(
+        path: '/stock/edit',
+        builder: (_, state) {
+          final stock = state.extra as StockEntry;
+          return CreateStockEntryScreen(entry: stock);
+        },
+      ),
+
+      GoRoute(
+        path: '/invoices',
+        builder: (_, _) => const SalesInvoiceListScreen(),
+      ),
+      GoRoute(
+        path: '/invoice/:id',
+        builder: (_, state) {
+          final id = state.pathParameters['id']!;
+          return SalesInvoiceDetailScreen(invoiceId: id);
+        },
       ),
     ],
   );

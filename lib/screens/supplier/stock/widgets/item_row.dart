@@ -44,6 +44,7 @@ class _ItemRowState extends State<ItemRow> {
         queryParameters: {
           'fields': '["item_code", "item_name"]',
           'limit_page_length': 100,
+          'filters': '[["is_stock_item", "=", 1]]',
         },
       );
 

@@ -20,12 +20,16 @@ class WebsiteRemoteDataSource {
 
   Future<Either<Failure, List<WebsiteItem>>> fetchItems({
     required int start,
+    String? search,
   }) async {
     try {
       final res = await _client.client.get(
         webItemApi,
         queryParameters: {
-          'query_args': jsonEncode({'start': start}),
+          'query_args': jsonEncode({
+            'start': start,
+            if (search != null && search.isNotEmpty) 'search': search,
+          }),
         },
       );
 

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '/core/di/service_locator.dart';
 import '/core/utils/api_client.dart';
+import '/core/utils/require_login.dart';
 import '/features/reviews/remote.dart';
 
 import 'not_reviewed_card.dart';
@@ -41,6 +42,9 @@ class ProductReviewsCard extends StatelessWidget {
           child: PopupMenuButton<String>(
             onSelected: (value) async {
               final controller = context.read<ProductReviewsController>();
+
+              // ----- LOGIN GUARD -----
+              if (!await requireLogin(context)) return;
 
               if (value == "review") {
                 // ✅ Open dialog & receive Review instance

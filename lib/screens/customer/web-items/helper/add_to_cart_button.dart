@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '/core/utils/snackbar.dart';
+import '/core/utils/require_login.dart';
+
 import '/features/cart/domain/cart.dart';
 import '/features/cart/provider.dart';
 
@@ -26,6 +28,10 @@ class _AddToCartButtonState extends State<AddToCartButton> {
           _loading
               ? null
               : () async {
+                // ----- LOGIN GUARD -----
+                if (!await requireLogin(context)) return;
+
+                // ----- GO TO CART IF ALREADY ADDED -----
                 if (_added) {
                   context.push('/cart');
                   return;

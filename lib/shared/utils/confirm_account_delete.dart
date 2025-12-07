@@ -53,7 +53,7 @@ class _ConfirmDeleteAccountDialogState
         // Close dialog, logout and redirect
         context.pop();
         await authProvider.logout();
-        context.go('/login');
+        context.go('/');
       },
     );
   }

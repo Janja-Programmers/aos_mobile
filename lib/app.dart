@@ -83,13 +83,15 @@ class App extends StatelessWidget {
               ),
         ),
       ],
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        routerConfig: AppRouter(auth).router,
-        title: AppStrings.appName,
-        theme: AppThemes.lightTheme,
-        darkTheme: AppThemes.darkTheme,
-        themeMode: ThemeMode.light,
+      child: SafeArea(
+        child: MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          routerConfig: AppRouter(auth).router,
+          title: AppStrings.appName,
+          theme: AppThemes.lightTheme,
+          darkTheme: AppThemes.darkTheme,
+          themeMode: ThemeMode.light,
+        ),
       ),
     );
   }

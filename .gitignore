@@ -43,6 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/local.properties
+/android/key.properties
+/android/gradlew
+/android/gradlew.bat
+/android/gradle
+/android/.gradle
+
 
 .gitignore
 
@@ -50,3 +57,4 @@ app.*.map.json
 
 /web
 READ.md
+*.jks

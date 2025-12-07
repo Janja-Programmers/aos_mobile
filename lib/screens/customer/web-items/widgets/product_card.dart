@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
 import '/core/utils/formatters.dart';
+import '/core/utils/require_login.dart';
 
 import '/features/cart/domain/cart.dart';
 import '/features/website/domain/webitem.dart';
@@ -115,7 +116,8 @@ class ProductCard extends StatelessWidget {
               top: 8,
               left: 8,
               child: InkWell(
-                onTap: () {
+                onTap: () async {
+                  if (!await requireLogin(context)) return;
                   handleToggleWishlist(
                     context,
                     wishlistProv,

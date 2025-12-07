@@ -2,10 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../screens/auth/auth_provider.dart';
+import '/screens/auth/auth_provider.dart';
 
-/// Builds user-specific popup menu items with styling and icons.
-List<PopupMenuEntry<String>> buildUserMenuItems(String userType) {
+List<PopupMenuEntry<String>> buildUserMenuItems({
+  required bool loggedIn,
+  required String userType,
+}) {
+  // Not logged in → show only Login/Register
+  if (!loggedIn) {
+    return [
+      PopupMenuItem(
+        value: 'login',
+        child: Row(
+          children: const [
+            Icon(Icons.login, color: Colors.black54),
+            SizedBox(width: 10),
+            Text('Login', style: TextStyle(fontSize: 14)),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'register',
+        child: Row(
+          children: const [
+            Icon(Icons.app_registration, color: Colors.black54),
+            SizedBox(width: 10),
+            Text('Register', style: TextStyle(fontSize: 14)),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  // Logged in → show user-specific menu
   return [
     if (userType == 'Buyer')
       PopupMenuItem(
@@ -60,6 +89,12 @@ List<PopupMenuEntry<String>> buildUserMenuItems(String userType) {
 /// Handles selection actions from the popup menu.
 Future<void> handleUserMenuSelection(BuildContext context, String value) async {
   switch (value) {
+    case 'login':
+      context.push('/login');
+      break;
+    case 'register':
+      context.push('/register');
+      break;
     case 'orders':
       context.push('/past-orders');
       break;
@@ -74,7 +109,7 @@ Future<void> handleUserMenuSelection(BuildContext context, String value) async {
       await authProvider.logout();
 
       if (context.mounted) {
-        Future.microtask(() => context.go('/login'));
+        Future.microtask(() => context.go('/'));
       }
       break;
   }

@@ -22,10 +22,13 @@ class ProductListScreen extends StatefulWidget {
 class _ProductListScreenState extends State<ProductListScreen> {
   String _searchQuery = '';
   Timer? _debounce;
+  late final TextEditingController _searchController;
 
   @override
   void initState() {
     super.initState();
+    _searchController = TextEditingController();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<WebsiteItemProv>().loadInitialItems();
       context.read<SliderProv>().loadSlider();
@@ -35,13 +38,19 @@ class _ProductListScreenState extends State<ProductListScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
   void _onSearchChanged(String value) {
+    setState(() => _searchQuery = value);
+
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {
-      setState(() => _searchQuery = value);
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      // Trigger backend search after debounce
+      if (mounted) {
+        await context.read<WebsiteItemProv>().searchItemsBackend(value);
+      }
     });
   }
 
@@ -91,9 +100,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     ),
                   )
                   : RefreshIndicator(
-                    onRefresh:
-                        () =>
-                            context.read<WebsiteItemProv>().loadInitialItems(),
+                    onRefresh: () async {
+                      _searchController.clear();
+                      _onSearchChanged(
+                        '',
+                      ); // reset local filter and backend search
+                      await context.read<WebsiteItemProv>().loadInitialItems();
+                    },
                     child: SingleChildScrollView(
                       child: Column(
                         children: [
@@ -101,6 +114,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           Padding(
                             padding: const EdgeInsets.all(8),
                             child: TextField(
+                              controller: _searchController,
                               enabled:
                                   !productProvider.isLoading &&
                                   productProvider.items.isNotEmpty,
@@ -116,6 +130,18 @@ class _ProductListScreenState extends State<ProductListScreen> {
                                   borderSide: BorderSide.none,
                                 ),
                                 filled: true,
+                                suffixIcon:
+                                    _searchQuery.isNotEmpty
+                                        ? IconButton(
+                                          icon: const Icon(Icons.clear),
+                                          onPressed: () {
+                                            _searchController.clear();
+                                            _onSearchChanged(
+                                              '',
+                                            ); // reset search
+                                          },
+                                        )
+                                        : null,
                               ),
                               onChanged: _onSearchChanged,
                             ),

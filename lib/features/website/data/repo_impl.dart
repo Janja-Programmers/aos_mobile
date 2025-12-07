@@ -13,8 +13,11 @@ class WebsiteRepoImpl implements WebsiteRepo {
   WebsiteRepoImpl(this.remote);
 
   @override
-  Future<Either<Failure, List<WebsiteItem>>> getAllItems({required int start}) {
-    return remote.fetchItems(start: start);
+  Future<Either<Failure, List<WebsiteItem>>> getAllItems({
+    required int start,
+    String? search,
+  }) async {
+    return await remote.fetchItems(start: start, search: search);
   }
 
   @override

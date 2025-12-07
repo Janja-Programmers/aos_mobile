@@ -32,7 +32,7 @@ class WebsiteItemProv with ChangeNotifier {
   int get totalPages => (_totalItems / _itemsPerPage).ceil();
 
   // --- Initial Load ---
-  Future<void> loadInitialItems() async {
+  Future<void> loadInitialItems({String? search}) async {
     _currentPage = 1;
     _items.clear();
     _error = null;
@@ -40,13 +40,41 @@ class WebsiteItemProv with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await _fetchItems(page: _currentPage);
+    await _fetchItems(page: _currentPage, search: search);
+  }
+
+  Future<void> searchItemsBackend(String search) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    _currentPage = 1;
+    final offset = 0;
+
+    final result = await getAllItems(start: offset, search: search);
+
+    result.fold(
+      (failure) {
+        _error = failure.message;
+      },
+      (fetchedItems) {
+        _items
+          ..clear()
+          ..addAll(fetchedItems);
+
+        // Correct: rely ONLY on page size to know if more exists
+        _hasMore = fetchedItems.length == _itemsPerPage;
+      },
+    );
+
+    _isLoading = false;
+    notifyListeners();
   }
 
   // --- Core Fetch Logic (used by next/prev) ---
-  Future<void> _fetchItems({required int page}) async {
+  Future<void> _fetchItems({required int page, String? search}) async {
     final offset = (page - 1) * _itemsPerPage;
-    final result = await getAllItems(start: offset);
+    final result = await getAllItems(start: offset, search: search);
 
     result.fold(
       (failure) {

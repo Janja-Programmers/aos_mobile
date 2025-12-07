@@ -30,6 +30,30 @@ class ItemFormFields extends StatefulWidget {
 
 class _ItemFormFieldsState extends State<ItemFormFields> {
   bool showRawEditor = true;
+  List<String> _categories = [];
+  bool _isLoadingCategories = true;
+  String? _categoryError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final groups = await widget.controller.fetchItemGroups();
+      setState(() {
+        _categories = groups;
+        _isLoadingCategories = false;
+      });
+    } catch (e) {
+      setState(() {
+        _categoryError = 'Failed to load categories';
+        _isLoadingCategories = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,88 +89,53 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
           ),
           fieldSpacing,
 
-          // 🔷 Category Dropdown (styled like an HTML <select>)
-          FutureBuilder<List<String>>(
-            future: controller.fetchItemGroups(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return const Text(
-                  "Error loading categories",
-                  style: TextStyle(color: Colors.red),
-                );
-              }
-
-              final groups = snapshot.data ?? [];
-              if (groups.isEmpty) {
-                return const Text("No categories available");
-              }
-
-              return DropdownButtonFormField<String>(
-                isExpanded: true,
-                menuMaxHeight: 250,
-                value:
-                    controller.groupController.text.isNotEmpty
-                        ? controller.groupController.text
-                        : null,
-                onChanged: (val) {
-                  controller.groupController.text = val ?? '';
-                },
-                items:
-                    groups
-                        .map(
-                          (g) => DropdownMenuItem(
-                            value: g,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12.0,
-                              ), // 👈 margin for dropdown item
-                              child: Text(
-                                g,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 15),
-                              ),
+          // 🔷 Category Dropdown
+          if (_isLoadingCategories)
+            const Center(child: CircularProgressIndicator())
+          else if (_categoryError != null)
+            Text(_categoryError!, style: const TextStyle(color: Colors.red))
+          else
+            DropdownButtonFormField<String>(
+              isExpanded: true,
+              menuMaxHeight: 250,
+              value:
+                  controller.groupController.text.isNotEmpty
+                      ? controller.groupController.text
+                      : null,
+              onChanged: (val) {
+                controller.groupController.text = val ?? '';
+              },
+              items:
+                  _categories
+                      .map(
+                        (g) => DropdownMenuItem(
+                          value: g,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
+                            child: Text(
+                              g,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 15),
                             ),
                           ),
-                        )
-                        .toList(),
-                decoration: InputDecoration(
-                  label: RichText(
-                    text: TextSpan(
-                      text: 'Category',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyLarge?.copyWith(color: Colors.grey[700]),
-                      children: const [
-                        TextSpan(
-                          text: ' *',
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
                         ),
-                      ],
-                    ),
-                  ),
-                  border: const OutlineInputBorder(),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 14,
-                  ),
-                ),
-                validator:
-                    (val) => AppValidator.required(val, fieldName: 'Category'),
-              );
-            },
-          ),
+                      )
+                      .toList(),
+              decoration: InputDecoration(
+                labelText: 'Category *',
+                border: const OutlineInputBorder(),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              validator:
+                  (val) => AppValidator.required(val, fieldName: 'Category'),
+            ),
           fieldSpacing,
 
           // 🔷 Maintain Stock Checkbox
           Row(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Checkbox(
                 value: controller.maintainStock,
@@ -155,7 +144,10 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
                   setState(() {});
                 },
               ),
-              const Text('Maintain Stock'),
+              Text(
+                'Maintain Stock',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
             ],
           ),
           fieldSpacing,

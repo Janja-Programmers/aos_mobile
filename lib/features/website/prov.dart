@@ -15,12 +15,10 @@ class WebsiteItemProv with ChangeNotifier {
   // --- Pagination State ---
   int _currentPage = 1;
   final int _itemsPerPage = 12;
-  int _totalItems = 0;
   bool _hasMore = true;
-
-  // --- Loading & Error State ---
   bool _isLoading = false;
   String? _error;
+  String _currentSearch = '';
 
   // --- Getters ---
   List<WebsiteItem> get items => _items;
@@ -29,10 +27,11 @@ class WebsiteItemProv with ChangeNotifier {
   bool get hasMore => _hasMore;
   String? get error => _error;
   int get currentPage => _currentPage;
-  int get totalPages => (_totalItems / _itemsPerPage).ceil();
+  String get currentSearch => _currentSearch;
 
-  // --- Initial Load ---
-  Future<void> loadInitialItems({String? search}) async {
+  // --- Initial Load / Search ---
+  Future<void> searchItems(String query) async {
+    _currentSearch = query;
     _currentPage = 1;
     _items.clear();
     _error = null;
@@ -40,80 +39,53 @@ class WebsiteItemProv with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await _fetchItems(page: _currentPage, search: search);
+    await _fetchPage(_currentPage, _currentSearch);
   }
 
-  Future<void> searchItemsBackend(String search) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    _currentPage = 1;
-    final offset = 0;
-
-    final result = await getAllItems(start: offset, search: search);
-
-    result.fold(
-      (failure) {
-        _error = failure.message;
-      },
-      (fetchedItems) {
-        _items
-          ..clear()
-          ..addAll(fetchedItems);
-
-        // Correct: rely ONLY on page size to know if more exists
-        _hasMore = fetchedItems.length == _itemsPerPage;
-      },
-    );
-
-    _isLoading = false;
-    notifyListeners();
+  // --- Refresh ---
+  Future<void> refresh() async {
+    await searchItems('');
   }
 
-  // --- Core Fetch Logic (used by next/prev) ---
-  Future<void> _fetchItems({required int page, String? search}) async {
-    final offset = (page - 1) * _itemsPerPage;
-    final result = await getAllItems(start: offset, search: search);
-
-    result.fold(
-      (failure) {
-        _error = failure.message;
-      },
-      (fetchedItems) {
-        _items
-          ..clear()
-          ..addAll(fetchedItems);
-
-        _totalItems =
-            _totalItems == 0
-                ? (fetchedItems.length < _itemsPerPage
-                    ? fetchedItems.length
-                    : _itemsPerPage * (page + 2))
-                : _totalItems;
-
-        _currentPage = page;
-        _hasMore = fetchedItems.length == _itemsPerPage;
-      },
-    );
-
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  // --- Pagination Controls ---
+  // --- Pagination ---
   Future<void> nextPage() async {
     if (!_hasMore || _isLoading) return;
     _isLoading = true;
     notifyListeners();
-    await _fetchItems(page: _currentPage + 1);
+    await _fetchPage(_currentPage + 1, _currentSearch);
   }
 
   Future<void> prevPage() async {
     if (_currentPage <= 1 || _isLoading) return;
     _isLoading = true;
     notifyListeners();
-    await _fetchItems(page: _currentPage - 1);
+    await _fetchPage(_currentPage - 1, _currentSearch);
+  }
+
+  // --- Core Fetch ---
+  Future<void> _fetchPage(int page, String search) async {
+    try {
+      final offset = (page - 1) * _itemsPerPage;
+      final result = await getAllItems(start: offset, search: search);
+
+      result.fold(
+        (failure) {
+          _error = failure.message;
+        },
+        (fetchedItems) {
+          if (page == 1) {
+            _items.clear();
+          }
+          _items.addAll(fetchedItems);
+          _currentPage = page;
+          _hasMore = fetchedItems.length == _itemsPerPage;
+          _error = null;
+        },
+      );
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   // --- Product Details ---
@@ -124,6 +96,7 @@ class WebsiteItemProv with ChangeNotifier {
     notifyListeners();
 
     final result = await getSingleItem(productId);
+
     result.fold(
       (failure) {
         _error = failure.message;

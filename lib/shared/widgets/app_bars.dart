@@ -35,7 +35,7 @@ class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
             context.push('/');
           },
           child: const CircleAvatar(
-            backgroundImage: AssetImage('assets/logo.png'),
+            backgroundImage: AssetImage('assets/logo_transparent.png'),
             radius: 22,
             backgroundColor: AppColors.transparent,
           ),

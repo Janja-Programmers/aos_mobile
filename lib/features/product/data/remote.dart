@@ -24,7 +24,8 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       final response = await client.client.get(
         productApi,
         queryParameters: {
-          'fields': '["name","item_name","category", "modified", "creation"]',
+          'fields':
+              '["name","item_name","category", "modified", "creation", "is_stock_item"]',
         },
       );
 

@@ -24,6 +24,7 @@ class AddItemController extends ChangeNotifier {
   final priceController = TextEditingController();
   final descController = TextEditingController();
   final shortDescController = TextEditingController();
+  bool maintainStock = false;
 
   final List<WebsiteSpecificationEntry> specControllers = [];
 
@@ -141,6 +142,7 @@ class AddItemController extends ChangeNotifier {
         itemName: nameController.text.trim(),
         itemPrice: double.tryParse(priceController.text.trim()) ?? 0.0,
         category: groupController.text.trim(),
+        isStockItem: maintainStock ? 1 : 0,
         vendor: existingProduct?.vendor,
         image: uploadedImageUrl,
         demoVideo: uploadedVideoUrl,
@@ -294,6 +296,7 @@ class AddItemController extends ChangeNotifier {
       "item_name": p.itemName,
       "item_price": p.itemPrice,
       "category": p.category,
+      "is_stock_item": p.isStockItem,
       "vendor": p.vendor,
       "web_long_description": p.websiteDescription,
       "short_description": p.shortWebsiteDescription,

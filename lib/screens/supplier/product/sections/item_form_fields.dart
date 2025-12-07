@@ -144,6 +144,22 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
           ),
           fieldSpacing,
 
+          // 🔷 Maintain Stock Checkbox
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Checkbox(
+                value: controller.maintainStock,
+                onChanged: (value) {
+                  controller.maintainStock = value ?? false;
+                  setState(() {});
+                },
+              ),
+              const Text('Maintain Stock'),
+            ],
+          ),
+          fieldSpacing,
+
           // 🖼️ Display Images
           const Align(
             alignment: Alignment.centerLeft,

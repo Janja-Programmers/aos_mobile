@@ -3,10 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
 import '/core/constants/colors.dart';
+
 import '/shared/widgets/app_bars.dart';
+import '/shared/widgets/app_bottom_nav.dart';
+import '/shared/utils/confirm_account_delete.dart';
 
 import '../auth/auth_provider.dart';
-import '../../shared/utils/confirm_account_delete.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -64,6 +66,7 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const TopAppBar(),
+      bottomNavigationBar: const BottomNavBar(),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

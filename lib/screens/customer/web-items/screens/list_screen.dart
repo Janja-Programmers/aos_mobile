@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '/core/constants/colors.dart';
 import '/shared/widgets/app_bars.dart';
+import '/shared/widgets/app_bottom_nav.dart';
 import '/screens/auth/auth_provider.dart';
 import '/features/website/prov.dart';
 import '/features/website/slider_prov.dart';
@@ -66,6 +67,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: TopAppBar(),
+        bottomNavigationBar: const BottomNavBar(),
         body: SafeArea(
           child: RefreshIndicator(
             onRefresh: _onRefresh,

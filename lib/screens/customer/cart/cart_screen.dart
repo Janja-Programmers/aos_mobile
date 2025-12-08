@@ -8,6 +8,7 @@ import '../../auth/auth_provider.dart';
 import '/features/cart/provider.dart';
 
 import '/shared/widgets/app_bars.dart';
+import '/shared/widgets/app_bottom_nav.dart';
 
 import 'controllers/place_order.dart';
 
@@ -25,6 +26,8 @@ class CartScreen extends StatelessWidget {
 
     if (user == null) {
       return Scaffold(
+        appBar: TopAppBar(),
+        bottomNavigationBar: const BottomNavBar(),
         body: Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -43,6 +46,7 @@ class CartScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: TopAppBar(),
+      bottomNavigationBar: const BottomNavBar(),
       backgroundColor: AppColors.background,
       body: Consumer<CartProvider>(
         builder: (context, provider, _) {

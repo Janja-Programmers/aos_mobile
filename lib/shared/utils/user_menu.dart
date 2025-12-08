@@ -60,20 +60,6 @@ List<PopupMenuEntry<String>> buildUserMenuItems({
       ),
 
     PopupMenuItem(
-      value: 'settings',
-      child: Row(
-        children: const [
-          Icon(Icons.settings, color: Colors.black54),
-          SizedBox(width: 10),
-          Text(
-            'Settings',
-            style: TextStyle(color: Colors.black54, fontSize: 14),
-          ),
-        ],
-      ),
-    ),
-
-    PopupMenuItem(
       value: 'logout',
       child: Row(
         children: const [
@@ -100,9 +86,6 @@ Future<void> handleUserMenuSelection(BuildContext context, String value) async {
       break;
     case 'browse_products':
       context.push('/');
-      break;
-    case 'settings':
-      context.push('/settings');
       break;
     case 'logout':
       final authProvider = context.read<AuthProvider>();

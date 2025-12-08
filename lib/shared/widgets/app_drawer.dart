@@ -101,7 +101,7 @@ class AppDrawer extends StatelessWidget {
                 top: false,
                 child: DrawerItem(
                   icon: Icons.language,
-                  title: "View website",
+                  title: "Browse Products",
                   onTap: () => context.push('/'),
                 ),
               ),

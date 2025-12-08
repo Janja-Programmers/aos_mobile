@@ -9,6 +9,7 @@ import '/features/wishlist/domain/wishlist_item.dart';
 import '/features/wishlist/provider.dart';
 
 import '/shared/widgets/app_bars.dart';
+import '/shared/widgets/app_bottom_nav.dart';
 
 import '../widgets/product_action_bar.dart';
 import '../widgets/product_availability.dart';
@@ -150,6 +151,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: TopAppBar(),
+      bottomNavigationBar: const BottomNavBar(),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

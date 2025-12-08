@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/shared/widgets/app_bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -54,6 +55,7 @@ class _WishlistScreenState extends State<WishlistScreen> {
 
     return Scaffold(
       appBar: TopAppBar(),
+      bottomNavigationBar: const BottomNavBar(),
       body:
           provider.isLoading
               ? const Center(child: CircularProgressIndicator())

@@ -20,9 +20,8 @@ class ProductListScreen extends StatefulWidget {
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
-  String _searchQuery = '';
-  Timer? _debounce;
   late final TextEditingController _searchController;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -30,7 +29,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     _searchController = TextEditingController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<WebsiteItemProv>().loadInitialItems();
+      context.read<WebsiteItemProv>().searchItems('');
       context.read<SliderProv>().loadSlider();
     });
   }
@@ -43,23 +42,15 @@ class _ProductListScreenState extends State<ProductListScreen> {
   }
 
   void _onSearchChanged(String value) {
-    setState(() => _searchQuery = value);
-
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () async {
-      // Trigger backend search after debounce
-      if (mounted) {
-        await context.read<WebsiteItemProv>().searchItemsBackend(value);
-      }
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      context.read<WebsiteItemProv>().searchItems(value);
     });
   }
 
-  List filteredItems(List items) {
-    return items.where((item) {
-      final name = item.name ?? '';
-      return _searchQuery.isEmpty ||
-          name.toLowerCase().contains(_searchQuery.toLowerCase());
-    }).toList();
+  Future<void> _onRefresh() async {
+    _searchController.clear();
+    await context.read<WebsiteItemProv>().searchItems('');
   }
 
   @override
@@ -67,7 +58,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
     final productProvider = context.watch<WebsiteItemProv>();
     final authProvider = context.watch<AuthProvider>();
     final user = authProvider.user;
-    final items = filteredItems(productProvider.items);
 
     return WillPopScope(
       onWillPop: () async {
@@ -78,143 +68,138 @@ class _ProductListScreenState extends State<ProductListScreen> {
         backgroundColor: AppColors.background,
         appBar: TopAppBar(),
         body: SafeArea(
-          child:
-              productProvider.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : productProvider.error != null
-                  ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text("Oops! We ran into a problem."),
-                        const SizedBox(height: 8),
-                        ElevatedButton(
-                          onPressed:
-                              () =>
-                                  context
-                                      .read<WebsiteItemProv>()
-                                      .loadInitialItems(),
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  )
-                  : RefreshIndicator(
-                    onRefresh: () async {
-                      _searchController.clear();
-                      _onSearchChanged(
-                        '',
-                      ); // reset local filter and backend search
-                      await context.read<WebsiteItemProv>().loadInitialItems();
-                    },
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          const SliderCarousel(),
-                          Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: TextField(
-                              controller: _searchController,
-                              enabled:
-                                  !productProvider.isLoading &&
-                                  productProvider.items.isNotEmpty,
-                              decoration: InputDecoration(
-                                hintText:
-                                    productProvider.isLoading
-                                        ? 'Loading products...'
-                                        : 'Search for products',
-                                prefixIcon: const Icon(Icons.search),
-                                fillColor: AppColors.white,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide.none,
-                                ),
-                                filled: true,
-                                suffixIcon:
-                                    _searchQuery.isNotEmpty
-                                        ? IconButton(
-                                          icon: const Icon(Icons.clear),
-                                          onPressed: () {
-                                            _searchController.clear();
-                                            _onSearchChanged(
-                                              '',
-                                            ); // reset search
-                                          },
-                                        )
-                                        : null,
-                              ),
-                              onChanged: _onSearchChanged,
-                            ),
-                          ),
+          child: RefreshIndicator(
+            onRefresh: _onRefresh,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  const SliderCarousel(),
 
-                          items.isEmpty
-                              ? const Center(child: Text('No products found'))
-                              : GridView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                padding: const EdgeInsets.all(8),
-                                gridDelegate:
-                                    const SliverGridDelegateWithMaxCrossAxisExtent(
-                                      maxCrossAxisExtent: 200,
-                                      mainAxisSpacing: 12,
-                                      crossAxisSpacing: 12,
-                                      childAspectRatio: 0.65,
-                                    ),
-                                itemCount: items.length,
-                                itemBuilder: (context, index) {
-                                  final item = items[index];
-                                  return ProductCard(item: item);
-                                },
-                              ),
-                          if (productProvider.error == null)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 16,
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  // Prev button
-                                  ElevatedButton.icon(
-                                    onPressed:
-                                        productProvider.currentPage > 1
-                                            ? () => productProvider.prevPage()
-                                            : null,
-                                    icon: const Icon(
-                                      Icons.arrow_back_ios_new,
-                                      size: 16,
-                                    ),
-                                    label: const Text('Prev'),
-                                  ),
-                                  // Page indicator
-                                  Text(
-                                    'Page ${productProvider.currentPage}',
-                                    // 'Page ${productProvider.currentPage} of ${productProvider.totalPages}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  // Next button
-                                  ElevatedButton.icon(
-                                    onPressed:
-                                        productProvider.hasMore
-                                            ? () => productProvider.nextPage()
-                                            : null,
-                                    icon: const Icon(
-                                      Icons.arrow_forward_ios,
-                                      size: 16,
-                                    ),
-                                    label: const Text('Next'),
-                                  ),
-                                ],
-                              ),
+                  // Search Field
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: TextField(
+                      controller: _searchController,
+                      enabled: true,
+                      decoration: InputDecoration(
+                        hintText: 'Search for products',
+                        prefixIcon: const Icon(Icons.search),
+                        fillColor: AppColors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        suffixIcon:
+                            _searchController.text.isNotEmpty
+                                ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    context.read<WebsiteItemProv>().searchItems(
+                                      '',
+                                    );
+                                  },
+                                )
+                                : null,
+                      ),
+                      onChanged: _onSearchChanged,
+                    ),
+                  ),
+
+                  // Loading / Error / Empty States
+                  if (productProvider.isLoading)
+                    const Center(child: CircularProgressIndicator())
+                  else if (productProvider.error != null)
+                    Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(productProvider.error!),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed:
+                                () => productProvider.searchItems(
+                                  productProvider.currentSearch,
+                                ),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (productProvider.items.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Center(
+                        child: Text(
+                          productProvider.currentSearch.isEmpty
+                              ? 'No products available'
+                              : 'No products found for "${productProvider.currentSearch}"',
+                        ),
+                      ),
+                    )
+                  else
+                    // Product Grid
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(8),
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 200,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 0.65,
+                          ),
+                      itemCount: productProvider.items.length,
+                      itemBuilder: (context, index) {
+                        final item = productProvider.items[index];
+                        return ProductCard(item: item);
+                      },
+                    ),
+
+                  // Pagination Controls
+                  if (productProvider.items.isNotEmpty &&
+                      productProvider.error == null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 16,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed:
+                                productProvider.currentPage > 1
+                                    ? () => productProvider.prevPage()
+                                    : null,
+                            icon: const Icon(
+                              Icons.arrow_back_ios_new,
+                              size: 16,
                             ),
+                            label: const Text('Prev'),
+                          ),
+                          Text(
+                            'Page ${productProvider.currentPage}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed:
+                                productProvider.hasMore
+                                    ? () => productProvider.nextPage()
+                                    : null,
+                            icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                            label: const Text('Next'),
+                          ),
                         ],
                       ),
                     ),
-                  ),
+                ],
+              ),
+            ),
+          ),
         ),
         floatingActionButton:
             user?.userType == 'Vendor'

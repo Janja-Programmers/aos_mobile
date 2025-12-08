@@ -56,8 +56,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   @override
   Widget build(BuildContext context) {
     final productProvider = context.watch<WebsiteItemProv>();
-    final authProvider = context.watch<AuthProvider>();
-    final user = authProvider.user;
+    final user = context.watch<AuthProvider>().user;
 
     return WillPopScope(
       onWillPop: () async {
@@ -70,27 +69,28 @@ class _ProductListScreenState extends State<ProductListScreen> {
         body: SafeArea(
           child: RefreshIndicator(
             onRefresh: _onRefresh,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                children: [
-                  const SliderCarousel(),
+            child: CustomScrollView(
+              slivers: [
+                // ----- SLIDER -----
+                SliverToBoxAdapter(
+                  child: SizedBox(height: 180, child: const SliderCarousel()),
+                ),
 
-                  // Search Field
-                  Padding(
-                    padding: const EdgeInsets.all(8),
+                // ----- SEARCH BAR -----
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
                     child: TextField(
                       controller: _searchController,
-                      enabled: true,
                       decoration: InputDecoration(
                         hintText: 'Search for products',
                         prefixIcon: const Icon(Icons.search),
+                        filled: true,
                         fillColor: AppColors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide.none,
                         ),
-                        filled: true,
                         suffixIcon:
                             _searchController.text.isNotEmpty
                                 ? IconButton(
@@ -107,30 +107,46 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       onChanged: _onSearchChanged,
                     ),
                   ),
+                ),
 
-                  // Loading / Error / Empty States
-                  if (productProvider.isLoading)
-                    const Center(child: CircularProgressIndicator())
-                  else if (productProvider.error != null)
-                    Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(productProvider.error!),
-                          const SizedBox(height: 8),
-                          ElevatedButton(
-                            onPressed:
-                                () => productProvider.searchItems(
-                                  productProvider.currentSearch,
-                                ),
-                            child: const Text('Retry'),
-                          ),
-                        ],
+                // ----- LOADING -----
+                if (productProvider.isLoading)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 40),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  )
+                // ----- ERROR -----
+                else if (productProvider.error != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Text(
+                              productProvider.error!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                            const SizedBox(height: 8),
+                            ElevatedButton(
+                              onPressed:
+                                  () => productProvider.searchItems(
+                                    productProvider.currentSearch,
+                                  ),
+                              child: const Text("Retry"),
+                            ),
+                          ],
+                        ),
                       ),
-                    )
-                  else if (productProvider.items.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(16),
+                    ),
+                  )
+                // ----- EMPTY -----
+                else if (productProvider.items.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
                       child: Center(
                         child: Text(
                           productProvider.currentSearch.isEmpty
@@ -138,13 +154,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
                               : 'No products found for "${productProvider.currentSearch}"',
                         ),
                       ),
-                    )
-                  else
-                    // Product Grid
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(8),
+                    ),
+                  )
+                // ----- PRODUCT GRID -----
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.all(12),
+                    sliver: SliverGrid(
                       gridDelegate:
                           const SliverGridDelegateWithMaxCrossAxisExtent(
                             maxCrossAxisExtent: 200,
@@ -152,20 +168,22 @@ class _ProductListScreenState extends State<ProductListScreen> {
                             crossAxisSpacing: 12,
                             childAspectRatio: 0.65,
                           ),
-                      itemCount: productProvider.items.length,
-                      itemBuilder: (context, index) {
+                      delegate: SliverChildBuilderDelegate((context, index) {
                         final item = productProvider.items[index];
                         return ProductCard(item: item);
-                      },
+                      }, childCount: productProvider.items.length),
                     ),
+                  ),
 
-                  // Pagination Controls
-                  if (productProvider.items.isNotEmpty &&
-                      productProvider.error == null)
-                    Padding(
+                // ----- PAGINATION -----
+                if (!productProvider.isLoading &&
+                    productProvider.items.isNotEmpty &&
+                    productProvider.error == null)
+                  SliverToBoxAdapter(
+                    child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 16,
+                        vertical: 16,
+                        horizontal: 20,
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -173,7 +191,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                           ElevatedButton.icon(
                             onPressed:
                                 productProvider.currentPage > 1
-                                    ? () => productProvider.prevPage()
+                                    ? productProvider.prevPage
                                     : null,
                             icon: const Icon(
                               Icons.arrow_back_ios_new,
@@ -182,13 +200,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
                             label: const Text('Prev'),
                           ),
                           Text(
-                            'Page ${productProvider.currentPage}',
+                            "Page ${productProvider.currentPage}",
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           ElevatedButton.icon(
                             onPressed:
                                 productProvider.hasMore
-                                    ? () => productProvider.nextPage()
+                                    ? productProvider.nextPage
                                     : null,
                             icon: const Icon(Icons.arrow_forward_ios, size: 16),
                             label: const Text('Next'),
@@ -196,18 +214,22 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         ],
                       ),
                     ),
-                ],
-              ),
+                  ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 20)),
+              ],
             ),
           ),
         ),
+
+        // ----- FAB FOR VENDORS -----
         floatingActionButton:
-            user?.userType == 'Vendor'
+            user?.userType == "Vendor"
                 ? FloatingActionButton(
                   onPressed: () => context.push('/dashboard'),
                   child: const Icon(Icons.dashboard, color: Colors.white),
                 )
-                : const SizedBox.shrink(),
+                : null,
       ),
     );
   }

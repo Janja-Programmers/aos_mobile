@@ -12,19 +12,20 @@ class SliderCarousel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sliderProv = context.watch<SliderProv>();
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width >= 600;
+    final height = isTablet ? 300.0 : 180.0;
 
-    // 🔹 Loading state — simple spinner
     if (sliderProv.isLoading) {
-      return const SizedBox(
-        height: 180,
-        child: Center(child: CircularProgressIndicator()),
+      return SizedBox(
+        height: height,
+        child: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    // 🔹 Error state — retry button
     if (sliderProv.error != null) {
       return SizedBox(
-        height: 180,
+        height: height,
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -54,10 +55,9 @@ class SliderCarousel extends StatelessWidget {
       );
     }
 
-    // 🔹 Empty state
     if (sliderProv.images.isEmpty) {
       return SizedBox(
-        height: 180,
+        height: height,
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -81,8 +81,8 @@ class SliderCarousel extends StatelessWidget {
       );
     }
 
-    // 🔹 Success state — show carousel
     return Container(
+      height: height,
       decoration: BoxDecoration(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
@@ -97,7 +97,7 @@ class SliderCarousel extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: CarouselSlider(
         options: CarouselOptions(
-          height: 180,
+          height: height,
           autoPlay: sliderProv.images.isNotEmpty,
           autoPlayInterval: const Duration(seconds: 3),
           autoPlayAnimationDuration: const Duration(milliseconds: 800),
@@ -110,7 +110,6 @@ class SliderCarousel extends StatelessWidget {
             sliderProv.images.map((imageUrl) {
               final resolvedImgUrl = resolveImageUrl(imageUrl);
               if (resolvedImgUrl == null) return const SizedBox.shrink();
-
               return Container(
                 color: Colors.transparent,
                 child: Center(

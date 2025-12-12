@@ -37,7 +37,11 @@ class WebsiteItemProv with ChangeNotifier {
   int get totalItems => _listModel?.totalItems ?? _totalItems;
   int get itemsPerPage => _listModel?.itemsPerPage ?? _itemsPerPage;
   int get totalPages => (totalItems / itemsPerPage).ceil();
-  bool get hasNext => _currentPage < totalPages;
+  bool get hasNext {
+    if (_listModel == null) return true;
+    return _items.length == itemsPerPage;
+  }
+
   bool get hasPrev => _currentPage > 1;
 
   // --- Initial Load / Search ---

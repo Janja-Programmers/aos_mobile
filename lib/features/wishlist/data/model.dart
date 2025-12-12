@@ -6,23 +6,29 @@ class WishlistItemModel extends WishlistItem {
     required super.title,
     required super.imageUrl,
     required super.price,
+    required super.itemGroup,
+    required super.inStock,
   });
 
   factory WishlistItemModel.fromJson(Map<String, dynamic> json) {
     return WishlistItemModel(
-      id: json['id'],
-      title: json['title'],
-      imageUrl: json['imageUrl'],
-      price: (json['price'] as num).toDouble(),
+      id: json['id'] ?? '',
+      title: json['title'] ?? '',
+      imageUrl: json['imageUrl'] ?? '',
+      price: (json['price'] ?? 0).toDouble(),
+      itemGroup: json['itemGroup'] ?? '',
+      inStock: json['inStock'] ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'title': title, 'imageUrl': imageUrl, 'price': price};
+    return {
+      'id': id,
+      'title': title,
+      'imageUrl': imageUrl,
+      'price': price,
+      'itemGroup': itemGroup,
+      'inStock': inStock,
+    };
   }
-}
-
-extension WishlistItemMapper on WishlistItem {
-  WishlistItemModel toModel() =>
-      WishlistItemModel(id: id, title: title, imageUrl: imageUrl, price: price);
 }

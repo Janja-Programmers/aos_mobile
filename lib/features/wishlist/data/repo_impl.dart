@@ -28,6 +28,8 @@ class WishlistRepoImpl implements WishlistRepo {
         title: item.title,
         imageUrl: item.imageUrl,
         price: item.price,
+        itemGroup: item.itemGroup,
+        inStock: item.inStock,
       ),
     ];
 

@@ -68,3 +68,15 @@ class WebsiteItem extends Equatable {
     reviews,
   ];
 }
+
+class WebsiteItemList {
+  final List<WebsiteItem> items;
+  final int totalItems;
+  final int itemsPerPage;
+
+  const WebsiteItemList({
+    required this.items,
+    required this.totalItems,
+    required this.itemsPerPage,
+  });
+}

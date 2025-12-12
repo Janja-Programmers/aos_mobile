@@ -17,7 +17,16 @@ class WishlistLocalDataSourceImpl implements WishlistLocalDataSource {
 
     if (jsonString != null) {
       final decoded = json.decode(jsonString) as List;
-      return decoded.map((item) => WishlistItemModel.fromJson(item)).toList();
+
+      final items =
+          decoded
+              .map((item) => WishlistItemModel.fromJson(item))
+              .where((item) => item.id.isNotEmpty)
+              .toList();
+
+      await saveWishlistItems(items);
+
+      return items;
     } else {
       return [];
     }

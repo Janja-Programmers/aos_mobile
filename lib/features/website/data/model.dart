@@ -53,56 +53,59 @@ class WebsiteItemModel extends Equatable {
   });
 
   factory WebsiteItemModel.fromJson(Map<String, dynamic> json) {
-    // Handle multi-image list (used in detail page)
-    final rawImages = json['images'];
+    try {
+      // Handle multi-image list
+      final rawImages = json['images'];
+      List<String> images = [];
+      if (rawImages is List) {
+        images = rawImages.whereType<String>().toList();
+      } else if (rawImages is String && rawImages.trim().isNotEmpty) {
+        images = [rawImages];
+      }
 
-    List<String> images = [];
-    if (rawImages is List) {
-      images = rawImages.whereType<String>().toList();
-    } else if (rawImages is String && rawImages.trim().isNotEmpty) {
-      images = [rawImages];
+      final item = WebsiteItemModel(
+        id: json['name'],
+        owner: json['owner'],
+        name: json['item_name'] ?? '',
+        image:
+            images.isNotEmpty
+                ? images.first
+                : (json['website_image'] is String
+                    ? json['website_image'].toString().trim()
+                    : ''),
+        images: images,
+        thumbnail: json['thumbnail'] ?? '',
+        demoVideoUrl: json['demo_video'],
+        itemCode: json['item_code'] ?? '',
+        description: json['short_description'] ?? '',
+        title: json['web_item_id'] ?? '',
+        itemGroup: json['item_group'] ?? '',
+        shortDescription: json['short_description'] ?? '',
+        longDescription:
+            json['web_long_description'] is String
+                ? cleanHtml(json['web_long_description'])
+                : '',
+        // --- Convert int -> bool safely ---
+        onBackorder: parseBool(json['on_backorder']),
+        inStock: parseBool(json['in_stock']),
+        published: parseBool(json['published']),
+        price: (json['price_list_rate'] ?? 0).toDouble(),
+        specifications:
+            (json['specifications'] as List<dynamic>?)
+                ?.map((e) => WebsiteSpecModel.fromJson(e))
+                .toList() ??
+            [],
+        reviews:
+            (json['reviews'] as List<dynamic>?)
+                ?.map((e) => ReviewModel.fromJson(e).toEntity())
+                .toList() ??
+            [],
+      );
+
+      return item;
+    } catch (e) {
+      rethrow; // Let caller handle failure
     }
-
-    return WebsiteItemModel(
-      id: json['name'],
-      owner: json['owner'],
-      name: json['item_name'] ?? '',
-
-      // 👇 FIX: Fall back to `json['image']` if multi-image list is empty
-      image:
-          images.isNotEmpty
-              ? images.first
-              : (json['website_image'] is String
-                  ? json['website_image'].toString().trim()
-                  : ''),
-
-      images: images,
-      thumbnail: json['thumbnail'] ?? '',
-      demoVideoUrl: json['demo_video'],
-      itemCode: json['item_code'] ?? '',
-      description: json['short_description'] ?? '',
-      title: json['web_item_id'] ?? '',
-      itemGroup: json['item_group'] ?? '',
-      shortDescription: json['short_description'] ?? '',
-      longDescription:
-          json['web_long_description'] is String
-              ? cleanHtml(json['web_long_description'])
-              : '',
-      onBackorder: json['on_backorder'] == 1,
-      published: json['published'] == 1,
-      price: (json['price_list_rate'] ?? 0).toDouble(),
-      inStock: json['in_stock'] ?? false,
-      specifications:
-          (json['specifications'] as List<dynamic>?)
-              ?.map((e) => WebsiteSpecModel.fromJson(e))
-              .toList() ??
-          [],
-      reviews:
-          (json['reviews'] as List<dynamic>?)
-              ?.map((e) => ReviewModel.fromJson(e).toEntity())
-              .toList() ??
-          [],
-    );
   }
 
   factory WebsiteItemModel.fromDetailJson(Map<String, dynamic> json) {
@@ -141,10 +144,11 @@ class WebsiteItemModel extends Equatable {
           json['long_description'] is String
               ? cleanHtml(json['long_description'])
               : '',
-      onBackorder: json['on_backorder'] == 1,
-      published: json['published'] == 1,
+
+      onBackorder: parseBool(json['on_backorder']),
+      inStock: parseBool(json['in_stock']),
+      published: parseBool(json['published']),
       price: (json['price'] ?? 0).toDouble(),
-      inStock: json['in_stock'] ?? false,
       specifications:
           (json['specifications'] as List<dynamic>?)
               ?.map((e) => WebsiteSpecModel.fromJson(e))
@@ -259,4 +263,37 @@ class WebsiteSpecModel extends Equatable {
 
   @override
   List<Object?> get props => [label, description];
+}
+
+class WebsiteItemListModel {
+  final List<WebsiteItemModel> items;
+  final int totalItems;
+  final int itemsPerPage;
+
+  const WebsiteItemListModel({
+    required this.items,
+    required this.totalItems,
+    required this.itemsPerPage,
+  });
+
+  factory WebsiteItemListModel.fromJson(Map<String, dynamic> json) {
+    final itemsJson = json['items'] as List<dynamic>? ?? [];
+    final items = itemsJson.map((e) => WebsiteItemModel.fromJson(e)).toList();
+
+    final settings = json['settings'] as Map<String, dynamic>?;
+
+    return WebsiteItemListModel(
+      items: items,
+      totalItems: settings?['items_count'] ?? items.length,
+      itemsPerPage: settings?['products_per_page'] ?? 12,
+    );
+  }
+
+  WebsiteItemList toEntity() {
+    return WebsiteItemList(
+      items: items.map((e) => e.toEntity()).toList(),
+      totalItems: totalItems,
+      itemsPerPage: itemsPerPage,
+    );
+  }
 }

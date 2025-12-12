@@ -52,6 +52,21 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = Provider.of<AuthProvider>(context);
 
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            if (GoRouter.of(context).canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
+        ),
+        backgroundColor: AppColors.background,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
       backgroundColor: AppColors.background,
       body: Center(
         child: SingleChildScrollView(

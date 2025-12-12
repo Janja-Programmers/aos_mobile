@@ -23,14 +23,14 @@ class WebsiteRemoteDataSource {
     String? search,
   }) async {
     try {
+      final queryArgs = {
+        'start': start,
+        if (search != null && search.isNotEmpty) 'search': search,
+      };
+
       final res = await _client.client.get(
         webItemApi,
-        queryParameters: {
-          'query_args': jsonEncode({
-            'start': start,
-            if (search != null && search.isNotEmpty) 'search': search,
-          }),
-        },
+        queryParameters: {'query_args': jsonEncode(queryArgs)},
       );
 
       final List<dynamic> list = res.data['message']['items'] ?? [];
@@ -38,12 +38,14 @@ class WebsiteRemoteDataSource {
       final items =
           list.map((item) {
             final model = WebsiteItemModel.fromJson(item);
-            return model.toEntity();
+            final entity = model.toEntity();
+            return entity;
           }).toList();
 
       return Right(items);
     } catch (e) {
-      return Left(handleException(e));
+      final failure = handleException(e);
+      return Left(failure);
     }
   }
 

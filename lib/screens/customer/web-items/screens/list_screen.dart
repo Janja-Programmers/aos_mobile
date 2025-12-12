@@ -10,6 +10,9 @@ import '/screens/auth/auth_provider.dart';
 import '/features/website/prov.dart';
 import '/features/website/slider_prov.dart';
 
+import '../widgets/product_empty.dart';
+import '../widgets/product_error.dart';
+import '../widgets/product_loading.dart';
 import '../widgets/product_card.dart';
 import '../widgets/slider.dart';
 
@@ -73,93 +76,69 @@ class _ProductListScreenState extends State<ProductListScreen> {
             onRefresh: _onRefresh,
             child: CustomScrollView(
               slivers: [
-                // ----- SLIDER -----
-                SliverToBoxAdapter(
-                  child: SizedBox(height: 180, child: const SliderCarousel()),
-                ),
-
-                // ----- SEARCH BAR -----
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search for products',
-                        prefixIcon: const Icon(Icons.search),
-                        filled: true,
-                        fillColor: AppColors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
-                        ),
-                        suffixIcon:
-                            _searchController.text.isNotEmpty
-                                ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    context.read<WebsiteItemProv>().searchItems(
-                                      '',
-                                    );
-                                  },
-                                )
-                                : null,
+                // ----- LOADING / ERROR / EMPTY -----
+                if (productProvider.isLoading)
+                  const ProductsLoadingWidget()
+                else if (productProvider.error != null)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: ProductsErrorWidget(
+                        message: productProvider.error!,
+                        onRetry:
+                            () => productProvider.searchItems(
+                              productProvider.currentSearch,
+                            ),
                       ),
-                      onChanged: _onSearchChanged,
+                    ),
+                  )
+                else if (productProvider.items.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: ProductsEmptyWidget(
+                        query: productProvider.currentSearch,
+                      ),
+                    ),
+                  )
+                else ...[
+                  // ----- SLIDER -----
+                  SliverToBoxAdapter(child: SliderCarousel()),
+
+                  // ----- SEARCH BAR -----
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search for products',
+                          prefixIcon: const Icon(Icons.search),
+                          filled: true,
+                          fillColor: AppColors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
+                          ),
+                          suffixIcon:
+                              _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      context
+                                          .read<WebsiteItemProv>()
+                                          .searchItems('');
+                                    },
+                                  )
+                                  : null,
+                        ),
+                        onChanged: _onSearchChanged,
+                      ),
                     ),
                   ),
-                ),
 
-                // ----- LOADING -----
-                if (productProvider.isLoading)
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 40),
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                  )
-                // ----- ERROR -----
-                else if (productProvider.error != null)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Text(
-                              productProvider.error!,
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                            const SizedBox(height: 8),
-                            ElevatedButton(
-                              onPressed:
-                                  () => productProvider.searchItems(
-                                    productProvider.currentSearch,
-                                  ),
-                              child: const Text("Retry"),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )
-                // ----- EMPTY -----
-                else if (productProvider.items.isEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Center(
-                        child: Text(
-                          productProvider.currentSearch.isEmpty
-                              ? 'No products available'
-                              : 'No products found for "${productProvider.currentSearch}"',
-                        ),
-                      ),
-                    ),
-                  )
-                // ----- PRODUCT GRID -----
-                else
+                  // ----- PRODUCT GRID -----
                   SliverPadding(
                     padding: const EdgeInsets.all(12),
                     sliver: SliverGrid(
@@ -177,48 +156,52 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     ),
                   ),
 
-                // ----- PAGINATION -----
-                if (!productProvider.isLoading &&
-                    productProvider.items.isNotEmpty &&
-                    productProvider.error == null)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 16,
-                        horizontal: 20,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed:
-                                productProvider.currentPage > 1
-                                    ? productProvider.prevPage
-                                    : null,
-                            icon: const Icon(
-                              Icons.arrow_back_ios_new,
-                              size: 16,
+                  // ----- PAGINATION -----
+                  if (!productProvider.isLoading &&
+                      productProvider.items.isNotEmpty &&
+                      productProvider.error == null)
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 20,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed:
+                                  productProvider.currentPage > 1
+                                      ? productProvider.prevPage
+                                      : null,
+                              icon: const Icon(
+                                Icons.arrow_back_ios_new,
+                                size: 16,
+                              ),
+                              label: const Text('Prev'),
                             ),
-                            label: const Text('Prev'),
-                          ),
-                          Text(
-                            "Page ${productProvider.currentPage}",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          ElevatedButton.icon(
-                            onPressed:
-                                productProvider.hasMore
-                                    ? productProvider.nextPage
-                                    : null,
-                            icon: const Icon(Icons.arrow_forward_ios, size: 16),
-                            label: const Text('Next'),
-                          ),
-                        ],
+                            Text(
+                              "Page ${productProvider.currentPage}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed:
+                                  productProvider.hasNext
+                                      ? productProvider.nextPage
+                                      : null,
+                              icon: const Icon(
+                                Icons.arrow_forward_ios,
+                                size: 16,
+                              ),
+                              label: const Text('Next'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                ],
               ],
             ),
           ),

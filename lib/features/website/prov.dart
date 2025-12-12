@@ -9,13 +9,15 @@ class WebsiteItemProv with ChangeNotifier {
   WebsiteItemProv({required this.getAllItems, required this.getSingleItem});
 
   // --- Core Data ---
-  final List<WebsiteItem> _items = [];
+  WebsiteItemList? _listModel;
   WebsiteItem? _selectedProduct;
+  final List<WebsiteItem> _items = [];
 
   // --- Pagination State ---
   int _currentPage = 1;
   final int _itemsPerPage = 12;
-  bool _hasMore = true;
+  final int _totalItems = 0;
+
   bool _isLoading = false;
   String? _error;
   String _currentSearch = '';
@@ -24,10 +26,23 @@ class WebsiteItemProv with ChangeNotifier {
   List<WebsiteItem> get items => _items;
   WebsiteItem? get selectedProduct => _selectedProduct;
   bool get isLoading => _isLoading;
-  bool get hasMore => _hasMore;
   String? get error => _error;
   int get currentPage => _currentPage;
   String get currentSearch => _currentSearch;
+
+  // Full API response access
+  WebsiteItemList? get listModel => _listModel;
+
+  // Derived pagination properties using listModel if available
+  int get totalItems => _listModel?.totalItems ?? _totalItems;
+  int get itemsPerPage => _listModel?.itemsPerPage ?? _itemsPerPage;
+  int get totalPages => (totalItems / itemsPerPage).ceil();
+  bool get hasNext {
+    if (_listModel == null) return true;
+    return _items.length == itemsPerPage;
+  }
+
+  bool get hasPrev => _currentPage > 1;
 
   // --- Initial Load / Search ---
   Future<void> searchItems(String query) async {
@@ -35,7 +50,6 @@ class WebsiteItemProv with ChangeNotifier {
     _currentPage = 1;
     _items.clear();
     _error = null;
-    _hasMore = true;
     _isLoading = true;
     notifyListeners();
 
@@ -49,16 +63,12 @@ class WebsiteItemProv with ChangeNotifier {
 
   // --- Pagination ---
   Future<void> nextPage() async {
-    if (!_hasMore || _isLoading) return;
-    _isLoading = true;
-    notifyListeners();
+    if (!hasNext || _isLoading) return;
     await _fetchPage(_currentPage + 1, _currentSearch);
   }
 
   Future<void> prevPage() async {
     if (_currentPage <= 1 || _isLoading) return;
-    _isLoading = true;
-    notifyListeners();
     await _fetchPage(_currentPage - 1, _currentSearch);
   }
 
@@ -72,14 +82,21 @@ class WebsiteItemProv with ChangeNotifier {
         (failure) {
           _error = failure.message;
         },
-        (fetchedItems) {
-          // 🔥 Overwrite the list instead of appending
+        (items) {
+          // Store full API response
+          _listModel = WebsiteItemList(
+            items: items,
+            totalItems: _totalItems,
+            itemsPerPage: _itemsPerPage,
+          );
+
+          // Populate UI list
           _items
             ..clear()
-            ..addAll(fetchedItems);
+            ..addAll(items);
 
+          // Update pagination info dynamically
           _currentPage = page;
-          _hasMore = fetchedItems.length == _itemsPerPage;
           _error = null;
         },
       );

@@ -2,7 +2,7 @@ name: africaonlinestores
 description: "Multivendor Application."
 publish_to: "none"
 
-version: 1.0.0+3
+version: 1.0.1+5
 
 environment:
   sdk: ^3.7.2
@@ -58,6 +58,7 @@ dependencies:
   photo_view: ^0.15.0
   device_info_plus: ^11.5.0
   flutter_rating_bar: ^4.0.1
+  sliver_tools: ^0.2.12
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +77,7 @@ flutter:
     - assets/dash.png
     - assets/logo.png
     - assets/logo_transparent.png
+    - assets/splash.png
     - assets/spinner.gif
 
 flutter_launcher_icons:
@@ -87,7 +89,11 @@ flutter_launcher_icons:
 
 flutter_native_splash:
   color: "#ffffff"
-  image: assets/logo.png
+  image: assets/splash.png
+  fullscreen: true
   android: true
   ios: true
-  fullscreen: true
+
+  android_12:
+    image: assets/splash.png
+    icon_background_color: "#ffffff"

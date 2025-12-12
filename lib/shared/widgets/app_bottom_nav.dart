@@ -6,8 +6,6 @@ import '/core/constants/colors.dart';
 import '/features/cart/provider.dart';
 import '/features/wishlist/provider.dart';
 
-import 'wishlist_icon_button.dart';
-
 class BottomNavBar extends StatelessWidget {
   const BottomNavBar({super.key});
 
@@ -66,7 +64,7 @@ class BottomNavBar extends StatelessWidget {
           selectedIcon: Badge(
             isLabelVisible: wishlistCount > 0,
             label: Text('$wishlistCount'),
-            child: const WishlistIconButton(),
+            child: const Icon(Icons.favorite),
           ),
           label: 'Wishlist',
         ),

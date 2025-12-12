@@ -29,8 +29,12 @@ class ProductCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        context.push('/product/${item.itemCode}');
+        context.push(
+          '/product/${item.itemCode}',
+          extra: {'itemCode': item.itemCode, 'isStockItem': item.inStock},
+        );
       },
+
       child: Card(
         color: AppColors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

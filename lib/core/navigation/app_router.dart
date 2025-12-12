@@ -98,7 +98,14 @@ class AppRouter {
         path: '/product/:itemCode',
         builder: (_, state) {
           final code = state.pathParameters['itemCode']!;
-          return ProductDetailScreen(itemCode: code);
+          final extra = state.extra as Map<String, dynamic>?;
+
+          final stock =
+              extra != null && extra['isStockItem'] != null
+                  ? extra['isStockItem'] as bool
+                  : false;
+
+          return ProductDetailScreen(itemCode: code, isStockItem: stock);
         },
       ),
 
@@ -127,14 +134,6 @@ class AppRouter {
       GoRoute(
         path: '/',
         builder: (context, state) => const ProductListScreen(),
-      ),
-      // Product Details
-      GoRoute(
-        path: '/product/:itemCode',
-        builder: (context, state) {
-          final itemCode = state.pathParameters['itemCode']!;
-          return ProductDetailScreen(itemCode: itemCode);
-        },
       ),
 
       // Shipping Address

@@ -23,8 +23,13 @@ import '../helper/empty_page.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String itemCode;
+  final bool isStockItem;
 
-  const ProductDetailScreen({super.key, required this.itemCode});
+  const ProductDetailScreen({
+    super.key,
+    required this.itemCode,
+    required this.isStockItem,
+  });
 
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
@@ -63,6 +68,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     final product = provider.selectedProduct;
     final isLoading = provider.isLoading;
     final error = provider.error;
+
+    final bool inStock = widget.isStockItem;
 
     if (isLoading) {
       return const Scaffold(
@@ -203,7 +210,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                               imageUrl: product.imageUrl,
                                               price: product.price.toDouble(),
                                               itemGroup: product.itemGroup,
-                                              inStock: product.inStock,
+                                              inStock: inStock,
                                             ),
                                           );
                                         },
@@ -233,12 +240,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             const SizedBox(height: 8),
 
                             ProductAvailability(
-                              inStock: product.inStock,
+                              inStock: inStock,
                               productName: product.name,
                             ),
                             const SizedBox(height: 6),
 
-                            ProductActionBar(product: product),
+                            ProductActionBar(product: product, inStock: inStock),
                             const SizedBox(height: 6),
 
                             ProductDescription(

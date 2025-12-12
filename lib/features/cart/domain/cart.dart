@@ -23,11 +23,7 @@ class CartItem {
     image: image,
   );
 
-  Map<String, dynamic> toJson() => {
-    "item_code": code,
-    "qty": quantity,
-    "rate": price,
-  };
+  Map<String, dynamic> toJson() => {"item_code": code, "qty": quantity};
 
   CartItem copyWith({
     String? code,

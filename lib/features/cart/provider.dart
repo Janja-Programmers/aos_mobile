@@ -99,29 +99,30 @@ class CartProvider with ChangeNotifier {
   }
 
   Future<bool> remove(String code) async {
-    // 1️⃣ Find the item locally before deletion
+    // 1️⃣ Get the item locally
     final item = _items.firstWhere(
       (e) => e.code == code,
       orElse: () => CartItem(code: code, name: '', price: 0, quantity: 0),
     );
 
-    // 2️⃣ Try remote sync first
-    final remoteResult = await repo.updateRemoteCart(
-      item.copyWith(
-        quantity: 0,
-      ), // set qty to 0 or use a delete API if available
-    );
+    // 2️⃣ Try remote sync but don't block local deletion
+    try {
+      final remoteResult = await repo.updateRemoteCart(
+        item.copyWith(quantity: 0),
+      );
+      remoteResult.fold(
+        (failure) => _setError("Remote sync failed: ${failure.message}"),
+        (_) => null,
+      );
+    } catch (e) {
+      // Log remote errors silently if needed
+      _setError("Remote sync exception: $e");
+    }
 
-    final remoteFailed = remoteResult.fold((failure) {
-      _setError("Remote sync failed: ${failure.message}");
-      return true;
-    }, (_) => false);
+    // 3️⃣ Always delete locally
+    final localResult = await removeFromCart(code);
 
-    if (remoteFailed) return false;
-
-    // 3️⃣ Proceed to local removal
-    final result = await removeFromCart(code);
-    return result.fold(
+    return localResult.fold(
       (failure) {
         _setError(failure.message);
         return false;

@@ -76,6 +76,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
             onRefresh: _onRefresh,
             child: CustomScrollView(
               slivers: [
+                // ----- SLIDER -----
+                SliverToBoxAdapter(child: SliderCarousel()),
+
                 // ----- LOADING / ERROR / EMPTY -----
                 if (productProvider.isLoading)
                   const ProductsLoadingWidget()
@@ -96,15 +99,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
-                      child: ProductsEmptyWidget(
-                        query: productProvider.currentSearch,
-                      ),
+                      child: ProductsEmptyWidget(onRetry: _onRefresh),
                     ),
                   )
                 else ...[
-                  // ----- SLIDER -----
-                  SliverToBoxAdapter(child: SliderCarousel()),
-
                   // ----- SEARCH BAR -----
                   SliverToBoxAdapter(
                     child: Padding(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '/core/utils/logger.dart';
 import '/features/cart/domain/cart.dart';
 import '/features/cart/provider.dart';
 import '/features/website/domain/webitem.dart';
@@ -13,8 +12,13 @@ import '../utils/vendor_card.dart';
 
 class ProductActionBar extends StatelessWidget {
   final WebsiteItem product;
+  final bool inStock;
 
-  const ProductActionBar({super.key, required this.product});
+  const ProductActionBar({
+    super.key,
+    required this.product,
+    required this.inStock,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,15 +33,11 @@ class ProductActionBar extends StatelessWidget {
       image: product.imageUrl,
     );
 
-    appLogger.i(
-      'ProductActionBar: Product ${product.id} of code ${product.itemCode} is in cart: $isInCart',
-    );
-
     return Row(
       children: [
         Expanded(
           child:
-              product.inStock
+              inStock
                   ? isInCart
                       ? ElevatedButton.icon(
                         onPressed: () => context.push('/cart'),

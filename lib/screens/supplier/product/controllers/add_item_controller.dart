@@ -59,11 +59,18 @@ class AddItemController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setMaintainStock(bool value) {
+    maintainStock = value;
+    notifyListeners();
+  }
+
   AddItemController({
     required this.provider,
     required this.apiClient,
     Product? initialProduct,
   }) {
+    reset();
+
     if (initialProduct != null) {
       setInitialProduct(initialProduct);
     } else {
@@ -104,6 +111,8 @@ class AddItemController extends ChangeNotifier {
         ),
       );
     }
+
+    maintainStock = product!.isStockItem == 1;
 
     notifyListeners();
   }
@@ -270,6 +279,7 @@ class AddItemController extends ChangeNotifier {
 
   void reset() {
     product = null;
+    maintainStock = false;
     nameController.clear();
     groupController.clear();
     itemCodeController.clear();

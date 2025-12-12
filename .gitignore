@@ -58,3 +58,4 @@ app.*.map.json
 /web
 READ.md
 *.jks
+/.vscode

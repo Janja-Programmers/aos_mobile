@@ -29,15 +29,23 @@ class _AddItemScreenState extends State<AddItemScreen> {
   @override
   void initState() {
     super.initState();
+
+    final ctrl = context.read<AddItemController>();
+
+    // ✅ Step 1: Reset everything to default
+    ctrl.reset();
+
+    // ✅ Step 2: Set loading state
+    ctrl.setLoading(true);
+
+    // ✅ Step 3: Async hydration for editing or fetching by name
     Future.microtask(() async {
       try {
-        final ctrl = context.read<AddItemController>();
-        ctrl.reset();
-        ctrl.setLoading(true);
-
         if (widget.product != null) {
+          // Editing existing product
           ctrl.setInitialProduct(widget.product!);
         } else if (widget.productName != null) {
+          // Fetch product by name (optional)
           final fetched = await ctrl.fetchSingleProduct(widget.productName!);
           if (fetched != null && mounted) {
             ctrl.setInitialProduct(fetched);
@@ -47,7 +55,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
             return;
           }
         }
-      } catch (e) {
+        // ✅ At this point, either new product (empty) or existing product is loaded
+      } catch (e, stack) {
         if (mounted) {
           topSnackBar(
             context,
@@ -55,9 +64,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
             type: TopSnackType.error,
           );
         }
+        debugPrint('Error in AddItemScreen.initState(): $e\n$stack');
       } finally {
         if (mounted) {
-          context.read<AddItemController>().setLoading(false);
+          // ✅ Always reset loading state
+          ctrl.setLoading(false);
         }
       }
     });

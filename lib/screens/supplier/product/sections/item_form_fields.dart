@@ -135,20 +135,22 @@ class _ItemFormFieldsState extends State<ItemFormFields> {
           fieldSpacing,
 
           // 🔷 Maintain Stock Checkbox
-          Row(
-            children: [
-              Checkbox(
-                value: controller.maintainStock,
-                onChanged: (value) {
-                  controller.maintainStock = value ?? false;
-                  setState(() {});
-                },
-              ),
-              Text(
-                'Maintain Stock',
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-            ],
+          Consumer<AddItemController>(
+            builder: (_, controller, _) {
+              return Row(
+                children: [
+                  Checkbox(
+                    value: controller.maintainStock,
+                    onChanged:
+                        (value) => controller.setMaintainStock(value ?? false),
+                  ),
+                  Text(
+                    'Maintain Stock',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ],
+              );
+            },
           ),
           fieldSpacing,
 

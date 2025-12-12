@@ -202,6 +202,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                               title: product.name,
                                               imageUrl: product.imageUrl,
                                               price: product.price.toDouble(),
+                                              itemGroup: product.itemGroup,
+                                              inStock: product.inStock,
                                             ),
                                           );
                                         },

@@ -3,8 +3,12 @@ import 'package:flutter/material.dart';
 import '/core/constants/colors.dart';
 import '/core/utils/formatters.dart';
 
+import '/features/cart/domain/cart.dart';
 import '/features/wishlist/domain/wishlist_item.dart';
+
 import '/screens/customer/web-items/widgets/image_or_placeholder.dart';
+
+import 'move_to_cart.dart';
 
 class WishlistItemCard extends StatelessWidget {
   final WishlistItem item;
@@ -68,31 +72,31 @@ class WishlistItemCard extends StatelessWidget {
                         color: AppColors.black,
                       ),
                     ),
-                    // const SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
-                    // // 👇 Conditional rendering of the MoveToCartButton
-                    // if (inStock == null || inStock == true)
-                    //   SizedBox(
-                    //     width: double.infinity,
-                    //     child: MoveToCartButton(
-                    //       item: CartItem(
-                    //         code: item.id,
-                    //         name: item.title,
-                    //         image: item.imageUrl,
-                    //         price: item.price,
-                    //         quantity: 1,
-                    //       ),
-                    //       wishlistItemId: item.id,
-                    //     ),
-                    //   )
-                    // else
-                    //   const Text(
-                    //     'Out of Stock',
-                    //     style: TextStyle(
-                    //       color: Color.fromARGB(255, 220, 71, 61),
-                    //       fontWeight: FontWeight.bold,
-                    //     ),
-                    //   ),
+                    // 👇 Conditional rendering of the MoveToCartButton
+                    if (inStock == null || inStock == true)
+                      SizedBox(
+                        width: double.infinity,
+                        child: MoveToCartButton(
+                          item: CartItem(
+                            code: item.id,
+                            name: item.title,
+                            image: item.imageUrl,
+                            price: item.price,
+                            quantity: 1,
+                          ),
+                          wishlistItemId: item.id,
+                        ),
+                      )
+                    else
+                      const Text(
+                        'Out of Stock',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 220, 71, 61),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                   ],
                 ),
               ),

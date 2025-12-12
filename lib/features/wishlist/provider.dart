@@ -37,8 +37,12 @@ class WishlistProvider extends ChangeNotifier {
   Future<void> loadWishlist() async {
     _setLoading(true);
     try {
-      _items.clear();
-      _items.addAll(await getWishlist());
+      final result = await getWishlist();
+
+      _items
+        ..clear()
+        ..addAll(result);
+
       _error = null;
     } catch (e) {
       _error = 'Failed to load wishlist: $e';

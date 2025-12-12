@@ -2,7 +2,7 @@ name: africaonlinestores
 description: "Multivendor Application."
 publish_to: "none"
 
-version: 1.0.0+3
+version: 1.0.1+5
 
 environment:
   sdk: ^3.7.2
@@ -97,4 +97,3 @@ flutter_native_splash:
   android_12:
     image: assets/splash.png
     icon_background_color: "#ffffff"
-    

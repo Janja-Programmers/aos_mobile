@@ -29,7 +29,6 @@ class ProductCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        context.read<WishlistProvider>().loadWishlist();
         context.push('/product/${item.itemCode}');
       },
       child: Card(
@@ -126,6 +125,8 @@ class ProductCard extends StatelessWidget {
                       title: item.name,
                       imageUrl: item.imageUrl,
                       price: item.price.toDouble(),
+                      itemGroup: item.itemGroup,
+                      inStock: item.inStock,
                     ),
                   );
                 },

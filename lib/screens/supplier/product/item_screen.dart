@@ -11,7 +11,7 @@ import '/shared/widgets/empty_state.dart';
 import '/shared/widgets/main_bar.dart';
 import '/shared/widgets/error_state.dart';
 
-import '/features/product/provider.dart';
+import '../../../features/product/product_provider.dart';
 
 import 'widgets/item_tile.dart';
 

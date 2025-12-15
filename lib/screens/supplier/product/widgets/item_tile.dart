@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '/features/product/provider.dart';
+import '../../../../features/product/product_provider.dart';
 
 import '/core/constants/colors.dart';
 import '/core/utils/snackbar.dart';

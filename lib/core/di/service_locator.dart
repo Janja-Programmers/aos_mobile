@@ -23,11 +23,9 @@ import '/features/website/slider_prov.dart';
 import '/features/reviews/remote.dart';
 
 /***** PRODUCT *******/
-import '/features/product/data/remote.dart';
-import '/features/product/data/repo_impl.dart';
-import '/features/product/domain/repo.dart';
-import '/features/product/domain/usecase.dart';
-import '/features/product/provider.dart';
+import '/features/product/data/product_remote.dart';
+import '/features/product/data/product_repository.dart';
+import '/features/product/product_provider.dart';
 import '/screens/customer/web-items/utils/vendor_utils.dart';
 
 /***** SALESORDER *******/
@@ -278,21 +276,24 @@ Future<void> init() async {
     ),
   );
 
-  // PRODUCTS Feature
-  // === Data ===
-  sl.registerLazySingleton<ProductRemoteDataSource>(
-    () => ProductRemoteDataSourceImpl(sl()),
-  );
-  // === Repository ===
-  sl.registerLazySingleton<ProductRepo>(() => ProductRepoImpl(sl()));
-  // === Domain ===
-  sl.registerLazySingleton(() => GetProductsUseCase(sl()));
-  sl.registerLazySingleton(() => CreateProductUseCase(sl()));
-  sl.registerLazySingleton(() => UpdateProductUseCase(sl()));
-  sl.registerLazySingleton(() => VendorUtils(sl<APIClient>()));
+  // =====================
+  // PRODUCT FEATURE
+  // =====================
 
-  // === Provider ===
-  sl.registerFactory(() => ProductProvider(sl(), sl(), sl()));
+  // Remote (talks to API)
+  sl.registerLazySingleton<ProductRemote>(() => ProductRemote(sl<APIClient>()));
+
+  // Repository (thin wrapper over remote)
+  sl.registerLazySingleton<ProductRepository>(
+    () => ProductRepository(sl<ProductRemote>()),
+  );
+
+  // Provider (state + orchestration)
+  sl.registerFactory<ProductProvider>(
+    () => ProductProvider(sl<ProductRepository>()),
+  );
+
+  sl.registerLazySingleton(() => VendorUtils(sl<APIClient>()));
 
   // ADDRESS Feature
   // ✅ Remote datasource

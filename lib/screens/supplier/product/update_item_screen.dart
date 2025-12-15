@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '/core/utils/snackbar.dart';
 
-import '/features/product/domain/product.dart';
+import '/features/product/data/product_model.dart';
 
 import '/shared/widgets/app_drawer.dart';
 import '/shared/widgets/custom_button.dart';
@@ -14,7 +14,7 @@ import 'controllers/add_item_controller.dart';
 import 'sections/item_form_fields.dart';
 
 class AddItemScreen extends StatefulWidget {
-  final Product? product;
+  final ProductModel? product;
   final String? productName;
 
   const AddItemScreen({super.key, this.product, this.productName});

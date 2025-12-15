@@ -1,13 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
 import '/core/constants/colors.dart';
-import '/features/product/domain/product.dart';
+import '/features/product/data/product_model.dart';
+
 import '../controllers/add_item_controller.dart';
 
 class ImageVideoPickerSection extends StatelessWidget {
   final AddItemController controller;
-  final Product? product;
+  final ProductModel? product;
 
   const ImageVideoPickerSection({
     super.key,

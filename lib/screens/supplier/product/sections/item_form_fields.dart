@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '/core/utils/validators.dart';
-import '/features/product/domain/product.dart';
+import '/features/product/data/product_model.dart';
 import '/shared/widgets/form_fields.dart';
 
 import '../controllers/add_item_controller.dart';
@@ -11,7 +11,7 @@ import '../widgets/web_spec_table.dart';
 import 'image_video_picker.dart';
 
 class ItemFormFields extends StatefulWidget {
-  final Product? product;
+  final ProductModel? product;
   final AddItemController controller;
   final bool isUpdate;
   final GlobalKey<FormState> formKey;

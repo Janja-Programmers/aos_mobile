@@ -11,7 +11,7 @@ import 'screens/auth/auth_provider.dart';
 
 // PRODUCT Feature
 import 'features/charts/presentation/provider.dart';
-import 'features/product/provider.dart';
+import 'features/product/product_provider.dart';
 import 'screens/customer/web-items/utils/vendor_prov.dart';
 import 'screens/customer/web-items/utils/vendor_utils.dart';
 

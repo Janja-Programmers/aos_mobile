@@ -1,17 +1,17 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '/core/utils/api_client.dart';
 import '/core/utils/snackbar.dart';
-import '/core/di/service_locator.dart';
 
-import '/features/product/domain/product.dart';
-import '/features/product/provider.dart';
+import '/features/product/product_provider.dart';
+import '/features/product/data/product_model.dart';
 
 class AddItemController extends ChangeNotifier {
-  Product? product;
+  ProductModel? product;
 
   final ProductProvider provider;
   final APIClient apiClient;
@@ -24,6 +24,7 @@ class AddItemController extends ChangeNotifier {
   final priceController = TextEditingController();
   final descController = TextEditingController();
   final shortDescController = TextEditingController();
+
   bool maintainStock = false;
 
   final List<WebsiteSpecificationEntry> specControllers = [];
@@ -36,7 +37,7 @@ class AddItemController extends ChangeNotifier {
             description: entry.descriptionController.text.trim(),
           ),
         )
-        .where((spec) => spec.label.isNotEmpty || spec.description.isNotEmpty)
+        .where((s) => s.label.isNotEmpty || s.description.isNotEmpty)
         .toList();
   }
 
@@ -67,28 +68,20 @@ class AddItemController extends ChangeNotifier {
   AddItemController({
     required this.provider,
     required this.apiClient,
-    Product? initialProduct,
+    ProductModel? initialProduct,
   }) {
     reset();
 
     if (initialProduct != null) {
       setInitialProduct(initialProduct);
-    } else {
-      // If creating new, start with one spec row
-      specControllers.add(WebsiteSpecificationEntry());
     }
   }
 
-  Future<Product?> fetchSingleProduct(String name) async {
-    try {
-      final product = await provider.getProductByName(name);
-      return product;
-    } catch (e) {
-      return null;
-    }
+  Future<ProductModel?> fetchSingleProduct(String name) async {
+    return await provider.getProductByName(name);
   }
 
-  void setInitialProduct(Product newProduct) {
+  void setInitialProduct(ProductModel newProduct) {
     if (product != null) return;
 
     product = newProduct;
@@ -130,12 +123,15 @@ class AddItemController extends ChangeNotifier {
     }
   }
 
-  Future<bool> submit(BuildContext context, Product? existingProduct) async {
+  Future<bool> submit(
+    BuildContext context,
+    ProductModel? existingProduct,
+  ) async {
     isSubmitting = true;
     notifyListeners();
 
     try {
-      if (formKey.currentState == null || !formKey.currentState!.validate()) {
+      if (!formKey.currentState!.validate()) {
         topSnackBar(
           context,
           'Please fix form errors',
@@ -144,12 +140,10 @@ class AddItemController extends ChangeNotifier {
         return false;
       }
 
-      final specs = getWebsiteSpecificationsFromControllers();
-
-      final productToSubmit = Product(
+      final model = ProductModel(
         name: existingProduct?.name ?? itemCodeController.text.trim(),
         itemName: nameController.text.trim(),
-        itemPrice: double.tryParse(priceController.text.trim()) ?? 0.0,
+        itemPrice: double.tryParse(priceController.text) ?? 0,
         category: groupController.text.trim(),
         isStockItem: maintainStock ? 1 : 0,
         vendor: existingProduct?.vendor,
@@ -157,19 +151,16 @@ class AddItemController extends ChangeNotifier {
         demoVideo: uploadedVideoUrl,
         websiteDescription: descController.text.trim(),
         shortWebsiteDescription: shortDescController.text.trim(),
-        websiteSpecifications: specs,
+        websiteSpecifications: getWebsiteSpecificationsFromControllers(),
       );
 
-      final payload = _buildPayloadFromProduct(productToSubmit);
-
       final success =
-          await (existingProduct == null
-              ? provider.createProductFromRaw(payload)
-              : provider.updateExistingItem(productToSubmit));
+          existingProduct == null
+              ? await provider.createProduct(model)
+              : await provider.updateExistingItem(model);
 
       return success;
-    } catch (e) {
-      if (!context.mounted) return false;
+    } catch (_) {
       topSnackBar(context, 'Error saving product', type: TopSnackType.error);
       return false;
     } finally {
@@ -188,20 +179,17 @@ class AddItemController extends ChangeNotifier {
       notifyListeners();
 
       final picker = ImagePicker();
-      XFile? pickedFile;
-
-      pickedFile =
+      final picked =
           isImage
               ? await picker.pickImage(source: ImageSource.gallery)
               : await picker.pickVideo(source: ImageSource.gallery);
 
-      if (pickedFile == null) {
-        topSnackBar(context, 'No file selected', type: TopSnackType.info);
+      if (picked == null) {
+        topSnackBar(context, 'No file selected');
         return null;
       }
 
-      final file = File(pickedFile.path);
-
+      final file = File(picked.path);
       final uploadedUrl = await uploadFile(file);
 
       if (isImage) {
@@ -215,7 +203,7 @@ class AddItemController extends ChangeNotifier {
       notifyListeners();
       return uploadedUrl;
     } catch (e) {
-      topSnackBar(context, 'Error: ${e.toString()}', type: TopSnackType.error);
+      topSnackBar(context, 'Upload failed');
       return null;
     } finally {
       // ✅ Reset both flags together
@@ -225,40 +213,22 @@ class AddItemController extends ChangeNotifier {
     }
   }
 
-  Future<List<String>> fetchItemGroups() async {
+  Future<String?> uploadFile(File file) async {
     try {
-      final res = await sl<APIClient>().client.get(
-        'https://africaonlinestores.com/api/resource/Item Group',
-        queryParameters: {
-          'fields': '["name"]',
-          'limit_page_length': 20,
-          'filters': '[["is_group", "=", 0]]',
-        },
-      );
-      return (res.data['data'] as List)
-          .map((e) => e['name'] as String)
-          .toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  Future<String?> uploadFile(File? file) async {
-    if (file == null) return null;
-
-    try {
-      final fileName = file.path.split('/').last;
       final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(file.path, filename: fileName),
+        'file': await MultipartFile.fromFile(
+          file.path,
+          filename: file.path.split('/').last,
+        ),
       });
 
-      final response = await apiClient.client.post(
+      final res = await apiClient.client.post(
         '/api/method/upload_file',
         data: formData,
       );
 
-      return response.data['message']['file_url'];
-    } catch (e) {
+      return res.data['message']['file_url'];
+    } catch (_) {
       return null;
     }
   }
@@ -272,20 +242,25 @@ class AddItemController extends ChangeNotifier {
     priceController.dispose();
     descController.dispose();
     shortDescController.dispose();
+
     for (final entry in specControllers) {
       entry.dispose();
     }
+
+    super.dispose();
   }
 
   void reset() {
     product = null;
     maintainStock = false;
+
     nameController.clear();
     groupController.clear();
     itemCodeController.clear();
     priceController.clear();
     descController.clear();
     shortDescController.clear();
+
     uploadedImageUrl = null;
     uploadedVideoUrl = null;
     selectedImage = null;
@@ -300,29 +275,23 @@ class AddItemController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Map<String, dynamic> _buildPayloadFromProduct(Product p) {
-    return {
-      "name": p.name,
-      "item_name": p.itemName,
-      "item_price": p.itemPrice,
-      "category": p.category,
-      "is_stock_item": p.isStockItem,
-      "vendor": p.vendor,
-      "web_long_description": p.websiteDescription,
-      "short_description": p.shortWebsiteDescription,
-      "image": p.image,
-      "demo_video": p.demoVideo,
-      "website_specifications":
-          p.websiteSpecifications
-              ?.map(
-                (e) => {
-                  "doctype": "Product Website Specification",
-                  "label": e.label,
-                  "description": e.description,
-                },
-              )
-              .toList(),
-    };
+  Future<List<String>> fetchItemGroups() async {
+    try {
+      final res = await apiClient.client.get(
+        '/api/resource/Item Group',
+        queryParameters: {
+          'fields': '["name"]',
+          'filters': '[["is_group","=",0]]',
+          'limit_page_length': 50,
+        },
+      );
+
+      return (res.data['data'] as List)
+          .map((e) => e['name'] as String)
+          .toList();
+    } catch (_) {
+      return [];
+    }
   }
 }
 

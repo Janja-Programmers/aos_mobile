@@ -9,7 +9,7 @@ import '/screens/auth/screens/register_screen.dart';
 import '/screens/auth/screens/reset_password.dart';
 
 // Seller
-import '/features/product/domain/product.dart';
+import '/features/product/data/product_model.dart';
 import '/screens/supplier/product/item_screen.dart';
 import '/screens/supplier/dashboard/dashboard.dart';
 import '/screens/supplier/product/update_item_screen.dart';
@@ -166,7 +166,7 @@ class AppRouter {
       GoRoute(
         path: '/edit-item/:name',
         builder: (_, state) {
-          final product = state.extra as Product;
+          final product = state.extra as ProductModel;
           return AddItemScreen(product: product);
         },
       ),

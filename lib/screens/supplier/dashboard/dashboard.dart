@@ -7,7 +7,7 @@ import '/features/auth/domain/user.dart';
 import '/features/d_note/prov.dart';
 import '/features/invoice/prov.dart';
 import '/features/order/prov.dart';
-import '/features/product/provider.dart';
+import '../../../features/product/product_provider.dart';
 import '/features/stock/providers/all.dart';
 
 import '/screens/auth/auth_provider.dart';

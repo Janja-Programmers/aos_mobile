@@ -1,26 +1,68 @@
 import 'package:flutter/material.dart';
 
-import 'features/cart/provider.dart';
-import 'screens/auth/auth_provider.dart';
+void main() {
+  runApp(const MyApp());
+}
 
-import 'core/di/service_locator.dart';
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
-import 'app.dart';
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        // This is the theme of your application.
+        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+      ),
+      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    );
+  }
+}
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
 
-  // Set up GetIt
-  await init();
+  final String title;
 
-  // Load user
-  final auth = sl<AuthProvider>();
-  await auth.loadUser();
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
 
-  // ✅ Load cart
-  final cartProvider = sl<CartProvider>();
-  await cartProvider.loadCart();
+class _MyHomePageState extends State<MyHomePage> {
+  int _counter = 0;
 
-  // Run app
-  runApp(App(auth: auth));
+  void _incrementCounter() {
+    setState(() {
+      _counter++;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(widget.title),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: .center,
+          children: [
+            const Text('You have pushed the button this many times:'),
+            Text(
+              '$_counter',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _incrementCounter,
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import '../data/auth_api.dart';
 import 'aos_ui.dart';
 import 'verify_otp_screen.dart';
@@ -8,10 +9,10 @@ class RegisterScreen extends StatefulWidget {
   final AuthApi authApi;
 
   @override
-  State<RegisterScreen> createState() => _SignupScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _SignupScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _email = TextEditingController();
@@ -32,7 +33,7 @@ class _SignupScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _signup() async {
+  Future<void> _register() async {
     if (!_accept) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -93,17 +94,17 @@ class _SignupScreenState extends State<RegisterScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: SizedBox(
-                  height: 36,
-                  width: 36,
+                  height: 56,
+                  width: 56,
                   child: Image.asset(
                     'assets/images/logo.png',
-                    height: 20,
-                    width: 20,
+                    height: 40,
+                    width: 40,
                   ),
                 ),
               ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 2),
               Text('Register', style: AOSUi.h1(context)),
               const SizedBox(height: 6),
               Text(
@@ -201,7 +202,7 @@ class _SignupScreenState extends State<RegisterScreen> {
               const SizedBox(height: 10),
               AOSUi.primaryButton(
                 text: 'Register',
-                onPressed: _signup,
+                onPressed: _register,
                 loading: _loading,
               ),
 
@@ -212,7 +213,7 @@ class _SignupScreenState extends State<RegisterScreen> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10),
                     child: Text(
-                      'Or Register with',
+                      'Or Continue with',
                       style: TextStyle(color: AOSUi.muted),
                     ),
                   ),
@@ -224,10 +225,10 @@ class _SignupScreenState extends State<RegisterScreen> {
               Row(
                 children: [
                   AOSUi.socialButton(
-                    icon: const Icon(
-                      Icons.g_mobiledata,
-                      size: 28,
-                      color: Colors.red,
+                    icon: SvgPicture.asset(
+                      'assets/icons/google.svg',
+                      width: 22,
+                      height: 22,
                     ),
                     text: 'Google',
                     onTap: () {
@@ -236,10 +237,10 @@ class _SignupScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(width: 12),
                   AOSUi.socialButton(
-                    icon: const Icon(
-                      Icons.apple,
-                      size: 22,
-                      color: Colors.black,
+                    icon: SvgPicture.asset(
+                      'assets/icons/apple.svg',
+                      width: 22,
+                      height: 22,
                     ),
                     text: 'Apple',
                     onTap: () {
@@ -254,12 +255,12 @@ class _SignupScreenState extends State<RegisterScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Do you have an account? ',
+                    'Already have an account? ',
                     style: AOSUi.bodyMuted(context),
                   ),
                   GestureDetector(
                     onTap: () {
-                      // TODO: navigate to Signin screen later
+                      // TODO: navigate to Login screen later
                       Navigator.push(
                         context,
                         MaterialPageRoute(

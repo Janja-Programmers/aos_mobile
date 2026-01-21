@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter/services.dart';
 import '../data/auth_api.dart';
-
 import 'aos_ui.dart';
 
 class VerifyOTPScreen extends StatefulWidget {
@@ -25,9 +24,24 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
   bool _resending = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Rebuild when focus changes so UI can reflect focus state if needed
+    for (final n in _nodes) {
+      n.addListener(() {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
+  @override
   void dispose() {
-    for (final c in _controllers) c.dispose();
-    for (final n in _nodes) n.dispose();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final n in _nodes) {
+      n.dispose();
+    }
     super.dispose();
   }
 
@@ -78,7 +92,6 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
         return;
       }
 
-      // success modal like screenshot 3
       await showModalBottomSheet(
         context: context,
         isScrollControlled: false,
@@ -86,9 +99,7 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
         builder: (_) => _SuccessSheet(
           onGoLogin: () {
             Navigator.pop(context); // close sheet
-            Navigator.pop(
-              context,
-            ); // back to signup or root (replace with login route later)
+            Navigator.pop(context); // back (replace with Login route later)
             Navigator.pop(context);
           },
         ),
@@ -120,6 +131,61 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
     }
   }
 
+  Widget _otpInputs() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const int count = 6;
+        const double gap = 10;
+
+        // Try to fit 6 in a row. If the screen is small, Wrap will handle it.
+        final available = constraints.maxWidth - (gap * (count - 1));
+        final w = (available / count).clamp(44.0, 56.0); // responsive width
+        final h = 56.0;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          alignment: WrapAlignment.spaceBetween,
+          children: List.generate(count, (i) {
+            return SizedBox(
+              width: w,
+              height: h,
+              child: TextField(
+                controller: _controllers[i],
+                focusNode: _nodes[i],
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                maxLength: 1,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+                decoration: InputDecoration(
+                  counterText: '',
+                  filled: true,
+                  fillColor: Colors.white,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: AOSUi.stroke),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(
+                      color: Colors.black,
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+                onChanged: (v) => _onChanged(i, v),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -138,14 +204,14 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
         centerTitle: true,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 22),
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+          children: [
+            const SizedBox(height: 6),
 
-              // icon circle
-              Container(
+            // icon circle
+            Center(
+              child: Container(
                 height: 96,
                 width: 96,
                 decoration: const BoxDecoration(
@@ -168,94 +234,60 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
                   ),
                 ),
               ),
+            ),
 
-              const SizedBox(height: 20),
-              Text('Verify OTP', style: AOSUi.h2(context)),
-              const SizedBox(height: 10),
-              Text(
-                'We have to sent the code verification to',
+            const SizedBox(height: 20),
+            Center(child: Text('Verify OTP', style: AOSUi.h2(context))),
+            const SizedBox(height: 10),
+            Center(
+              child: Text(
+                'We have sent the verification code to',
                 style: AOSUi.bodyMuted(context),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 6),
-              Text(
+            ),
+            const SizedBox(height: 6),
+            Center(
+              child: Text(
                 widget.email,
                 style: const TextStyle(fontWeight: FontWeight.w700),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 22),
+            ),
+            const SizedBox(height: 22),
 
-              // OTP boxes
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(6, (i) {
-                  // final isActive =
-                  //     _nodes[i].hasFocus || _controllers[i].text.isNotEmpty;
-                  return SizedBox(
-                    width: 52,
-                    height: 56,
-                    child: TextField(
-                      controller: _controllers[i],
-                      focusNode: _nodes[i],
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      maxLength: 1,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      decoration: InputDecoration(
-                        counterText: '',
-                        filled: true,
-                        fillColor: Colors.white,
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: AOSUi.stroke),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(
-                            color: Colors.black,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                      onChanged: (v) => _onChanged(i, v),
-                    ),
-                  );
-                }),
-              ),
+            _otpInputs(),
 
-              const SizedBox(height: 22),
-              AOSUi.primaryButton(
-                text: 'Submit',
-                onPressed: _verify,
-                loading: _loading,
-              ),
+            const SizedBox(height: 22),
+            AOSUi.primaryButton(
+              text: 'Submit',
+              onPressed: _verify,
+              loading: _loading,
+            ),
 
-              const SizedBox(height: 18),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Didn't receive the code? ",
-                    style: AOSUi.bodyMuted(context),
-                  ),
-                  GestureDetector(
-                    onTap: _resending ? null : _resend,
-                    child: Text(
-                      _resending ? 'Sending...' : 'Resend',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: Colors.black,
-                      ),
+            const SizedBox(height: 18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Didn't receive the code? ",
+                  style: AOSUi.bodyMuted(context),
+                ),
+                GestureDetector(
+                  onTap: _resending ? null : _resend,
+                  child: Text(
+                    _resending ? 'Sending...' : 'Resend',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
 
-              const Spacer(),
-              const SizedBox(height: 12),
-            ],
-          ),
+            const SizedBox(height: 18),
+          ],
         ),
       ),
     );
@@ -268,68 +300,73 @@ class _SuccessSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).viewPadding.bottom;
+
     return Container(
-      color: Colors.black.withOpacity(0.25),
+      color: const Color.fromRGBO(0, 0, 0, 0.25),
       child: Align(
         alignment: Alignment.bottomCenter,
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(22, 12, 22, 22),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                height: 5,
-                width: 54,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE6E8EC),
-                  borderRadius: BorderRadius.circular(99),
+        child: SafeArea(
+          top: false,
+          child: Container(
+            padding: EdgeInsets.fromLTRB(22, 12, 22, 22 + bottomPad),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: 5,
+                  width: 54,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE6E8EC),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 22),
+                const SizedBox(height: 22),
 
-              // big green circle + check
-              Container(
-                height: 96,
-                width: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF2ECC71).withOpacity(0.15),
-                ),
-                child: Center(
-                  child: Container(
-                    height: 64,
-                    width: 64,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xFF2ECC71),
-                    ),
-                    child: const Icon(
-                      Icons.check,
-                      color: Colors.white,
-                      size: 30,
+                Container(
+                  height: 96,
+                  width: 96,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color.fromRGBO(46, 204, 113, 0.15),
+                  ),
+                  child: Center(
+                    child: Container(
+                      height: 64,
+                      width: 64,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFF2ECC71),
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 30,
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 18),
-              Text('Register Success', style: AOSUi.h2(context)),
-              const SizedBox(height: 10),
-              Text(
-                'Congratulation! your account already created.\nPlease login to get amazing experience.',
-                textAlign: TextAlign.center,
-                style: AOSUi.bodyMuted(context),
-              ),
-              const SizedBox(height: 18),
-              AOSUi.primaryButton(
-                text: 'Go to Login page',
-                onPressed: onGoLogin,
-              ),
-            ],
+                const SizedBox(height: 18),
+                Text('Register Success', style: AOSUi.h2(context)),
+                const SizedBox(height: 10),
+                Text(
+                  'Congratulations! Your account has been created.\nPlease login to continue.',
+                  textAlign: TextAlign.center,
+                  style: AOSUi.bodyMuted(context),
+                ),
+                const SizedBox(height: 18),
+
+                AOSUi.primaryButton(
+                  text: 'Proceed to Login',
+                  onPressed: onGoLogin,
+                ),
+              ],
+            ),
           ),
         ),
       ),

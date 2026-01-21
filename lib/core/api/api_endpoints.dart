@@ -1,3 +1,3 @@
 class ApiEndpoints {
-  static const String baseUrl = 'http://localhost:8000';
+  static const String baseUrl = 'https://aos-staging.m.frappe.cloud/';
 }

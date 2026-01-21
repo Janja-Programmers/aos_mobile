@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../data/auth_api.dart';
-import 'aos_ui.dart';
+
+import '/core/theme/app_colors.dart';
+import '/features/auth/data/auth_api.dart';
+
+import '../../../core/theme/app_theme.dart';
 
 class VerifyOTPScreen extends StatefulWidget {
   const VerifyOTPScreen({
@@ -167,7 +170,7 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
                   fillColor: Colors.white,
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: AOSUi.stroke),
+                    borderSide: const BorderSide(color: AppColors.stroke),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -189,7 +192,7 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AOSUi.bg,
+      backgroundColor: AppColors.bg,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -237,12 +240,12 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
             ),
 
             const SizedBox(height: 20),
-            Center(child: Text('Verify OTP', style: AOSUi.h2(context))),
+            Center(child: Text('Verify OTP', style: AppTheme.h2(context))),
             const SizedBox(height: 10),
             Center(
               child: Text(
                 'We have sent the verification code to',
-                style: AOSUi.bodyMuted(context),
+                style: AppTheme.bodyMuted(context),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -259,7 +262,7 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
             _otpInputs(),
 
             const SizedBox(height: 22),
-            AOSUi.primaryButton(
+            AppTheme.primaryButton(
               text: 'Submit',
               onPressed: _verify,
               loading: _loading,
@@ -271,7 +274,7 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
               children: [
                 Text(
                   "Didn't receive the code? ",
-                  style: AOSUi.bodyMuted(context),
+                  style: AppTheme.bodyMuted(context),
                 ),
                 GestureDetector(
                   onTap: _resending ? null : _resend,
@@ -352,16 +355,16 @@ class _SuccessSheet extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 18),
-                Text('Register Success', style: AOSUi.h2(context)),
+                Text('Register Success', style: AppTheme.h2(context)),
                 const SizedBox(height: 10),
                 Text(
                   'Congratulations! Your account has been created.\nPlease login to continue.',
                   textAlign: TextAlign.center,
-                  style: AOSUi.bodyMuted(context),
+                  style: AppTheme.bodyMuted(context),
                 ),
                 const SizedBox(height: 18),
 
-                AOSUi.primaryButton(
+                AppTheme.primaryButton(
                   text: 'Proceed to Login',
                   onPressed: onGoLogin,
                 ),

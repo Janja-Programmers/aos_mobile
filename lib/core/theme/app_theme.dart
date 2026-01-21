@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
 
-class AOSUi {
-  static const bg = Colors.white;
-  static const text = Color(0xFF111111);
-  static const muted = Color(0xFF9AA0A6);
-  static const fieldBg = Color(0xFFF6F7F9);
-  static const stroke = Color(0xFFE6E8EC);
+import '/core/theme/app_colors.dart';
 
+class AppTheme {
   static TextStyle h1(BuildContext c) => Theme.of(c).textTheme.headlineMedium!
-      .copyWith(fontWeight: FontWeight.w800, color: text);
+      .copyWith(fontWeight: FontWeight.w800, color: AppColors.text);
 
-  static TextStyle h2(BuildContext c) => Theme.of(
-    c,
-  ).textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.w700, color: text);
+  static TextStyle h2(BuildContext c) => Theme.of(c).textTheme.headlineSmall!
+      .copyWith(fontWeight: FontWeight.w700, color: AppColors.text);
 
   static TextStyle bodyMuted(BuildContext c) =>
-      Theme.of(c).textTheme.bodyMedium!.copyWith(color: muted);
+      Theme.of(c).textTheme.bodyMedium!.copyWith(color: AppColors.muted);
 
   static BorderRadius pill = BorderRadius.circular(999);
 
@@ -25,14 +20,14 @@ class AOSUi {
   }) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: muted),
+      labelStyle: const TextStyle(color: AppColors.muted),
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       suffixIcon: suffixIcon,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(22),
-        borderSide: const BorderSide(color: stroke),
+        borderSide: const BorderSide(color: AppColors.stroke),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(22),
@@ -87,7 +82,7 @@ class AOSUi {
           height: 56,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: stroke),
+            border: Border.all(color: AppColors.stroke),
             color: Colors.white,
           ),
           child: Row(

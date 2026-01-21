@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import '../data/auth_api.dart';
-import 'aos_ui.dart';
+
+import '/features/auth/data/auth_api.dart';
+import '/core/theme/app_colors.dart';
+
+import '../../../core/theme/app_theme.dart';
 import 'verify_otp_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -83,7 +86,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AOSUi.bg,
+      backgroundColor: AppColors.bg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 22),
@@ -105,11 +108,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
 
               const SizedBox(height: 2),
-              Text('Register', style: AOSUi.h1(context)),
+              Text('Register', style: AppTheme.h1(context)),
               const SizedBox(height: 6),
               Text(
                 'Enter your details below to create your account',
-                style: AOSUi.bodyMuted(context),
+                style: AppTheme.bodyMuted(context),
               ),
               const SizedBox(height: 26),
 
@@ -119,7 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     TextFormField(
                       controller: _name,
-                      decoration: AOSUi.inputDecoration(label: 'Full Name'),
+                      decoration: AppTheme.inputDecoration(label: 'Full Name'),
                       validator: (v) => (v == null || v.trim().length < 2)
                           ? 'Enter your full name'
                           : null,
@@ -128,7 +131,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: AOSUi.inputDecoration(label: 'Email Address'),
+                      decoration: AppTheme.inputDecoration(label: 'Email Address'),
                       validator: (v) {
                         final t = (v ?? '').trim();
                         if (t.isEmpty) return 'Email is required';
@@ -140,7 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _password,
                       obscureText: _obscure1,
-                      decoration: AOSUi.inputDecoration(
+                      decoration: AppTheme.inputDecoration(
                         label: 'Password',
                         suffixIcon: IconButton(
                           onPressed: () =>
@@ -160,7 +163,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _confirm,
                       obscureText: _obscure2,
-                      decoration: AOSUi.inputDecoration(
+                      decoration: AppTheme.inputDecoration(
                         label: 'Confirm Password',
                         suffixIcon: IconButton(
                           onPressed: () =>
@@ -193,14 +196,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       'I Accept the Terms & Conditions and Privacy Policy',
                       style: Theme.of(
                         context,
-                      ).textTheme.bodyMedium!.copyWith(color: AOSUi.text),
+                      ).textTheme.bodyMedium!.copyWith(color: AppColors.text),
                     ),
                   ),
                 ],
               ),
 
               const SizedBox(height: 10),
-              AOSUi.primaryButton(
+              AppTheme.primaryButton(
                 text: 'Register',
                 onPressed: _register,
                 loading: _loading,
@@ -209,22 +212,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 18),
               Row(
                 children: const [
-                  Expanded(child: Divider(color: AOSUi.stroke)),
+                  Expanded(child: Divider(color: AppColors.stroke)),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10),
                     child: Text(
                       'Or Continue with',
-                      style: TextStyle(color: AOSUi.muted),
+                      style: TextStyle(color: AppColors.muted),
                     ),
                   ),
-                  Expanded(child: Divider(color: AOSUi.stroke)),
+                  Expanded(child: Divider(color: AppColors.stroke)),
                 ],
               ),
               const SizedBox(height: 14),
 
               Row(
                 children: [
-                  AOSUi.socialButton(
+                  AppTheme.socialButton(
                     icon: SvgPicture.asset(
                       'assets/icons/google.svg',
                       width: 22,
@@ -236,7 +239,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
                   const SizedBox(width: 12),
-                  AOSUi.socialButton(
+                  AppTheme.socialButton(
                     icon: SvgPicture.asset(
                       'assets/icons/apple.svg',
                       width: 22,
@@ -256,7 +259,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   Text(
                     'Already have an account? ',
-                    style: AOSUi.bodyMuted(context),
+                    style: AppTheme.bodyMuted(context),
                   ),
                   GestureDetector(
                     onTap: () {

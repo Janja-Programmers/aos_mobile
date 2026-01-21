@@ -1,25 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '/core/theme/app_colors.dart';
-import '/features/auth/data/auth_api.dart';
-
+import '../../../core/routing/app_routes.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
+import '../providers/auth_controller.dart';
 
-class VerifyOTPScreen extends StatefulWidget {
-  const VerifyOTPScreen({
-    super.key,
-    required this.authApi,
-    required this.email,
-  });
-  final AuthApi authApi;
+class VerifyOTPScreen extends ConsumerStatefulWidget {
+  const VerifyOTPScreen({super.key, required this.email});
   final String email;
 
   @override
-  State<VerifyOTPScreen> createState() => _VerifyOTPScreenState();
+  ConsumerState<VerifyOTPScreen> createState() => _VerifyOTPScreenState();
 }
 
-class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
+class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
   final _controllers = List.generate(6, (_) => TextEditingController());
   final _nodes = List.generate(6, (_) => FocusNode());
 
@@ -29,7 +26,6 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
   @override
   void initState() {
     super.initState();
-    // Rebuild when focus changes so UI can reflect focus state if needed
     for (final n in _nodes) {
       n.addListener(() {
         if (mounted) setState(() {});
@@ -50,9 +46,13 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
 
   String get _otp => _controllers.map((c) => c.text.trim()).join();
 
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   void _onChanged(int index, String value) {
     if (value.length > 1) {
-      // paste handling: take first 6 digits
       final digits = value.replaceAll(RegExp(r'\D'), '');
       for (int i = 0; i < 6; i++) {
         _controllers[i].text = i < digits.length ? digits[i] : '';
@@ -61,37 +61,26 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
       return;
     }
 
-    if (value.isNotEmpty && index < 5) {
-      _nodes[index + 1].requestFocus();
-    }
-    if (value.isEmpty && index > 0) {
-      _nodes[index - 1].requestFocus();
-    }
+    if (value.isNotEmpty && index < 5) _nodes[index + 1].requestFocus();
+    if (value.isEmpty && index > 0) _nodes[index - 1].requestFocus();
   }
 
   Future<void> _verify() async {
     if (_otp.length != 6) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Enter the 6-digit code')));
+      _snack('Enter the 6-digit code');
       return;
     }
 
     setState(() => _loading = true);
     try {
-      final res = await widget.authApi.verifyOtp(
-        email: widget.email,
-        otp: _otp,
-      );
-      final ok = res['ok'] == true;
-      final msg = (res['message'] ?? '').toString();
+      final (ok, msg) = await ref
+          .read(authControllerProvider.notifier)
+          .verifyOtp(email: widget.email, otp: _otp);
 
       if (!mounted) return;
 
       if (!ok) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
+        _snack(msg);
         return;
       }
 
@@ -102,16 +91,13 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
         builder: (_) => _SuccessSheet(
           onGoLogin: () {
             Navigator.pop(context); // close sheet
-            Navigator.pop(context); // back (replace with Login route later)
-            Navigator.pop(context);
+            context.go('${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}');
           },
         ),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Network error: $e')));
+      _snack('Network error: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -120,15 +106,15 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
   Future<void> _resend() async {
     setState(() => _resending = true);
     try {
-      final res = await widget.authApi.resendOtp(email: widget.email);
-      final msg = (res['message'] ?? '').toString();
+      final msg = await ref
+          .read(authControllerProvider.notifier)
+          .resendOtp(email: widget.email);
+
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      _snack(msg);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Network error: $e')));
+      _snack('Network error: $e');
     } finally {
       if (mounted) setState(() => _resending = false);
     }
@@ -140,10 +126,9 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
         const int count = 6;
         const double gap = 10;
 
-        // Try to fit 6 in a row. If the screen is small, Wrap will handle it.
         final available = constraints.maxWidth - (gap * (count - 1));
-        final w = (available / count).clamp(44.0, 56.0); // responsive width
-        final h = 56.0;
+        final w = (available / count).clamp(44.0, 56.0);
+        const h = 56.0;
 
         return Wrap(
           spacing: gap,
@@ -160,10 +145,7 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
                 textAlign: TextAlign.center,
                 maxLength: 1,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                 decoration: InputDecoration(
                   counterText: '',
                   filled: true,
@@ -174,10 +156,7 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(
-                      color: Colors.black,
-                      width: 1.5,
-                    ),
+                    borderSide: const BorderSide(color: Colors.black, width: 1.5),
                   ),
                 ),
                 onChanged: (v) => _onChanged(i, v),
@@ -198,7 +177,7 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
         title: const Text(
           'Verification',
@@ -211,8 +190,6 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
           children: [
             const SizedBox(height: 6),
-
-            // icon circle
             Center(
               child: Container(
                 height: 96,
@@ -229,16 +206,11 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
                       shape: BoxShape.circle,
                       color: Colors.black,
                     ),
-                    child: const Icon(
-                      Icons.mail_outline,
-                      color: Colors.white,
-                      size: 28,
-                    ),
+                    child: const Icon(Icons.mail_outline, color: Colors.white, size: 28),
                   ),
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
             Center(child: Text('Verify OTP', style: AppTheme.h2(context))),
             const SizedBox(height: 10),
@@ -258,24 +230,18 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
               ),
             ),
             const SizedBox(height: 22),
-
             _otpInputs(),
-
             const SizedBox(height: 22),
             AppTheme.primaryButton(
               text: 'Submit',
-              onPressed: _verify,
+              onPressed: _loading ? null : _verify,
               loading: _loading,
             ),
-
             const SizedBox(height: 18),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  "Didn't receive the code? ",
-                  style: AppTheme.bodyMuted(context),
-                ),
+                Text("Didn't receive the code? ", style: AppTheme.bodyMuted(context)),
                 GestureDetector(
                   onTap: _resending ? null : _resend,
                   child: Text(
@@ -288,7 +254,6 @@ class _VerifyOTPScreenState extends State<VerifyOTPScreen> {
                 ),
               ],
             ),
-
             const SizedBox(height: 18),
           ],
         ),
@@ -329,13 +294,12 @@ class _SuccessSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 22),
-
                 Container(
                   height: 96,
                   width: 96,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color.fromRGBO(46, 204, 113, 0.15),
+                    color: Color.fromRGBO(46, 204, 113, 0.15),
                   ),
                   child: Center(
                     child: Container(
@@ -345,15 +309,10 @@ class _SuccessSheet extends StatelessWidget {
                         shape: BoxShape.circle,
                         color: Color(0xFF2ECC71),
                       ),
-                      child: const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 30,
-                      ),
+                      child: const Icon(Icons.check, color: Colors.white, size: 30),
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 18),
                 Text('Register Success', style: AppTheme.h2(context)),
                 const SizedBox(height: 10),
@@ -363,7 +322,6 @@ class _SuccessSheet extends StatelessWidget {
                   style: AppTheme.bodyMuted(context),
                 ),
                 const SizedBox(height: 18),
-
                 AppTheme.primaryButton(
                   text: 'Proceed to Login',
                   onPressed: onGoLogin,

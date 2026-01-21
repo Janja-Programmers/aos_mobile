@@ -9,31 +9,51 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/validators.dart';
 import '../providers/auth_controller.dart';
 
-class RegisterScreen extends ConsumerStatefulWidget {
-  const RegisterScreen({super.key});
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({super.key, this.prefillEmail});
+  final String? prefillEmail;
 
   @override
-  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _name = TextEditingController();
-  final _email = TextEditingController();
-  final _password = TextEditingController();
-  final _confirm = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
 
+  bool _rememberMe = true;
+  bool _obscure = true;
   bool _loading = false;
-  bool _obscure1 = true;
-  bool _obscure2 = true;
-  bool _accept = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    // If email was provided by route query, use it; otherwise load remember-me.
+    if (widget.prefillEmail != null && widget.prefillEmail!.trim().isNotEmpty) {
+      _emailCtrl.text = widget.prefillEmail!.trim();
+      return;
+    }
+
+    final (remember, email) = await ref
+        .read(authControllerProvider.notifier)
+        .getRememberedLogin();
+
+    if (!mounted) return;
+    setState(() {
+      _rememberMe = remember;
+      _emailCtrl.text = email;
+    });
+  }
 
   @override
   void dispose() {
-    _name.dispose();
-    _email.dispose();
-    _password.dispose();
-    _confirm.dispose();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
     super.dispose();
   }
 
@@ -42,28 +62,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  Future<void> _register() async {
-    if (!_accept) {
-      _snack('Please accept Terms & Conditions and Privacy Policy');
-      return;
-    }
+  Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _loading = true);
     try {
-      final (ok, msg) = await ref.read(authControllerProvider.notifier).register(
-            email: _email.text.trim().toLowerCase(),
-            password: _password.text,
-            fullName: _name.text.trim(),
+      final ok = await ref
+          .read(authControllerProvider.notifier)
+          .login(
+            email: _emailCtrl.text.trim().toLowerCase(),
+            password: _passwordCtrl.text,
+            rememberMe: _rememberMe,
           );
 
       if (!mounted) return;
-      _snack(msg);
 
       if (ok) {
-        // Go to OTP verification; pass email via extra
-        context.push(AppRoutes.verifyOtp, extra: _email.text.trim().toLowerCase());
+        context.go(AppRoutes.home);
+        return;
       }
+
+      final err = ref.read(authControllerProvider).errorMessage;
+      _snack(err ?? 'Login failed.');
     } catch (e) {
       if (!mounted) return;
       _snack('Network error: $e');
@@ -95,10 +115,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 2),
-              Text('Register', style: AppTheme.h1(context)),
+              Text('Hello, Welcome Back', style: AppTheme.h1(context)),
               const SizedBox(height: 6),
               Text(
-                'Enter your details below to create your account',
+                'Login to your account below',
                 style: AppTheme.bodyMuted(context),
               ),
               const SizedBox(height: 26),
@@ -108,50 +128,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 child: Column(
                   children: [
                     TextFormField(
-                      controller: _name,
-                      decoration: AppTheme.inputDecoration(label: 'Full Name'),
-                      validator: (v) => Validators.minLen(v?.trim(), 2, 'Enter your full name'),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _email,
+                      controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: AppTheme.inputDecoration(label: 'Email Address'),
+                      decoration: AppTheme.inputDecoration(
+                        label: 'Email Address',
+                      ),
                       validator: Validators.email,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
-                      controller: _password,
-                      obscureText: _obscure1,
+                      controller: _passwordCtrl,
+                      obscureText: _obscure,
                       decoration: AppTheme.inputDecoration(
                         label: 'Password',
                         suffixIcon: IconButton(
-                          onPressed: () => setState(() => _obscure1 = !_obscure1),
+                          onPressed: () => setState(() => _obscure = !_obscure),
                           icon: Icon(
-                            _obscure1
+                            _obscure
                                 ? Icons.visibility_off_outlined
                                 : Icons.visibility_outlined,
                           ),
                         ),
                       ),
-                      validator: (v) => Validators.minLen(v, 8, 'Min 8 characters'),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _confirm,
-                      obscureText: _obscure2,
-                      decoration: AppTheme.inputDecoration(
-                        label: 'Confirm Password',
-                        suffixIcon: IconButton(
-                          onPressed: () => setState(() => _obscure2 = !_obscure2),
-                          icon: Icon(
-                            _obscure2
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                          ),
-                        ),
-                      ),
-                      validator: (v) => (v != _password.text) ? 'Passwords do not match' : null,
+                      validator: Validators.passwordRequired,
+                      onFieldSubmitted: (_) => _login(),
                     ),
                   ],
                 ),
@@ -161,17 +161,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               Row(
                 children: [
                   Checkbox(
-                    value: _accept,
-                    onChanged: (v) => setState(() => _accept = v ?? false),
+                    value: _rememberMe,
+                    onChanged: (v) => setState(() => _rememberMe = v ?? true),
                     activeColor: Colors.black,
                   ),
                   Expanded(
                     child: Text(
-                      'I Accept the Terms & Conditions and Privacy Policy',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium!
-                          .copyWith(color: AppColors.text),
+                      'Remember Me',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium!.copyWith(color: AppColors.text),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      // TODO: implement forgot password flow
+                      _snack('Forgot password is coming soon.');
+                    },
+                    child: const Text(
+                      'Forgot Password?',
+                      style: TextStyle(color: AppColors.muted),
                     ),
                   ),
                 ],
@@ -179,8 +188,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
               const SizedBox(height: 10),
               AppTheme.primaryButton(
-                text: 'Register',
-                onPressed: _loading ? null : _register,
+                text: 'Login',
+                onPressed: _loading ? null : _login,
                 loading: _loading,
               ),
 
@@ -200,6 +209,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               const SizedBox(height: 14),
 
+              // Social buttons (placeholders)
               Row(
                 children: [
                   AppTheme.socialButton(
@@ -228,11 +238,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Already have an account? ', style: AppTheme.bodyMuted(context)),
+                  Text(
+                    'Don\'t have an account? ',
+                    style: AppTheme.bodyMuted(context),
+                  ),
                   GestureDetector(
-                    onTap: () => context.push('${AppRoutes.login}?email=${Uri.encodeComponent(_email.text.trim().toLowerCase())}'),
+                    onTap: () => context.push(AppRoutes.register),
                     child: const Text(
-                      'Login',
+                      'Register',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: Colors.black,

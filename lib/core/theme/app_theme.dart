@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
 
-import '/core/theme/app_colors.dart';
+import 'app_colors.dart';
 
 class AppTheme {
+  static ThemeData get lightTheme => ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: AppColors.bg,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
+          centerTitle: true,
+        ),
+      );
+
   static TextStyle h1(BuildContext c) => Theme.of(c).textTheme.headlineMedium!
       .copyWith(fontWeight: FontWeight.w800, color: AppColors.text);
 

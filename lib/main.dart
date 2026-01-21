@@ -1,30 +1,26 @@
-import 'package:aos_mobile/core/api/api_endpoints.dart';
-import 'package:aos_mobile/core/const.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'core/api/api_client.dart';
-
-import 'features/auth/data/auth_api.dart';
-import 'features/auth/ui/register_screen.dart';
+import 'core/routing/app_router.dart';
+import 'core/theme/app_theme.dart';
 
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const ProviderScope(child: AOSApp()));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class AOSApp extends ConsumerWidget {
+  const AOSApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    const baseUrl = ApiEndpoints.baseUrl;
-    final apiClient = ApiClient(baseUrl);
-    final authApi = AuthApi(apiClient);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
 
-    return MaterialApp(
-      title: AppStrings.title,
-      theme: ThemeData(useMaterial3: true),
+    return MaterialApp.router(
+      title: 'Africa Online Stores',
+      theme: AppTheme.lightTheme,
+      routerConfig: router,
       debugShowCheckedModeBanner: false,
-      home: RegisterScreen(authApi: authApi),
     );
   }
 }

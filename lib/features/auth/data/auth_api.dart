@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import '/core/api/api_client.dart';
+import '../../../core/api/api_client.dart';
 
 class AuthApi {
   AuthApi(this._client);
@@ -37,13 +37,41 @@ class AuthApi {
     return _unwrap(res);
   }
 
+  Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
+    final res = await _client.dio.post(
+      '/api/method/aos.api.auth.login',
+      data: {'email': email, 'password': password},
+    );
+    return _unwrap(res);
+  }
+
+  Future<Map<String, dynamic>> me() async {
+    final res = await _client.dio.get('/api/method/aos.api.auth.me');
+    return _unwrap(res);
+  }
+
+  Future<Map<String, dynamic>> logout() async {
+    final res = await _client.dio.post('/api/method/aos.api.auth.logout');
+    return _unwrap(res);
+  }
+
   Map<String, dynamic> _unwrap(Response res) {
-    // Frappe wraps responses like: {"message": {...}}
     final data = res.data;
+
+    // Frappe wraps method response like: {"message": {...}}
     if (data is Map && data['message'] is Map) {
-      return Map<String, dynamic>.from(data['message']);
+      return Map<String, dynamic>.from(data['message'] as Map);
     }
+
+    if (data is Map && data.containsKey('message') && data['message'] is! Map) {
+      return {'ok': true, 'message': data['message'].toString()};
+    }
+
     if (data is Map) return Map<String, dynamic>.from(data);
+
     return {'ok': false, 'message': 'Unexpected response from server'};
   }
 }

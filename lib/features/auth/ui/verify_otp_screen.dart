@@ -9,9 +9,16 @@ import 'package:aos_mobile/core/theme/app_theme.dart';
 
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 
+enum OtpPurpose { emailVerification, passwordReset }
+
 class VerifyOTPScreen extends ConsumerStatefulWidget {
-  const VerifyOTPScreen({super.key, required this.email});
+  const VerifyOTPScreen({
+    super.key,
+    required this.email,
+    this.purpose = OtpPurpose.emailVerification,
+  });
   final String email;
+  final OtpPurpose purpose;
 
   @override
   ConsumerState<VerifyOTPScreen> createState() => _VerifyOTPScreenState();
@@ -74,15 +81,32 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
 
     setState(() => _loading = true);
     try {
-      final result = await ref
-          .read(authControllerProvider.notifier)
-          .verifyOtp(email: widget.email, otp: _otp);
+      final ctrl = ref.read(authControllerProvider.notifier);
+
+      // Use the same UI for different OTP purposes, but call the correct backend.
+      final result = (widget.purpose == OtpPurpose.passwordReset)
+          ? await ctrl.forgotPasswordVerifyOtp(email: widget.email, otp: _otp)
+          : await ctrl.verifyOtp(email: widget.email, otp: _otp);
 
       if (!mounted) return;
 
       await result.fold(
-        (f) async => _snack(f.message),
-        (msg) async {
+        (f) async {
+          _snack(f.message);
+        },
+        (right) async {
+          if (!mounted) return;
+
+          if (widget.purpose == OtpPurpose.passwordReset) {
+            final resetToken = right;
+            context.go(
+              AppRoutes.resetPassword,
+              extra: {'email': widget.email, 'reset_token': resetToken},
+            );
+            return;
+          }
+
+          final msg = right;
           _snack(msg);
           await showModalBottomSheet(
             context: context,
@@ -90,7 +114,7 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
             backgroundColor: Colors.transparent,
             builder: (_) => _SuccessSheet(
               onGoLogin: () {
-                Navigator.pop(context); // close sheet
+                context.pop();
                 context.go(
                   '${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}',
                 );
@@ -110,15 +134,13 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
   Future<void> _resend() async {
     setState(() => _resending = true);
     try {
-      final result = await ref
-          .read(authControllerProvider.notifier)
-          .resendOtp(email: widget.email);
+      final ctrl = ref.read(authControllerProvider.notifier);
+      final result = (widget.purpose == OtpPurpose.passwordReset)
+          ? await ctrl.forgotPasswordRequest(email: widget.email)
+          : await ctrl.resendOtp(email: widget.email);
 
       if (!mounted) return;
-      result.fold(
-        (f) => _snack(f.message),
-        (msg) => _snack(msg),
-      );
+      result.fold((f) => _snack(f.message), (msg) => _snack(msg));
     } catch (e) {
       if (!mounted) return;
       _snack('Unexpected error: $e');
@@ -183,6 +205,16 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenTitle = (widget.purpose == OtpPurpose.passwordReset)
+        ? 'Enter Verification Code'
+        : 'Verification';
+    final header = (widget.purpose == OtpPurpose.passwordReset)
+        ? 'Enter Verification Code'
+        : 'Verify OTP';
+    final subtitle = (widget.purpose == OtpPurpose.passwordReset)
+        ? 'We have sent a verification code to your email address'
+        : 'We have sent the verification code to';
+
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(
@@ -192,9 +224,12 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Verification',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
+        title: Text(
+          screenTitle,
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         centerTitle: true,
       ),
@@ -229,11 +264,11 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            Center(child: Text('Verify OTP', style: AppTheme.h2(context))),
+            Center(child: Text(header, style: AppTheme.h2(context))),
             const SizedBox(height: 10),
             Center(
               child: Text(
-                'We have sent the verification code to',
+                subtitle,
                 style: AppTheme.bodyMuted(context),
                 textAlign: TextAlign.center,
               ),

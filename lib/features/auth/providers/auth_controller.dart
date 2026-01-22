@@ -227,6 +227,66 @@ class AuthController extends StateNotifier<AuthState> {
     return ok ? Either.right(msg) : Either.left(Failure(msg));
   }
 
+  // Forgot password
+  Future<Either<Failure, String>> forgotPasswordRequest({
+    required String email,
+  }) async {
+    final res = await _api.forgotPasswordRequest(email: email);
+    if (res.isLeft) return Either.left(res.leftOrNull!);
+
+    final payload = res.rightOrNull ?? <String, dynamic>{};
+    final ok = payload['ok'] == true;
+    final msg = (payload['message'] ?? (ok ? 'OTP sent' : 'Failed')).toString();
+    return ok ? Either.right(msg) : Either.left(Failure(msg));
+  }
+
+  Future<Either<Failure, String>> forgotPasswordVerifyOtp({
+    required String email,
+    required String otp,
+  }) async {
+    final res = await _api.forgotPasswordVerifyOtp(email: email, otp: otp);
+    if (res.isLeft) return Either.left(res.leftOrNull!);
+
+    final payload = res.rightOrNull ?? <String, dynamic>{};
+    final ok = payload['ok'] == true;
+    if (!ok) {
+      final msg = (payload['message'] ?? 'Verification failed').toString();
+      return Either.left(Failure(msg));
+    }
+
+    final data = (payload['data'] is Map)
+        ? Map<String, dynamic>.from(payload['data'] as Map)
+        : <String, dynamic>{};
+    final token = (data['reset_token'] ?? '').toString();
+    if (token.isEmpty) {
+      return Either.left(
+        const Failure('Verification succeeded but no reset token returned.'),
+      );
+    }
+    return Either.right(token);
+  }
+
+  Future<Either<Failure, String>> forgotPasswordReset({
+    required String email,
+    required String resetToken,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final res = await _api.forgotPasswordReset(
+      email: email,
+      resetToken: resetToken,
+      newPassword: newPassword,
+      confirmPassword: confirmPassword,
+    );
+    if (res.isLeft) return Either.left(res.leftOrNull!);
+
+    final payload = res.rightOrNull ?? <String, dynamic>{};
+    final ok = payload['ok'] == true;
+    final msg = (payload['message'] ?? (ok ? 'Password updated' : 'Failed'))
+        .toString();
+    return ok ? Either.right(msg) : Either.left(Failure(msg));
+  }
+
   Future<(bool remember, String email)> getRememberedLogin() async {
     final remember = await _storage.getRememberMe();
     final email = await _storage.getRememberedEmail();

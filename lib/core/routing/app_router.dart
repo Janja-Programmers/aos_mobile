@@ -8,6 +8,8 @@ import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 import 'package:aos_mobile/features/auth/ui/login_screen.dart';
 import 'package:aos_mobile/features/auth/ui/register_screen.dart';
 import 'package:aos_mobile/features/auth/ui/verify_otp_screen.dart';
+import 'package:aos_mobile/features/auth/ui/forgot_password_screen.dart';
+import 'package:aos_mobile/features/auth/ui/reset_password_screen.dart';
 import 'package:aos_mobile/features/home/ui/home_screen.dart';
 import 'package:aos_mobile/core/routing/app_routes.dart';
 
@@ -43,8 +45,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.verifyOtp,
         builder: (context, state) {
-          final email = (state.extra is String) ? state.extra as String : '';
-          return VerifyOTPScreen(email: email);
+          String email = '';
+          OtpPurpose purpose = OtpPurpose.emailVerification;
+
+          if (state.extra is String) {
+            email = state.extra as String;
+          } else if (state.extra is Map) {
+            final m = Map<String, dynamic>.from(state.extra as Map);
+            email = (m['email'] ?? '').toString();
+            final p = m['purpose'];
+            if (p is OtpPurpose) purpose = p;
+          }
+
+          return VerifyOTPScreen(email: email, purpose: purpose);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.resetPassword,
+        builder: (context, state) {
+          if (state.extra is Map) {
+            final m = Map<String, dynamic>.from(state.extra as Map);
+            final email = (m['email'] ?? '').toString();
+            final token = (m['reset_token'] ?? '').toString();
+            return ResetPasswordScreen(email: email, resetToken: token);
+          }
+          return const ResetPasswordScreen(email: '', resetToken: '');
         },
       ),
     ],
@@ -54,7 +83,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final goingToAuth =
           state.matchedLocation == AppRoutes.login ||
           state.matchedLocation == AppRoutes.register ||
-          state.matchedLocation == AppRoutes.verifyOtp;
+          state.matchedLocation == AppRoutes.verifyOtp ||
+          state.matchedLocation == AppRoutes.forgotPassword ||
+          state.matchedLocation == AppRoutes.resetPassword;
 
       if (auth.isLoggedIn && goingToAuth) return AppRoutes.home;
 

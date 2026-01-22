@@ -100,4 +100,62 @@ class AuthApi {
       return Either.left(const Failure('Unexpected error. Please try again.'));
     }
   }
+
+  // Forgot password
+  Future<Either<Failure, Map<String, dynamic>>> forgotPasswordRequest({
+    required String email,
+  }) async {
+    try {
+      final res = await _client.dio.post(
+        ApiEndpoints.forgotPasswordRequestEndpoint,
+        data: {'email': email},
+      );
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Unexpected error. Please try again.'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> forgotPasswordVerifyOtp({
+    required String email,
+    required String otp,
+  }) async {
+    try {
+      final res = await _client.dio.post(
+        ApiEndpoints.forgotPasswordVerifyOtpEndpoint,
+        data: {'email': email, 'otp': otp},
+      );
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Unexpected error. Please try again.'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> forgotPasswordReset({
+    required String email,
+    required String resetToken,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      final res = await _client.dio.post(
+        ApiEndpoints.forgotPasswordResetEndpoint,
+        data: {
+          'email': email,
+          'reset_token': resetToken,
+          'new_password': newPassword,
+          'confirm_password': confirmPassword,
+        },
+      );
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Unexpected error. Please try again.'));
+    }
+  }
 }

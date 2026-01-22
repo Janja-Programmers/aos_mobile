@@ -77,10 +77,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (!mounted) return;
 
-      result.fold(
-        (f) => _snack(f.message),
-        (_) => context.go(AppRoutes.home),
-      );
+      result.fold((f) => _snack(f.message), (_) => context.go(AppRoutes.home));
     } catch (e) {
       if (!mounted) return;
       _snack('Unexpected error: $e');
@@ -172,8 +169,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      // TODO: implement forgot password flow
-                      _snack('Forgot password is coming soon.');
+                      context.push(AppRoutes.forgotPassword);
                     },
                     child: const Text(
                       'Forgot Password?',

@@ -5,6 +5,12 @@ class ApiEndpoints {
       '/api/method/aos.api.auth.verify_email_otp';
   static final String resendOtpEndpoint =
       '/api/method/aos.api.auth.resend_email_otp';
+  static final String forgotPasswordRequestEndpoint =
+      '/api/method/aos.api.auth.forgot_password_request';
+  static final String forgotPasswordVerifyOtpEndpoint =
+      '/api/method/aos.api.auth.forgot_password_verify_otp';
+  static final String forgotPasswordResetEndpoint =
+      '/api/method/aos.api.auth.forgot_password_reset';
   static final String meEndpoint = '/api/method/aos.api.auth.me';
   static final String logoutEndpoint = '/api/method/aos.api.auth.logout';
 }

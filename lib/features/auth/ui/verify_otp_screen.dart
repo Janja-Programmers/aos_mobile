@@ -116,7 +116,7 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
             builder: (_) => AppSuccessSheet(
               title: 'Email Verified\nSuccessfully',
               message: 'Your email has been verified successfully',
-              buttonText: 'Go To Login',
+              buttonText: 'Proceed To Login',
               onPressed: () {
                 context.pop();
                 context.go(
@@ -320,4 +320,3 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
     );
   }
 }
-

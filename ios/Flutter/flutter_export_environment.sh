@@ -1,9 +1,9 @@
 #!/bin/sh
 # This is a generated file; do not edit or check into version control.
-export "FLUTTER_ROOT=C:\Users\ADMIN\develop\flutter"
-export "FLUTTER_APPLICATION_PATH=D:\JP\aos\aos_mobile"
+export "FLUTTER_ROOT=/home/kalutu/flutter"
+export "FLUTTER_APPLICATION_PATH=/run/media/kalutu/84c675d2-c6b9-44f3-b8b1-aebfb7403d00/JP/aos_mobile"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
-export "FLUTTER_TARGET=lib\main.dart"
+export "FLUTTER_TARGET=lib/main.dart"
 export "FLUTTER_BUILD_DIR=build"
 export "FLUTTER_BUILD_NAME=1.0.0"
 export "FLUTTER_BUILD_NUMBER=1"

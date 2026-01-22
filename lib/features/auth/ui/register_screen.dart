@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/routing/app_routes.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/validators.dart';
-import '../providers/auth_controller.dart';
+import 'package:aos_mobile/core/core.dart';
+import 'package:aos_mobile/core/theme/app_colors.dart';
+import 'package:aos_mobile/core/theme/app_theme.dart';
+
+import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -51,7 +51,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     setState(() => _loading = true);
     try {
-      final (ok, msg) = await ref.read(authControllerProvider.notifier).register(
+      final (ok, msg) = await ref
+          .read(authControllerProvider.notifier)
+          .register(
             email: _email.text.trim().toLowerCase(),
             password: _password.text,
             fullName: _name.text.trim(),
@@ -62,7 +64,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       if (ok) {
         // Go to OTP verification; pass email via extra
-        context.push(AppRoutes.verifyOtp, extra: _email.text.trim().toLowerCase());
+        await context.push(
+          AppRoutes.verifyOtp,
+          extra: _email.text.trim().toLowerCase(),
+        );
       }
     } catch (e) {
       if (!mounted) return;
@@ -110,13 +115,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     TextFormField(
                       controller: _name,
                       decoration: AppTheme.inputDecoration(label: 'Full Name'),
-                      validator: (v) => Validators.minLen(v?.trim(), 2, 'Enter your full name'),
+                      validator: (v) => Validators.minLen(
+                        v?.trim(),
+                        2,
+                        'Enter your full name',
+                      ),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: AppTheme.inputDecoration(label: 'Email Address'),
+                      decoration: AppTheme.inputDecoration(
+                        label: 'Email Address',
+                      ),
                       validator: Validators.email,
                     ),
                     const SizedBox(height: 16),
@@ -126,7 +137,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       decoration: AppTheme.inputDecoration(
                         label: 'Password',
                         suffixIcon: IconButton(
-                          onPressed: () => setState(() => _obscure1 = !_obscure1),
+                          onPressed: () =>
+                              setState(() => _obscure1 = !_obscure1),
                           icon: Icon(
                             _obscure1
                                 ? Icons.visibility_off_outlined
@@ -134,7 +146,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ),
                         ),
                       ),
-                      validator: (v) => Validators.minLen(v, 8, 'Min 8 characters'),
+                      validator: (v) =>
+                          Validators.minLen(v, 8, 'Min 8 characters'),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -143,7 +156,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       decoration: AppTheme.inputDecoration(
                         label: 'Confirm Password',
                         suffixIcon: IconButton(
-                          onPressed: () => setState(() => _obscure2 = !_obscure2),
+                          onPressed: () =>
+                              setState(() => _obscure2 = !_obscure2),
                           icon: Icon(
                             _obscure2
                                 ? Icons.visibility_off_outlined
@@ -151,7 +165,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           ),
                         ),
                       ),
-                      validator: (v) => (v != _password.text) ? 'Passwords do not match' : null,
+                      validator: (v) => (v != _password.text)
+                          ? 'Passwords do not match'
+                          : null,
                     ),
                   ],
                 ),
@@ -168,10 +184,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   Expanded(
                     child: Text(
                       'I Accept the Terms & Conditions and Privacy Policy',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium!
-                          .copyWith(color: AppColors.text),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium!.copyWith(color: AppColors.text),
                     ),
                   ),
                 ],
@@ -185,8 +200,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
 
               const SizedBox(height: 18),
-              Row(
-                children: const [
+              const Row(
+                children: [
                   Expanded(child: Divider(color: AppColors.stroke)),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10),
@@ -228,9 +243,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Already have an account? ', style: AppTheme.bodyMuted(context)),
+                  Text(
+                    'Already have an account? ',
+                    style: AppTheme.bodyMuted(context),
+                  ),
                   GestureDetector(
-                    onTap: () => context.push('${AppRoutes.login}?email=${Uri.encodeComponent(_email.text.trim().toLowerCase())}'),
+                    onTap: () => context.push(
+                      '${AppRoutes.login}?email=${Uri.encodeComponent(_email.text.trim().toLowerCase())}',
+                    ),
                     child: const Text(
                       'Login',
                       style: TextStyle(

@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import '../../../core/providers.dart';
-import '../../../core/api/api_client.dart';
-import '../../../core/api/session_storage.dart';
-import '../data/auth_api.dart';
-import '../domain/auth_state.dart';
+import 'package:aos_mobile/core/providers.dart';
+import 'package:aos_mobile/core/api/api_client.dart';
+import 'package:aos_mobile/core/api/session_storage.dart';
+import 'package:aos_mobile/features/auth/data/auth_api.dart';
+import 'package:aos_mobile/features/auth/domain/auth_state.dart';
 
 final authRefreshProvider = StreamProvider<void>((ref) {
   // A lightweight stream that emits whenever authController changes.

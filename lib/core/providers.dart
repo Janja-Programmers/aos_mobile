@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'api/api_client.dart';
-import 'api/session_storage.dart';
-import 'config/app_config.dart';
-import '../features/auth/data/auth_api.dart';
+import 'package:aos_mobile/core/api/api_client.dart';
+import 'package:aos_mobile/core/api/session_storage.dart';
+import 'package:aos_mobile/core/config/app_config.dart';
+import 'package:aos_mobile/features/auth/data/auth_api.dart';
 
 final sessionStorageProvider = Provider<SessionStorage>((ref) {
   return SessionStorage();

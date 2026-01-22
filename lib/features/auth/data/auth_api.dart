@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
-import '../../../core/api/api_client.dart';
+import 'package:aos_mobile/core/api/api_client.dart';
+import 'package:aos_mobile/core/api/api_endpoints.dart';
 
 class AuthApi {
   AuthApi(this._client);
@@ -12,7 +13,7 @@ class AuthApi {
     required String fullName,
   }) async {
     final res = await _client.dio.post(
-      '/api/method/aos.api.auth.register',
+      ApiEndpoints.registerEndpoint,
       data: {'email': email, 'password': password, 'full_name': fullName},
     );
     return _unwrap(res);
@@ -23,7 +24,7 @@ class AuthApi {
     required String otp,
   }) async {
     final res = await _client.dio.post(
-      '/api/method/aos.api.auth.verify_email_otp',
+      ApiEndpoints.verifyOtpEndpoint,
       data: {'email': email, 'otp': otp},
     );
     return _unwrap(res);
@@ -31,7 +32,7 @@ class AuthApi {
 
   Future<Map<String, dynamic>> resendOtp({required String email}) async {
     final res = await _client.dio.post(
-      '/api/method/aos.api.auth.resend_email_otp',
+      ApiEndpoints.resendOtpEndpoint,
       data: {'email': email},
     );
     return _unwrap(res);
@@ -42,19 +43,19 @@ class AuthApi {
     required String password,
   }) async {
     final res = await _client.dio.post(
-      '/api/method/aos.api.auth.login',
+      ApiEndpoints.loginEndpoint,
       data: {'email': email, 'password': password},
     );
     return _unwrap(res);
   }
 
   Future<Map<String, dynamic>> me() async {
-    final res = await _client.dio.get('/api/method/aos.api.auth.me');
+    final res = await _client.dio.get(ApiEndpoints.meEndpoint);
     return _unwrap(res);
   }
 
   Future<Map<String, dynamic>> logout() async {
-    final res = await _client.dio.post('/api/method/aos.api.auth.logout');
+    final res = await _client.dio.post(ApiEndpoints.logoutEndpoint);
     return _unwrap(res);
   }
 

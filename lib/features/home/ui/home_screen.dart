@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/routing/app_routes.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../auth/providers/auth_controller.dart';
+import 'package:aos_mobile/core/core.dart';
+import 'package:aos_mobile/core/theme/app_theme.dart';
+
+import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -19,10 +20,7 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('AOS Home'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('AOS Home'), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(22),
         child: Column(
@@ -51,7 +49,8 @@ class HomeScreen extends ConsumerWidget {
             ] else ...[
               AppTheme.primaryButton(
                 text: 'Logout',
-                onPressed: () => ref.read(authControllerProvider.notifier).logout(),
+                onPressed: () =>
+                    ref.read(authControllerProvider.notifier).logout(),
               ),
             ],
 

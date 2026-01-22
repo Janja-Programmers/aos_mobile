@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/providers/auth_controller.dart';
-import '../../features/auth/ui/login_screen.dart';
-import '../../features/auth/ui/register_screen.dart';
-import '../../features/auth/ui/verify_otp_screen.dart';
-import '../../features/home/ui/home_screen.dart';
-import 'app_routes.dart';
+import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
+import 'package:aos_mobile/features/auth/ui/login_screen.dart';
+import 'package:aos_mobile/features/auth/ui/register_screen.dart';
+import 'package:aos_mobile/features/auth/ui/verify_otp_screen.dart';
+import 'package:aos_mobile/features/home/ui/home_screen.dart';
+import 'package:aos_mobile/core/routing/app_routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // auth state
@@ -72,8 +72,8 @@ class GoRouterRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _sub;
 
   @override
-  void dispose() {
-    _sub.cancel();
+  Future<void> dispose() async {
+    await _sub.cancel();
     super.dispose();
   }
 }

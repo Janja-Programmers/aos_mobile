@@ -3,10 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/routing/app_routes.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
-import '../providers/auth_controller.dart';
+import 'package:aos_mobile/core/core.dart';
+import 'package:aos_mobile/core/theme/app_colors.dart';
+import 'package:aos_mobile/core/theme/app_theme.dart';
+
+import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 
 class VerifyOTPScreen extends ConsumerStatefulWidget {
   const VerifyOTPScreen({super.key, required this.email});
@@ -91,7 +92,9 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
         builder: (_) => _SuccessSheet(
           onGoLogin: () {
             Navigator.pop(context); // close sheet
-            context.go('${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}');
+            context.go(
+              '${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}',
+            );
           },
         ),
       );
@@ -145,7 +148,10 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
                 textAlign: TextAlign.center,
                 maxLength: 1,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
                 decoration: InputDecoration(
                   counterText: '',
                   filled: true,
@@ -156,7 +162,10 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Colors.black, width: 1.5),
+                    borderSide: const BorderSide(
+                      color: Colors.black,
+                      width: 1.5,
+                    ),
                   ),
                 ),
                 onChanged: (v) => _onChanged(i, v),
@@ -206,7 +215,11 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
                       shape: BoxShape.circle,
                       color: Colors.black,
                     ),
-                    child: const Icon(Icons.mail_outline, color: Colors.white, size: 28),
+                    child: const Icon(
+                      Icons.mail_outline,
+                      color: Colors.white,
+                      size: 28,
+                    ),
                   ),
                 ),
               ),
@@ -241,7 +254,10 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Didn't receive the code? ", style: AppTheme.bodyMuted(context)),
+                Text(
+                  "Didn't receive the code? ",
+                  style: AppTheme.bodyMuted(context),
+                ),
                 GestureDetector(
                   onTap: _resending ? null : _resend,
                   child: Text(
@@ -309,7 +325,11 @@ class _SuccessSheet extends StatelessWidget {
                         shape: BoxShape.circle,
                         color: Color(0xFF2ECC71),
                       ),
-                      child: const Icon(Icons.check, color: Colors.white, size: 30),
+                      child: const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 30,
+                      ),
                     ),
                   ),
                 ),

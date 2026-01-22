@@ -12,19 +12,29 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # ─────────────────── UI & Design ───────────────────
   cupertino_icons: ^1.0.8
-  dio: ^5.9.0
-  flutter_secure_storage: ^10.0.0
   flutter_svg: ^2.2.3
-  shared_preferences: ^2.5.4
+
+  # ─────────────────── State Management ───────────────────
   flutter_riverpod: ^3.2.0
+
+  # ─────────────────── Networking ───────────────────
+  dio: ^5.9.0
+
+  # ─────────────────── Navigation & Routing ───────────────────
   go_router: ^17.0.1
+
+  # ─────────────────── Local Storage & Persistence ───────────────────
+  flutter_secure_storage: ^10.0.0
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^6.0.0
+  riverpod_lint: ^3.0.0-dev.4
 
 # The following section is specific to Flutter packages.
 flutter:
@@ -47,3 +57,4 @@ flutter:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
+

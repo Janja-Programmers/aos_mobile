@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/routing/app_routes.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/validators.dart';
-import '../providers/auth_controller.dart';
+import 'package:aos_mobile/core/core.dart';
+import 'package:aos_mobile/core/theme/app_colors.dart';
+import 'package:aos_mobile/core/theme/app_theme.dart';
+
+import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key, this.prefillEmail});
@@ -194,8 +194,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
 
               const SizedBox(height: 18),
-              Row(
-                children: const [
+              const Row(
+                children: [
                   Expanded(child: Divider(color: AppColors.stroke)),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 10),

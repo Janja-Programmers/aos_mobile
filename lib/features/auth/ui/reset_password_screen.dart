@@ -6,6 +6,7 @@ import 'package:aos_mobile/core/core.dart';
 import 'package:aos_mobile/core/theme/app_colors.dart';
 import 'package:aos_mobile/core/theme/app_theme.dart';
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
+import 'package:aos_mobile/shared/widgets/app_success_sheet.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({
@@ -67,8 +68,11 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           context: context,
           isScrollControlled: false,
           backgroundColor: Colors.transparent,
-          builder: (_) => _PasswordUpdatedSheet(
-            onBackToLogin: () {
+          builder: (_) => AppSuccessSheet(
+            title: 'Password Updated\nSuccessfully',
+            message: 'Your password has been updated successfully',
+            buttonText: 'Back To Login',
+            onPressed: () {
               context.pop();
               context.go(
                 '${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}',
@@ -175,59 +179,3 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   }
 }
 
-class _PasswordUpdatedSheet extends StatelessWidget {
-  const _PasswordUpdatedSheet({required this.onBackToLogin});
-  final VoidCallback onBackToLogin;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            height: 72,
-            width: 72,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFFF1F1F2),
-            ),
-            child: Center(
-              child: Container(
-                height: 44,
-                width: 44,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black,
-                ),
-                child: const Icon(Icons.check, color: Colors.white),
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            'Password Updated\nSuccessfully',
-            style: AppTheme.h2(context),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Your password has been updated successfully',
-            style: AppTheme.bodyMuted(context),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 18),
-          AppTheme.primaryButton(
-            text: 'Back To Login',
-            onPressed: onBackToLogin,
-          ),
-        ],
-      ),
-    );
-  }
-}

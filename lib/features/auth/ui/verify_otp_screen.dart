@@ -8,6 +8,7 @@ import 'package:aos_mobile/core/theme/app_colors.dart';
 import 'package:aos_mobile/core/theme/app_theme.dart';
 
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
+import 'package:aos_mobile/shared/widgets/app_success_sheet.dart';
 
 enum OtpPurpose { emailVerification, passwordReset }
 
@@ -112,8 +113,11 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
             context: context,
             isScrollControlled: false,
             backgroundColor: Colors.transparent,
-            builder: (_) => _SuccessSheet(
-              onGoLogin: () {
+            builder: (_) => AppSuccessSheet(
+              title: 'Email Verified\nSuccessfully',
+              message: 'Your email has been verified successfully',
+              buttonText: 'Go To Login',
+              onPressed: () {
                 context.pop();
                 context.go(
                   '${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}',
@@ -317,79 +321,3 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
   }
 }
 
-class _SuccessSheet extends StatelessWidget {
-  const _SuccessSheet({required this.onGoLogin});
-  final VoidCallback onGoLogin;
-
-  @override
-  Widget build(BuildContext context) {
-    final bottomPad = MediaQuery.of(context).viewPadding.bottom;
-
-    return Container(
-      color: const Color.fromRGBO(0, 0, 0, 0.25),
-      child: Align(
-        alignment: Alignment.bottomCenter,
-        child: SafeArea(
-          top: false,
-          child: Container(
-            padding: EdgeInsets.fromLTRB(22, 12, 22, 22 + bottomPad),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  height: 5,
-                  width: 54,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE6E8EC),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Container(
-                  height: 96,
-                  width: 96,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color.fromRGBO(46, 204, 113, 0.15),
-                  ),
-                  child: Center(
-                    child: Container(
-                      height: 64,
-                      width: 64,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFF2ECC71),
-                      ),
-                      child: const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Text('Register Success', style: AppTheme.h2(context)),
-                const SizedBox(height: 10),
-                Text(
-                  'Congratulations! Your account has been created.\nPlease login to continue.',
-                  textAlign: TextAlign.center,
-                  style: AppTheme.bodyMuted(context),
-                ),
-                const SizedBox(height: 18),
-                AppTheme.primaryButton(
-                  text: 'Proceed to Login',
-                  onPressed: onGoLogin,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

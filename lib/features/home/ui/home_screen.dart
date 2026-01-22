@@ -7,6 +7,8 @@ import 'package:aos_mobile/core/theme/app_theme.dart';
 
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 
+import 'package:aos_mobile/shared/widgets/app_bottom_nav.dart';
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -53,16 +55,10 @@ class HomeScreen extends ConsumerWidget {
                     ref.read(authControllerProvider.notifier).logout(),
               ),
             ],
-
-            const Spacer(),
-            Text(
-              'Use this page to test auth flow.',
-              textAlign: TextAlign.center,
-              style: AppTheme.bodyMuted(context),
-            ),
           ],
         ),
       ),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
     );
   }
 }

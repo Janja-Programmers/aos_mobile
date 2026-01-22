@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:aos_mobile/core/providers.dart';
 import 'package:aos_mobile/core/api/api_client.dart';
 import 'package:aos_mobile/core/api/session_storage.dart';
+import 'package:aos_mobile/core/api/failure.dart';
+import 'package:aos_mobile/core/utils/either.dart';
 import 'package:aos_mobile/features/auth/data/auth_api.dart';
 import 'package:aos_mobile/features/auth/domain/auth_state.dart';
 
@@ -57,20 +59,30 @@ class AuthController extends StateNotifier<AuthState> {
         return;
       }
 
-      _apiClient.setSid(sid);
+      await _apiClient.setSid(sid);
       final res = await _api.me();
-      final ok = res['ok'] == true;
 
-      if (!ok) {
+      if (res.isLeft) {
         await _storage.clearSid();
-        _apiClient.clearSid();
+        await _apiClient.clearSid();
         state = state.copyWith(initializing: false, isLoggedIn: false);
         _emit();
         return;
       }
 
-      final data = (res['data'] is Map)
-          ? Map<String, dynamic>.from(res['data'] as Map)
+      final payload = res.rightOrNull ?? <String, dynamic>{};
+      final ok = payload['ok'] == true;
+
+      if (!ok) {
+        await _storage.clearSid();
+        await _apiClient.clearSid();
+        state = state.copyWith(initializing: false, isLoggedIn: false);
+        _emit();
+        return;
+      }
+
+      final data = (payload['data'] is Map)
+          ? Map<String, dynamic>.from(payload['data'] as Map)
           : <String, dynamic>{};
       final userMap = (data['user'] is Map)
           ? Map<String, dynamic>.from(data['user'] as Map)
@@ -86,13 +98,13 @@ class AuthController extends StateNotifier<AuthState> {
       _emit();
     } catch (_) {
       await _storage.clearSid();
-      _apiClient.clearSid();
+      await _apiClient.clearSid();
       state = state.copyWith(initializing: false, isLoggedIn: false);
       _emit();
     }
   }
 
-  Future<bool> login({
+  Future<Either<Failure, void>> login({
     required String email,
     required String password,
     required bool rememberMe,
@@ -100,27 +112,35 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(clearError: true);
 
     final res = await _api.login(email: email, password: password);
-    final ok = res['ok'] == true;
-    if (!ok) {
-      state = state.copyWith(
-        errorMessage: (res['message'] ?? 'Login failed.').toString(),
-      );
+    if (res.isLeft) {
+      final f = res.leftOrNull ?? const Failure('Login failed.');
+      state = state.copyWith(errorMessage: f.message);
       _emit();
-      return false;
+      return Either.left(f);
     }
 
-    final data = (res['data'] is Map)
-        ? Map<String, dynamic>.from(res['data'] as Map)
+    final payload = res.rightOrNull ?? <String, dynamic>{};
+    final ok = payload['ok'] == true;
+    if (!ok) {
+      final f = Failure((payload['message'] ?? 'Login failed.').toString());
+      state = state.copyWith(errorMessage: f.message);
+      _emit();
+      return Either.left(f);
+    }
+
+    final data = (payload['data'] is Map)
+        ? Map<String, dynamic>.from(payload['data'] as Map)
         : <String, dynamic>{};
 
     final sid = (data['sid'] ?? '').toString();
     if (sid.isEmpty) {
-      state = state.copyWith(errorMessage: 'Login failed (no session).');
+      const f = Failure('Login failed (no session).');
+      state = state.copyWith(errorMessage: f.message);
       _emit();
-      return false;
+      return Either.left(f);
     }
 
-    _apiClient.setSid(sid);
+    await _apiClient.setSid(sid);
     await _storage.setSid(sid);
 
     await _storage.setRememberMe(rememberMe);
@@ -142,7 +162,7 @@ class AuthController extends StateNotifier<AuthState> {
       clearError: true,
     );
     _emit();
-    return true;
+    return Either.right(null);
   }
 
   Future<void> logout() async {
@@ -151,9 +171,8 @@ class AuthController extends StateNotifier<AuthState> {
     } catch (_) {
       // ignore network errors here; still clear local session.
     }
-
     await _storage.clearSid();
-    _apiClient.clearSid();
+    await _apiClient.clearSid();
 
     state = state.copyWith(
       initializing: false,
@@ -165,7 +184,7 @@ class AuthController extends StateNotifier<AuthState> {
     _emit();
   }
 
-  Future<(bool ok, String message)> register({
+  Future<Either<Failure, String>> register({
     required String email,
     required String password,
     required String fullName,
@@ -175,25 +194,37 @@ class AuthController extends StateNotifier<AuthState> {
       password: password,
       fullName: fullName,
     );
-    final ok = res['ok'] == true;
-    final msg = (res['message'] ?? (ok ? 'Success' : 'Failed')).toString();
-    return (ok, msg);
+    if (res.isLeft) return Either.left(res.leftOrNull!);
+
+    final payload = res.rightOrNull ?? <String, dynamic>{};
+    final ok = payload['ok'] == true;
+    final msg = (payload['message'] ?? (ok ? 'Success' : 'Failed')).toString();
+    return ok ? Either.right(msg) : Either.left(Failure(msg));
   }
 
-  Future<(bool ok, String message)> verifyOtp({
+  Future<Either<Failure, String>> verifyOtp({
     required String email,
     required String otp,
   }) async {
     final res = await _api.verifyOtp(email: email, otp: otp);
-    final ok = res['ok'] == true;
-    final msg = (res['message'] ?? (ok ? 'Verified' : 'Verification failed'))
-        .toString();
-    return (ok, msg);
+    if (res.isLeft) return Either.left(res.leftOrNull!);
+
+    final payload = res.rightOrNull ?? <String, dynamic>{};
+    final ok = payload['ok'] == true;
+    final msg =
+        (payload['message'] ?? (ok ? 'Verified' : 'Verification failed'))
+            .toString();
+    return ok ? Either.right(msg) : Either.left(Failure(msg));
   }
 
-  Future<String> resendOtp({required String email}) async {
+  Future<Either<Failure, String>> resendOtp({required String email}) async {
     final res = await _api.resendOtp(email: email);
-    return (res['message'] ?? 'Sent').toString();
+    if (res.isLeft) return Either.left(res.leftOrNull!);
+
+    final payload = res.rightOrNull ?? <String, dynamic>{};
+    final ok = payload['ok'] == true;
+    final msg = (payload['message'] ?? 'Sent').toString();
+    return ok ? Either.right(msg) : Either.left(Failure(msg));
   }
 
   Future<(bool remember, String email)> getRememberedLogin() async {

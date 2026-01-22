@@ -74,33 +74,34 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
 
     setState(() => _loading = true);
     try {
-      final (ok, msg) = await ref
+      final result = await ref
           .read(authControllerProvider.notifier)
           .verifyOtp(email: widget.email, otp: _otp);
 
       if (!mounted) return;
 
-      if (!ok) {
-        _snack(msg);
-        return;
-      }
-
-      await showModalBottomSheet(
-        context: context,
-        isScrollControlled: false,
-        backgroundColor: Colors.transparent,
-        builder: (_) => _SuccessSheet(
-          onGoLogin: () {
-            Navigator.pop(context); // close sheet
-            context.go(
-              '${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}',
-            );
-          },
-        ),
+      await result.fold(
+        (f) async => _snack(f.message),
+        (msg) async {
+          _snack(msg);
+          await showModalBottomSheet(
+            context: context,
+            isScrollControlled: false,
+            backgroundColor: Colors.transparent,
+            builder: (_) => _SuccessSheet(
+              onGoLogin: () {
+                Navigator.pop(context); // close sheet
+                context.go(
+                  '${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}',
+                );
+              },
+            ),
+          );
+        },
       );
     } catch (e) {
       if (!mounted) return;
-      _snack('Network error: $e');
+      _snack('Unexpected error: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -109,15 +110,18 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
   Future<void> _resend() async {
     setState(() => _resending = true);
     try {
-      final msg = await ref
+      final result = await ref
           .read(authControllerProvider.notifier)
           .resendOtp(email: widget.email);
 
       if (!mounted) return;
-      _snack(msg);
+      result.fold(
+        (f) => _snack(f.message),
+        (msg) => _snack(msg),
+      );
     } catch (e) {
       if (!mounted) return;
-      _snack('Network error: $e');
+      _snack('Unexpected error: $e');
     } finally {
       if (mounted) setState(() => _resending = false);
     }

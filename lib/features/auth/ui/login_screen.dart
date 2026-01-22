@@ -67,7 +67,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _loading = true);
     try {
-      final ok = await ref
+      final result = await ref
           .read(authControllerProvider.notifier)
           .login(
             email: _emailCtrl.text.trim().toLowerCase(),
@@ -77,16 +77,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (!mounted) return;
 
-      if (ok) {
-        context.go(AppRoutes.home);
-        return;
-      }
-
-      final err = ref.read(authControllerProvider).errorMessage;
-      _snack(err ?? 'Login failed.');
+      result.fold(
+        (f) => _snack(f.message),
+        (_) => context.go(AppRoutes.home),
+      );
     } catch (e) {
       if (!mounted) return;
-      _snack('Network error: $e');
+      _snack('Unexpected error: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

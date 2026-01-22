@@ -51,7 +51,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     setState(() => _loading = true);
     try {
-      final (ok, msg) = await ref
+      final result = await ref
           .read(authControllerProvider.notifier)
           .register(
             email: _email.text.trim().toLowerCase(),
@@ -60,18 +60,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           );
 
       if (!mounted) return;
-      _snack(msg);
 
-      if (ok) {
-        // Go to OTP verification; pass email via extra
-        await context.push(
-          AppRoutes.verifyOtp,
-          extra: _email.text.trim().toLowerCase(),
-        );
-      }
+      await result.fold(
+        (f) async => _snack(f.message),
+        (msg) async {
+          _snack(msg);
+          // Go to OTP verification; pass email via extra
+          await context.push(
+            AppRoutes.verifyOtp,
+            extra: _email.text.trim().toLowerCase(),
+          );
+        },
+      );
     } catch (e) {
       if (!mounted) return;
-      _snack('Network error: $e');
+      _snack('Unexpected error: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

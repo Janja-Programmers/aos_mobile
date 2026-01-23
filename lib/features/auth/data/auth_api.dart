@@ -158,4 +158,27 @@ class AuthApi {
       return Either.left(const Failure('Unexpected error. Please try again.'));
     }
   }
+
+  // Change password (logged-in)
+  Future<Either<Failure, Map<String, dynamic>>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      final res = await _client.dio.post(
+        ApiEndpoints.changePasswordEndpoint,
+        data: {
+          'current_password': currentPassword,
+          'new_password': newPassword,
+          'confirm_password': confirmPassword,
+        },
+      );
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Unexpected error. Please try again.'));
+    }
+  }
 }

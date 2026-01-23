@@ -288,6 +288,26 @@ class AuthController extends StateNotifier<AuthState> {
     return ok ? Either.right(msg) : Either.left(Failure(msg));
   }
 
+  // Change password (logged-in)
+  Future<Either<Failure, String>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final res = await _api.changePassword(
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+      confirmPassword: confirmPassword,
+    );
+    if (res.isLeft) return Either.left(res.leftOrNull!);
+
+    final payload = res.rightOrNull ?? <String, dynamic>{};
+    final ok = payload['ok'] == true;
+    final msg = (payload['message'] ?? (ok ? 'Password changed' : 'Failed')).toString();
+    return ok ? Either.right(msg) : Either.left(Failure(msg));
+  }
+
+
   Future<(bool remember, String email)> getRememberedLogin() async {
     final remember = await _storage.getRememberMe();
     final email = await _storage.getRememberedEmail();

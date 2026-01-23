@@ -14,6 +14,8 @@ class ApiEndpoints {
       '/api/method/aos.api.auth.forgot_password_reset';
   static final String meEndpoint = '/api/method/aos.api.auth.me';
   static final String logoutEndpoint = '/api/method/aos.api.auth.logout';
+  static final String changePasswordEndpoint =
+      '/api/method/aos.api.auth.change_password';
 
   // Accounts Endpoints
   static final String getProfileEndpoint =

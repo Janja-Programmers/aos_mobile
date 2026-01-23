@@ -15,6 +15,7 @@ import 'package:aos_mobile/features/account/ui/account_screen.dart';
 import 'package:aos_mobile/features/account/ui/privacy_policy_screen.dart';
 import 'package:aos_mobile/features/account/ui/terms_conditions_screen.dart';
 import 'package:aos_mobile/features/account/ui/update_profile_screen.dart';
+import 'package:aos_mobile/features/account/ui/password_security_screen.dart';
 import 'package:aos_mobile/core/routing/app_routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -76,6 +77,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.updateProfile,
         builder: (context, state) => const UpdateProfileScreen(),
       ),
+
+      GoRoute(
+        path: AppRoutes.passwordSecurity,
+        builder: (context, state) => const PasswordSecurityScreen(),
+      ),
+
       GoRoute(
         path: AppRoutes.terms,
         builder: (context, state) => const TermsConditionsScreen(),
@@ -110,10 +117,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final goingToAccount = state.matchedLocation == AppRoutes.account;
       final goingToUpdateProfile =
           state.matchedLocation == AppRoutes.updateProfile;
+      final goingToPasswordSecurity =
+          state.matchedLocation == AppRoutes.passwordSecurity;
       final goingToTerms = state.matchedLocation == AppRoutes.terms;
       final goingToPrivacy = state.matchedLocation == AppRoutes.privacy;
 
-      if (!auth.isLoggedIn && (goingToAccount || goingToUpdateProfile)) {
+      if (!auth.isLoggedIn &&
+          (goingToAccount || goingToUpdateProfile || goingToPasswordSecurity)) {
         return AppRoutes.login;
       }
 

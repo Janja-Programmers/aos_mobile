@@ -1,0 +1,103 @@
+import 'package:flutter_riverpod/legacy.dart';
+
+import 'package:aos_mobile/core/providers.dart';
+import 'package:aos_mobile/core/api/failure.dart';
+import 'package:aos_mobile/core/utils/either.dart';
+
+import 'package:aos_mobile/features/account/data/accounts_api.dart';
+import 'package:aos_mobile/features/account/domain/account_state.dart';
+
+final accountsControllerProvider =
+    StateNotifierProvider<AccountsController, AccountState>((ref) {
+      final api = ref.watch(accountsApiProvider);
+      return AccountsController(api: api)..loadProfile();
+    });
+
+class AccountsController extends StateNotifier<AccountState> {
+  AccountsController({required AccountsApi api})
+    : _api = api,
+      super(const AccountState());
+
+  final AccountsApi _api;
+
+  Future<Either<Failure, Map<String, dynamic>>> loadProfile() async {
+    if (state.loading) {
+      return Either.right(state.profile);
+    }
+
+    state = state.copyWith(loading: true, clearError: true);
+
+    final res = await _api.getProfile();
+
+    if (res.isLeft) {
+      final f = res.leftOrNull ?? const Failure('Failed to load profile.');
+      state = state.copyWith(loading: false, errorMessage: f.message);
+      return Either.left(f);
+    }
+
+    final payload = res.rightOrNull ?? <String, dynamic>{};
+    final ok = payload['ok'] == true;
+
+    if (!ok) {
+      final f = Failure(
+        (payload['message'] ?? 'Failed to load profile.').toString(),
+      );
+      state = state.copyWith(loading: false, errorMessage: f.message);
+      return Either.left(f);
+    }
+
+    final data = (payload['data'] is Map)
+        ? Map<String, dynamic>.from(payload['data'] as Map)
+        : <String, dynamic>{};
+
+    state = state.copyWith(loading: false, profile: data, clearError: true);
+    return Either.right(data);
+  }
+
+  Future<Either<Failure, String>> updateProfile({
+    String? fullName,
+    String? userImage,
+  }) async {
+    state = state.copyWith(clearError: true);
+
+    final res = await _api.updateProfile(
+      fullName: fullName,
+      userImage: userImage,
+    );
+
+    if (res.isLeft) {
+      final f = res.leftOrNull ?? const Failure('Failed to update profile.');
+      state = state.copyWith(errorMessage: f.message);
+      return Either.left(f);
+    }
+
+    final payload = res.rightOrNull ?? <String, dynamic>{};
+    final ok = payload['ok'] == true;
+    final msg =
+        (payload['message'] ?? (ok ? 'Profile updated.' : 'Update failed.'))
+            .toString();
+
+    if (!ok) {
+      final f = Failure(msg);
+      state = state.copyWith(errorMessage: f.message);
+      return Either.left(f);
+    }
+
+    // Refresh local profile after update
+    await loadProfile();
+    return Either.right(msg);
+  }
+
+  Future<Either<Failure, String>> uploadProfilePhoto({
+    required dynamic file, // File from dart:io
+    required String docname,
+  }) async {
+    final res = await _api.uploadProfilePhoto(file: file, docname: docname);
+    if (res.isLeft) {
+      return Either.left(res.leftOrNull ?? const Failure('Upload failed.'));
+    }
+    return Either.right(res.rightOrNull ?? '');
+  }
+
+  void clearError() => state = state.copyWith(clearError: true);
+}

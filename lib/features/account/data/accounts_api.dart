@@ -2,8 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
-import 'package:aos_mobile/core/api/api_client.dart';
-import 'package:aos_mobile/core/api/api_endpoints.dart';
+import 'package:aos_mobile/core/core.dart';
 import 'package:aos_mobile/core/api/api_response.dart';
 import 'package:aos_mobile/core/api/dio_failure_mapper.dart';
 import 'package:aos_mobile/core/api/failure.dart';

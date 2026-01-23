@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +9,7 @@ import 'package:aos_mobile/core/theme/app_colors.dart';
 import 'package:aos_mobile/core/theme/app_theme.dart';
 
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
+import 'package:aos_mobile/features/account/ui/legal_docs_widgets.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -42,6 +44,69 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  void _openLegalSheet({required String title, required Widget child}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.85,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            builder: (context, controller) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
+                child: Column(
+                  children: [
+                    Container(
+                      height: 4,
+                      width: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.black12,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: controller,
+                        child: child,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _register() async {
     if (!_accept) {
       _snack('Please accept Terms & Conditions and Privacy Policy');
@@ -61,17 +126,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       if (!mounted) return;
 
-      await result.fold(
-        (f) async => _snack(f.message),
-        (msg) async {
-          _snack(msg);
-          // Go to OTP verification; pass email via extra
-          await context.push(
-            AppRoutes.verifyOtp,
-            extra: _email.text.trim().toLowerCase(),
-          );
-        },
-      );
+      await result.fold((f) async => _snack(f.message), (msg) async {
+        _snack(msg);
+        // Go to OTP verification; pass email via extra
+        await context.push(
+          AppRoutes.verifyOtp,
+          extra: _email.text.trim().toLowerCase(),
+        );
+      });
     } catch (e) {
       if (!mounted) return;
       _snack('Unexpected error: $e');
@@ -185,11 +247,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     activeColor: Colors.black,
                   ),
                   Expanded(
-                    child: Text(
-                      'I Accept the Terms & Conditions and Privacy Policy',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium!.copyWith(color: AppColors.text),
+                    child: RichText(
+                      text: TextSpan(
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium!.copyWith(color: AppColors.text),
+                        children: [
+                          const TextSpan(text: 'I agree to the '),
+                          TextSpan(
+                            text: 'Terms & Conditions',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => _openLegalSheet(
+                                title: 'Terms & Conditions',
+                                child: const TermsConditionsContent(),
+                              ),
+                          ),
+                          const TextSpan(text: ' and '),
+                          TextSpan(
+                            text: 'Privacy Policy',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => _openLegalSheet(
+                                title: 'Privacy Policy',
+                                child: const PrivacyPolicyContent(),
+                              ),
+                          ),
+                          const TextSpan(text: '.'),
+                        ],
+                      ),
                     ),
                   ),
                 ],

@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:aos_mobile/core/core.dart';
+import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 
-class AppBottomNav extends StatelessWidget {
+class AppBottomNav extends ConsumerWidget {
   final int currentIndex;
 
   const AppBottomNav({super.key, required this.currentIndex});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authControllerProvider);
+
     return BottomNavigationBar(
       currentIndex: currentIndex,
       type: BottomNavigationBarType.fixed,
@@ -17,8 +21,16 @@ class AppBottomNav extends StatelessWidget {
       selectedItemColor: Colors.black,
       unselectedItemColor: Colors.grey,
       onTap: (index) {
-        // for now, all tabs go home
-        context.go(AppRoutes.home);
+        switch (index) {
+          case 0:
+            context.go(AppRoutes.home);
+            break;
+          case 4:
+            context.go(auth.isLoggedIn ? AppRoutes.account : AppRoutes.login);
+            break;
+          default:
+            context.go(AppRoutes.home);
+        }
       },
       items: [
         _navItem(Icons.home_outlined, 'Home', currentIndex == 0),

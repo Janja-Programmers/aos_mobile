@@ -49,6 +49,13 @@ class AuthController extends StateNotifier<AuthState> {
     if (!_changesCtrl.isClosed) _changesCtrl.add(null);
   }
 
+  /// Update the cached user data (used after profile update).
+  void setUserFromMap(Map<String, dynamic> userMap) {
+    if (!state.isLoggedIn) return;
+    state = state.copyWith(user: AuthUser.fromMap(userMap));
+    _emit();
+  }
+
   Future<void> init() async {
     // Load sid from storage and validate.
     try {

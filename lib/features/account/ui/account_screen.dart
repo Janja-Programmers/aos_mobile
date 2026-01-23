@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:aos_mobile/core/core.dart';
+import 'package:aos_mobile/core/config/app_config.dart';
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 import 'package:aos_mobile/shared/widgets/account_option_tile.dart';
 import 'package:aos_mobile/shared/widgets/app_bottom_nav.dart';
@@ -47,16 +48,24 @@ class AccountScreen extends ConsumerWidget {
               CircleAvatar(
                 radius: 26,
                 backgroundColor: const Color(0xFFEDEDED),
-                child: Text(
-                  (user?.fullName.isNotEmpty ?? false)
-                      ? user!.fullName.trim().substring(0, 1).toUpperCase()
-                      : 'U',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
-                ),
+                backgroundImage: (user?.userImage.isNotEmpty == true)
+                    ? NetworkImage('${AppConfig.normalizedBaseUrl}${user!.userImage}')
+                    : null,
+                child: (user?.userImage.isNotEmpty == true)
+                    ? null
+                    : Text(
+                        (user?.fullName.isNotEmpty ?? false)
+                            ? user!.fullName
+                                .trim()
+                                .substring(0, 1)
+                                .toUpperCase()
+                            : 'U',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                      ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -93,7 +102,7 @@ class AccountScreen extends ConsumerWidget {
             icon: Icons.person_outline,
             title: 'Personal Information',
             onTap: () {
-              // TODO
+              context.push(AppRoutes.updateProfile);
             },
           ),
           const Divider(height: 1),

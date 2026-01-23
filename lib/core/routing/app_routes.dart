@@ -6,6 +6,7 @@ class AppRoutes {
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
   static const account = '/account';
+  static const updateProfile = '/account/update-profile';
   static const terms = '/terms';
   static const privacy = '/privacy';
 }

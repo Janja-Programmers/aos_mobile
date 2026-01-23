@@ -14,6 +14,7 @@ import 'package:aos_mobile/features/home/ui/home_screen.dart';
 import 'package:aos_mobile/features/account/ui/account_screen.dart';
 import 'package:aos_mobile/features/account/ui/privacy_policy_screen.dart';
 import 'package:aos_mobile/features/account/ui/terms_conditions_screen.dart';
+import 'package:aos_mobile/features/account/ui/update_profile_screen.dart';
 import 'package:aos_mobile/core/routing/app_routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -72,6 +73,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AccountScreen(),
       ),
       GoRoute(
+        path: AppRoutes.updateProfile,
+        builder: (context, state) => const UpdateProfileScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.terms,
         builder: (context, state) => const TermsConditionsScreen(),
       ),
@@ -103,13 +108,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == AppRoutes.resetPassword;
 
       final goingToAccount = state.matchedLocation == AppRoutes.account;
+      final goingToUpdateProfile =
+          state.matchedLocation == AppRoutes.updateProfile;
       final goingToTerms = state.matchedLocation == AppRoutes.terms;
       final goingToPrivacy = state.matchedLocation == AppRoutes.privacy;
 
-      // If not logged in, protect account routes (account entry). Terms & Privacy are public.
-      if (!auth.isLoggedIn && goingToAccount) return AppRoutes.login;
+      if (!auth.isLoggedIn && (goingToAccount || goingToUpdateProfile)) {
+        return AppRoutes.login;
+      }
 
-      // If terms/privacy are ever opened from inside account (deep links), allow them even when logged out.
       if (!auth.isLoggedIn && (goingToTerms || goingToPrivacy)) {
         return null;
       }

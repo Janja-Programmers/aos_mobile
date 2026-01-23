@@ -109,23 +109,18 @@ class AuthController extends StateNotifier<AuthState> {
     required String password,
     required bool rememberMe,
   }) async {
-    state = state.copyWith(clearError: true);
-
     final res = await _api.login(email: email, password: password);
+
     if (res.isLeft) {
-      final f = res.leftOrNull ?? const Failure('Login failed.');
-      state = state.copyWith(errorMessage: f.message);
-      _emit();
-      return Either.left(f);
+      return Either.left(res.leftOrNull ?? const Failure('Login failed.'));
     }
 
     final payload = res.rightOrNull ?? <String, dynamic>{};
     final ok = payload['ok'] == true;
     if (!ok) {
-      final f = Failure((payload['message'] ?? 'Login failed.').toString());
-      state = state.copyWith(errorMessage: f.message);
-      _emit();
-      return Either.left(f);
+      return Either.left(
+        Failure((payload['message'] ?? 'Login failed.').toString()),
+      );
     }
 
     final data = (payload['data'] is Map)
@@ -134,12 +129,10 @@ class AuthController extends StateNotifier<AuthState> {
 
     final sid = (data['sid'] ?? '').toString();
     if (sid.isEmpty) {
-      const f = Failure('Login failed (no session).');
-      state = state.copyWith(errorMessage: f.message);
-      _emit();
-      return Either.left(f);
+      return Either.left(const Failure('Login failed (no session).'));
     }
 
+    // Persist session & remember me
     await _apiClient.setSid(sid);
     await _storage.setSid(sid);
 
@@ -162,6 +155,7 @@ class AuthController extends StateNotifier<AuthState> {
       clearError: true,
     );
     _emit();
+
     return Either.right(null);
   }
 

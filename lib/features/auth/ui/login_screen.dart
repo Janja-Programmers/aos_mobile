@@ -77,7 +77,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (!mounted) return;
 
-      result.fold((f) => _snack(f.message), (_) => context.go(AppRoutes.home));
+      await result.fold(
+        (f) async {
+          _snack(f.message);
+        },
+        (_) async {
+          context.go(AppRoutes.home);
+        },
+      );
     } catch (e) {
       if (!mounted) return;
       _snack('Unexpected error: $e');

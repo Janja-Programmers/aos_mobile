@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:aos_mobile/core/core.dart';
@@ -8,6 +7,7 @@ import 'package:aos_mobile/core/theme/app_colors.dart';
 import 'package:aos_mobile/core/theme/app_theme.dart';
 
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
+import 'package:aos_mobile/features/auth/shared/widgets/platform_social_section.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key, this.prefillEmail});
@@ -193,45 +193,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 loading: _loading,
               ),
 
-              const SizedBox(height: 18),
-              const Row(
-                children: [
-                  Expanded(child: Divider(color: AppColors.stroke)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(
-                      'Or Continue with',
-                      style: TextStyle(color: AppColors.muted),
-                    ),
-                  ),
-                  Expanded(child: Divider(color: AppColors.stroke)),
-                ],
-              ),
-              const SizedBox(height: 14),
-
-              // Social buttons (placeholders)
-              Row(
-                children: [
-                  AppTheme.socialButton(
-                    icon: SvgPicture.asset(
-                      'assets/icons/google.svg',
-                      width: 22,
-                      height: 22,
-                    ),
-                    text: 'Google',
-                    onTap: () => _snack('Google signup coming soon.'),
-                  ),
-                  const SizedBox(width: 12),
-                  AppTheme.socialButton(
-                    icon: SvgPicture.asset(
-                      'assets/icons/apple.svg',
-                      width: 22,
-                      height: 22,
-                    ),
-                    text: 'Apple',
-                    onTap: () => _snack('Apple signup coming soon.'),
-                  ),
-                ],
+              PlatformSocialSection(
+                loading: _loading,
+                onGoogle: () => _snack('Google signup coming soon.'),
+                onApple: () => _snack('Apple signup coming soon.'),
               ),
 
               const SizedBox(height: 18),

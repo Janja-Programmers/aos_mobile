@@ -52,7 +52,7 @@ class AppConfirmSheet extends StatelessWidget {
                 width: 64,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: iconBg.withOpacity(0.15),
+                  color: iconBg,
                 ),
                 child: Center(
                   child: Container(

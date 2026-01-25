@@ -8,6 +8,7 @@ import 'package:aos_mobile/features/account/providers/accounts_controller.dart';
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 import 'package:aos_mobile/shared/widgets/account_option_tile.dart';
 import 'package:aos_mobile/shared/widgets/app_bottom_nav.dart';
+import 'package:aos_mobile/shared/widgets/app_confirm_sheet.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -168,8 +169,28 @@ class AccountScreen extends ConsumerWidget {
               height: 56,
               child: OutlinedButton.icon(
                 onPressed: () async {
-                  await ref.read(authControllerProvider.notifier).logout();
-                  if (context.mounted) context.go(AppRoutes.home);
+                  await showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => AppConfirmSheet(
+                      icon: Icons.error_outline,
+                      iconBg: const Color(0xFFE65A5A),
+                      title: 'Logout',
+                      message:
+                          'Are you sure you want to log out? You will need to sign in again to access your account.',
+                      primaryText: 'Logout',
+                      secondaryText: 'Cancel',
+                      onPrimary: () async {
+                        Navigator.of(context).pop(); // close sheet
+                        await ref.read(authControllerProvider.notifier).logout();
+                        if (context.mounted) context.go(AppRoutes.home);
+                      },
+                      onSecondary: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  );
                 },
                 style: OutlinedButton.styleFrom(
                   shape: RoundedRectangleBorder(

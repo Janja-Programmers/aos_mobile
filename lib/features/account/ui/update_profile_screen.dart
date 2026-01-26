@@ -5,15 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:aos_mobile/core/config/app_config.dart';
-import 'package:aos_mobile/core/core.dart';
-import 'package:aos_mobile/core/providers.dart';
-import 'package:aos_mobile/core/utils/normalize_image.dart';
+import 'package:africaonlinestores/core/config/app_config.dart';
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/utils/normalize_image.dart';
 
-import 'package:aos_mobile/features/account/data/accounts_api.dart';
-import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
+import 'package:africaonlinestores/features/account/data/accounts_api.dart';
+import 'package:africaonlinestores/features/auth/providers/auth_controller.dart';
 
-import 'package:aos_mobile/core/utils/app_snack.dart';
+import 'package:africaonlinestores/core/utils/app_snack.dart';
 
 class UpdateProfileScreen extends ConsumerStatefulWidget {
   const UpdateProfileScreen({super.key});

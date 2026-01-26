@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import 'package:aos_mobile/core/api/failure.dart';
+import 'package:africaonlinestores/core/api/failure.dart';
 
 /// Convert Dio exceptions into a user-friendly [Failure].
 Failure mapDioException(DioException e) {

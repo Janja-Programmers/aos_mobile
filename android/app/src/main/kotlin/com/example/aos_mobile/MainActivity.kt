@@ -1,4 +1,4 @@
-package com.example.aos_mobile
+package com.example.africaonlinestores
 
 import io.flutter.embedding.android.FlutterActivity
 

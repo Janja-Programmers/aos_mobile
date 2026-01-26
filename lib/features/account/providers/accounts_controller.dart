@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:aos_mobile/core/providers.dart';
-import 'package:aos_mobile/core/api/failure.dart';
-import 'package:aos_mobile/core/utils/either.dart';
+import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/utils/either.dart';
 
-import 'package:aos_mobile/features/account/data/accounts_api.dart';
-import 'package:aos_mobile/features/account/domain/account_state.dart';
+import 'package:africaonlinestores/features/account/data/accounts_api.dart';
+import 'package:africaonlinestores/features/account/domain/account_state.dart';
 
 final accountsControllerProvider =
     StateNotifierProvider<AccountsController, AccountState>((ref) {

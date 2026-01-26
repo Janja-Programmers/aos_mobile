@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:aos_mobile/ui/components/app_text_styles.dart';
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
 class OtpResendRow extends StatelessWidget {
   const OtpResendRow({

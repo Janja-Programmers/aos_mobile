@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 
-import 'package:aos_mobile/core/api/failure.dart';
-import 'package:aos_mobile/core/utils/either.dart';
+import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/utils/either.dart';
 
 /// Helpers for dealing with Frappe-style responses.
 ///

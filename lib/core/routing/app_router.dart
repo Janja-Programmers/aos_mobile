@@ -4,19 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
-import 'package:aos_mobile/features/auth/ui/login_screen.dart';
-import 'package:aos_mobile/features/auth/ui/register_screen.dart';
-import 'package:aos_mobile/features/auth/ui/verify_otp_screen.dart';
-import 'package:aos_mobile/features/auth/ui/forgot_password_screen.dart';
-import 'package:aos_mobile/features/auth/ui/reset_password_screen.dart';
-import 'package:aos_mobile/features/home/ui/home_screen.dart';
-import 'package:aos_mobile/features/account/ui/account_screen.dart';
-import 'package:aos_mobile/features/account/ui/privacy_policy_screen.dart';
-import 'package:aos_mobile/features/account/ui/terms_conditions_screen.dart';
-import 'package:aos_mobile/features/account/ui/update_profile_screen.dart';
-import 'package:aos_mobile/features/account/ui/password_security_screen.dart';
-import 'package:aos_mobile/core/routing/app_routes.dart';
+import 'package:africaonlinestores/features/auth/providers/auth_controller.dart';
+import 'package:africaonlinestores/features/auth/ui/login_screen.dart';
+import 'package:africaonlinestores/features/auth/ui/register_screen.dart';
+import 'package:africaonlinestores/features/auth/ui/verify_otp_screen.dart';
+import 'package:africaonlinestores/features/auth/ui/forgot_password_screen.dart';
+import 'package:africaonlinestores/features/auth/ui/reset_password_screen.dart';
+import 'package:africaonlinestores/features/home/ui/home_screen.dart';
+import 'package:africaonlinestores/features/account/ui/account_screen.dart';
+import 'package:africaonlinestores/features/account/ui/privacy_policy_screen.dart';
+import 'package:africaonlinestores/features/account/ui/terms_conditions_screen.dart';
+import 'package:africaonlinestores/features/account/ui/update_profile_screen.dart';
+import 'package:africaonlinestores/features/account/ui/password_security_screen.dart';
+import 'package:africaonlinestores/core/routing/app_routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // auth state

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:aos_mobile/core/theme/app_theme_extensions.dart';
-import 'package:aos_mobile/features/account/ui/legal_docs_widgets.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/account/ui/legal_docs_widgets.dart';
 
 /// Simple static Terms & Conditions page.
 class TermsConditionsScreen extends StatelessWidget {

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:aos_mobile/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
-import 'package:aos_mobile/features/auth/shared/widgets/otp_input.dart';
+import 'package:africaonlinestores/features/auth/shared/widgets/otp_input.dart';
 
-import 'package:aos_mobile/ui/components/app_text_styles.dart';
-import 'package:aos_mobile/ui/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
+import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
 
 class OtpSection extends StatefulWidget {
   const OtpSection({

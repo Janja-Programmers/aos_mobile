@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:aos_mobile/core/core.dart';
-import 'package:aos_mobile/core/config/app_config.dart';
-import 'package:aos_mobile/core/utils/app_snack.dart';
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/config/app_config.dart';
+import 'package:africaonlinestores/core/utils/app_snack.dart';
 
-import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
+import 'package:africaonlinestores/features/auth/providers/auth_controller.dart';
 
-import 'package:aos_mobile/ui/components/account_option_tile.dart';
-import 'package:aos_mobile/ui/components/app_bottom_nav.dart';
-import 'package:aos_mobile/ui/components/app_confirm_sheet.dart';
-import 'package:aos_mobile/ui/components/app_text_styles.dart';
+import 'package:africaonlinestores/ui/components/account_option_tile.dart';
+import 'package:africaonlinestores/ui/components/app_bottom_nav.dart';
+import 'package:africaonlinestores/ui/components/app_confirm_sheet.dart';
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});

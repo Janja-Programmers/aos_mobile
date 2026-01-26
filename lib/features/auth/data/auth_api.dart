@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
 
-import 'package:aos_mobile/core/api/api_client.dart';
-import 'package:aos_mobile/core/api/api_endpoints.dart';
-import 'package:aos_mobile/core/api/api_response.dart';
-import 'package:aos_mobile/core/api/dio_failure_mapper.dart';
-import 'package:aos_mobile/core/api/failure.dart';
-import 'package:aos_mobile/core/utils/either.dart';
+import 'package:africaonlinestores/core/api/api_client.dart';
+import 'package:africaonlinestores/core/api/api_endpoints.dart';
+import 'package:africaonlinestores/core/api/api_response.dart';
+import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
+import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/utils/either.dart';
 
 class AuthApi {
   AuthApi(this._client);

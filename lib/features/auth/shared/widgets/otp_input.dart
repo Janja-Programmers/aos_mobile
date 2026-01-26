@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:aos_mobile/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 class OtpInputController {
   OtpInputController({required this.length})

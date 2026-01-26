@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:aos_mobile/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 extension AppTextStylesX on BuildContext {
   TextStyle get h1 => Theme.of(this).textTheme.headlineMedium!.copyWith(

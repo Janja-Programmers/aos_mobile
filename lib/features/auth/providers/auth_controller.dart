@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:aos_mobile/core/providers.dart';
-import 'package:aos_mobile/core/api/api_client.dart';
-import 'package:aos_mobile/core/api/session_storage.dart';
-import 'package:aos_mobile/core/api/failure.dart';
-import 'package:aos_mobile/core/utils/either.dart';
-import 'package:aos_mobile/features/auth/data/auth_api.dart';
-import 'package:aos_mobile/features/auth/data/google_auth_service.dart';
-import 'package:aos_mobile/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/api/api_client.dart';
+import 'package:africaonlinestores/core/api/session_storage.dart';
+import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/features/auth/data/auth_api.dart';
+import 'package:africaonlinestores/features/auth/data/google_auth_service.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 
 final authRefreshProvider = StreamProvider<void>((ref) {
   // A lightweight stream that emits whenever authController changes.

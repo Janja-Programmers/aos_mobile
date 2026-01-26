@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:aos_mobile/core/config/app_config.dart';
+import 'package:africaonlinestores/core/config/app_config.dart';
 
 class GoogleAuthService {
   static final GoogleSignIn _signIn = GoogleSignIn.instance;

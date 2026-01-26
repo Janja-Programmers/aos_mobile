@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:aos_mobile/core/routing/app_router.dart';
-import 'package:aos_mobile/core/theme/app_theme.dart';
-import 'package:aos_mobile/core/theme/theme_controller.dart';
+import 'package:africaonlinestores/core/routing/app_router.dart';
+import 'package:africaonlinestores/core/theme/app_theme.dart';
+import 'package:africaonlinestores/core/theme/theme_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

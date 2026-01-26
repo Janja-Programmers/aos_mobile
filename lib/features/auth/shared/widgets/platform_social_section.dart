@@ -3,8 +3,8 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:aos_mobile/core/theme/app_theme_extensions.dart';
-import 'package:aos_mobile/ui/components/buttons/social_button.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/ui/components/buttons/social_button.dart';
 
 class PlatformSocialSection extends StatelessWidget {
   const PlatformSocialSection({

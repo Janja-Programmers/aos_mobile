@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:aos_mobile/core/theme/app_color_tokens.dart';
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 
 extension AppThemeX on BuildContext {
   /// Access your theme tokens (fails loudly if not added to ThemeData.extensions).

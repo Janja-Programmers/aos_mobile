@@ -1,4 +1,4 @@
-name: aos_mobile
+name: africaonlinestores
 description: "Africa Online Stores"
 
 publish_to: "none"
@@ -62,4 +62,3 @@ flutter:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
-

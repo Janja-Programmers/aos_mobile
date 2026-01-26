@@ -1,4 +1,4 @@
-# aos_mobile
+# africaonlinestores
 
 A new Flutter project.
 

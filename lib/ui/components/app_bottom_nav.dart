@@ -18,8 +18,6 @@ class AppBottomNav extends ConsumerWidget {
     return BottomNavigationBar(
       currentIndex: currentIndex,
       type: BottomNavigationBarType.fixed,
-
-      // Theme-driven colors (keeps UI consistent across light/dark)
       backgroundColor: scheme.surface,
       selectedItemColor: scheme.onSurface,
       unselectedItemColor: context.appColors.muted,
@@ -28,6 +26,9 @@ class AppBottomNav extends ConsumerWidget {
         switch (index) {
           case 0:
             context.go(AppRoutes.home);
+            break;
+          case 1:
+            context.go(AppRoutes.categories);
             break;
           case 4:
             context.go(auth.isLoggedIn ? AppRoutes.account : AppRoutes.login);

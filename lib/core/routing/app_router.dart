@@ -11,11 +11,13 @@ import 'package:africaonlinestores/features/auth/ui/verify_otp_screen.dart';
 import 'package:africaonlinestores/features/auth/ui/forgot_password_screen.dart';
 import 'package:africaonlinestores/features/auth/ui/reset_password_screen.dart';
 import 'package:africaonlinestores/features/home/ui/home_screen.dart';
+import 'package:africaonlinestores/features/catalog/ui/categories_screen.dart';
 import 'package:africaonlinestores/features/account/ui/account_screen.dart';
 import 'package:africaonlinestores/features/account/ui/privacy_policy_screen.dart';
 import 'package:africaonlinestores/features/account/ui/terms_conditions_screen.dart';
 import 'package:africaonlinestores/features/account/ui/update_profile_screen.dart';
 import 'package:africaonlinestores/features/account/ui/password_security_screen.dart';
+
 import 'package:africaonlinestores/core/routing/app_routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -35,6 +37,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.home,
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.categories,
+        builder: (context, state) => const CategoriesScreen(),
       ),
       GoRoute(
         path: AppRoutes.login,

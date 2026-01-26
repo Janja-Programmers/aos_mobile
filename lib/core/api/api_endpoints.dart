@@ -25,4 +25,8 @@ class ApiEndpoints {
   static final String updateProfileEndpoint =
       '/api/method/aos.api.accounts.update_profile';
   static final String uploadFileEndpoint = '/api/method/upload_file';
+
+  // Catalog Endpoints
+  static final String getCategoriesEndpoint =
+      '/api/method/aos.api.catalog.get_categories';
 }

@@ -2,11 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:aos_mobile/core/config/app_config.dart';
+import 'package:aos_mobile/core/core.dart';
 import 'package:aos_mobile/core/providers.dart';
-
 import 'package:aos_mobile/features/account/data/accounts_api.dart';
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 
@@ -107,6 +108,10 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
     ref.read(authControllerProvider.notifier).setUserFromMap(data);
 
     _snack('Profile updated.');
+
+    if (mounted) {
+      context.go(AppRoutes.account);
+    }
   }
 
   Future<void> _pickPhoto() async {

@@ -12,11 +12,13 @@ class PlatformSocialSection extends StatelessWidget {
     required this.loading,
     required this.onGoogle,
     required this.onApple,
+    required this.googleLoading,
   });
 
   final bool loading;
   final VoidCallback onGoogle;
   final VoidCallback onApple;
+  final bool googleLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -89,14 +91,20 @@ class PlatformSocialSection extends StatelessWidget {
           width: double.infinity,
           child: OutlinedButton.icon(
             onPressed: loading ? null : onGoogle,
-            icon: SvgPicture.asset(
-              'assets/icons/google.svg',
-              width: 22,
-              height: 22,
-            ),
-            label: const Text(
-              'Continue with Google',
-              style: TextStyle(fontWeight: FontWeight.w700),
+            icon: googleLoading
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : SvgPicture.asset(
+                    'assets/icons/google.svg',
+                    width: 22,
+                    height: 22,
+                  ),
+            label: Text(
+              googleLoading ? 'Signing in…' : 'Continue with Google',
+              style: const TextStyle(fontWeight: FontWeight.w700),
             ),
             style: OutlinedButton.styleFrom(
               backgroundColor: Colors.white,

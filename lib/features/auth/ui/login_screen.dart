@@ -24,7 +24,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   bool _rememberMe = true;
   bool _obscure = true;
-  bool _loading = false;
+  bool _loginLoading = false;
+  bool _googleLoading = false;
+
+  bool get _busy => _loginLoading || _googleLoading;
 
   @override
   void initState() {
@@ -63,9 +66,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _login() async {
+    if (_busy) return;
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _loading = true);
+    setState(() => _loginLoading = true);
     try {
       final result = await ref
           .read(authControllerProvider.notifier)
@@ -78,18 +82,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
 
       await result.fold(
-        (f) async {
-          _snack(f.message);
-        },
-        (_) async {
-          context.go(AppRoutes.home);
-        },
+        (f) async => _snack(f.message),
+        (_) async => context.go(AppRoutes.home),
       );
     } catch (e) {
       if (!mounted) return;
       _snack('Unexpected error: $e');
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _loginLoading = false);
+    }
+  }
+
+  Future<void> _googleSignIn() async {
+    if (_busy) return;
+
+    setState(() => _googleLoading = true);
+    try {
+      final result = await ref
+          .read(authControllerProvider.notifier)
+          .signInWithGoogle();
+
+      if (!mounted) return;
+
+      result.fold((f) => _snack(f.message), (_) => context.go(AppRoutes.home));
+    } catch (e) {
+      if (!mounted) return;
+      _snack('Unexpected error: $e');
+    } finally {
+      if (mounted) setState(() => _googleLoading = false);
     }
   }
 
@@ -189,13 +209,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 10),
               AppTheme.primaryButton(
                 text: 'Login',
-                onPressed: _loading ? null : _login,
-                loading: _loading,
+                onPressed: _busy ? null : _login,
+                loading: _loginLoading,
               ),
 
               PlatformSocialSection(
-                loading: _loading,
-                onGoogle: () => _snack('Google signup coming soon.'),
+                loading: _busy,
+                googleLoading: _googleLoading,
+                onGoogle: _googleSignIn,
                 onApple: () => _snack('Apple signup coming soon.'),
               ),
 

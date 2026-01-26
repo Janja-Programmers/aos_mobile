@@ -11,4 +11,9 @@ class AppConfig {
     final v = baseUrl.trim();
     return v.endsWith('/') ? v.substring(0, v.length - 1) : v;
   }
+
+  static const String googleWebClientId = String.fromEnvironment(
+    'AOS_GOOGLE_WEB_CLIENT_ID',
+    defaultValue: 'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com',
+  );
 }

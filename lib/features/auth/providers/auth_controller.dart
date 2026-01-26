@@ -9,6 +9,7 @@ import 'package:aos_mobile/core/api/session_storage.dart';
 import 'package:aos_mobile/core/api/failure.dart';
 import 'package:aos_mobile/core/utils/either.dart';
 import 'package:aos_mobile/features/auth/data/auth_api.dart';
+import 'package:aos_mobile/features/auth/data/google_auth_service.dart';
 import 'package:aos_mobile/features/auth/domain/auth_state.dart';
 
 final authRefreshProvider = StreamProvider<void>((ref) {
@@ -303,10 +304,50 @@ class AuthController extends StateNotifier<AuthState> {
 
     final payload = res.rightOrNull ?? <String, dynamic>{};
     final ok = payload['ok'] == true;
-    final msg = (payload['message'] ?? (ok ? 'Password changed' : 'Failed')).toString();
+    final msg = (payload['message'] ?? (ok ? 'Password changed' : 'Failed'))
+        .toString();
     return ok ? Either.right(msg) : Either.left(Failure(msg));
   }
 
+  Future<Either<Failure, void>> signInWithGoogle() async {
+    try {
+      final idToken = await GoogleAuthService.signInAndGetIdToken();
+      if (idToken == null || idToken.isEmpty) {
+        return Either.left(const Failure('Google sign-in cancelled.'));
+      }
+
+      final res = await _api.googleLogin(idToken: idToken);
+      if (res.isLeft) return Either.left(res.leftOrNull!);
+
+      final payload = res.rightOrNull ?? {};
+      if (payload['ok'] != true) {
+        return Either.left(
+          Failure((payload['message'] ?? 'Google login failed').toString()),
+        );
+      }
+
+      final data = Map<String, dynamic>.from(payload['data'] ?? {});
+      final sid = (data['sid'] ?? '').toString();
+      if (sid.isEmpty) {
+        return Either.left(const Failure('No session returned.'));
+      }
+
+      await _apiClient.setSid(sid);
+      await _storage.setSid(sid);
+
+      state = state.copyWith(
+        isLoggedIn: true,
+        sid: sid,
+        user: AuthUser.fromMap(Map<String, dynamic>.from(data['user'] ?? {})),
+        clearError: true,
+      );
+      _emit();
+
+      return Either.right(null);
+    } catch (e) {
+      return Either.left(Failure('Google sign-in failed: $e'));
+    }
+  }
 
   Future<(bool remember, String email)> getRememberedLogin() async {
     final remember = await _storage.getRememberMe();

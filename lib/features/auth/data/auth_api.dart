@@ -11,6 +11,16 @@ class AuthApi {
   AuthApi(this._client);
   final ApiClient _client;
 
+  Future<Either<Failure, Map<String, dynamic>>> googleLogin({
+    required String idToken,
+  }) async {
+    final res = await _client.dio.post(
+      ApiEndpoints.googleLoginEndpoint,
+      data: {'id_token': idToken},
+    );
+    return unwrapFrappe(res);
+  }
+
   Future<Either<Failure, Map<String, dynamic>>> register({
     required String email,
     required String password,

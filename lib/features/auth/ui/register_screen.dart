@@ -25,10 +25,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _password = TextEditingController();
   final _confirm = TextEditingController();
 
-  bool _loading = false;
+  bool _googleLoading = false;
+  bool _registerLoading = false;
   bool _obscure1 = true;
   bool _obscure2 = true;
   bool _accept = true;
+
+  bool get _busy => _registerLoading || _googleLoading;
 
   @override
   void dispose() {
@@ -112,9 +115,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _snack('Please accept Terms & Conditions and Privacy Policy');
       return;
     }
+
+    if (_busy) return;
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _loading = true);
+    setState(() => _registerLoading = true);
     try {
       final result = await ref
           .read(authControllerProvider.notifier)
@@ -137,7 +142,27 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (!mounted) return;
       _snack('Unexpected error: $e');
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _registerLoading = false);
+    }
+  }
+
+  Future<void> _googleSignIn() async {
+    if (_busy) return;
+
+    setState(() => _googleLoading = true);
+    try {
+      final result = await ref
+          .read(authControllerProvider.notifier)
+          .signInWithGoogle();
+
+      if (!mounted) return;
+
+      result.fold((f) => _snack(f.message), (_) => context.go(AppRoutes.home));
+    } catch (e) {
+      if (!mounted) return;
+      _snack('Unexpected error: $e');
+    } finally {
+      if (mounted) setState(() => _googleLoading = false);
     }
   }
 
@@ -289,13 +314,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               const SizedBox(height: 10),
               AppTheme.primaryButton(
                 text: 'Register',
-                onPressed: _loading ? null : _register,
-                loading: _loading,
+                onPressed: _busy ? null : _register,
+                loading: _registerLoading,
               ),
 
               PlatformSocialSection(
-                loading: _loading,
-                onGoogle: () => _snack('Google signup coming soon.'),
+                loading: _busy,
+                googleLoading: _googleLoading,
+                onGoogle: _googleSignIn,
                 onApple: () => _snack('Apple signup coming soon.'),
               ),
 

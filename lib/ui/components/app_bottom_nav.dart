@@ -13,13 +13,17 @@ class AppBottomNav extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
+    final scheme = Theme.of(context).colorScheme;
 
     return BottomNavigationBar(
       currentIndex: currentIndex,
       type: BottomNavigationBarType.fixed,
-      backgroundColor: Colors.white,
-      selectedItemColor: Colors.black,
-      unselectedItemColor: Colors.grey,
+
+      // Theme-driven colors (keeps UI consistent across light/dark)
+      backgroundColor: scheme.surface,
+      selectedItemColor: scheme.onSurface,
+      unselectedItemColor: context.appColors.muted,
+
       onTap: (index) {
         switch (index) {
           case 0:
@@ -33,16 +37,33 @@ class AppBottomNav extends ConsumerWidget {
         }
       },
       items: [
-        _navItem(Icons.home_outlined, 'Home', currentIndex == 0),
-        _navItem(Icons.grid_view_outlined, 'Categories', currentIndex == 1),
-        _navItem(Icons.sell_outlined, 'Selling', currentIndex == 2),
-        _navItem(Icons.chat_bubble_outline, 'Messages', currentIndex == 3),
-        _navItem(Icons.person_outline, 'Account', currentIndex == 4),
+        _navItem(context, Icons.home_outlined, 'Home', currentIndex == 0),
+        _navItem(
+          context,
+          Icons.grid_view_outlined,
+          'Categories',
+          currentIndex == 1,
+        ),
+        _navItem(context, Icons.sell_outlined, 'Selling', currentIndex == 2),
+        _navItem(
+          context,
+          Icons.chat_bubble_outline,
+          'Messages',
+          currentIndex == 3,
+        ),
+        _navItem(context, Icons.person_outline, 'Account', currentIndex == 4),
       ],
     );
   }
 
-  BottomNavigationBarItem _navItem(IconData icon, String label, bool active) {
+  BottomNavigationBarItem _navItem(
+    BuildContext context,
+    IconData icon,
+    String label,
+    bool active,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+
     return BottomNavigationBarItem(
       label: label,
       icon: Column(
@@ -54,7 +75,7 @@ class AppBottomNav extends ConsumerWidget {
               height: 3,
               margin: const EdgeInsets.only(bottom: 6),
               decoration: BoxDecoration(
-                color: Colors.black,
+                color: scheme.primary,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:aos_mobile/core/theme/app_theme.dart';
+import 'package:aos_mobile/core/theme/app_theme_extensions.dart';
+import 'package:aos_mobile/ui/components/app_text_styles.dart';
 
 class AppConfirmSheet extends StatelessWidget {
   const AppConfirmSheet({
@@ -24,10 +25,18 @@ class AppConfirmSheet extends StatelessWidget {
   final VoidCallback onPrimary;
   final VoidCallback onSecondary;
 
+  static const BorderRadius _pill = BorderRadius.all(Radius.circular(999));
+  static const BorderRadius _sheetRadius = BorderRadius.vertical(
+    top: Radius.circular(26),
+  );
+
   @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.of(context).viewInsets;
-    final viewPadding = MediaQuery.of(context).viewPadding;
+    final mediaQuery = MediaQuery.of(context);
+    final viewInsets = mediaQuery.viewInsets;
+    final viewPadding = mediaQuery.viewPadding;
+
+    final scheme = Theme.of(context).colorScheme;
 
     return SafeArea(
       top: false,
@@ -40,13 +49,14 @@ class AppConfirmSheet extends StatelessWidget {
             18,
             18 + viewPadding.bottom + viewInsets.bottom,
           ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: _sheetRadius,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Icon badge
               Container(
                 height: 64,
                 width: 64,
@@ -60,25 +70,27 @@ class AppConfirmSheet extends StatelessWidget {
                     width: 44,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: iconBg,
+                      color: iconBg.withAlpha(46),
                     ),
-                    child: Icon(icon, color: Colors.white, size: 22),
+                    child: Icon(icon, color: scheme.onPrimary, size: 22),
                   ),
                 ),
               ),
+
               const SizedBox(height: 12),
-              Text(
-                title,
-                style: AppTheme.h2(context),
-                textAlign: TextAlign.center,
-              ),
+
+              Text(title, style: context.h2, textAlign: TextAlign.center),
+
               const SizedBox(height: 6),
+
               Text(
                 message,
-                style: AppTheme.bodyMuted(context),
+                style: context.bodyMuted,
                 textAlign: TextAlign.center,
               ),
+
               const SizedBox(height: 16),
+
               Row(
                 children: [
                   Expanded(
@@ -87,11 +99,11 @@ class AppConfirmSheet extends StatelessWidget {
                       child: OutlinedButton(
                         onPressed: onPrimary,
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: iconBg),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(999),
+                          side: BorderSide(color: context.appColors.stroke),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: _pill,
                           ),
-                          foregroundColor: iconBg,
+                          foregroundColor: context.appColors.text,
                         ),
                         child: Text(
                           primaryText,
@@ -107,11 +119,12 @@ class AppConfirmSheet extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: onSecondary,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(999),
+                          backgroundColor: scheme.primary,
+                          foregroundColor: scheme.onPrimary,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: _pill,
                           ),
+                          elevation: 0,
                         ),
                         child: Text(
                           secondaryText,

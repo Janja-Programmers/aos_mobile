@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:aos_mobile/core/theme/app_theme_extensions.dart';
+
 /// Shared, reusable legal document content widgets.
 /// These are used both in full pages and in bottom sheets (e.g. Register consent).
 class TermsConditionsContent extends StatelessWidget {
@@ -127,11 +129,14 @@ class _H1 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w800,
+        color: colors.text,
       ),
     );
   }
@@ -143,13 +148,16 @@ class _H2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w800,
+          color: colors.text,
         ),
       ),
     );
@@ -162,13 +170,11 @@ class _P extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Text(
       text,
-      style: const TextStyle(
-        height: 1.45,
-        fontSize: 13.5,
-        color: Colors.black87,
-      ),
+      style: TextStyle(height: 1.45, fontSize: 13.5, color: colors.muted),
     );
   }
 }

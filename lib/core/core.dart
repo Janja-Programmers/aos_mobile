@@ -9,3 +9,6 @@ export 'routing/app_routes.dart';
 
 // ───────────── Utils ─────────────
 export 'utils/validators.dart';
+
+// ───────────── Theme ─────────────
+export 'theme/app_theme_extensions.dart';

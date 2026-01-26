@@ -1,116 +1,119 @@
 import 'package:flutter/material.dart';
 
-import 'package:aos_mobile/core/theme/app_colors.dart';
+import 'package:aos_mobile/core/theme/app_color_tokens.dart';
 
 class AppTheme {
-  static ThemeData get lightTheme => ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: AppColors.bg,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.black),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0,
-          centerTitle: true,
-        ),
-      );
+  AppTheme._();
 
-  static TextStyle h1(BuildContext c) => Theme.of(c).textTheme.headlineMedium!
-      .copyWith(fontWeight: FontWeight.w800, color: AppColors.text);
+  static const BorderRadius pill = BorderRadius.all(Radius.circular(999));
+  static const BorderRadius fieldRadius = BorderRadius.all(Radius.circular(22));
 
-  static TextStyle h2(BuildContext c) => Theme.of(c).textTheme.headlineSmall!
-      .copyWith(fontWeight: FontWeight.w700, color: AppColors.text);
+  static ThemeData light() {
+    const tokens = AppColorTokens.light;
 
-  static TextStyle bodyMuted(BuildContext c) =>
-      Theme.of(c).textTheme.bodyMedium!.copyWith(color: AppColors.muted);
-
-  static BorderRadius pill = BorderRadius.circular(999);
-
-  static InputDecoration inputDecoration({
-    required String label,
-    Widget? suffixIcon,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: AppColors.muted),
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-      suffixIcon: suffixIcon,
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(22),
-        borderSide: const BorderSide(color: AppColors.stroke),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(22),
-        borderSide: const BorderSide(color: Colors.black, width: 1.2),
-      ),
+    final scheme = ColorScheme.fromSeed(
+      seedColor: Colors.black,
+      brightness: Brightness.light,
+      surfaceBright: tokens.bg,
+      surface: Colors.white,
     );
-  }
 
-  static Widget primaryButton({
-    required String text,
-    required VoidCallback? onPressed,
-    bool loading = false,
-  }) {
-    return SizedBox(
-      height: 56,
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: loading ? null : onPressed,
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      extensions: const <ThemeExtension<dynamic>>[tokens],
+
+      scaffoldBackgroundColor: tokens.bg,
+
+      appBarTheme: AppBarTheme(
+        backgroundColor: tokens.bg,
+        foregroundColor: tokens.text,
+        elevation: 0,
+        centerTitle: true,
+      ),
+
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: tokens.fieldBg,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 18,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: fieldRadius,
+          borderSide: BorderSide(color: tokens.stroke),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: fieldRadius,
+          borderSide: BorderSide(color: scheme.primary, width: 1.2),
+        ),
+        labelStyle: TextStyle(color: tokens.muted),
+      ),
+
+      elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: pill),
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
+          shape: const RoundedRectangleBorder(borderRadius: pill),
           elevation: 0,
+          minimumSize: const Size.fromHeight(56),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
-        child: loading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
       ),
     );
   }
 
-  static Widget socialButton({
-    required Widget icon,
-    required String text,
-    required VoidCallback? onTap,
-  }) {
-    return Expanded(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(22),
-        onTap: onTap,
-        child: Container(
-          height: 56,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.stroke),
-            color: Colors.white,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              icon,
-              const SizedBox(width: 10),
-              Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+  static ThemeData dark() {
+    const tokens = AppColorTokens.dark;
+
+    // You can also use fromSeed here. Your current dark scheme is fine.
+    final scheme = const ColorScheme.dark(
+      primary: Colors.white,
+      onPrimary: Colors.black,
+      surface: Color(0xFF121212),
+      onSurface: Color(0xFFF5F5F5),
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      extensions: const <ThemeExtension<dynamic>>[tokens],
+
+      scaffoldBackgroundColor: tokens.bg,
+
+      appBarTheme: AppBarTheme(
+        backgroundColor: tokens.bg,
+        foregroundColor: tokens.text,
+        elevation: 0,
+        centerTitle: true,
+      ),
+
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: tokens.fieldBg,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 18,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: fieldRadius,
+          borderSide: BorderSide(color: tokens.stroke),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: fieldRadius,
+          borderSide: BorderSide(color: scheme.primary, width: 1.2),
+        ),
+        labelStyle: TextStyle(color: tokens.muted),
+      ),
+
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
+          shape: const RoundedRectangleBorder(borderRadius: pill),
+          elevation: 0,
+          minimumSize: const Size.fromHeight(56),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
     );

@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:aos_mobile/core/core.dart';
-import 'package:aos_mobile/core/theme/app_colors.dart';
-import 'package:aos_mobile/core/theme/app_theme.dart';
+import 'package:aos_mobile/core/utils/app_snack.dart';
 
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 import 'package:aos_mobile/features/auth/shared/widgets/platform_social_section.dart';
+
+import 'package:aos_mobile/ui/components/app_text_styles.dart';
+import 'package:aos_mobile/ui/components/buttons/primary_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key, this.prefillEmail});
@@ -60,11 +62,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  void _snack(String msg) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-
   Future<void> _login() async {
     if (_busy) return;
     if (!_formKey.currentState!.validate()) return;
@@ -82,12 +79,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
 
       await result.fold(
-        (f) async => _snack(f.message),
+        (f) async => showAppSnack(context, f.message),
         (_) async => context.go(AppRoutes.home),
       );
     } catch (e) {
       if (!mounted) return;
-      _snack('Unexpected error: $e');
+      showAppSnack(context, 'Unexpected error: $e');
     } finally {
       if (mounted) setState(() => _loginLoading = false);
     }
@@ -104,10 +101,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (!mounted) return;
 
-      result.fold((f) => _snack(f.message), (_) => context.go(AppRoutes.home));
+      result.fold(
+        (f) => showAppSnack(context, f.message),
+        (_) => context.go(AppRoutes.home),
+      );
     } catch (e) {
       if (!mounted) return;
-      _snack('Unexpected error: $e');
+      showAppSnack(context, 'Unexpected error: $e');
     } finally {
       if (mounted) setState(() => _googleLoading = false);
     }
@@ -115,8 +115,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 22),
@@ -136,14 +139,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 2),
-              Text('Hello, Welcome Back', style: AppTheme.h1(context)),
+              Text('Hello, Welcome Back', style: context.h1),
               const SizedBox(height: 6),
-              Text(
-                'Login to your account below',
-                style: AppTheme.bodyMuted(context),
-              ),
+              Text('Login to your account below', style: context.bodyMuted),
               const SizedBox(height: 26),
-
               Form(
                 key: _formKey,
                 child: Column(
@@ -151,17 +150,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     TextFormField(
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: AppTheme.inputDecoration(
-                        label: 'Email Address',
-                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Email Address',
+                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
                       validator: Validators.email,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _passwordCtrl,
                       obscureText: _obscure,
-                      decoration: AppTheme.inputDecoration(
-                        label: 'Password',
+                      decoration: InputDecoration(
+                        labelText: 'Password',
                         suffixIcon: IconButton(
                           onPressed: () => setState(() => _obscure = !_obscure),
                           icon: Icon(
@@ -170,77 +169,70 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 : Icons.visibility_outlined,
                           ),
                         ),
-                      ),
+                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
                       validator: Validators.passwordRequired,
                       onFieldSubmitted: (_) => _login(),
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 10),
               Row(
                 children: [
                   Checkbox(
                     value: _rememberMe,
                     onChanged: (v) => setState(() => _rememberMe = v ?? true),
-                    activeColor: Colors.black,
+                    activeColor: scheme.primary,
                   ),
                   Expanded(
                     child: Text(
                       'Remember Me',
                       style: Theme.of(
                         context,
-                      ).textTheme.bodyMedium!.copyWith(color: AppColors.text),
+                      ).textTheme.bodyMedium!.copyWith(color: colors.text),
                     ),
                   ),
                   TextButton(
                     onPressed: () {
                       context.push(AppRoutes.forgotPassword);
                     },
-                    child: const Text(
+                    child: Text(
                       'Forgot Password?',
-                      style: TextStyle(color: AppColors.muted),
+                      style: TextStyle(color: colors.muted),
                     ),
                   ),
                 ],
               ),
-
               const SizedBox(height: 10),
-              AppTheme.primaryButton(
+              PrimaryButton(
                 text: 'Login',
                 onPressed: _busy ? null : _login,
                 loading: _loginLoading,
               ),
-
               PlatformSocialSection(
                 loading: _busy,
                 googleLoading: _googleLoading,
                 onGoogle: _googleSignIn,
-                onApple: () => _snack('Apple signup coming soon.'),
+                onApple: () =>
+                    showAppSnack(context, 'Apple signup coming soon.'),
               ),
-
               const SizedBox(height: 18),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'Don\'t have an account? ',
-                    style: AppTheme.bodyMuted(context),
-                  ),
+                  Text('Don\'t have an account? ', style: context.bodyMuted),
                   GestureDetector(
                     onTap: () => context.push(AppRoutes.register),
-                    child: const Text(
+                    child: Text(
                       'Register',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: Colors.black,
+                        color: scheme.onSurface,
                       ),
                     ),
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
             ],
           ),

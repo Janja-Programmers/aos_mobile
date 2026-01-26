@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:aos_mobile/core/theme/app_theme.dart';
+
+import 'package:aos_mobile/core/theme/app_theme_extensions.dart';
+import 'package:aos_mobile/ui/components/app_text_styles.dart';
+import 'package:aos_mobile/ui/components/buttons/primary_button.dart';
 
 class AppSuccessSheet extends StatelessWidget {
   const AppSuccessSheet({
@@ -15,14 +18,21 @@ class AppSuccessSheet extends StatelessWidget {
   final String buttonText;
   final VoidCallback onPressed;
 
+  static const BorderRadius _sheetRadius = BorderRadius.vertical(
+    top: Radius.circular(26),
+  );
+  static const double _maxHeightFactor = 0.85;
+
   @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.of(context).viewInsets; // keyboard
-    final viewPadding = MediaQuery.of(context).viewPadding; // safe areas
-    final size = MediaQuery.of(context).size;
+    final mediaQuery = MediaQuery.of(context);
+    final viewInsets = mediaQuery.viewInsets;
+    final viewPadding = mediaQuery.viewPadding;
+    final size = mediaQuery.size;
 
-    // Give the sheet a max height so it never tries to exceed the screen.
-    final maxHeight = size.height * 0.85;
+    final maxHeight = size.height * _maxHeightFactor;
+
+    final scheme = Theme.of(context).colorScheme;
 
     return SafeArea(
       top: false,
@@ -37,9 +47,9 @@ class AppSuccessSheet extends StatelessWidget {
               22,
               22 + viewPadding.bottom + viewInsets.bottom,
             ),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+            decoration: BoxDecoration(
+              color: scheme.surface,
+              borderRadius: _sheetRadius,
             ),
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -49,39 +59,32 @@ class AppSuccessSheet extends StatelessWidget {
                   Container(
                     height: 72,
                     width: 72,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFFF1F1F2),
+                      color: context.appColors.fieldBg,
                     ),
                     child: Center(
                       child: Container(
                         height: 44,
                         width: 44,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.black,
+                          color: scheme.primary,
                         ),
-                        child: const Icon(Icons.check, color: Colors.white),
+                        child: Icon(Icons.check, color: scheme.onPrimary),
                       ),
                     ),
                   ),
                   const SizedBox(height: 14),
-                  Text(
-                    title,
-                    style: AppTheme.h2(context),
-                    textAlign: TextAlign.center,
-                  ),
+                  Text(title, style: context.h2, textAlign: TextAlign.center),
                   const SizedBox(height: 8),
                   Text(
                     message,
-                    style: AppTheme.bodyMuted(context),
+                    style: context.bodyMuted,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 18),
-                  AppTheme.primaryButton(
-                    text: buttonText,
-                    onPressed: onPressed,
-                  ),
+                  PrimaryButton(text: buttonText, onPressed: onPressed),
                 ],
               ),
             ),

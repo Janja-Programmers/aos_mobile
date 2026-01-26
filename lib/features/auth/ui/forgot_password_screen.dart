@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:aos_mobile/core/core.dart';
-import 'package:aos_mobile/core/theme/app_colors.dart';
-import 'package:aos_mobile/core/theme/app_theme.dart';
+
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 import 'package:aos_mobile/features/auth/ui/verify_otp_screen.dart';
+
+import 'package:aos_mobile/ui/components/app_text_styles.dart';
+import 'package:aos_mobile/ui/components/buttons/primary_button.dart';
+import 'package:aos_mobile/core/utils/app_snack.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -27,16 +30,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _snack(String msg) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-
   Future<void> _sendOtp() async {
     final email = _emailCtrl.text.trim();
     final err = Validators.email(email);
     if (err != null) {
-      _snack(err);
+      showAppSnack(context, err);
       return;
     }
 
@@ -47,8 +45,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           .forgotPasswordRequest(email: email);
 
       if (!mounted) return;
-      result.fold((f) => _snack(f.message), (msg) {
-        _snack(msg);
+
+      result.fold((f) => showAppSnack(context, f.message), (msg) {
+        showAppSnack(context, msg);
         context.go(
           AppRoutes.verifyOtp,
           extra: {'email': email, 'purpose': OtpPurpose.passwordReset},
@@ -56,7 +55,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      _snack('Unexpected error: $e');
+      showAppSnack(context, 'Unexpected error: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -64,13 +63,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: scheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: scheme.onSurface),
           onPressed: () => context.pop(),
         ),
       ),
@@ -78,14 +79,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
           children: [
-            Text('Forgot Password', style: AppTheme.h2(context)),
+            Text('Forgot Password', style: context.h2),
             const SizedBox(height: 8),
             Text(
               'Enter your email address to reset your password',
-              style: AppTheme.bodyMuted(context),
+              style: context.bodyMuted,
             ),
             const SizedBox(height: 22),
-
             Form(
               key: _formKey,
               child: Column(
@@ -93,15 +93,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   TextFormField(
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: AppTheme.inputDecoration(
-                      label: 'Email Address',
-                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Email Address',
+                    ).applyDefaults(Theme.of(context).inputDecorationTheme),
                     validator: Validators.email,
                     onFieldSubmitted: (_) => _sendOtp(),
                   ),
                   const SizedBox(height: 22),
-
-                  AppTheme.primaryButton(
+                  PrimaryButton(
                     text: 'Send OTP',
                     onPressed: _loading ? null : _sendOtp,
                     loading: _loading,

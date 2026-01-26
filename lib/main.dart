@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:aos_mobile/core/routing/app_router.dart';
 import 'package:aos_mobile/core/theme/app_theme.dart';
+import 'package:aos_mobile/core/theme/theme_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,9 +17,18 @@ class AOSApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
 
+    // Default to system theme while loading prefs.
+    final themeModeAsync = ref.watch(themeModeProvider);
+    final themeMode = themeModeAsync.maybeWhen(
+      data: (m) => m,
+      orElse: () => ThemeMode.system,
+    );
+
     return MaterialApp.router(
       title: 'Africa Online Stores',
-      theme: AppTheme.lightTheme,
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

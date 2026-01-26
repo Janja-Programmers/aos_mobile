@@ -4,20 +4,30 @@ import 'package:go_router/go_router.dart';
 
 import 'package:aos_mobile/core/core.dart';
 import 'package:aos_mobile/core/config/app_config.dart';
+import 'package:aos_mobile/core/utils/app_snack.dart';
+
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
-import 'package:aos_mobile/shared/widgets/account_option_tile.dart';
-import 'package:aos_mobile/shared/widgets/app_bottom_nav.dart';
+
+import 'package:aos_mobile/ui/components/account_option_tile.dart';
+import 'package:aos_mobile/ui/components/app_bottom_nav.dart';
+import 'package:aos_mobile/ui/components/app_confirm_sheet.dart';
+import 'package:aos_mobile/ui/components/app_text_styles.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
+
+  static const BorderRadius _pill = BorderRadius.all(Radius.circular(999));
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
     final user = auth.user;
 
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: scheme.surface,
       appBar: AppBar(
         title: const Text('Account'),
         leading: _CircleIconButton(
@@ -34,7 +44,7 @@ class AccountScreen extends ConsumerWidget {
           _CircleIconButton(
             icon: Icons.favorite_border,
             onPressed: () {
-              // TODO: route to favourites when implemented
+              showAppSnack(context, 'Account comings soon!');
             },
           ),
           const SizedBox(width: 8),
@@ -47,7 +57,7 @@ class AccountScreen extends ConsumerWidget {
             children: [
               CircleAvatar(
                 radius: 26,
-                backgroundColor: const Color(0xFFEDEDED),
+                backgroundColor: colors.fieldBg,
                 backgroundImage: (user?.userImage.isNotEmpty == true)
                     ? NetworkImage(
                         '${AppConfig.normalizedBaseUrl}${user!.userImage}',
@@ -62,10 +72,10 @@ class AccountScreen extends ConsumerWidget {
                                   .substring(0, 1)
                                   .toUpperCase()
                             : 'U',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: Colors.black,
+                          color: colors.text,
                         ),
                       ),
               ),
@@ -78,18 +88,16 @@ class AccountScreen extends ConsumerWidget {
                       user?.fullName.isNotEmpty == true
                           ? user!.fullName
                           : 'Account',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
+                        color: colors.text,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       user?.email ?? '',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.black54,
-                      ),
+                      style: TextStyle(fontSize: 13, color: colors.muted),
                     ),
                   ],
                 ),
@@ -99,6 +107,7 @@ class AccountScreen extends ConsumerWidget {
 
           const SizedBox(height: 18),
           const _SectionTitle('Account settings'),
+
           const SizedBox(height: 6),
           AccountOptionTile(
             icon: Icons.person_outline,
@@ -107,6 +116,7 @@ class AccountScreen extends ConsumerWidget {
               context.push(AppRoutes.updateProfile);
             },
           ),
+
           const Divider(height: 1),
           AccountOptionTile(
             icon: Icons.lock_outline,
@@ -115,17 +125,19 @@ class AccountScreen extends ConsumerWidget {
               context.push(AppRoutes.passwordSecurity);
             },
           ),
+
           const Divider(height: 1),
           AccountOptionTile(
             icon: Icons.notifications_none,
             title: 'Notifications Preferences',
             onTap: () {
-              // TODO
+              showAppSnack(context, 'Notifications Preferences coming soon!');
             },
           ),
 
           const SizedBox(height: 18),
           const _SectionTitle('Other'),
+
           const SizedBox(height: 6),
           AccountOptionTile(
             icon: Icons.description_outlined,
@@ -134,6 +146,7 @@ class AccountScreen extends ConsumerWidget {
               context.push(AppRoutes.terms);
             },
           ),
+
           const Divider(height: 1),
           AccountOptionTile(
             icon: Icons.privacy_tip_outlined,
@@ -142,12 +155,13 @@ class AccountScreen extends ConsumerWidget {
               context.push(AppRoutes.privacy);
             },
           ),
+
           const Divider(height: 1),
           AccountOptionTile(
             icon: Icons.language_outlined,
             title: 'Language',
             onTap: () {
-              // TODO
+              showAppSnack(context, 'Language coming soon!');
             },
           ),
 
@@ -156,15 +170,45 @@ class AccountScreen extends ConsumerWidget {
             height: 56,
             child: OutlinedButton.icon(
               onPressed: () async {
-                await ref.read(authControllerProvider.notifier).logout();
-                if (context.mounted) context.go(AppRoutes.home);
+                final parentContext = context;
+
+                await showModalBottomSheet<void>(
+                  context: parentContext,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (sheetContext) {
+                    return AppConfirmSheet(
+                      icon: Icons.error_outline,
+                      iconBg: Theme.of(parentContext).colorScheme.error,
+                      title: 'Logout',
+                      message:
+                          'Are you sure you want to log out? You will need to sign in again to access your account.',
+                      primaryText: 'Logout',
+                      secondaryText: 'Cancel',
+                      onPrimary: () async {
+                        // Close the sheet first using the sheet context
+                        Navigator.of(sheetContext).pop();
+
+                        // Then perform logout
+                        await ref
+                            .read(authControllerProvider.notifier)
+                            .logout();
+
+                        // Navigate using the parent context (guard its mounted)
+                        if (!parentContext.mounted) return;
+                        parentContext.go(AppRoutes.home);
+                      },
+                      onSecondary: () {
+                        Navigator.of(sheetContext).pop();
+                      },
+                    );
+                  },
+                );
               },
               style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                side: const BorderSide(color: Color(0xFFE65A5A)),
-                foregroundColor: const Color(0xFFE65A5A),
+                shape: const RoundedRectangleBorder(borderRadius: _pill),
+                side: BorderSide(color: scheme.error),
+                foregroundColor: scheme.error,
               ),
               icon: const Icon(Icons.logout, size: 18),
               label: const Text(
@@ -186,10 +230,7 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-    );
+    return Text(text, style: context.h2.copyWith(fontSize: 16));
   }
 }
 
@@ -199,21 +240,26 @@ class _CircleIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
 
+  static const BorderRadius _pill = BorderRadius.all(Radius.circular(999));
+
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: InkWell(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: _pill,
         onTap: onPressed,
         child: Container(
           width: 38,
           height: 38,
-          decoration: const BoxDecoration(
-            color: Color(0xFFF2F2F2),
+          decoration: BoxDecoration(
+            color: colors.fieldBg,
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, size: 20, color: Colors.black),
+          child: Icon(icon, size: 20, color: scheme.onSurface),
         ),
       ),
     );

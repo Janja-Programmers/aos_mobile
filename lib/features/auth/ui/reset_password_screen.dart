@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:aos_mobile/core/core.dart';
-import 'package:aos_mobile/core/theme/app_colors.dart';
-import 'package:aos_mobile/core/theme/app_theme.dart';
+import 'package:aos_mobile/core/utils/app_snack.dart';
+
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
-import 'package:aos_mobile/shared/widgets/app_success_sheet.dart';
+
+import 'package:aos_mobile/ui/components/app_success_sheet.dart';
+import 'package:aos_mobile/ui/components/app_text_styles.dart';
+import 'package:aos_mobile/ui/components/buttons/primary_button.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({
@@ -39,11 +42,6 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     super.dispose();
   }
 
-  void _snack(String msg) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -63,7 +61,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
       if (!mounted) return;
 
-      await result.fold((f) async => _snack(f.message), (msg) async {
+      await result.fold((f) async => showAppSnack(context, f.message), (
+        _,
+      ) async {
         await showModalBottomSheet(
           context: context,
           isScrollControlled: false,
@@ -73,7 +73,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             message: 'Your password has been updated successfully',
             buttonText: 'Back To Login',
             onPressed: () {
-              context.pop();
+              if (!context.mounted) return;
+
+              // Close the sheet first (Navigator owns overlays).
+              Navigator.of(context).pop();
+
+              // Then route using go_router.
               context.go(
                 '${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}',
               );
@@ -83,7 +88,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      _snack('Unexpected error: $e');
+      showAppSnack(context, 'Unexpected error: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -91,13 +96,15 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: scheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: scheme.onSurface),
           onPressed: () => context.pop(),
         ),
       ),
@@ -107,14 +114,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           child: ListView(
             children: [
               const SizedBox(height: 8),
-              Text('Enter New Password', style: AppTheme.h2(context)),
+              Text('Enter New Password', style: context.h2),
               const SizedBox(height: 8),
-              Text(
-                'Enter your new password',
-                style: AppTheme.bodyMuted(context),
-              ),
+              Text('Enter your new password', style: context.bodyMuted),
               const SizedBox(height: 22),
-
               Form(
                 key: _formKey,
                 child: Column(
@@ -122,8 +125,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                     TextFormField(
                       controller: _pwCtrl,
                       obscureText: _obscure1,
-                      decoration: AppTheme.inputDecoration(
-                        label: 'Password',
+                      decoration: InputDecoration(
+                        labelText: 'Password',
                         suffixIcon: IconButton(
                           onPressed: () =>
                               setState(() => _obscure1 = !_obscure1),
@@ -133,18 +136,17 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                                 : Icons.visibility_outlined,
                           ),
                         ),
-                      ),
+                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
                       validator: (v) =>
                           Validators.minLen(v, 8, 'Min 8 characters'),
                       onFieldSubmitted: (_) => _save(),
                     ),
                     const SizedBox(height: 16),
-
                     TextFormField(
                       controller: _pw2Ctrl,
                       obscureText: _obscure2,
-                      decoration: AppTheme.inputDecoration(
-                        label: 'Confirm Password',
+                      decoration: InputDecoration(
+                        labelText: 'Confirm Password',
                         suffixIcon: IconButton(
                           onPressed: () =>
                               setState(() => _obscure2 = !_obscure2),
@@ -154,7 +156,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                                 : Icons.visibility_outlined,
                           ),
                         ),
-                      ),
+                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
                       validator: (v) =>
                           (v != _pwCtrl.text) ? 'Passwords do not match' : null,
                       onFieldSubmitted: (_) => _save(),
@@ -162,14 +164,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 22),
-              AppTheme.primaryButton(
+              PrimaryButton(
                 text: 'Save',
                 onPressed: _loading ? null : _save,
                 loading: _loading,
               ),
-
               const SizedBox(height: 24),
             ],
           ),
@@ -178,4 +178,3 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     );
   }
 }
-

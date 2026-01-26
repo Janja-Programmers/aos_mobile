@@ -1,15 +1,17 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:aos_mobile/core/core.dart';
-import 'package:aos_mobile/core/theme/app_colors.dart';
-import 'package:aos_mobile/core/theme/app_theme.dart';
+import 'package:aos_mobile/core/utils/app_snack.dart';
 
 import 'package:aos_mobile/features/account/ui/legal_docs_widgets.dart';
 import 'package:aos_mobile/features/auth/providers/auth_controller.dart';
 import 'package:aos_mobile/features/auth/shared/widgets/platform_social_section.dart';
+
+import 'package:aos_mobile/ui/components/app_text_styles.dart';
+import 'package:aos_mobile/ui/components/buttons/primary_button.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -42,27 +44,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
-  void _snack(String msg) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-
   void _openLegalSheet({required String title, required Widget child}) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: scheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
-      builder: (_) {
+      builder: (sheetContext) {
         return SafeArea(
           child: DraggableScrollableSheet(
             expand: false,
             initialChildSize: 0.85,
             minChildSize: 0.5,
             maxChildSize: 0.95,
-            builder: (context, controller) {
+            builder: (ctx, controller) {
               return Padding(
                 padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
                 child: Column(
@@ -71,7 +71,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       height: 4,
                       width: 44,
                       decoration: BoxDecoration(
-                        color: Colors.black12,
+                        color: colors.stroke,
                         borderRadius: BorderRadius.circular(99),
                       ),
                     ),
@@ -81,15 +81,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         Expanded(
                           child: Text(
                             title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
+                              color: colors.text,
                             ),
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.of(context).pop(),
+                          icon: Icon(Icons.close, color: scheme.onSurface),
+                          onPressed: () => Navigator.of(sheetContext).pop(),
                         ),
                       ],
                     ),
@@ -112,7 +113,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _register() async {
     if (!_accept) {
-      _snack('Please accept Terms & Conditions and Privacy Policy');
+      showAppSnack(
+        context,
+        'Please accept Terms & Conditions and Privacy Policy',
+      );
       return;
     }
 
@@ -131,8 +135,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       if (!mounted) return;
 
-      await result.fold((f) async => _snack(f.message), (msg) async {
-        _snack(msg);
+      await result.fold((f) async => showAppSnack(context, f.message), (
+        msg,
+      ) async {
+        showAppSnack(context, msg);
         await context.push(
           AppRoutes.verifyOtp,
           extra: _email.text.trim().toLowerCase(),
@@ -140,7 +146,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      _snack('Unexpected error: $e');
+      showAppSnack(context, 'Unexpected error: $e');
     } finally {
       if (mounted) setState(() => _registerLoading = false);
     }
@@ -157,10 +163,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       if (!mounted) return;
 
-      result.fold((f) => _snack(f.message), (_) => context.go(AppRoutes.home));
+      result.fold(
+        (f) => showAppSnack(context, f.message),
+        (_) => context.go(AppRoutes.home),
+      );
     } catch (e) {
       if (!mounted) return;
-      _snack('Unexpected error: $e');
+      showAppSnack(context, 'Unexpected error: $e');
     } finally {
       if (mounted) setState(() => _googleLoading = false);
     }
@@ -168,8 +177,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 22),
@@ -189,11 +201,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 2),
-              Text('Register', style: AppTheme.h1(context)),
+              Text('Register', style: context.h1),
               const SizedBox(height: 6),
               Text(
                 'Enter your details below to create your account',
-                style: AppTheme.bodyMuted(context),
+                style: context.bodyMuted,
               ),
               const SizedBox(height: 26),
 
@@ -203,7 +215,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   children: [
                     TextFormField(
                       controller: _name,
-                      decoration: AppTheme.inputDecoration(label: 'Full Name'),
+                      decoration: const InputDecoration(
+                        labelText: 'Full Name',
+                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
                       validator: (v) => Validators.minLen(
                         v?.trim(),
                         2,
@@ -214,17 +228,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     TextFormField(
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: AppTheme.inputDecoration(
-                        label: 'Email Address',
-                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Email Address',
+                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
                       validator: Validators.email,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _password,
                       obscureText: _obscure1,
-                      decoration: AppTheme.inputDecoration(
-                        label: 'Password',
+                      decoration: InputDecoration(
+                        labelText: 'Password',
                         suffixIcon: IconButton(
                           onPressed: () =>
                               setState(() => _obscure1 = !_obscure1),
@@ -234,7 +248,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 : Icons.visibility_outlined,
                           ),
                         ),
-                      ),
+                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
                       validator: (v) =>
                           Validators.minLen(v, 8, 'Min 8 characters'),
                     ),
@@ -242,8 +256,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     TextFormField(
                       controller: _confirm,
                       obscureText: _obscure2,
-                      decoration: AppTheme.inputDecoration(
-                        label: 'Confirm Password',
+                      decoration: InputDecoration(
+                        labelText: 'Confirm Password',
                         suffixIcon: IconButton(
                           onPressed: () =>
                               setState(() => _obscure2 = !_obscure2),
@@ -253,7 +267,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 : Icons.visibility_outlined,
                           ),
                         ),
-                      ),
+                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
                       validator: (v) => (v != _password.text)
                           ? 'Passwords do not match'
                           : null,
@@ -268,21 +282,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   Checkbox(
                     value: _accept,
                     onChanged: (v) => setState(() => _accept = v ?? false),
-                    activeColor: Colors.black,
+                    activeColor: scheme.primary,
                   ),
                   Expanded(
                     child: RichText(
                       text: TextSpan(
                         style: Theme.of(
                           context,
-                        ).textTheme.bodyMedium!.copyWith(color: AppColors.text),
+                        ).textTheme.bodyMedium!.copyWith(color: colors.text),
                         children: [
                           const TextSpan(text: 'I agree to the '),
                           TextSpan(
                             text: 'Terms & Conditions',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w700,
                               decoration: TextDecoration.underline,
+                              color: colors.text,
                             ),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => _openLegalSheet(
@@ -293,9 +308,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           const TextSpan(text: ' and '),
                           TextSpan(
                             text: 'Privacy Policy',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w700,
                               decoration: TextDecoration.underline,
+                              color: colors.text,
                             ),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => _openLegalSheet(
@@ -312,7 +328,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
 
               const SizedBox(height: 10),
-              AppTheme.primaryButton(
+              PrimaryButton(
                 text: 'Register',
                 onPressed: _busy ? null : _register,
                 loading: _registerLoading,
@@ -322,26 +338,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 loading: _busy,
                 googleLoading: _googleLoading,
                 onGoogle: _googleSignIn,
-                onApple: () => _snack('Apple signup coming soon.'),
+                onApple: () =>
+                    showAppSnack(context, 'Apple signup coming soon.'),
               ),
 
               const SizedBox(height: 18),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'Already have an account? ',
-                    style: AppTheme.bodyMuted(context),
-                  ),
+                  Text('Already have an account? ', style: context.bodyMuted),
                   GestureDetector(
                     onTap: () => context.push(
                       '${AppRoutes.login}?email=${Uri.encodeComponent(_email.text.trim().toLowerCase())}',
                     ),
-                    child: const Text(
+                    child: Text(
                       'Login',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: Colors.black,
+                        color: scheme.onSurface,
                       ),
                     ),
                   ),

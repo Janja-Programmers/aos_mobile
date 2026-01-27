@@ -6,6 +6,7 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/utils/app_snack.dart';
 
 import 'package:africaonlinestores/features/auth/providers/auth_controller.dart';
+import 'package:africaonlinestores/features/auth/ui/verify_otp_screen.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_section.dart';
 
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
@@ -78,10 +79,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (!mounted) return;
 
-      await result.fold(
-        (f) async => showAppSnack(context, f.message),
-        (_) async => context.go(AppRoutes.home),
-      );
+      await result.fold((f) async {
+        showAppSnack(context, f.message);
+
+        final msg = f.message.toLowerCase();
+        final email = _emailCtrl.text.trim().toLowerCase();
+
+        if (msg.contains('verify your email')) {
+          await context.push(
+            AppRoutes.verifyOtp,
+            extra: {'email': email, 'purpose': OtpPurpose.emailVerification},
+          );
+          return;
+        }
+      }, (_) async => context.go(AppRoutes.home));
     } catch (e) {
       if (!mounted) return;
       showAppSnack(context, 'Unexpected error: $e');

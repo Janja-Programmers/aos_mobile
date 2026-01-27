@@ -1,6 +1,7 @@
 class AppRoutes {
   static const home = '/';
   static const categories = '/categories';
+  static const notifications = '/notifications';
   static const login = '/login';
   static const register = '/register';
   static const verifyOtp = '/verify-otp';

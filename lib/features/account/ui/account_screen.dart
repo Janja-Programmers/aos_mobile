@@ -130,8 +130,8 @@ class AccountScreen extends ConsumerWidget {
           AccountOptionTile(
             icon: Icons.notifications_none,
             title: 'Notifications Preferences',
-            onTap: () {
-              showAppSnack(context, 'Notifications Preferences coming soon!');
+            onTap:() {
+              context.push(AppRoutes.notifications);
             },
           ),
 

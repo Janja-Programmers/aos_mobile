@@ -14,6 +14,7 @@ class AppConfig {
 
   static const String googleWebClientId = String.fromEnvironment(
     'AOS_GOOGLE_WEB_CLIENT_ID',
-    defaultValue: 'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com',
+    defaultValue:
+        '779793412118-8n4ml1k5rgeic3bifvg9e57nntdiqdhb.apps.googleusercontent.com',
   );
 }

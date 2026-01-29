@@ -18,6 +18,7 @@ import 'package:africaonlinestores/features/account/ui/privacy_policy_screen.dar
 import 'package:africaonlinestores/features/account/ui/terms_conditions_screen.dart';
 import 'package:africaonlinestores/features/account/ui/update_profile_screen.dart';
 import 'package:africaonlinestores/features/account/ui/password_security_screen.dart';
+import 'package:africaonlinestores/features/account/ui/localization_settings_screen.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
 
@@ -107,6 +108,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PrivacyPolicyScreen(),
       ),
       GoRoute(
+        path: AppRoutes.localization,
+        builder: (context, state) => const LocalizationSettingsScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.resetPassword,
         builder: (context, state) {
           if (state.extra is Map) {
@@ -134,11 +139,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == AppRoutes.updateProfile;
       final goingToPasswordSecurity =
           state.matchedLocation == AppRoutes.passwordSecurity;
+      final goingToLocalization =
+          state.matchedLocation == AppRoutes.localization;
       final goingToTerms = state.matchedLocation == AppRoutes.terms;
       final goingToPrivacy = state.matchedLocation == AppRoutes.privacy;
 
       if (!auth.isLoggedIn &&
-          (goingToAccount || goingToUpdateProfile || goingToPasswordSecurity)) {
+          (goingToAccount ||
+              goingToUpdateProfile ||
+              goingToPasswordSecurity ||
+              goingToLocalization)) {
         return AppRoutes.login;
       }
 

@@ -25,6 +25,18 @@ class ApiClient {
     // Cookie management
     dio.interceptors.add(CookieManager(cookieJar));
 
+    // Locale/currency context headers (set by LocaleController).
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          if (_contextHeaders.isNotEmpty) {
+            options.headers.addAll(_contextHeaders);
+          }
+          handler.next(options);
+        },
+      ),
+    );
+
     // Debug logging only (avoid leaking info + reduce noise in release).
     if (kDebugMode) {
       dio.interceptors.add(
@@ -41,6 +53,8 @@ class ApiClient {
   final Dio dio;
   final CookieJar cookieJar;
   final Uri baseUri;
+
+  Map<String, String> _contextHeaders = const {};
 
   String? _sid;
   String? get sid => _sid;
@@ -59,6 +73,24 @@ class ApiClient {
   Future<void> clearSid() async {
     _sid = null;
     await cookieJar.delete(baseUri);
+  }
+
+  /// Sets locale/country/currency context headers that will be attached to
+  /// all outgoing requests.
+  ///
+  /// These headers are used by the backend to tailor responses.
+  void setContext({String? countryCode, String? languageCode, String? currencyCode}) {
+    final next = <String, String>{};
+    if (countryCode != null && countryCode.isNotEmpty) {
+      next['X-AOS-Country'] = countryCode;
+    }
+    if (languageCode != null && languageCode.isNotEmpty) {
+      next['X-AOS-Language'] = languageCode;
+    }
+    if (currencyCode != null && currencyCode.isNotEmpty) {
+      next['X-AOS-Currency'] = currencyCode;
+    }
+    _contextHeaders = next;
   }
 }
 

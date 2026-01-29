@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/localization/locale_controller.dart';
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/session_storage.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
@@ -24,21 +25,24 @@ final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
     final api = ref.watch(authApiProvider);
     final client = ref.watch(apiClientProvider);
     final storage = ref.watch(sessionStorageProvider);
-    return AuthController(api: api, apiClient: client, storage: storage)
+    return AuthController(ref: ref, api: api, apiClient: client, storage: storage)
       ..init();
   },
 );
 
 class AuthController extends StateNotifier<AuthState> {
   AuthController({
+    required Ref ref,
     required AuthApi api,
     required ApiClient apiClient,
     required SessionStorage storage,
-  }) : _api = api,
+  }) : _ref = ref,
+       _api = api,
        _apiClient = apiClient,
        _storage = storage,
        super(AuthState.initial());
 
+  final Ref _ref;
   final AuthApi _api;
   final ApiClient _apiClient;
   final SessionStorage _storage;
@@ -104,6 +108,13 @@ class AuthController extends StateNotifier<AuthState> {
         clearError: true,
       );
       _emit();
+
+      // Apply server-side preferences for this account (cross-device).
+      try {
+        await _ref.read(localeControllerProvider.notifier).refreshFromBackend();
+      } catch (_) {
+        // ignore
+      }
     } catch (_) {
       await _storage.clearSid();
       await _apiClient.clearSid();
@@ -163,6 +174,16 @@ class AuthController extends StateNotifier<AuthState> {
       clearError: true,
     );
     _emit();
+
+    // Sync locale/country/currency prefs to backend so the account follows
+    // across devices, then hydrate back from server.
+    try {
+      final localeCtrl = _ref.read(localeControllerProvider.notifier);
+      await localeCtrl.syncToBackend();
+      await localeCtrl.refreshFromBackend();
+    } catch (_) {
+      // ignore
+    }
 
     return Either.right(null);
   }

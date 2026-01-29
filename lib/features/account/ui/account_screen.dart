@@ -159,9 +159,9 @@ class AccountScreen extends ConsumerWidget {
           const Divider(height: 1),
           AccountOptionTile(
             icon: Icons.language_outlined,
-            title: 'Language',
+            title: 'Language & Region',
             onTap: () {
-              showAppSnack(context, 'Language coming soon!');
+              context.push(AppRoutes.localization);
             },
           ),
 

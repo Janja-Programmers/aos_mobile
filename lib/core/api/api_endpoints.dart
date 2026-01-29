@@ -29,4 +29,12 @@ class ApiEndpoints {
   // Catalog Endpoints
   static final String getCategoriesEndpoint =
       '/api/method/aos.api.catalog.get_categories';
+
+  // Localization Endpoints
+  static final String getLocaleBundleEndpoint =
+      '/api/method/aos.api.localization.get_locale_bundle';
+  static final String getMyPreferencesEndpoint =
+      '/api/method/aos.api.localization.get_my_preferences';
+  static final String updatePreferencesEndpoint =
+      '/api/method/aos.api.localization.update_preferences';
 }

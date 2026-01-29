@@ -56,7 +56,7 @@ class _OtpSectionState extends State<OtpSection> {
             width: 96,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: colors.fieldBg,
+              color: colors.surface,
             ),
             child: Center(
               child: Container(
@@ -89,7 +89,10 @@ class _OtpSectionState extends State<OtpSection> {
         Center(
           child: Text(
             widget.email,
-            style: TextStyle(fontWeight: FontWeight.w700, color: colors.text),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: colors.textPrimary,
+            ),
             textAlign: TextAlign.center,
           ),
         ),

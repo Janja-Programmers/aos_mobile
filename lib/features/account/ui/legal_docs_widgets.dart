@@ -136,7 +136,7 @@ class _H1 extends StatelessWidget {
       style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w800,
-        color: colors.text,
+        color: colors.textPrimary,
       ),
     );
   }
@@ -157,7 +157,7 @@ class _H2 extends StatelessWidget {
         style: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w800,
-          color: colors.text,
+          color: colors.textPrimary,
         ),
       ),
     );
@@ -174,7 +174,7 @@ class _P extends StatelessWidget {
 
     return Text(
       text,
-      style: TextStyle(height: 1.45, fontSize: 13.5, color: colors.muted),
+      style: TextStyle(height: 1.45, fontSize: 13.5, color: colors.textMuted),
     );
   }
 }

@@ -29,7 +29,7 @@ class ParentsRail extends StatelessWidget {
       width: width,
       decoration: BoxDecoration(
         color: scheme.surface,
-        border: Border(right: BorderSide(color: colors.stroke)),
+        border: Border(right: BorderSide(color: colors.border)),
       ),
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -57,10 +57,10 @@ class ParentsRail extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: (width * 0.27).clamp(22.0, 28.0),
-                    backgroundColor: colors.stroke,
+                    backgroundColor: colors.border,
                     foregroundImage: url == null ? null : NetworkImage(url),
                     child: url == null
-                        ? Icon(Icons.category_outlined, color: colors.muted)
+                        ? Icon(Icons.category_outlined, color: colors.textMuted)
                         : null,
                   ),
                   const SizedBox(height: 6),
@@ -72,7 +72,7 @@ class ParentsRail extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       height: 1.1,
-                      color: selected ? scheme.onSurface : colors.muted,
+                      color: selected ? scheme.onSurface : colors.textMuted,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                     ),
                   ),

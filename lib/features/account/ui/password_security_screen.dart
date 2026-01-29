@@ -92,7 +92,7 @@ class _PasswordSecurityScreenState
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: context.appColors.fieldBg,
+        color: context.appColors.surface,
         borderRadius: _pill,
       ),
       child: Row(
@@ -262,7 +262,7 @@ class _SecurityPlaceholder extends StatelessWidget {
     return Center(
       child: Text(
         'Security settings coming soon.',
-        style: TextStyle(color: context.appColors.muted),
+        style: TextStyle(color: context.appColors.textMuted),
       ),
     );
   }
@@ -300,7 +300,7 @@ class _SegmentButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: selected ? scheme.onPrimary : context.appColors.muted,
+            color: selected ? scheme.onPrimary : context.appColors.textMuted,
           ),
         ),
       ),

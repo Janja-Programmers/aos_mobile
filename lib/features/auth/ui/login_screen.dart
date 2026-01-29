@@ -198,9 +198,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Expanded(
                     child: Text(
                       'Remember Me',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium!.copyWith(color: colors.text),
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: colors.textPrimary,
+                      ),
                     ),
                   ),
                   TextButton(
@@ -209,7 +209,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     },
                     child: Text(
                       'Forgot Password?',
-                      style: TextStyle(color: colors.muted),
+                      style: TextStyle(color: colors.textMuted),
                     ),
                   ),
                 ],

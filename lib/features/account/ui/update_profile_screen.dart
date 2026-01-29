@@ -349,7 +349,7 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
                       label: 'Email',
                       suffix: Icon(
                         Icons.lock_outline,
-                        color: colors.muted,
+                        color: colors.textMuted,
                         size: 18,
                       ),
                     ),
@@ -445,7 +445,7 @@ class _EditableAvatar extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 46,
-          backgroundColor: colors.fieldBg,
+          backgroundColor: colors.surface,
           backgroundImage: img,
           child: hasImage
               ? null
@@ -454,7 +454,7 @@ class _EditableAvatar extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: colors.text,
+                    color: colors.textPrimary,
                   ),
                 ),
         ),

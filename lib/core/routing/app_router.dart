@@ -18,7 +18,7 @@ import 'package:africaonlinestores/features/account/ui/privacy_policy_screen.dar
 import 'package:africaonlinestores/features/account/ui/terms_conditions_screen.dart';
 import 'package:africaonlinestores/features/account/ui/update_profile_screen.dart';
 import 'package:africaonlinestores/features/account/ui/password_security_screen.dart';
-import 'package:africaonlinestores/features/account/ui/localization_settings_screen.dart';
+import 'package:africaonlinestores/features/account/ui/preference_screen.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
 
@@ -108,8 +108,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PrivacyPolicyScreen(),
       ),
       GoRoute(
-        path: AppRoutes.localization,
-        builder: (context, state) => const LocalizationSettingsScreen(),
+        path: AppRoutes.preference,
+        builder: (context, state) => const PreferenceScreen(),
       ),
       GoRoute(
         path: AppRoutes.resetPassword,
@@ -139,8 +139,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == AppRoutes.updateProfile;
       final goingToPasswordSecurity =
           state.matchedLocation == AppRoutes.passwordSecurity;
-      final goingToLocalization =
-          state.matchedLocation == AppRoutes.localization;
+      final goingTopreference = state.matchedLocation == AppRoutes.preference;
       final goingToTerms = state.matchedLocation == AppRoutes.terms;
       final goingToPrivacy = state.matchedLocation == AppRoutes.privacy;
 
@@ -148,7 +147,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           (goingToAccount ||
               goingToUpdateProfile ||
               goingToPasswordSecurity ||
-              goingToLocalization)) {
+              goingTopreference)) {
         return AppRoutes.login;
       }
 

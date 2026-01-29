@@ -176,6 +176,13 @@ final localeControllerProvider =
 final localeBundleProvider = FutureProvider<LocaleBundle>((ref) async {
   final api = ref.read(localizationApiProvider);
   final res = await api.getLocaleBundle();
-  if (res.isLeft) throw res.leftOrNull!;
-  return res.rightOrNull!;
+
+  return res.fold(
+    (failure) {
+      throw failure; // FutureProvider will go to error state
+    },
+    (bundle) {
+      return bundle;
+    },
+  );
 });

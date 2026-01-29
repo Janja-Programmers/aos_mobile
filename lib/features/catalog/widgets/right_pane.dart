@@ -25,7 +25,6 @@ class RightPane extends StatelessWidget {
 
     final children = parent.children;
 
-    // Replace these 3 with real remote images if you have them from API.
     final bannerUrls = <String?>[buildIconUrl(parent.icon), null, null];
 
     return ListView(
@@ -43,7 +42,7 @@ class RightPane extends StatelessWidget {
           decoration: BoxDecoration(
             color: scheme.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colors.stroke),
+            border: Border.all(color: colors.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,7 +59,7 @@ class RightPane extends StatelessWidget {
               if (children.isEmpty)
                 Text(
                   'No subcategories yet.',
-                  style: TextStyle(color: colors.muted),
+                  style: TextStyle(color: colors.textMuted),
                 )
               else
                 SubcategoriesGrid(items: children, buildIconUrl: buildIconUrl),

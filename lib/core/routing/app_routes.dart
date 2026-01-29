@@ -10,7 +10,7 @@ class AppRoutes {
   static const account = '/account';
   static const updateProfile = '/account/update-profile';
   static const passwordSecurity = '/account/security';
-  static const localization = '/account/localization';
+  static const preference = '/account/preference';
   static const terms = '/terms';
   static const privacy = '/privacy';
 }

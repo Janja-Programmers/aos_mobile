@@ -7,7 +7,7 @@ flutter_icons:
   adaptive_icon_foreground: assets/images/logo.png
 
   # iOS icon
-  image_path: assets/images/logo.png
+  image_path: assets/icons/app_icon.png
 
   # Optional but recommended
   remove_alpha_ios: true

@@ -27,7 +27,7 @@ class SocialButton extends StatelessWidget {
           height: 56,
           decoration: BoxDecoration(
             borderRadius: AppTheme.fieldRadius,
-            border: Border.all(color: context.appColors.stroke),
+            border: Border.all(color: context.appColors.border),
             color: scheme.surface,
           ),
           child: Row(
@@ -40,7 +40,7 @@ class SocialButton extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: context.appColors.text,
+                  color: context.appColors.textPrimary,
                 ),
               ),
             ],

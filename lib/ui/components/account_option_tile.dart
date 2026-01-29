@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/core.dart';
+
 class AccountOptionTile extends StatelessWidget {
   const AccountOptionTile({
     super.key,
@@ -23,8 +25,8 @@ class AccountOptionTile extends StatelessWidget {
             Container(
               width: 36,
               height: 36,
-              decoration: const BoxDecoration(
-                color: Colors.black,
+              decoration: BoxDecoration(
+                color: context.appColors.primary,
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: Colors.white, size: 18),

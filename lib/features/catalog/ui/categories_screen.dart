@@ -7,9 +7,10 @@ import 'package:africaonlinestores/features/catalog/providers/categories_control
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/utils/category_icon_url.dart';
 
-import 'package:africaonlinestores/features/catalog/widgets/categories_header.dart';
 import 'package:africaonlinestores/features/catalog/widgets/parents_rail.dart';
 import 'package:africaonlinestores/features/catalog/widgets/right_pane.dart';
+
+import 'package:africaonlinestores/ui/components/app_search_bar.dart';
 
 class CategoriesScreen extends ConsumerStatefulWidget {
   const CategoriesScreen({super.key});
@@ -41,18 +42,18 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
     );
 
     return Scaffold(
+      appBar: AppBar(
+        toolbarHeight: 72,
+        titleSpacing: 12,
+        title: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: AppSearchBar(controller: _searchCtrl),
+        ),
+      ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            CategoriesHeader(
-              controller: _searchCtrl,
-              onBack: () {
-                if (Navigator.of(context).canPop()) {
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
             Expanded(
               child: state.loading && parents.isEmpty
                   ? const Center(child: CircularProgressIndicator())
@@ -73,7 +74,10 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                             ),
                             Expanded(
                               child: Padding(
-                                padding: const EdgeInsets.only(right: 12),
+                                padding: const EdgeInsets.only(
+                                  right: 12,
+                                  left: 12,
+                                ),
                                 child: RightPane(
                                   parent: selectedParent,
                                   buildIconUrl: buildCategoryIconUrl,

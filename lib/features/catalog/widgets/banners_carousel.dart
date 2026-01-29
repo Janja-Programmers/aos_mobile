@@ -66,13 +66,13 @@ class _BannersCarouselState extends State<BannersCarousel> {
                 return Container(
                   decoration: BoxDecoration(
                     color: scheme.surface,
-                    border: Border.all(color: colors.stroke),
+                    border: Border.all(color: colors.border),
                   ),
                   child: url == null
                       ? Center(
                           child: Icon(
                             Icons.image_outlined,
-                            color: colors.muted,
+                            color: colors.textMuted,
                             size: 36,
                           ),
                         )
@@ -98,7 +98,7 @@ class _BannersCarouselState extends State<BannersCarousel> {
               width: active ? 18 : 8,
               height: 8,
               decoration: BoxDecoration(
-                color: active ? scheme.primary : colors.stroke,
+                color: active ? scheme.primary : colors.border,
                 borderRadius: BorderRadius.circular(99),
               ),
             );

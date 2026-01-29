@@ -5,49 +5,97 @@ import 'package:flutter/material.dart';
 @immutable
 class AppColorTokens extends ThemeExtension<AppColorTokens> {
   const AppColorTokens({
-    required this.bg,
-    required this.text,
-    required this.muted,
-    required this.fieldBg,
-    required this.stroke,
+    required this.primary,
+    required this.primaryHover,
+    required this.surface,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textMuted,
+    required this.elevated,
+    required this.border,
+
+    required this.success,
+    required this.warning,
+    required this.error,
+    required this.info,
   });
 
-  final Color bg;
-  final Color text;
-  final Color muted;
-  final Color fieldBg;
-  final Color stroke;
+  final Color primary;
+  final Color primaryHover;
+  final Color surface;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color elevated;
+  final Color border;
+
+  final Color success;
+  final Color warning;
+  final Color error;
+  final Color info;
 
   static const light = AppColorTokens(
-    bg: Colors.white,
-    text: Color(0xFF111111),
-    muted: Color(0xFF9AA0A6),
-    fieldBg: Color(0xFFF6F7F9),
-    stroke: Color(0xFFE6E8EC),
+    primary: Color(0xFFC1121F),
+    primaryHover: Color(0xFF8E0E15),
+
+    textPrimary: Color(0xFF1A1A1A),
+    textSecondary: Color(0xFF555555),
+    textMuted: Color(0xFF8A8A8A),
+    surface: Color(0xFFFAFAFA),
+    elevated: Color(0xFFF5F5F5),
+    border: Color(0xFFE8E8E8),
+
+    success: Color(0xFF2ECC71),
+    warning: Color(0xFFF5A623),
+    error: Color(0xFFFF4D4D),
+    info: Color(0xFF4DA3FF),
   );
 
   static const dark = AppColorTokens(
-    bg: Color(0xFF0B0B0B),
-    text: Color(0xFFF5F5F5),
-    muted: Color(0xFF9AA0A6),
-    fieldBg: Color(0xFF151515),
-    stroke: Color(0xFF2A2A2A),
+    primary: Color(0xFFC1121F),
+    primaryHover: Color(0xFF8E0E15),
+
+    textPrimary: Color(0xFF1A1A1A),
+    textSecondary: Color(0xFF555555),
+    textMuted: Color(0xFF8A8A8A),
+    surface: Color(0xFFFAFAFA),
+    elevated: Color(0xFFF5F5F5),
+    border: Color(0xFFE8E8E8),
+
+    success: Color(0xFF2ECC71),
+    warning: Color(0xFFF5A623),
+    error: Color(0xFFFF4D4D),
+    info: Color(0xFF4DA3FF),
   );
 
   @override
   AppColorTokens copyWith({
-    Color? bg,
-    Color? text,
-    Color? muted,
-    Color? fieldBg,
-    Color? stroke,
+    Color? primary,
+    Color? primaryHover,
+    Color? surface,
+    Color? textPrimary,
+    Color? textSecondary,
+    Color? textMuted,
+    Color? elevated,
+    Color? border,
+    Color? success,
+    Color? warning,
+    Color? error,
+    Color? info,
   }) {
     return AppColorTokens(
-      bg: bg ?? this.bg,
-      text: text ?? this.text,
-      muted: muted ?? this.muted,
-      fieldBg: fieldBg ?? this.fieldBg,
-      stroke: stroke ?? this.stroke,
+      primary: primary ?? this.primary,
+      primaryHover: primaryHover ?? this.primaryHover,
+      surface: surface ?? this.surface,
+      textPrimary: textPrimary ?? this.textPrimary,
+      textSecondary: textSecondary ?? this.textSecondary,
+      textMuted: textMuted ?? this.textMuted,
+      elevated: elevated ?? this.elevated,
+      border: border ?? this.border,
+      success: success ?? this.success,
+      warning: warning ?? this.warning,
+      error: error ?? this.error,
+      info: info ?? this.info,
     );
   }
 
@@ -55,11 +103,22 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
   AppColorTokens lerp(ThemeExtension<AppColorTokens>? other, double t) {
     if (other is! AppColorTokens) return this;
     return AppColorTokens(
-      bg: Color.lerp(bg, other.bg, t) ?? bg,
-      text: Color.lerp(text, other.text, t) ?? text,
-      muted: Color.lerp(muted, other.muted, t) ?? muted,
-      fieldBg: Color.lerp(fieldBg, other.fieldBg, t) ?? fieldBg,
-      stroke: Color.lerp(stroke, other.stroke, t) ?? stroke,
+      primary: Color.lerp(primary, other.primary, t) ?? primary,
+      primaryHover:
+          Color.lerp(primaryHover, other.primaryHover, t) ?? primaryHover,
+
+      textPrimary: Color.lerp(textPrimary, other.textPrimary, t) ?? textPrimary,
+      textSecondary:
+          Color.lerp(textSecondary, other.textSecondary, t) ?? textSecondary,
+      textMuted: Color.lerp(textMuted, other.textMuted, t) ?? textMuted,
+      surface: Color.lerp(surface, other.surface, t) ?? surface,
+      elevated: Color.lerp(elevated, other.elevated, t) ?? elevated,
+      border: Color.lerp(border, other.border, t) ?? border,
+
+      success: Color.lerp(success, other.success, t) ?? success,
+      warning: Color.lerp(warning, other.warning, t) ?? warning,
+      error: Color.lerp(error, other.error, t) ?? error,
+      info: Color.lerp(info, other.info, t) ?? info,
     );
   }
 }

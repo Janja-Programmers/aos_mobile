@@ -27,7 +27,7 @@ class PrimaryButton extends StatelessWidget {
                 width: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(scheme.onPrimary),
+                  valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
                 ),
               )
             : Text(text),

@@ -99,11 +99,11 @@ class AppConfirmSheet extends StatelessWidget {
                       child: OutlinedButton(
                         onPressed: onPrimary,
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: context.appColors.stroke),
+                          side: BorderSide(color: context.appColors.border),
                           shape: const RoundedRectangleBorder(
                             borderRadius: _pill,
                           ),
-                          foregroundColor: context.appColors.text,
+                          foregroundColor: context.appColors.textPrimary,
                         ),
                         child: Text(
                           primaryText,

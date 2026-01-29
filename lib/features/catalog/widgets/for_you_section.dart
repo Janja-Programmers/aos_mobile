@@ -31,7 +31,10 @@ class ForYouSection extends StatelessWidget {
             const Spacer(),
             TextButton(
               onPressed: onSeeAll,
-              child: Text('See all >', style: TextStyle(color: colors.muted)),
+              child: Text(
+                'See all >',
+                style: TextStyle(color: colors.textMuted),
+              ),
             ),
           ],
         ),
@@ -48,7 +51,7 @@ class ForYouSection extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: scheme.surface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: colors.stroke),
+                  border: Border.all(color: colors.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -56,7 +59,7 @@ class ForYouSection extends StatelessWidget {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: colors.stroke,
+                          color: colors.border,
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(12),
                           ),
@@ -71,12 +74,12 @@ class ForYouSection extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: scheme.surface,
                                 borderRadius: BorderRadius.circular(999),
-                                border: Border.all(color: colors.stroke),
+                                border: Border.all(color: colors.border),
                               ),
                               child: Icon(
                                 Icons.favorite_border,
                                 size: 16,
-                                color: colors.muted,
+                                color: colors.textMuted,
                               ),
                             ),
                           ),

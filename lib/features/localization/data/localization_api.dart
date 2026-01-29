@@ -49,7 +49,7 @@ class LocalizationApi {
       final currencies = _parseOptions(
         data['currencies'],
         codeKey: 'code',
-        labelKey: 'name',
+        labelKey: 'symbol',
       );
 
       return Either.right(
@@ -78,10 +78,7 @@ class LocalizationApi {
       final data = (p['data'] is Map)
           ? Map<String, dynamic>.from(p['data'] as Map)
           : <String, dynamic>{};
-      final prefs = data['preferences'];
-      if (prefs == null) return Either.right(null);
-      if (prefs is! Map) return Either.right(null);
-      final m = Map<String, dynamic>.from(prefs);
+      final m = Map<String, dynamic>.from(data);
       return Either.right(_prefsFromMap(m));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -133,28 +130,54 @@ class LocalizationApi {
     required String labelKey,
   }) {
     final out = <LocaleOption>[];
+    final seen = <String>{};
+
     if (raw is List) {
       for (final item in raw) {
-        if (item is Map) {
-          final m = Map<String, dynamic>.from(item);
-          final code = (m[codeKey] ?? '').toString();
-          final label = (m[labelKey] ?? '').toString();
-          if (code.isEmpty || label.isEmpty) continue;
-          out.add(LocaleOption(code: code, label: label));
-        }
+        if (item is! Map) continue;
+        final m = Map<String, dynamic>.from(item);
+
+        final code = (m[codeKey] ?? '').toString().trim();
+        if (code.isEmpty) continue;
+
+        // Prefer provided labelKey, but fall back to common keys.
+        final label = ((m[labelKey] ?? m['name'] ?? m['label'] ?? m['code']) ?? '')
+            .toString()
+            .trim();
+        if (label.isEmpty) continue;
+
+        if (seen.contains(code)) continue; // ✅ de-dupe by code
+        seen.add(code);
+
+        out.add(LocaleOption(code: code, label: label));
       }
     }
+
     return out;
   }
 
   static UserPreferencesDto _prefsFromMap(Map<String, dynamic> m) {
+    final country = (m['country'] is Map)
+        ? Map<String, dynamic>.from(m['country'])
+        : const <String, dynamic>{};
+    final language = (m['language'] is Map)
+        ? Map<String, dynamic>.from(m['language'])
+        : const <String, dynamic>{};
+    final currency = (m['currency'] is Map)
+        ? Map<String, dynamic>.from(m['currency'])
+        : const <String, dynamic>{};
+    final overrides = (m['overrides'] is Map)
+        ? Map<String, dynamic>.from(m['overrides'])
+        : const <String, dynamic>{};
+
     return UserPreferencesDto(
-      countryCode: (m['country'] ?? m['country_code'] ?? '').toString(),
-      languageCode: (m['language'] ?? m['language_code'] ?? 'en').toString(),
-      currencyCode: (m['currency'] ?? m['currency_code'] ?? 'USD').toString(),
+      countryCode: (country['code'] ?? '').toString(),
+      languageCode: (language['code'] ?? 'en').toString(),
+      currencyCode: (currency['code'] ?? 'USD').toString(),
       timezone: (m['timezone'] ?? '').toString(),
-      languageOverridden: m['language_overridden'] == true,
-      currencyOverridden: m['currency_overridden'] == true,
+
+      languageOverridden: overrides['language'] == true,
+      currencyOverridden: overrides['currency'] == true,
     );
   }
 }

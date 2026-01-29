@@ -211,7 +211,7 @@ class _OtpInputState extends State<OtpInput> {
                     color: scheme.surface,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: focused ? scheme.primary : colors.stroke,
+                      color: focused ? scheme.primary : colors.border,
                       width: focused ? 1.5 : 1.0,
                     ),
                   ),
@@ -220,7 +220,7 @@ class _OtpInputState extends State<OtpInput> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: colors.text,
+                      color: colors.textPrimary,
                     ),
                   ),
                 ),
@@ -272,7 +272,7 @@ class _OtpInputState extends State<OtpInput> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: widget.enabled ? colors.text : colors.muted,
+                color: widget.enabled ? colors.textPrimary : colors.textMuted,
               ),
             ),
           ),
@@ -290,7 +290,7 @@ class _OtpInputState extends State<OtpInput> {
             alignment: Alignment.center,
             child: Icon(
               icon,
-              color: widget.enabled ? scheme.onSurface : colors.muted,
+              color: widget.enabled ? scheme.onSurface : colors.textMuted,
             ),
           ),
         ),

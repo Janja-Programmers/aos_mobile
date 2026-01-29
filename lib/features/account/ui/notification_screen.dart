@@ -49,7 +49,7 @@ class _PushNotificationScreenState
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: colors.fieldBg,
+                color: colors.surface,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(

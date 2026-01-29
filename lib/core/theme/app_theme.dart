@@ -14,7 +14,7 @@ class AppTheme {
     final scheme = ColorScheme.fromSeed(
       seedColor: Colors.black,
       brightness: Brightness.light,
-      surfaceBright: tokens.bg,
+      surfaceBright: tokens.surface,
       surface: Colors.white,
     );
 
@@ -23,31 +23,31 @@ class AppTheme {
       colorScheme: scheme,
       extensions: const <ThemeExtension<dynamic>>[tokens],
 
-      scaffoldBackgroundColor: tokens.bg,
+      scaffoldBackgroundColor: tokens.surface,
 
       appBarTheme: AppBarTheme(
-        backgroundColor: tokens.bg,
-        foregroundColor: tokens.text,
+        backgroundColor: tokens.surface,
+        foregroundColor: tokens.surface,
         elevation: 0,
         centerTitle: true,
       ),
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: tokens.fieldBg,
+        fillColor: tokens.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 18,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: fieldRadius,
-          borderSide: BorderSide(color: tokens.stroke),
+          borderSide: BorderSide(color: tokens.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: fieldRadius,
           borderSide: BorderSide(color: scheme.primary, width: 1.2),
         ),
-        labelStyle: TextStyle(color: tokens.muted),
+        labelStyle: TextStyle(color: tokens.textMuted),
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -79,31 +79,31 @@ class AppTheme {
       colorScheme: scheme,
       extensions: const <ThemeExtension<dynamic>>[tokens],
 
-      scaffoldBackgroundColor: tokens.bg,
+      scaffoldBackgroundColor: tokens.surface,
 
       appBarTheme: AppBarTheme(
-        backgroundColor: tokens.bg,
-        foregroundColor: tokens.text,
+        backgroundColor: tokens.surface,
+        foregroundColor: tokens.textPrimary,
         elevation: 0,
         centerTitle: true,
       ),
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: tokens.fieldBg,
+        fillColor: tokens.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 18,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: fieldRadius,
-          borderSide: BorderSide(color: tokens.stroke),
+          borderSide: BorderSide(color: tokens.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: fieldRadius,
           borderSide: BorderSide(color: scheme.primary, width: 1.2),
         ),
-        labelStyle: TextStyle(color: tokens.muted),
+        labelStyle: TextStyle(color: tokens.textMuted),
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(

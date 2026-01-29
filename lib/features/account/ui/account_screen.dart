@@ -57,7 +57,7 @@ class AccountScreen extends ConsumerWidget {
             children: [
               CircleAvatar(
                 radius: 26,
-                backgroundColor: colors.fieldBg,
+                backgroundColor: colors.surface,
                 backgroundImage: (user?.userImage.isNotEmpty == true)
                     ? NetworkImage(
                         '${AppConfig.normalizedBaseUrl}${user!.userImage}',
@@ -75,7 +75,7 @@ class AccountScreen extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: colors.text,
+                          color: colors.textPrimary,
                         ),
                       ),
               ),
@@ -91,13 +91,13 @@ class AccountScreen extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: colors.text,
+                        color: colors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       user?.email ?? '',
-                      style: TextStyle(fontSize: 13, color: colors.muted),
+                      style: TextStyle(fontSize: 13, color: colors.textMuted),
                     ),
                   ],
                 ),
@@ -130,7 +130,7 @@ class AccountScreen extends ConsumerWidget {
           AccountOptionTile(
             icon: Icons.notifications_none,
             title: 'Notifications Preferences',
-            onTap:() {
+            onTap: () {
               context.push(AppRoutes.notifications);
             },
           ),
@@ -140,10 +140,10 @@ class AccountScreen extends ConsumerWidget {
 
           const SizedBox(height: 6),
           AccountOptionTile(
-            icon: Icons.description_outlined,
-            title: 'Terms & Conditions',
+            icon: Icons.language_outlined,
+            title: 'Preferences',
             onTap: () {
-              context.push(AppRoutes.terms);
+              context.push(AppRoutes.preference);
             },
           ),
 
@@ -158,10 +158,10 @@ class AccountScreen extends ConsumerWidget {
 
           const Divider(height: 1),
           AccountOptionTile(
-            icon: Icons.language_outlined,
-            title: 'Language & Region',
+            icon: Icons.description_outlined,
+            title: 'Terms & Conditions',
             onTap: () {
-              context.push(AppRoutes.localization);
+              context.push(AppRoutes.terms);
             },
           ),
 
@@ -256,7 +256,7 @@ class _CircleIconButton extends StatelessWidget {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: colors.fieldBg,
+            color: colors.surface,
             shape: BoxShape.circle,
           ),
           child: Icon(icon, size: 20, color: scheme.onSurface),

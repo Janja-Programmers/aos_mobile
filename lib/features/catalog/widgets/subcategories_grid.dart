@@ -63,12 +63,15 @@ class SubcategoriesGrid extends StatelessWidget {
                     width: double.infinity,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: colors.stroke,
+                        color: colors.border,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       alignment: Alignment.center,
                       child: url == null
-                          ? Icon(Icons.grid_view_outlined, color: colors.muted)
+                          ? Icon(
+                              Icons.grid_view_outlined,
+                              color: colors.textMuted,
+                            )
                           : ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Image.network(

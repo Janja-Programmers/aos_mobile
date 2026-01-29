@@ -61,7 +61,7 @@ class AppSuccessSheet extends StatelessWidget {
                     width: 72,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: context.appColors.fieldBg,
+                      color: context.appColors.surface,
                     ),
                     child: Center(
                       child: Container(

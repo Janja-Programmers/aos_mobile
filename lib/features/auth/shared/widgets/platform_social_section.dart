@@ -30,12 +30,12 @@ class PlatformSocialSection extends StatelessWidget {
     Widget dividerRow({required String label}) {
       return Row(
         children: [
-          Expanded(child: Divider(color: colors.stroke)),
+          Expanded(child: Divider(color: colors.border)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(label, style: TextStyle(color: colors.muted)),
+            child: Text(label, style: TextStyle(color: colors.textMuted)),
           ),
-          Expanded(child: Divider(color: colors.stroke)),
+          Expanded(child: Divider(color: colors.border)),
         ],
       );
     }
@@ -107,7 +107,7 @@ class PlatformSocialSection extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               backgroundColor: scheme.surface,
               foregroundColor: scheme.onSurface,
-              side: BorderSide(color: colors.stroke),
+              side: BorderSide(color: colors.border),
               shape: const RoundedRectangleBorder(borderRadius: _pill),
             ),
           ),

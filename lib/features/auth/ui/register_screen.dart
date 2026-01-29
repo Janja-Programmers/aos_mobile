@@ -71,7 +71,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       height: 4,
                       width: 44,
                       decoration: BoxDecoration(
-                        color: colors.stroke,
+                        color: colors.border,
                         borderRadius: BorderRadius.circular(99),
                       ),
                     ),
@@ -84,7 +84,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
-                              color: colors.text,
+                              color: colors.textPrimary,
                             ),
                           ),
                         ),
@@ -287,9 +287,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   Expanded(
                     child: RichText(
                       text: TextSpan(
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium!.copyWith(color: colors.text),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: colors.textPrimary,
+                        ),
                         children: [
                           const TextSpan(text: 'I agree to the '),
                           TextSpan(
@@ -297,7 +297,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               decoration: TextDecoration.underline,
-                              color: colors.text,
+                              color: colors.textPrimary,
                             ),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => _openLegalSheet(
@@ -311,7 +311,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               decoration: TextDecoration.underline,
-                              color: colors.text,
+                              color: colors.textPrimary,
                             ),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => _openLegalSheet(

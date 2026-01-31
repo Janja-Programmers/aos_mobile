@@ -11,6 +11,7 @@ import 'package:africaonlinestores/features/auth/providers/auth_controller.dart'
 import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_section.dart';
 
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
+import 'package:africaonlinestores/ui/components/app_text_fields.dart';
 import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -29,8 +30,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   bool _googleLoading = false;
   bool _registerLoading = false;
-  bool _obscure1 = true;
-  bool _obscure2 = true;
   bool _accept = true;
 
   bool get _busy => _registerLoading || _googleLoading;
@@ -213,64 +212,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    TextFormField(
+                    AppFormField(
                       controller: _name,
-                      decoration: const InputDecoration(
-                        labelText: 'Full Name',
-                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
-                      validator: (v) => Validators.minLen(
-                        v?.trim(),
-                        2,
-                        'Enter your full name',
-                      ),
+                      label: 'Full Name',
+                      validator: Validators.required,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.name],
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
+                    AppFormField(
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email Address',
-                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
+                      label: 'Email Address',
                       validator: Validators.email,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [
+                        AutofillHints.username,
+                        AutofillHints.email,
+                      ],
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
+                    AppPasswordFormField(
                       controller: _password,
-                      obscureText: _obscure1,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        suffixIcon: IconButton(
-                          onPressed: () =>
-                              setState(() => _obscure1 = !_obscure1),
-                          icon: Icon(
-                            _obscure1
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                          ),
-                        ),
-                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
-                      validator: (v) =>
-                          Validators.minLen(v, 8, 'Min 8 characters'),
+                      validator: Validators.passwordRequired,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.newPassword],
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
+                    AppPasswordFormField(
                       controller: _confirm,
-                      obscureText: _obscure2,
-                      decoration: InputDecoration(
-                        labelText: 'Confirm Password',
-                        suffixIcon: IconButton(
-                          onPressed: () =>
-                              setState(() => _obscure2 = !_obscure2),
-                          icon: Icon(
-                            _obscure2
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                          ),
-                        ),
-                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
-                      validator: (v) => (v != _password.text)
-                          ? 'Passwords do not match'
-                          : null,
+                      label: 'Confirm Password',
+                      validator: (v) =>
+                          Validators.confirmPassword(v, _confirm.text),
+                      textInputAction: TextInputAction.done,
+                      autofillHints: const [AutofillHints.newPassword],
                     ),
                   ],
                 ),

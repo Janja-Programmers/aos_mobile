@@ -9,6 +9,7 @@ import 'package:africaonlinestores/features/auth/providers/auth_controller.dart'
 
 import 'package:africaonlinestores/ui/components/app_success_sheet.dart';
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
+import 'package:africaonlinestores/ui/components/app_text_fields.dart';
 import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
@@ -32,8 +33,6 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final _pw2Ctrl = TextEditingController();
 
   bool _loading = false;
-  bool _obscure1 = true;
-  bool _obscure2 = true;
 
   @override
   void dispose() {
@@ -122,44 +121,20 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    TextFormField(
+                    AppPasswordFormField(
                       controller: _pwCtrl,
-                      obscureText: _obscure1,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        suffixIcon: IconButton(
-                          onPressed: () =>
-                              setState(() => _obscure1 = !_obscure1),
-                          icon: Icon(
-                            _obscure1
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                          ),
-                        ),
-                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
-                      validator: (v) =>
-                          Validators.minLen(v, 8, 'Min 8 characters'),
-                      onFieldSubmitted: (_) => _save(),
+                      label: 'New Password',
+                      validator: Validators.passwordRequired,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.newPassword],
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
+                    AppPasswordFormField(
                       controller: _pw2Ctrl,
-                      obscureText: _obscure2,
-                      decoration: InputDecoration(
-                        labelText: 'Confirm Password',
-                        suffixIcon: IconButton(
-                          onPressed: () =>
-                              setState(() => _obscure2 = !_obscure2),
-                          icon: Icon(
-                            _obscure2
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                          ),
-                        ),
-                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
-                      validator: (v) =>
-                          (v != _pwCtrl.text) ? 'Passwords do not match' : null,
-                      onFieldSubmitted: (_) => _save(),
+                      label: 'Confirm Password',
+                      validator: Validators.passwordRequired,
+                      textInputAction: TextInputAction.done,
+                      autofillHints: const [AutofillHints.newPassword],
                     ),
                   ],
                 ),

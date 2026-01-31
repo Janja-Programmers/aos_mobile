@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/utils/app_snack.dart';
 import 'package:africaonlinestores/features/localization/domain/locale_bundle.dart';
+import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
 
 class PreferenceScreen extends ConsumerStatefulWidget {
   const PreferenceScreen({super.key});
@@ -181,34 +182,10 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
 
                 const SizedBox(height: 18),
 
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: scheme.primary,
-                      disabledBackgroundColor: scheme.primary.withOpacity(0.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      elevation: 0,
-                    ),
-                    onPressed: _saving ? null : () => _save(context),
-                    child: _saving
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text(
-                            'Update',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
+                PrimaryButton(
+                  text: 'Update',
+                  onPressed: _saving ? null : () => _save(context),
+                  loading: _saving,
                 ),
               ],
             ),
@@ -294,7 +271,9 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.15),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(99),
                 ),
               ),

@@ -10,6 +10,7 @@ import 'package:africaonlinestores/features/auth/ui/verify_otp_screen.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_section.dart';
 
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
+import 'package:africaonlinestores/ui/components/app_text_fields.dart';
 import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -26,7 +27,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordCtrl = TextEditingController();
 
   bool _rememberMe = true;
-  bool _obscure = true;
   bool _loginLoading = false;
   bool _googleLoading = false;
 
@@ -158,31 +158,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    TextFormField(
+                    AppFormField(
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email Address',
-                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
+                      label: 'Email Address',
                       validator: Validators.email,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.username, AutofillHints.email],
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
+                    AppPasswordFormField(
                       controller: _passwordCtrl,
-                      obscureText: _obscure,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        suffixIcon: IconButton(
-                          onPressed: () => setState(() => _obscure = !_obscure),
-                          icon: Icon(
-                            _obscure
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                          ),
-                        ),
-                      ).applyDefaults(Theme.of(context).inputDecorationTheme),
                       validator: Validators.passwordRequired,
                       onFieldSubmitted: (_) => _login(),
+                      textInputAction: TextInputAction.done,
+                      autofillHints: const [AutofillHints.password],
                     ),
                   ],
                 ),

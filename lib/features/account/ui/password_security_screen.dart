@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/ui/components/app_text_fields.dart';
 import 'package:africaonlinestores/features/auth/providers/auth_controller.dart';
 import 'package:africaonlinestores/ui/components/app_success_sheet.dart';
 import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
@@ -25,9 +26,6 @@ class _PasswordSecurityScreenState
   final _confirm = TextEditingController();
 
   bool _loading = false;
-  bool _ob1 = true;
-  bool _ob2 = true;
-  bool _ob3 = true;
 
   static const BorderRadius _pill = BorderRadius.all(Radius.circular(999));
 
@@ -154,25 +152,12 @@ class _PasswordSecurityScreenState
                                 style: TextStyle(fontWeight: FontWeight.w700),
                               ),
                               const SizedBox(height: 8),
-                              TextFormField(
+                              AppPasswordFormField(
                                 controller: _old,
-                                obscureText: _ob1,
-                                decoration:
-                                    InputDecoration(
-                                      labelText: 'Enter your old password',
-                                      suffixIcon: IconButton(
-                                        onPressed: () =>
-                                            setState(() => _ob1 = !_ob1),
-                                        icon: Icon(
-                                          _ob1
-                                              ? Icons.visibility_off_outlined
-                                              : Icons.visibility_outlined,
-                                        ),
-                                      ),
-                                    ).applyDefaults(
-                                      Theme.of(context).inputDecorationTheme,
-                                    ),
+                                label: 'Current Password',
                                 validator: Validators.passwordRequired,
+                                textInputAction: TextInputAction.next,
+                                autofillHints: const [AutofillHints.password],
                               ),
                               const SizedBox(height: 16),
                               const Text(
@@ -180,26 +165,12 @@ class _PasswordSecurityScreenState
                                 style: TextStyle(fontWeight: FontWeight.w700),
                               ),
                               const SizedBox(height: 8),
-                              TextFormField(
+                              AppPasswordFormField(
                                 controller: _new,
-                                obscureText: _ob2,
-                                decoration:
-                                    InputDecoration(
-                                      labelText: 'Enter your new password',
-                                      suffixIcon: IconButton(
-                                        onPressed: () =>
-                                            setState(() => _ob2 = !_ob2),
-                                        icon: Icon(
-                                          _ob2
-                                              ? Icons.visibility_off_outlined
-                                              : Icons.visibility_outlined,
-                                        ),
-                                      ),
-                                    ).applyDefaults(
-                                      Theme.of(context).inputDecorationTheme,
-                                    ),
-                                validator: (v) =>
-                                    Validators.minLen(v, 8, 'Min 8 characters'),
+                                label: 'New Password',
+                                validator: Validators.passwordRequired,
+                                textInputAction: TextInputAction.next,
+                                autofillHints: const [AutofillHints.password],
                               ),
                               const SizedBox(height: 16),
                               const Text(
@@ -207,28 +178,16 @@ class _PasswordSecurityScreenState
                                 style: TextStyle(fontWeight: FontWeight.w700),
                               ),
                               const SizedBox(height: 8),
-                              TextFormField(
+                              AppPasswordFormField(
                                 controller: _confirm,
-                                obscureText: _ob3,
-                                decoration:
-                                    InputDecoration(
-                                      labelText: 'Re enter your new password',
-                                      suffixIcon: IconButton(
-                                        onPressed: () =>
-                                            setState(() => _ob3 = !_ob3),
-                                        icon: Icon(
-                                          _ob3
-                                              ? Icons.visibility_off_outlined
-                                              : Icons.visibility_outlined,
-                                        ),
-                                      ),
-                                    ).applyDefaults(
-                                      Theme.of(context).inputDecorationTheme,
-                                    ),
-                                validator: (v) => (v != _new.text)
-                                    ? 'Passwords do not match'
-                                    : null,
-                                onFieldSubmitted: (_) => _submit(),
+                                label: 'Confirm Password',
+                                validator: (v) => Validators.confirmPassword(
+                                  v,
+                                  _confirm.text,
+                                ),
+
+                                textInputAction: TextInputAction.done,
+                                autofillHints: const [AutofillHints.password],
                               ),
                               const SizedBox(height: 90),
                             ],

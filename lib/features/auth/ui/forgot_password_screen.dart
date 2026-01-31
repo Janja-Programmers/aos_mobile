@@ -9,6 +9,7 @@ import 'package:africaonlinestores/features/auth/ui/verify_otp_screen.dart';
 
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/ui/components/app_text_fields.dart';
 import 'package:africaonlinestores/core/utils/app_snack.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -90,14 +91,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  TextFormField(
+                  AppFormField(
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email Address',
-                    ).applyDefaults(Theme.of(context).inputDecorationTheme),
+                    label: 'Email Address',
                     validator: Validators.email,
-                    onFieldSubmitted: (_) => _sendOtp(),
+                    textInputAction: TextInputAction.done,
+                    autofillHints: const [AutofillHints.username, AutofillHints.email],
                   ),
                   const SizedBox(height: 22),
                   PrimaryButton(

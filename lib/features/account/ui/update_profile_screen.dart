@@ -12,6 +12,7 @@ import 'package:africaonlinestores/core/utils/normalize_image.dart';
 
 import 'package:africaonlinestores/features/account/data/accounts_api.dart';
 import 'package:africaonlinestores/features/auth/providers/auth_controller.dart';
+import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
 
 import 'package:africaonlinestores/core/utils/app_snack.dart';
 
@@ -289,7 +290,6 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
     final auth = ref.watch(authControllerProvider);
     final baseUrl = AppConfig.normalizedBaseUrl;
 
-    final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
 
     return Scaffold(
@@ -356,37 +356,10 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
                   ),
 
                   const SizedBox(height: 34),
-                  SizedBox(
-                    height: 54,
-                    child: ElevatedButton(
-                      onPressed: (_saving || _uploadingPhoto) ? null : _save,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: scheme.primary,
-                        foregroundColor: scheme.onPrimary,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(999)),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: _saving
-                          ? SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  scheme.onPrimary,
-                                ),
-                              ),
-                            )
-                          : const Text(
-                              'Update',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                    ),
+                  PrimaryButton(
+                    text: 'Save Changes',
+                    onPressed: (_saving || _uploadingPhoto) ? null : _save,
+                    loading: _saving,
                   ),
                 ],
               ),

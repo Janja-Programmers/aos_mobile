@@ -30,6 +30,14 @@ class ApiEndpoints {
   static final String getCategoriesEndpoint =
       '/api/method/aos.api.catalog.get_categories';
 
+  // Ads / Listings Endpoints
+  static final String getLocationsEndpoint =
+      '/api/method/aos.api.localization.get_locations';
+  static final String getCategorySchemaEndpoint =
+      '/api/method/aos.api.attributes.get_category_schema';
+  static final String createAdEndpoint =
+      '/api/method/aos.api.ads.create_ad';
+
   // Localization Endpoints
   static final String getLocaleBundleEndpoint =
       '/api/method/aos.api.localization.get_locale_bundle';

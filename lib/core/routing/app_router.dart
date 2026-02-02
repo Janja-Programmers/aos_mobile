@@ -20,6 +20,12 @@ import 'package:africaonlinestores/features/account/ui/update_profile_screen.dar
 import 'package:africaonlinestores/features/account/ui/password_security_screen.dart';
 import 'package:africaonlinestores/features/account/ui/preference_screen.dart';
 
+import 'package:africaonlinestores/features/ads/ui/ad_list.dart';
+import 'package:africaonlinestores/features/ads/ui/create_ad_flow_screen.dart';
+import 'package:africaonlinestores/features/ads/ui/pickers/select_category_screen.dart';
+import 'package:africaonlinestores/features/ads/ui/pickers/select_location_screen.dart';
+import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
+
 import 'package:africaonlinestores/core/routing/app_routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -44,9 +50,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.categories,
         builder: (context, state) => const CategoriesScreen(),
       ),
+
+      // Ads / Listings
       GoRoute(
-        path: AppRoutes.categories,
-        builder: (context, state) => const CategoriesScreen(),
+        path: AppRoutes.adList,
+        builder: (context, state) => const AdListScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.createAd,
+        builder: (context, state) => const CreateAdFlowScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.selectCategory,
+        builder: (context, state) {
+          final parent = state.extra is CategoryNode
+              ? state.extra as CategoryNode
+              : null;
+          return SelectCategoryScreen(parent: parent);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.selectLocation,
+        builder: (context, state) => const SelectLocationScreen(),
       ),
       GoRoute(
         path: AppRoutes.notifications,

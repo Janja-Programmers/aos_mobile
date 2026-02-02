@@ -13,4 +13,10 @@ class AppRoutes {
   static const preference = '/account/preference';
   static const terms = '/terms';
   static const privacy = '/privacy';
+
+  // Ads / Listings
+  static const adList = '/ads/list';
+  static const createAd = '/ads/create';
+  static const selectCategory = '/ads/select-category';
+  static const selectLocation = '/ads/select-location';
 }

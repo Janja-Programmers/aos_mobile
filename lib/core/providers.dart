@@ -8,6 +8,7 @@ import 'package:africaonlinestores/features/auth/data/auth_api.dart';
 import 'package:africaonlinestores/features/account/data/accounts_api.dart';
 import 'package:africaonlinestores/features/catalog/data/categories_api.dart';
 import 'package:africaonlinestores/features/localization/data/localization_api.dart';
+import 'package:africaonlinestores/features/ads/data/ads_api.dart';
 
 final sessionStorageProvider = Provider<SessionStorage>((ref) {
   return const SessionStorage();
@@ -31,4 +32,8 @@ final categoriesApiProvider = Provider<CategoriesApi>((ref) {
 
 final localizationApiProvider = Provider<LocalizationApi>((ref) {
   return LocalizationApi(ref.watch(apiClientProvider));
+});
+
+final adsApiProvider = Provider<AdsApi>((ref) {
+  return AdsApi(ref.watch(apiClientProvider));
 });

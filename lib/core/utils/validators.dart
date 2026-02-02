@@ -7,8 +7,24 @@ class Validators {
 
   static String? email(String? v) {
     final t = (v ?? '').trim();
-    if (t.isEmpty) return 'Email is required';
-    if (!t.contains('@')) return 'Enter a valid email';
+
+    if (t.isEmpty) {
+      return 'Email is required';
+    }
+
+    if (t.contains('..') || t.startsWith('.') || t.endsWith('.')) {
+      return 'Enter a valid email address';
+    }
+
+    // Reasonably strict email regex (practical, not RFC-overkill)
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
+
+    if (!emailRegex.hasMatch(t)) {
+      return 'Enter a valid email address';
+    }
+
     return null;
   }
 

@@ -12,10 +12,12 @@ class AppTheme {
     const tokens = AppColorTokens.light;
 
     final scheme = ColorScheme.fromSeed(
-      seedColor: Colors.black,
+      seedColor: tokens.primary,
       brightness: Brightness.light,
       surfaceBright: tokens.surface,
-      surface: Colors.white,
+      surface: tokens.surface,
+      primary: tokens.primary,
+      onPrimary: tokens.primaryHover,
     );
 
     return ThemeData(

@@ -25,7 +25,6 @@ class SocialButton extends StatelessWidget {
 
     return SizedBox(
       height: 54,
-      width: double.infinity,
       child: OutlinedButton(
         onPressed: loading ? null : onPressed,
         style: OutlinedButton.styleFrom(
@@ -35,6 +34,7 @@ class SocialButton extends StatelessWidget {
           shape: const RoundedRectangleBorder(borderRadius: AppTheme.pill),
         ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (loading)

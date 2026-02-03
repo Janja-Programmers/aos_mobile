@@ -46,27 +46,31 @@ class PlatformSocialSection extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              SocialButton(
-                icon: SvgPicture.asset(
-                  'assets/icons/google.svg',
-                  width: 22,
-                  height: 22,
+              Expanded(
+                child: SocialButton(
+                  icon: SvgPicture.asset(
+                    'assets/icons/google.svg',
+                    width: 22,
+                    height: 22,
+                  ),
+                  label: 'Google',
+                  loading: googleLoading,
+                  onPressed: onGoogle,
                 ),
-                label: 'Continue with Google',
-                loading: googleLoading,
-                onPressed: onGoogle,
               ),
               const SizedBox(width: 12),
 
-              SocialButton(
-                icon: SvgPicture.asset(
-                  'assets/icons/apple.svg',
-                  width: 22,
-                  height: 22,
+              Expanded(
+                child: SocialButton(
+                  icon: SvgPicture.asset(
+                    'assets/icons/apple.svg',
+                    width: 22,
+                    height: 22,
+                  ),
+                  label: 'Apple',
+                  loading: googleLoading,
+                  onPressed: onGoogle,
                 ),
-                label: 'Continue with Google',
-                loading: googleLoading,
-                onPressed: onGoogle,
               ),
             ],
           ),

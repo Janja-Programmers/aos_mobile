@@ -80,7 +80,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
 
       await result.fold((f) async {
-        showAppSnack(context, f.message);
+        ShowSnack(context, f.message).error();
 
         final msg = f.message.toLowerCase();
         final email = _emailCtrl.text.trim().toLowerCase();
@@ -95,7 +95,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }, (_) async => context.go(AppRoutes.home));
     } catch (e) {
       if (!mounted) return;
-      showAppSnack(context, 'Unexpected error: $e');
+      ShowSnack(context, 'Unexpected error: $e').error();
     } finally {
       if (mounted) setState(() => _loginLoading = false);
     }
@@ -113,12 +113,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
 
       result.fold(
-        (f) => showAppSnack(context, f.message),
+        (f) => ShowSnack(context, f.message).error(),
         (_) => context.go(AppRoutes.home),
       );
     } catch (e) {
       if (!mounted) return;
-      showAppSnack(context, 'Unexpected error: $e');
+      ShowSnack(context, 'Unexpected error: $e').error();
     } finally {
       if (mounted) setState(() => _googleLoading = false);
     }
@@ -127,7 +127,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -152,7 +151,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 2),
               Text('Hello, Welcome Back', style: context.h1),
               const SizedBox(height: 6),
-              Text('Login to your account below', style: context.bodyMuted),
+              Text('Login to your account below', style: context.p),
               const SizedBox(height: 26),
               Form(
                 key: _formKey,
@@ -164,7 +163,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       label: 'Email Address',
                       validator: Validators.email,
                       textInputAction: TextInputAction.next,
-                      autofillHints: const [AutofillHints.username, AutofillHints.email],
+                      autofillHints: const [
+                        AutofillHints.username,
+                        AutofillHints.email,
+                      ],
                     ),
                     const SizedBox(height: 16),
                     AppPasswordFormField(
@@ -184,23 +186,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     value: _rememberMe,
                     onChanged: (v) => setState(() => _rememberMe = v ?? true),
                     activeColor: scheme.primary,
+                    checkColor: scheme.tertiary,
                   ),
-                  Expanded(
-                    child: Text(
-                      'Remember Me',
-                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                  ),
+                  Expanded(child: Text('Remember Me', style: context.p)),
                   TextButton(
                     onPressed: () {
                       context.push(AppRoutes.forgotPassword);
                     },
-                    child: Text(
-                      'Forgot Password?',
-                      style: TextStyle(color: colors.textMuted),
-                    ),
+                    child: Text('Forgot Password?', style: context.p),
                   ),
                 ],
               ),
@@ -215,22 +208,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 googleLoading: _googleLoading,
                 onGoogle: _googleSignIn,
                 onApple: () =>
-                    showAppSnack(context, 'Apple signup coming soon.'),
+                    ShowSnack(context, 'Apple signup coming soon.').info(),
               ),
               const SizedBox(height: 18),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Don\'t have an account? ', style: context.bodyMuted),
+                  Text('Don\'t have an account? ', style: context.p),
                   GestureDetector(
                     onTap: () => context.push(AppRoutes.register),
-                    child: Text(
-                      'Register',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
-                      ),
-                    ),
+                    child: Text('Register', style: context.pStrong),
                   ),
                 ],
               ),

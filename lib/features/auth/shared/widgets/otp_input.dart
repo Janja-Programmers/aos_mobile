@@ -68,7 +68,6 @@ class OtpInputController {
     final offset = sel.isValid ? sel.start : text.length;
     final caret = offset.clamp(0, text.length);
 
-    // Backspace deletes char before caret.
     if (caret == 0) return;
 
     final next = text.substring(0, caret - 1) + text.substring(caret);
@@ -111,7 +110,6 @@ class _OtpInputState extends State<OtpInput> {
 
     widget.controller._textController.addListener(_handleTextChanged);
 
-    // Autofocus the hidden field, but keep keyboard hidden.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       widget.controller.focusAndHideKeyboard();
@@ -134,7 +132,6 @@ class _OtpInputState extends State<OtpInput> {
   }
 
   void _handleTextChanged() {
-    // Normalize to digits + max length
     final current = widget.controller._textController.text;
     final digits = current.replaceAll(RegExp(r'\D'), '');
     final trimmed = digits.length > widget.controller.length
@@ -152,9 +149,8 @@ class _OtpInputState extends State<OtpInput> {
       widget.onCompleted(trimmed);
     }
 
-    // Always keep keyboard hidden (custom keypad UX)
     widget.controller.focusAndHideKeyboard();
-    if (mounted) setState(() {}); // update box highlight
+    if (mounted) setState(() {});
   }
 
   int get _caret {
@@ -171,14 +167,14 @@ class _OtpInputState extends State<OtpInput> {
   }
 
   Widget _boxes(BuildContext context) {
-    const double gap = 10;
+    const double gap = 4;
+    const double height = 58;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final count = widget.controller.length;
         final available = constraints.maxWidth - (gap * (count - 1));
-        final w = (available / count).clamp(44.0, 56.0);
-        const h = 56.0;
+        final width = (available / count).clamp(46.0, 58.0);
 
         final scheme = Theme.of(context).colorScheme;
         final colors = context.appColors;
@@ -188,39 +184,54 @@ class _OtpInputState extends State<OtpInput> {
 
         return Wrap(
           spacing: gap,
-          runSpacing: gap,
           alignment: WrapAlignment.spaceBetween,
           children: List.generate(count, (i) {
             final hasChar = i < text.length;
             final ch = hasChar ? text[i] : '';
 
-            // focused box = caret position OR last box when full
             final focused =
                 widget.enabled &&
                 ((text.length < count && i == caret) ||
                     (text.length == count && i == count - 1));
 
             return GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () => _tapBox(i),
               child: SizedBox(
-                width: w,
-                height: h,
-                child: Container(
+                width: width,
+                height: height,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.easeOut,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: scheme.surface,
-                    borderRadius: BorderRadius.circular(14),
+                    color: widget.enabled
+                        ? scheme.surface
+                        : scheme.surfaceVariant.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: focused ? scheme.primary : colors.border,
-                      width: focused ? 1.5 : 1.0,
+                      color: focused
+                          ? scheme.primary
+                          : colors.border.withOpacity(0.6),
+                      width: focused ? 2 : 1,
                     ),
+                    boxShadow: focused
+                        ? [
+                            BoxShadow(
+                              color: scheme.primary.withOpacity(0.18),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : [],
                   ),
                   child: Text(
-                    ch,
+                    ch.isEmpty ? '•' : ch,
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: colors.textPrimary,
+                      letterSpacing: 1.2,
+                      color: ch.isEmpty ? colors.textMuted : colors.textPrimary,
                     ),
                   ),
                 ),
@@ -242,15 +253,12 @@ class _OtpInputState extends State<OtpInput> {
         keyboardType: TextInputType.number,
         autofillHints: const [AutofillHints.oneTimeCode],
         readOnly: true,
-        enableInteractiveSelection: true,
         showCursor: false,
         cursorWidth: 0,
+        enableInteractiveSelection: true,
         decoration: const InputDecoration(border: InputBorder.none),
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-
-        onTap: () {
-          widget.controller.focusAndHideKeyboard();
-        },
+        onTap: widget.controller.focusAndHideKeyboard,
       ),
     );
   }
@@ -258,21 +266,33 @@ class _OtpInputState extends State<OtpInput> {
   Widget _keypad(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
+    const double keyGap = 12;
+
+    void add(String d) {
+      HapticFeedback.lightImpact();
+      widget.controller.insertDigit(d);
+      widget.controller.focusAndHideKeyboard();
+    }
 
     Widget key(String label, {VoidCallback? onTap}) {
       return Expanded(
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           onTap: widget.enabled ? onTap : null,
-          child: Container(
-            height: 52,
-            alignment: Alignment.center,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: widget.enabled ? colors.textPrimary : colors.textMuted,
+          child: Ink(
+            height: 56,
+            decoration: BoxDecoration(
+              color: scheme.surfaceVariant.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Center(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: widget.enabled ? colors.textPrimary : colors.textMuted,
+                ),
               ),
             ),
           ),
@@ -283,63 +303,87 @@ class _OtpInputState extends State<OtpInput> {
     Widget iconKey(IconData icon, {VoidCallback? onTap}) {
       return Expanded(
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           onTap: widget.enabled ? onTap : null,
-          child: Container(
-            height: 52,
-            alignment: Alignment.center,
-            child: Icon(
-              icon,
-              color: widget.enabled ? scheme.onSurface : colors.textMuted,
+          child: Ink(
+            height: 56,
+            decoration: BoxDecoration(
+              color: scheme.surfaceVariant.withOpacity(0.35),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Center(
+              child: Icon(
+                icon,
+                size: 22,
+                color: widget.enabled ? scheme.onSurface : colors.textMuted,
+              ),
             ),
           ),
         ),
       );
     }
 
-    void add(String d) {
-      widget.controller.insertDigit(d);
-      widget.controller.focusAndHideKeyboard();
-    }
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 200),
+      opacity: widget.enabled ? 1 : 0.5,
+      child: Column(
+        children: [
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              key('1', onTap: () => add('1')),
+              const SizedBox(width: keyGap),
+              key('2', onTap: () => add('2')),
+              const SizedBox(width: keyGap),
+              key('3', onTap: () => add('3')),
+            ],
+          ),
+          const SizedBox(height: keyGap),
+          Row(
+            children: [
+              key('4', onTap: () => add('4')),
+              const SizedBox(width: keyGap),
+              key('5', onTap: () => add('5')),
+              const SizedBox(width: keyGap),
+              key('6', onTap: () => add('6')),
+            ],
+          ),
+          const SizedBox(height: keyGap),
+          Row(
+            children: [
+              key('7', onTap: () => add('7')),
+              const SizedBox(width: keyGap),
+              key('8', onTap: () => add('8')),
+              const SizedBox(width: keyGap),
+              key('9', onTap: () => add('9')),
+            ],
+          ),
+          const SizedBox(height: keyGap),
+          Row(
+            children: [
+              iconKey(
+                Icons.backspace_outlined,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  widget.controller.backspace();
+                },
+              ),
 
-    return Column(
-      children: [
-        const SizedBox(height: 14),
-        Row(
-          children: [
-            key('1', onTap: () => add('1')),
-            key('2', onTap: () => add('2')),
-            key('3', onTap: () => add('3')),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            key('4', onTap: () => add('4')),
-            key('5', onTap: () => add('5')),
-            key('6', onTap: () => add('6')),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            key('7', onTap: () => add('7')),
-            key('8', onTap: () => add('8')),
-            key('9', onTap: () => add('9')),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            iconKey(
-              Icons.backspace_outlined,
-              onTap: widget.controller.backspace,
-            ),
-            key('0', onTap: () => add('0')),
-            iconKey(Icons.clear, onTap: widget.controller.clear),
-          ],
-        ),
-      ],
+              const SizedBox(width: keyGap),
+              key('0', onTap: () => add('0')),
+              const SizedBox(width: keyGap),
+
+              iconKey(
+                Icons.clear,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  widget.controller.clear();
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

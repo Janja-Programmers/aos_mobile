@@ -77,18 +77,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: colors.textPrimary,
-                            ),
-                          ),
-                        ),
+                        Expanded(child: Text(title, style: context.h2)),
                         IconButton(
-                          icon: Icon(Icons.close, color: scheme.onSurface),
+                          icon: Icon(
+                            Icons.close,
+                            color: context.appColors.border,
+                          ),
                           onPressed: () => Navigator.of(sheetContext).pop(),
                         ),
                       ],
@@ -112,10 +106,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _register() async {
     if (!_accept) {
-      showAppSnack(
+      ShowSnack(
         context,
         'Please accept Terms & Conditions and Privacy Policy',
-      );
+      ).error();
       return;
     }
 
@@ -134,10 +128,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       if (!mounted) return;
 
-      await result.fold((f) async => showAppSnack(context, f.message), (
+      await result.fold((f) async => ShowSnack(context, f.message).error(), (
         msg,
       ) async {
-        showAppSnack(context, msg);
+        ShowSnack(context, msg).success();
         await context.push(
           AppRoutes.verifyOtp,
           extra: _email.text.trim().toLowerCase(),
@@ -145,7 +139,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      showAppSnack(context, 'Unexpected error: $e');
+      ShowSnack(context, 'Unexpected error: $e').error();
     } finally {
       if (mounted) setState(() => _registerLoading = false);
     }
@@ -163,12 +157,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (!mounted) return;
 
       result.fold(
-        (f) => showAppSnack(context, f.message),
+        (f) => ShowSnack(context, f.message).error(),
         (_) => context.go(AppRoutes.home),
       );
     } catch (e) {
       if (!mounted) return;
-      showAppSnack(context, 'Unexpected error: $e');
+      ShowSnack(context, 'Unexpected error: $e').error();
     } finally {
       if (mounted) setState(() => _googleLoading = false);
     }
@@ -177,7 +171,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -201,10 +194,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               const SizedBox(height: 2),
               Text('Register', style: context.h1),
+
               const SizedBox(height: 6),
               Text(
                 'Enter your details below to create your account',
-                style: context.bodyMuted,
+                style: context.p,
               ),
               const SizedBox(height: 26),
 
@@ -243,7 +237,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       controller: _confirm,
                       label: 'Confirm Password',
                       validator: (v) =>
-                          Validators.confirmPassword(v, _confirm.text),
+                          Validators.confirmPassword(v, _password.text),
                       textInputAction: TextInputAction.done,
                       autofillHints: const [AutofillHints.newPassword],
                     ),
@@ -258,22 +252,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     value: _accept,
                     onChanged: (v) => setState(() => _accept = v ?? false),
                     activeColor: scheme.primary,
+                    checkColor: scheme.tertiary,
                   ),
                   Expanded(
                     child: RichText(
                       text: TextSpan(
-                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          color: colors.textPrimary,
-                        ),
+                        style: context.p,
                         children: [
                           const TextSpan(text: 'I agree to the '),
                           TextSpan(
                             text: 'Terms & Conditions',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              decoration: TextDecoration.underline,
-                              color: colors.textPrimary,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => _openLegalSheet(
                                 title: 'Terms & Conditions',
@@ -283,11 +272,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           const TextSpan(text: ' and '),
                           TextSpan(
                             text: 'Privacy Policy',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              decoration: TextDecoration.underline,
-                              color: colors.textPrimary,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => _openLegalSheet(
                                 title: 'Privacy Policy',
@@ -314,25 +299,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 googleLoading: _googleLoading,
                 onGoogle: _googleSignIn,
                 onApple: () =>
-                    showAppSnack(context, 'Apple signup coming soon.'),
+                    ShowSnack(context, 'Apple signup coming soon.').info(),
               ),
 
               const SizedBox(height: 18),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Already have an account? ', style: context.bodyMuted),
+                  Text('Already have an account? ', style: context.p),
                   GestureDetector(
                     onTap: () => context.push(
                       '${AppRoutes.login}?email=${Uri.encodeComponent(_email.text.trim().toLowerCase())}',
                     ),
-                    child: Text(
-                      'Login',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
-                      ),
-                    ),
+                    child: Text('Login', style: context.pStrong),
                   ),
                 ],
               ),

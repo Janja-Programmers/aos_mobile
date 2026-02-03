@@ -5,7 +5,6 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/otp_input.dart';
 
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
-import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
 
 class OtpSection extends StatefulWidget {
   const OtpSection({
@@ -68,7 +67,7 @@ class _OtpSectionState extends State<OtpSection> {
                 ),
                 child: Icon(
                   Icons.mail_outline,
-                  color: scheme.onPrimary,
+                  color: context.appColors.border,
                   size: 28,
                 ),
               ),
@@ -76,15 +75,9 @@ class _OtpSectionState extends State<OtpSection> {
           ),
         ),
         const SizedBox(height: 20),
-        Center(child: Text(widget.header, style: context.h2)),
+        Center(child: Text(widget.header, style: context.h4)),
         const SizedBox(height: 10),
-        Center(
-          child: Text(
-            widget.subtitle,
-            style: context.bodyMuted,
-            textAlign: TextAlign.center,
-          ),
-        ),
+        Center(child: Text(widget.subtitle, style: context.p)),
         const SizedBox(height: 6),
         Center(
           child: Text(
@@ -105,15 +98,6 @@ class _OtpSectionState extends State<OtpSection> {
           onChanged: widget.onChanged,
           onCompleted: widget.onCompleted,
           showCustomKeypad: widget.showCustomKeypad,
-        ),
-
-        const SizedBox(height: 22),
-        PrimaryButton(
-          text: 'Submit',
-          onPressed: widget.enabled
-              ? () => widget.onCompleted(_otpController.value)
-              : null,
-          loading: !widget.enabled,
         ),
       ],
     );

@@ -60,7 +60,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
       if (!mounted) return;
 
-      await result.fold((f) async => showAppSnack(context, f.message), (
+      await result.fold((f) async => ShowSnack(context, f.message).error(), (
         _,
       ) async {
         await showModalBottomSheet(
@@ -70,7 +70,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           builder: (_) => AppSuccessSheet(
             title: 'Password Updated\nSuccessfully',
             message: 'Your password has been updated successfully',
-            buttonText: 'Back To Login',
+            buttonText: 'Proceed To Login',
             onPressed: () {
               if (!context.mounted) return;
 
@@ -87,7 +87,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      showAppSnack(context, 'Unexpected error: $e');
+      ShowSnack(context, 'Unexpected error: $e').error();
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -103,7 +103,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         backgroundColor: scheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: scheme.onSurface),
+          icon: Icon(Icons.arrow_back, color: context.appColors.textPrimary),
           onPressed: () => context.pop(),
         ),
       ),
@@ -115,7 +115,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               const SizedBox(height: 8),
               Text('Enter New Password', style: context.h2),
               const SizedBox(height: 8),
-              Text('Enter your new password', style: context.bodyMuted),
+              Text('Enter your new password', style: context.p),
               const SizedBox(height: 22),
               Form(
                 key: _formKey,
@@ -132,7 +132,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                     AppPasswordFormField(
                       controller: _pw2Ctrl,
                       label: 'Confirm Password',
-                      validator: Validators.passwordRequired,
+                      validator: (v) =>
+                          Validators.confirmPassword(v, _pwCtrl.text),
                       textInputAction: TextInputAction.done,
                       autofillHints: const [AutofillHints.newPassword],
                     ),

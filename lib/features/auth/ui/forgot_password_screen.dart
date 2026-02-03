@@ -35,7 +35,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final email = _emailCtrl.text.trim();
     final err = Validators.email(email);
     if (err != null) {
-      showAppSnack(context, err);
+      ShowSnack(context, err).error();
       return;
     }
 
@@ -47,16 +47,16 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
       if (!mounted) return;
 
-      result.fold((f) => showAppSnack(context, f.message), (msg) {
-        showAppSnack(context, msg);
-        context.go(
+      result.fold((f) => ShowSnack(context, f.message).error(), (msg) {
+        ShowSnack(context, msg).success();
+        context.push(
           AppRoutes.verifyOtp,
           extra: {'email': email, 'purpose': OtpPurpose.passwordReset},
         );
       });
     } catch (e) {
       if (!mounted) return;
-      showAppSnack(context, 'Unexpected error: $e');
+      ShowSnack(context, 'Unexpected error: $e').error();
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -72,7 +72,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         backgroundColor: scheme.surface,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: scheme.onSurface),
+          icon: Icon(Icons.arrow_back, color: context.appColors.textPrimary),
           onPressed: () => context.pop(),
         ),
       ),
@@ -80,11 +80,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
           children: [
-            Text('Forgot Password', style: context.h2),
+            Text('Forgot Password', style: context.h3),
             const SizedBox(height: 8),
             Text(
               'Enter your email address to reset your password',
-              style: context.bodyMuted,
+              style: context.p,
             ),
             const SizedBox(height: 22),
             Form(
@@ -97,7 +97,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     label: 'Email Address',
                     validator: Validators.email,
                     textInputAction: TextInputAction.done,
-                    autofillHints: const [AutofillHints.username, AutofillHints.email],
+                    autofillHints: const [
+                      AutofillHints.username,
+                      AutofillHints.email,
+                    ],
                   ),
                   const SizedBox(height: 22),
                   PrimaryButton(

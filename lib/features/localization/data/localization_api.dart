@@ -48,8 +48,8 @@ class LocalizationApi {
       );
       final currencies = _parseOptions(
         data['currencies'],
-        codeKey: 'code',
-        labelKey: 'symbol',
+        codeKey: 'symbol',
+        labelKey: 'code',
       );
 
       return Either.right(
@@ -141,9 +141,10 @@ class LocalizationApi {
         if (code.isEmpty) continue;
 
         // Prefer provided labelKey, but fall back to common keys.
-        final label = ((m[labelKey] ?? m['name'] ?? m['label'] ?? m['code']) ?? '')
-            .toString()
-            .trim();
+        final label =
+            ((m[labelKey] ?? m['name'] ?? m['label'] ?? m['code']) ?? '')
+                .toString()
+                .trim();
         if (label.isEmpty) continue;
 
         if (seen.contains(code)) continue; // ✅ de-dupe by code

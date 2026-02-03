@@ -72,23 +72,20 @@ class AppConfirmSheet extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: iconBg.withAlpha(46),
                     ),
-                    child: Icon(icon, color: scheme.onPrimary, size: 22),
+                    child: Icon(
+                      icon,
+                      color: context.appColors.border,
+                      size: 22,
+                    ),
                   ),
                 ),
               ),
-
               const SizedBox(height: 12),
 
-              Text(title, style: context.h2, textAlign: TextAlign.center),
-
+              Text(title, style: context.h4, textAlign: TextAlign.center),
               const SizedBox(height: 6),
 
-              Text(
-                message,
-                style: context.bodyMuted,
-                textAlign: TextAlign.center,
-              ),
-
+              Text(message, style: context.p, textAlign: TextAlign.center),
               const SizedBox(height: 16),
 
               Row(
@@ -120,7 +117,7 @@ class AppConfirmSheet extends StatelessWidget {
                         onPressed: onSecondary,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: scheme.primary,
-                          foregroundColor: scheme.onPrimary,
+                          foregroundColor: context.appColors.border,
                           shape: const RoundedRectangleBorder(
                             borderRadius: _pill,
                           ),

@@ -1,11 +1,14 @@
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/ui/components/app_text_fields.dart';
+import 'package:africaonlinestores/core/utils/app_snack.dart';
+
 import 'package:africaonlinestores/features/auth/providers/auth_controller.dart';
 import 'package:africaonlinestores/ui/components/app_success_sheet.dart';
+import 'package:africaonlinestores/ui/components/app_text_fields.dart';
 import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
 
 class PasswordSecurityScreen extends ConsumerStatefulWidget {
@@ -37,11 +40,6 @@ class _PasswordSecurityScreenState
     super.dispose();
   }
 
-  void _snack(String msg) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -58,7 +56,9 @@ class _PasswordSecurityScreenState
 
       if (!mounted) return;
 
-      await res.fold((f) async => _snack(f.message), (msg) async {
+      await res.fold((f) async => ShowSnack(context, f.message).error(), (
+        msg,
+      ) async {
         _old.clear();
         _new.clear();
         _confirm.clear();
@@ -119,7 +119,7 @@ class _PasswordSecurityScreenState
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Change Password'),
+        title: Text('Change Password', style: context.h4),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -147,11 +147,6 @@ class _PasswordSecurityScreenState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const SizedBox(height: 6),
-                              const Text(
-                                'Old password',
-                                style: TextStyle(fontWeight: FontWeight.w700),
-                              ),
-                              const SizedBox(height: 8),
                               AppPasswordFormField(
                                 controller: _old,
                                 label: 'Current Password',
@@ -159,12 +154,8 @@ class _PasswordSecurityScreenState
                                 textInputAction: TextInputAction.next,
                                 autofillHints: const [AutofillHints.password],
                               ),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'New password',
-                                style: TextStyle(fontWeight: FontWeight.w700),
-                              ),
                               const SizedBox(height: 8),
+
                               AppPasswordFormField(
                                 controller: _new,
                                 label: 'New Password',
@@ -172,19 +163,13 @@ class _PasswordSecurityScreenState
                                 textInputAction: TextInputAction.next,
                                 autofillHints: const [AutofillHints.password],
                               ),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'Confirm password',
-                                style: TextStyle(fontWeight: FontWeight.w700),
-                              ),
                               const SizedBox(height: 8),
+
                               AppPasswordFormField(
                                 controller: _confirm,
                                 label: 'Confirm Password',
-                                validator: (v) => Validators.confirmPassword(
-                                  v,
-                                  _confirm.text,
-                                ),
+                                validator: (v) =>
+                                    Validators.confirmPassword(v, _new.text),
 
                                 textInputAction: TextInputAction.done,
                                 autofillHints: const [AutofillHints.password],
@@ -254,14 +239,9 @@ class _SegmentButton extends StatelessWidget {
           color: selected ? scheme.primary : Colors.transparent,
           borderRadius: _pill,
         ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: selected ? scheme.onPrimary : context.appColors.textMuted,
-          ),
-        ),
+        child: selected
+            ? Text(text, style: context.button)
+            : Text(text, style: context.p),
       ),
     );
   }

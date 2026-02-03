@@ -2,49 +2,55 @@ import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
 class SocialButton extends StatelessWidget {
   const SocialButton({
     super.key,
     required this.icon,
-    required this.text,
-    this.onTap,
+    required this.label,
+    this.onPressed,
+    this.loading = false,
   });
 
   final Widget icon;
-  final String text;
-  final VoidCallback? onTap;
+  final String label;
+  final VoidCallback? onPressed;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
 
-    return Expanded(
-      child: InkWell(
-        borderRadius: AppTheme.fieldRadius,
-        onTap: onTap,
-        child: Container(
-          height: 56,
-          decoration: BoxDecoration(
-            borderRadius: AppTheme.fieldRadius,
-            border: Border.all(color: context.appColors.border),
-            color: scheme.surface,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              icon,
-              const SizedBox(width: 10),
-              Text(
-                text,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: context.appColors.textPrimary,
+    return SizedBox(
+      height: 54,
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: loading ? null : onPressed,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: context.appColors.primary,
+          side: BorderSide(color: colors.border),
+          shape: const RoundedRectangleBorder(borderRadius: AppTheme.pill),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (loading)
+              SizedBox(
+                height: 18,
+                width: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
                 ),
-              ),
-            ],
-          ),
+              )
+            else
+              icon,
+            const SizedBox(width: 10),
+            Text(loading ? 'Signing in…' : label, style: context.p),
+          ],
         ),
       ),
     );

@@ -9,6 +9,7 @@ import 'package:africaonlinestores/features/auth/providers/auth_controller.dart'
 import 'package:africaonlinestores/features/auth/shared/widgets/otp_resend_row.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/otp_section.dart';
 
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 import 'package:africaonlinestores/ui/components/app_success_sheet.dart';
 
 enum OtpPurpose { emailVerification, passwordReset }
@@ -29,13 +30,12 @@ class VerifyOTPScreen extends ConsumerStatefulWidget {
 
 class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
   bool _loading = false;
-  bool _resending = false;
 
   String _otp = '';
 
   Future<void> _verify() async {
     if (_otp.length != 6) {
-      showAppSnack(context, 'Enter the 6-digit code');
+      ShowSnack(context, 'Enter the 6-digit code').error();
       return;
     }
 
@@ -49,7 +49,7 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
 
       if (!mounted) return;
 
-      await result.fold((f) async => showAppSnack(context, f.message), (
+      await result.fold((f) async => ShowSnack(context, f.message).error(), (
         right,
       ) async {
         if (!mounted) return;
@@ -64,7 +64,7 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
         }
 
         // email verification success
-        showAppSnack(context, right);
+        ShowSnack(context, right).success();
 
         await showModalBottomSheet(
           context: context,
@@ -90,14 +90,13 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      showAppSnack(context, 'Unexpected error: $e');
+      ShowSnack(context, 'Unexpected error: $e').error();
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _resend() async {
-    setState(() => _resending = true);
     try {
       final ctrl = ref.read(authControllerProvider.notifier);
 
@@ -108,28 +107,20 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
       if (!mounted) return;
 
       result.fold(
-        (f) => showAppSnack(context, f.message),
-        (msg) => showAppSnack(context, msg),
+        (f) => ShowSnack(context, f.message).error(),
+        (msg) => ShowSnack(context, msg).success(),
       );
     } catch (e) {
       if (!mounted) return;
-      showAppSnack(context, 'Unexpected error: $e');
-    } finally {
-      if (mounted) setState(() => _resending = false);
+      ShowSnack(context, 'Unexpected error: $e').error();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenTitle = (widget.purpose == OtpPurpose.passwordReset)
-        ? 'Enter Verification Code'
-        : 'Verification';
-    final header = (widget.purpose == OtpPurpose.passwordReset)
-        ? 'Enter Verification Code'
-        : 'Verify OTP';
-    final subtitle = (widget.purpose == OtpPurpose.passwordReset)
-        ? 'We have sent a verification code to your email address'
-        : 'We have sent the verification code to';
+    final screenTitle = 'Email Verification';
+    final header = 'Enter Verification Code';
+    final subtitle = 'We have sent the verification code to';
 
     final scheme = Theme.of(context).colorScheme;
 
@@ -137,23 +128,16 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: scheme.surface,
-        elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: scheme.onSurface),
           onPressed: () => context.pop(),
         ),
-        title: Text(
-          screenTitle,
-          style: TextStyle(
-            color: scheme.onSurface,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        title: Text(screenTitle, style: context.h3),
         centerTitle: true,
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 22),
           children: [
             OtpSection(
               header: header,
@@ -165,11 +149,7 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
               showCustomKeypad: true,
             ),
             const SizedBox(height: 18),
-            OtpResendRow(
-              resending: _resending,
-              onResend: _resending ? null : _resend,
-            ),
-            const SizedBox(height: 18),
+            OtpResendRow(onResend: _resend),
           ],
         ),
       ),

@@ -159,20 +159,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == AppRoutes.forgotPassword ||
           state.matchedLocation == AppRoutes.resetPassword;
 
-      final goingToAccount = state.matchedLocation == AppRoutes.account;
       final goingToUpdateProfile =
           state.matchedLocation == AppRoutes.updateProfile;
       final goingToPasswordSecurity =
           state.matchedLocation == AppRoutes.passwordSecurity;
-      final goingTopreference = state.matchedLocation == AppRoutes.preference;
       final goingToTerms = state.matchedLocation == AppRoutes.terms;
       final goingToPrivacy = state.matchedLocation == AppRoutes.privacy;
 
       if (!auth.isLoggedIn &&
-          (goingToAccount ||
-              goingToUpdateProfile ||
-              goingToPasswordSecurity ||
-              goingTopreference)) {
+          (goingToUpdateProfile || goingToPasswordSecurity)) {
         return AppRoutes.login;
       }
 

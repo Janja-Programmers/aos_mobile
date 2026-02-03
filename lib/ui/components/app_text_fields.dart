@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+
 /// Shared app text inputs that rely on the app's [InputDecorationTheme].
 ///
 /// Use [AppFormField] for forms (validation) and [AppTextField] for simple inputs.
@@ -147,6 +149,7 @@ class _AppPasswordFormFieldState extends State<AppPasswordFormField> {
         onPressed: () => setState(() => _obscure = !_obscure),
         icon: Icon(
           _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          color: context.appColors.primary,
         ),
       ),
     );

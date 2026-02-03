@@ -14,10 +14,11 @@ class AppTheme {
     final scheme = ColorScheme.fromSeed(
       seedColor: tokens.primary,
       brightness: Brightness.light,
-      surfaceBright: tokens.surface,
+      surfaceBright: tokens.surfaceBright,
       surface: tokens.surface,
       primary: tokens.primary,
       onPrimary: tokens.primaryHover,
+      tertiary: tokens.border,
     );
 
     return ThemeData(
@@ -69,11 +70,14 @@ class AppTheme {
     const tokens = AppColorTokens.dark;
 
     // You can also use fromSeed here. Your current dark scheme is fine.
-    final scheme = const ColorScheme.dark(
-      primary: Colors.white,
-      onPrimary: Colors.black,
-      surface: Color(0xFF121212),
-      onSurface: Color(0xFFF5F5F5),
+    final scheme = ColorScheme.fromSeed(
+      seedColor: tokens.primary,
+      brightness: Brightness.light,
+      surfaceBright: tokens.surface,
+      surface: tokens.surface,
+      primary: tokens.primary,
+      onPrimary: tokens.primaryHover,
+      tertiary: tokens.border,
     );
 
     return ThemeData(

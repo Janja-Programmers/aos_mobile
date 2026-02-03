@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:africaonlinestores/features/account/ui/widgets/editable_avator.dart';
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -295,7 +297,7 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Update Profile'),
+        title: Text('Update Profile', style: context.h3),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).maybePop(),
@@ -311,7 +313,7 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
                   const SizedBox(height: 8),
 
                   Center(
-                    child: _EditableAvatar(
+                    child: EditableAvatar(
                       baseUrl: baseUrl,
                       authFullName: auth.user?.fullName ?? '',
                       authUserImage: auth.user?.userImage ?? '',
@@ -323,24 +325,13 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
                   ),
 
                   const SizedBox(height: 24),
-
-                  const Text(
-                    'Full Name',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
                   TextField(
                     controller: _nameCtrl,
                     textInputAction: TextInputAction.next,
                     decoration: _decor(context, label: 'Full name'),
                   ),
 
-                  const SizedBox(height: 18),
-                  const Text(
-                    'Email',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 24),
                   TextField(
                     controller: _emailCtrl,
                     readOnly: true,
@@ -349,13 +340,13 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
                       label: 'Email',
                       suffix: Icon(
                         Icons.lock_outline,
-                        color: colors.textMuted,
+                        color: colors.primary,
                         size: 18,
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 34),
+                  const SizedBox(height: 24),
                   PrimaryButton(
                     text: 'Save Changes',
                     onPressed: (_saving || _uploadingPhoto) ? null : _save,
@@ -364,106 +355,6 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
                 ],
               ),
             ),
-    );
-  }
-}
-
-class _EditableAvatar extends StatelessWidget {
-  const _EditableAvatar({
-    required this.baseUrl,
-    required this.authFullName,
-    required this.authUserImage,
-    required this.apiUserImage,
-    required this.localPhoto,
-    required this.uploading,
-    required this.onTapCamera,
-  });
-
-  final String baseUrl;
-  final String authFullName;
-  final String authUserImage;
-  final String apiUserImage;
-  final File? localPhoto;
-  final bool uploading;
-  final VoidCallback onTapCamera;
-
-  static const BorderRadius _pill = BorderRadius.all(Radius.circular(99));
-
-  ImageProvider<Object>? _imageProvider() {
-    if (localPhoto != null) return FileImage(localPhoto!);
-
-    if (apiUserImage.isNotEmpty) return NetworkImage('$baseUrl$apiUserImage');
-
-    if (authUserImage.isNotEmpty) return NetworkImage('$baseUrl$authUserImage');
-
-    return null;
-  }
-
-  String _initial() {
-    final name = authFullName.trim();
-    if (name.isEmpty) return 'U';
-    return name.substring(0, 1).toUpperCase();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colors = context.appColors;
-
-    final img = _imageProvider();
-    final hasImage = img != null;
-
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        CircleAvatar(
-          radius: 46,
-          backgroundColor: colors.surface,
-          backgroundImage: img,
-          child: hasImage
-              ? null
-              : Text(
-                  _initial(),
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
-                ),
-        ),
-        Positioned(
-          bottom: 0,
-          right: 0,
-          child: InkWell(
-            onTap: onTapCamera,
-            borderRadius: _pill,
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: scheme.primary,
-                borderRadius: _pill,
-                border: Border.all(color: scheme.surface, width: 2),
-              ),
-              child: uploading
-                  ? Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          scheme.onPrimary,
-                        ),
-                      ),
-                    )
-                  : Icon(
-                      Icons.camera_alt_outlined,
-                      color: scheme.onPrimary,
-                      size: 18,
-                    ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

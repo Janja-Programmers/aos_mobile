@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
 class PrimaryButton extends StatelessWidget {
@@ -30,7 +31,7 @@ class PrimaryButton extends StatelessWidget {
                   valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
                 ),
               )
-            : Text(text),
+            : Text(text, style: context.button),
       ),
     );
   }

@@ -18,7 +18,7 @@ class HomeScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.red,
       appBar: AppBar(title: const Text('AOS Home'), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(22),

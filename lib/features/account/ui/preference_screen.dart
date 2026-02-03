@@ -3,7 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/utils/app_snack.dart';
+
+import 'package:africaonlinestores/features/account/ui/widgets/locale_picker_page.dart';
+import 'package:africaonlinestores/features/account/ui/widgets/pref_card.dart';
 import 'package:africaonlinestores/features/localization/domain/locale_bundle.dart';
+
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
 
 class PreferenceScreen extends ConsumerStatefulWidget {
@@ -70,7 +75,7 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
           onPressed: () => Navigator.pop(context),
           color: colors.textPrimary,
         ),
-        title: Text('Preferences', style: TextStyle(color: colors.textPrimary)),
+        title: Text('Preferences', style: context.h3),
       ),
       body: bundleAsync.when(
         data: (bundle) {
@@ -95,77 +100,89 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Manage how the app works for you',
-                  style: TextStyle(color: colors.textMuted, fontSize: 16),
-                ),
+                Text('Manage how the app works for you', style: context.p),
                 const SizedBox(height: 16),
 
-                _PrefCard(
+                PrefCard(
                   leading: Icons.language,
                   title: 'Language',
                   value: languageLabel,
                   description: 'Controls how text appears in the app.',
-                  onTap: () => _openPickerBottomSheet(
-                    context,
-                    title: 'Language',
-                    items: bundle.languages,
-                    value: _language,
-                    onChanged: (v) => setState(() {
-                      _dirty = true;
-                      _language = v;
-                    }),
-                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => LocalePickerPage(
+                          title: 'Languages',
+                          items: bundle.languages,
+                          initialValue: _language,
+                          onChanged: (v) => setState(() {
+                            _dirty = true;
+                            _language = v;
+                          }),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                const SizedBox(height: 14),
 
-                _PrefCard(
+                PrefCard(
                   leading: Icons.location_on,
                   title: 'Country',
                   value: countryLabel,
                   description:
                       'Determines nearby listings and where your ads appear.',
-                  onTap: () => _openPickerBottomSheet(
-                    context,
-                    title: 'Country',
-                    items: bundle.countries,
-                    value: _country,
-                    onChanged: (v) => setState(() {
-                      _dirty = true;
-                      _country = v;
-                    }),
-                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => LocalePickerPage(
+                          title: 'Country',
+                          items: bundle.countries,
+                          initialValue: _country,
+                          onChanged: (v) => setState(() {
+                            _dirty = true;
+                            _country = v;
+                          }),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                const SizedBox(height: 14),
 
-                _PrefCard(
+                PrefCard(
                   leading: Icons.attach_money,
                   title: 'Currency',
                   value: currencyLabel,
                   description:
                       'Used for prices when viewing and posting listings.',
-                  onTap: () => _openPickerBottomSheet(
-                    context,
-                    title: 'Currency',
-                    items: bundle.currencies,
-                    value: _currency,
-                    onChanged: (v) => setState(() {
-                      _dirty = true;
-                      _currency = v;
-                    }),
-                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => LocalePickerPage(
+                          title: 'Currency',
+                          items: bundle.currencies,
+                          initialValue: _currency,
+                          onChanged: (v) => setState(() {
+                            _dirty = true;
+                            _currency = v;
+                          }),
+                        ),
+                      ),
+                    );
+                  },
                 ),
 
-                const SizedBox(height: 18),
-
-                _PrefCard(
+                PrefCard(
                   leading: Icons.my_location,
                   leadingColor: scheme.primary,
                   title: 'Use my current location',
                   titleColor: scheme.primary,
                   value: '',
                   showChevron: false,
-                  description: '',
+                  description:
+                      'Automatically sets language, country, and currency.',
                   onTap: _saving
                       ? null
                       : () => setState(() {
@@ -173,14 +190,6 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
                           _useDeviceDefaults(bundle);
                         }),
                 ),
-
-                const SizedBox(height: 10),
-                Text(
-                  'Automatically sets language, country, and currency.',
-                  style: TextStyle(color: colors.textMuted, fontSize: 14),
-                ),
-
-                const SizedBox(height: 18),
 
                 PrimaryButton(
                   text: 'Update',
@@ -234,106 +243,16 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
     _currency = bundle.baseCurrencyCode;
   }
 
-  void _openPickerBottomSheet(
-    BuildContext context, {
-    required String title,
-    required List<LocaleOption> items,
-    required String? value,
-    required ValueChanged<String> onChanged,
-  }) {
-    final scheme = Theme.of(context).colorScheme;
-
-    // De-dupe (defensive): avoid Dropdown/List issues if API returns duplicates.
-    final seen = <String>{};
-    final safeItems = <LocaleOption>[];
-    for (final it in items) {
-      if (it.code.isEmpty) continue;
-      if (seen.contains(it.code)) continue;
-      seen.add(it.code);
-      safeItems.add(it);
-    }
-
-    final normalizedValue = _normalizeToCode(safeItems, value);
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: scheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 10),
-              Container(
-                width: 44,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(99),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Done'),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              Flexible(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: safeItems.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (_, i) {
-                    final it = safeItems[i];
-                    final selected = it.code == normalizedValue;
-                    return ListTile(
-                      title: Text(it.label),
-                      trailing: selected
-                          ? const Icon(Icons.check)
-                          : const SizedBox(),
-                      onTap: () {
-                        onChanged(it.code);
-                        Navigator.pop(ctx);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Future<void> _save(BuildContext context) async {
     final country = _country;
     final language = _language;
     final currency = _currency;
 
     if (country == null || language == null || currency == null) {
-      showAppSnack(context, 'Please select country, language and currency.');
+      ShowSnack(
+        context,
+        'Please select country, language and currency.',
+      ).error();
       return;
     }
 
@@ -349,109 +268,12 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
 
       if (mounted) {
         setState(() => _dirty = false);
-        showAppSnack(context, 'Preferences updated.');
+        ShowSnack(context, 'Preferences updated.').success();
       }
     } catch (_) {
-      if (mounted) showAppSnack(context, 'Failed to update preferences.');
+      if (mounted) ShowSnack(context, 'Failed to update preferences.').error();
     } finally {
       if (mounted) setState(() => _saving = false);
     }
-  }
-}
-
-class _PrefCard extends StatelessWidget {
-  const _PrefCard({
-    required this.leading,
-    required this.title,
-    required this.value,
-    required this.description,
-    required this.onTap,
-    this.leadingColor,
-    this.titleColor,
-    this.showChevron = true,
-  });
-
-  final IconData leading;
-  final String title;
-  final String value;
-  final String description;
-  final VoidCallback? onTap;
-
-  final Color? leadingColor;
-  final Color? titleColor;
-  final bool showChevron;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final scheme = Theme.of(context).colorScheme;
-
-    return Material(
-      color: colors.surface,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: (leadingColor ?? scheme.primary).withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(leading, color: leadingColor ?? scheme.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: titleColor ?? colors.textPrimary,
-                            ),
-                          ),
-                        ),
-                        if (showChevron)
-                          Icon(Icons.chevron_right, color: colors.textMuted),
-                      ],
-                    ),
-                    if (value.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        value,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                    ],
-                    if (description.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        description,
-                        style: TextStyle(fontSize: 13, color: colors.textMuted),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

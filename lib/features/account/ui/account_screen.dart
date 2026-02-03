@@ -82,6 +82,12 @@ class AccountScreen extends ConsumerWidget {
           AccountCard(
             child: Column(
               children: [
+                if (user != null)
+                  AccountOptionTile(
+                    icon: Icons.list_alt_outlined,
+                    title: 'My Listings',
+                    onTap: () => context.push(AppRoutes.myAds),
+                  ),
                 AccountOptionTile(
                   icon: Icons.lock_outline,
                   title: 'Password & Security',

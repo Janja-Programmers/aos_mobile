@@ -108,4 +108,66 @@ class AdsApi {
       return Either.left(const Failure('Failed to create ad.'));
     }
   }
+
+  Future<Either<Failure, Map<String, dynamic>>> listAds({
+    required String countryCode,
+    String? locationId,
+    String? categoryId,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final res = await _dio.get(
+        ApiEndpoints.listAdsEndpoint,
+        queryParameters: {
+          'country': countryCode,
+          if (locationId != null && locationId.trim().isNotEmpty)
+            'location': locationId,
+          if (categoryId != null && categoryId.trim().isNotEmpty)
+            'category': categoryId,
+          'limit': limit,
+          'offset': offset,
+        },
+      );
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to fetch ads.'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> myAds({
+    String status = 'Active',
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final res = await _dio.get(
+        ApiEndpoints.myAdsEndpoint,
+        queryParameters: {'status': status, 'limit': limit, 'offset': offset},
+      );
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to fetch your ads.'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> getAd({
+    required String id,
+  }) async {
+    try {
+      final res = await _dio.get(
+        ApiEndpoints.getAdEndpoint,
+        queryParameters: {'ad_id': id},
+      );
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to fetch ad details.'));
+    }
+  }
 }

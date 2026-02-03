@@ -45,7 +45,7 @@ class AppBottomNav extends ConsumerWidget {
                   context.go(AppRoutes.categories);
                   break;
                 case 2:
-                  context.go(AppRoutes.adList);
+                  context.go(AppRoutes.createAd);
                   break;
                 case 3:
                   context.go(AppRoutes.home);
@@ -54,7 +54,7 @@ class AppBottomNav extends ConsumerWidget {
                   context.go(AppRoutes.account);
                   break;
                 default:
-                  context.go(AppRoutes.adList);
+                  context.go(AppRoutes.home);
                   break;
               }
             },

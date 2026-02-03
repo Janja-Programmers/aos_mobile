@@ -38,6 +38,14 @@ class ApiEndpoints {
   static final String createAdEndpoint =
       '/api/method/aos.api.ads.create_ad';
 
+  // Read Ads
+  static final String listAdsEndpoint =
+      '/api/method/aos.api.ads.list_ads';
+  static final String myAdsEndpoint =
+      '/api/method/aos.api.ads.my_ads';
+  static final String getAdEndpoint =
+      '/api/method/aos.api.ads.get_ad';
+
   // Localization Endpoints
   static final String getLocaleBundleEndpoint =
       '/api/method/aos.api.localization.get_locale_bundle';

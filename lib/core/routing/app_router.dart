@@ -10,7 +10,6 @@ import 'package:africaonlinestores/features/auth/ui/register_screen.dart';
 import 'package:africaonlinestores/features/auth/ui/verify_otp_screen.dart';
 import 'package:africaonlinestores/features/auth/ui/forgot_password_screen.dart';
 import 'package:africaonlinestores/features/auth/ui/reset_password_screen.dart';
-import 'package:africaonlinestores/features/home/ui/home_screen.dart';
 import 'package:africaonlinestores/features/catalog/ui/categories_screen.dart';
 import 'package:africaonlinestores/features/account/ui/notification_screen.dart';
 import 'package:africaonlinestores/features/account/ui/account_screen.dart';
@@ -20,7 +19,9 @@ import 'package:africaonlinestores/features/account/ui/update_profile_screen.dar
 import 'package:africaonlinestores/features/account/ui/password_security_screen.dart';
 import 'package:africaonlinestores/features/account/ui/preference_screen.dart';
 
-import 'package:africaonlinestores/features/ads/ui/ad_list.dart';
+import 'package:africaonlinestores/features/ads/ui/ad_list_screen.dart';
+import 'package:africaonlinestores/features/ads/ui/ad_details_screen.dart';
+import 'package:africaonlinestores/features/ads/ui/my_ads_screen.dart';
 import 'package:africaonlinestores/features/ads/ui/create_ad_flow_screen.dart';
 import 'package:africaonlinestores/features/ads/ui/pickers/select_category_screen.dart';
 import 'package:africaonlinestores/features/ads/ui/pickers/select_location_screen.dart';
@@ -43,18 +44,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
     routes: [
       GoRoute(
-        path: AppRoutes.home,
-        builder: (context, state) => const HomeScreen(),
-      ),
-      GoRoute(
         path: AppRoutes.categories,
         builder: (context, state) => const CategoriesScreen(),
       ),
 
       // Ads / Listings
       GoRoute(
-        path: AppRoutes.adList,
+        path: AppRoutes.home,
         builder: (context, state) => const AdListScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.myAds,
+        builder: (context, state) => const MyAdsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.adDetails,
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          return AdDetailsScreen(id: id);
+        },
       ),
       GoRoute(
         path: AppRoutes.createAd,

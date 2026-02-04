@@ -58,15 +58,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const MyAdsScreen(),
       ),
       GoRoute(
+        path: AppRoutes.createAd,
+        builder: (context, state) => const CreateAdFlowScreen(),
+      ),
+      // IMPORTANT: keep static routes (like /ads/create) BEFORE dynamic ones (like /ads/:id)
+      // otherwise /ads/create gets matched as id="create".
+      GoRoute(
         path: AppRoutes.adDetails,
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           return AdDetailsScreen(id: id);
         },
-      ),
-      GoRoute(
-        path: AppRoutes.createAd,
-        builder: (context, state) => const CreateAdFlowScreen(),
       ),
       GoRoute(
         path: AppRoutes.selectCategory,

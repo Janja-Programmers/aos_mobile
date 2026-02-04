@@ -174,7 +174,7 @@ class LocalizationApi {
     return UserPreferencesDto(
       countryCode: (country['code'] ?? '').toString(),
       languageCode: (language['code'] ?? 'en').toString(),
-      currencyCode: (currency['code'] ?? 'USD').toString(),
+      currencyCode: (currency['code'] ?? 'KES').toString(),
       timezone: (m['timezone'] ?? '').toString(),
 
       languageOverridden: overrides['language'] == true,

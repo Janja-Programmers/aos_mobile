@@ -84,15 +84,10 @@ class AccountScreen extends ConsumerWidget {
               children: [
                 if (user != null)
                   AccountOptionTile(
-                    icon: Icons.list_alt_outlined,
-                    title: 'My Listings',
-                    onTap: () => context.push(AppRoutes.myAds),
+                    icon: Icons.lock_outline,
+                    title: 'Password & Security',
+                    onTap: () => context.push(AppRoutes.passwordSecurity),
                   ),
-                AccountOptionTile(
-                  icon: Icons.lock_outline,
-                  title: 'Password & Security',
-                  onTap: () => context.push(AppRoutes.passwordSecurity),
-                ),
 
                 AccountOptionTile(
                   icon: Icons.notifications_none,
@@ -156,8 +151,8 @@ class AccountScreen extends ConsumerWidget {
                     backgroundColor: Colors.transparent,
                     builder: (sheetContext) {
                       return AppConfirmSheet(
-                        icon: Icons.error_outline,
-                        iconBg: scheme.errorContainer,
+                        icon: Icons.warning_rounded,
+                        iconBg: scheme.primary,
                         title: 'Logout',
                         message:
                             'Are you sure you want to log out? You will need to sign in again to access your account.',

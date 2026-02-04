@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/utils/app_snack.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/providers/ads_api_provider.dart';
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
 class AdDetailsScreen extends ConsumerStatefulWidget {
   const AdDetailsScreen({super.key, required this.id});
@@ -32,7 +33,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
       _err = null;
     });
 
-    final res = await ref.read(adsApiProvider).getAd(id: widget.id);
+    final res = await ref.read(adsApiProvider).getAd(id: "AD-2026-00009");
     if (!mounted) return;
 
     res.fold(
@@ -68,7 +69,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(''),
+        title: Text('AD DETAIL SCREEN', style: context.h4),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -81,7 +82,10 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                   children: [
                     Text(_err!, textAlign: TextAlign.center),
                     const SizedBox(height: 12),
-                    FilledButton(onPressed: _load, child: const Text('Retry')),
+                    FilledButton(
+                      onPressed: _load,
+                      child: const Text('Retried'),
+                    ),
                   ],
                 ),
               ),

@@ -110,7 +110,7 @@ class AdsApi {
   }
 
   Future<Either<Failure, Map<String, dynamic>>> listAds({
-    required String countryCode,
+    required String countryName,
     String? locationId,
     String? categoryId,
     int limit = 20,
@@ -120,7 +120,7 @@ class AdsApi {
       final res = await _dio.get(
         ApiEndpoints.listAdsEndpoint,
         queryParameters: {
-          'country': countryCode,
+          'country': countryName,
           if (locationId != null && locationId.trim().isNotEmpty)
             'location': locationId,
           if (categoryId != null && categoryId.trim().isNotEmpty)

@@ -24,8 +24,10 @@ class AOSAdListItem {
   final String coverImage;
 
   factory AOSAdListItem.fromJson(Map<String, dynamic> json) {
-    final images = (json['images'] is List) ? (json['images'] as List) : const [];
-    String cover = (json['cover_image'] ?? json['image'] ?? '').toString();
+    final images = (json['images'] is List)
+        ? (json['images'] as List)
+        : const [];
+    String cover = (json['primary_image'] ?? json['image'] ?? '').toString();
     if (cover.isEmpty && images.isNotEmpty) {
       final first = images.first;
       if (first is Map) {
@@ -43,8 +45,10 @@ class AOSAdListItem {
       id: (json['id'] ?? json['name'] ?? '').toString(),
       title: (json['title'] ?? '').toString(),
       country: (json['country'] ?? '').toString(),
-      locationName: (json['location_name'] ?? json['location'] ?? '').toString(),
-      categoryName: (json['category_name'] ?? json['category'] ?? '').toString(),
+      locationName: (json['location_name'] ?? json['location'] ?? '')
+          .toString(),
+      categoryName: (json['category_name'] ?? json['category'] ?? '')
+          .toString(),
       currency: (json['currency'] ?? '').toString(),
       priceType: (json['price_type'] ?? '').toString(),
       price: price,
@@ -114,7 +118,13 @@ class AOSAdDetails {
       for (final e in rawSpecs) {
         if (e is Map) {
           final k = (e['label'] ?? e['name'] ?? e['key'] ?? '').toString();
-          final v = (e['value'] ?? e['value_text'] ?? e['value_number'] ?? e['value_date'] ?? '').toString();
+          final v =
+              (e['value'] ??
+                      e['value_text'] ??
+                      e['value_number'] ??
+                      e['value_date'] ??
+                      '')
+                  .toString();
           if (k.isNotEmpty && v.isNotEmpty) {
             specs.add({'label': k, 'value': v});
           }
@@ -127,8 +137,10 @@ class AOSAdDetails {
       title: (json['title'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
       country: (json['country'] ?? '').toString(),
-      locationName: (json['location_name'] ?? json['location'] ?? '').toString(),
-      categoryName: (json['category_name'] ?? json['category'] ?? '').toString(),
+      locationName: (json['location_name'] ?? json['location'] ?? '')
+          .toString(),
+      categoryName: (json['category_name'] ?? json['category'] ?? '')
+          .toString(),
       description: (json['description'] ?? '').toString(),
       currency: (json['currency'] ?? '').toString(),
       priceType: (json['price_type'] ?? '').toString(),

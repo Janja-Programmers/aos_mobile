@@ -3,15 +3,50 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/features/auth/providers/auth_controller.dart';
+import 'package:africaonlinestores/ui/components/app_confirm_sheet.dart';
 
 class AppBottomNav extends ConsumerWidget {
   final int currentIndex;
 
   const AppBottomNav({super.key, required this.currentIndex});
 
+  Future<void> _showLoginRequiredSheet(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final scheme = Theme.of(context).colorScheme;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return AppConfirmSheet(
+          icon: Icons.lock_outlined,
+          iconBg: scheme.primary,
+          title: 'Login required',
+          message: 'Please login to access selling',
+          primaryText: 'Cancel',
+          secondaryText: 'Log in',
+          onPrimary: () => Navigator.of(sheetContext).pop(),
+          onSecondary: () {
+            Navigator.of(sheetContext).pop();
+
+            if (context.mounted) {
+              context.go(AppRoutes.login);
+            }
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final authState = ref.watch(authControllerProvider);
+    final user = authState.user;
 
     return SafeArea(
       child: Container(
@@ -26,35 +61,38 @@ class AppBottomNav extends ConsumerWidget {
             type: BottomNavigationBarType.fixed,
             backgroundColor: context.appColors.surfaceBright,
             elevation: 0,
-
             selectedItemColor: scheme.primary,
             unselectedItemColor: context.appColors.textMuted,
-
             selectedFontSize: 12,
             unselectedFontSize: 12,
-
             selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
 
-            onTap: (index) {
+            // ✅ make onTap async because we await the sheet
+            onTap: (index) async {
               switch (index) {
                 case 0:
                   context.go(AppRoutes.home);
                   break;
+
                 case 1:
                   context.go(AppRoutes.categories);
                   break;
+
                 case 2:
+                  if (user == null) {
+                    await _showLoginRequiredSheet(context, ref);
+                  } else {
+                    context.go(AppRoutes.myAds);
+                  }
+                  break;
+
+                case 3:
                   context.go(AppRoutes.createAd);
                   break;
-                case 3:
-                  context.go(AppRoutes.home);
-                  break;
+
                 case 4:
                   context.go(AppRoutes.account);
-                  break;
-                default:
-                  context.go(AppRoutes.home);
                   break;
               }
             },
@@ -90,7 +128,6 @@ class AppBottomNav extends ConsumerWidget {
                   ),
                 ),
               ),
-
               _item(
                 context,
                 icon: Icons.chat_bubble_outline,

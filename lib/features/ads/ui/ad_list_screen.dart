@@ -1,14 +1,15 @@
+import 'package:africaonlinestores/core/localization/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/localization/locale_controller.dart';
-import 'package:africaonlinestores/core/routing/app_routes.dart';
-import 'package:africaonlinestores/core/utils/app_snack.dart';
+import 'package:africaonlinestores/core/providers.dart';
 
-import 'package:africaonlinestores/features/ads/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-import 'package:africaonlinestores/features/ads/ui/widgets/ad_card.dart';
+import 'package:africaonlinestores/features/ads/ui/sections/ads_content.dart';
+import 'package:africaonlinestores/features/ads/ui/sections/ads_empty.dart';
+import 'package:africaonlinestores/features/ads/ui/sections/ads_error.dart';
+import 'package:africaonlinestores/features/ads/ui/sections/ads_loading.dart';
 
 class AdListScreen extends ConsumerStatefulWidget {
   const AdListScreen({super.key});
@@ -22,12 +23,14 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
   bool _loading = false;
   bool _loadingMore = false;
   bool _hasMore = true;
+  String? _error;
   int _offset = 0;
   static const _limit = 20;
 
   Future<void> _refresh() async {
     _offset = 0;
     _hasMore = true;
+    _error = null;
     _items.clear();
     await _load(initial: true);
   }
@@ -39,10 +42,23 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
     final prefs = ref
         .read(localeControllerProvider)
         .maybeWhen(data: (v) => v, orElse: () => null);
-    final country = (prefs?.countryCode ?? '').trim();
-    if (country.isEmpty) {
-      return;
+
+    final codeOrLabel = (prefs?.countryCode ?? '').trim();
+    if (codeOrLabel.isEmpty) return;
+
+    // Backend expects a country NAME for list_ads
+    const fallbackCountryName = 'Kenya';
+    String countryName = fallbackCountryName;
+
+    try {
+      final bundle = await ref.read(localeBundleProvider.future);
+      countryName =
+          labelFor(bundle.countries, codeOrLabel) ?? fallbackCountryName;
+    } catch (_) {
+      countryName = fallbackCountryName;
     }
+
+    if (countryName.trim().isEmpty) return;
 
     setState(() {
       if (initial) {
@@ -54,23 +70,23 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
 
     final res = await ref
         .read(adsApiProvider)
-        .listAds(countryCode: country, limit: _limit, offset: _offset);
+        .listAds(countryName: countryName, limit: _limit, offset: _offset);
     if (!mounted) return;
 
     res.fold(
       (f) {
-        ShowSnack(context, f.message).error();
+        setState(() => _error = f.message);
       },
       (data) {
-        final raw = data['data'];
-        final list = <AOSAdListItem>[];
-        if (raw is Map && raw['items'] is List) {
-          for (final e in (raw['items'] as List)) {
-            if (e is Map) {
-              list.add(AOSAdListItem.fromJson(Map<String, dynamic>.from(e)));
-            }
-          }
-        }
+        final payload = data['data'];
+        final rawItems = payload['items'];
+
+        if (rawItems is! List) return;
+
+        final list = rawItems
+            .whereType<Map<String, dynamic>>()
+            .map(AOSAdListItem.fromJson)
+            .toList();
 
         setState(() {
           if (_offset == 0) _items.clear();
@@ -91,117 +107,39 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load(initial: true));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _load(initial: true);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(localeControllerProvider, (_, _) => _refresh());
+
     final prefs = ref
         .watch(localeControllerProvider)
         .maybeWhen(data: (v) => v, orElse: () => null);
     final country = (prefs?.countryCode ?? '').trim();
 
-    if (country.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.public, size: 48),
-              const SizedBox(height: 12),
-              const Text(
-                'Select your country to browse ads.',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'You can set it in Preferences.',
-                style: TextStyle(color: Theme.of(context).hintColor),
-              ),
-            ],
-          ),
-        ),
-      );
+    if (_loading && _items.isEmpty) {
+      return const AdListLoadingView();
     }
 
-    return NotificationListener<ScrollNotification>(
-      onNotification: (n) {
-        if (n.metrics.pixels >= n.metrics.maxScrollExtent - 240) {
-          _load();
-        }
-        return false;
-      },
-      child: RefreshIndicator(
-        onRefresh: _refresh,
-        child: _loading && _items.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : CustomScrollView(
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                    sliver: SliverToBoxAdapter(
-                      child: Row(
-                        children: [
-                          const Text(
-                            'Popular Products',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            country,
-                            style: TextStyle(
-                              color: Theme.of(context).hintColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 0.75,
-                          ),
-                      delegate: SliverChildBuilderDelegate((context, i) {
-                        final ad = _items[i];
-                        return AdCard(
-                          ad: ad,
-                          onTap: () {
-                            context.push(AppRoutes.adDetailsPath(ad.id));
-                          },
-                        );
-                      }, childCount: _items.length),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: _loadingMore
-                          ? const Center(child: CircularProgressIndicator())
-                          : (!_hasMore && _items.isNotEmpty)
-                          ? Text(
-                              'No more ads.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Theme.of(context).hintColor,
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ),
-                ],
-              ),
-      ),
+    if (_error != null && _items.isEmpty) {
+      return AdListErrorView(message: _error!, onRetry: _refresh);
+    }
+
+    if (!_loading && _items.isEmpty) {
+      return AdListEmptyView(onRefresh: _refresh);
+    }
+
+    return AdListContentView(
+      items: _items,
+      country: country,
+      onLoadMore: _load,
+      onRefresh: _refresh,
+      loadingMore: _loadingMore,
+      hasMore: _hasMore,
     );
   }
 }

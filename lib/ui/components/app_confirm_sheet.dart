@@ -75,7 +75,7 @@ class AppConfirmSheet extends StatelessWidget {
                     child: Icon(
                       icon,
                       color: context.appColors.border,
-                      size: 22,
+                      size: 30,
                     ),
                   ),
                 ),

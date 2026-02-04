@@ -11,7 +11,7 @@ import 'package:africaonlinestores/features/ads/ui/steps/details_step.dart';
 import 'package:africaonlinestores/features/ads/ui/steps/description_step.dart';
 import 'package:africaonlinestores/features/ads/ui/steps/pricing_step.dart';
 import 'package:africaonlinestores/features/ads/utils/pricing_rules.dart';
-import 'package:africaonlinestores/features/ads/widgets/ad_stepper.dart';
+import 'package:africaonlinestores/features/ads/ui/widgets/ad_stepper.dart';
 import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
 
 class CreateAdFlowScreen extends ConsumerStatefulWidget {

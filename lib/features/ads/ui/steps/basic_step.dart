@@ -9,7 +9,7 @@ import 'package:africaonlinestores/core/routing/app_routes.dart';
 import 'package:africaonlinestores/features/ads/providers/ad_draft_controller.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/utils/file_url.dart';
-import 'package:africaonlinestores/features/ads/widgets/picker_field.dart';
+import 'package:africaonlinestores/features/ads/ui/widgets/picker_field.dart';
 
 class BasicStep extends ConsumerStatefulWidget {
   const BasicStep({super.key});

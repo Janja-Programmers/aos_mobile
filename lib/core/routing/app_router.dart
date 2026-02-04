@@ -19,8 +19,8 @@ import 'package:africaonlinestores/features/account/ui/update_profile_screen.dar
 import 'package:africaonlinestores/features/account/ui/password_security_screen.dart';
 import 'package:africaonlinestores/features/account/ui/preference_screen.dart';
 
-import 'package:africaonlinestores/features/ads/ui/ad_list_screen.dart';
-import 'package:africaonlinestores/features/ads/ui/ad_details_screen.dart';
+import 'package:africaonlinestores/features/home/ui/ad_list_screen.dart';
+import 'package:africaonlinestores/features/home/ui/ad_details_screen.dart';
 import 'package:africaonlinestores/features/ads/ui/my_ads_screen.dart';
 import 'package:africaonlinestores/features/ads/ui/create_ad_flow_screen.dart';
 import 'package:africaonlinestores/features/ads/ui/pickers/select_category_screen.dart';

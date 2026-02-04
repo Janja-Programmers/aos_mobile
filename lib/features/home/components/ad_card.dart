@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/features/home/utils/helpers.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
 class AdCard extends StatelessWidget {
   const AdCard({super.key, required this.ad, required this.onTap});
@@ -21,7 +23,6 @@ class AdCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: 170,
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
@@ -42,7 +43,7 @@ class AdCard extends StatelessWidget {
                         child: const Icon(Icons.image_outlined),
                       )
                     : Image.network(
-                        _toFullUrl(ad.coverImage),
+                        toFullUrl(ad.coverImage),
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) => Container(
                           color: Theme.of(
@@ -53,27 +54,46 @@ class AdCard extends StatelessWidget {
                       ),
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              ad.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 4),
-            if (subtitle.isNotEmpty)
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: Theme.of(context).hintColor),
-              ),
-            const Spacer(),
-            Text(
-              _priceText(ad),
-              style: TextStyle(
-                color: colors.onSurface,
-                fontWeight: FontWeight.w900,
+
+            const SizedBox(height: 8),
+
+            // ✅ Don't force this area to take remaining height (Expanded) —
+            // it can be too small in a grid tile and overflow.
+            Flexible(
+              fit: FlexFit.loose,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    ad.title,
+                    maxLines: 1, // ✅ tighter to avoid overflow
+                    overflow: TextOverflow.ellipsis,
+                    style: context.pStrong,
+                  ),
+
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 2), // ✅ tighter spacing
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.p,
+                    ),
+                  ],
+
+                  const SizedBox(height: 2),
+
+                  Text(
+                    priceText(ad),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: colors.onSurface,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -81,23 +101,4 @@ class AdCard extends StatelessWidget {
       ),
     );
   }
-}
-
-String _priceText(AOSAdListItem ad) {
-  final type = ad.priceType.trim();
-  if (type.toLowerCase() == 'free') return 'Free';
-  if (type.toLowerCase() == 'contact for price') return 'Contact for price';
-  if (ad.price == null) return '';
-
-  final cur = ad.currency.trim();
-  final p = ad.price!.toStringAsFixed(ad.price! % 1 == 0 ? 0 : 2);
-  final unit = ad.priceUnit.trim();
-  if (unit.isNotEmpty) return '$cur $p / $unit';
-  return '$cur $p';
-}
-
-String _toFullUrl(String fileUrl) {
-  final u = fileUrl.trim();
-  if (u.startsWith('http://') || u.startsWith('https://')) return u;
-  return u;
 }

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 import 'package:africaonlinestores/features/ads/providers/ad_draft_controller.dart';
 import 'package:africaonlinestores/features/ads/ui/pickers/select_option_screen.dart';
-import 'package:africaonlinestores/features/ads/widgets/picker_field.dart';
+import 'package:africaonlinestores/features/ads/ui/widgets/picker_field.dart';
 
 class DetailsStep extends ConsumerWidget {
   const DetailsStep({super.key, required this.schema});

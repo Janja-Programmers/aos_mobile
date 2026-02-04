@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/utils/app_snack.dart';
+import 'package:africaonlinestores/features/ads/utils/file_url.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
@@ -33,7 +36,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
       _err = null;
     });
 
-    final res = await ref.read(adsApiProvider).getAd(id: "AD-2026-00009");
+    final res = await ref.read(adsApiProvider).getAd(id: widget.id);
     if (!mounted) return;
 
     res.fold(
@@ -69,7 +72,6 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('AD DETAIL SCREEN', style: context.h4),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -82,10 +84,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                   children: [
                     Text(_err!, textAlign: TextAlign.center),
                     const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: _load,
-                      child: const Text('Retried'),
-                    ),
+                    FilledButton(onPressed: _load, child: const Text('Retry')),
                   ],
                 ),
               ),
@@ -127,15 +126,11 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                         ],
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        _ad!.title,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                      ),
+                      Text(_ad!.title, style: context.h6),
                       const SizedBox(height: 10),
                       Text(
-                        _ad!.price.toString(),
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        '${_ad!.currency} ${_ad!.price.toString()}',
+                        style: context.pStrong.copyWith(
                           fontWeight: FontWeight.w900,
                           color: colors.primary,
                         ),
@@ -167,36 +162,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                                 style: TextStyle(fontWeight: FontWeight.w800),
                               ),
                               const SizedBox(height: 10),
-                              for (final s in _ad!.specs)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 10),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          'Wrong ${s.values.first}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                color: Theme.of(
-                                                  context,
-                                                ).hintColor,
-                                              ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Text(
-                                          'Wrong ${s.values.first}',
-                                          textAlign: TextAlign.right,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              for (final s in _ad!.specs) _SpecRow(spec: s),
                             ],
                           ],
                         ),
@@ -210,18 +176,21 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                     child: Row(
                       children: [
+                        // ✅ HOME: icon-only
                         _ActionButton(
                           icon: Icons.home_outlined,
-                          label: 'Home',
                           filled: false,
-                          onTap: () => Navigator.pop(context),
+                          label: null,
+                          onTap: () => context.push(AppRoutes.home),
                         ),
                         const SizedBox(width: 10),
+
+                        // ✅ CALL: icon + label
                         Expanded(
                           child: _ActionButton(
                             icon: Icons.call,
-                            label: 'Call',
                             filled: true,
+                            label: 'Call',
                             onTap: () => ShowSnack(
                               context,
                               'Wire call action later',
@@ -229,11 +198,13 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                           ),
                         ),
                         const SizedBox(width: 10),
+
+                        // ✅ MESSAGE: icon + label
                         Expanded(
                           child: _ActionButton(
                             icon: Icons.chat_bubble_outline,
-                            label: 'Message',
                             filled: false,
+                            label: 'Message',
                             onTap: () => ShowSnack(
                               context,
                               'Wire chat action later',
@@ -282,7 +253,7 @@ class _ImageHeader extends StatelessWidget {
             child: images.isEmpty
                 ? const Center(child: Icon(Icons.image_outlined, size: 40))
                 : Image.network(
-                    images[safeSelected],
+                    buildFileUrl(images[safeSelected]) ?? '',
                     fit: BoxFit.cover,
                     errorBuilder: (_, _, _) =>
                         const Center(child: Icon(Icons.broken_image_outlined)),
@@ -316,7 +287,7 @@ class _ImageHeader extends StatelessWidget {
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Image.network(
-                      images[i],
+                      buildFileUrl(images[i]) ?? '',
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => const Center(
                         child: Icon(Icons.broken_image_outlined, size: 18),
@@ -328,6 +299,60 @@ class _ImageHeader extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _SpecRow extends StatelessWidget {
+  const _SpecRow({required this.spec});
+
+  final Map<String, dynamic> spec;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    String key = (spec['label'] ?? spec['key'] ?? spec['name'] ?? '')
+        .toString();
+    String val = (spec['value'] ?? spec['val'] ?? '').toString();
+
+    if (key.trim().isEmpty || val.trim().isEmpty) {
+      if (spec.entries.isNotEmpty) {
+        final e = spec.entries.first;
+        key = key.trim().isEmpty ? e.key.toString() : key;
+        val = val.trim().isEmpty ? e.value.toString() : val;
+      }
+    }
+
+    key = key.trim();
+    val = val.trim();
+
+    if (key.isEmpty && val.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              key.isEmpty ? 'Specification' : key,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).hintColor,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              val,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: colors.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -376,31 +401,69 @@ class _SectionCard extends StatelessWidget {
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.icon,
-    required this.label,
     required this.filled,
     required this.onTap,
+    this.label,
   });
 
   final IconData icon;
-  final String label;
   final bool filled;
   final VoidCallback onTap;
 
+  /// If null/empty => icon-only button (used for Home).
+  final String? label;
+
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final scheme = Theme.of(context).colorScheme;
+    final appColors = context.appColors;
+
+    final isIconOnly = (label == null || label!.trim().isEmpty);
+
+    // Color rules you requested:
+    // - Outlined: primary
+    // - Filled: appColors.border
+    final iconColor = filled ? appColors.border : scheme.primary;
+    final textColor = filled ? appColors.border : scheme.primary;
+
+    if (isIconOnly) {
+      // ✅ Icon-only (Home)
+      return SizedBox(
+        height: 48,
+        width: 48,
+        child: filled
+            ? FilledButton(
+                onPressed: onTap,
+                style: FilledButton.styleFrom(padding: EdgeInsets.zero),
+                child: Icon(icon, size: 20, color: iconColor),
+              )
+            : OutlinedButton(
+                onPressed: onTap,
+                style: OutlinedButton.styleFrom(padding: EdgeInsets.zero),
+                child: Icon(icon, size: 20, color: iconColor),
+              ),
+      );
+    }
+
+    // ✅ Icon + label (Call / Message)
     return SizedBox(
       height: 48,
       child: filled
           ? FilledButton.icon(
               onPressed: onTap,
-              icon: Icon(icon, size: 18),
-              label: Text(label),
+              icon: Icon(icon, size: 18, color: iconColor),
+              label: Text(
+                label!,
+                style: TextStyle(color: textColor, fontWeight: FontWeight.w700),
+              ),
             )
           : OutlinedButton.icon(
               onPressed: onTap,
-              icon: Icon(icon, size: 18, color: colors.onSurface),
-              label: Text(label),
+              icon: Icon(icon, size: 18, color: iconColor),
+              label: Text(
+                label!,
+                style: TextStyle(color: textColor, fontWeight: FontWeight.w700),
+              ),
             ),
     );
   }

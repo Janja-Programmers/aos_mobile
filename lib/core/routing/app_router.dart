@@ -61,14 +61,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.createAd,
         builder: (context, state) => const CreateAdFlowScreen(),
       ),
-      // IMPORTANT: keep static routes (like /ads/create) BEFORE dynamic ones (like /ads/:id)
-      // otherwise /ads/create gets matched as id="create".
       GoRoute(
-        path: AppRoutes.adDetails,
-        builder: (context, state) {
-          final id = state.pathParameters['id'] ?? '';
-          return AdDetailsScreen(id: id);
-        },
+        path: AppRoutes.selectLocation,
+        builder: (context, state) => const SelectLocationScreen(),
       ),
       GoRoute(
         path: AppRoutes.selectCategory,
@@ -80,8 +75,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: AppRoutes.selectLocation,
-        builder: (context, state) => const SelectLocationScreen(),
+        path: AppRoutes.adDetails,
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          return AdDetailsScreen(id: id);
+        },
       ),
       GoRoute(
         path: AppRoutes.notifications,

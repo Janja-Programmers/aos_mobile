@@ -18,9 +18,10 @@ class AppRoutes {
   static const adList = '/ads/list';
   static const createAd = '/ads/create';
   static const myAds = '/ads/my';
-  static const adDetails = '/ads/:id';
 
-  static String adDetailsPath(String id) => '/ads/$id';
   static const selectCategory = '/ads/select-category';
   static const selectLocation = '/ads/select-location';
+
+  static const adDetails = '/ads/:id';
+  static String adDetailsPath(String id) => '/ads/$id';
 }

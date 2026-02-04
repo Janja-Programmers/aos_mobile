@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/account/utils/avator_image.dart';
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
@@ -55,17 +54,16 @@ class EditableAvatar extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 46,
-          backgroundColor: colors.surface,
+          backgroundColor: scheme.onPrimary,
           backgroundImage: img,
-          onBackgroundImageError: (_, _) {},
-          child: hasImage ? null : Text(_initial(), style: context.h3),
+          onBackgroundImageError: hasImage ? (_, _) {} : null,
+          child: hasImage ? null : Text(_initial(), style: context.h3.copyWith(color: colors.border)),
         ),
-
         Positioned(
           bottom: 0,
           right: 0,
           child: InkWell(
-            onTap: onTapCamera,
+            onTap: uploading ? null : onTapCamera,
             borderRadius: _pill,
             child: Container(
               width: 36,

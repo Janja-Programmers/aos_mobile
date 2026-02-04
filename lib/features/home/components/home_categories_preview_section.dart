@@ -116,14 +116,14 @@ class _CategoryChip extends StatelessWidget {
                       width: 26,
                       height: 26,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => Icon(
+                      errorBuilder: (_, _, _) => Icon(
                         Icons.category_outlined,
                         color: colors.textMuted,
                       ),
                     )
                   : Icon(Icons.category_outlined, color: colors.textMuted),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
               item.name,
               maxLines: 2,

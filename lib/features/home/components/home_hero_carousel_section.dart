@@ -81,7 +81,7 @@ class _HeroCarouselState extends State<_HeroCarousel> {
                     Image.network(
                       _images[i],
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                      errorBuilder: (_, _, _) => Container(
                         color: colors.surface,
                         alignment: Alignment.center,
                         child: Icon(Icons.image, color: colors.textMuted),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/routing/app_routes.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 import 'package:africaonlinestores/features/ads/providers/ad_draft_controller.dart';
@@ -392,7 +394,7 @@ class _ScaffoldShell extends StatelessWidget {
         title: Text('Create Ad', style: Theme.of(context).textTheme.titleLarge),
         actions: [
           IconButton(
-            onPressed: posting ? null : () => Navigator.of(context).maybePop(),
+            onPressed: posting ? null : () => context.push(AppRoutes.home),
             icon: Icon(
               Icons.close,
               color: Theme.of(context).colorScheme.onSurface,

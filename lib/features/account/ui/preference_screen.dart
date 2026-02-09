@@ -193,7 +193,7 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
 
                 PrimaryButton(
                   text: 'Update',
-                  onPressed: _saving ? null : () => _save(context),
+                  onPressed: _saving ? null : () => _onSavePressed,
                   loading: _saving,
                 ),
               ],
@@ -243,12 +243,8 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
     _currency = bundle.baseCurrencyCode;
   }
 
-  Future<void> _save(BuildContext context) async {
-    final country = _country;
-    final language = _language;
-    final currency = _currency;
-
-    if (country == null || language == null || currency == null) {
+  void _onSavePressed() {
+    if (_country == null || _language == null || _currency == null) {
       ShowSnack(
         context,
         'Please select country, language and currency.',
@@ -256,24 +252,31 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
       return;
     }
 
+    _saveAsync();
+  }
+
+  Future<void> _saveAsync() async {
     setState(() => _saving = true);
 
     final ctrl = ref.read(localeControllerProvider.notifier);
 
     try {
-      await ctrl.setCountry(country);
-      await ctrl.setLanguage(language, overridden: true);
-      await ctrl.setCurrency(currency, overridden: true);
+      await ctrl.setCountry(_country!);
+      await ctrl.setLanguage(_language!, overridden: true);
+      await ctrl.setCurrency(_currency!, overridden: true);
       await ctrl.syncToBackend();
 
-      if (mounted) {
-        setState(() => _dirty = false);
-        ShowSnack(context, 'Preferences updated.').success();
-      }
+      if (!mounted) return;
+
+      setState(() => _dirty = false);
+      ShowSnack(context, 'Preferences updated.').success();
     } catch (_) {
-      if (mounted) ShowSnack(context, 'Failed to update preferences.').error();
+      if (!mounted) return;
+      ShowSnack(context, 'Failed to update preferences.').error();
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 }

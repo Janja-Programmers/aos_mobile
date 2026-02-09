@@ -129,7 +129,14 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                       Text(_ad!.title, style: context.h6),
                       const SizedBox(height: 10),
                       Text(
-                        '${_ad!.currency} ${_ad!.price.toString()}',
+                        _ad!.priceDisplay.trim().isNotEmpty
+                            ? _ad!.priceDisplay
+                            : [
+                                _ad!.currency,
+                                (_ad!.price ?? 0).toString(),
+                                if (_ad!.priceUnit.trim().isNotEmpty)
+                                  _ad!.priceUnit,
+                              ].where((e) => e.trim().isNotEmpty).join(' '),
                         style: context.pStrong.copyWith(
                           fontWeight: FontWeight.w900,
                           color: colors.primary,
@@ -306,7 +313,7 @@ class _ImageHeader extends StatelessWidget {
 class _SpecRow extends StatelessWidget {
   const _SpecRow({required this.spec});
 
-  final Map<String, dynamic> spec;
+  final Map<String, String> spec;
 
   @override
   Widget build(BuildContext context) {

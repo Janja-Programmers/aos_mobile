@@ -3,46 +3,39 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
-/// Top carousel section (3 images + animated dots indicator).
+/// Promo carousel shown at the top of the home feed.
 ///
-/// This is kept as a sliver so it can be placed inside a CustomScrollView.
+/// Matches the video style: colored promo cards + dots indicator.
+/// Kept as a sliver so it can live inside a [CustomScrollView].
 class HomeHeroCarouselSection extends StatelessWidget {
   const HomeHeroCarouselSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const SliverToBoxAdapter(child: _HeroCarousel());
+    return const SliverToBoxAdapter(child: _PromoCarousel());
   }
 }
 
-class _HeroCarousel extends StatefulWidget {
-  const _HeroCarousel();
+class _PromoCarousel extends StatefulWidget {
+  const _PromoCarousel();
 
   @override
-  State<_HeroCarousel> createState() => _HeroCarouselState();
+  State<_PromoCarousel> createState() => _PromoCarouselState();
 }
 
-class _HeroCarouselState extends State<_HeroCarousel> {
+class _PromoCarouselState extends State<_PromoCarousel> {
   final _controller = PageController();
   Timer? _timer;
   int _index = 0;
 
-  // Using stable public images.
-  static const _images = <String>[
-    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1400&q=80',
-    'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1400&q=80',
-    'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=1400&q=80',
-  ];
-
   @override
   void initState() {
     super.initState();
-
-    // Auto-advance.
-    _timer = Timer.periodic(const Duration(seconds: 4), (_) {
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!mounted) return;
-      final next = (_index + 1) % _images.length;
+      final next = (_index + 1) % _cards.length;
       _controller.animateToPage(
         next,
         duration: const Duration(milliseconds: 420),
@@ -58,6 +51,33 @@ class _HeroCarouselState extends State<_HeroCarousel> {
     super.dispose();
   }
 
+  static const _cards = <_PromoCardModel>[
+    _PromoCardModel(
+      tag: 'HOT',
+      title: 'MEGA SALE',
+      subtitle: 'Up to 50% Off',
+      caption: 'Electronics & Gadgets',
+      variant: _PromoCardVariant.red,
+      icon: Icons.bolt_rounded,
+    ),
+    _PromoCardModel(
+      tag: 'NEW',
+      title: 'FREE DELIVERY',
+      subtitle: 'On Orders Above Ksh 2,000',
+      caption: 'Limited Time Offer',
+      variant: _PromoCardVariant.blue,
+      icon: Icons.local_shipping_outlined,
+    ),
+    _PromoCardModel(
+      tag: 'NEW',
+      title: 'NEW ARRIVALS',
+      subtitle: 'Fresh Products Daily',
+      caption: 'Just Landed',
+      variant: _PromoCardVariant.teal,
+      icon: Icons.new_releases_outlined,
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
@@ -66,49 +86,17 @@ class _HeroCarouselState extends State<_HeroCarousel> {
       children: [
         SizedBox(
           height: 132,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: PageView.builder(
-              controller: _controller,
-              // RTL carousel feel.
-              reverse: true,
-              itemCount: _images.length,
-              onPageChanged: (i) => setState(() => _index = i),
-              itemBuilder: (context, i) {
-                return Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.network(
-                      _images[i],
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Container(
-                        color: colors.surface,
-                        alignment: Alignment.center,
-                        child: Icon(Icons.image, color: colors.textMuted),
-                      ),
-                    ),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            Colors.black.withOpacity(0.35),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+          child: PageView.builder(
+            controller: _controller,
+            itemCount: _cards.length,
+            onPageChanged: (i) => setState(() => _index = i),
+            itemBuilder: (context, i) => _PromoCard(model: _cards[i]),
           ),
         ),
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(_images.length, (i) {
+          children: List.generate(_cards.length, (i) {
             final active = i == _index;
             return AnimatedContainer(
               duration: const Duration(milliseconds: 220),
@@ -123,6 +111,126 @@ class _HeroCarouselState extends State<_HeroCarousel> {
           }),
         ),
       ],
+    );
+  }
+}
+
+enum _PromoCardVariant { red, blue, teal }
+
+class _PromoCardModel {
+  const _PromoCardModel({
+    required this.tag,
+    required this.title,
+    required this.subtitle,
+    required this.caption,
+    required this.variant,
+    required this.icon,
+  });
+
+  final String tag;
+  final String title;
+  final String subtitle;
+  final String caption;
+  final _PromoCardVariant variant;
+  final IconData icon;
+}
+
+class _PromoCard extends StatelessWidget {
+  const _PromoCard({required this.model});
+
+  final _PromoCardModel model;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    Color start;
+    Color end;
+    switch (model.variant) {
+      case _PromoCardVariant.red:
+        start = const Color(0xFFE94B3C);
+        end = const Color(0xFFEF2D56);
+        break;
+      case _PromoCardVariant.blue:
+        start = const Color(0xFF0A84FF);
+        end = const Color(0xFF3B82F6);
+        break;
+      case _PromoCardVariant.teal:
+        start = const Color(0xFF10B981);
+        end = const Color(0xFF06B6D4);
+        break;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [start, end],
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: 14,
+            top: 14,
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.18),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              alignment: Alignment.center,
+              child: Icon(model.icon, color: Colors.white),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    model.tag,
+                    style: context.pStrong.copyWith(
+                      fontSize: 11,
+                      color: colors.primary,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  model.title,
+                  style: context.h4.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  model.subtitle,
+                  style: context.pStrong.copyWith(color: Colors.white),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  model.caption,
+                  style: context.p.copyWith(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

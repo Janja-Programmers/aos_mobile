@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -70,7 +71,7 @@ class AccountScreen extends ConsumerWidget {
 
           GetVerifiedBanner(
             onTap: () {
-              // TODO: change to your route
+              ShowSnack(context, 'Coming Soon!').info();
               // context.push(AppRoutes.getVerified);
             },
           ),

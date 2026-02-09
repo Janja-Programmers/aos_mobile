@@ -8,6 +8,7 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/localization/locale_controller.dart';
 import 'package:africaonlinestores/core/localization/utils.dart';
 import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/utils/app_snack.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/home/sections/ads_content.dart';
 import 'package:africaonlinestores/features/home/sections/ads_error.dart';
@@ -155,23 +156,46 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
       locationLabel: _locationLabel,
       onTapLocation: _openLocationPicker,
       onTapFavorites: () {
-        // TODO: route
+        ShowSnack(context, 'Coming Soon!').info();
       },
       onTapNotifications: () {
-        // TODO: route
+        ShowSnack(context, 'Coming Soon!').info();
       },
     );
 
     // This is the SCROLLABLE content only (no search inside).
     final Widget stateBody;
+    final searchBar = AppSearchBar(
+      controller: _searchCtrl,
+      // In the future (API search):
+      // onSubmitted: (_) => _refresh(),
+    );
+
     if (_loading && _items.isEmpty) {
-      stateBody = const AdListLoadingView();
+      stateBody = CustomScrollView(
+        slivers: [
+          PinnedHeaderSliver(child: searchBar),
+          const SliverFillRemaining(
+            hasScrollBody: false,
+            child: AdListLoadingView(),
+          ),
+        ],
+      );
     } else if (_error != null && _items.isEmpty) {
-      stateBody = AdListErrorView(message: _error!, onRetry: _refresh);
+      stateBody = CustomScrollView(
+        slivers: [
+          PinnedHeaderSliver(child: searchBar),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: AdListErrorView(message: _error!, onRetry: _refresh),
+          ),
+        ],
+      );
     } else {
       stateBody = AdListContentView(
         items: _items,
         country: country,
+        search: searchBar,
         onLoadMore: _load,
         onRefresh: _refresh,
         loadingMore: _loadingMore,
@@ -181,24 +205,7 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
       );
     }
 
-    // ✅ Recommended layout:
-    // - AppBar fixed
-    // - Search bar fixed below AppBar (NOT scrollable)
-    // - Only the content area scrolls
-    final body = Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: AppSearchBar(
-            controller: _searchCtrl,
-            // In the future (API search):
-            // onSubmitted: (_) => _refresh(),
-          ),
-        ),
-        Expanded(child: stateBody),
-      ],
-    );
-
-    return AdListScaffold(header: header, body: body);
+    // ✅ Single scroll view for the page content (search is pinned inside).
+    return AdListScaffold(header: header, body: stateBody);
   }
 }

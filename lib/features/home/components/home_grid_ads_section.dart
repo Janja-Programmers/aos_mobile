@@ -7,25 +7,52 @@ import 'package:africaonlinestores/features/home/components/ad_card.dart';
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
 /// Popular products section (title row + grid of ad cards).
-class HomePopularAdsSection extends StatelessWidget {
-  const HomePopularAdsSection({
+class GridAdsSection extends StatelessWidget {
+  const GridAdsSection({
     super.key,
+    required this.title,
     required this.items,
-    required this.country,
+    this.onSeeAll,
   });
 
+  final String title;
   final List<AOSAdListItem> items;
-  final String country;
+  final VoidCallback? onSeeAll;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return SliverMainAxisGroup(
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           sliver: SliverToBoxAdapter(
             child: Row(
-              children: [Text('Discover more on AOS', style: context.h5)],
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: context.h5.copyWith(color: colors.primary),
+                  ),
+                ),
+
+                if (onSeeAll != null)
+                  InkWell(
+                    onTap: onSeeAll,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
+                      child: Text(
+                        'See all',
+                        style: context.p.copyWith(color: colors.primary),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),

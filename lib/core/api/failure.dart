@@ -1,7 +1,7 @@
 /// Represents an error returned by the API layer.
 ///
 /// Keep it simple: a user-friendly message + optional status code.
-class Failure {
+class Failure implements Exception {
   const Failure(this.message, {this.statusCode, this.type});
 
   final String message;
@@ -9,7 +9,8 @@ class Failure {
   final FailureType? type;
 
   @override
-  String toString() => 'Failure(message: $message, statusCode: $statusCode, type: $type)';
+  String toString() =>
+      'Failure(message: $message, statusCode: $statusCode, type: $type)';
 }
 
 enum FailureType {

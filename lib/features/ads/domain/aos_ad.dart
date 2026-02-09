@@ -70,6 +70,7 @@ class AOSAdDetails {
     required this.currency,
     required this.priceType,
     required this.price,
+    required this.priceDisplay,
     required this.priceUnit,
     required this.images,
     required this.video,
@@ -86,6 +87,7 @@ class AOSAdDetails {
   final String currency;
   final String priceType;
   final double? price;
+  final String priceDisplay;
   final String priceUnit;
   final List<String> images;
   final String? video;
@@ -117,14 +119,30 @@ class AOSAdDetails {
     if (rawSpecs is List) {
       for (final e in rawSpecs) {
         if (e is Map) {
-          final k = (e['label'] ?? e['name'] ?? e['key'] ?? '').toString();
-          final v =
-              (e['value'] ??
-                      e['value_text'] ??
-                      e['value_number'] ??
-                      e['value_date'] ??
-                      '')
-                  .toString();
+          final k = (e['label'] ??
+                  e['attribute'] ??
+                  e['name'] ??
+                  e['key'] ??
+                  '')
+              .toString();
+
+          // Prefer explicit text, otherwise fall back to other value types.
+          // Some backends send 0.0 for value_number even when text is present.
+          final text = (e['value'] ?? e['value_text'] ?? '').toString();
+          final num = e['value_number'];
+          final date = e['value_date'];
+          final boolVal = e['value_bool'];
+
+          String v = text.trim();
+          if (v.isEmpty && num != null) v = num.toString();
+          if (v.isEmpty && date != null) v = date.toString();
+          if (v.isEmpty && boolVal != null) {
+            // Common patterns: 0/1 or true/false
+            final b = boolVal.toString().trim();
+            if (b == '1') v = 'Yes';
+            if (b == '0') v = 'No';
+            if (v.isEmpty) v = b;
+          }
           if (k.isNotEmpty && v.isNotEmpty) {
             specs.add({'label': k, 'value': v});
           }
@@ -145,6 +163,7 @@ class AOSAdDetails {
       currency: (json['currency'] ?? '').toString(),
       priceType: (json['price_type'] ?? '').toString(),
       price: price,
+      priceDisplay: (json['price_display'] ?? '').toString(),
       priceUnit: (json['price_unit'] ?? '').toString(),
       images: images,
       video: (json['video'] ?? '').toString().trim().isEmpty

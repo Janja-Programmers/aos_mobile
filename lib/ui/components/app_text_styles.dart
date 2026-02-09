@@ -24,20 +24,25 @@ extension AppTextStylesX on BuildContext {
     color: appColors.textPrimary,
   );
 
+  // ---------- Titles (adjusted for more contrast) ----------
+
   TextStyle get h4 => Theme.of(this).textTheme.titleLarge!.copyWith(
-    fontWeight: FontWeight.w600,
+    fontSize: 24, // larger than h5 & h6
+    fontWeight: FontWeight.w700,
     fontFamily: GoogleFonts.poppins().fontFamily,
     color: appColors.textPrimary,
   );
 
   TextStyle get h5 => Theme.of(this).textTheme.titleMedium!.copyWith(
+    fontSize: 20, // medium
     fontWeight: FontWeight.w600,
     fontFamily: GoogleFonts.poppins().fontFamily,
     color: appColors.textPrimary,
   );
 
   TextStyle get h6 => Theme.of(this).textTheme.titleSmall!.copyWith(
-    fontWeight: FontWeight.w600,
+    fontSize: 16, // small
+    fontWeight: FontWeight.w500,
     fontFamily: GoogleFonts.poppins().fontFamily,
     color: appColors.textPrimary,
   );

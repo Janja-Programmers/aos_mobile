@@ -32,68 +32,74 @@ class AdCard extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min, // 🔑 critical for grids & slivers
           children: [
+            // ───────── Image ─────────
             ClipRRect(
               borderRadius: BorderRadius.circular(14),
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: ad.coverImage.isEmpty
-                    ? Container(
-                        color: Theme.of(context).dividerColor.withOpacity(0.08),
-                        child: const Icon(Icons.image_outlined),
-                      )
-                    : Image.network(
-                        toFullUrl(ad.coverImage),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => Container(
-                          color: Theme.of(
-                            context,
-                          ).dividerColor.withOpacity(0.08),
-                          child: const Icon(Icons.broken_image_outlined),
-                        ),
-                      ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final size = constraints.maxWidth.isFinite
+                      ? constraints.maxWidth
+                      : 120.0; // fallback safety
+
+                  return SizedBox(
+                    width: size,
+                    height: size,
+                    child: ad.coverImage.isEmpty
+                        ? Container(
+                            alignment: Alignment.center,
+                            color: Theme.of(
+                              context,
+                            ).dividerColor.withOpacity(0.08),
+                            child: const Icon(Icons.image_outlined),
+                          )
+                        : Image.network(
+                            toFullUrl(ad.coverImage),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              alignment: Alignment.center,
+                              color: Theme.of(
+                                context,
+                              ).dividerColor.withOpacity(0.08),
+                              child: const Icon(Icons.broken_image_outlined),
+                            ),
+                          ),
+                  );
+                },
               ),
             ),
-
             const SizedBox(height: 8),
 
-            // ✅ Don't force this area to take remaining height (Expanded) —
-            // it can be too small in a grid tile and overflow.
-            Flexible(
-              fit: FlexFit.loose,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    ad.title,
-                    maxLines: 1, // ✅ tighter to avoid overflow
-                    overflow: TextOverflow.ellipsis,
-                    style: context.pStrong,
-                  ),
+            // ───────── Title ─────────
+            Text(
+              ad.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.pStrong,
+            ),
 
-                  if (subtitle.isNotEmpty) ...[
-                    const SizedBox(height: 2), // ✅ tighter spacing
-                    Text(
-                      subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.p,
-                    ),
-                  ],
+            // ───────── Location ─────────
+            if (subtitle.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.p,
+              ),
+            ],
 
-                  const SizedBox(height: 2),
+            const SizedBox(height: 2),
 
-                  Text(
-                    priceText(ad),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: colors.onSurface,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ],
+            // ───────── Price ─────────
+            Text(
+              priceText(ad),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: colors.onSurface,
+                fontWeight: FontWeight.w900,
               ),
             ),
           ],

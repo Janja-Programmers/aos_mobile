@@ -10,6 +10,7 @@ import 'package:africaonlinestores/features/ads/providers/ad_draft_controller.da
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/utils/file_url.dart';
 import 'package:africaonlinestores/features/ads/ui/widgets/picker_field.dart';
+import 'package:africaonlinestores/core/utils/app_snack.dart';
 
 class BasicStep extends ConsumerStatefulWidget {
   const BasicStep({super.key});
@@ -42,9 +43,7 @@ class _BasicStepState extends ConsumerState<BasicStep> {
     final res = await ctrl.uploadAndAddImage(File(x.path));
     setState(() => _uploadingImage = false);
     if (res.isLeft && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(res.leftOrNull!.message)));
+      ShowSnack(context, res.leftOrNull!.message).error();
     }
   }
 
@@ -57,9 +56,7 @@ class _BasicStepState extends ConsumerState<BasicStep> {
     final res = await ctrl.uploadAndSetVideo(File(x.path));
     setState(() => _uploadingVideo = false);
     if (res.isLeft && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(res.leftOrNull!.message)));
+      ShowSnack(context, res.leftOrNull!.message).error();
     }
   }
 

@@ -57,7 +57,7 @@ class AdCard extends StatelessWidget {
                         : Image.network(
                             toFullUrl(ad.coverImage),
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
+                            errorBuilder: (_, _, _) => Container(
                               alignment: Alignment.center,
                               color: Theme.of(
                                 context,

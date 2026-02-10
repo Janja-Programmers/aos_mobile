@@ -15,6 +15,7 @@ import 'package:africaonlinestores/features/ads/ui/steps/pricing_step.dart';
 import 'package:africaonlinestores/features/ads/utils/pricing_rules.dart';
 import 'package:africaonlinestores/features/ads/ui/widgets/ad_stepper.dart';
 import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/core/utils/app_snack.dart';
 
 class CreateAdFlowScreen extends ConsumerStatefulWidget {
   const CreateAdFlowScreen({super.key});
@@ -241,9 +242,7 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
 
       if (res.isLeft) {
         if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(res.leftOrNull!.message)));
+        ShowSnack(context, res.leftOrNull!.message).error();
         return;
       }
 
@@ -261,9 +260,7 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to submit: $e')));
+      ShowSnack(context, 'Failed to submit: $e').error();
     } finally {
       if (mounted) setState(() => _posting = false);
     }

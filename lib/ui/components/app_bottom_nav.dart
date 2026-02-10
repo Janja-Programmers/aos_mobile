@@ -34,7 +34,7 @@ class AppBottomNav extends ConsumerWidget {
             Navigator.of(sheetContext).pop();
 
             if (context.mounted) {
-              context.go(AppRoutes.login);
+              context.goNamed(AppRoutes.nLogin);
             }
           },
         );
@@ -72,27 +72,27 @@ class AppBottomNav extends ConsumerWidget {
             onTap: (index) async {
               switch (index) {
                 case 0:
-                  context.go(AppRoutes.home);
+                  context.goNamed(AppRoutes.nHome);
                   break;
 
                 case 1:
-                  context.go(AppRoutes.categories);
+                  context.goNamed(AppRoutes.nCategories);
                   break;
 
                 case 2:
                   if (user == null) {
                     await _showLoginRequiredSheet(context, ref);
                   } else {
-                    context.go(AppRoutes.myAds);
+                    context.goNamed(AppRoutes.nMyAds);
                   }
                   break;
 
                 case 3:
-                  context.go(AppRoutes.home);
+                  context.goNamed(AppRoutes.nHome);
                   break;
 
                 case 4:
-                  context.go(AppRoutes.account);
+                  context.goNamed(AppRoutes.nAccount);
                   break;
               }
             },

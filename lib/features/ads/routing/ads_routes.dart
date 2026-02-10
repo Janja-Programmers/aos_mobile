@@ -13,18 +13,17 @@ class AdsRoutes {
   static List<RouteBase> routes() {
     return [
       GoRoute(
-        path: AppRoutes.createAd,
-        builder: (context, state) => const CreateAdFlowScreen(),
-      ),
-      GoRoute(
+        name: AppRoutes.nMyAds,
         path: AppRoutes.myAds,
         builder: (context, state) => const MyAdsScreen(),
       ),
       GoRoute(
-        path: AppRoutes.selectLocation,
-        builder: (context, state) => const SelectLocationScreen(),
+        name: AppRoutes.nCreateAd,
+        path: AppRoutes.createAd,
+        builder: (context, state) => const CreateAdFlowScreen(),
       ),
       GoRoute(
+        name: AppRoutes.nSelectCategory,
         path: AppRoutes.selectCategory,
         builder: (context, state) {
           final parent = state.extra is CategoryNode
@@ -32,6 +31,11 @@ class AdsRoutes {
               : null;
           return SelectCategoryScreen(parent: parent);
         },
+      ),
+      GoRoute(
+        name: AppRoutes.nSelectLocation,
+        path: AppRoutes.selectLocation,
+        builder: (context, state) => const SelectLocationScreen(),
       ),
     ];
   }

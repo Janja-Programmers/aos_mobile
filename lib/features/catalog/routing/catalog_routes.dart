@@ -9,6 +9,7 @@ class CatalogRoutes {
   static List<RouteBase> routes() {
     return [
       GoRoute(
+        name: AppRoutes.nCategories,
         path: AppRoutes.categories,
         builder: (context, state) => const CategoriesScreen(),
       ),

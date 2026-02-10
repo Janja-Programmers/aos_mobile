@@ -54,7 +54,7 @@ class SubcategoriesGrid extends StatelessWidget {
             final url = buildIconUrl(item.icon);
 
             return InkWell(
-              onTap: () => onTap?.call(item),
+              onTap: onTap == null ? null : () => onTap!(item),
               borderRadius: BorderRadius.circular(12),
               child: Column(
                 children: [

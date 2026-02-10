@@ -23,8 +23,8 @@ class AccountScreen extends ConsumerWidget {
   Widget _buildAccountHeader(BuildContext context, user) {
     if (user == null) {
       return AccountGuestHeaderCard(
-        onLogin: () => context.push(AppRoutes.login),
-        onSignUp: () => context.push(AppRoutes.register),
+        onLogin: () => context.pushNamed(AppRoutes.nLogin),
+        onSignUp: () => context.pushNamed(AppRoutes.nRegister),
       );
     }
 
@@ -34,7 +34,7 @@ class AccountScreen extends ConsumerWidget {
       initials: _initialsFromName(user.fullName),
       baseUrl: AppConfig.normalizedBaseUrl,
       imagePath: user.userImage.isNotEmpty ? user.userImage : null,
-      onEdit: () => context.push(AppRoutes.updateProfile),
+      onEdit: () => context.pushNamed(AppRoutes.nUpdateProfile),
     );
   }
 
@@ -58,7 +58,7 @@ class AccountScreen extends ConsumerWidget {
             if (context.canPop()) {
               context.pop();
             } else {
-              context.go(AppRoutes.home);
+              context.goNamed(AppRoutes.nHome);
             }
           },
         ),
@@ -87,13 +87,13 @@ class AccountScreen extends ConsumerWidget {
                   AccountOptionTile(
                     icon: Icons.lock_outline,
                     title: 'Password & Security',
-                    onTap: () => context.push(AppRoutes.passwordSecurity),
+                    onTap: () => context.pushNamed(AppRoutes.nPasswordSecurity),
                   ),
 
                 AccountOptionTile(
                   icon: Icons.notifications_none,
                   title: 'Notifications Preferences',
-                  onTap: () => context.push(AppRoutes.notifications),
+                  onTap: () => context.pushNamed(AppRoutes.nNotifications),
                 ),
 
                 AppSwitchTile(
@@ -121,18 +121,18 @@ class AccountScreen extends ConsumerWidget {
                 AccountOptionTile(
                   icon: Icons.language_outlined,
                   title: 'Preferences',
-                  onTap: () => context.push(AppRoutes.preference),
+                  onTap: () => context.pushNamed(AppRoutes.nPreference),
                 ),
                 AccountOptionTile(
                   icon: Icons.privacy_tip_outlined,
                   title: 'Privacy Policy',
-                  onTap: () => context.push(AppRoutes.privacy),
+                  onTap: () => context.pushNamed(AppRoutes.nPrivacy),
                 ),
                 AccountOptionTile(
                   icon: Icons.description_outlined,
                   title: 'Terms & Conditions',
                   showDivider: false,
-                  onTap: () => context.push(AppRoutes.terms),
+                  onTap: () => context.pushNamed(AppRoutes.nTerms),
                 ),
               ],
             ),

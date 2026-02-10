@@ -13,7 +13,7 @@ import 'package:go_router/go_router.dart';
 ///
 /// Optional:
 ///   AccountGuestHeaderCard(
-///     onLogin: () => context.push(AppRoutes.login),
+///     onLogin: () => context.pushNamed(AppRoutes.nLogin),
 ///     onSignUp: () => context.push(AppRoutes.signUp),
 ///   )
 class AccountGuestHeaderCard extends StatelessWidget {
@@ -77,7 +77,7 @@ class AccountGuestHeaderCard extends StatelessWidget {
                       onPressed:
                           onLogin ??
                           () {
-                            context.push(AppRoutes.login);
+                            context.pushNamed(AppRoutes.nLogin);
                           },
                       style: OutlinedButton.styleFrom(
                         shape: const StadiumBorder(),
@@ -98,7 +98,7 @@ class AccountGuestHeaderCard extends StatelessWidget {
                       onPressed:
                           onSignUp ??
                           () {
-                            context.push(AppRoutes.register);
+                            context.pushNamed(AppRoutes.nRegister);
                           },
                       style: FilledButton.styleFrom(
                         shape: const StadiumBorder(),

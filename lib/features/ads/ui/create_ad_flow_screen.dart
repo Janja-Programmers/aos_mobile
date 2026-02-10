@@ -391,7 +391,7 @@ class _ScaffoldShell extends StatelessWidget {
         title: Text('Create Ad', style: Theme.of(context).textTheme.titleLarge),
         actions: [
           IconButton(
-            onPressed: posting ? null : () => context.push(AppRoutes.home),
+            onPressed: posting ? null : () => context.pushNamed(AppRoutes.nHome),
             icon: Icon(
               Icons.close,
               color: Theme.of(context).colorScheme.onSurface,

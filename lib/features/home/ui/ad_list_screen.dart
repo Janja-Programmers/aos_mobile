@@ -1,8 +1,3 @@
-// lib/features/home/ui/ad_list_screen.dart
-// (Only the relevant updated parts — this is where the NON-SCROLLABLE search bar lives.)
-
-import 'package:africaonlinestores/features/ads/ui/pickers/select_location_screen.dart';
-import 'package:africaonlinestores/features/home/domain/location_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,12 +6,16 @@ import 'package:africaonlinestores/core/localization/locale_controller.dart';
 import 'package:africaonlinestores/core/localization/utils.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/app_snack.dart';
+
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/ads/ui/pickers/select_location_screen.dart';
+import 'package:africaonlinestores/features/home/components/home_app_bar.dart';
+import 'package:africaonlinestores/features/home/domain/location_picker.dart';
+import 'package:africaonlinestores/features/home/ui/ad_list_scaffold.dart';
 import 'package:africaonlinestores/features/home/sections/ads_content.dart';
 import 'package:africaonlinestores/features/home/sections/ads_error.dart';
 import 'package:africaonlinestores/features/home/sections/ads_loading.dart';
-import 'package:africaonlinestores/features/home/ui/ad_list_scaffold.dart';
-import 'package:africaonlinestores/features/home/components/home_app_bar.dart';
+
 import 'package:africaonlinestores/ui/components/app_search_bar.dart';
 
 class AdListScreen extends ConsumerStatefulWidget {

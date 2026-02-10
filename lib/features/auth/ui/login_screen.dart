@@ -86,13 +86,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         final email = _emailCtrl.text.trim().toLowerCase();
 
         if (msg.contains('verify your email')) {
-          await context.push(
-            AppRoutes.verifyOtp,
-            extra: {'email': email, 'purpose': OtpPurpose.emailVerification},
-          );
+          await context.pushNamed(AppRoutes.nVerifyOtp, extra: {'email': email, 'purpose': OtpPurpose.emailVerification});
           return;
         }
-      }, (_) async => context.go(AppRoutes.home));
+      }, (_) async => context.goNamed(AppRoutes.nHome));
     } catch (e) {
       if (!mounted) return;
       ShowSnack(context, 'Unexpected error: $e').error();
@@ -114,7 +111,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       result.fold(
         (f) => ShowSnack(context, f.message).error(),
-        (_) => context.go(AppRoutes.home),
+        (_) => context.goNamed(AppRoutes.nHome),
       );
     } catch (e) {
       if (!mounted) return;
@@ -191,7 +188,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Expanded(child: Text('Remember Me', style: context.p)),
                   TextButton(
                     onPressed: () {
-                      context.push(AppRoutes.forgotPassword);
+                      context.pushNamed(AppRoutes.nForgotPassword);
                     },
                     child: Text('Forgot Password?', style: context.p),
                   ),
@@ -216,7 +213,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 children: [
                   Text('Don\'t have an account? ', style: context.p),
                   GestureDetector(
-                    onTap: () => context.push(AppRoutes.register),
+                    onTap: () => context.pushNamed(AppRoutes.nRegister),
                     child: Text('Register', style: context.pStrong),
                   ),
                 ],

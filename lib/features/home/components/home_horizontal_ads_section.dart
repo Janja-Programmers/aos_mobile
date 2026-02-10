@@ -60,7 +60,7 @@ class HomeHorizontalAdsSection extends StatelessWidget {
                         child: AdCard(
                           ad: ad,
                           onTap: () =>
-                              context.push(AppRoutes.adDetailsPath(ad.id)),
+                              context.pushNamed(AppRoutes.nAdDetails, pathParameters: {'id': ad.id}),
                         ),
                       );
                     },

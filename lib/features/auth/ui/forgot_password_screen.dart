@@ -49,10 +49,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
       result.fold((f) => ShowSnack(context, f.message).error(), (msg) {
         ShowSnack(context, msg).success();
-        context.push(
-          AppRoutes.verifyOtp,
-          extra: {'email': email, 'purpose': OtpPurpose.passwordReset},
-        );
+        context.pushNamed(AppRoutes.nVerifyOtp, extra: {'email': email, 'purpose': OtpPurpose.passwordReset});
       });
     } catch (e) {
       if (!mounted) return;

@@ -72,7 +72,7 @@ class GridAdsSection extends StatelessWidget {
               final ad = items[i];
               return AdCard(
                 ad: ad,
-                onTap: () => context.push(AppRoutes.adDetailsPath(ad.id)),
+                onTap: () => context.pushNamed(AppRoutes.nAdDetails, pathParameters: {'id': ad.id}),
               );
             }, childCount: items.length),
           ),

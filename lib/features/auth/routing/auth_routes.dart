@@ -13,6 +13,7 @@ class AuthRoutes {
   static List<RouteBase> routes() {
     return [
       GoRoute(
+        name: AppRoutes.nLogin,
         path: AppRoutes.login,
         builder: (context, state) {
           final prefillEmail = state.uri.queryParameters['email'];
@@ -20,10 +21,12 @@ class AuthRoutes {
         },
       ),
       GoRoute(
+        name: AppRoutes.nRegister,
         path: AppRoutes.register,
         builder: (context, state) => const RegisterScreen(),
       ),
       GoRoute(
+        name: AppRoutes.nVerifyOtp,
         path: AppRoutes.verifyOtp,
         builder: (context, state) {
           String email = '';
@@ -42,10 +45,12 @@ class AuthRoutes {
         },
       ),
       GoRoute(
+        name: AppRoutes.nForgotPassword,
         path: AppRoutes.forgotPassword,
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
+        name: AppRoutes.nResetPassword,
         path: AppRoutes.resetPassword,
         builder: (context, state) {
           if (state.extra is Map) {

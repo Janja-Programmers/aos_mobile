@@ -132,10 +132,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         msg,
       ) async {
         ShowSnack(context, msg).success();
-        await context.push(
-          AppRoutes.verifyOtp,
-          extra: _email.text.trim().toLowerCase(),
-        );
+        await context.pushNamed(AppRoutes.nVerifyOtp, extra: _email.text.trim().toLowerCase());
       });
     } catch (e) {
       if (!mounted) return;
@@ -158,7 +155,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       result.fold(
         (f) => ShowSnack(context, f.message).error(),
-        (_) => context.go(AppRoutes.home),
+        (_) => context.goNamed(AppRoutes.nHome),
       );
     } catch (e) {
       if (!mounted) return;
@@ -308,9 +305,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 children: [
                   Text('Already have an account? ', style: context.p),
                   GestureDetector(
-                    onTap: () => context.push(
-                      '${AppRoutes.login}?email=${Uri.encodeComponent(_email.text.trim().toLowerCase())}',
-                    ),
+                    onTap: () => context.pushNamed(AppRoutes.nLogin, queryParameters: {'email': _email.text.trim().toLowerCase()}),
                     child: Text('Login', style: context.pStrong),
                   ),
                 ],

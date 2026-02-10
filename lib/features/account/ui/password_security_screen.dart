@@ -126,7 +126,7 @@ class _PasswordSecurityScreenState
             if (context.canPop()) {
               context.pop();
             } else {
-              context.go(AppRoutes.account);
+              context.goNamed(AppRoutes.nAccount);
             }
           },
         ),

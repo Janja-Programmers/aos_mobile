@@ -7,6 +7,7 @@ import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/widgets/banners_carousel.dart';
 import 'package:africaonlinestores/features/catalog/widgets/subcategories_grid.dart';
 import 'package:africaonlinestores/features/catalog/widgets/for_you_section.dart';
+import 'package:go_router/go_router.dart';
 
 class RightPane extends StatelessWidget {
   const RightPane({
@@ -62,7 +63,14 @@ class RightPane extends StatelessWidget {
                   style: TextStyle(color: colors.textMuted),
                 )
               else
-                SubcategoriesGrid(items: children, buildIconUrl: buildIconUrl),
+                SubcategoriesGrid(
+                  items: children,
+                  buildIconUrl: buildIconUrl,
+                  onTap: (cat) {
+                    final categoryId = cat.id;
+                    context.pushNamed(AppRoutes.nAllAds, pathParameters: {'categoryId': categoryId});
+                  },
+                ),
             ],
           ),
         ),

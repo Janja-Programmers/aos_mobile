@@ -14,51 +14,68 @@ import 'package:africaonlinestores/features/home/routing/home_routes.dart';
 import 'package:africaonlinestores/core/routing/app_routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  // auth state
   final auth = ref.watch(authControllerProvider);
-
-  // listen to auth changes (StateNotifier stream)
   final authStream = ref.watch(authControllerProvider.notifier).stream;
 
   return GoRouter(
     initialLocation: AppRoutes.home,
 
-    // ✅ Correct: GoRouter refreshes whenever auth notifier emits
+    // Refresh router when auth changes
     refreshListenable: GoRouterRefreshStream(authStream),
 
+    // ✅ IMPORTANT:
+    // - Put static/specific route groups before more generic ones.
+    // - ALSO ensure inside AdsRoutes.routes() that:
+    //   /ads/all/:categoryId is registered BEFORE /ads/:id
     routes: [
       ...HomeRoutes.routes(),
       ...CatalogRoutes.routes(),
+
+      // Ads browse + details (public) + seller routes (protected by redirect below)
       ...AdsRoutes.routes(),
+
+      // Account routes
       ...AccountRoutes.routes(),
+
+      // Auth routes
       ...AuthRoutes.routes(),
     ],
 
     redirect: (context, state) {
-      // Home is always landing. We only block auth screens if already logged in.
+      final loc = state.matchedLocation;
+
+      // Auth pages (block if already logged in)
       final goingToAuth =
-          state.matchedLocation == AppRoutes.login ||
-          state.matchedLocation == AppRoutes.register ||
-          state.matchedLocation == AppRoutes.verifyOtp ||
-          state.matchedLocation == AppRoutes.forgotPassword ||
-          state.matchedLocation == AppRoutes.resetPassword;
+          loc == AppRoutes.login ||
+          loc == AppRoutes.register ||
+          loc == AppRoutes.verifyOtp ||
+          loc == AppRoutes.forgotPassword ||
+          loc == AppRoutes.resetPassword;
 
-      final goingToUpdateProfile =
-          state.matchedLocation == AppRoutes.updateProfile;
-      final goingToPasswordSecurity =
-          state.matchedLocation == AppRoutes.passwordSecurity;
-      final goingToTerms = state.matchedLocation == AppRoutes.terms;
-      final goingToPrivacy = state.matchedLocation == AppRoutes.privacy;
+      // Public legal pages
+      final goingToTerms = loc == AppRoutes.terms;
+      final goingToPrivacy = loc == AppRoutes.privacy;
 
-      if (!auth.isLoggedIn &&
-          (goingToUpdateProfile || goingToPasswordSecurity)) {
+      // Any account page should be protected (except you already allow terms/privacy above)
+      final goingToAccount =
+          loc == AppRoutes.account || loc.startsWith('/account/');
+
+      // Protect "seller" ads pages (create flow + my ads)
+      final goingToSellerAds =
+          loc == AppRoutes.myAds ||
+          loc == AppRoutes.createAd ||
+          loc == AppRoutes.selectCategory ||
+          loc == AppRoutes.selectLocation;
+
+      // Allow Terms/Privacy for everyone
+      if (goingToTerms || goingToPrivacy) return null;
+
+      // If not logged in, block protected pages
+      if (!auth.isLoggedIn && (goingToAccount || goingToSellerAds)) {
         return AppRoutes.login;
       }
 
-      if (!auth.isLoggedIn && (goingToTerms || goingToPrivacy)) {
-        return null;
-      }
-
+      // If logged in, block auth pages
       if (auth.isLoggedIn && goingToAuth) return AppRoutes.home;
 
       return null;
@@ -75,8 +92,8 @@ class GoRouterRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _sub;
 
   @override
-  Future<void> dispose() async {
-    await _sub.cancel();
+  void dispose() {
+    _sub.cancel();
     super.dispose();
   }
 }

@@ -31,7 +31,7 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
               Text('Categories', style: context.h5),
               const Spacer(),
               InkWell(
-                onTap: () => context.push(AppRoutes.categories),
+                onTap: () => context.pushNamed(AppRoutes.categories),
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -65,7 +65,8 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
                   final c = items[i];
                   return _CategoryTile(
                     item: c,
-                    onTap: () => context.push(AppRoutes.categories),
+                    onTap: () =>
+                        context.pushNamed(AppRoutes.nAllAds, pathParameters: {'categoryId': c.id}),
                   );
                 },
               ),

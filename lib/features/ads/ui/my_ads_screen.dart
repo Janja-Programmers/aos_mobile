@@ -142,7 +142,7 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
                 : (_items.isEmpty)
                 ? MyAdsEmptyView(
                     onPostFirstAd: () {
-                      context.push(AppRoutes.createAd);
+                      context.pushNamed(AppRoutes.nCreateAd);
                     },
                     onLearnMore: () {
                       ShowSnack(context, 'Guide coming soon.').info();
@@ -159,7 +159,7 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(AppRoutes.createAd),
+        onPressed: () => context.pushNamed(AppRoutes.nCreateAd),
         icon: const Icon(Icons.add),
         label: const Text('Post Ad'),
       ),

@@ -132,7 +132,7 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
 
     showAppSnack(context, 'Profile updated.');
 
-    if (mounted) context.go(AppRoutes.account);
+    if (mounted) context.goNamed(AppRoutes.nAccount);
   }
 
   Future<void> _pickPhoto() async {

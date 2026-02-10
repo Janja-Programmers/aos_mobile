@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:africaonlinestores/core/core.dart';
 
-/// Home AppBar for Ads List (Home).
-/// - Title row + favorites/notifications actions
-/// - Location pill (tap to open bottom sheet)
-///
-/// NOTE: Search bar is intentionally NOT included here.
-/// Put search directly under the AppBar in the page BODY.
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const HomeAppBar({
     super.key,
@@ -15,38 +9,61 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onTapLocation,
     this.onTapFavorites,
     this.onTapNotifications,
-    this.height = 72,
+    this.search,
+    this.toolbarHeight = 72,
+    this.searchPadding = const EdgeInsets.all(12),
   });
 
   final String title;
   final String locationLabel;
-
   final VoidCallback? onTapLocation;
   final VoidCallback? onTapFavorites;
   final VoidCallback? onTapNotifications;
+  final Widget? search;
 
-  final double height;
+  /// Main AppBar height (title + actions + location row).
+  final double toolbarHeight;
+
+  /// Padding applied around the injected [search] widget.
+  ///
+  /// Keeping this in the AppBar makes the layout consistent across screens.
+  final EdgeInsets searchPadding;
+
+  // AppSearchBar is height 44 by design.
+  static const double _searchHeight = 44;
 
   @override
-  Size get preferredSize => Size.fromHeight(height);
+  Size get preferredSize {
+    final bottom = search == null ? 0.0 : (_searchHeight + searchPadding.vertical);
+    return Size.fromHeight(toolbarHeight + bottom);
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
     return AppBar(
-      toolbarHeight: height,
+      toolbarHeight: toolbarHeight,
       elevation: 0,
       centerTitle: false,
-      titleSpacing: 16,
       automaticallyImplyLeading: false,
       backgroundColor: colors.surface,
       surfaceTintColor: colors.surface,
+      bottom: search == null
+          ? null
+          : PreferredSize(
+              preferredSize:
+                  Size.fromHeight(_searchHeight + searchPadding.vertical),
+              child: Padding(
+                padding: searchPadding,
+                child: search!,
+              ),
+            ),
+      titleSpacing: 16,
       title: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.only(top: 10, bottom: 6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Row(
               children: [
@@ -69,7 +86,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ],
             ),
-
+            const SizedBox(height: 4),
             GestureDetector(
               onTap: onTapLocation,
               child: Row(

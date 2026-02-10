@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/features/home/components/home_brand_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +6,7 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 
 import 'package:africaonlinestores/features/home/components/home_categories_preview_section.dart';
+import 'package:africaonlinestores/features/home/components/home_brand_section.dart';
 import 'package:africaonlinestores/features/home/components/home_hero_carousel_section.dart';
 import 'package:africaonlinestores/features/home/components/home_horizontal_ads_section.dart';
 import 'package:africaonlinestores/features/home/components/home_ranking_tips_section.dart';
@@ -23,7 +23,6 @@ class AdListContentView extends ConsumerWidget {
     super.key,
     required this.items,
     required this.country,
-    required this.search,
     required this.locationLabel,
     required this.onTapLocation,
     required this.onLoadMore,
@@ -34,7 +33,6 @@ class AdListContentView extends ConsumerWidget {
 
   final List<AOSAdListItem> items;
   final String country;
-  final Widget search;
   final String locationLabel;
   final VoidCallback onTapLocation;
   final VoidCallback onLoadMore;
@@ -64,7 +62,6 @@ class AdListContentView extends ConsumerWidget {
         onRefresh: onRefresh,
         child: CustomScrollView(
           slivers: [
-            PinnedHeaderSliver(child: search),
             const SliverPadding(
               padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
               sliver: HomeHeroCarouselSection(),
@@ -72,7 +69,7 @@ class AdListContentView extends ConsumerWidget {
 
             const SliverPadding(
               padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
-              sliver: HomeCategoriesPreviewSection(limit: 4),
+              sliver: HomeCategoriesPreviewSection(limit: 10),
             ),
 
             HomeHorizontalAdsSection(title: 'Flash Sales', items: popular),

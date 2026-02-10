@@ -113,6 +113,11 @@ class AdsApi {
     required String countryName,
     String? locationId,
     String? categoryId,
+    String? q,
+    String? sort,
+    String? priceType,
+    double? priceMin,
+    double? priceMax,
     int limit = 20,
     int offset = 0,
   }) async {
@@ -121,10 +126,13 @@ class AdsApi {
         ApiEndpoints.listAdsEndpoint,
         queryParameters: {
           'country': countryName,
-          if (locationId != null && locationId.trim().isNotEmpty)
-            'location': locationId,
-          if (categoryId != null && categoryId.trim().isNotEmpty)
-            'category': categoryId,
+          if (locationId?.trim().isNotEmpty == true) 'location': locationId,
+          if (categoryId?.trim().isNotEmpty == true) 'category': categoryId,
+          if (q?.trim().isNotEmpty == true) 'q': q,
+          if (sort?.trim().isNotEmpty == true) 'sort': sort,
+          if (priceType?.trim().isNotEmpty == true) 'price_type': priceType,
+          if (priceMin != null) 'price_min': priceMin,
+          if (priceMax != null) 'price_max': priceMax,
           'limit': limit,
           'offset': offset,
         },

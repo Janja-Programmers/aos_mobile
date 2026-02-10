@@ -19,12 +19,14 @@ class AppSearchBar extends StatelessWidget {
   final bool readOnly;
   final VoidCallback? onTap;
 
+  static const InputBorder _noBorder = InputBorder.none;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
 
-    final borderColor = colors.border;
+    final borderColor = scheme.primary;
     final iconColor = colors.textMuted;
 
     return Material(
@@ -39,9 +41,6 @@ class AppSearchBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.search, size: 20, color: iconColor),
-            const SizedBox(width: 10),
-
             Expanded(
               child: TextField(
                 controller: controller,
@@ -58,32 +57,49 @@ class AppSearchBar extends StatelessWidget {
                   hintText: 'Search here...',
                   hintStyle: TextStyle(fontSize: 15, color: iconColor),
 
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  disabledBorder: InputBorder.none,
+                  prefixIcon: Icon(Icons.search, size: 20, color: iconColor),
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
 
+                  // ✅ ensure NO TextField border of any kind
+                  border: _noBorder,
+                  enabledBorder: _noBorder,
+                  focusedBorder: _noBorder,
+                  disabledBorder: _noBorder,
+                  errorBorder: _noBorder,
+                  focusedErrorBorder: _noBorder,
+
+                  // ✅ also prevent filled/outline behavior
                   filled: false,
                   fillColor: Colors.transparent,
 
                   isDense: true,
                   isCollapsed: true,
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const EdgeInsets.only(top: 2),
                 ),
               ),
             ),
 
-            _TinyIconButton(
-              icon: Icons.mic_none,
-              color: iconColor,
-              onTap: onMicTap ?? () {},
-            ),
-            const SizedBox(width: 8),
-            _TinyIconButton(
-              icon: Icons.camera_alt_outlined,
-              color: iconColor,
-              onTap: onCameraTap ?? () {},
-            ),
+            if (onMicTap != null) ...[
+              _TinyIconButton(
+                icon: Icons.mic_none,
+                color: iconColor,
+                onTap: onMicTap!,
+              ),
+            ],
+
+            if (onMicTap != null && onCameraTap != null)
+              const SizedBox(width: 8),
+
+            if (onCameraTap != null) ...[
+              _TinyIconButton(
+                icon: Icons.camera_alt_outlined,
+                color: iconColor,
+                onTap: onCameraTap!,
+              ),
+            ],
           ],
         ),
       ),
@@ -108,7 +124,7 @@ class _TinyIconButton extends StatelessWidget {
       onTap: onTap,
       radius: 22,
       child: SizedBox(
-        width: 28, // tight like the image
+        width: 28,
         height: 28,
         child: Center(child: Icon(icon, size: 20, color: color)),
       ),

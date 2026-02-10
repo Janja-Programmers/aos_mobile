@@ -1,6 +1,8 @@
 // lib/features/home/ui/ad_list_screen.dart
 // (Only the relevant updated parts — this is where the NON-SCROLLABLE search bar lives.)
 
+import 'package:africaonlinestores/features/ads/ui/pickers/select_location_screen.dart';
+import 'package:africaonlinestores/features/home/domain/location_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,6 +40,14 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
   // Location filter ("All Cities" => null)
   String _locationLabel = 'All Cities';
   String? _locationId;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _load(initial: true);
+    });
+  }
 
   @override
   void dispose() {
@@ -78,6 +88,7 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
     if (countryName.trim().isEmpty) return;
 
     setState(() {
+      _error = null;
       if (initial) {
         _loading = true;
       } else {
@@ -90,30 +101,35 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
         .listAds(
           countryName: countryName,
           locationId: _locationId,
+          q: _searchCtrl.text.trim().isEmpty ? null : _searchCtrl.text.trim(),
           limit: _limit,
           offset: _offset,
-          // In the future: query: _searchCtrl.text.trim().isEmpty ? null : _searchCtrl.text.trim(),
         );
 
     if (!mounted) return;
 
-    res.fold((f) => setState(() => _error = f.message), (data) {
-      final payload = data['data'];
-      final rawItems = payload['items'];
-      if (rawItems is! List) return;
+    res.fold(
+      (f) => setState(() {
+        _error = f.message;
+      }),
+      (data) {
+        final payload = data['data'];
+        final rawItems = (payload is Map) ? payload['items'] : null;
+        if (rawItems is! List) return;
 
-      final list = rawItems
-          .whereType<Map<String, dynamic>>()
-          .map(AOSAdListItem.fromJson)
-          .toList();
+        final list = rawItems
+            .whereType<Map<String, dynamic>>()
+            .map(AOSAdListItem.fromJson)
+            .toList();
 
-      setState(() {
-        if (_offset == 0) _items.clear();
-        _items.addAll(list);
-        _offset += list.length;
-        _hasMore = list.length == _limit;
-      });
-    });
+        setState(() {
+          if (_offset == 0) _items.clear();
+          _items.addAll(list);
+          _offset += list.length;
+          _hasMore = list.length == _limit;
+        });
+      },
+    );
 
     if (!mounted) return;
     setState(() {
@@ -123,18 +139,21 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
   }
 
   Future<void> _openLocationPicker() async {
-    // (keep your existing bottom sheet implementation here exactly as you already have it)
-    // after picking:
-    // setState(() { _locationLabel = picked.label; _locationId = picked.id; });
-    // await _refresh();
-  }
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SelectLocationScreen(selectedId: _locationId),
+      ),
+    );
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _load(initial: true);
+    final picked = LocationPick.fromPopResult(result);
+    if (picked == null) return;
+
+    setState(() {
+      _locationLabel = picked.label;
+      _locationId = picked.id;
     });
+
+    await _refresh();
   }
 
   @override
@@ -152,60 +171,39 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
         .maybeWhen(data: (v) => v, orElse: () => null);
     final country = (prefs?.countryCode ?? '').trim();
 
+    final searchBar = AppSearchBar(
+      controller: _searchCtrl,
+      onMicTap: () {},
+      onCameraTap: () {},
+    );
+
     final header = HomeAppBar(
       locationLabel: _locationLabel,
       onTapLocation: _openLocationPicker,
-      onTapFavorites: () {
-        ShowSnack(context, 'Coming Soon!').info();
-      },
-      onTapNotifications: () {
-        ShowSnack(context, 'Coming Soon!').info();
-      },
+      onTapFavorites: () => ShowSnack(context, 'Coming Soon!').info(),
+      onTapNotifications: () => ShowSnack(context, 'Coming Soon!').info(),
+      search: searchBar,
     );
 
-    // This is the SCROLLABLE content only (no search inside).
     final Widget stateBody;
-    final searchBar = AppSearchBar(
-      controller: _searchCtrl,
-      // In the future (API search):
-      // onSubmitted: (_) => _refresh(),
-    );
 
     if (_loading && _items.isEmpty) {
-      stateBody = CustomScrollView(
-        slivers: [
-          PinnedHeaderSliver(child: searchBar),
-          const SliverFillRemaining(
-            hasScrollBody: false,
-            child: AdListLoadingView(),
-          ),
-        ],
-      );
+      stateBody = const AdListLoadingView();
     } else if (_error != null && _items.isEmpty) {
-      stateBody = CustomScrollView(
-        slivers: [
-          PinnedHeaderSliver(child: searchBar),
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: AdListErrorView(message: _error!, onRetry: _refresh),
-          ),
-        ],
-      );
+      stateBody = AdListErrorView(message: _error!, onRetry: _refresh);
     } else {
       stateBody = AdListContentView(
         items: _items,
         country: country,
-        search: searchBar,
         onLoadMore: _load,
         onRefresh: _refresh,
         loadingMore: _loadingMore,
         hasMore: _hasMore,
-        locationLabel: '',
-        onTapLocation: () {},
+        locationLabel: _locationLabel,
+        onTapLocation: _openLocationPicker,
       );
     }
 
-    // ✅ Single scroll view for the page content (search is pinned inside).
     return AdListScaffold(header: header, body: stateBody);
   }
 }

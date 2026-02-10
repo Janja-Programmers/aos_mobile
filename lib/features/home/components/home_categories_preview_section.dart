@@ -5,12 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
+import 'package:africaonlinestores/features/ads/utils/file_url.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/providers/categories_controller.dart';
 
-/// Categories preview section (grid row) with a "See all" link.
-///
-/// Matches the video: show a compact row of categories (usually 4) and...
+/// Categories preview section (carousel row) with a "See all" link.
 class HomeCategoriesPreviewSection extends ConsumerWidget {
   const HomeCategoriesPreviewSection({super.key, this.limit = 10});
 
@@ -48,28 +47,30 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
+
           if (state.loading && items.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 14),
               child: Center(child: CircularProgressIndicator()),
             )
           else
-            Row(
-              children: List.generate(items.length.clamp(0, 4), (i) {
-                final c = items[i];
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      right: i == items.length - 1 ? 0 : 10,
-                    ),
-                    child: _CategoryTile(
-                      item: c,
-                      onTap: () => context.push(AppRoutes.categories),
-                    ),
-                  ),
-                );
-              }),
+            SizedBox(
+              height: 92,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                itemCount: items.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 12),
+                itemBuilder: (context, i) {
+                  final c = items[i];
+                  return _CategoryTile(
+                    item: c,
+                    onTap: () => context.push(AppRoutes.categories),
+                  );
+                },
+              ),
             ),
+
           if (state.errorMessage != null && items.isEmpty) ...[
             const SizedBox(height: 8),
             Text(
@@ -93,41 +94,53 @@ class _CategoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
+    final hasIcon = (item.icon != null && item.icon!.trim().isNotEmpty);
+
+    final url = buildFileUrl(item.icon!);
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: colors.surface,
-              border: Border.all(color: colors.border),
-              borderRadius: BorderRadius.circular(18),
+      child: SizedBox(
+        width: 76,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                color: colors.surface,
+                shape: BoxShape.circle,
+                border: Border.all(color: colors.border),
+              ),
+              alignment: Alignment.center,
+              child: ClipOval(
+                child: hasIcon
+                    ? CircleAvatar(
+                        radius: 28.0,
+                        backgroundColor: colors.border,
+                        foregroundImage: url == null ? null : NetworkImage(url),
+                        child: url == null
+                            ? Icon(
+                                Icons.category_outlined,
+                                color: colors.textMuted,
+                              )
+                            : null,
+                      )
+                    : Icon(Icons.category_outlined, color: colors.textMuted),
+              ),
             ),
-            alignment: Alignment.center,
-            child: (item.icon != null && item.icon!.trim().isNotEmpty)
-                ? Image.network(
-                    item.icon!,
-                    width: 28,
-                    height: 28,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) =>
-                        Icon(Icons.category_outlined, color: colors.textMuted),
-                  )
-                : Icon(Icons.category_outlined, color: colors.textMuted),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            item.name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: context.p.copyWith(fontSize: 12),
-          ),
-        ],
+            const SizedBox(height: 6),
+            Text(
+              item.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: context.p.copyWith(fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }

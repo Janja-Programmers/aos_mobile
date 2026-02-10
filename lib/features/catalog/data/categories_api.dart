@@ -17,9 +17,7 @@ class CategoriesApi {
     try {
       final res = await _client.dio.get(
         ApiEndpoints.getCategoriesEndpoint,
-        queryParameters: {
-          if (includeInactive) 'include_inactive': 1,
-        },
+        queryParameters: {if (includeInactive) 'include_inactive': 1},
       );
       return unwrapFrappe(res);
     } on DioException catch (e) {

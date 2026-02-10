@@ -36,6 +36,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   google_fonts: ^8.0.0
+  video_player: ^2.10.1
+  chewie: ^1.13.0
 
 dev_dependencies:
   flutter_test:

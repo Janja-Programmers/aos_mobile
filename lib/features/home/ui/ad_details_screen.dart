@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:go_router/go_router.dart';
-import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/utils/app_snack.dart';
-import 'package:africaonlinestores/features/ads/utils/file_url.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/providers/ads_api_provider.dart';
-import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
-part 'ad_details_screen_parts.dart';
+import 'package:africaonlinestores/features/home/components/ad_details/ad_detail_action_buttons.dart';
+import 'package:africaonlinestores/features/home/components/ad_details/ads_header_info_section.dart';
+import 'package:africaonlinestores/features/home/components/ad_details/image_header_section.dart';
+import 'package:africaonlinestores/features/home/components/ad_details/product_detail_section.dart';
+import 'package:africaonlinestores/features/home/components/ad_details/grid_ads_section.dart';
 
 class AdDetailsScreen extends ConsumerStatefulWidget {
   const AdDetailsScreen({super.key, required this.id});
@@ -23,8 +22,12 @@ class AdDetailsScreen extends ConsumerStatefulWidget {
 class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
   bool _loading = true;
   String? _err;
+
   AOSAdDetails? _ad;
   int _selectedImage = 0;
+
+  List<AOSAdListItem> _similar = [];
+  bool _loadingSimilar = false;
 
   @override
   void initState() {
@@ -49,6 +52,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
       (json) {
         final data = json['data'];
         final adJson = (data is Map) ? (data['item'] ?? data) : null;
+
         if (adJson is! Map) {
           setState(() {
             _loading = false;
@@ -56,9 +60,82 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
           });
           return;
         }
+
+        final ad = AOSAdDetails.fromJson(Map<String, dynamic>.from(adJson));
+
+        // media selection clamp
+        final cleanImages = ad.images
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+        final thumbCount = cleanImages.take(4).length;
+        final hasVideo = (ad.video?.trim().isNotEmpty ?? false);
+        final mediaCount = thumbCount + (hasVideo ? 1 : 0);
+
         setState(() {
-          _ad = AOSAdDetails.fromJson(Map<String, dynamic>.from(adJson));
+          _ad = ad;
           _loading = false;
+          _selectedImage = _selectedImage.clamp(
+            0,
+            (mediaCount > 0 ? mediaCount - 1 : 0),
+          );
+        });
+
+        // ✅ load similar after we have the ad
+        _loadSimilar();
+      },
+    );
+  }
+
+  Future<void> _loadSimilar() async {
+    final ad = _ad;
+    if (ad == null) return;
+    if (_loadingSimilar) return;
+
+    setState(() => _loadingSimilar = true);
+
+    final categoryId = ad.categoryName;
+    final countryName = ad.country;
+
+    final res = await ref
+        .read(adsApiProvider)
+        .listAds(
+          countryName: countryName,
+          categoryId: categoryId,
+          limit: 7,
+          offset: 0,
+        );
+
+    if (!mounted) return;
+
+    res.fold(
+      (f) => setState(() {
+        _loadingSimilar = false;
+        // optional: store error string if you want to show it
+        // _similarErr = f.message;
+      }),
+      (json) {
+        final data = json['data'];
+
+        final raw = (data is Map)
+            ? (data['items'] ?? data['results'] ?? data['list'])
+            : null;
+
+        if (raw is! List) {
+          setState(() => _loadingSimilar = false);
+          return;
+        }
+
+        final items = raw
+            .whereType<Map>()
+            .map((m) => AOSAdListItem.fromJson(Map<String, dynamic>.from(m)))
+            .where((x) => x.id != widget.id)
+            .take(6)
+            .toList();
+
+        setState(() {
+          _similar = items;
+          _loadingSimilar = false;
         });
       },
     );
@@ -99,131 +176,48 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
-                      _ImageHeader(
+                      ImageHeaderSection(
                         images: _ad!.images,
+                        videoUrl: _ad!.video,
                         selected: _selectedImage,
                         onSelect: (i) => setState(() => _selectedImage = i),
                       ),
                       const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            color: colors.primary,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              [
-                                _ad!.locationName,
-                                _ad!.country,
-                              ].where((e) => e.trim().isNotEmpty).join(', '),
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(context).hintColor,
-                                  ),
-                            ),
-                          ),
-                        ],
+
+                      AdHeaderInfoSection(
+                        colorsPrimary: colors.primary,
+                        locationName: _ad!.locationName,
+                        country: _ad!.country,
+                        title: _ad!.title,
+                        priceDisplay: _ad!.priceDisplay,
+                        currency: _ad!.currency,
+                        price: _ad!.price,
+                        priceUnit: _ad!.priceUnit,
                       ),
                       const SizedBox(height: 6),
-                      Text(_ad!.title, style: context.h6),
-                      const SizedBox(height: 10),
-                      Text(
-                        _ad!.priceDisplay.trim().isNotEmpty
-                            ? _ad!.priceDisplay
-                            : [
-                                _ad!.currency,
-                                (_ad!.price ?? 0).toString(),
-                                if (_ad!.priceUnit.trim().isNotEmpty)
-                                  _ad!.priceUnit,
-                              ].where((e) => e.trim().isNotEmpty).join(' '),
-                        style: context.pStrong.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: colors.primary,
-                        ),
+
+                      AdProductDetailsSection(
+                        description: _ad!.description,
+                        specs: _ad!.specs,
                       ),
-                      const SizedBox(height: 16),
-                      _SectionCard(
-                        title: 'Product Details',
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Description',
-                              style: TextStyle(fontWeight: FontWeight.w800),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _ad!.description.isEmpty
-                                  ? 'No description.'
-                                  : _ad!.description,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: Theme.of(context).hintColor,
-                                  ),
-                            ),
-                            const SizedBox(height: 14),
-                            if (_ad!.specs.isNotEmpty) ...[
-                              const Text(
-                                'Specifications',
-                                style: TextStyle(fontWeight: FontWeight.w800),
-                              ),
-                              const SizedBox(height: 10),
-                              for (final s in _ad!.specs) _SpecRow(spec: s),
-                            ],
-                          ],
+                      const SizedBox(height: 8),
+
+                      if (_loadingSimilar)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      else
+                        GridAdsSectionBox(
+                          title: 'Similar Products',
+                          items: _similar,
                         ),
-                      ),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
-                SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                    child: Row(
-                      children: [
-                        // ✅ HOME: icon-only
-                        _ActionButton(
-                          icon: Icons.home_outlined,
-                          filled: false,
-                          label: null,
-                          onTap: () => context.push(AppRoutes.home),
-                        ),
-                        const SizedBox(width: 10),
 
-                        // ✅ CALL: icon + label
-                        Expanded(
-                          child: _ActionButton(
-                            icon: Icons.call,
-                            filled: true,
-                            label: 'Call',
-                            onTap: () => ShowSnack(
-                              context,
-                              'Wire call action later',
-                            ).info(),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-
-                        // ✅ MESSAGE: icon + label
-                        Expanded(
-                          child: _ActionButton(
-                            icon: Icons.chat_bubble_outline,
-                            filled: false,
-                            label: 'Message',
-                            onTap: () => ShowSnack(
-                              context,
-                              'Wire chat action later',
-                            ).info(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                AdDetailActionBar(onCall: () {}, onMessage: () {}),
               ],
             ),
     );

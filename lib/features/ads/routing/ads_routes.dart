@@ -13,12 +13,12 @@ class AdsRoutes {
   static List<RouteBase> routes() {
     return [
       GoRoute(
-        path: AppRoutes.myAds,
-        builder: (context, state) => const MyAdsScreen(),
-      ),
-      GoRoute(
         path: AppRoutes.createAd,
         builder: (context, state) => const CreateAdFlowScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.myAds,
+        builder: (context, state) => const MyAdsScreen(),
       ),
       GoRoute(
         path: AppRoutes.selectLocation,

@@ -6,7 +6,6 @@ import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/home/components/ad_card.dart';
 import 'package:africaonlinestores/features/home/components/section_header.dart';
 
-/// A titled horizontal rail of ads (Popular Products, Hot Findings, etc.)
 class HomeHorizontalAdsSection extends StatelessWidget {
   const HomeHorizontalAdsSection({
     super.key,
@@ -33,15 +32,15 @@ class HomeHorizontalAdsSection extends StatelessWidget {
           children: [
             // ───────── Section header ─────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+              padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
               child: SectionHeader(title: title, onSeeAll: onSeeAll),
             ),
 
             // ───────── Horizontal rail ─────────
             LayoutBuilder(
               builder: (context, constraints) {
-                // Responsive sizing derived from screen width
-                final cardWidth = constraints.maxWidth * 0.55;
+                final maxW = constraints.maxWidth;
+                final cardWidth = (maxW * 0.45).clamp(150.0, 260.0);
                 final cardHeight = cardWidth / 0.68;
 
                 return SizedBox(
@@ -59,8 +58,10 @@ class HomeHorizontalAdsSection extends StatelessWidget {
                         width: cardWidth,
                         child: AdCard(
                           ad: ad,
-                          onTap: () =>
-                              context.pushNamed(AppRoutes.nAdDetails, pathParameters: {'id': ad.id}),
+                          onTap: () => context.pushNamed(
+                            AppRoutes.nAdDetails,
+                            pathParameters: {'id': ad.id},
+                          ),
                         ),
                       );
                     },

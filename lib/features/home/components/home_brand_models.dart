@@ -4,16 +4,18 @@ class HomePromoItem {
   const HomePromoItem({
     required this.title,
     required this.subtitle,
-    required this.ctaText,
+    this.ctaText = 'Shop Now',
     this.onTapCta,
-    this.background = const Color(0xFF6F7CF7),
+    required this.color,
+    required this.icon,
   });
 
   final String title;
   final String subtitle;
   final String ctaText;
   final VoidCallback? onTapCta;
-  final Color background;
+  final Color color;
+  final IconData icon;
 }
 
 class HomeCategoryItem {

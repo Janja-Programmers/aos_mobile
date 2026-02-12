@@ -6,7 +6,6 @@ import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/home/components/ad_card.dart';
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
-/// Popular products section (title row + grid of ad cards).
 class GridAdsSection extends StatelessWidget {
   const GridAdsSection({
     super.key,
@@ -63,16 +62,16 @@ class GridAdsSection extends StatelessWidget {
               crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-
-              // ✅ Taller tiles -> more room for title/subtitle/price
-              // Old: 0.75 (too short)
               childAspectRatio: 0.68,
             ),
             delegate: SliverChildBuilderDelegate((context, i) {
               final ad = items[i];
               return AdCard(
                 ad: ad,
-                onTap: () => context.pushNamed(AppRoutes.nAdDetails, pathParameters: {'id': ad.id}),
+                onTap: () => context.pushNamed(
+                  AppRoutes.nAdDetails,
+                  pathParameters: {'id': ad.id},
+                ),
               );
             }, childCount: items.length),
           ),

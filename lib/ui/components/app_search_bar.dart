@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:africaonlinestores/core/core.dart';
 
-class AppSearchBar extends StatelessWidget {
+class AppSearchBar extends StatefulWidget {
   const AppSearchBar({
     super.key,
     this.controller,
@@ -10,16 +10,71 @@ class AppSearchBar extends StatelessWidget {
     this.onSubmitted,
     this.readOnly = false,
     this.onTap,
+    this.hintText = 'Search here...',
+    this.textAlign = TextAlign.start,
+    this.autofocus = false,
   });
 
   final TextEditingController? controller;
   final VoidCallback? onMicTap;
   final VoidCallback? onCameraTap;
   final ValueChanged<String>? onSubmitted;
+
+  /// If true, user cannot type. Useful when tapping should open a new page.
   final bool readOnly;
+
+  /// If provided, will run when the field is tapped.
+  /// Common use: navigate to search screen.
   final VoidCallback? onTap;
 
+  final String hintText;
+  final TextAlign textAlign;
+  final bool autofocus;
+
+  @override
+  State<AppSearchBar> createState() => _AppSearchBarState();
+}
+
+class _AppSearchBarState extends State<AppSearchBar> {
   static const InputBorder _noBorder = InputBorder.none;
+
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _focusNode.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChanged);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    // If caller wants navigation (or any custom behavior), let them handle it.
+    if (widget.onTap != null) {
+      widget.onTap!();
+
+      // If it's readOnly, do not keep focus (avoids keyboard flashing).
+      if (widget.readOnly) {
+        _focusNode.unfocus();
+      }
+      return;
+    }
+
+    // Default behavior: if it's NOT readOnly, allow typing by requesting focus.
+    if (!widget.readOnly) {
+      _focusNode.requestFocus();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,41 +84,40 @@ class AppSearchBar extends StatelessWidget {
     final borderColor = scheme.primary;
     final iconColor = colors.textMuted;
 
+    final isFocused = _focusNode.hasFocus && !widget.readOnly;
+    final outlineColor = isFocused ? borderColor : iconColor;
+
     return Material(
       color: Colors.transparent,
       child: Container(
         height: 44,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(
           color: scheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor, width: 1),
+          border: Border.all(color: outlineColor, width: 1),
         ),
         child: Row(
           children: [
             Expanded(
               child: TextField(
-                controller: controller,
-                readOnly: readOnly,
-                onTap: onTap,
+                controller: widget.controller,
+                focusNode: _focusNode,
+                readOnly: widget.readOnly,
+                autofocus: widget.autofocus,
+                onTap: _handleTap,
                 textInputAction: TextInputAction.search,
-                onSubmitted: onSubmitted,
+                textAlign: widget.textAlign,
+                onSubmitted: widget.onSubmitted,
                 style: TextStyle(
                   fontSize: 15,
                   color: scheme.onSurface,
                   decoration: TextDecoration.none,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Search here...',
+                  hintText: widget.hintText,
                   hintStyle: TextStyle(fontSize: 15, color: iconColor),
-
                   prefixIcon: Icon(Icons.search, size: 20, color: iconColor),
-                  prefixIconConstraints: const BoxConstraints(
-                    minWidth: 36,
-                    minHeight: 36,
-                  ),
 
-                  // ✅ ensure NO TextField border of any kind
                   border: _noBorder,
                   enabledBorder: _noBorder,
                   focusedBorder: _noBorder,
@@ -71,33 +125,28 @@ class AppSearchBar extends StatelessWidget {
                   errorBorder: _noBorder,
                   focusedErrorBorder: _noBorder,
 
-                  // ✅ also prevent filled/outline behavior
                   filled: false,
                   fillColor: Colors.transparent,
 
                   isDense: true,
                   isCollapsed: true,
-                  contentPadding: const EdgeInsets.only(top: 2),
                 ),
               ),
             ),
-
-            if (onMicTap != null) ...[
+            if (widget.onMicTap != null) ...[
               _TinyIconButton(
                 icon: Icons.mic_none,
                 color: iconColor,
-                onTap: onMicTap!,
+                onTap: widget.onMicTap!,
               ),
             ],
-
-            if (onMicTap != null && onCameraTap != null)
+            if (widget.onMicTap != null && widget.onCameraTap != null)
               const SizedBox(width: 8),
-
-            if (onCameraTap != null) ...[
+            if (widget.onCameraTap != null) ...[
               _TinyIconButton(
                 icon: Icons.camera_alt_outlined,
                 color: iconColor,
-                onTap: onCameraTap!,
+                onTap: widget.onCameraTap!,
               ),
             ],
           ],

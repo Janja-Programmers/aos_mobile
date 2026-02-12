@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 
-import 'package:africaonlinestores/features/home/components/home_categories_preview_section.dart';
 import 'package:africaonlinestores/features/home/components/home_brand_section.dart';
+import 'package:africaonlinestores/features/home/components/home_categories_preview_section.dart';
+import 'package:africaonlinestores/features/home/components/home_grid_ads_section.dart';
 import 'package:africaonlinestores/features/home/components/home_hero_carousel_section.dart';
 import 'package:africaonlinestores/features/home/components/home_horizontal_ads_section.dart';
 import 'package:africaonlinestores/features/home/components/home_ranking_tips_section.dart';
-import 'package:africaonlinestores/features/home/components/home_grid_ads_section.dart';
+
+import 'package:africaonlinestores/features/home/domain/home_ads_section.dart';
+import 'package:africaonlinestores/features/home/domain/home_ads_sections.dart';
+import 'package:africaonlinestores/features/home/providers/home_section_ads_provider.dart';
 
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
@@ -42,14 +45,24 @@ class AdListContentView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Use the same incoming ads list to populate multiple rails.
-    // Later, these can be backed by dedicated endpoints (popular/hot/new...)
-    final popular = items.take(8).toList();
-    // final hot = items.skip(4).take(8).toList();
-    final nearYou = items.skip(10).take(8).toList();
-    final homeAccessories = items.skip(2).take(8).toList();
-    final healthBeauty = items.skip(6).take(8).toList();
-    final babyKids = items.skip(12).take(8).toList();
+    // Keep the exact Home page arrangement requested, but fetch each
+    // rail/grid from the backend using [homeAdsSections].
+    HomeAdsSection? sectionByKey(String key) {
+      for (final s in homeAdsSections) {
+        if (s.key == key) return s;
+      }
+      return null;
+    }
+
+    // IMPORTANT: in a CustomScrollView.slivers list, the type is Widget (sliver widget),
+    // not "Sliver" (that type doesn't exist).
+    Widget sectionSliver(String key) {
+      final s = sectionByKey(key);
+      if (s == null) {
+        return const SliverToBoxAdapter(child: SizedBox.shrink());
+      }
+      return _HomeAdsSectionSliver(section: s);
+    }
 
     return NotificationListener<ScrollNotification>(
       onNotification: (n) {
@@ -68,27 +81,27 @@ class AdListContentView extends ConsumerWidget {
             ),
 
             const SliverPadding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
               sliver: HomeCategoriesPreviewSection(limit: 10),
             ),
 
-            HomeHorizontalAdsSection(title: 'Flash Sales', items: popular),
+            // ✅ Exact arrangement:
+            // Flash Sales (rail)
+            sectionSliver('flash_sales'),
 
-            GridAdsSection(title: 'New Products', items: nearYou),
+            // New Products (grid)
+            sectionSliver('new_products'),
 
-            HomeHorizontalAdsSection(title: 'Deals', items: popular),
+            // Deals (rail)
+            sectionSliver('deals'),
 
+            // Ranking tips
             const HomeRankingTipsSection(),
 
-            HomeHorizontalAdsSection(
-              title: 'Home Accessories',
-              items: homeAccessories,
-            ),
+            // Home Accessories (rail)
+            sectionSliver('home_accessories'),
 
-            HomeHorizontalAdsSection(
-              title: 'Health & Beauty',
-              items: healthBeauty,
-            ),
+            sectionSliver('laptops_and_computers'),
 
             SliverToBoxAdapter(
               child: Padding(
@@ -97,21 +110,27 @@ class AdListContentView extends ConsumerWidget {
                   vertical: 10,
                 ),
                 child: HomeBrandSection(
-                  promos: const [
+                  promos: [
                     HomePromoItem(
                       title: 'Top Deals',
                       subtitle: 'Best Prices',
                       ctaText: 'Shop Now',
+                      color: context.appColors.success,
+                      icon: Icons.apartment,
                     ),
                     HomePromoItem(
                       title: 'New Arrivals',
-                      subtitle: 'Fresh Picks',
-                      ctaText: 'Explore',
+                      subtitle: 'Fresh Stock',
+                      ctaText: 'Shop Now',
+                      color: context.appColors.warning,
+                      icon: Icons.apartment,
                     ),
                     HomePromoItem(
-                      title: 'Hot Discounts',
-                      subtitle: 'Limited Time',
-                      ctaText: 'Grab Now',
+                      title: 'Summer Sale',
+                      subtitle: 'Upto 40%',
+                      ctaText: 'Shop Now',
+                      color: context.appColors.info,
+                      icon: Icons.apartment,
                     ),
                   ],
                   categories: [
@@ -135,16 +154,17 @@ class AdListContentView extends ConsumerWidget {
               ),
             ),
 
-            HomeHorizontalAdsSection(title: 'Top Category', items: popular),
+            sectionSliver('health_beauty'),
 
-            HomeHorizontalAdsSection(title: 'Popular Category', items: popular),
+            sectionSliver('health_beauty'),
 
             const SliverPadding(
               padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
               sliver: HomeHeroCarouselSection(),
             ),
 
-            HomeHorizontalAdsSection(title: 'Baby & Kids', items: babyKids),
+            // Baby & Kids (rail)
+            sectionSliver('baby_kids'),
 
             SliverPadding(
               padding: const EdgeInsets.only(top: 6),
@@ -170,6 +190,44 @@ class AdListContentView extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _HomeAdsSectionSliver extends ConsumerWidget {
+  const _HomeAdsSectionSliver({required this.section});
+
+  final HomeAdsSection section;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final req = HomeSectionAdsRequest(section: section);
+    final asyncItems = ref.watch(homeSectionAdsProvider(req));
+
+    return asyncItems.when(
+      loading: () => const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 18),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+      error: (_, _) => const SliverToBoxAdapter(child: SizedBox.shrink()),
+      data: (items) {
+        if (items.isEmpty) {
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
+
+        // New Products is intentionally a grid, others default to rail.
+        if (section.key == 'new_products') {
+          return GridAdsSection(title: section.title, items: items);
+        }
+
+        return HomeHorizontalAdsSection(
+          title: section.title,
+          items: items,
+          onSeeAll: () {},
+        );
+      },
     );
   }
 }

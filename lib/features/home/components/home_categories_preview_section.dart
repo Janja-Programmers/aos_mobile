@@ -4,12 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/ads/utils/file_url.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/providers/categories_controller.dart';
 
-/// Categories preview section (carousel row) with a "See all" link.
+/// Categories preview section (horizontal carousel) with a "See all" link.
+/// Responsive and overflow-safe.
 class HomeCategoriesPreviewSection extends ConsumerWidget {
   const HomeCategoriesPreviewSection({super.key, this.limit = 10});
 
@@ -26,59 +26,62 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          /// Header
           Row(
             children: [
-              Text('Categories', style: context.h5),
-              const Spacer(),
-              InkWell(
-                onTap: () => context.pushNamed(AppRoutes.categories),
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
-                  ),
-                  child: Text(
-                    'See all',
-                    style: context.p.copyWith(color: colors.primary),
-                  ),
+              Expanded(
+                child: Text(
+                  'Categories',
+                  style: context.h5,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              TextButton(
+                onPressed: () => context.pushNamed(AppRoutes.categories),
+                child: Text(
+                  'See all',
+                  style: context.p.copyWith(color: colors.primary),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
 
+          /// Loading
           if (state.loading && items.isEmpty)
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 14),
+              padding: EdgeInsets.symmetric(vertical: 20),
               child: Center(child: CircularProgressIndicator()),
             )
-          else
+          /// Categories list
+          else if (items.isNotEmpty)
             SizedBox(
-              height: 92,
+              height: 110,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 2),
                 itemCount: items.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 12),
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
                 itemBuilder: (context, i) {
                   final c = items[i];
                   return _CategoryTile(
                     item: c,
-                    onTap: () =>
-                        context.pushNamed(AppRoutes.nAllAds, pathParameters: {'categoryId': c.id}),
+                    onTap: () => context.pushNamed(
+                      AppRoutes.nAllAds,
+                      pathParameters: {'categoryId': c.id},
+                    ),
                   );
                 },
               ),
+            )
+          /// Error
+          else if (state.errorMessage != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                state.errorMessage!,
+                style: context.p.copyWith(color: colors.error),
+              ),
             ),
-
-          if (state.errorMessage != null && items.isEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              state.errorMessage!,
-              style: context.p.copyWith(color: colors.error),
-            ),
-          ],
         ],
       ),
     );
@@ -95,21 +98,22 @@ class _CategoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    final hasIcon = (item.icon != null && item.icon!.trim().isNotEmpty);
+    final hasIcon = item.icon != null && item.icon!.trim().isNotEmpty;
 
-    final url = buildFileUrl(item.icon!);
+    final url = hasIcon ? buildFileUrl(item.icon!) : null;
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
       child: SizedBox(
-        width: 76,
+        width: 82,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            /// Circle container
             Container(
-              width: 54,
-              height: 54,
+              width: 58,
+              height: 58,
               decoration: BoxDecoration(
                 color: colors.surface,
                 shape: BoxShape.circle,
@@ -117,28 +121,32 @@ class _CategoryTile extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: ClipOval(
-                child: hasIcon
-                    ? CircleAvatar(
-                        radius: 28.0,
-                        backgroundColor: colors.border,
-                        foregroundImage: url == null ? null : NetworkImage(url),
-                        child: url == null
-                            ? Icon(
-                                Icons.category_outlined,
-                                color: colors.textMuted,
-                              )
-                            : null,
+                child: url != null
+                    ? Image.network(
+                        url,
+                        fit: BoxFit.cover,
+                        width: 58,
+                        height: 58,
+                        errorBuilder: (_, _, _) => Icon(
+                          Icons.category_outlined,
+                          color: colors.textMuted,
+                        ),
                       )
                     : Icon(Icons.category_outlined, color: colors.textMuted),
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              item.name,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: context.p.copyWith(fontSize: 12),
+
+            const SizedBox(height: 8),
+
+            /// Name
+            Flexible(
+              child: Text(
+                item.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: context.p.copyWith(fontSize: 12),
+              ),
             ),
           ],
         ),

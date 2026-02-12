@@ -35,15 +35,7 @@ class _HomeBrandPromoCarouselState extends State<HomeBrandPromoCarousel> {
   Timer? _timer;
   int _index = 0;
 
-  List<HomePromoItem> get _items => widget.items.isEmpty
-      ? const [
-          HomePromoItem(
-            title: 'Top Deals',
-            subtitle: 'Best Prices',
-            ctaText: 'Shop Now',
-          ),
-        ]
-      : widget.items;
+  List<HomePromoItem> get _items => widget.items;
 
   @override
   void initState() {
@@ -117,44 +109,74 @@ class _PromoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final base = item.color;
+
     return Container(
-      color: item.background,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [base.withOpacity(0.85), base.withOpacity(0.55)],
+        ),
+      ),
       child: Stack(
         children: [
-          Positioned.fill(
-            child: CustomPaint(painter: _PromoPainter(item.background)),
+          Positioned.fill(child: CustomPaint(painter: _PromoPainter(base))),
+
+          // Tag pill
+          Positioned(
+            left: 14,
+            top: 14,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.18),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(item.icon, size: 16, color: Colors.white),
+                  const SizedBox(width: 6),
+                  Text(
+                    item.title,
+                    style: context.p.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
+
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 54, 16, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   item.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.pStrong.copyWith(
+                  style: context.h5.copyWith(
                     color: Colors.white,
-                    fontSize: 22,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   item.subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.pStrong.copyWith(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 14,
+                  style: context.p.copyWith(
+                    color: Colors.white.withOpacity(0.92),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: _CtaButton(label: item.ctaText, onTap: item.onTapCta),
+                const SizedBox(height: 14),
+                _CtaButton(
+                  label: item.ctaText,
+                  onTap: item.onTapCta,
+                  textColor: base,
                 ),
               ],
             ),
@@ -166,10 +188,15 @@ class _PromoCard extends StatelessWidget {
 }
 
 class _CtaButton extends StatelessWidget {
-  const _CtaButton({required this.label, required this.onTap});
+  const _CtaButton({
+    required this.label,
+    required this.onTap,
+    required this.textColor,
+  });
 
   final String label;
   final VoidCallback? onTap;
+  final Color textColor;
 
   @override
   Widget build(BuildContext context) {
@@ -186,10 +213,13 @@ class _CtaButton extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: context.pStrong.copyWith(fontWeight: FontWeight.w800),
+                style: context.pStrong.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: textColor,
+                ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.arrow_forward_rounded, size: 18),
+              Icon(Icons.arrow_forward_rounded, size: 18, color: textColor),
             ],
           ),
         ),

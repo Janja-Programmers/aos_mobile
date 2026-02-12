@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
-/// Reusable section header: title + optional "See all" action.
+/// Reusable section header styled like AOS Flash Sales.
 class SectionHeader extends StatelessWidget {
   const SectionHeader({super.key, required this.title, this.onSeeAll});
 
@@ -14,24 +14,47 @@ class SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return Row(
-      children: [
-        Expanded(
-          child: Text(title, style: context.h5.copyWith(color: colors.primary)),
-        ),
-        if (onSeeAll != null)
-          InkWell(
-            onTap: onSeeAll,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              child: Text(
-                'See all',
-                style: context.p.copyWith(color: colors.primary),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: colors.primary.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: context.h5.copyWith(
+                color: colors.primary,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
-      ],
+          if (onSeeAll != null)
+            InkWell(
+              onTap: onSeeAll,
+              borderRadius: BorderRadius.circular(999),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.primary.withOpacity(0.18),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  'See all',
+                  style: context.p.copyWith(
+                    color: colors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

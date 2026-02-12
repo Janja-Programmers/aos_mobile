@@ -171,7 +171,9 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
     final country = (prefs?.countryCode ?? '').trim();
 
     final searchBar = AppSearchBar(
+      readOnly: true,
       controller: _searchCtrl,
+      onSubmitted: (_) => {},
       onMicTap: () {},
       onCameraTap: () {},
     );

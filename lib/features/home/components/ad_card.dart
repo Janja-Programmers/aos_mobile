@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/features/home/utils/helpers.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/ads/utils/file_url.dart';
+import 'package:africaonlinestores/features/home/utils/helpers.dart';
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
 class AdCard extends StatelessWidget {
@@ -32,7 +33,7 @@ class AdCard extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min, // 🔑 critical for grids & slivers
+          mainAxisSize: MainAxisSize.min,
           children: [
             // ───────── Image ─────────
             ClipRRect(
@@ -41,7 +42,7 @@ class AdCard extends StatelessWidget {
                 builder: (context, constraints) {
                   final size = constraints.maxWidth.isFinite
                       ? constraints.maxWidth
-                      : 120.0; // fallback safety
+                      : 120.0;
 
                   return SizedBox(
                     width: size,
@@ -55,14 +56,10 @@ class AdCard extends StatelessWidget {
                             child: const Icon(Icons.image_outlined),
                           )
                         : Image.network(
-                            toFullUrl(ad.coverImage),
+                            buildFileUrl(ad.coverImage) ?? '',
                             fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Container(
-                              alignment: Alignment.center,
-                              color: Theme.of(
-                                context,
-                              ).dividerColor.withOpacity(0.08),
-                              child: const Icon(Icons.broken_image_outlined),
+                            errorBuilder: (_, _, _) => const Center(
+                              child: Icon(Icons.broken_image_outlined),
                             ),
                           ),
                   );

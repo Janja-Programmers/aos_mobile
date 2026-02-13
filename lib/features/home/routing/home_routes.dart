@@ -1,9 +1,13 @@
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/features/home/sections/tips/marketing_tips_screen.dart';
+import 'package:africaonlinestores/features/home/sections/tips/photography_tips_screen.dart';
+import 'package:africaonlinestores/features/home/sections/tips/ranking_tips_screen.dart';
 import 'package:africaonlinestores/features/home/ui/ad_details_screen.dart';
 import 'package:africaonlinestores/features/home/ui/ad_list_screen.dart';
 import 'package:africaonlinestores/features/home/ui/all_ads_screen.dart';
+import 'package:africaonlinestores/features/home/ui/home_search_screen.dart';
 
 class HomeRoutes {
   const HomeRoutes._();
@@ -20,6 +24,30 @@ class HomeRoutes {
         name: AppRoutes.nAdList,
         path: AppRoutes.adList,
         builder: (context, state) => const AdListScreen(),
+      ),
+
+      GoRoute(
+        name: AppRoutes.nPhotoTips,
+        path: AppRoutes.photoTips,
+        builder: (context, state) => const PhotographyTipsScreen(),
+      ),
+
+      GoRoute(
+        name: AppRoutes.nMarketTips,
+        path: AppRoutes.marketTips,
+        builder: (context, state) => const MarketingTipsScreen(),
+      ),
+
+      GoRoute(
+        name: AppRoutes.nRankTips,
+        path: AppRoutes.rankTips,
+        builder: (context, state) => const RankingTipsScreen(),
+      ),
+
+      GoRoute(
+        name: AppRoutes.nSearch,
+        path: AppRoutes.search,
+        builder: (context, state) => const HomeSearchScreen(),
       ),
 
       // ✅ more specific dynamic route FIRST

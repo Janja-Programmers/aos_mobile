@@ -26,6 +26,10 @@
 		<true/>
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>
+		<key>NSSpeechRecognitionUsageDescription</key>
+		<string>We use speech recognition to let you search faster.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>We use the microphone to capture your voice for search.</string>
 		<key>UIMainStoryboardFile</key>
 		<string>Main</string>
 		<key>UISupportedInterfaceOrientations</key>

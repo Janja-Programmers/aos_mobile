@@ -24,14 +24,12 @@ class HomeCategoryItem {
     required this.icon,
     this.iconBg,
     this.iconFg,
-    this.onTapTrailing,
+    this.onTap,
   });
 
   final String title;
   final IconData icon;
   final Color? iconBg;
   final Color? iconFg;
-
-  /// Only trailing arrow is clickable.
-  final VoidCallback? onTapTrailing;
+  final VoidCallback? onTap;
 }

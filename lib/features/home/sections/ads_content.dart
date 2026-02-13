@@ -16,6 +16,7 @@ import 'package:africaonlinestores/features/home/domain/home_ads_sections.dart';
 import 'package:africaonlinestores/features/home/providers/home_section_ads_provider.dart';
 
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
+import 'package:go_router/go_router.dart';
 
 /// Content body for the Home (Ads list) screen.
 ///
@@ -101,6 +102,7 @@ class AdListContentView extends ConsumerWidget {
             // Home Accessories (rail)
             sectionSliver('home_accessories'),
 
+            // Electronics
             sectionSliver('laptops_and_computers'),
 
             SliverToBoxAdapter(
@@ -118,6 +120,7 @@ class AdListContentView extends ConsumerWidget {
                       color: context.appColors.success,
                       icon: Icons.apartment,
                     ),
+
                     HomePromoItem(
                       title: 'New Arrivals',
                       subtitle: 'Fresh Stock',
@@ -125,6 +128,7 @@ class AdListContentView extends ConsumerWidget {
                       color: context.appColors.warning,
                       icon: Icons.apartment,
                     ),
+
                     HomePromoItem(
                       title: 'Summer Sale',
                       subtitle: 'Upto 40%',
@@ -137,25 +141,38 @@ class AdListContentView extends ConsumerWidget {
                     HomeCategoryItem(
                       title: 'Electronics',
                       icon: Icons.desktop_windows_outlined,
-                      onTapTrailing: () {},
+                      onTap: () => context.pushNamed(
+                        AppRoutes.nAllAds,
+                        pathParameters: {'categoryId': 'Electronics'},
+                      ),
                     ),
+
                     HomeCategoryItem(
                       title: 'Fashion',
                       icon: Icons.checkroom_outlined,
-                      onTapTrailing: () {},
+                      onTap: () => context.pushNamed(
+                        AppRoutes.nAllAds,
+                        pathParameters: {'categoryId': 'Women\'s Fashion'},
+                      ),
                     ),
+
                     HomeCategoryItem(
-                      title: 'Home &\nGarden',
+                      title: 'Garden Supplies',
                       icon: Icons.home_outlined,
-                      onTapTrailing: () {},
+                      onTap: () => context.pushNamed(
+                        AppRoutes.nAllAds,
+                        pathParameters: {'categoryId': 'Garden Supplies'},
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
 
-            sectionSliver('health_beauty'),
+            // Furniture
+            sectionSliver('furniture'),
 
+            // Health & Beauty
             sectionSliver('health_beauty'),
 
             const SliverPadding(
@@ -163,12 +180,22 @@ class AdListContentView extends ConsumerWidget {
               sliver: HomeHeroCarouselSection(),
             ),
 
+            // Fashion
+            sectionSliver('fashion'),
+
             // Baby & Kids (rail)
             sectionSliver('baby_kids'),
 
             SliverPadding(
               padding: const EdgeInsets.only(top: 6),
-              sliver: GridAdsSection(items: items, title: 'Discover more'),
+              sliver: GridAdsSection(
+                items: items,
+                title: 'Discover more',
+                onSeeAll: () => context.pushNamed(
+                  AppRoutes.nAllAds,
+                  pathParameters: {'categoryId': 'Electronics'},
+                ),
+              ),
             ),
 
             SliverToBoxAdapter(
@@ -204,6 +231,18 @@ class _HomeAdsSectionSliver extends ConsumerWidget {
     final req = HomeSectionAdsRequest(section: section);
     final asyncItems = ref.watch(homeSectionAdsProvider(req));
 
+    VoidCallback? seeAllAds(BuildContext context) {
+      final id = section.seeAllCategoryId;
+      if (id == null || id.trim().isEmpty) return null;
+
+      return () => context.pushNamed(
+        AppRoutes.nAllAds,
+        pathParameters: {'categoryId': id},
+      );
+    }
+
+    final seeAll = seeAllAds(context);
+
     return asyncItems.when(
       loading: () => const SliverToBoxAdapter(
         child: Padding(
@@ -219,13 +258,17 @@ class _HomeAdsSectionSliver extends ConsumerWidget {
 
         // New Products is intentionally a grid, others default to rail.
         if (section.key == 'new_products') {
-          return GridAdsSection(title: section.title, items: items);
+          return GridAdsSection(
+            title: section.title,
+            items: items,
+            onSeeAll: seeAll,
+          );
         }
 
         return HomeHorizontalAdsSection(
           title: section.title,
           items: items,
-          onSeeAll: () {},
+          onSeeAll: seeAll,
         );
       },
     );

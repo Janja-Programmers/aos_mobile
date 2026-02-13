@@ -1,182 +1,156 @@
-import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/features/home/components/home_brand_models.dart';
 
-/// Right side of HomeBrandSection:
-/// - dynamic category "pills/cards"
-/// - uses provided models only (no catalog dependency)
 class HomeBrandCategoriesCard extends StatelessWidget {
   const HomeBrandCategoriesCard({
     super.key,
     required this.items,
     this.borderRadius,
-    this.onTap,
     this.padding,
+    this.title = 'You might be\nlooking for',
   });
 
   final List<HomeCategoryItem> items;
   final BorderRadius? borderRadius;
-  final ValueChanged<HomeCategoryItem>? onTap;
-
-  /// Optional outer padding for the grid area.
-  /// If null, defaults to a tight layout (caller controls spacing via parent).
   final EdgeInsetsGeometry? padding;
+  final String title;
 
-  BorderRadius get _radius => borderRadius ?? BorderRadius.circular(16);
+  BorderRadius get _radius => borderRadius ?? BorderRadius.circular(18);
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     if (items.isEmpty) return const SizedBox.shrink();
 
-    // Keep it lightweight + avoid nested scroll: parent controls scrolling
+    final shown = items.length > 3 ? items.take(3).toList() : items;
+
     return ClipRRect(
       borderRadius: _radius,
       child: Container(
         decoration: BoxDecoration(
-          color: context.appColors.surface,
-          borderRadius: _radius,
-          border: Border.all(color: context.appColors.border),
-        ),
-        padding: padding ?? const EdgeInsets.all(10),
-        child: _PillsWrap(items: items, onTap: onTap),
-      ),
-    );
-  }
-}
-
-class _PillsWrap extends StatelessWidget {
-  const _PillsWrap({required this.items, this.onTap});
-
-  final List<HomeCategoryItem> items;
-  final ValueChanged<HomeCategoryItem>? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    // “Dynamic pills” layout: wraps and fills available space.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          // Keeps same UI even when pills exceed available height.
-          // If your old design was non-scrollable, remove this scroll view.
-          physics: const BouncingScrollPhysics(),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final item in items)
-                _CategoryPill(
-                  item: item,
-                  onTap: onTap,
-                  maxWidth: constraints.maxWidth,
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _CategoryPill extends StatelessWidget {
-  const _CategoryPill({required this.item, required this.maxWidth, this.onTap});
-
-  final HomeCategoryItem item;
-  final double maxWidth;
-  final ValueChanged<HomeCategoryItem>? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final textTheme = Theme.of(context).textTheme;
-
-    return InkWell(
-      onTap: onTap == null ? null : () => onTap!(item),
-      borderRadius: BorderRadius.circular(999),
-      child: Ink(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
           color: colors.surface,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: colors.border),
+          borderRadius: _radius,
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+              color: Colors.black.withOpacity(0.06),
+            ),
+          ],
         ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_hasIcon(item))
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: _PillIcon(icon: item.icon),
-                ),
-              Flexible(
-                child: Text(
-                  item.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.labelMedium?.copyWith(
-                    color: colors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
+        padding: padding ?? const EdgeInsets.fromLTRB(12, 12, 12, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: colors.textPrimary,
+                fontWeight: FontWeight.w900,
+                height: 1.1,
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // ✅ Scroll only inside the remaining space (prevents overflow)
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    for (int i = 0; i < shown.length; i++) ...[
+                      _CategoryTile(item: shown[i]),
+                      if (i != shown.length - 1) const SizedBox(height: 8),
+                    ],
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
-
-  bool _hasIcon(HomeCategoryItem item) {
-    // Supports both IconData and String? safely
-    return true;
-  }
 }
 
-class _PillIcon extends StatelessWidget {
-  const _PillIcon({required this.icon});
+class _CategoryTile extends StatelessWidget {
+  const _CategoryTile({required this.item});
 
-  final Object? icon;
+  final HomeCategoryItem item;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final tap = item.onTap;
+
+    return InkWell(
+      onTap: tap,
+      borderRadius: BorderRadius.circular(999),
+      child: Ink(
+        padding: const EdgeInsets.all(1.5),
+        decoration: BoxDecoration(
+          color: colors.surface.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: colors.border.withOpacity(0.35)),
+        ),
+        child: Row(
+          children: [
+            _IconBadge(icon: item.icon, size: 32),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                item.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: context.p.copyWith(
+                  color: colors.textPrimary,
+                  height: 1.0,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: colors.textMuted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _IconBadge extends StatelessWidget {
+  const _IconBadge({required this.icon, this.size = 32});
+
+  final Object? icon;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final badgeBg = colors.primary.withOpacity(0.10);
 
     return Container(
-      width: 22,
-      height: 22,
+      width: size,
+      height: size,
       alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: colors.border),
-      ),
+      decoration: BoxDecoration(color: badgeBg, shape: BoxShape.circle),
       child: _buildIcon(colors),
     );
   }
 
   Widget _buildIcon(AppColorTokens colors) {
-    // If model provides an actual IconData, render it
     if (icon is IconData) {
-      return Icon(icon as IconData, size: 14, color: colors.textSecondary);
+      return Icon(icon as IconData, size: 18, color: colors.primary);
     }
-
-    // If it’s a String (e.g. "tag", "phone", "car"), keep UI safe:
-    // you can later map string->icon here without changing call sites.
-    if (icon is String && (icon as String).trim().isNotEmpty) {
-      return Icon(
-        Icons.local_offer_outlined,
-        size: 14,
-        color: colors.textSecondary,
-      );
-    }
-
-    return Icon(
-      Icons.local_offer_outlined,
-      size: 14,
-      color: colors.textSecondary,
-    );
+    return Icon(Icons.category_outlined, size: 18, color: colors.primary);
   }
 }

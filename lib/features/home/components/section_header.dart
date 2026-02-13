@@ -15,7 +15,7 @@ class SectionHeader extends StatelessWidget {
     final colors = context.appColors;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: colors.primary.withOpacity(0.12),
         borderRadius: BorderRadius.circular(12),

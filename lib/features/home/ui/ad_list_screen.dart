@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/localization/locale_controller.dart';
 import 'package:africaonlinestores/core/localization/utils.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/app_snack.dart';
@@ -173,9 +173,10 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
     final searchBar = AppSearchBar(
       readOnly: true,
       controller: _searchCtrl,
+      onTap: () => context.pushNamed(AppRoutes.nSearch),
       onSubmitted: (_) => {},
-      onMicTap: () {},
-      onCameraTap: () {},
+      onMicTap: () => context.pushNamed(AppRoutes.nSearch),
+      onCameraTap: () => context.pushNamed(AppRoutes.nSearch),
     );
 
     final header = HomeAppBar(

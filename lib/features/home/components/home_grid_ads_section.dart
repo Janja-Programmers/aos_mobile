@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/home/components/ad_card.dart';
-import 'package:africaonlinestores/ui/components/app_text_styles.dart';
+import 'package:africaonlinestores/features/home/components/section_header.dart';
 
 class GridAdsSection extends StatelessWidget {
   const GridAdsSection({
@@ -20,41 +20,15 @@ class GridAdsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.appColors;
-
     return SliverMainAxisGroup(
       slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-          sliver: SliverToBoxAdapter(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: context.h5.copyWith(color: colors.primary),
-                  ),
-                ),
-
-                if (onSeeAll != null)
-                  InkWell(
-                    onTap: onSeeAll,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 6,
-                      ),
-                      child: Text(
-                        'See all',
-                        style: context.p.copyWith(color: colors.primary),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+        SliverToBoxAdapter(
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
+            child: SectionHeader(title: title, onSeeAll: onSeeAll),
           ),
         ),
+
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverGrid(

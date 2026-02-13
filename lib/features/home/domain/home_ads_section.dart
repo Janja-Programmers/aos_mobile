@@ -12,6 +12,7 @@ class HomeAdsSection {
     this.preferredCategoryNames = const <String>[],
     this.sort,
     this.limit = 8,
+    this.seeAllCategoryId,
   });
 
   /// Stable identifier for caching providers.
@@ -21,7 +22,6 @@ class HomeAdsSection {
   final String title;
 
   /// Category names to try match against the catalog tree (case-insensitive).
-  ///
   /// First match wins.
   final List<String> preferredCategoryNames;
 
@@ -30,4 +30,7 @@ class HomeAdsSection {
 
   /// Max number of items to fetch.
   final int limit;
+
+  /// See all CategoryID
+  final String? seeAllCategoryId;
 }

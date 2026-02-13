@@ -21,6 +21,14 @@ class AppRoutes {
   static const passwordSecurity = '/account/security';
   static const preference = '/account/preference';
 
+  // Learn
+  static const photoTips = '/photoTips';
+  static const marketTips = '/marketTips';
+  static const rankTips = '/rankTips';
+
+  // Search
+  static const search = '/search';
+
   // Ads - static paths first
   static const adList = '/ads/list';
   static const myAds = '/ads/my';
@@ -42,6 +50,11 @@ class AppRoutes {
   static const nAdList = 'adList';
   static const nAllAds = 'allAds';
   static const nAdDetails = 'adDetails';
+  static const nPhotoTips = 'photoTips';
+  static const nMarketTips = 'marketTips';
+  static const nRankTips = 'rankTips';
+
+  static const nSearch = 'search';
 
   static const nCategories = 'categories';
   static const nNotifications = 'notifications';

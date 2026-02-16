@@ -6,7 +6,6 @@ import 'package:africaonlinestores/core/routing/app_routes.dart';
 import 'package:africaonlinestores/core/utils/app_snack.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/providers/ads_api_provider.dart';
-import 'package:africaonlinestores/ui/components/app_bottom_nav.dart';
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/ads/ui/sections/my_ads_content.dart';
@@ -163,7 +162,6 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
         icon: const Icon(Icons.add),
         label: const Text('Post Ad'),
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
     );
   }
 }

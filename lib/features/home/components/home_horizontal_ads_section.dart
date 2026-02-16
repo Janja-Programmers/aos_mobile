@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/ads/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/home/components/ad_card.dart';
 import 'package:africaonlinestores/features/home/components/section_header.dart';
 
@@ -58,10 +57,7 @@ class HomeHorizontalAdsSection extends StatelessWidget {
                         width: cardWidth,
                         child: AdCard(
                           ad: ad,
-                          onTap: () => context.pushNamed(
-                            AppRoutes.nAdDetails,
-                            pathParameters: {'id': ad.id},
-                          ),
+                          onTap: () => AdNavigation.toDetail(context, ad.id),
                         ),
                       );
                     },

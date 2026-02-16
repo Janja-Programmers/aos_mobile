@@ -37,7 +37,7 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
                 ),
               ),
               TextButton(
-                onPressed: () => context.pushNamed(AppRoutes.categories),
+                onPressed: () => context.pushNamed(AppRoutes.nCategories),
                 child: Text(
                   'See all',
                   style: context.p.copyWith(color: colors.primary),

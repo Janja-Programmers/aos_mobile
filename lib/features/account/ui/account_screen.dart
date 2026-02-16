@@ -12,7 +12,6 @@ import 'package:africaonlinestores/features/account/ui/widgets/account_sections.
 import 'package:africaonlinestores/features/auth/providers/auth_controller.dart';
 
 import 'package:africaonlinestores/ui/components/account_option_tile.dart';
-import 'package:africaonlinestores/ui/components/app_bottom_nav.dart';
 import 'package:africaonlinestores/ui/components/app_confirm_sheet.dart';
 import 'package:africaonlinestores/ui/components/app_switch_tile.dart';
 import 'package:africaonlinestores/ui/components/app_text_styles.dart';
@@ -188,7 +187,6 @@ class AccountScreen extends ConsumerWidget {
           const SizedBox(height: 10),
         ],
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 4),
     );
   }
 

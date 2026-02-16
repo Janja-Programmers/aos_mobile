@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/ui/components/app_bottom_nav.dart';
-
 import 'package:africaonlinestores/features/catalog/providers/categories_controller.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/utils/category_icon_url.dart';
@@ -100,7 +98,6 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );
   }
 }

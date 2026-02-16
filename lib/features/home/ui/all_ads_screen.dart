@@ -8,6 +8,7 @@ import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/app_snack.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/ads/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/providers/categories_controller.dart';
 import 'package:africaonlinestores/features/home/components/ad_card.dart';
@@ -372,7 +373,7 @@ class _AllAdsScreenState extends ConsumerState<AllAdsScreen> {
                             return AdCard(
                               ad: ad,
                               onTap: () =>
-                                  context.pushNamed(AppRoutes.nAdDetails, pathParameters: {'id': ad.id}),
+                                  AdNavigation.toDetail(context, ad.id),
                             );
                           }, childCount: _items.length),
                         ),
@@ -384,8 +385,10 @@ class _AllAdsScreenState extends ConsumerState<AllAdsScreen> {
                             final ad = _items[i];
                             return _AdListTile(
                               ad: ad,
-                              onTap: () =>
-                                  context.pushNamed(AppRoutes.nAdDetails, pathParameters: {'id': ad.id}),
+                              onTap: () => context.pushNamed(
+                                AppRoutes.nAdDetails,
+                                pathParameters: {'id': ad.id},
+                              ),
                             );
                           },
                           separatorBuilder: (_, _) =>

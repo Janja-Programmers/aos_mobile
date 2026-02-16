@@ -113,7 +113,9 @@ class _SelectLocationScreenState extends ConsumerState<SelectLocationScreen> {
                 child: ListView.separated(
                   padding: const EdgeInsets.only(top: 6),
                   itemCount: filtered.length + (showAllCities ? 1 : 0),
-                  separatorBuilder: (_, _) => const Divider(height: 0),
+                  separatorBuilder: (_, _) {
+                    return const SizedBox.shrink();
+                  },
                   itemBuilder: (context, index) {
                     if (showAllCities && index == 0) {
                       return _LocationTile(

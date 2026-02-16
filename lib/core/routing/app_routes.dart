@@ -42,12 +42,7 @@ class AppRoutes {
       '/ads/all/${Uri.encodeComponent(categoryId)}';
 
   // Ads - MOST generic dynamic route LAST
-  // NOTE: Exclude reserved static slugs to prevent `/ads/:id` from matching
-  // paths like `/ads/my` (seller routes). This makes routing robust even when
-  // route declarations are reordered.
-  static const adDetails =
-      '/ads/:id((?!(?:my|create|list|select-category|select-location|all)\$)[^/]+)';
-  static String adDetailsPath(String id) => '/ads/${Uri.encodeComponent(id)}';
+  static const adDetails = '/ads/:id';
 
   // ✅ Route names (use pushNamed/goNamed)
   static const nHome = 'home';

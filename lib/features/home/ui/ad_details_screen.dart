@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/routing/app_nav.dart';
+import 'package:africaonlinestores/core/routing/app_nav_config.dart';
+
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
+import 'package:africaonlinestores/ui/components/app_search_bar.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/providers/ads_api_provider.dart';
@@ -29,10 +37,18 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
   List<AOSAdListItem> _similar = [];
   bool _loadingSimilar = false;
 
+  final _searchCtrl = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -147,10 +163,89 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        elevation: 0,
+        centerTitle: false,
+        titleSpacing: 0,
+
+        leading: const BackButton(),
+
+        title: SizedBox(
+          height: 44,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: AppSearchBar(
+                readOnly: true,
+                controller: _searchCtrl,
+                onTap: () => context.pushNamed(AppRoutes.nSearch),
+                onSubmitted: (_) {},
+                onMicTap: () => context.pushNamed(AppRoutes.nSearch),
+                onCameraTap: () => context.pushNamed(AppRoutes.nSearch),
+              ),
+            ),
+          ),
         ),
+
+        actions: [
+          PopupMenuButton<int>(
+            icon: const Icon(Icons.menu),
+            color: context.appColors.surface,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            onSelected: (index) {
+              AppNavigation.goTo(context, ref, index);
+            },
+            itemBuilder: (context) {
+              final items = AppNavConfig.items;
+              final location = GoRouterState.of(context).matchedLocation;
+
+              return List.generate(items.length, (i) {
+                final item = items[i];
+                final isActive = location.contains(item.routeName);
+                return PopupMenuItem<int>(
+                  value: i,
+                  padding: EdgeInsets.zero,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? context.appColors.primary.withOpacity(0.08)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          item.icon,
+                          size: 20,
+                          color: isActive
+                              ? context.appColors.primary
+                              : context.appColors.textPrimary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          item.label,
+                          style: context.p.copyWith(
+                            color: isActive
+                                ? context.appColors.primary
+                                : context.appColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              });
+            },
+          ),
+        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

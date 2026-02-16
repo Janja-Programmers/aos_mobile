@@ -1,5 +1,7 @@
+import 'package:africaonlinestores/ui/components/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/features/home/components/ad_details/section_card.dart';
 
 class AdProductDetailsSection extends StatelessWidget {
@@ -37,7 +39,8 @@ class AdProductDetailsSection extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 10),
-            for (final s in specs) _SpecRow(spec: s),
+            for (int i = 0; i < specs.length; i++)
+              _SpecRow(spec: specs[i], showDivider: i != specs.length - 1),
           ],
         ],
       ),
@@ -46,47 +49,70 @@ class AdProductDetailsSection extends StatelessWidget {
 }
 
 class _SpecRow extends StatelessWidget {
-  const _SpecRow({required this.spec});
+  const _SpecRow({required this.spec, required this.showDivider});
 
   final Map<String, dynamic> spec;
+  final bool showDivider;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final colors = context.appColors;
 
-    String key = (spec['label'] ?? spec['key'] ?? spec['name'] ?? '')
-        .toString();
-    String val = (spec['value'] ?? spec['val'] ?? '').toString();
+    final String key = (spec['label'] ?? spec['key'] ?? spec['name'] ?? '')
+        .toString()
+        .trim();
 
-    key = key.trim();
-    val = val.trim();
+    final String val = (spec['value'] ?? spec['val'] ?? '').toString().trim();
 
-    if (key.isEmpty || val.isEmpty) return const SizedBox.shrink();
+    if (key.isEmpty || val.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              key,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).hintColor,
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// 🔥 Left vertical indicator
+              Container(
+                width: 4,
+                height: 18,
+                margin: const EdgeInsets.only(right: 10, top: 2),
+                decoration: BoxDecoration(
+                  color: colors.textPrimary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              val,
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: colors.onSurface,
+
+              /// Key + Value
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(child: Text(key, style: context.p)),
+                    Expanded(
+                      child: Text(
+                        val,
+                        textAlign: TextAlign.left,
+                        style: context.pStrong,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+
+        /// 🔥 Divider
+        if (showDivider)
+          Divider(
+            height: 1,
+            thickness: 0.5,
+            color: context.appColors.textPrimary,
+          ),
+      ],
     );
   }
 }

@@ -45,11 +45,11 @@ class HomeHorizontalAdsSection extends StatelessWidget {
                 return SizedBox(
                   height: cardHeight,
                   child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
                     itemCount: items.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 12),
+                    separatorBuilder: (_, _) => const SizedBox(width: 6),
                     itemBuilder: (context, index) {
                       final ad = items[index];
 

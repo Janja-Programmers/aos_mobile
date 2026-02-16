@@ -11,6 +11,8 @@ class AdCard extends StatelessWidget {
   final AOSAdListItem ad;
   final VoidCallback onTap;
 
+  static const double _cardHeight = 250;
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -23,83 +25,83 @@ class AdCard extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context).dividerColor.withOpacity(0.25),
+      child: SizedBox(
+        height: _cardHeight,
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Theme.of(context).dividerColor.withOpacity(0.25),
+            ),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ───────── Image ─────────
-            ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final size = constraints.maxWidth.isFinite
-                      ? constraints.maxWidth
-                      : 120.0;
-
-                  return SizedBox(
-                    width: size,
-                    height: size,
-                    child: ad.coverImage.isEmpty
-                        ? Container(
-                            alignment: Alignment.center,
-                            color: Theme.of(
-                              context,
-                            ).dividerColor.withOpacity(0.08),
-                            child: const Icon(Icons.image_outlined),
-                          )
-                        : Image.network(
-                            buildFileUrl(ad.coverImage) ?? '',
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => const Center(
-                              child: Icon(Icons.broken_image_outlined),
-                            ),
-                          ),
-                  );
-                },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// 🔥 IMAGE TAKES FLEX SPACE
+              Expanded(
+                flex: 6,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: ad.coverImage.isEmpty
+                      ? Container(
+                          alignment: Alignment.center,
+                          color: Theme.of(
+                            context,
+                          ).dividerColor.withOpacity(0.08),
+                          child: const Icon(Icons.image_outlined),
+                        )
+                      : Image.network(
+                          buildFileUrl(ad.coverImage) ?? '',
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder: (_, _, _) =>
+                              const Icon(Icons.broken_image_outlined),
+                        ),
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
 
-            // ───────── Title ─────────
-            Text(
-              ad.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: context.pStrong,
-            ),
+              const SizedBox(height: 8),
 
-            // ───────── Location ─────────
-            if (subtitle.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.p,
+              /// 🔥 TEXT SECTION
+              Expanded(
+                flex: 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      ad.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.pStrong,
+                    ),
+
+                    if (subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.p,
+                      ),
+                    ],
+
+                    const Spacer(),
+
+                    Text(
+                      priceText(ad),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.onSurface,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
-
-            const SizedBox(height: 2),
-
-            // ───────── Price ─────────
-            Text(
-              priceText(ad),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: colors.onSurface,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

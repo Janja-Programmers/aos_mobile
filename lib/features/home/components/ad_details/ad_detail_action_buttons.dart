@@ -9,12 +9,7 @@ import 'package:africaonlinestores/core/utils/app_snack.dart';
 class AdDetailActionBar extends StatelessWidget {
   const AdDetailActionBar({super.key, this.onCall, this.onMessage});
 
-  /// Optional override for Call action.
-  /// If null, a default "Wire call action later" snack is shown.
   final VoidCallback? onCall;
-
-  /// Optional override for Message action.
-  /// If null, a default "Wire chat action later" snack is shown.
   final VoidCallback? onMessage;
 
   @override
@@ -75,6 +70,8 @@ class _AdDetailActionButton extends StatelessWidget {
   final VoidCallback onTap;
   final String? label;
 
+  static const _radius = BorderRadius.all(Radius.circular(10));
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -82,25 +79,43 @@ class _AdDetailActionButton extends StatelessWidget {
 
     final isIconOnly = label == null || label!.trim().isEmpty;
 
-    // Your color rules:
-    // - Outlined: primary
-    // - Filled: appColors.border
     final iconColor = filled ? appColors.border : scheme.primary;
     final textColor = filled ? appColors.border : scheme.primary;
 
+    final filledStyle = FilledButton.styleFrom(
+      shape: const RoundedRectangleBorder(borderRadius: _radius),
+    );
+
+    final outlinedStyle = OutlinedButton.styleFrom(
+      shape: const RoundedRectangleBorder(borderRadius: _radius),
+    );
+
     if (isIconOnly) {
+      final buttonStyle =
+          (filled ? FilledButton.styleFrom() : OutlinedButton.styleFrom())
+              .copyWith(
+                padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+                minimumSize: const WidgetStatePropertyAll(Size(48, 48)),
+                shape: const WidgetStatePropertyAll(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+                ),
+                alignment: Alignment.center,
+              );
+
       return SizedBox(
         height: 48,
         width: 48,
         child: filled
             ? FilledButton(
                 onPressed: onTap,
-                style: FilledButton.styleFrom(padding: EdgeInsets.zero),
+                style: buttonStyle,
                 child: Icon(icon, size: 20, color: iconColor),
               )
             : OutlinedButton(
                 onPressed: onTap,
-                style: OutlinedButton.styleFrom(padding: EdgeInsets.zero),
+                style: buttonStyle,
                 child: Icon(icon, size: 20, color: iconColor),
               ),
       );
@@ -111,6 +126,7 @@ class _AdDetailActionButton extends StatelessWidget {
       child: filled
           ? FilledButton.icon(
               onPressed: onTap,
+              style: filledStyle,
               icon: Icon(icon, size: 18, color: iconColor),
               label: Text(
                 label!,
@@ -119,6 +135,7 @@ class _AdDetailActionButton extends StatelessWidget {
             )
           : OutlinedButton.icon(
               onPressed: onTap,
+              style: outlinedStyle,
               icon: Icon(icon, size: 18, color: iconColor),
               label: Text(
                 label!,

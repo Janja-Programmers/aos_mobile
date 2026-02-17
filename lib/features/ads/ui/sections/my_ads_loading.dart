@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/widgets/app_shimmer.dart';
 import 'package:flutter/material.dart';
 
 class MyAdsLoadingView extends StatelessWidget {
@@ -5,6 +6,11 @@ class MyAdsLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(child: CircularProgressIndicator());
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      itemCount: 5,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (_, __) => const ShimmerBox(height: 96),
+    );
   }
 }

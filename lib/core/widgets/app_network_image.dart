@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/widgets/app_shimmer.dart';
+
 /// Centralized network image widget used across the app
 ///
 /// Handles:
@@ -35,16 +37,10 @@ class AppNetworkImage extends StatelessWidget {
       loadingBuilder: (context, child, progress) {
         if (progress == null) return child;
 
-        return SizedBox(
+        return ShimmerBox(
           width: width,
           height: height,
-          child: const Center(
-            child: SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ),
+          borderRadius: borderRadius,
         );
       },
       errorBuilder: (context, error, stackTrace) {

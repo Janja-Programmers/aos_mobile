@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
 
@@ -7,7 +8,6 @@ import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/widgets/banners_carousel.dart';
 import 'package:africaonlinestores/features/catalog/widgets/subcategories_grid.dart';
 import 'package:africaonlinestores/features/catalog/widgets/for_you_section.dart';
-import 'package:go_router/go_router.dart';
 
 class RightPane extends StatelessWidget {
   const RightPane({
@@ -68,7 +68,10 @@ class RightPane extends StatelessWidget {
                   buildIconUrl: buildIconUrl,
                   onTap: (cat) {
                     final categoryId = cat.id;
-                    context.pushNamed(AppRoutes.nAllAds, pathParameters: {'categoryId': categoryId});
+                    context.pushNamed(
+                      AppRoutes.nAllAds,
+                      pathParameters: {'categoryId': categoryId},
+                    );
                   },
                 ),
             ],
@@ -77,7 +80,7 @@ class RightPane extends StatelessWidget {
 
         const SizedBox(height: 14),
 
-        ForYouSection(onSeeAll: () {}),
+        ForYouSection(categoryId: parent.id),
       ],
     );
   }

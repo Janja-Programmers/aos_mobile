@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:africaonlinestores/core/routing/app_routes.dart';
 import 'package:africaonlinestores/features/catalog/providers/categories_controller.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/utils/category_icon_url.dart';
@@ -41,11 +43,29 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 72,
-        titleSpacing: 12,
-        title: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: AppSearchBar(controller: _searchCtrl),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        elevation: 0,
+        centerTitle: false,
+        titleSpacing: 0,
+
+        leading: const BackButton(),
+
+        title: SizedBox(
+          height: 52,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+              child: AppSearchBar(
+                readOnly: true,
+                controller: _searchCtrl,
+                onTap: () => context.pushNamed(AppRoutes.nSearch),
+                onSubmitted: (_) {},
+                onMicTap: () => context.pushNamed(AppRoutes.nSearch),
+                onCameraTap: () => context.pushNamed(AppRoutes.nSearch),
+              ),
+            ),
+          ),
         ),
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,

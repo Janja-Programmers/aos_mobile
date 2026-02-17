@@ -171,7 +171,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
         leading: const BackButton(),
 
         title: SizedBox(
-          height: 44,
+          height: 52,
           child: Align(
             alignment: Alignment.centerLeft,
             child: Padding(

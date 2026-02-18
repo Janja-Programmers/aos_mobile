@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:africaonlinestores/features/account/ui/widgets/editable_avator.dart';
-import 'package:africaonlinestores/ui/components/app_text_styles.dart';
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,10 +13,10 @@ import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/normalize_image.dart';
 
 import 'package:africaonlinestores/features/account/data/accounts_api.dart';
-import 'package:africaonlinestores/features/auth/providers/auth_controller.dart';
-import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
+import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 
-import 'package:africaonlinestores/core/utils/app_snack.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class UpdateProfileScreen extends ConsumerStatefulWidget {
   const UpdateProfileScreen({super.key});

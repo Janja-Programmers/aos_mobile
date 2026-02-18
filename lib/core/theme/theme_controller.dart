@@ -15,5 +15,17 @@ class ThemeController extends AsyncNotifier<ThemeMode> {
   }
 }
 
-final themeModeProvider =
-    AsyncNotifierProvider<ThemeController, ThemeMode>(ThemeController.new);
+class PreloadedThemeController extends ThemeController {
+  final ThemeMode initial;
+
+  PreloadedThemeController(this.initial);
+
+  @override
+  Future<ThemeMode> build() async {
+    return initial;
+  }
+}
+
+final themeModeProvider = AsyncNotifierProvider<ThemeController, ThemeMode>(
+  ThemeController.new,
+);

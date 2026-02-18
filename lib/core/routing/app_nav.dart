@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/core/routing/app_routes.dart';
 
-import 'package:africaonlinestores/ui/components/app_confirm_sheet.dart';
-import 'package:africaonlinestores/features/auth/providers/auth_controller.dart';
+import 'package:africaonlinestores/shared/components/app_confirm_sheet.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 
 class AppNavigation {
   static Future<void> goTo(

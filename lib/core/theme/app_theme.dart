@@ -72,7 +72,7 @@ class AppTheme {
     // You can also use fromSeed here. Your current dark scheme is fine.
     final scheme = ColorScheme.fromSeed(
       seedColor: tokens.primary,
-      brightness: Brightness.light,
+      brightness: Brightness.dark,
       surfaceBright: tokens.surface,
       surface: tokens.surface,
       primary: tokens.primary,

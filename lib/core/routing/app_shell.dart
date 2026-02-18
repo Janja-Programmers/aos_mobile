@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/ui/components/app_bottom_nav.dart';
+import 'package:africaonlinestores/shared/components/app_bottom_nav.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;

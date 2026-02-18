@@ -4,7 +4,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/auth/shared/widgets/otp_input.dart';
 
-import 'package:africaonlinestores/ui/components/app_text_styles.dart';
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 
 class OtpSection extends StatefulWidget {
   const OtpSection({

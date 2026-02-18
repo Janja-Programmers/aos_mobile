@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/utils/app_snack.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 import 'package:africaonlinestores/features/account/ui/widgets/locale_picker_page.dart';
 import 'package:africaonlinestores/features/account/ui/widgets/pref_card.dart';
 import 'package:africaonlinestores/features/localization/domain/locale_bundle.dart';
 
-import 'package:africaonlinestores/ui/components/app_text_styles.dart';
-import 'package:africaonlinestores/ui/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 
 class PreferenceScreen extends ConsumerStatefulWidget {
   const PreferenceScreen({super.key});

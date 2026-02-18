@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/features/auth/providers/auth_controller.dart';
-import 'package:africaonlinestores/features/account/routing/account_routes.dart';
-import 'package:africaonlinestores/features/ads/routing/ads_routes.dart';
-import 'package:africaonlinestores/features/auth/routing/auth_routes.dart';
-import 'package:africaonlinestores/features/catalog/routing/catalog_routes.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
+import 'package:africaonlinestores/features/account/shared/routing/account_routes.dart';
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
+import 'package:africaonlinestores/features/auth/shared/routing/auth_routes.dart';
+import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
 
 import 'package:africaonlinestores/core/routing/app_shell.dart';
 import 'package:africaonlinestores/core/routing/app_routes.dart';

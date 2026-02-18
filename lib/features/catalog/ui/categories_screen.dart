@@ -3,14 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
-import 'package:africaonlinestores/features/catalog/providers/categories_controller.dart';
+import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
-import 'package:africaonlinestores/features/catalog/utils/category_icon_url.dart';
+import 'package:africaonlinestores/features/catalog/shared/utils/category_icon_url.dart';
 
-import 'package:africaonlinestores/features/catalog/widgets/parents_rail.dart';
-import 'package:africaonlinestores/features/catalog/widgets/right_pane.dart';
+import 'package:africaonlinestores/features/catalog/shared/widgets/parents_rail.dart';
+import 'package:africaonlinestores/features/catalog/shared/widgets/right_pane.dart';
 
-import 'package:africaonlinestores/ui/components/app_search_bar.dart';
+import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 
 class CategoriesScreen extends ConsumerStatefulWidget {
   const CategoriesScreen({super.key});

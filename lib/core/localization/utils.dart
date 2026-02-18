@@ -1,8 +1,5 @@
 import 'package:africaonlinestores/features/localization/domain/locale_bundle.dart';
 
-/// Returns a human label for a value that might be a code (KE) or already a label (Kenya).
-/// - Matches code case-insensitively (ke == KE)
-/// - If it's already a label, returns it
 String? labelFor(List<LocaleOption> items, String? codeOrLabel) {
   final v = codeOrLabel?.trim();
   if (v == null || v.isEmpty) return null;

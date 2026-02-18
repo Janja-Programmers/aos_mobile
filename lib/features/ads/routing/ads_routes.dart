@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
-import 'package:africaonlinestores/features/ads/ui/create_ad_flow_screen.dart';
+import 'package:africaonlinestores/features/ads/create/create_ad_flow_screen.dart';
 import 'package:africaonlinestores/features/ads/ui/my_ads_screen.dart';
 import 'package:africaonlinestores/features/ads/ui/pickers/select_category_screen.dart';
 import 'package:africaonlinestores/features/ads/ui/pickers/select_location_screen.dart';

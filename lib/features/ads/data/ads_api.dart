@@ -109,6 +109,23 @@ class AdsApi {
     }
   }
 
+  Future<Either<Failure, Map<String, dynamic>>> saveAdDraft({
+    required Map<String, dynamic> payload,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiEndpoints.saveAdDraftEndpoint,
+        data: {'payload_json': payload},
+      );
+
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to save draft.'));
+    }
+  }
+
   Future<Either<Failure, Map<String, dynamic>>> listAds({
     required String countryName,
     String? locationId,
@@ -125,7 +142,7 @@ class AdsApi {
       final res = await _dio.get(
         ApiEndpoints.listAdsEndpoint,
         queryParameters: {
-          'country': "Kenya",
+          'country': countryName,
           if (locationId?.trim().isNotEmpty == true) 'location': locationId,
           if (categoryId?.trim().isNotEmpty == true) 'category': categoryId,
           if (q?.trim().isNotEmpty == true) 'q': q,

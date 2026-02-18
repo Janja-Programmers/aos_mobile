@@ -79,8 +79,6 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
       ),
       body: bundleAsync.when(
         data: (bundle) {
-          // Normalize any existing values to bundle codes (handles cases where
-          // a saved preference accidentally contains a label like "Kenya").
           _country =
               _normalizeToCode(bundle.countries, _country) ??
               bundle.defaultCountryCode;

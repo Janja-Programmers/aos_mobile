@@ -35,16 +35,14 @@ class ApiEndpoints {
       '/api/method/aos.api.localization.get_locations';
   static final String getCategorySchemaEndpoint =
       '/api/method/aos.api.attributes.get_category_schema';
-  static final String createAdEndpoint =
-      '/api/method/aos.api.ads.create_ad';
+  static final String createAdEndpoint = '/api/method/aos.api.ads.create_ad';
+  static final String saveAdDraftEndpoint =
+      '/api/method/aos.api.ads.save_ad_draft';
 
   // Read Ads
-  static final String listAdsEndpoint =
-      '/api/method/aos.api.ads.list_ads';
-  static final String myAdsEndpoint =
-      '/api/method/aos.api.ads.my_ads';
-  static final String getAdEndpoint =
-      '/api/method/aos.api.ads.get_ad';
+  static final String listAdsEndpoint = '/api/method/aos.api.ads.list_ads';
+  static final String myAdsEndpoint = '/api/method/aos.api.ads.my_ads';
+  static final String getAdEndpoint = '/api/method/aos.api.ads.get_ad';
 
   // Localization Endpoints
   static final String getLocaleBundleEndpoint =

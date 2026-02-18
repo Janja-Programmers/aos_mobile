@@ -1,0 +1,1 @@
+enum CancelAction { saveAndExit, discard }

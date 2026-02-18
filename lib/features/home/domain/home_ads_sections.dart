@@ -28,37 +28,37 @@ const homeAdsSections = <HomeAdsSection>[
 
   HomeAdsSection(
     key: 'home_accessories',
-    title: 'Home Accessories',
+    title: 'Home Accessories AOS',
     preferredCategoryNames: <String>['Home Accessories'],
     seeAllCategoryId: 'Home Accessories',
   ),
   HomeAdsSection(
     key: 'health_beauty',
-    title: 'Health & Beauty',
+    title: 'Health & Beauty AOS',
     preferredCategoryNames: <String>['Hair Beauty', 'Health and Beauty'],
     seeAllCategoryId: 'Hair Beauty',
   ),
   HomeAdsSection(
     key: 'baby_kids',
-    title: 'Baby & Kids',
+    title: 'Baby & Kids AOS',
     preferredCategoryNames: ['Babies & Kids'],
     seeAllCategoryId: 'Babies & Kids',
   ),
   HomeAdsSection(
     key: 'fashion',
-    title: 'Fashion',
+    title: 'Fashion AOS',
     preferredCategoryNames: ['Women\'s Fashion'],
     seeAllCategoryId: 'Women\'s Fashion',
   ),
   HomeAdsSection(
     key: 'laptops_and_computers',
-    title: 'Electronics',
+    title: 'Electronics AOS',
     preferredCategoryNames: <String>['Electronics'],
     seeAllCategoryId: 'Electronics',
   ),
   HomeAdsSection(
     key: 'furniture',
-    title: 'Furniture',
+    title: 'Furniture AOS',
     preferredCategoryNames: <String>['Furniture'],
     seeAllCategoryId: 'Furniture',
   ),

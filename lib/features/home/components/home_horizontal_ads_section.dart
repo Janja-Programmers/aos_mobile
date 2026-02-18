@@ -39,7 +39,7 @@ class HomeHorizontalAdsSection extends StatelessWidget {
             LayoutBuilder(
               builder: (context, constraints) {
                 final maxW = constraints.maxWidth;
-                final cardWidth = (maxW * 0.45).clamp(150.0, 260.0);
+                final cardWidth = (maxW * 0.45).clamp(120.0, 260.0);
                 final cardHeight = cardWidth / 0.68;
 
                 return SizedBox(

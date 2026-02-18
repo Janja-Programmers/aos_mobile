@@ -38,11 +38,8 @@ class AppRoutes {
 
   // Ads - dynamic paths after static
   static const allAds = '/ads/all/:categoryId';
-  static String allAdsPath(String categoryId) =>
-      '/ads/all/${Uri.encodeComponent(categoryId)}';
-
   // Ads - MOST generic dynamic route LAST
-  static const adDetails = '/ads/:id';
+  static const adDetails = '/ads/detail/:id';
 
   // ✅ Route names (use pushNamed/goNamed)
   static const nHome = 'home';

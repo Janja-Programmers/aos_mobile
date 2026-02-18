@@ -6,7 +6,7 @@ import 'package:africaonlinestores/features/home/sections/tips/photography_tips_
 import 'package:africaonlinestores/features/home/sections/tips/ranking_tips_screen.dart';
 import 'package:africaonlinestores/features/home/ui/ad_details_screen.dart';
 import 'package:africaonlinestores/features/home/ui/ad_list_screen.dart';
-import 'package:africaonlinestores/features/home/ui/all_ads_screen.dart';
+import 'package:africaonlinestores/features/ads/all_ads/all_ads_screen.dart';
 import 'package:africaonlinestores/features/home/ui/home_search_screen.dart';
 
 class HomeRoutes {
@@ -50,6 +50,16 @@ class HomeRoutes {
         builder: (context, state) => const HomeSearchScreen(),
       ),
 
+      GoRoute(
+        name: AppRoutes.nAdDetails,
+        path: AppRoutes.adDetails, // /ads/details/:id
+        builder: (context, state) {
+          final raw = state.pathParameters['id'] ?? '';
+          final id = Uri.decodeComponent(raw);
+          return AdDetailsScreen(id: id);
+        },
+      ),
+
       // ✅ more specific dynamic route FIRST
       GoRoute(
         name: AppRoutes.nAllAds,
@@ -72,17 +82,6 @@ class HomeRoutes {
             showPills: showPills,
             bannerUrl: (banner ?? '').trim().isEmpty ? null : banner,
           );
-        },
-      ),
-
-      // ✅ MOST generic route LAST
-      GoRoute(
-        name: AppRoutes.nAdDetails,
-        path: AppRoutes.adDetails, // /ads/:id
-        builder: (context, state) {
-          final raw = state.pathParameters['id'] ?? '';
-          final id = Uri.decodeComponent(raw);
-          return AdDetailsScreen(id: id);
         },
       ),
     ];

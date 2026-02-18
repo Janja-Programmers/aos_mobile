@@ -8,7 +8,7 @@ import 'package:africaonlinestores/features/ads/ui/pickers/select_category_scree
 import 'package:africaonlinestores/features/ads/ui/pickers/select_location_screen.dart';
 import 'package:africaonlinestores/features/home/ui/ad_details_screen.dart';
 import 'package:africaonlinestores/features/home/ui/ad_list_screen.dart';
-import 'package:africaonlinestores/features/home/ui/all_ads_screen.dart';
+import 'package:africaonlinestores/features/ads/all_ads/all_ads_screen.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 
 class AdsRoutes {

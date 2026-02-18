@@ -125,7 +125,7 @@ class AdsApi {
       final res = await _dio.get(
         ApiEndpoints.listAdsEndpoint,
         queryParameters: {
-          'country': countryName,
+          'country': "Kenya",
           if (locationId?.trim().isNotEmpty == true) 'location': locationId,
           if (categoryId?.trim().isNotEmpty == true) 'category': categoryId,
           if (q?.trim().isNotEmpty == true) 'q': q,

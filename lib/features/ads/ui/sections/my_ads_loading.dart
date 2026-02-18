@@ -9,8 +9,8 @@ class MyAdsLoadingView extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       itemCount: 5,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (_, __) => const ShimmerBox(height: 96),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      itemBuilder: (_, _) => const ShimmerBox(height: 96),
     );
   }
 }

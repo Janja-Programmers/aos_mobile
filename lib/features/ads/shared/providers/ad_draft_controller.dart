@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 
 class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
@@ -18,7 +19,8 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
   AdDraft get draft => _draft;
 
-  // ---------- BASIC ----------
+  // ================= BASIC =================
+
   void updateTitle(String v) {
     _draft = _draft.copyWith(title: v);
     state = AsyncValue.data(_draft);
@@ -35,18 +37,14 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   }
 
   void setCategory({required String id, required String label}) {
-    _draft = _draft.copyWith(categoryId: id, categoryLabel: label);
-
-    // reset attributes + pricing when category changes (backend-driven)
     _draft = _draft.copyWith(
+      categoryId: id,
+      categoryLabel: label,
       attributes: const <String, dynamic>{},
       priceType: null,
       price: null,
       priceUnit: null,
-      // keep currency if you want, or clear it too:
-      // currency: null,
     );
-
     state = AsyncValue.data(_draft);
   }
 
@@ -55,19 +53,23 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     state = AsyncValue.data(_draft);
   }
 
-  // ---------- DETAILS ----------
+  // ================= DETAILS =================
+
   void setAttribute(String key, dynamic value) {
     final next = Map<String, dynamic>.from(_draft.attributes);
+
     if (value == null || (value is String && value.trim().isEmpty)) {
       next.remove(key);
     } else {
       next[key] = value;
     }
+
     _draft = _draft.copyWith(attributes: next);
     state = AsyncValue.data(_draft);
   }
 
-  // ---------- PRICING (backend-aligned, first-class) ----------
+  // ================= PRICING =================
+
   void setPriceType(String? v) {
     _draft = _draft.copyWith(
       priceType: (v == null || v.trim().isEmpty) ? null : v,
@@ -99,50 +101,111 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     state = AsyncValue.data(_draft);
   }
 
-  // ---------- MEDIA ----------
+  void setOfferPrice(double? value) {
+    state = state.whenData((draft) {
+      return draft.copyWith(offerPrice: value);
+    });
+  }
+
+  void setOfferStart(DateTime? value) {
+    state = state.whenData((draft) {
+      return draft.copyWith(offerStart: value);
+    });
+  }
+
+  void setOfferEnd(DateTime? value) {
+    state = state.whenData((draft) {
+      return draft.copyWith(offerEnd: value);
+    });
+  }
+
+  // ================= MEDIA =================
+
+  /// Replace entire image list safely
+  void replaceImages(List<AdMediaImage> images) {
+    if (images.isEmpty) {
+      _draft = _draft.copyWith(images: []);
+      state = AsyncValue.data(_draft);
+      return;
+    }
+
+    // Ensure first image is primary
+    final normalized = <AdMediaImage>[];
+
+    for (int i = 0; i < images.length; i++) {
+      normalized.add(images[i].copyWith(isPrimary: i == 0));
+    }
+
+    _draft = _draft.copyWith(images: normalized);
+    state = AsyncValue.data(_draft);
+  }
+
+  /// Reorder and set primary
   void setPrimaryImage(int index) {
     if (index < 0 || index >= _draft.images.length) return;
-    final next = <AdMediaImage>[];
-    for (int i = 0; i < _draft.images.length; i++) {
-      final img = _draft.images[i];
-      next.add(img.copyWith(isPrimary: i == index));
-    }
-    _draft = _draft.copyWith(images: next);
-    state = AsyncValue.data(_draft);
+    if (index == 0) return;
+
+    final images = List<AdMediaImage>.from(_draft.images);
+
+    final selected = images.removeAt(index);
+    images.insert(0, selected);
+
+    replaceImages(images);
   }
 
   void removeImage(int index) {
     if (index < 0 || index >= _draft.images.length) return;
+
     final next = List<AdMediaImage>.from(_draft.images)..removeAt(index);
-    // Ensure we still have a primary image if list not empty.
-    if (next.isNotEmpty && !next.any((e) => e.isPrimary)) {
-      next[0] = next[0].copyWith(isPrimary: true);
-    }
-    _draft = _draft.copyWith(images: next);
-    state = AsyncValue.data(_draft);
+
+    replaceImages(next);
+  }
+
+  // ----------------- EDIT IMAGE -----------------
+  Future<void> replaceImageAt(int index, File file) async {
+    final api = _ref.read(adsApiProvider);
+
+    final res = await api.uploadMedia(file: file);
+    if (res.isLeft) return;
+
+    final url = res.rightOrNull!;
+    final images = List<AdMediaImage>.from(_draft.images);
+
+    final isPrimary = images[index].isPrimary;
+
+    images[index] = AdMediaImage(url: url, isPrimary: isPrimary);
+
+    replaceImages(images);
   }
 
   Future<Either<Failure, String>> uploadAndAddImage(File file) async {
-    state = AsyncValue.data(_draft);
     final api = _ref.read(adsApiProvider);
     final res = await api.uploadMedia(file: file);
+
     if (res.isLeft) return Either.left(res.leftOrNull!);
+
     final url = res.rightOrNull!;
+
     final next = List<AdMediaImage>.from(_draft.images);
+
     next.add(AdMediaImage(url: url, isPrimary: next.isEmpty));
-    _draft = _draft.copyWith(images: next);
-    state = AsyncValue.data(_draft);
+
+    replaceImages(next);
+
     return Either.right(url);
   }
 
   Future<Either<Failure, String>> uploadAndSetVideo(File file) async {
-    state = AsyncValue.data(_draft);
     final api = _ref.read(adsApiProvider);
     final res = await api.uploadMedia(file: file);
+
     if (res.isLeft) return Either.left(res.leftOrNull!);
+
     final url = res.rightOrNull!;
+
     _draft = _draft.copyWith(videoUrl: url);
     state = AsyncValue.data(_draft);
+
     return Either.right(url);
   }
 
@@ -150,6 +213,8 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     _draft = _draft.copyWith(videoUrl: null);
     state = AsyncValue.data(_draft);
   }
+
+  // ================= RESET =================
 
   void reset() {
     _draft = const AdDraft();

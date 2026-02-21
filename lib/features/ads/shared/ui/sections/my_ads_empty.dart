@@ -1,21 +1,30 @@
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+
 import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 
 class MyAdsEmptyView extends StatelessWidget {
   const MyAdsEmptyView({
     super.key,
-    required this.onPostFirstAd,
+    required this.title,
+    required this.description,
+    required this.primaryLabel,
+    required this.onPrimaryAction,
     this.onLearnMore,
   });
 
-  final VoidCallback onPostFirstAd;
+  final String title;
+  final String description;
+  final String primaryLabel;
+  final VoidCallback onPrimaryAction;
   final VoidCallback? onLearnMore;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
 
     return Center(
       child: SingleChildScrollView(
@@ -25,7 +34,6 @@ class MyAdsEmptyView extends StatelessWidget {
           children: [
             const SizedBox(height: 32),
 
-            // Icon Container
             Container(
               width: 160,
               height: 160,
@@ -37,48 +45,39 @@ class MyAdsEmptyView extends StatelessWidget {
               child: Icon(
                 Icons.shopping_bag_outlined,
                 size: 64,
-                color: context.appColors.textMuted,
+                color: colors.textMuted,
               ),
             ),
 
             const SizedBox(height: 20),
 
-            // Title
-            Text('No Listings Yet', style: context.h3),
+            Text(title, style: context.h3),
             const SizedBox(height: 8),
 
-            // Description
             Text(
-              "You haven't posted any ads yet.\n"
-              "Start selling by creating your first listing!",
+              description,
               textAlign: TextAlign.center,
-              style: context.p,
+              style: context.p.copyWith(color: colors.textMuted),
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(height: 24),
 
-            // Primary CTA
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: FilledButton.icon(
-                onPressed: onPostFirstAd,
-                icon: Icon(
-                  Icons.add_circle_outline,
-                  color: context.appColors.border,
+            PrimaryButton(
+              text: primaryLabel,
+              onPressed: onPrimaryAction,
+              icon: Icons.add,
+            ),
+
+            const SizedBox(height: 12),
+
+            if (onLearnMore != null)
+              TextButton(
+                onPressed: onLearnMore,
+                child: Text(
+                  'Learn how to sell faster',
+                  style: context.p.copyWith(color: colors.primary),
                 ),
-                label: Text('Post Your First Ad', style: context.button),
               ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // Secondary CTA
-            TextButton(
-              onPressed: onLearnMore,
-              style: TextButton.styleFrom(foregroundColor: scheme.primary),
-              child: const Text('Learn how to sell faster'),
-            ),
 
             const SizedBox(height: 32),
           ],

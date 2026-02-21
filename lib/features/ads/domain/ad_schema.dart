@@ -93,10 +93,12 @@ class PricingSchema {
     required this.requirement,
     this.allowedTypes = const <String>[],
     this.allowedUnits = const <String>[],
+    this.isService = false,
     this.meta = const <String, dynamic>{},
   });
 
   final PricingRequirement requirement;
+  final bool isService;
   final List<String> allowedTypes;
   final List<String> allowedUnits;
 
@@ -114,32 +116,47 @@ class PricingSchema {
   static PricingSchema fromAny(dynamic raw) {
     if (raw is Map) {
       final m = Map<String, dynamic>.from(raw);
+
       final req = _parseRequirement(
         (m['requirement'] ?? m['mode'] ?? 'optional').toString(),
       );
+
       final types = <String>[];
       final units = <String>[];
+
       if (m['allowed_price_types'] is List) {
         for (final t in (m['allowed_price_types'] as List)) {
           if (t == null) continue;
           types.add(t.toString());
         }
       }
+
       if (m['price_units'] is List) {
         for (final u in (m['price_units'] as List)) {
           if (u == null) continue;
           units.add(u.toString());
         }
       }
+
+      /// ✅ PARSE is_service
+      final isService =
+          m['is_service'] == true ||
+          m['isService'] == true ||
+          m['service'] == true;
+
       return PricingSchema(
         requirement: req,
         allowedTypes: types,
         allowedUnits: units,
+        isService: isService,
         meta: m,
       );
     }
-    // Default
-    return const PricingSchema(requirement: PricingRequirement.optional);
+
+    return const PricingSchema(
+      requirement: PricingRequirement.optional,
+      isService: false,
+    );
   }
 }
 

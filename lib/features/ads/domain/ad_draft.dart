@@ -16,6 +16,7 @@ class AdMediaImage {
 
 class AdDraft {
   const AdDraft({
+    // ---------- BASIC ----------
     this.title = '',
     this.countryId,
     this.locationId,
@@ -23,19 +24,26 @@ class AdDraft {
     this.categoryId,
     this.categoryLabel,
 
+    // ---------- MEDIA ----------
     this.images = const <AdMediaImage>[],
     this.videoUrl,
 
-    /// UI-only, category-driven values
+    // ---------- DETAILS ----------
     this.attributes = const <String, dynamic>{},
 
+    // ---------- DESCRIPTION ----------
     this.description = '',
 
-    // --- Pricing (FIRST-CLASS, backend-aligned) ---
+    // ---------- PRICING ----------
     this.priceType,
     this.currency,
     this.price,
     this.priceUnit,
+
+    // ---------- OFFER ----------
+    this.offerPrice,
+    this.offerStart,
+    this.offerEnd,
   });
 
   // ---------- BASIC ----------
@@ -53,17 +61,25 @@ class AdDraft {
   final String? videoUrl;
 
   // ---------- DETAILS ----------
-  /// UI-friendly structure; mapped to Ad Attribute Value table on submit
   final Map<String, dynamic> attributes;
 
   // ---------- DESCRIPTION ----------
   final String description;
 
   // ---------- PRICING ----------
-  final String? priceType; // price_type
-  final String? currency; // currency
-  final double? price; // price
-  final String? priceUnit; // price_unit
+  final String? priceType; // backend: price_type
+  final String? currency; // backend: currency
+  final double? price; // backend: price
+  final String? priceUnit; // backend: price_unit
+
+  // ---------- OFFER ----------
+  final double? offerPrice; // backend: offer_price
+  final DateTime? offerStart; // backend: offer_start
+  final DateTime? offerEnd; // backend: offer_end
+
+  // ------------------------------------------------------------------
+  // COPY WITH
+  // ------------------------------------------------------------------
 
   AdDraft copyWith({
     String? title,
@@ -80,6 +96,10 @@ class AdDraft {
     String? currency,
     double? price,
     String? priceUnit,
+    double? offerPrice,
+    DateTime? offerStart,
+    DateTime? offerEnd,
+    bool clearOffer = false,
   }) {
     return AdDraft(
       title: title ?? this.title,
@@ -96,6 +116,11 @@ class AdDraft {
       currency: currency ?? this.currency,
       price: price ?? this.price,
       priceUnit: priceUnit ?? this.priceUnit,
+
+      // Offer logic
+      offerPrice: clearOffer ? null : (offerPrice ?? this.offerPrice),
+      offerStart: clearOffer ? null : (offerStart ?? this.offerStart),
+      offerEnd: clearOffer ? null : (offerEnd ?? this.offerEnd),
     );
   }
 }

@@ -62,7 +62,10 @@ class CreateAdStepsBuilder {
       steps.add(
         CreateAdStepDef(
           label: 'Pricing',
-          widget: PricingStep(schema: schema.pricing),
+          widget: PricingStep(
+            schema: schema.pricing,
+            isService: schema.pricing.isService,
+          ),
           validator: (d, s) => CreateAdValidator.pricing(d, s.pricing),
         ),
       );

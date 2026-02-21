@@ -1,8 +1,8 @@
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/section_card.dart';
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 
 class AdProductDetailsSection extends StatelessWidget {
   const AdProductDetailsSection({
@@ -21,23 +21,15 @@ class AdProductDetailsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Description',
-            style: TextStyle(fontWeight: FontWeight.w800),
-          ),
+          Text('Description', style: context.pStrong),
           const SizedBox(height: 8),
           Text(
             description.trim().isEmpty ? 'No description.' : description,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).hintColor,
-            ),
+            style: context.p,
           ),
           const SizedBox(height: 14),
           if (specs.isNotEmpty) ...[
-            const Text(
-              'Specifications',
-              style: TextStyle(fontWeight: FontWeight.w800),
-            ),
+            Text('Specifications', style: context.pStrong),
             const SizedBox(height: 10),
             for (int i = 0; i < specs.length; i++)
               _SpecRow(spec: specs[i], showDivider: i != specs.length - 1),

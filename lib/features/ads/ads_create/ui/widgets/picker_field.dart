@@ -1,41 +1,73 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+
 class PickerField extends StatelessWidget {
   const PickerField({
     super.key,
-    required this.label,
+    this.label,
     this.value,
     this.required = false,
     this.leading,
+    this.trailing,
+    this.placeholder = 'Select',
     this.onTap,
   });
 
-  final String label;
+  final String? label;
   final String? value;
   final bool required;
   final Widget? leading;
+  final Widget? trailing;
+  final String placeholder;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final base = Theme.of(context).inputDecorationTheme;
-    final textTheme = Theme.of(context).textTheme;
+    final colors = context.appColors;
     final showValue = value != null && value!.trim().isNotEmpty;
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: required ? '$label *' : label,
-          prefixIcon: leading,
-          suffixIcon: const Icon(Icons.chevron_right_rounded),
-        ).applyDefaults(base),
-        child: Text(
-          showValue ? value! : 'Select',
-          style: showValue
-              ? textTheme.bodyMedium
-              : textTheme.bodyMedium?.copyWith(color: Theme.of(context).hintColor),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: colors.border,
+        ),
+        child: Row(
+          children: [
+            // Leading icon (primary color)
+            if (leading != null) ...[
+              IconTheme(
+                data: IconThemeData(color: colors.primary, size: 22),
+                child: leading!,
+              ),
+              const SizedBox(width: 12),
+            ],
+
+            // Value / Placeholder
+            Expanded(
+              child: Text(
+                showValue ? value! : placeholder,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.p.copyWith(
+                  color: showValue ? colors.textPrimary : colors.textMuted,
+                  fontWeight: showValue ? FontWeight.w500 : null,
+                ),
+              ),
+            ),
+            trailing ??
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 20,
+                  color: colors.textPrimary,
+                ),
+          ],
         ),
       ),
     );

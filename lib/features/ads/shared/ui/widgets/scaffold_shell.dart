@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/ad_stepper.dart';
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 
 class ScaffoldShell extends StatelessWidget {
   const ScaffoldShell({
@@ -35,14 +36,11 @@ class ScaffoldShell extends StatelessWidget {
           icon: const Icon(Icons.arrow_back),
           onPressed: posting ? null : onBackPressed,
         ),
-        title: Text(title, style: Theme.of(context).textTheme.titleLarge),
+        title: Text(title, style: context.h5),
         actions: [
           IconButton(
             onPressed: posting ? null : onCancelPressed,
-            icon: Icon(
-              Icons.close,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+            icon: const Icon(Icons.close),
           ),
         ],
       ),

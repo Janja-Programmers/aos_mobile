@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/localization/locale_controller.dart';
+import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 
 class SelectLocationScreen extends ConsumerStatefulWidget {
   const SelectLocationScreen({super.key, this.selectedId});
@@ -43,8 +44,6 @@ class _SelectLocationScreenState extends ConsumerState<SelectLocationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     final prefs = ref
         .watch(localeControllerProvider)
         .maybeWhen(data: (v) => v, orElse: () => null);
@@ -55,7 +54,10 @@ class _SelectLocationScreenState extends ConsumerState<SelectLocationScreen> {
     const accentRed = Color(0xFFDA1E28);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Select Location'), centerTitle: true),
+      appBar: AppBar(
+        title: Text('Select Location', style: context.h5),
+        centerTitle: true,
+      ),
       body: FutureBuilder(
         future: ref.read(adsApiProvider).getLocations(countryCode: country),
         builder: (context, snap) {
@@ -99,12 +101,7 @@ class _SelectLocationScreenState extends ConsumerState<SelectLocationScreen> {
 
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  '$foundCount locations found',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
+                child: Text('$foundCount locations found', style: context.p),
               ),
 
               const SizedBox(height: 6),
@@ -167,21 +164,15 @@ class _LocationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
 
     return ListTile(
       onTap: onTap,
       leading: Icon(
         Icons.location_on_outlined,
-        color: selected ? accent : scheme.onSurfaceVariant,
+        color: selected ? accent : colors.textPrimary,
       ),
-      title: Text(
-        label,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: selected ? accent : scheme.onSurface,
-          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-        ),
-      ),
+      title: Text(label, style: context.pStrong),
       trailing: selected
           ? Container(
               width: 22,

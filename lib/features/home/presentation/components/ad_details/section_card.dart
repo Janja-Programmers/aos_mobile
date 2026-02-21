@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+
 class SectionCard extends StatelessWidget {
   const SectionCard({super.key, this.title, required this.child});
 
@@ -30,12 +32,7 @@ class SectionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (_hasTitle) ...[
-            Text(
-              title!,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-            ),
+            Text(title!, style: context.h6),
             const SizedBox(height: 12),
           ],
           child,

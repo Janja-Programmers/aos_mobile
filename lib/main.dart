@@ -1,16 +1,34 @@
+import 'package:africaonlinestores/core/localization/locale_prefs_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/routing/app_router.dart';
+import 'package:africaonlinestores/core/localization/locale_controller.dart';
 import 'package:africaonlinestores/core/theme/app_theme.dart';
 import 'package:africaonlinestores/core/theme/theme_controller.dart';
-import 'package:africaonlinestores/core/localization/locale_controller.dart';
-import 'package:africaonlinestores/core/localization/locale_prefs.dart';
+import 'package:africaonlinestores/core/theme/theme_prefs.dart';
+import 'package:africaonlinestores/core/utils/local_resolver.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(child: AOSApp()));
+
+  final savedTheme = await ThemePrefs.readThemeMode();
+  final initialTheme = savedTheme ?? ThemeMode.system;
+
+  final savedLocale = await LocalePrefsStore().read();
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        themeModeProvider.overrideWith((ref) => ThemeController(initialTheme)),
+        localeControllerProvider.overrideWith(
+          () => PreloadedLocaleController(savedLocale),
+        ),
+      ],
+      child: const AOSApp(),
+    ),
+  );
 }
 
 class AOSApp extends ConsumerWidget {
@@ -19,27 +37,22 @@ class AOSApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
-    // Default to system theme while loading prefs.
-    final themeModeAsync = ref.watch(themeModeProvider);
-    final themeMode = themeModeAsync.maybeWhen(
-      data: (m) => m,
-      orElse: () => ThemeMode.system,
-    );
+    final localeAsync = ref.watch(localeControllerProvider);
+    final prefs = localeAsync.maybeWhen(data: (v) => v, orElse: () => null);
 
     return MaterialApp.router(
       title: 'Africa Online Stores',
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
-      locale: _resolveLocale(ref.watch(localeControllerProvider)),
+      locale: resolveLocale(prefs),
       localizationsDelegates: const [
         ...GlobalMaterialLocalizations.delegates,
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      // NOTE: Keep this list small for now; app text translations are handled
-      // via your own intl ARB setup. Material widgets will fall back to en.
       supportedLocales: const [
         Locale('en'),
         Locale('sw'),
@@ -50,16 +63,4 @@ class AOSApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
     );
   }
-}
-
-Locale? _resolveLocale(AsyncValue<LocalePrefs> prefsAsync) {
-  final prefs = prefsAsync.maybeWhen(data: (v) => v, orElse: () => null);
-
-  if (prefs == null) return null;
-
-  final lang = prefs.languageCode;
-  final country = prefs.countryCode;
-
-  if (lang.isEmpty) return null;
-  return country.isEmpty ? Locale(lang) : Locale(lang, country);
 }

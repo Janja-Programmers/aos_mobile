@@ -93,23 +93,30 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
       ),
-
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: tokens.surface,
+
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 18,
         ),
+
+        hintStyle: TextStyle(color: tokens.textMuted),
+        labelStyle: TextStyle(color: tokens.textMuted),
+        floatingLabelStyle: TextStyle(color: tokens.textPrimary),
+        errorStyle: TextStyle(color: scheme.error),
+        isDense: true,
+
         enabledBorder: OutlineInputBorder(
           borderRadius: fieldRadius,
           borderSide: BorderSide(color: tokens.border),
         ),
+
         focusedBorder: OutlineInputBorder(
           borderRadius: fieldRadius,
           borderSide: BorderSide(color: scheme.primary, width: 1.2),
         ),
-        labelStyle: TextStyle(color: tokens.textMuted),
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(

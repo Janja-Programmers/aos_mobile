@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
@@ -27,9 +28,10 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
   String? _error;
   List<AOSAdListItem> _items = const [];
 
-  // Counts shown on tabs (keys should match the tab labels)
   Map<String, int> _counts = const {};
+
   String _apiStatusForTab(String tab) => tab == 'Drafts' ? 'Draft' : tab;
+
   String _tabKeyForStatus(String apiStatus) =>
       apiStatus == 'Draft' ? 'Drafts' : apiStatus;
 
@@ -38,6 +40,56 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
+
+  // =======================
+  // EMPTY STATE HELPERS
+  // =======================
+
+  String _emptyTitle() {
+    switch (_status) {
+      case 'Draft':
+        return 'No Drafts Yet';
+      case 'Reviewing':
+        return 'Nothing Under Review';
+      case 'Declined':
+        return 'No Declined Ads';
+      case 'Active':
+      default:
+        return 'No Listings Yet';
+    }
+  }
+
+  String _emptyDescription() {
+    switch (_status) {
+      case 'Draft':
+        return 'You have no saved drafts.\nStart creating a listing and finish later.';
+      case 'Reviewing':
+        return 'You have no ads currently under review.';
+      case 'Declined':
+        return 'You have no declined ads at the moment.';
+      case 'Active':
+      default:
+        return "You haven't posted any ads yet.\nStart selling by creating your first listing!";
+    }
+  }
+
+  String _emptyPrimaryLabel() {
+    switch (_status) {
+      case 'Draft':
+        return 'Create Draft';
+      case 'Reviewing':
+        return 'Post Ad for Review';
+      case 'Declined':
+        return 'Create New Ad';
+      case 'Active':
+      default:
+        return 'Post Your First Ad';
+    }
+  }
+
+  // =======================
+  // LOAD DATA
+  // =======================
 
   Future<void> _load() async {
     setState(() {
@@ -54,26 +106,22 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
 
     final Map<String, int> newCounts = {};
 
-    // Load counts for ALL tabs
+    // Load counts for all tabs
     for (final entry in statuses.entries) {
       final res = await ref.read(adsApiProvider).myAds(status: entry.value);
 
-      res.fold(
-        (_) {
-          newCounts[entry.key] = 0;
-        },
-        (data) {
-          final dataMap = (data['data'] ?? const {}) as Map;
-          final pagination = (dataMap['pagination'] ?? const {}) as Map;
+      res.fold((_) => newCounts[entry.key] = 0, (data) {
+        final dataMap = (data['data'] ?? const {}) as Map;
 
-          final totalRaw = pagination['total'];
-          final total = totalRaw is int
-              ? totalRaw
-              : int.tryParse('$totalRaw') ?? 0;
+        final pagination = (dataMap['pagination'] ?? const {}) as Map;
 
-          newCounts[entry.key] = total;
-        },
-      );
+        final totalRaw = pagination['total'];
+        final total = totalRaw is int
+            ? totalRaw
+            : int.tryParse('$totalRaw') ?? 0;
+
+        newCounts[entry.key] = total;
+      });
     }
 
     // Load current tab items
@@ -114,15 +162,28 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
     );
   }
 
+  // =======================
+  // BUILD
+  // =======================
+
   @override
   Widget build(BuildContext context) {
     final tabs = const ['Active', 'Reviewing', 'Drafts', 'Declined'];
 
+    final colors = context.appColors;
+
     return Scaffold(
-      appBar: AppBar(title: Text('My Listings', style: context.h4)),
+      backgroundColor: colors.surface,
+
+      appBar: AppBar(
+        backgroundColor: colors.surface,
+        title: Text('My Listings', style: context.h4),
+      ),
+
       body: Column(
         children: [
           const SizedBox(height: 12),
+
           MyAdsTabs(
             tabs: tabs,
             selected: _tabKeyForStatus(_status),
@@ -132,7 +193,9 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
               _load();
             },
           ),
+
           const SizedBox(height: 8),
+
           Expanded(
             child: _loading
                 ? const MyAdsLoadingView()
@@ -140,7 +203,10 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
                 ? MyAdsErrorView(message: _error!, onRetry: _load)
                 : (_items.isEmpty)
                 ? MyAdsEmptyView(
-                    onPostFirstAd: () {
+                    title: _emptyTitle(),
+                    primaryLabel: _emptyPrimaryLabel(),
+                    description: _emptyDescription(),
+                    onPrimaryAction: () {
                       context.pushNamed(AppRoutes.nCreateAd);
                     },
                     onLearnMore: () {
@@ -157,11 +223,15 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.pushNamed(AppRoutes.nCreateAd),
-        icon: const Icon(Icons.add),
-        label: const Text('Post Ad'),
-      ),
+
+      // ✅ Minimal + FAB
+      floatingActionButton: (!_loading && _error == null && _items.isNotEmpty)
+          ? FloatingActionButton(
+              backgroundColor: colors.primary,
+              onPressed: () => context.pushNamed(AppRoutes.nCreateAd),
+              child: Icon(Icons.add, color: colors.border),
+            )
+          : null,
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/section_card.dart';
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 
 class AdHeaderInfoSection extends StatelessWidget {
   const AdHeaderInfoSection({
@@ -44,8 +45,6 @@ class AdHeaderInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return SectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,31 +53,13 @@ class AdHeaderInfoSection extends StatelessWidget {
             children: [
               Icon(Icons.location_on_outlined, color: colorsPrimary, size: 18),
               const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  _locationText(),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.hintColor,
-                  ),
-                ),
-              ),
+              Expanded(child: Text(_locationText(), style: context.p)),
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
+          Text(title, style: context.pStrong),
           const SizedBox(height: 10),
-          Text(
-            _priceText(),
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: colorsPrimary,
-            ),
-          ),
+          Text(_priceText(), style: context.pStrong.copyWith(fontSize: 16)),
         ],
       ),
     );

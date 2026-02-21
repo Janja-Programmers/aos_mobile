@@ -1,5 +1,7 @@
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:flutter/material.dart';
+
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
@@ -7,31 +9,62 @@ class PrimaryButton extends StatelessWidget {
     required this.text,
     this.onPressed,
     this.loading = false,
+    this.icon,
   });
 
   final String text;
   final VoidCallback? onPressed;
   final bool loading;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
+    final isEnabled = !loading && onPressed != null;
+
+    final bgColor = isEnabled ? colors.primary : colors.border;
+
+    final fgColor = isEnabled ? colors.border : colors.primary;
 
     return SizedBox(
       height: 56,
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: loading ? null : onPressed,
+        onPressed: isEnabled ? onPressed : null,
+
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          backgroundColor: bgColor,
+          disabledBackgroundColor: bgColor,
+          foregroundColor: fgColor,
+          disabledForegroundColor: fgColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+
         child: loading
             ? SizedBox(
                 height: 20,
                 width: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
+                  valueColor: AlwaysStoppedAnimation(fgColor),
                 ),
               )
-            : Text(text, style: context.button),
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 20, color: fgColor),
+                    const SizedBox(width: 8),
+                  ],
+
+                  Text(text, style: context.p.copyWith(color: fgColor)),
+                ],
+              ),
       ),
     );
   }

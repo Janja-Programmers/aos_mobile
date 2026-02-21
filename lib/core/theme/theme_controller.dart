@@ -1,31 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/core/theme/theme_prefs.dart';
 
-class ThemeController extends AsyncNotifier<ThemeMode> {
-  @override
-  Future<ThemeMode> build() async {
-    return (await ThemePrefs.readThemeMode()) ?? ThemeMode.system;
-  }
+class ThemeController extends StateNotifier<ThemeMode> {
+  ThemeController(super.initialState);
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    state = AsyncValue.data(mode);
+    state = mode;
     await ThemePrefs.writeThemeMode(mode);
   }
 }
 
-class PreloadedThemeController extends ThemeController {
-  final ThemeMode initial;
-
-  PreloadedThemeController(this.initial);
-
-  @override
-  Future<ThemeMode> build() async {
-    return initial;
-  }
-}
-
-final themeModeProvider = AsyncNotifierProvider<ThemeController, ThemeMode>(
-  ThemeController.new,
+final themeModeProvider = StateNotifierProvider<ThemeController, ThemeMode>(
+  (ref) => throw UnimplementedError(),
 );

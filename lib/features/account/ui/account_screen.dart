@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +14,7 @@ import 'package:africaonlinestores/shared/components/account_option_tile.dart';
 import 'package:africaonlinestores/shared/components/app_confirm_sheet.dart';
 import 'package:africaonlinestores/shared/components/app_switch_tile.dart';
 import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -39,13 +39,8 @@ class AccountScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeModeAsync = ref.watch(themeModeProvider);
-    final isDarkMode = themeModeAsync.maybeWhen(
-      data: (mode) => mode == ThemeMode.dark,
-      orElse: () => false,
-    );
-
-    print("Current AppTheme isDarkMode init: $isDarkMode");
+    final themeMode = ref.watch(themeModeProvider);
+    final isDarkMode = themeMode == ThemeMode.dark;
 
     final auth = ref.watch(authControllerProvider);
     final user = auth.user;
@@ -109,8 +104,6 @@ class AccountScreen extends ConsumerWidget {
                     ref
                         .read(themeModeProvider.notifier)
                         .setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
-
-                    print("Toggled AppTheme: ${val.toString()}");
                   },
                 ),
               ],

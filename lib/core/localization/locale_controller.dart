@@ -17,7 +17,7 @@ import 'package:africaonlinestores/features/localization/domain/locale_bundle.da
 class LocaleController extends AsyncNotifier<LocalePrefs> {
   late final LocalePrefsStore _store;
   late final LocalizationApi _api;
-  late final ApiClient _apiClient;
+  ApiClient? _apiClient;
 
   @override
   Future<LocalePrefs> build() async {
@@ -72,7 +72,7 @@ class LocaleController extends AsyncNotifier<LocalePrefs> {
   }
 
   void _applyToApi(LocalePrefs prefs) {
-    _apiClient.setContext(
+    _apiClient?.setContext(
       countryCode: prefs.countryCode,
       languageCode: prefs.languageCode,
       currencyCode: prefs.currencyCode,
@@ -186,3 +186,23 @@ final localeBundleProvider = FutureProvider<LocaleBundle>((ref) async {
     },
   );
 });
+
+class PreloadedLocaleController extends LocaleController {
+  final LocalePrefs? initial;
+
+  PreloadedLocaleController(this.initial);
+
+  @override
+  Future<LocalePrefs> build() async {
+    _store = ref.read(localePrefsStoreProvider);
+    _api = ref.read(localizationApiProvider);
+    _apiClient = ref.read(apiClientProvider);
+
+    if (initial != null) {
+      _applyToApi(initial!);
+      return initial!;
+    }
+
+    return super.build();
+  }
+}

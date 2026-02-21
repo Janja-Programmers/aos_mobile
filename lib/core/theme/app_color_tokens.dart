@@ -20,6 +20,9 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     required this.warning,
     required this.error,
     required this.info,
+
+    required this.white,
+    required this.black,
   });
 
   final Color primary;
@@ -38,6 +41,9 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
   final Color error;
   final Color info;
 
+  final Color white;
+  final Color black;
+
   static const light = AppColorTokens(
     primary: Color(0xFFC1121F),
     primaryHover: Color.fromARGB(255, 131, 30, 35),
@@ -55,6 +61,9 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     warning: Color(0xFFF5A623),
     error: Color(0xFFFF4D4D),
     info: Color(0xFF4DA3FF),
+
+    white: Color(0xFFFFFFFF),
+    black: Color(0x00000000),
   );
 
   static const dark = AppColorTokens(
@@ -74,6 +83,9 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     warning: Color(0xFFF5A623),
     error: Color(0xFFFF4D4D),
     info: Color(0xFF4DA3FF),
+
+    white: Color(0xFFFFFFFF),
+    black: Color(0x00000000),
   );
 
   @override
@@ -92,6 +104,8 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     Color? warning,
     Color? error,
     Color? info,
+    Color? white,
+    Color? black,
   }) {
     return AppColorTokens(
       primary: primary ?? this.primary,
@@ -108,6 +122,8 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
       warning: warning ?? this.warning,
       error: error ?? this.error,
       info: info ?? this.info,
+      white: white ?? this.white,
+      black: black ?? this.black,
     );
   }
 
@@ -134,6 +150,9 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
       warning: Color.lerp(warning, other.warning, t) ?? warning,
       error: Color.lerp(error, other.error, t) ?? error,
       info: Color.lerp(info, other.info, t) ?? info,
+
+      white: Color.lerp(white, other.white, t) ?? white,
+      black: Color.lerp(black, other.black, t) ?? black,
     );
   }
 }

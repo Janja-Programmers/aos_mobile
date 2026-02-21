@@ -25,3 +25,8 @@ double? readBackendPrice(Map<String, dynamic> pricing) {
   if (raw is num) return raw.toDouble();
   return double.tryParse(raw.toString().trim());
 }
+
+bool isValidOffer(double? price, double? offer) {
+  if (price == null || offer == null) return true;
+  return offer < price;
+}

@@ -277,6 +277,7 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
             child: PrimaryButton(
               text: isLast ? 'Post Ad' : 'Continue',
               loading: posting,
+              icon: Icons.arrow_forward,
               onPressed: (posting || !canContinue)
                   ? null
                   : () async {

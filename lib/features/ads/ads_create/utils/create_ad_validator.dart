@@ -22,23 +22,33 @@ class CreateAdValidator {
   }
 
   static bool pricing(AdDraft d, PricingSchema schema) {
+    /// 🔒 Hidden pricing → always valid
     if (schema.requirement == PricingRequirement.hidden) return true;
 
     final priceType = d.priceType;
 
+    /// Optional + empty → OK
     if (schema.requirement == PricingRequirement.optional &&
         isEmptyStr(priceType)) {
       return true;
     }
 
+    /// Required + empty → Invalid
     if (schema.requirement == PricingRequirement.required &&
         isEmptyStr(priceType)) {
       return false;
     }
 
+    /// ✅ SERVICE: Contact for price is always valid
+    if (schema.isService && isContactForPrice(priceType)) {
+      return true;
+    }
+
+    /// 💰 Types that need numeric amount
     if (typeNeedsAmount(priceType)) {
       if (d.price == null || d.price! <= 0) return false;
 
+      /// Units (only if required)
       if (typeNeedsUnit(priceType, schema)) {
         if (isEmptyStr(d.priceUnit)) return false;
       }

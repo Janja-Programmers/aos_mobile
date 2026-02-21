@@ -26,8 +26,8 @@ class _PushNotificationScreenState
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final themeModeAsync = ref.watch(themeModeProvider);
-    final isDarkMode = themeModeAsync.value == ThemeMode.dark;
+    final themeMode = ref.watch(themeModeProvider);
+    final isDarkMode = themeMode == ThemeMode.dark;
 
     return Scaffold(
       appBar: AppBar(

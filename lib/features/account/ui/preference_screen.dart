@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:africaonlinestores/core/localization/utils.dart';
 
 import 'package:africaonlinestores/features/account/ui/widgets/locale_picker_page.dart';
 import 'package:africaonlinestores/features/account/ui/widgets/pref_card.dart';
@@ -10,6 +10,7 @@ import 'package:africaonlinestores/features/localization/domain/locale_bundle.da
 
 import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class PreferenceScreen extends ConsumerStatefulWidget {
   const PreferenceScreen({super.key});
@@ -89,9 +90,9 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
               _normalizeToCode(bundle.currencies, _currency) ??
               bundle.baseCurrencyCode;
 
-          final countryLabel = _labelFor(bundle.countries, _country) ?? '—';
-          final languageLabel = _labelFor(bundle.languages, _language) ?? '—';
-          final currencyLabel = _labelFor(bundle.currencies, _currency) ?? '—';
+          final countryLabel = labelFor(bundle.countries, _country) ?? '—';
+          final languageLabel = labelFor(bundle.languages, _language) ?? '—';
+          final currencyLabel = labelFor(bundle.currencies, _currency) ?? '—';
 
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -209,17 +210,17 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
     );
   }
 
-  String? _labelFor(List<LocaleOption> items, String? code) {
-    if (code == null) return null;
-    for (final it in items) {
-      if (it.code == code) return it.label;
-    }
-    // If code isn't found, it might be a label; show it as-is.
-    for (final it in items) {
-      if (it.label == code) return it.label;
-    }
-    return null;
-  }
+  // String? _labelFor(List<LocaleOption> items, String? code) {
+  //   if (code == null) return null;
+  //   for (final it in items) {
+  //     if (it.code == code) return it.label;
+  //   }
+  //   // If code isn't found, it might be a label; show it as-is.
+  //   for (final it in items) {
+  //     if (it.label == code) return it.label;
+  //   }
+  //   return null;
+  // }
 
   /// Ensures stored value is a valid option code.
   /// If value matches a label, returns the corresponding code.

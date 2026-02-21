@@ -1,4 +1,7 @@
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:flutter/material.dart';
+
+import 'package:africaonlinestores/core/core.dart';
 
 class AdStepper extends StatelessWidget {
   const AdStepper({
@@ -15,14 +18,23 @@ class AdStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: List.generate(steps.length, (i) {
           final isCurrent = i == currentIndex;
           final isDone = completed.contains(i);
-          final circleColor = isDone || isCurrent ? scheme.primary : scheme.outlineVariant;
-          final textColor = isDone || isCurrent ? scheme.primary : scheme.onSurfaceVariant;
+          final circleColor = isDone || isCurrent
+              ? scheme.primary
+              : colors.border;
+          final iconTextColor = isDone || isCurrent
+              ? colors.white
+              : colors.black;
+          final textColor = isDone || isCurrent
+              ? colors.primary
+              : colors.textPrimary;
 
           return Expanded(
             child: Column(
@@ -33,27 +45,36 @@ class AdStepper extends StatelessWidget {
                     Expanded(
                       child: Container(
                         height: 2,
-                        color: i == 0 ? Colors.transparent : scheme.outlineVariant,
+                        color: i == 0 ? Colors.transparent : scheme.primary,
                       ),
                     ),
+
                     Container(
                       height: 28,
                       width: 28,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: scheme.surface,
+                        color: circleColor,
                         border: Border.all(color: circleColor, width: 2),
                       ),
                       child: Center(
                         child: isDone
-                            ? Icon(Icons.check, size: 16, color: circleColor)
-                            : Text('${i + 1}', style: TextStyle(color: circleColor, fontWeight: FontWeight.w700)),
+                            ? Icon(Icons.check, size: 16, color: iconTextColor)
+                            : isCurrent
+                            ? Text(
+                                '${i + 1}',
+                                style: context.p.copyWith(color: iconTextColor),
+                              )
+                            : Text('${i + 1}', style: context.p),
                       ),
                     ),
+                    // Line to next
                     Expanded(
                       child: Container(
                         height: 2,
-                        color: i == steps.length - 1 ? Colors.transparent : scheme.outlineVariant,
+                        color: i == steps.length - 1
+                            ? Colors.transparent
+                            : scheme.outlineVariant,
                       ),
                     ),
                   ],
@@ -61,7 +82,10 @@ class AdStepper extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   steps[i],
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: textColor, fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500),
+                  style: context.p.copyWith(
+                    color: textColor,
+                    fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],

@@ -15,8 +15,6 @@ class AdCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     final subtitle = [
       if (ad.locationName.isNotEmpty) ad.locationName,
       if (ad.country.isNotEmpty) ad.country,
@@ -92,10 +90,7 @@ class AdCard extends StatelessWidget {
                       priceText(ad),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colors.onSurface,
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: context.pStrong,
                     ),
                   ],
                 ),

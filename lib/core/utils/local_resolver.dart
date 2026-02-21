@@ -1,17 +1,13 @@
 import 'dart:ui';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/localization/locale_prefs.dart';
 
-Locale? resolveLocale(AsyncValue<LocalePrefs> prefsAsync) {
-  final prefs = prefsAsync.maybeWhen(data: (v) => v, orElse: () => null);
-
+Locale? resolveLocale(LocalePrefs? prefs) {
   if (prefs == null) return null;
 
-  final lang = prefs.languageCode;
-  final country = prefs.countryCode;
+  if (prefs.languageCode.isEmpty) return null;
 
-  if (lang.isEmpty) return null;
-  return country.isEmpty ? Locale(lang) : Locale(lang, country);
+  return prefs.countryCode.isEmpty
+      ? Locale(prefs.languageCode)
+      : Locale(prefs.languageCode, prefs.countryCode);
 }

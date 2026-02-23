@@ -47,6 +47,12 @@ class ApiEndpoints {
   static final String toggleAdReviewEndpoint =
       '/api/method/aos.api.reviews.toggle_reaction';
 
+  // Wishlist Endpoints
+  static final String listWishlistEndpoint =
+      '/api/method/aos.api.wishlist.list_wishlist';
+  static final String toggleWishlistEndpoint =
+      '/api/method/aos.api.wishlist.toggle_wishlist';
+
   // Read Ads
   static final String listAdsEndpoint = '/api/method/aos.api.ads.list_ads';
   static final String myAdsEndpoint = '/api/method/aos.api.ads.my_ads';

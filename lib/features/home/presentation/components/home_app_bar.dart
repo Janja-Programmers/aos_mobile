@@ -1,7 +1,10 @@
+import 'package:africaonlinestores/features/home/wishlist/controller/wishlist_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:africaonlinestores/core/core.dart';
 
-class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const HomeAppBar({
     super.key,
     this.title = 'Africa Online Stores',
@@ -34,13 +37,17 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize {
-    final bottom = search == null ? 0.0 : (_searchHeight + searchPadding.vertical);
+    final bottom = search == null
+        ? 0.0
+        : (_searchHeight + searchPadding.vertical);
     return Size.fromHeight(toolbarHeight + bottom);
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
+    final wishlistState = ref.watch(wishlistControllerProvider).value;
+    final hasWishlistItems = (wishlistState?.ids.isNotEmpty ?? false);
 
     return AppBar(
       toolbarHeight: toolbarHeight,
@@ -52,12 +59,10 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       bottom: search == null
           ? null
           : PreferredSize(
-              preferredSize:
-                  Size.fromHeight(_searchHeight + searchPadding.vertical),
-              child: Padding(
-                padding: searchPadding,
-                child: search!,
+              preferredSize: Size.fromHeight(
+                _searchHeight + searchPadding.vertical,
               ),
+              child: Padding(padding: searchPadding, child: search!),
             ),
       titleSpacing: 16,
       title: Padding(
@@ -75,11 +80,15 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
                 const Spacer(),
+
                 _CircleIconButton(
-                  icon: Icons.favorite_border,
-                  onTap: onTapFavorites,
+                  icon: hasWishlistItems
+                      ? Icons.favorite
+                      : Icons.favorite_border,
+                  onTap: hasWishlistItems ? onTapFavorites : null,
                 ),
                 const SizedBox(width: 10),
+
                 _CircleIconButton(
                   icon: Icons.notifications_none,
                   onTap: onTapNotifications,
@@ -142,7 +151,11 @@ class _CircleIconButton extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: colors.border),
         ),
-        child: Icon(icon, size: 20, color: colors.textPrimary),
+        child: Icon(
+          icon,
+          size: 20,
+          color: onTap == null ? colors.textMuted : colors.primary,
+        ),
       ),
     );
   }

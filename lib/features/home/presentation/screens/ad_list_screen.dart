@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/ads/ads_all/all_ads_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -76,26 +77,41 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
       loading: () => HomeAppBar(
         locationLabel: 'All Cities',
         onTapLocation: () {},
-        onTapFavorites: () => ShowSnack(context, 'Coming Soon!').info(),
+        onTapFavorites: () {
+          context.pushNamed(
+            AppRoutes.nAllAds,
+
+            extra: const AllAdsArgs('', null, mode: AllAdsMode.wishlist),
+          );
+        },
         onTapNotifications: () => ShowSnack(context, 'Coming Soon!').info(),
         search: searchBar,
       ),
       error: (_, _) => HomeAppBar(
         locationLabel: 'All Cities',
         onTapLocation: () {},
-        onTapFavorites: () => ShowSnack(context, 'Coming Soon!').info(),
+        onTapFavorites: () {
+          context.pushNamed(
+            AppRoutes.nAllAds,
+            extra: const AllAdsArgs('', null, mode: AllAdsMode.wishlist),
+          );
+        },
         onTapNotifications: () => ShowSnack(context, 'Coming Soon!').info(),
         search: searchBar,
       ),
       data: (market) => HomeAppBar(
         locationLabel: market.locationLabel ?? 'All Cities',
         onTapLocation: _openLocationPicker,
-        onTapFavorites: () => ShowSnack(context, 'Coming Soon!').info(),
+        onTapFavorites: () {
+          context.pushNamed(
+            AppRoutes.nAllAds,
+            extra: const AllAdsArgs('', null, mode: AllAdsMode.wishlist),
+          );
+        },
         onTapNotifications: () => ShowSnack(context, 'Coming Soon!').info(),
         search: searchBar,
       ),
     );
-
     return AdListScaffold(
       header: header,
       body: AdListContentView(

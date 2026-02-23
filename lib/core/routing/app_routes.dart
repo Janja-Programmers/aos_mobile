@@ -30,14 +30,13 @@ class AppRoutes {
   static const search = '/search';
 
   // Ads - static paths first
+  static const allAds = '/ads/all';
   static const adList = '/ads/list';
   static const myAds = '/ads/my';
   static const createAd = '/ads/create';
   static const selectCategory = '/ads/select-category';
   static const selectLocation = '/ads/select-location';
 
-  // Ads - dynamic paths after static
-  static const allAds = '/ads/all/:categoryId';
   // Ads - MOST generic dynamic route LAST
   static const adDetails = '/ads/detail/:id';
 

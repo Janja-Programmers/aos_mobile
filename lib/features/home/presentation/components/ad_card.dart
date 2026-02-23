@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:africaonlinestores/features/home/wishlist/controller/wishlist_controller.dart';
 import 'package:africaonlinestores/features/home/shared/utils/helpers.dart';
 
 import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
-class AdCard extends StatelessWidget {
+class AdCard extends ConsumerWidget {
   const AdCard({super.key, required this.ad, required this.onTap});
 
   final AOSAdListItem ad;
@@ -17,7 +20,7 @@ class AdCard extends StatelessWidget {
   static const double _cardHeight = 285;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
 
     final subtitle = [
@@ -26,6 +29,10 @@ class AdCard extends StatelessWidget {
     ].join(', ');
 
     final hasOffer = ad.isOfferActive && ad.offerPercent > 0;
+
+    final wishlistState = ref.watch(wishlistControllerProvider).value;
+    final wish = wishlistState?.ids.contains(ad.id) ?? false;
+    final pending = wishlistState?.pending.contains(ad.id) ?? false;
 
     return InkWell(
       onTap: onTap,
@@ -97,21 +104,54 @@ class AdCard extends StatelessWidget {
                   Positioned(
                     right: 10,
                     top: 10,
-                    child: Container(
-                      height: 34,
-                      width: 34,
-                      decoration: BoxDecoration(
-                        color: colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        ad.isWishlisted
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        size: 18,
-                        color: ad.isWishlisted
-                            ? colors.primary
-                            : colors.textPrimary,
+                    child: Material(
+                      color: Colors.transparent,
+                      shape: const CircleBorder(),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: pending
+                            ? null
+                            : () async {
+                                final ok = await ref
+                                    .read(wishlistControllerProvider.notifier)
+                                    .toggle(ad.id);
+
+                                if (!ok) {
+                                  if (!context.mounted) return;
+                                  ShowSnack(
+                                    context,
+                                    'Unexpected error. Please try again.',
+                                  ).error();
+                                }
+                              },
+                        child: Container(
+                          height: 34,
+                          width: 34,
+                          decoration: BoxDecoration(
+                            color: colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: pending
+                              ? SizedBox(
+                                  height: 18,
+                                  width: 18,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(6),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: colors.primary,
+                                    ),
+                                  ),
+                                )
+                              : Icon(
+                                  wish ? Icons.favorite : Icons.favorite_border,
+                                  size: 18,
+                                  color: wish
+                                      ? colors.primary
+                                      : colors.textPrimary,
+                                ),
+                        ),
                       ),
                     ),
                   ),

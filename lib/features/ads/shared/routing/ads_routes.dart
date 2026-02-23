@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/features/ads/ads_all/all_ads_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_all/all_ads_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_create/create_ad_flow_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_seller/my_ads_screen.dart';
@@ -34,8 +35,15 @@ class AdsRoutes {
     GoRoute(
       name: AppRoutes.nAllAds,
       path: AppRoutes.allAds,
-      builder: (context, state) =>
-          AllAdsScreen(parentCategoryId: _param(state, 'categoryId')),
+      builder: (context, state) {
+        final args = state.extra as AllAdsArgs?;
+
+        return AllAdsScreen(
+          parentCategoryId: args?.parentCategoryId ?? '',
+          initialCategoryId: args?.initialCategoryId,
+          mode: args?.mode ?? AllAdsMode.normal,
+        );
+      },
     ),
 
     GoRoute(

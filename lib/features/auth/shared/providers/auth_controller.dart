@@ -9,9 +9,11 @@ import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/session_storage.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+
 import 'package:africaonlinestores/features/auth/data/auth_api.dart';
 import 'package:africaonlinestores/features/auth/data/google_auth_service.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/home/wishlist/controller/wishlist_controller.dart';
 
 final authRefreshProvider = StreamProvider<void>((ref) {
   // A lightweight stream that emits whenever authController changes.
@@ -178,6 +180,7 @@ class AuthController extends StateNotifier<AuthState> {
       clearError: true,
     );
     _emit();
+    _ref.invalidate(wishlistControllerProvider);
 
     // Sync locale/country/currency prefs to backend so the account follows
     // across devices, then hydrate back from server.
@@ -195,9 +198,7 @@ class AuthController extends StateNotifier<AuthState> {
   Future<void> logout() async {
     try {
       await _api.logout();
-    } catch (_) {
-      // ignore network errors here; still clear local session.
-    }
+    } catch (_) {}
     await _storage.clearSid();
     await _apiClient.clearSid();
 
@@ -209,6 +210,7 @@ class AuthController extends StateNotifier<AuthState> {
       clearError: true,
     );
     _emit();
+    _ref.invalidate(wishlistControllerProvider);
   }
 
   Future<Either<Failure, String>> register({
@@ -373,6 +375,7 @@ class AuthController extends StateNotifier<AuthState> {
         clearError: true,
       );
       _emit();
+      _ref.invalidate(wishlistControllerProvider);
 
       return Either.right(null);
     } catch (e) {

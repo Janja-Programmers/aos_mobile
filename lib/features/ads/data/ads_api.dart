@@ -213,4 +213,39 @@ class AdsApi {
       return Either.left(const Failure('Failed to fetch reviews.'));
     }
   }
+
+  Future<Either<Failure, Map<String, dynamic>>> listWishlist({
+    int limit = 200,
+    int offset = 0,
+  }) async {
+    try {
+      final res = await _dio.get(
+        ApiEndpoints.listWishlistEndpoint,
+        queryParameters: {'limit': limit, 'offset': offset},
+      );
+
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to fetch wishlist.'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> toggleWishlist({
+    required String adId,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiEndpoints.toggleWishlistEndpoint,
+        data: {'ad_id': adId},
+      );
+
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to update wishlist.'));
+    }
+  }
 }

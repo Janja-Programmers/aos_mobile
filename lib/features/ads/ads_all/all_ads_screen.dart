@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,22 +20,28 @@ class AllAdsScreen extends ConsumerWidget {
     this.initialCategoryId,
     this.showPills = true,
     this.bannerUrl,
+    this.mode = AllAdsMode.normal,
   });
 
   final String parentCategoryId;
   final String? initialCategoryId;
   final bool showPills;
   final String? bannerUrl;
+  final AllAdsMode mode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isWishlist = mode == AllAdsMode.wishlist;
+
     final state = ref.watch(
-      allAdsControllerProvider(AllAdsArgs(parentCategoryId, initialCategoryId)),
+      allAdsControllerProvider(
+        AllAdsArgs(parentCategoryId, initialCategoryId, mode: mode),
+      ),
     );
 
     final controller = ref.read(
       allAdsControllerProvider(
-        AllAdsArgs(parentCategoryId, initialCategoryId),
+        AllAdsArgs(parentCategoryId, initialCategoryId, mode: mode),
       ).notifier,
     );
 
@@ -46,15 +53,18 @@ class AllAdsScreen extends ConsumerWidget {
         child: CustomScrollView(
           slivers: [
             /// 🔥 Sticky App Bar
-            const SliverAppBar(
+            SliverAppBar(
               pinned: true,
               floating: false,
               elevation: 0,
-              title: Text('All Ads'),
+              title: Text(
+                isWishlist ? 'My Wishlist' : 'All Ads',
+                style: context.h5,
+              ),
             ),
 
             /// 🔥 Sticky Pills
-            if (canShowPills)
+            if (!isWishlist && canShowPills)
               SliverPersistentHeader(
                 pinned: true,
                 delegate: StickyHeaderDelegate(

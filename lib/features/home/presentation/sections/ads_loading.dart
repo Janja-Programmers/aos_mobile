@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/shared/widgets/app_shimmer.dart';
+import 'package:africaonlinestores/shared/shimmer/app_shimmer.dart';
 
 class AdListLoadingView extends StatelessWidget {
   const AdListLoadingView({super.key});

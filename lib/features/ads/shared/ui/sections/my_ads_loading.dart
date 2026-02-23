@@ -1,4 +1,4 @@
-import 'package:africaonlinestores/shared/widgets/app_shimmer.dart';
+import 'package:africaonlinestores/shared/shimmer/app_shimmer.dart';
 import 'package:flutter/material.dart';
 
 class MyAdsLoadingView extends StatelessWidget {

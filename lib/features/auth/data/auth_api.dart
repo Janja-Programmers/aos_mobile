@@ -25,11 +25,21 @@ class AuthApi {
     required String email,
     required String password,
     required String fullName,
+    required String country,
+    required String language,
+    required String currency,
   }) async {
     try {
       final res = await _client.dio.post(
         ApiEndpoints.registerEndpoint,
-        data: {'email': email, 'password': password, 'full_name': fullName},
+        data: {
+          'email': email,
+          'password': password,
+          'full_name': fullName,
+          'country': country,
+          'language': language,
+          'currency': currency,
+        },
       );
       return unwrapFrappe(res);
     } on DioException catch (e) {

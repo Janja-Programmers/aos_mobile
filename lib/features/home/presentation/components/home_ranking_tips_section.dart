@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
+
 import 'package:africaonlinestores/shared/components/app_text_styles.dart';
-import 'package:go_router/go_router.dart';
 
 /// Info card block ("Photography Tips" / "Marketing Tips" / "Ranking Tips")
 /// Horizontal, scrollable, sliver-safe
@@ -100,7 +101,7 @@ class _Card extends StatelessWidget {
           child: Ink(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: colors.surface,
+              color: colors.white,
               borderRadius: BorderRadius.circular(22),
               border: Border.all(color: colors.border),
             ),

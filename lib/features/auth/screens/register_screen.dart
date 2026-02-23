@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:africaonlinestores/core/localization/locale_prefs_store.dart';
 
 import 'package:africaonlinestores/features/account/ui/legal_docs_widgets.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
@@ -13,6 +13,7 @@ import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_
 import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/app_text_fields.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -105,11 +106,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _register() async {
+    final localePrefs = await LocalePrefsStore().read();
+
+    if (localePrefs == null) {
+      if (mounted) {
+        ShowSnack(
+          context,
+          'Localization not configured. Please complete onboarding.',
+        ).error();
+      }
+      return;
+    }
     if (!_accept) {
-      ShowSnack(
-        context,
-        'Please accept Terms & Conditions and Privacy Policy',
-      ).error();
+      if (mounted) {
+        ShowSnack(
+          context,
+          'Please accept Terms & Conditions and Privacy Policy',
+        ).error();
+      }
       return;
     }
 
@@ -124,6 +138,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             email: _email.text.trim().toLowerCase(),
             password: _password.text,
             fullName: _name.text.trim(),
+
+            // Localization
+            country: localePrefs.countryCode,
+            language: localePrefs.languageCode,
+            currency: localePrefs.currencyCode,
           );
 
       if (!mounted) return;
@@ -132,7 +151,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         msg,
       ) async {
         ShowSnack(context, msg).success();
-        await context.pushNamed(AppRoutes.nVerifyOtp, extra: _email.text.trim().toLowerCase());
+        await context.pushNamed(
+          AppRoutes.nVerifyOtp,
+          extra: _email.text.trim().toLowerCase(),
+        );
       });
     } catch (e) {
       if (!mounted) return;
@@ -305,7 +327,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 children: [
                   Text('Already have an account? ', style: context.p),
                   GestureDetector(
-                    onTap: () => context.pushNamed(AppRoutes.nLogin, queryParameters: {'email': _email.text.trim().toLowerCase()}),
+                    onTap: () => context.pushNamed(
+                      AppRoutes.nLogin,
+                      queryParameters: {
+                        'email': _email.text.trim().toLowerCase(),
+                      },
+                    ),
                     child: Text('Login', style: context.pStrong),
                   ),
                 ],

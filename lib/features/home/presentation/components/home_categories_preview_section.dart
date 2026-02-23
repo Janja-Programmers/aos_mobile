@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/shared/shimmer/app_shimmer.dart';
+
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
@@ -49,9 +51,21 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
 
           /// Loading
           if (state.loading && items.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Center(child: CircularProgressIndicator()),
+            SizedBox(
+              height: 110,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: 6,
+                separatorBuilder: (_, _) => const SizedBox(width: 12),
+                itemBuilder: (_, _) => const Column(
+                  children: [
+                    ShimmerBox(width: 58, height: 58, shape: BoxShape.circle),
+                    SizedBox(height: 8),
+                    ShimmerBox(width: 60, height: 12),
+                  ],
+                ),
+              ),
             )
           /// Categories list
           else if (items.isNotEmpty)

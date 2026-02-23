@@ -25,8 +25,12 @@ final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
     final api = ref.watch(authApiProvider);
     final client = ref.watch(apiClientProvider);
     final storage = ref.watch(sessionStorageProvider);
-    return AuthController(ref: ref, api: api, apiClient: client, storage: storage)
-      ..init();
+    return AuthController(
+      ref: ref,
+      api: api,
+      apiClient: client,
+      storage: storage,
+    )..init();
   },
 );
 
@@ -211,11 +215,17 @@ class AuthController extends StateNotifier<AuthState> {
     required String email,
     required String password,
     required String fullName,
+    required String country,
+    required String language,
+    required String currency,
   }) async {
     final res = await _api.register(
       email: email,
       password: password,
       fullName: fullName,
+      country: country,
+      language: language,
+      currency: currency,
     );
     if (res.isLeft) return Either.left(res.leftOrNull!);
 

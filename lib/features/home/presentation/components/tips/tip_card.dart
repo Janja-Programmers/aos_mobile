@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+
 class TipCard extends StatelessWidget {
   const TipCard({
     super.key,
@@ -18,15 +21,17 @@ class TipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.white,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -56,14 +61,7 @@ class TipCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
-                    height: 1.4,
-                  ),
-                ),
+                Text(description, style: context.p),
               ],
             ),
           ),

@@ -39,10 +39,24 @@ class ApiEndpoints {
   static final String saveAdDraftEndpoint =
       '/api/method/aos.api.ads.save_ad_draft';
 
+  // Reviews Endpoints
+  static final String createAdReviewEndpoint =
+      '/api/method/aos.api.reviews.create_review';
+  static final String getAdReviewsEndpoint =
+      '/api/method/aos.api.reviews.list_reviews';
+  static final String toggleAdReviewEndpoint =
+      '/api/method/aos.api.reviews.toggle_reaction';
+
   // Read Ads
   static final String listAdsEndpoint = '/api/method/aos.api.ads.list_ads';
   static final String myAdsEndpoint = '/api/method/aos.api.ads.my_ads';
   static final String getAdEndpoint = '/api/method/aos.api.ads.get_ad';
+
+  // Seller Endpoints
+  static final String getSellerEndpoint =
+      '/api/method/aos.api.sellers.get_seller';
+  static final String toggleSellerEndpoint =
+      '/api/method/aos.api.sellers.toggle_follow';
 
   // Localization Endpoints
   static final String getLocaleBundleEndpoint =

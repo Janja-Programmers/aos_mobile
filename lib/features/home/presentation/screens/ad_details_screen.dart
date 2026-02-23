@@ -10,9 +10,15 @@ import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/ads/domain/aos_review.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 
+import 'package:africaonlinestores/features/seller/domain/aos_seller.dart';
+import 'package:africaonlinestores/features/seller/data/seller_controller.dart';
+
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_detail_action_buttons.dart';
+import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_seller_store_section.dart';
+import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_reviews_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ads_header_info_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/image_header_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/product_detail_section.dart';
@@ -20,7 +26,6 @@ import 'package:africaonlinestores/features/home/presentation/components/ad_deta
 
 class AdDetailsScreen extends ConsumerStatefulWidget {
   const AdDetailsScreen({super.key, required this.id});
-
   final String id;
 
   @override
@@ -37,6 +42,12 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
   List<AOSAdListItem> _similar = [];
   bool _loadingSimilar = false;
 
+  AOSSellerProfile? _seller;
+  bool _loadingSeller = false;
+
+  List<AOSReview> _reviews = [];
+  bool _loadingReviews = false;
+
   final _searchCtrl = TextEditingController();
 
   @override
@@ -51,6 +62,9 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
     super.dispose();
   }
 
+  // =============================
+  // MAIN LOAD
+  // =============================
   Future<void> _load() async {
     setState(() {
       _loading = true;
@@ -79,11 +93,11 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
 
         final ad = AOSAdDetails.fromJson(Map<String, dynamic>.from(adJson));
 
-        // media selection clamp
         final cleanImages = ad.images
             .map((e) => e.trim())
             .where((e) => e.isNotEmpty)
             .toList();
+
         final thumbCount = cleanImages.take(4).length;
         final hasVideo = (ad.video?.trim().isNotEmpty ?? false);
         final mediaCount = thumbCount + (hasVideo ? 1 : 0);
@@ -93,55 +107,38 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
           _loading = false;
           _selectedImage = _selectedImage.clamp(
             0,
-            (mediaCount > 0 ? mediaCount - 1 : 0),
+            mediaCount > 0 ? mediaCount - 1 : 0,
           );
         });
 
-        // ✅ load similar after we have the ad
         _loadSimilar();
+        _loadSeller();
+        _loadReviews();
       },
     );
   }
 
+  // =============================
+  // SIMILAR
+  // =============================
   Future<void> _loadSimilar() async {
-    final ad = _ad;
-    if (ad == null) return;
-    if (_loadingSimilar) return;
+    if (_ad == null || _loadingSimilar) return;
 
     setState(() => _loadingSimilar = true);
-
-    final categoryId = ad.categoryName;
-    final countryName = ad.country;
 
     final res = await ref
         .read(adsApiProvider)
         .listAds(
-          countryName: countryName,
-          categoryId: categoryId,
+          countryName: _ad!.country,
+          categoryId: _ad!.categoryName,
           limit: 7,
-          offset: 0,
         );
 
     if (!mounted) return;
 
-    res.fold(
-      (f) => setState(() {
-        _loadingSimilar = false;
-        // optional: store error string if you want to show it
-        // _similarErr = f.message;
-      }),
-      (json) {
-        final data = json['data'];
-
-        final raw = (data is Map)
-            ? (data['items'] ?? data['results'] ?? data['list'])
-            : null;
-
-        if (raw is! List) {
-          setState(() => _loadingSimilar = false);
-          return;
-        }
-
+    res.fold((_) => setState(() => _loadingSimilar = false), (json) {
+      final raw = json['data']?['items'];
+      if (raw is List) {
         final items = raw
             .whereType<Map>()
             .map((m) => AOSAdListItem.fromJson(Map<String, dynamic>.from(m)))
@@ -153,52 +150,101 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
           _similar = items;
           _loadingSimilar = false;
         });
-      },
-    );
+      }
+    });
   }
 
+  // =============================
+  // SELLER
+  // =============================
+  Future<void> _loadSeller() async {
+    if (_ad == null) return;
+
+    setState(() => _loadingSeller = true);
+
+    final sellerId = _ad!.sellerId;
+
+    final res = await ref
+        .read(sellerApiProvider)
+        .getSellerProfile(sellerId: sellerId);
+
+    if (!mounted) return;
+
+    res.fold((_) => setState(() => _loadingSeller = false), (json) {
+      final data = json['data'];
+      if (data is Map) {
+        setState(() {
+          _seller = AOSSellerProfile.fromJson(Map<String, dynamic>.from(data));
+          _loadingSeller = false;
+        });
+      } else {
+        setState(() => _loadingSeller = false);
+      }
+    });
+  }
+
+  // =============================
+  // REVIEWS
+  // =============================
+  Future<void> _loadReviews() async {
+    if (_ad == null || _loadingReviews) return;
+
+    setState(() => _loadingReviews = true);
+
+    final res = await ref.read(adsApiProvider).getAdReviews(adId: _ad!.id);
+
+    if (!mounted) return;
+
+    res.fold((_) => setState(() => _loadingReviews = false), (json) {
+      final raw = json['data']?['items'];
+      if (raw is List) {
+        final items = raw
+            .whereType<Map>()
+            .map((e) => AOSReview.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+
+        setState(() {
+          _reviews = items;
+          _loadingReviews = false;
+        });
+      } else {
+        setState(() => _loadingReviews = false);
+      }
+    });
+  }
+
+  // =============================
+  // UI
+  // =============================
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: colors.surface,
         elevation: 0,
         centerTitle: false,
         titleSpacing: 0,
-
         leading: const BackButton(),
-
         title: SizedBox(
           height: 52,
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: AppSearchBar(
-                readOnly: true,
-                controller: _searchCtrl,
-                onTap: () => context.pushNamed(AppRoutes.nSearch),
-                onSubmitted: (_) {},
-                onMicTap: () => context.pushNamed(AppRoutes.nSearch),
-                onCameraTap: () => context.pushNamed(AppRoutes.nSearch),
-              ),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: AppSearchBar(
+              readOnly: true,
+              controller: _searchCtrl,
+              onTap: () => context.pushNamed(AppRoutes.nSearch),
+              onSubmitted: (_) {},
+              onMicTap: () => context.pushNamed(AppRoutes.nSearch),
+              onCameraTap: () => context.pushNamed(AppRoutes.nSearch),
             ),
           ),
         ),
-
         actions: [
           PopupMenuButton<int>(
             icon: const Icon(Icons.menu),
-            color: context.appColors.surface,
-            surfaceTintColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            onSelected: (index) {
-              AppNavigation.goTo(context, ref, index);
-            },
+            onSelected: (index) => AppNavigation.goTo(context, ref, index),
             itemBuilder: (context) {
               final items = AppNavConfig.items;
               final location = GoRouterState.of(context).matchedLocation;
@@ -206,40 +252,27 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
               return List.generate(items.length, (i) {
                 final item = items[i];
                 final isActive = location.contains(item.routeName);
+
                 return PopupMenuItem<int>(
                   value: i,
-                  padding: EdgeInsets.zero,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? context.appColors.primary.withOpacity(0.08)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          item.icon,
-                          size: 20,
+                  child: Row(
+                    children: [
+                      Icon(
+                        item.icon,
+                        color: isActive
+                            ? context.appColors.primary
+                            : context.appColors.textPrimary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        item.label,
+                        style: context.p.copyWith(
                           color: isActive
                               ? context.appColors.primary
                               : context.appColors.textPrimary,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          item.label,
-                          style: context.p.copyWith(
-                            color: isActive
-                                ? context.appColors.primary
-                                : context.appColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 );
               });
@@ -250,19 +283,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _err != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(_err!, textAlign: TextAlign.center),
-                    const SizedBox(height: 12),
-                    FilledButton(onPressed: _load, child: const Text('Retry')),
-                  ],
-                ),
-              ),
-            )
+          ? Center(child: Text(_err!))
           : _ad == null
           ? const SizedBox.shrink()
           : Column(
@@ -289,19 +310,45 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                         price: _ad!.price,
                         priceUnit: _ad!.priceUnit,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 12),
 
                       AdProductDetailsSection(
                         description: _ad!.description,
                         specs: _ad!.specs,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
+
+                      if (_loadingReviews)
+                        const Center(child: CircularProgressIndicator())
+                      else if (_reviews.isNotEmpty)
+                        AdReviewsSection(
+                          reviews: _reviews,
+                          totalReviews: _reviews.length,
+                          onSeeAll: () {},
+                        ),
+                      const SizedBox(height: 12),
+
+                      if (_loadingSeller)
+                        const Center(child: CircularProgressIndicator())
+                      else if (_seller != null)
+                        AdSellerInfoSection(
+                          shopName: _seller!.shopName,
+                          avatar: _seller!.avatar,
+                          rating: _seller!.rating,
+                          totalReviews: _seller!.totalReviews,
+                          totalFollowers: _seller!.totalFollowers,
+                          totalAds: _seller!.totalAds,
+                          joined: _seller!.joined,
+                          isFollowing: _seller!.isFollowing,
+                          onVisitStore: () {},
+                          onReview: () {},
+                          onReport: () {},
+                          onPostSimilar: () {},
+                        ),
+                      const SizedBox(height: 12),
 
                       if (_loadingSimilar)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Center(child: CircularProgressIndicator()),
-                        )
+                        const Center(child: CircularProgressIndicator())
                       else
                         GridAdsSectionBox(
                           title: 'Similar Products',

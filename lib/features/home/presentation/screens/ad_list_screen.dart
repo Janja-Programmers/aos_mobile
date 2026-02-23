@@ -41,14 +41,6 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
   String? _locationId;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _load(initial: true);
-    });
-  }
-
-  @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
@@ -70,8 +62,9 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
         .read(localeControllerProvider)
         .maybeWhen(data: (v) => v, orElse: () => null);
 
-    final codeOrLabel = (prefs?.countryCode ?? '').trim();
-    if (codeOrLabel.isEmpty) return;
+    final codeOrLabel = (prefs?.countryCode.isNotEmpty == true
+        ? prefs!.countryCode
+        : 'Kenya');
 
     const fallbackCountryName = 'Kenya';
     String countryName = fallbackCountryName;
@@ -163,6 +156,14 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
         _locationId = null;
       });
       _refresh();
+    });
+
+    ref.listen(localeControllerProvider, (previous, next) {
+      next.whenData((_) {
+        if (_items.isEmpty && !_loading) {
+          _refresh();
+        }
+      });
     });
 
     final prefs = ref

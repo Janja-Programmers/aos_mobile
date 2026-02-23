@@ -195,4 +195,22 @@ class AdsApi {
       return Either.left(const Failure('Failed to fetch ad details.'));
     }
   }
+
+  Future<Either<Failure, Map<String, dynamic>>> getAdReviews({
+    required String adId,
+    int limit = 10,
+    int offset = 0,
+  }) async {
+    try {
+      final res = await _dio.get(
+        ApiEndpoints.getAdReviewsEndpoint,
+        queryParameters: {'ad': adId, 'limit': limit, 'offset': offset},
+      );
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to fetch reviews.'));
+    }
+  }
 }

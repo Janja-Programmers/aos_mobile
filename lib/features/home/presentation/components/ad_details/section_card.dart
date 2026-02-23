@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 
 class SectionCard extends StatelessWidget {
@@ -16,7 +17,7 @@ class SectionCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        color: Theme.of(context).colorScheme.surface,
+        color: context.appColors.white,
         border: Border.all(
           color: Theme.of(context).dividerColor.withOpacity(0.15),
         ),
@@ -32,7 +33,10 @@ class SectionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (_hasTitle) ...[
-            Text(title!, style: context.h6),
+            Text(
+              title!,
+              style: context.h6.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 12),
           ],
           child,

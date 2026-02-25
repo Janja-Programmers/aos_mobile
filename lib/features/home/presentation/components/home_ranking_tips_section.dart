@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 /// Info card block ("Photography Tips" / "Marketing Tips" / "Ranking Tips")
 /// Horizontal, scrollable, sliver-safe

@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/providers.dart';
 
-import 'package:africaonlinestores/features/home/presentation/components/home_brand_section.dart';
+import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_categories_preview_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_grid_ads_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_hero_carousel_section.dart';
@@ -14,7 +15,7 @@ import 'package:africaonlinestores/features/home/presentation/components/home_ra
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
 import 'package:africaonlinestores/features/home/presentation/shimmers/home_page_skeleton.dart';
 
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 class AdListContentView extends ConsumerWidget {
   const AdListContentView({
@@ -45,15 +46,9 @@ class AdListContentView extends ConsumerWidget {
             onRefresh: onRefresh,
             child: CustomScrollView(
               slivers: [
-                const SliverPadding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  sliver: HomeHeroCarouselSection(),
-                ),
+                const HomeHeroCarouselSection(),
 
-                const SliverPadding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  sliver: HomeCategoriesPreviewSection(limit: 10),
-                ),
+                const HomeCategoriesPreviewSection(limit: 10),
 
                 _sectionSliver(context, state, 'flash_sales'),
                 _sectionSliver(context, state, 'new_products'),
@@ -127,10 +122,7 @@ class AdListContentView extends ConsumerWidget {
                 _sectionSliver(context, state, 'furniture'),
                 _sectionSliver(context, state, 'health_beauty'),
 
-                const SliverPadding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  sliver: HomeHeroCarouselSection(),
-                ),
+                const HomeHeroCarouselSection(),
 
                 _sectionSliver(context, state, 'fashion'),
                 _sectionSliver(context, state, 'baby_kids'),
@@ -156,7 +148,7 @@ class AdListContentView extends ConsumerWidget {
                         ? Text(
                             'No more ads',
                             style: context.p.copyWith(
-                              color: context.appColors.textMuted,
+                              color: context.appColors.primary,
                             ),
                             textAlign: TextAlign.center,
                           )

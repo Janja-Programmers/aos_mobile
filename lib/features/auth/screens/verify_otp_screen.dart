@@ -10,7 +10,7 @@ import 'package:africaonlinestores/features/auth/shared/widgets/otp_resend_row.d
 import 'package:africaonlinestores/features/auth/shared/widgets/otp_section.dart';
 import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/app_success_sheet.dart';
 
 class VerifyOTPScreen extends ConsumerStatefulWidget {

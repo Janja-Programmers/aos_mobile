@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 class SelectLocationScreen extends ConsumerStatefulWidget {
   const SelectLocationScreen({super.key, this.selectedId});

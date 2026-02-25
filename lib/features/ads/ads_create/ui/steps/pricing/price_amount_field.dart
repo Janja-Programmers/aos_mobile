@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 class PriceAmountField extends StatelessWidget {
   const PriceAmountField({

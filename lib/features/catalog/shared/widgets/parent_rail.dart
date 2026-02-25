@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 
@@ -22,8 +23,8 @@ class ParentsRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
+    final scheme = Theme.of(context).colorScheme;
 
     return Container(
       width: width,
@@ -32,19 +33,21 @@ class ParentsRail extends StatelessWidget {
         border: Border(right: BorderSide(color: colors.border)),
       ),
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        itemCount: parents.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 6),
         itemBuilder: (context, index) {
-          final c = parents[index];
-          final selected = c.id == selectedId;
-          final url = buildIconUrl(c.icon);
+          final parent = parents[index];
+          final selected = parent.id == selectedId;
+          final iconUrl = buildIconUrl(parent.icon);
 
           return InkWell(
-            onTap: () => onSelect(c.id),
+            onTap: () => onSelect(parent.id),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               decoration: BoxDecoration(
                 color: selected
-                    ? scheme.primary.withAlpha(20)
+                    ? scheme.primary.withOpacity(0.08)
                     : Colors.transparent,
                 border: Border(
                   left: BorderSide(
@@ -55,25 +58,38 @@ class ParentsRail extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: (width * 0.27).clamp(22.0, 28.0),
-                    backgroundColor: colors.border,
-                    foregroundImage: url == null ? null : NetworkImage(url),
-                    child: url == null
+                  /// Icon circle
+                  Container(
+                    width: (width * 0.5).clamp(42.0, 50.0),
+                    height: (width * 0.5).clamp(42.0, 50.0),
+                    decoration: BoxDecoration(
+                      color: colors.elevated,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: iconUrl == null
                         ? Icon(Icons.category_outlined, color: colors.textMuted)
-                        : null,
+                        : ClipOval(
+                            child: Image.network(
+                              iconUrl,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                            ),
+                          ),
                   ),
+
                   const SizedBox(height: 6),
+
+                  /// Name
                   Text(
-                    c.name,
+                    parent.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 11,
-                      height: 1.1,
+                    style: AppTextStylesX(context).caption.copyWith(
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                       color: selected ? scheme.onSurface : colors.textMuted,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                     ),
                   ),
                 ],
@@ -81,8 +97,6 @@ class ParentsRail extends StatelessWidget {
             ),
           );
         },
-        separatorBuilder: (_, _) => const SizedBox(height: 4),
-        itemCount: parents.length,
       ),
     );
   }

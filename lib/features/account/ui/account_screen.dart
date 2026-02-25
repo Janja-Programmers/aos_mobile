@@ -13,7 +13,7 @@ import 'package:africaonlinestores/features/auth/shared/providers/auth_controlle
 import 'package:africaonlinestores/shared/components/account_option_tile.dart';
 import 'package:africaonlinestores/shared/components/app_confirm_sheet.dart';
 import 'package:africaonlinestores/shared/components/app_switch_tile.dart';
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class AccountScreen extends ConsumerWidget {

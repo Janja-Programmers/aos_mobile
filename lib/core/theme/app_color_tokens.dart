@@ -7,6 +7,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
   const AppColorTokens({
     required this.primary,
     required this.primaryHover,
+    required this.primaryRedSoft,
     required this.surface,
     required this.surfaceBright,
     required this.textPrimary,
@@ -23,10 +24,14 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
 
     required this.white,
     required this.black,
+    required this.orange,
+    required this.amber,
+    required this.red,
   });
 
   final Color primary;
   final Color primaryHover;
+  final Color primaryRedSoft;
   final Color surface;
   final Color surfaceBright;
   final Color textPrimary;
@@ -43,17 +48,21 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
 
   final Color white;
   final Color black;
+  final Color orange;
+  final Color amber;
+  final Color red;
 
   static const light = AppColorTokens(
     primary: Color(0xFFC1121F),
-    primaryHover: Color.fromARGB(255, 131, 30, 35),
+    primaryHover: Color(0xFF8E0E15),
+    primaryRedSoft: Color(0xFFC1121F),
 
     textPrimary: Color(0xFF1A1A1A),
     textSecondary: Color(0xFF555555),
     textMuted: Color(0xFF8A8A8A),
-    surface: Color.fromARGB(255, 229, 228, 228),
-    surfaceBright: Color(0xFFFAFAFA),
-    elevated: Color(0xFFF5F5F5),
+    surface: Color(0xFFFAFAFA),
+    surfaceBright: Color(0xFFFFFFFF),
+    elevated: Color(0xFFFFFFFF),
     border: Color(0xFFE8E8E8),
     btnText: Color(0xFFFFFFFF),
 
@@ -62,21 +71,25 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     error: Color(0xFFFF4D4D),
     info: Color(0xFF4DA3FF),
 
-    white: Color(0xFFFFFFFF),
-    black: Color(0x00000000),
+    white: Colors.white,
+    black: Colors.black,
+    orange: Colors.orange,
+    amber: Colors.amber,
+    red: Colors.red,
   );
 
   static const dark = AppColorTokens(
     primary: Color(0xFFC1121F),
     primaryHover: Color(0xFF8E0E15),
+    primaryRedSoft: Color(0xFFC1121F),
 
     textPrimary: Color(0xFFFFFFFF),
-    textSecondary: Color(0xFF555555),
+    textSecondary: Color(0xFFB3B3B3),
     textMuted: Color(0xFF8A8A8A),
     surface: Color(0x00000000),
     surfaceBright: Color(0xFFFFFFFF),
-    elevated: Color(0xFFF5F5F5),
-    border: Color(0xFFE8E8E8),
+    elevated: Color(0xFF121212),
+    border: Color(0xFF2A2A2A),
     btnText: Color(0xFFFFFFFF),
 
     success: Color(0xFF2ECC71),
@@ -84,14 +97,18 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     error: Color(0xFFFF4D4D),
     info: Color(0xFF4DA3FF),
 
-    black: Color(0xFFFFFFFF),
-    white: Color(0x00000000),
+    white: Colors.black,
+    black: Colors.white,
+    orange: Colors.orange,
+    amber: Colors.amber,
+    red: Colors.red,
   );
 
   @override
   AppColorTokens copyWith({
     Color? primary,
     Color? primaryHover,
+    Color? primaryRedSoft,
     Color? surface,
     Color? surfaceBright,
     Color? textPrimary,
@@ -106,10 +123,14 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     Color? info,
     Color? white,
     Color? black,
+    Color? orange,
+    Color? amber,
+    Color? red,
   }) {
     return AppColorTokens(
       primary: primary ?? this.primary,
       primaryHover: primaryHover ?? this.primaryHover,
+      primaryRedSoft: primaryRedSoft ?? this.primaryRedSoft,
       surface: surface ?? this.surface,
       surfaceBright: surfaceBright ?? this.surfaceBright,
       textPrimary: textPrimary ?? this.textPrimary,
@@ -124,6 +145,9 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
       info: info ?? this.info,
       white: white ?? this.white,
       black: black ?? this.black,
+      orange: orange ?? this.orange,
+      amber: amber ?? this.amber,
+      red: red ?? this.red,
     );
   }
 
@@ -134,7 +158,8 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
       primary: Color.lerp(primary, other.primary, t) ?? primary,
       primaryHover:
           Color.lerp(primaryHover, other.primaryHover, t) ?? primaryHover,
-
+      primaryRedSoft:
+          Color.lerp(primaryRedSoft, other.primaryRedSoft, t) ?? primaryRedSoft,
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t) ?? textPrimary,
       textSecondary:
           Color.lerp(textSecondary, other.textSecondary, t) ?? textSecondary,
@@ -153,6 +178,9 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
 
       white: Color.lerp(white, other.white, t) ?? white,
       black: Color.lerp(black, other.black, t) ?? black,
+      orange: Color.lerp(orange, other.orange, t) ?? orange,
+      amber: Color.lerp(amber, other.amber, t) ?? amber,
+      red: Color.lerp(red, other.red, t) ?? red,
     );
   }
 }

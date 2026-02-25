@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
-import 'package:africaonlinestores/features/home/presentation/components/ad_card.dart';
+import 'package:africaonlinestores/shared/components/cards/ad_card_horizontal.dart';
 import 'package:africaonlinestores/features/home/presentation/components/section_header.dart';
 
 class HomeHorizontalAdsSection extends StatelessWidget {
@@ -23,50 +23,38 @@ class HomeHorizontalAdsSection extends StatelessWidget {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    return SliverPadding(
-      padding: const EdgeInsets.only(bottom: 12),
-      sliver: SliverToBoxAdapter(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ───────── Section header ─────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
-              child: SectionHeader(title: title, onSeeAll: onSeeAll),
-            ),
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// Section Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+            child: SectionHeader(title: title, onSeeAll: onSeeAll),
+          ),
 
-            // ───────── Horizontal rail ─────────
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final maxW = constraints.maxWidth;
-                final cardWidth = (maxW * 0.45).clamp(120.0, 260.0);
-                final cardHeight = cardWidth / 0.68;
+          /// Horizontal List
+          SizedBox(
+            height: 280, // Design system spec
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: items.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final ad = items[index];
 
-                return SizedBox(
-                  height: cardHeight,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: items.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 6),
-                    itemBuilder: (context, index) {
-                      final ad = items[index];
-
-                      return SizedBox(
-                        width: cardWidth,
-                        child: AdCard(
-                          ad: ad,
-                          onTap: () => AdNavigation.toDetail(context, ad.id),
-                        ),
-                      );
-                    },
-                  ),
+                return AdHorizontalCard(
+                  ad: ad,
+                  onTap: () => AdNavigation.toDetail(context, ad.id),
                 );
               },
             ),
-          ],
-        ),
+          ),
+
+          const SizedBox(height: 12),
+        ],
       ),
     );
   }

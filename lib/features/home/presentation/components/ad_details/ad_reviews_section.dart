@@ -5,7 +5,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_review.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/section_card.dart';
 
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:intl/intl.dart';
 
 class AdReviewsSection extends StatelessWidget {

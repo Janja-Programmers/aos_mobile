@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 
@@ -21,61 +22,59 @@ class SubcategoriesGrid extends StatelessWidget {
     final colors = context.appColors;
 
     return LayoutBuilder(
-      builder: (context, c) {
-        // Force 3 columns (as requested)
-        const cols = 3;
+      builder: (context, constraints) {
+        const columns = 3;
+        const crossSpacing = 12.0;
+        const mainSpacing = 12.0;
 
-        // Tighter spacing
-        const crossSpacing = 8.0;
-        const mainSpacing = 8.0;
+        final totalSpacing = crossSpacing * (columns - 1);
+        final tileWidth = (constraints.maxWidth - totalSpacing) / columns;
 
-        // Compute tile height from available width so it "squeezes" nicely.
-        // This makes tiles shorter on small screens and avoids big vertical gaps.
-        final tileW = (c.maxWidth - (crossSpacing * (cols - 1))) / cols;
-        final imageH = (tileW * 0.78).clamp(
-          52.0,
-          70.0,
-        ); // slightly smaller image
-        final textH = 34.0; // enough for 2 lines
-        final tileH = imageH + 6 + textH; // 6 = gap between image and text
+        // Slightly more premium proportions
+        final imageHeight = (tileWidth * 0.80).clamp(56.0, 80.0);
+        const textHeight = 36.0;
+        final tileHeight = imageHeight + 8 + textHeight;
 
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: items.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: cols,
+            crossAxisCount: columns,
             crossAxisSpacing: crossSpacing,
             mainAxisSpacing: mainSpacing,
-            mainAxisExtent: tileH, // ✅ controls row height directly
+            mainAxisExtent: tileHeight,
           ),
           itemBuilder: (context, index) {
             final item = items[index];
-            final url = buildIconUrl(item.icon);
+            final iconUrl = buildIconUrl(item.icon);
 
             return InkWell(
               onTap: onTap == null ? null : () => onTap!(item),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               child: Column(
                 children: [
+                  /// Image container
                   SizedBox(
-                    height: imageH,
+                    height: imageHeight,
                     width: double.infinity,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: colors.border,
-                        borderRadius: BorderRadius.circular(12),
+                        color: colors.elevated,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: colors.border),
                       ),
                       alignment: Alignment.center,
-                      child: url == null
+                      child: iconUrl == null
                           ? Icon(
                               Icons.grid_view_outlined,
+                              size: 26,
                               color: colors.textMuted,
                             )
                           : ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                               child: Image.network(
-                                url,
+                                iconUrl,
                                 fit: BoxFit.cover,
                                 width: double.infinity,
                                 height: double.infinity,
@@ -83,19 +82,21 @@ class SubcategoriesGrid extends StatelessWidget {
                             ),
                     ),
                   ),
-                  const SizedBox(height: 6),
+
+                  const SizedBox(height: 8),
+
+                  /// Title
                   SizedBox(
-                    height: textH,
+                    height: textHeight,
                     child: Center(
                       child: Text(
                         item.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 12,
+                        style: AppTextStylesX(context).caption.copyWith(
                           fontWeight: FontWeight.w600,
-                          height: 1.1,
+                          color: colors.textPrimary,
                         ),
                       ),
                     ),

@@ -1,6 +1,7 @@
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/ads/ads_all/all_ads_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_all/all_ads_state.dart';
@@ -8,10 +9,10 @@ import 'package:africaonlinestores/features/ads/ads_all/sheets/filter_sheet.dart
 import 'package:africaonlinestores/features/ads/ads_all/sheets/sort_sheet.dart';
 import 'package:africaonlinestores/features/ads/ads_all/widget/category_pills.dart';
 import 'package:africaonlinestores/features/ads/ads_all/widget/view_toggle_bar.dart';
-import 'package:africaonlinestores/features/ads/ads_all/widget/ad_list_tile.dart';
 import 'package:africaonlinestores/features/ads/ads_all/widget/sticky_header_delegate.dart';
 
-import 'package:africaonlinestores/features/home/presentation/components/ad_card.dart';
+import 'package:africaonlinestores/shared/components/cards/ad_card_grid.dart';
+import 'package:africaonlinestores/shared/components/cards/ad_card_list.dart';
 
 class AllAdsScreen extends ConsumerWidget {
   const AllAdsScreen({
@@ -125,32 +126,41 @@ class AllAdsScreen extends ConsumerWidget {
       );
     }
 
-    /// Grid View
+    /// GRID VIEW
     if (state.view == ViewMode.grid) {
+      final width = MediaQuery.of(context).size.width;
+
+      double aspectRatio;
+      if (width < 360) {
+        aspectRatio = 0.58;
+      } else {
+        aspectRatio = 0.62;
+      }
+
       return SliverPadding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         sliver: SliverGrid(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 0.68,
+            mainAxisSpacing: 16,
+            childAspectRatio: aspectRatio,
           ),
           delegate: SliverChildBuilderDelegate((context, i) {
             final ad = state.items[i];
-            return AdCard(ad: ad, onTap: () {});
+            return AdGridCard(ad: ad, onTap: () {});
           }, childCount: state.items.length),
         ),
       );
     }
 
-    /// List View
+    /// LIST VIEW
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
       sliver: SliverList.separated(
         itemBuilder: (context, i) {
           final ad = state.items[i];
-          return AdListTile(ad: ad, onTap: () {});
+          return AdListItem(ad: ad, onTap: () {});
         },
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemCount: state.items.length,

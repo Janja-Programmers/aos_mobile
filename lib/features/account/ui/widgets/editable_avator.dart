@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/account/shared/utils/avator_image.dart';
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 class EditableAvatar extends StatelessWidget {
   const EditableAvatar({

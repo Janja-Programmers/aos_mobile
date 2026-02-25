@@ -7,7 +7,7 @@ import 'package:africaonlinestores/features/catalog/shared/providers/categories_
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/utils/category_icon_url.dart';
 
-import 'package:africaonlinestores/features/catalog/shared/widgets/parents_rail.dart';
+import 'package:africaonlinestores/features/catalog/shared/widgets/parent_rail.dart';
 import 'package:africaonlinestores/features/catalog/shared/widgets/right_pane.dart';
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
-import 'package:africaonlinestores/features/home/presentation/components/ad_card.dart';
+import 'package:africaonlinestores/shared/components/cards/ad_card_grid.dart';
 import 'package:africaonlinestores/features/home/presentation/components/section_header.dart';
 
 class GridAdsSection extends StatelessWidget {
@@ -11,35 +11,45 @@ class GridAdsSection extends StatelessWidget {
     required this.title,
     required this.items,
     this.onSeeAll,
+    this.isService = false,
   });
 
   final String title;
   final List<AOSAdListItem> items;
   final VoidCallback? onSeeAll;
+  final bool isService;
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
+    double aspectRatio;
+
+    if (width < 360) {
+      aspectRatio = 0.58;
+    } else {
+      aspectRatio = isService ? 0.56 : 0.62;
+    }
+
     return SliverMainAxisGroup(
       slivers: [
         SliverToBoxAdapter(
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
-            child: SectionHeader(title: title, onSeeAll: onSeeAll),
-          ),
+          child: SectionHeader(title: title, onSeeAll: onSeeAll),
         ),
 
         SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.68,
+              mainAxisSpacing: 16,
+              childAspectRatio: aspectRatio,
             ),
             delegate: SliverChildBuilderDelegate((context, i) {
               final ad = items[i];
-              return AdCard(
+
+              return AdGridCard(
                 ad: ad,
                 onTap: () => AdNavigation.toDetail(context, ad.id),
               );

@@ -8,7 +8,7 @@ import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 
 import 'package:africaonlinestores/shared/components/app_success_sheet.dart';
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/app_text_fields.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 

@@ -7,7 +7,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/ads/shared/ui/sections/my_ads_content.dart';
 import 'package:africaonlinestores/features/ads/shared/ui/sections/my_ads_empty.dart';
@@ -170,13 +170,14 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
   Widget build(BuildContext context) {
     final tabs = const ['Active', 'Reviewing', 'Drafts', 'Declined'];
 
+    final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
 
     return Scaffold(
-      backgroundColor: colors.surface,
+      backgroundColor: scheme.surface,
 
       appBar: AppBar(
-        backgroundColor: colors.surface,
+        backgroundColor: scheme.surface,
         title: Text('My Listings', style: context.h4),
       ),
 

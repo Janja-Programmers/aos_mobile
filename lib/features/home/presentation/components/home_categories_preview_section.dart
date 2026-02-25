@@ -3,15 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
-import 'package:africaonlinestores/shared/shimmer/app_shimmer.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
 
-/// Categories preview section (horizontal carousel) with a "See all" link.
-/// Responsive and overflow-safe.
+import 'package:africaonlinestores/shared/shimmer/category_shimmer.dart';
+
 class HomeCategoriesPreviewSection extends ConsumerWidget {
   const HomeCategoriesPreviewSection({super.key, this.limit = 10});
 
@@ -25,78 +24,78 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
     final items = state.parents.take(limit).toList();
 
     return SliverToBoxAdapter(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /// Header
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Categories',
-                  style: context.h5,
-                  overflow: TextOverflow.ellipsis,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// HEADER
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Categories',
+                    style: context.title, // 18 w600 from DS
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-              TextButton(
-                onPressed: () => context.pushNamed(AppRoutes.nCategories),
-                child: Text(
-                  'See all',
-                  style: context.p.copyWith(color: colors.primary),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          /// Loading
-          if (state.loading && items.isEmpty)
-            SizedBox(
-              height: 110,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: 6,
-                separatorBuilder: (_, _) => const SizedBox(width: 12),
-                itemBuilder: (_, _) => const Column(
-                  children: [
-                    ShimmerBox(width: 58, height: 58, shape: BoxShape.circle),
-                    SizedBox(height: 8),
-                    ShimmerBox(width: 60, height: 12),
-                  ],
-                ),
-              ),
-            )
-          /// Categories list
-          else if (items.isNotEmpty)
-            SizedBox(
-              height: 110,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: items.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (context, i) {
-                  final c = items[i];
-                  return _CategoryTile(
-                    item: c,
-                    onTap: () => context.pushNamed(
-                      AppRoutes.nAllAds,
-                      pathParameters: {'categoryId': c.id},
+                TextButton(
+                  onPressed: () => context.pushNamed(AppRoutes.nCategories),
+                  child: Text(
+                    'See all',
+                    style: context.p.copyWith(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w500,
                     ),
-                  );
-                },
-              ),
-            )
-          /// Error
-          else if (state.errorMessage != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                state.errorMessage!,
-                style: context.p.copyWith(color: colors.error),
-              ),
+                  ),
+                ),
+              ],
             ),
-        ],
+
+            const SizedBox(height: 12),
+
+            /// LOADING
+            if (state.loading && items.isEmpty)
+              SizedBox(
+                height: 95,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 6,
+                  separatorBuilder: (_, _) => const SizedBox(width: 20),
+                  itemBuilder: (_, _) => const CategoryShimmer(),
+                ),
+              )
+            /// CONTENT
+            else if (items.isNotEmpty)
+              SizedBox(
+                height: 95,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 20),
+                  itemBuilder: (context, i) {
+                    final c = items[i];
+                    return _CategoryTile(
+                      item: c,
+                      onTap: () => context.pushNamed(
+                        AppRoutes.nAllAds,
+                        pathParameters: {'categoryId': c.id},
+                      ),
+                    );
+                  },
+                ),
+              )
+            /// ERROR
+            else if (state.errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  state.errorMessage!,
+                  style: context.body.copyWith(color: colors.error),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -118,48 +117,54 @@ class _CategoryTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       child: SizedBox(
-        width: 82,
+        width: 72, // SPEC
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            /// Circle container
+            /// ICON CIRCLE
             Container(
-              width: 58,
-              height: 58,
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
-                color: colors.surface,
+                color: colors.elevated,
                 shape: BoxShape.circle,
                 border: Border.all(color: colors.border),
               ),
               alignment: Alignment.center,
-              child: ClipOval(
-                child: url != null
-                    ? Image.network(
+              child: url != null
+                  ? ClipOval(
+                      child: Image.network(
                         url,
+                        width: 50,
+                        height: 50,
                         fit: BoxFit.cover,
-                        width: 58,
-                        height: 58,
                         errorBuilder: (_, _, _) => Icon(
                           Icons.category_outlined,
-                          color: colors.textMuted,
+                          size: 26,
+                          color: colors.primary,
                         ),
-                      )
-                    : Icon(Icons.category_outlined, color: colors.textMuted),
-              ),
+                      ),
+                    )
+                  : Icon(
+                      Icons.category_outlined,
+                      size: 26,
+                      color: colors.primary,
+                    ),
             ),
 
             const SizedBox(height: 8),
 
-            /// Name
-            Flexible(
-              child: Text(
-                item.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: context.p.copyWith(fontSize: 12),
+            /// LABEL
+            Text(
+              item.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTextStylesX(context).caption.copyWith(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
               ),
             ),
           ],

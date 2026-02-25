@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
 
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:go_router/go_router.dart';
 
 /// Guest header card used on Account screen when user is NOT authenticated.
@@ -105,7 +105,10 @@ class AccountGuestHeaderCard extends StatelessWidget {
                         backgroundColor: scheme.primary,
                         foregroundColor: scheme.surface,
                       ),
-                      child: Text('Register', style: context.button),
+                      child: Text(
+                        'Register',
+                        style: AppTextStylesX(context).button,
+                      ),
                     ),
                   ),
                 ),

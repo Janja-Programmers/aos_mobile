@@ -5,7 +5,7 @@ import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/pickers/select_option_sheet.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/picker_field.dart';
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 class DetailsStep extends ConsumerWidget {
   const DetailsStep({super.key, required this.schema});

@@ -6,7 +6,7 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 
 import 'package:africaonlinestores/features/ads/ads_report/report_ad_screen.dart';

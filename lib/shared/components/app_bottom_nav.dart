@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/layout/app_dimensions.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 
 class AppBottomNav extends ConsumerWidget {
@@ -11,99 +13,135 @@ class AppBottomNav extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
-
     return SafeArea(
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-          child: BottomNavigationBar(
-            currentIndex: currentIndex,
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: context.appColors.surfaceBright,
-            elevation: 0,
-            selectedItemColor: scheme.primary,
-            unselectedItemColor: context.appColors.textMuted,
-            selectedFontSize: 12,
-            unselectedFontSize: 12,
-            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+        margin: AppDimensions.spacing.bottomNavMargin,
+        padding: AppDimensions.spacing.bottomNavPadding,
+        decoration: BoxDecoration(
+          color: context.appColors.surface,
+          borderRadius: AppDimensions.radii.bottomNav,
+          boxShadow: AppDimensions.shadows.lg,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _NavItem(
+              label: 'Home',
+              icon: Icons.home_outlined,
+              activeIcon: Icons.home_rounded,
+              active: currentIndex == 0,
+              onTap: () => AppNavigation.goTo(context, ref, 0),
+            ),
+            _NavItem(
+              label: 'Categories',
+              icon: Icons.grid_view_outlined,
+              activeIcon: Icons.grid_view_rounded,
+              active: currentIndex == 1,
+              onTap: () => AppNavigation.goTo(context, ref, 1),
+            ),
 
-            // ✅ make onTap async because we await the sheet
-            onTap: (index) async {
-              await AppNavigation.goTo(context, ref, index);
-            },
+            _SellButton(onTap: () => AppNavigation.goTo(context, ref, 2)),
 
-            items: [
-              _item(
-                context,
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home,
-                label: 'Home',
-                active: currentIndex == 0,
-              ),
-              _item(
-                context,
-                icon: Icons.grid_view_outlined,
-                activeIcon: Icons.grid_view_rounded,
-                label: 'Categories',
-                active: currentIndex == 1,
-              ),
-              BottomNavigationBarItem(
-                label: 'Selling',
-                icon: Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    color: context.appColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.add,
-                    color: context.appColors.border,
-                    size: 20,
-                  ),
-                ),
-              ),
-              _item(
-                context,
-                icon: Icons.chat_bubble_outline,
-                activeIcon: Icons.chat_bubble,
-                label: 'Messages',
-                active: currentIndex == 3,
-              ),
-              _item(
-                context,
-                icon: Icons.person_outline,
-                activeIcon: Icons.person,
-                label: 'Account',
-                active: currentIndex == 4,
-              ),
-            ],
-          ),
+            _NavItem(
+              label: 'Contact',
+              icon: Icons.contact_phone_outlined,
+              activeIcon: Icons.contact_phone,
+              active: currentIndex == 3,
+              onTap: () => AppNavigation.goTo(context, ref, 3),
+            ),
+            _NavItem(
+              label: 'Account',
+              icon: Icons.person_outline,
+              activeIcon: Icons.person,
+              active: currentIndex == 4,
+              onTap: () => AppNavigation.goTo(context, ref, 4),
+            ),
+          ],
         ),
       ),
     );
   }
+}
 
-  BottomNavigationBarItem _item(
-    BuildContext context, {
-    required IconData icon,
-    required IconData activeIcon,
-    required String label,
-    required bool active,
-  }) {
-    return BottomNavigationBarItem(
-      label: label,
-      icon: Icon(
-        active ? activeIcon : icon,
-        color: active
-            ? context.appColors.primary
-            : context.appColors.textPrimary,
+// ignore: unused_element
+class _NavItem extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _NavItem({
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+    required this.active,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = active
+        ? context.appColors.primary
+        : context.appColors.textPrimary;
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: active
+                  ? context.appColors.primary.withOpacity(0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              active ? activeIcon : icon,
+              size: AppDimensions.sizes.iconLg,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(label, style: context.bottomNavLabel(selected: active)),
+        ],
+      ),
+    );
+  }
+}
+
+// ignore: unused_element
+class _SellButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _SellButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: context.appColors.primary,
+              shape: BoxShape.circle,
+              boxShadow: AppDimensions.shadows.sellButton(
+                context.appColors.primary,
+              ),
+            ),
+            child: const Icon(Icons.add, size: 24, color: Colors.white),
+          ),
+          const SizedBox(height: 2),
+          Text("Selling", style: context.pStrong),
+        ],
       ),
     );
   }

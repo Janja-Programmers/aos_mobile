@@ -7,7 +7,7 @@ import 'package:africaonlinestores/features/catalog/shared/providers/categories_
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/utils/category_icon_url.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 class SelectCategoryScreen extends ConsumerWidget {
   const SelectCategoryScreen({super.key, this.parent});

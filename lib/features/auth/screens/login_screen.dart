@@ -9,7 +9,7 @@ import 'package:africaonlinestores/features/auth/shared/providers/auth_controlle
 import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_section.dart';
 
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/app_text_fields.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 

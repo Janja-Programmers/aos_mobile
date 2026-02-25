@@ -7,7 +7,7 @@ import 'package:africaonlinestores/features/ads/shared/utils/pricing_rules.dart'
 
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/pricing/price_visibility_toggle.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/pricing/price_amount_field.dart';
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/pricing/price_type_picker.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/pricing/offer_section.dart';
 

@@ -7,7 +7,7 @@ import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/picker_fie
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/basic/media_section.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/widgets/section_tile.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 class BasicStep extends ConsumerStatefulWidget {
   const BasicStep({super.key});

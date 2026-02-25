@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/ads/shared/ui/ad_review_create.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -341,7 +342,14 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                           joined: _seller!.joined,
                           isFollowing: _seller!.isFollowing,
                           onVisitStore: () {},
-                          onReview: () {},
+                          onReview: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ReviewScreen(adId: _ad!.id),
+                              ),
+                            );
+                          },
                           onReport: () {},
                           onPostSimilar: () {},
                         ),

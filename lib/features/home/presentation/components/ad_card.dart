@@ -188,7 +188,7 @@ class AdCard extends ConsumerWidget {
             const Spacer(),
 
             /// RATING
-            _buildRatingRow(context),
+            buildRatingRow(context),
           ],
         ),
       ),
@@ -247,7 +247,7 @@ class AdCard extends ConsumerWidget {
     return Row(children: stars);
   }
 
-  Widget _buildRatingRow(BuildContext context) {
+  Widget buildRatingRow(BuildContext context) {
     final colors = context.appColors;
 
     if (ad.totalReviews == 0) {

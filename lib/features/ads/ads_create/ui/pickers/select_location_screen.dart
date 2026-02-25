@@ -44,13 +44,7 @@ class _SelectLocationScreenState extends ConsumerState<SelectLocationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final prefs = ref
-        .watch(localeControllerProvider)
-        .maybeWhen(data: (v) => v, orElse: () => null);
-    final country = prefs?.countryCode ?? 'KE';
-
     final q = _searchCtrl.text.trim();
-
     const accentRed = Color(0xFFDA1E28);
 
     return Scaffold(
@@ -59,7 +53,7 @@ class _SelectLocationScreenState extends ConsumerState<SelectLocationScreen> {
         centerTitle: true,
       ),
       body: FutureBuilder(
-        future: ref.read(adsApiProvider).getLocations(countryCode: country),
+        future: ref.read(adsApiProvider).getLocations(),
         builder: (context, snap) {
           if (!snap.hasData) {
             if (snap.hasError) {

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/localization/utils.dart';
+import 'package:africaonlinestores/core/preferences/user_preference_state.dart';
+import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/account/ui/widgets/locale_picker_page.dart';
 import 'package:africaonlinestores/features/account/ui/widgets/pref_card.dart';
-import 'package:africaonlinestores/features/localization/domain/locale_bundle.dart';
 
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 
 class PreferenceScreen extends ConsumerStatefulWidget {
   const PreferenceScreen({super.key});
@@ -25,48 +25,15 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
   String? _currency;
 
   bool _saving = false;
-
-  /// True after the user changes any selection in this screen.
-  /// When true, we stop auto-updating fields from providers.
   bool _dirty = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Hydrate from backend (if logged in) so the screen reflects account prefs.
-    // Safe: controller should no-op/return failure when unauthenticated.
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      try {
-        await ref.read(localeControllerProvider.notifier).refreshFromBackend();
-      } catch (_) {
-        // ignore
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final scheme = Theme.of(context).colorScheme;
 
-    final bundleAsync = ref.watch(localeBundleProvider);
+    final localizationAsync = ref.watch(localizationControllerProvider);
 
-    // ✅ Riverpod (older) friendly: listen inside build
-    ref.listen<AsyncValue<LocalePrefs>>(localeControllerProvider, (prev, next) {
-      final prefs = next.maybeWhen(data: (v) => v, orElse: () => null);
-      if (prefs == null) return;
-      if (!mounted) return;
-
-      // Only auto-apply if user hasn't started editing.
-      if (_dirty) return;
-
-      setState(() {
-        _country = prefs.countryCode;
-        _language = prefs.languageCode;
-        _currency = prefs.currencyCode;
-      });
-    });
+    final prefsAsync = ref.watch(userPreferenceControllerProvider);
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -78,21 +45,27 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
         ),
         title: Text('Preferences', style: context.h3),
       ),
-      body: bundleAsync.when(
-        data: (bundle) {
-          _country =
-              _normalizeToCode(bundle.countries, _country) ??
-              bundle.defaultCountryCode;
-          _language =
-              _normalizeToCode(bundle.languages, _language) ??
-              bundle.defaultLanguageCode;
-          _currency =
-              _normalizeToCode(bundle.currencies, _currency) ??
-              bundle.baseCurrencyCode;
+      body: localizationAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => Center(
+          child: Text(
+            'Failed to load locale options.',
+            style: TextStyle(color: colors.textPrimary),
+          ),
+        ),
+        data: (localization) {
+          // Hydrate from provider only if not editing
+          prefsAsync.whenData((prefs) {
+            if (_dirty || prefs == null) return;
 
-          final countryLabel = labelFor(bundle.countries, _country) ?? '—';
-          final languageLabel = labelFor(bundle.languages, _language) ?? '—';
-          final currencyLabel = labelFor(bundle.currencies, _currency) ?? '—';
+            _country = prefs.country;
+            _language = prefs.language;
+            _currency = prefs.currency;
+          });
+
+          final countryLabel = _labelFor(localization.countries, _country);
+          final languageLabel = _labelFor(localization.languages, _language);
+          final currencyLabel = _labelFor(localization.currencies, _currency);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -102,147 +75,112 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
                 Text('Manage how the app works for you', style: context.p),
                 const SizedBox(height: 16),
 
+                /// Language
                 PrefCard(
                   leading: Icons.language,
                   title: 'Language',
-                  value: languageLabel,
+                  value: languageLabel ?? '—',
                   description: 'Controls how text appears in the app.',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => LocalePickerPage(
-                          title: 'Languages',
-                          items: bundle.languages,
-                          initialValue: _language,
-                          onChanged: (v) => setState(() {
-                            _dirty = true;
-                            _language = v;
-                          }),
-                        ),
-                      ),
-                    );
-                  },
+                  onTap: () => _openPicker(
+                    context,
+                    title: 'Languages',
+                    items: localization.languages,
+                    initialValue: _language,
+                    onChanged: (v) {
+                      setState(() {
+                        _dirty = true;
+                        _language = v;
+                      });
+                    },
+                  ),
                 ),
 
+                /// Country
                 PrefCard(
                   leading: Icons.location_on,
                   title: 'Country',
-                  value: countryLabel,
+                  value: countryLabel ?? '—',
                   description:
                       'Determines nearby listings and where your ads appear.',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => LocalePickerPage(
-                          title: 'Country',
-                          items: bundle.countries,
-                          initialValue: _country,
-                          onChanged: (v) => setState(() {
-                            _dirty = true;
-                            _country = v;
-                          }),
-                        ),
-                      ),
-                    );
-                  },
+                  onTap: () => _openPicker(
+                    context,
+                    title: 'Country',
+                    items: localization.countries,
+                    initialValue: _country,
+                    onChanged: (v) {
+                      setState(() {
+                        _dirty = true;
+                        _country = v;
+                      });
+                    },
+                  ),
                 ),
 
+                /// Currency
                 PrefCard(
                   leading: Icons.attach_money,
                   title: 'Currency',
-                  value: currencyLabel,
+                  value: currencyLabel ?? '—',
                   description:
                       'Used for prices when viewing and posting listings.',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => LocalePickerPage(
-                          title: 'Currency',
-                          items: bundle.currencies,
-                          initialValue: _currency,
-                          onChanged: (v) => setState(() {
-                            _dirty = true;
-                            _currency = v;
-                          }),
-                        ),
-                      ),
-                    );
-                  },
+                  onTap: () => _openPicker(
+                    context,
+                    title: 'Currency',
+                    items: localization.currencies,
+                    initialValue: _currency,
+                    onChanged: (v) {
+                      setState(() {
+                        _dirty = true;
+                        _currency = v;
+                      });
+                    },
+                  ),
                 ),
 
-                PrefCard(
-                  leading: Icons.my_location,
-                  leadingColor: scheme.primary,
-                  title: 'Use my current location',
-                  titleColor: scheme.primary,
-                  value: '',
-                  showChevron: false,
-                  description:
-                      'Automatically sets language, country, and currency.',
-                  onTap: _saving
-                      ? null
-                      : () => setState(() {
-                          _dirty = true;
-                          _useDeviceDefaults(bundle);
-                        }),
-                ),
+                const SizedBox(height: 24),
 
                 PrimaryButton(
                   text: 'Update',
-                  onPressed: _saving ? null : () => _onSavePressed,
+                  onPressed: _saving ? null : _onSavePressed,
                   loading: _saving,
                 ),
               ],
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Text(
-            'Failed to load locale options.',
-            style: TextStyle(color: colors.textPrimary),
-          ),
+      ),
+    );
+  }
+
+  void _openPicker(
+    BuildContext context, {
+    required String title,
+    required List<Map<String, dynamic>> items,
+    required String? initialValue,
+    required ValueChanged<String> onChanged,
+  }) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LocalePickerPage(
+          title: title,
+          items: items,
+          initialValue: initialValue,
+          onChanged: onChanged,
         ),
       ),
     );
   }
 
-  // String? _labelFor(List<LocaleOption> items, String? code) {
-  //   if (code == null) return null;
-  //   for (final it in items) {
-  //     if (it.code == code) return it.label;
-  //   }
-  //   // If code isn't found, it might be a label; show it as-is.
-  //   for (final it in items) {
-  //     if (it.label == code) return it.label;
-  //   }
-  //   return null;
-  // }
+  String? _labelFor(List<Map<String, dynamic>> items, String? code) {
+    if (code == null) return null;
 
-  /// Ensures stored value is a valid option code.
-  /// If value matches a label, returns the corresponding code.
-  String? _normalizeToCode(List<LocaleOption> items, String? value) {
-    if (value == null || value.isEmpty) return null;
+    final match = items.firstWhere((e) => e['code'] == code, orElse: () => {});
 
-    for (final it in items) {
-      if (it.code == value) return value;
-    }
-    for (final it in items) {
-      if (it.label == value) return it.code;
-    }
-    return null;
+    return match.isNotEmpty ? match['name'] : null;
   }
 
-  void _useDeviceDefaults(LocaleBundle bundle) {
-    _country = bundle.defaultCountryCode;
-    _language = bundle.defaultLanguageCode;
-    _currency = bundle.baseCurrencyCode;
-  }
-
-  void _onSavePressed() {
+  Future<void> _onSavePressed() async {
     if (_country == null || _language == null || _currency == null) {
       ShowSnack(
         context,
@@ -251,23 +189,27 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
       return;
     }
 
-    _saveAsync();
-  }
-
-  Future<void> _saveAsync() async {
     setState(() => _saving = true);
 
-    final ctrl = ref.read(localeControllerProvider.notifier);
+    final ctrl = ref.read(userPreferenceControllerProvider.notifier);
+
+    final newState = UserPreferenceState(
+      country: _country!,
+      language: _language!,
+      currency: _currency!,
+    );
 
     try {
-      await ctrl.setCountry(_country!);
-      await ctrl.setLanguage(_language!, overridden: true);
-      await ctrl.setCurrency(_currency!, overridden: true);
-      await ctrl.syncToBackend();
+      await ctrl.updatePreference(newState, (json) async {
+        // call backend update here
+      });
 
       if (!mounted) return;
 
-      setState(() => _dirty = false);
+      setState(() {
+        _dirty = false;
+      });
+
       ShowSnack(context, 'Preferences updated.').success();
     } catch (_) {
       if (!mounted) return;

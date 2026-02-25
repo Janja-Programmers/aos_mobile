@@ -8,11 +8,10 @@ import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/otp_resend_row.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/otp_section.dart';
+import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 
 import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/app_success_sheet.dart';
-
-enum OtpPurpose { emailVerification, passwordReset }
 
 class VerifyOTPScreen extends ConsumerStatefulWidget {
   const VerifyOTPScreen({
@@ -125,7 +124,7 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: scheme.surface,
       appBar: AppBar(
         backgroundColor: scheme.surface,
         leading: IconButton(

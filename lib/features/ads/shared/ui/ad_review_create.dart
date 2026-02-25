@@ -167,19 +167,19 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
                       const SizedBox(height: 16),
 
-                      // /// Add Photo Row
-                      // InkWell(
-                      //   onTap: () {
-                      //     // TODO: implement image picker
-                      //   },
-                      //   child: Row(
-                      //     children: [
-                      //       const Icon(Icons.camera_alt_outlined, size: 20),
-                      //       const SizedBox(width: 8),
-                      //       Text("Add a photo", style: context.p),
-                      //     ],
-                      //   ),
-                      // ),
+                      /// Add Photo Row
+                      InkWell(
+                        onTap: () {
+                          // TODO: implement image picker
+                        },
+                        child: Row(
+                          children: [
+                            const Icon(Icons.camera_alt_outlined, size: 20),
+                            const SizedBox(width: 8),
+                            Text("Add a photo", style: context.p),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),

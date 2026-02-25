@@ -7,13 +7,8 @@ final forYouAdsProvider = FutureProvider.family<List<AOSAdListItem>, String>((
   categoryId,
 ) async {
   final adsApi = ref.read(adsApiProvider);
-  final country = 'Kenya';
 
-  final res = await adsApi.listAds(
-    countryName: country,
-    categoryId: categoryId,
-    limit: 10,
-  );
+  final res = await adsApi.listAds(categoryId: categoryId, limit: 10);
 
   if (res.isLeft) return [];
 

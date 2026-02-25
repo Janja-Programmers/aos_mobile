@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/localization/locale_prefs_store.dart';
+import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/validators.dart';
 
 import 'package:africaonlinestores/features/account/ui/legal_docs_widgets.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
@@ -106,17 +108,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _register() async {
-    final localePrefs = await LocalePrefsStore().read();
-
-    if (localePrefs == null) {
-      if (mounted) {
-        ShowSnack(
-          context,
-          'Localization not configured. Please complete onboarding.',
-        ).error();
-      }
-      return;
-    }
     if (!_accept) {
       if (mounted) {
         ShowSnack(
@@ -131,7 +122,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _registerLoading = true);
+
     try {
+      final prefsAsync = ref.read(userPreferenceControllerProvider);
+
+      final prefs = prefsAsync.maybeWhen(data: (v) => v, orElse: () => null);
+
       final result = await ref
           .read(authControllerProvider.notifier)
           .register(
@@ -139,10 +135,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             password: _password.text,
             fullName: _name.text.trim(),
 
-            // Localization
-            country: localePrefs.countryCode,
-            language: localePrefs.languageCode,
-            currency: localePrefs.currencyCode,
+            // ✅ Send preference if exists, else null
+            language: prefs?.language,
+            currency: prefs?.currency,
           );
 
       if (!mounted) return;
@@ -160,7 +155,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (!mounted) return;
       ShowSnack(context, 'Unexpected error: $e').error();
     } finally {
-      if (mounted) setState(() => _registerLoading = false);
+      if (mounted) {
+        setState(() => _registerLoading = false);
+      }
     }
   }
 
@@ -192,7 +189,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: scheme.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 22),

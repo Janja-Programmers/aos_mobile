@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/features/ads/shared/ui/ad_review_create.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,9 +9,11 @@ import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 
+import 'package:africaonlinestores/features/ads/ads_report/report_ad_screen.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_review.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:africaonlinestores/features/ads/shared/ui/ad_review_create.dart';
 
 import 'package:africaonlinestores/features/seller/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/seller/data/seller_controller.dart';
@@ -129,11 +130,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
 
     final res = await ref
         .read(adsApiProvider)
-        .listAds(
-          countryName: _ad!.country,
-          categoryId: _ad!.categoryName,
-          limit: 7,
-        );
+        .listAds(categoryId: _ad!.categoryName, limit: 7);
 
     if (!mounted) return;
 
@@ -350,7 +347,14 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                               ),
                             );
                           },
-                          onReport: () {},
+                          onReport: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ReportAdScreen(adId: _ad!.id),
+                              ),
+                            );
+                          },
                           onPostSimilar: () {},
                         ),
                       const SizedBox(height: 12),

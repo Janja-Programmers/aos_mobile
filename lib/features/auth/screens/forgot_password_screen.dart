@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:africaonlinestores/core/core.dart';
 
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
-import 'package:africaonlinestores/features/auth/screens/verify_otp_screen.dart';
+import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 
 import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
@@ -49,7 +49,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
       result.fold((f) => ShowSnack(context, f.message).error(), (msg) {
         ShowSnack(context, msg).success();
-        context.pushNamed(AppRoutes.nVerifyOtp, extra: {'email': email, 'purpose': OtpPurpose.passwordReset});
+        context.pushNamed(
+          AppRoutes.nVerifyOtp,
+          extra: {'email': email, 'purpose': OtpPurpose.passwordReset},
+        );
       });
     } catch (e) {
       if (!mounted) return;
@@ -64,7 +67,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: scheme.surface,
       appBar: AppBar(
         backgroundColor: scheme.surface,
         elevation: 0,

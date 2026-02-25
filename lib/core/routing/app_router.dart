@@ -9,23 +9,32 @@ import 'package:africaonlinestores/features/account/shared/routing/account_route
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/auth/shared/routing/auth_routes.dart';
 import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
+import 'package:africaonlinestores/features/onboarding/onboarding_screen.dart';
 
+import 'package:africaonlinestores/core/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/core/routing/app_shell.dart';
 import 'package:africaonlinestores/core/routing/app_routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authControllerProvider);
   final authStream = ref.watch(authControllerProvider.notifier).stream;
+  final bootstrapAsync = ref.watch(appBootstrapProvider);
 
   return GoRouter(
     initialLocation: AppRoutes.home,
     refreshListenable: GoRouterRefreshStream(authStream),
-
     routes: [
-      // Public auth routes
+      // 🔓 Public auth routes
       ...AuthRoutes.routes(),
 
-      // Main app shell (bottom nav)
+      // 🧭 Onboarding
+      GoRoute(
+        name: AppRoutes.nOnboarding,
+        path: AppRoutes.onboarding,
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+
+      // 🏠 Main app shell (bottom navigation)
       ShellRoute(
         builder: (context, state, child) {
           return AppShell(child: child);
@@ -39,16 +48,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
 
     redirect: (context, state) {
+      final bootstrap = bootstrapAsync.value;
+      if (bootstrap == null || !bootstrap.isReady) {
+        return null;
+      }
+
+      final completed = bootstrap.onboardingCompleted;
       final loc = state.matchedLocation;
 
+      final isOnboarding = loc == AppRoutes.onboarding;
       final isAuthRoute = loc.startsWith('/auth');
       final isAccountRoute = loc.startsWith('/account');
       final isSellerRoute = loc.startsWith('/seller');
 
+      // 🚨 Force onboarding if not completed
+      if (!completed && !isOnboarding) {
+        return AppRoutes.onboarding;
+      }
+
+      // ✅ Prevent returning to onboarding after completion
+      if (completed && isOnboarding) {
+        return AppRoutes.home;
+      }
+
+      // 🔐 Protect account & seller routes
       if (!auth.isLoggedIn && (isAccountRoute || isSellerRoute)) {
         return AppRoutes.login;
       }
 
+      // 🔁 Logged-in users shouldn’t see auth pages
       if (auth.isLoggedIn && isAuthRoute) {
         return AppRoutes.home;
       }

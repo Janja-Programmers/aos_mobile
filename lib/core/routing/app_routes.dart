@@ -3,6 +3,7 @@ class AppRoutes {
   static const home = '/';
   static const categories = '/categories';
   static const notifications = '/notifications';
+  static const onboarding = '/onboarding';
 
   // Legal
   static const terms = '/terms';
@@ -42,6 +43,7 @@ class AppRoutes {
 
   // ✅ Route names (use pushNamed/goNamed)
   static const nHome = 'home';
+  static const nOnboarding = 'onboarding';
   static const nAdList = 'adList';
   static const nAllAds = 'allAds';
   static const nAdDetails = 'adDetails';

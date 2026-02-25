@@ -68,7 +68,7 @@ class ApiEndpoints {
   static final String getLocaleBundleEndpoint =
       '/api/method/aos.api.localization.get_locale_bundle';
   static final String getMyPreferencesEndpoint =
-      '/api/method/aos.api.localization.get_my_preferences';
+      '/api/method/aos.api.accounts.get_my_preference';
   static final String updatePreferencesEndpoint =
-      '/api/method/aos.api.localization.update_preferences';
+      '/api/method/aos.api.accounts.update_my_preference';
 }

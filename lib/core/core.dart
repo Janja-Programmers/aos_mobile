@@ -14,5 +14,3 @@ export 'utils/validators.dart';
 export 'theme/app_theme_extensions.dart';
 
 // ───────────── Localization ─────────────
-export 'localization/locale_controller.dart';
-export 'localization/locale_prefs.dart';

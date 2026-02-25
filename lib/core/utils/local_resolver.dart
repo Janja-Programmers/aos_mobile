@@ -1,13 +1,18 @@
 import 'dart:ui';
 
-import 'package:africaonlinestores/core/localization/locale_prefs.dart';
+import 'package:africaonlinestores/core/preferences/user_preference_state.dart';
 
-Locale? resolveLocale(LocalePrefs? prefs) {
+Locale? resolveLocale(UserPreferenceState? prefs) {
   if (prefs == null) return null;
 
-  if (prefs.languageCode.isEmpty) return null;
+  final language = prefs.language?.toLowerCase();
+  final country = prefs.country?.toUpperCase();
 
-  return prefs.countryCode.isEmpty
-      ? Locale(prefs.languageCode)
-      : Locale(prefs.languageCode, prefs.countryCode);
+  if (language == null || language.isEmpty) return null;
+
+  if (country == null || country.isEmpty) {
+    return Locale(language);
+  }
+
+  return Locale(language, country);
 }

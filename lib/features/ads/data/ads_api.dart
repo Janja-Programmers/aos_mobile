@@ -15,40 +15,46 @@ class AdsApi {
 
   Dio get _dio => _client.dio;
 
-  Future<Either<Failure, List<Map<String, dynamic>>>> getLocations({
-    required String countryCode,
-  }) async {
+  Future<Either<Failure, List<Map<String, dynamic>>>> getLocations() async {
     try {
-      final res = await _dio.get(
+      final res = await _client.get(
         ApiEndpoints.getLocationsEndpoint,
-        queryParameters: {'country': countryCode},
+        withCountry: true,
       );
+
       final unwrapped = unwrapFrappe(res);
-      if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
-      final p = unwrapped.rightOrNull!;
-      final data = (p['data'] is Map)
-          ? Map<String, dynamic>.from(p['data'] as Map)
-          : <String, dynamic>{};
-      final list =
-          data['locations'] ?? data['items'] ?? data['data'] ?? data['list'];
-      if (list is List) {
+      if (unwrapped.isLeft) {
+        return Either.left(unwrapped.leftOrNull!);
+      }
+
+      final payload = unwrapped.rightOrNull!;
+
+      final raw = payload['data'];
+
+      if (raw is List) {
         return Either.right(
-          list
+          raw
               .whereType<Map>()
               .map((e) => Map<String, dynamic>.from(e))
               .toList(),
         );
       }
-      // Sometimes backend returns {data:[...]}
-      if (p['data'] is List) {
-        return Either.right(
-          (p['data'] as List)
-              .whereType<Map>()
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList(),
-        );
+
+      if (raw is Map) {
+        final list =
+            raw['locations'] ?? raw['items'] ?? raw['data'] ?? raw['list'];
+
+        if (list is List) {
+          return Either.right(
+            list
+                .whereType<Map>()
+                .map((e) => Map<String, dynamic>.from(e))
+                .toList(),
+          );
+        }
       }
-      return Either.right(const <Map<String, dynamic>>[]);
+
+      return Either.right(const []);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
@@ -127,7 +133,6 @@ class AdsApi {
   }
 
   Future<Either<Failure, Map<String, dynamic>>> listAds({
-    required String countryName,
     String? locationId,
     String? categoryId,
     String? q,
@@ -139,10 +144,10 @@ class AdsApi {
     int offset = 0,
   }) async {
     try {
-      final res = await _dio.get(
+      final res = await _client.get(
         ApiEndpoints.listAdsEndpoint,
+        withCountry: true,
         queryParameters: {
-          'country': countryName,
           if (locationId?.trim().isNotEmpty == true) 'location': locationId,
           if (categoryId?.trim().isNotEmpty == true) 'category': categoryId,
           if (q?.trim().isNotEmpty == true) 'q': q,
@@ -154,6 +159,7 @@ class AdsApi {
           'offset': offset,
         },
       );
+
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));

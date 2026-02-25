@@ -1,10 +1,11 @@
-import 'package:africaonlinestores/core/localization/locale_prefs_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/core/bootstrap/app_bootstrap_controller.dart';
+import 'package:africaonlinestores/core/providers.dart'
+    show userPreferenceControllerProvider;
 import 'package:africaonlinestores/core/routing/app_router.dart';
-import 'package:africaonlinestores/core/localization/locale_controller.dart';
 import 'package:africaonlinestores/core/theme/app_theme.dart';
 import 'package:africaonlinestores/core/theme/theme_controller.dart';
 import 'package:africaonlinestores/core/theme/theme_prefs.dart';
@@ -16,19 +17,29 @@ void main() async {
   final savedTheme = await ThemePrefs.readThemeMode();
   final initialTheme = savedTheme ?? ThemeMode.system;
 
-  final savedLocale = await LocalePrefsStore().read();
-
   runApp(
     ProviderScope(
       overrides: [
         themeModeProvider.overrideWith((ref) => ThemeController(initialTheme)),
-        localeControllerProvider.overrideWith(
-          () => PreloadedLocaleController(savedLocale),
-        ),
       ],
-      child: const AOSApp(),
+      child: const AppRoot(),
     ),
   );
+}
+
+class AppRoot extends ConsumerWidget {
+  const AppRoot({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bootstrap = ref.watch(appBootstrapProvider);
+
+    return bootstrap.when(
+      loading: () => const SizedBox.shrink(),
+      error: (e, _) => const SizedBox.shrink(),
+      data: (_) => const AOSApp(),
+    );
+  }
 }
 
 class AOSApp extends ConsumerWidget {
@@ -39,8 +50,8 @@ class AOSApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
 
-    final localeAsync = ref.watch(localeControllerProvider);
-    final prefs = localeAsync.maybeWhen(data: (v) => v, orElse: () => null);
+    final prefsAsync = ref.watch(userPreferenceControllerProvider);
+    final prefs = prefsAsync.maybeWhen(data: (v) => v, orElse: () => null);
 
     return MaterialApp.router(
       title: 'Africa Online Stores',

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/providers.dart';
 
 import 'package:africaonlinestores/features/home/presentation/components/home_brand_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_categories_preview_section.dart';
@@ -10,7 +11,6 @@ import 'package:africaonlinestores/features/home/presentation/components/home_gr
 import 'package:africaonlinestores/features/home/presentation/components/home_hero_carousel_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_horizontal_ads_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_ranking_tips_section.dart';
-import 'package:africaonlinestores/features/home/presentation/controller/home_page_controller.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
 import 'package:africaonlinestores/features/home/presentation/shimmers/home_page_skeleton.dart';
 

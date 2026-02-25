@@ -1,17 +1,17 @@
 import 'dart:async';
 
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/localization/utils.dart';
 import 'package:africaonlinestores/core/providers.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/home/shared/providers/voice_input_controller.dart';
+
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeSearchScreen extends ConsumerStatefulWidget {
@@ -98,36 +98,7 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
     });
   }
 
-  Future<String?> _resolveCountryName() async {
-    final prefs = ref
-        .read(localeControllerProvider)
-        .maybeWhen(data: (v) => v, orElse: () => null);
-
-    final codeOrLabel = (prefs?.countryCode ?? '').trim();
-    if (codeOrLabel.isEmpty) return null;
-
-    const fallbackCountryName = 'Kenya';
-    try {
-      final bundle = await ref.read(localeBundleProvider.future);
-      return labelFor(bundle.countries, codeOrLabel) ?? fallbackCountryName;
-    } catch (_) {
-      return fallbackCountryName;
-    }
-  }
-
   Future<void> _search(String q) async {
-    final countryName = await _resolveCountryName();
-    if (!mounted) return;
-
-    if (countryName == null || countryName.trim().isEmpty) {
-      setState(() {
-        _error = 'Country not set. Please set your country in Preferences.';
-        _results = const [];
-        _loading = false;
-      });
-      return;
-    }
-
     setState(() {
       _loading = true;
       _error = null;
@@ -135,7 +106,7 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
 
     final res = await ref
         .read(adsApiProvider)
-        .listAds(countryName: countryName, q: q, limit: 20, offset: 0);
+        .listAds(q: q, limit: 20, offset: 0);
 
     if (!mounted) return;
 
@@ -145,12 +116,9 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
         _results = const [];
       }),
       (data) {
-        final payload = data['data'];
-        final rawItems = (payload is Map) ? payload['items'] : null;
+        final rawItems = data['data']?['items'];
         if (rawItems is! List) {
-          setState(() {
-            _results = const [];
-          });
+          setState(() => _results = const []);
           return;
         }
 
@@ -159,16 +127,12 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
             .map(AOSAdListItem.fromJson)
             .toList();
 
-        setState(() {
-          _results = list;
-        });
+        setState(() => _results = list);
       },
     );
 
     if (!mounted) return;
-    setState(() {
-      _loading = false;
-    });
+    setState(() => _loading = false);
   }
 
   void _setQueryAndSearch(String term) {

@@ -3,19 +3,12 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/providers.dart';
-
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-import 'package:africaonlinestores/features/home/data/market_context_controller.dart';
 import 'package:africaonlinestores/features/home/domain/market_place.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
 import 'package:africaonlinestores/features/home/domain/home_ads_sections.dart';
 import 'package:africaonlinestores/features/home/shared/utils/category_lookup.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
-
-final homePageControllerProvider =
-    AsyncNotifierProvider<HomePageController, HomePageState>(
-      HomePageController.new,
-    );
 
 class HomePageController extends AsyncNotifier<HomePageState> {
   static const _discoverLimit = 20;
@@ -47,7 +40,6 @@ class HomePageController extends AsyncNotifier<HomePageState> {
       final res = await ref
           .read(adsApiProvider)
           .listAds(
-            countryName: market.country,
             locationId: market.locationId,
             categoryId: categoryId,
             sort: section.sort,
@@ -69,7 +61,6 @@ class HomePageController extends AsyncNotifier<HomePageState> {
     final discoverRes = await ref
         .read(adsApiProvider)
         .listAds(
-          countryName: market.country,
           locationId: market.locationId,
           limit: _discoverLimit,
           offset: _offset,
@@ -105,7 +96,6 @@ class HomePageController extends AsyncNotifier<HomePageState> {
     final res = await ref
         .read(adsApiProvider)
         .listAds(
-          countryName: market.country,
           locationId: market.locationId,
           limit: _discoverLimit,
           offset: _offset,

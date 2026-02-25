@@ -5,6 +5,7 @@ import 'package:africaonlinestores/features/auth/screens/forgot_password_screen.
 import 'package:africaonlinestores/features/auth/screens/login_screen.dart';
 import 'package:africaonlinestores/features/auth/screens/register_screen.dart';
 import 'package:africaonlinestores/features/auth/screens/reset_password_screen.dart';
+import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 import 'package:africaonlinestores/features/auth/screens/verify_otp_screen.dart';
 
 class AuthRoutes {

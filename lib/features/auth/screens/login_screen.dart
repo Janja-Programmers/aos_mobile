@@ -6,7 +6,7 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
-import 'package:africaonlinestores/features/auth/screens/verify_otp_screen.dart';
+import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_section.dart';
 
 import 'package:africaonlinestores/shared/components/app_text_styles.dart';
@@ -64,10 +64,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _login() async {
-    if (_busy) return;
+    if (_loginLoading) return;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _loginLoading = true);
+
     try {
       final result = await ref
           .read(authControllerProvider.notifier)
@@ -79,22 +80,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (!mounted) return;
 
-      await result.fold((f) async {
-        ShowSnack(context, f.message).error();
+      await result.fold(
+        (f) async {
+          ShowSnack(context, f.message).error();
 
-        final msg = f.message.toLowerCase();
-        final email = _emailCtrl.text.trim().toLowerCase();
+          final msg = f.message.toLowerCase();
+          final email = _emailCtrl.text.trim().toLowerCase();
 
-        if (msg.contains('verify your email')) {
-          await context.pushNamed(AppRoutes.nVerifyOtp, extra: {'email': email, 'purpose': OtpPurpose.emailVerification});
-          return;
-        }
-      }, (_) async => context.goNamed(AppRoutes.nHome));
+          if (msg.contains('verify your email')) {
+            // Navigate to OTP verification
+            await context.pushNamed(
+              AppRoutes.nVerifyOtp,
+              extra: {'email': email, 'purpose': OtpPurpose.emailVerification},
+            );
+
+            // Set loading off after navigation
+            if (mounted) setState(() => _loginLoading = false);
+            return;
+          }
+        },
+        (_) async {
+          // Navigate to Home
+          context.goNamed(AppRoutes.nHome);
+
+          // Set loading off after navigation
+          if (mounted) setState(() => _loginLoading = false);
+        },
+      );
     } catch (e) {
       if (!mounted) return;
       ShowSnack(context, 'Unexpected error: $e').error();
     } finally {
-      if (mounted) setState(() => _loginLoading = false);
+      // Only set loading off if navigation didn’t happen
+      if (mounted && _loginLoading) setState(() => _loginLoading = false);
     }
   }
 
@@ -126,7 +144,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: scheme.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 22),

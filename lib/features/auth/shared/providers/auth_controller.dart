@@ -3,17 +3,15 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
-import 'package:africaonlinestores/core/localization/locale_controller.dart';
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/session_storage.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/auth/data/auth_api.dart';
 import 'package:africaonlinestores/features/auth/data/google_auth_service.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
-import 'package:africaonlinestores/features/home/wishlist/controller/wishlist_controller.dart';
 
 final authRefreshProvider = StreamProvider<void>((ref) {
   // A lightweight stream that emits whenever authController changes.
@@ -68,7 +66,6 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> init() async {
-    // Load sid from storage and validate.
     try {
       final sid = await _storage.getSid();
       if (sid == null) {
@@ -81,52 +78,44 @@ class AuthController extends StateNotifier<AuthState> {
       final res = await _api.me();
 
       if (res.isLeft) {
-        await _storage.clearSid();
-        await _apiClient.clearSid();
-        state = state.copyWith(initializing: false, isLoggedIn: false);
-        _emit();
+        await _clearSession();
         return;
       }
 
-      final payload = res.rightOrNull ?? <String, dynamic>{};
-      final ok = payload['ok'] == true;
-
-      if (!ok) {
-        await _storage.clearSid();
-        await _apiClient.clearSid();
-        state = state.copyWith(initializing: false, isLoggedIn: false);
-        _emit();
+      final payload = res.rightOrNull ?? {};
+      if (payload['ok'] != true) {
+        await _clearSession();
         return;
       }
 
-      final data = (payload['data'] is Map)
-          ? Map<String, dynamic>.from(payload['data'] as Map)
-          : <String, dynamic>{};
-      final userMap = (data['user'] is Map)
-          ? Map<String, dynamic>.from(data['user'] as Map)
-          : <String, dynamic>{};
+      final user = Map<String, dynamic>.from(payload['data']?['user'] ?? {});
 
       state = state.copyWith(
         initializing: false,
         isLoggedIn: true,
         sid: sid,
-        user: AuthUser.fromMap(userMap),
+        user: AuthUser.fromMap(user),
         clearError: true,
       );
-      _emit();
 
-      // Apply server-side preferences for this account (cross-device).
-      try {
-        await _ref.read(localeControllerProvider.notifier).refreshFromBackend();
-      } catch (_) {
-        // ignore
-      }
-    } catch (_) {
-      await _storage.clearSid();
-      await _apiClient.clearSid();
-      state = state.copyWith(initializing: false, isLoggedIn: false);
       _emit();
+    } catch (_) {
+      await _clearSession();
     }
+  }
+
+  Future<void> _clearSession() async {
+    await _storage.clearSid();
+    await _apiClient.clearSid();
+
+    state = state.copyWith(
+      initializing: false,
+      isLoggedIn: false,
+      sid: null,
+      user: null,
+    );
+
+    _emit();
   }
 
   Future<Either<Failure, void>> login({
@@ -140,24 +129,20 @@ class AuthController extends StateNotifier<AuthState> {
       return Either.left(res.leftOrNull ?? const Failure('Login failed.'));
     }
 
-    final payload = res.rightOrNull ?? <String, dynamic>{};
-    final ok = payload['ok'] == true;
-    if (!ok) {
+    final payload = res.rightOrNull ?? {};
+    if (payload['ok'] != true) {
       return Either.left(
-        Failure((payload['message'] ?? 'Login failed.').toString()),
+        Failure(payload['message']?.toString() ?? 'Login failed.'),
       );
     }
 
-    final data = (payload['data'] is Map)
-        ? Map<String, dynamic>.from(payload['data'] as Map)
-        : <String, dynamic>{};
+    final data = Map<String, dynamic>.from(payload['data'] ?? {});
+    final sid = data['sid']?.toString() ?? '';
 
-    final sid = (data['sid'] ?? '').toString();
     if (sid.isEmpty) {
       return Either.left(const Failure('Login failed (no session).'));
     }
 
-    // Persist session & remember me
     await _apiClient.setSid(sid);
     await _storage.setSid(sid);
 
@@ -168,29 +153,25 @@ class AuthController extends StateNotifier<AuthState> {
       await _storage.clearRememberedEmail();
     }
 
-    final userMap = (data['user'] is Map)
-        ? Map<String, dynamic>.from(data['user'] as Map)
-        : <String, dynamic>{};
-
     state = state.copyWith(
       initializing: false,
       isLoggedIn: true,
       sid: sid,
-      user: AuthUser.fromMap(userMap),
+      user: AuthUser.fromMap(Map<String, dynamic>.from(data['user'] ?? {})),
       clearError: true,
     );
+
     _emit();
     _ref.invalidate(wishlistControllerProvider);
 
-    // Sync locale/country/currency prefs to backend so the account follows
-    // across devices, then hydrate back from server.
-    try {
-      final localeCtrl = _ref.read(localeControllerProvider.notifier);
-      await localeCtrl.syncToBackend();
-      await localeCtrl.refreshFromBackend();
-    } catch (_) {
-      // ignore
-    }
+    // Trigger preference sync (no locale controller anymore)
+    final prefApi = _ref.read(userPreferenceApiProvider);
+    await _ref
+        .read(userPreferenceControllerProvider.notifier)
+        .syncOnLogin(
+          getRemotePrefs: prefApi.getMyPreferences,
+          updateRemotePrefs: prefApi.updateMyPreferences,
+        );
 
     return Either.right(null);
   }
@@ -199,17 +180,8 @@ class AuthController extends StateNotifier<AuthState> {
     try {
       await _api.logout();
     } catch (_) {}
-    await _storage.clearSid();
-    await _apiClient.clearSid();
 
-    state = state.copyWith(
-      initializing: false,
-      isLoggedIn: false,
-      sid: null,
-      user: null,
-      clearError: true,
-    );
-    _emit();
+    await _clearSession();
     _ref.invalidate(wishlistControllerProvider);
   }
 
@@ -217,17 +189,15 @@ class AuthController extends StateNotifier<AuthState> {
     required String email,
     required String password,
     required String fullName,
-    required String country,
-    required String language,
-    required String currency,
+    String? language,
+    String? currency,
   }) async {
     final res = await _api.register(
       email: email,
       password: password,
       fullName: fullName,
-      country: country,
-      language: language,
-      currency: currency,
+      language: language ?? '',
+      currency: currency ?? '',
     );
     if (res.isLeft) return Either.left(res.leftOrNull!);
 

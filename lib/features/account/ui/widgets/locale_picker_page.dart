@@ -1,13 +1,13 @@
-import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/features/localization/domain/locale_bundle.dart';
+import 'package:africaonlinestores/shared/components/app_text_styles.dart';
 
-/// Picker page with search using your LocaleOption
+/// Generic picker page with search.
+/// Used for country, language, currency, etc.
 class LocalePickerPage extends StatefulWidget {
   final String title;
-  final List<LocaleOption> items;
+  final List<Map<String, dynamic>> items;
   final String? initialValue;
   final ValueChanged<String> onChanged;
 
@@ -24,42 +24,58 @@ class LocalePickerPage extends StatefulWidget {
 }
 
 class _LocalePickerPageState extends State<LocalePickerPage> {
-  late List<LocaleOption> _filteredItems;
-  late TextEditingController _searchController;
+  late final TextEditingController _searchController;
+  late final List<Map<String, dynamic>> _allItems;
+
+  List<Map<String, dynamic>> _filtered = [];
   String? _selectedCode;
 
   @override
   void initState() {
     super.initState();
+
     _searchController = TextEditingController();
     _selectedCode = widget.initialValue;
-    _filteredItems = _dedupe(widget.items);
+
+    _allItems = _dedupe(widget.items);
+    _filtered = _allItems;
+
     _searchController.addListener(_onSearchChanged);
   }
 
-  /// Remove duplicates and empty codes
-  List<LocaleOption> _dedupe(List<LocaleOption> items) {
+  /// Remove duplicate codes and invalid entries once.
+  List<Map<String, dynamic>> _dedupe(List<Map<String, dynamic>> items) {
     final seen = <String>{};
-    final safeItems = <LocaleOption>[];
+    final result = <Map<String, dynamic>>[];
+
     for (final it in items) {
-      if (it.code.isEmpty) continue;
-      if (seen.contains(it.code)) continue;
-      seen.add(it.code);
-      safeItems.add(it);
+      final code = (it['code'] ?? '').toString();
+      if (code.isEmpty || seen.contains(code)) continue;
+
+      seen.add(code);
+      result.add(it);
     }
-    return safeItems;
+
+    return result;
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text.toLowerCase();
+    final query = _searchController.text.trim().toLowerCase();
+
+    if (query.isEmpty) {
+      setState(() => _filtered = _allItems);
+      return;
+    }
+
     setState(() {
-      _filteredItems = _dedupe(
-        widget.items,
-      ).where((it) => it.label.toLowerCase().contains(query)).toList();
+      _filtered = _allItems.where((it) {
+        final label = (it['name'] ?? '').toString().toLowerCase();
+        return label.contains(query);
+      }).toList();
     });
   }
 
-  void _onItemSelected(String code) {
+  void _select(String code) {
     widget.onChanged(code);
     Navigator.pop(context);
   }
@@ -78,12 +94,6 @@ class _LocalePickerPageState extends State<LocalePickerPage> {
       appBar: AppBar(
         backgroundColor: colors.surface,
         title: Text(widget.title, style: context.h3),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Done', style: TextStyle(color: colors.textPrimary)),
-          ),
-        ],
         iconTheme: IconThemeData(color: colors.textPrimary),
         elevation: 1,
       ),
@@ -105,19 +115,23 @@ class _LocalePickerPageState extends State<LocalePickerPage> {
           const Divider(height: 1),
           Expanded(
             child: ListView.separated(
-              itemCount: _filteredItems.length,
+              itemCount: _filtered.length,
               separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (_, i) {
-                final it = _filteredItems[i];
-                final selected = it.code == _selectedCode;
+                final it = _filtered[i];
+                final code = (it['code'] ?? '').toString();
+                final label = (it['name'] ?? '').toString();
+
+                final selected = code == _selectedCode;
+
                 return ListTile(
-                  title: Text(it.label, style: context.p),
+                  title: Text(label, style: context.p),
                   trailing: selected
                       ? Icon(Icons.check, color: colors.primary)
                       : const SizedBox(),
                   onTap: () {
-                    setState(() => _selectedCode = it.code);
-                    _onItemSelected(it.code);
+                    setState(() => _selectedCode = code);
+                    _select(code);
                   },
                 );
               },

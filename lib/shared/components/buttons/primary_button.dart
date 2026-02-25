@@ -26,16 +26,20 @@ class PrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final isEnabled = !loading && onPressed != null;
+
+    final isDisabled = onPressed == null || loading;
+
     final bgColor =
-        backgroundColor ?? (isEnabled ? colors.primary : colors.border);
-    final fgColor = textColor ?? (isEnabled ? Colors.white : colors.primary);
+        backgroundColor ?? (isDisabled ? colors.primaryHover : colors.primary);
+
+    final fgColor =
+        textColor ?? (isDisabled ? colors.textPrimary : Colors.white);
 
     return SizedBox(
       height: 56,
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: isEnabled ? onPressed : null,
+        onPressed: isDisabled ? null : onPressed,
         style: ElevatedButton.styleFrom(
           elevation: 0,
           backgroundColor: bgColor,

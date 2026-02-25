@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/features/ads/ads_all/all_ads_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,14 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
+import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/features/ads/ads_all/all_ads_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/pickers/select_location_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_app_bar.dart';
 import 'package:africaonlinestores/features/home/domain/location_picker.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_list_scaffold.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/ads_content.dart';
-
-import 'package:africaonlinestores/features/home/data/market_context_controller.dart';
-import 'package:africaonlinestores/features/home/presentation/controller/home_page_controller.dart';
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 

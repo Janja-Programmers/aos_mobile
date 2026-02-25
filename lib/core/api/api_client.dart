@@ -1,15 +1,17 @@
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// API client for Frappe backend.
-///
-/// Uses a CookieJar + CookieManager so session cookies (sid) are handled
-/// automatically.
+import 'package:africaonlinestores/core/providers.dart';
+
 class ApiClient {
-  ApiClient({required String baseUrl})
-    : baseUri = Uri.parse(_normalizeBaseUrl(baseUrl)),
+  final Ref _ref;
+
+  ApiClient({required String baseUrl, required Ref ref})
+    : _ref = ref,
+      baseUri = Uri.parse(_normalizeBaseUrl(baseUrl)),
       cookieJar = CookieJar(),
       dio = Dio(
         BaseOptions(
@@ -22,10 +24,8 @@ class ApiClient {
           },
         ),
       ) {
-    // Cookie management
     dio.interceptors.add(CookieManager(cookieJar));
 
-    // Locale/currency context headers (set by LocaleController).
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
@@ -37,7 +37,6 @@ class ApiClient {
       ),
     );
 
-    // Debug logging only (avoid leaking info + reduce noise in release).
     if (kDebugMode) {
       dio.interceptors.add(
         LogInterceptor(
@@ -54,14 +53,14 @@ class ApiClient {
   final CookieJar cookieJar;
   final Uri baseUri;
 
-  Map<String, String> _contextHeaders = const {};
+  final Map<String, String> _contextHeaders = {};
 
   String? _sid;
   String? get sid => _sid;
 
-  /// Sets sid into the CookieJar (preferred) and also keeps it in memory.
   Future<void> setSid(String sid) async {
     _sid = sid;
+
     final cookie = Cookie('sid', sid)
       ..path = '/'
       ..httpOnly = true;
@@ -69,28 +68,70 @@ class ApiClient {
     await cookieJar.saveFromResponse(baseUri, [cookie]);
   }
 
-  /// Clears sid from memory and CookieJar.
   Future<void> clearSid() async {
     _sid = null;
     await cookieJar.delete(baseUri);
   }
 
-  /// Sets locale/country/currency context headers that will be attached to
-  /// all outgoing requests.
-  ///
-  /// These headers are used by the backend to tailor responses.
-  void setContext({String? countryCode, String? languageCode, String? currencyCode}) {
-    final next = <String, String>{};
-    if (countryCode != null && countryCode.isNotEmpty) {
-      next['X-AOS-Country'] = countryCode;
+  void setContext({
+    String? countryCode,
+    String? languageCode,
+    String? currencyCode,
+  }) {
+    _contextHeaders.clear();
+
+    if (countryCode?.isNotEmpty == true) {
+      _contextHeaders['X-AOS-Country'] = countryCode!;
     }
-    if (languageCode != null && languageCode.isNotEmpty) {
-      next['X-AOS-Language'] = languageCode;
+    if (languageCode?.isNotEmpty == true) {
+      _contextHeaders['X-AOS-Language'] = languageCode!;
     }
-    if (currencyCode != null && currencyCode.isNotEmpty) {
-      next['X-AOS-Currency'] = currencyCode;
+    if (currencyCode?.isNotEmpty == true) {
+      _contextHeaders['X-AOS-Currency'] = currencyCode!;
     }
-    _contextHeaders = next;
+  }
+
+  /// Synchronous resolution (cheap)
+  String? _resolveCountryCode() {
+    final prefsAsync = _ref.read(userPreferenceControllerProvider);
+
+    final prefs = prefsAsync.maybeWhen(data: (v) => v, orElse: () => null);
+
+    final code = prefs?.country;
+    return (code == null || code.isEmpty) ? null : code;
+  }
+
+  Map<String, dynamic>? _injectCountry(
+    Map<String, dynamic>? queryParameters,
+    bool withCountry,
+  ) {
+    if (!withCountry) return queryParameters;
+
+    final country = _resolveCountryCode();
+    if (country == null) return queryParameters;
+
+    return {...?queryParameters, 'country': country};
+  }
+
+  Future<Response<T>> get<T>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    bool withCountry = false,
+    Options? options,
+  }) {
+    final qp = _injectCountry(queryParameters, withCountry);
+    return dio.get<T>(path, queryParameters: qp, options: options);
+  }
+
+  Future<Response<T>> post<T>(
+    String path, {
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? queryParameters,
+    bool withCountry = false,
+    Options? options,
+  }) {
+    final qp = _injectCountry(queryParameters, withCountry);
+    return dio.post<T>(path, data: data, queryParameters: qp, options: options);
   }
 }
 

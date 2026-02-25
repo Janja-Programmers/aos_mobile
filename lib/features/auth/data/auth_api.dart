@@ -14,38 +14,40 @@ class AuthApi {
   Future<Either<Failure, Map<String, dynamic>>> googleLogin({
     required String idToken,
   }) async {
-    final res = await _client.dio.post(
-      ApiEndpoints.googleLoginEndpoint,
-      data: {'id_token': idToken},
-    );
-    return unwrapFrappe(res);
+    try {
+      final res = await _client.post(
+        ApiEndpoints.googleLoginEndpoint,
+        data: {'id_token': idToken},
+      );
+      return unwrapFrappe(res);
+    } catch (e) {
+      return _mapError(e);
+    }
   }
 
   Future<Either<Failure, Map<String, dynamic>>> register({
     required String email,
     required String password,
     required String fullName,
-    required String country,
-    required String language,
-    required String currency,
+    String? language,
+    String? currency,
   }) async {
     try {
-      final res = await _client.dio.post(
+      final res = await _client.post(
         ApiEndpoints.registerEndpoint,
+        withCountry: true, // country auto-injected
         data: {
           'email': email,
           'password': password,
           'full_name': fullName,
-          'country': country,
-          'language': language,
-          'currency': currency,
+          'language': ?language,
+          'currency': ?currency,
         },
       );
+
       return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Unexpected error. Please try again.'));
+    } catch (e) {
+      return _mapError(e);
     }
   }
 
@@ -87,37 +89,31 @@ class AuthApi {
     required String password,
   }) async {
     try {
-      final res = await _client.dio.post(
+      final res = await _client.post(
         ApiEndpoints.loginEndpoint,
         data: {'email': email, 'password': password},
       );
       return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Unexpected error. Please try again.'));
+    } catch (e) {
+      return _mapError(e);
     }
   }
 
   Future<Either<Failure, Map<String, dynamic>>> me() async {
     try {
-      final res = await _client.dio.get(ApiEndpoints.meEndpoint);
+      final res = await _client.get(ApiEndpoints.meEndpoint);
       return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Unexpected error. Please try again.'));
+    } catch (e) {
+      return _mapError(e);
     }
   }
 
   Future<Either<Failure, Map<String, dynamic>>> logout() async {
     try {
-      final res = await _client.dio.post(ApiEndpoints.logoutEndpoint);
+      final res = await _client.post(ApiEndpoints.logoutEndpoint);
       return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Unexpected error. Please try again.'));
+    } catch (e) {
+      return _mapError(e);
     }
   }
 
@@ -126,15 +122,13 @@ class AuthApi {
     required String email,
   }) async {
     try {
-      final res = await _client.dio.post(
+      final res = await _client.post(
         ApiEndpoints.forgotPasswordRequestEndpoint,
         data: {'email': email},
       );
       return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Unexpected error. Please try again.'));
+    } catch (e) {
+      return _mapError(e);
     }
   }
 
@@ -143,15 +137,13 @@ class AuthApi {
     required String otp,
   }) async {
     try {
-      final res = await _client.dio.post(
+      final res = await _client.post(
         ApiEndpoints.forgotPasswordVerifyOtpEndpoint,
         data: {'email': email, 'otp': otp},
       );
       return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Unexpected error. Please try again.'));
+    } catch (e) {
+      return _mapError(e);
     }
   }
 
@@ -162,7 +154,7 @@ class AuthApi {
     required String confirmPassword,
   }) async {
     try {
-      final res = await _client.dio.post(
+      final res = await _client.post(
         ApiEndpoints.forgotPasswordResetEndpoint,
         data: {
           'email': email,
@@ -172,21 +164,18 @@ class AuthApi {
         },
       );
       return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Unexpected error. Please try again.'));
+    } catch (e) {
+      return _mapError(e);
     }
   }
 
-  // Change password (logged-in)
   Future<Either<Failure, Map<String, dynamic>>> changePassword({
     required String currentPassword,
     required String newPassword,
     required String confirmPassword,
   }) async {
     try {
-      final res = await _client.dio.post(
+      final res = await _client.post(
         ApiEndpoints.changePasswordEndpoint,
         data: {
           'current_password': currentPassword,
@@ -195,10 +184,15 @@ class AuthApi {
         },
       );
       return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Unexpected error. Please try again.'));
+    } catch (e) {
+      return _mapError(e);
     }
+  }
+
+  Either<Failure, Map<String, dynamic>> _mapError(Object e) {
+    if (e is DioException) {
+      return Either.left(mapDioException(e));
+    }
+    return Either.left(const Failure('Unexpected error. Please try again.'));
   }
 }

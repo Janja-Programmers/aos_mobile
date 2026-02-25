@@ -2,10 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/core/providers.dart';
-import 'package:africaonlinestores/core/localization/locale_controller.dart';
-import 'package:africaonlinestores/core/localization/utils.dart';
 
-import 'package:africaonlinestores/features/localization/domain/locale_bundle.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/ads_all/all_ads_state.dart';
 
@@ -50,12 +47,7 @@ final allAdsControllerProvider = StateNotifierProvider.autoDispose
 class AllAdsController extends StateNotifier<AllAdsState> {
   AllAdsController(this.ref, this.args)
     : super(AllAdsState(selectedCategoryId: args.initialCategoryId)) {
-    _bundleFuture = ref.read(localeBundleProvider.future);
-    if (args.mode == AllAdsMode.normal) {
-      _resolveCountryName().then((_) => load(initial: true));
-    } else {
-      load(initial: true); // Wishlist doesn't need country
-    }
+    load(initial: true);
   }
 
   final Ref ref;
@@ -64,27 +56,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   static const _limit = 20;
   int _offset = 0;
 
-  late final Future<LocaleBundle> _bundleFuture;
-  String? _countryName;
-
   bool get isWishlist => args.mode == AllAdsMode.wishlist;
-
-  // ================= Locale Resolution =================
-
-  Future<void> _resolveCountryName() async {
-    final localeAsync = ref.read(localeControllerProvider);
-
-    final prefs = localeAsync.maybeWhen(data: (v) => v, orElse: () => null);
-
-    if (prefs == null || prefs.countryCode.isEmpty) return;
-
-    try {
-      final bundle = await _bundleFuture;
-      _countryName = labelFor(bundle.countries, prefs.countryCode);
-    } catch (_) {
-      _countryName = null;
-    }
-  }
 
   // ================= Fetch =================
 
@@ -100,37 +72,20 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     final api = ref.read(adsApiProvider);
 
-    late final dynamic res;
-
-    if (isWishlist) {
-      res = await api.listWishlist(limit: _limit, offset: _offset);
-    } else {
-      if (_countryName == null) {
-        await _resolveCountryName();
-        if (_countryName == null) {
-          state = state.copyWith(
-            loading: false,
-            loadingMore: false,
-            error: 'Unable to determine country',
+    final res = isWishlist
+        ? await api.listWishlist(limit: _limit, offset: _offset)
+        : await api.listAds(
+            categoryId: state.selectedCategoryId ?? args.parentCategoryId,
+            limit: _limit,
+            offset: _offset,
           );
-          return;
-        }
-      }
-
-      res = await api.listAds(
-        countryName: _countryName!,
-        categoryId: state.selectedCategoryId ?? args.parentCategoryId,
-        limit: _limit,
-        offset: _offset,
-      );
-    }
 
     res.fold(
-      (f) {
+      (failure) {
         state = state.copyWith(
           loading: false,
           loadingMore: false,
-          error: f.message,
+          error: failure.message,
         );
       },
       (data) {
@@ -172,8 +127,10 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   }
 
   void setCategory(String? id) {
-    if (isWishlist) return; // No categories in wishlist mode
+    if (isWishlist) return;
+
     state = state.copyWith(selectedCategoryId: id);
+
     refresh();
   }
 }

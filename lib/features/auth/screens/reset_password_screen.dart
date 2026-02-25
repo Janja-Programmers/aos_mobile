@@ -98,7 +98,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: scheme.surface,
       appBar: AppBar(
         backgroundColor: scheme.surface,
         elevation: 0,

@@ -70,10 +70,10 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     primary: Color(0xFFC1121F),
     primaryHover: Color(0xFF8E0E15),
 
-    textPrimary: Color(0xFF1A1A1A),
+    textPrimary: Color(0xFFFFFFFF),
     textSecondary: Color(0xFF555555),
     textMuted: Color(0xFF8A8A8A),
-    surface: Color(0xFF1A1A1A),
+    surface: Color(0x00000000),
     surfaceBright: Color(0xFFFFFFFF),
     elevated: Color(0xFFF5F5F5),
     border: Color(0xFFE8E8E8),
@@ -84,8 +84,8 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     error: Color(0xFFFF4D4D),
     info: Color(0xFF4DA3FF),
 
-    white: Color(0xFFFFFFFF),
-    black: Color(0x00000000),
+    black: Color(0xFFFFFFFF),
+    white: Color(0x00000000),
   );
 
   @override

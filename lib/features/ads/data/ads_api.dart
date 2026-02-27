@@ -190,11 +190,11 @@ class AdsApi {
         if (priceType?.trim().isNotEmpty == true)
           'price_type': priceType!.trim(),
 
-        if (priceMin != null) 'price_min': priceMin,
+        'price_min': ?priceMin,
 
-        if (priceMax != null) 'price_max': priceMax,
+        'price_max': ?priceMax,
 
-        if (ratingMin != null) 'rating_min': ratingMin,
+        'rating_min': ?ratingMin,
 
         'limit': limit,
         'offset': offset,
@@ -239,6 +239,22 @@ class AdsApi {
       final res = await _dio.get(
         ApiEndpoints.getAdEndpoint,
         queryParameters: {'ad_id': id},
+      );
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to fetch ad details.'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> getAdDraft({
+    required String id,
+  }) async {
+    try {
+      final res = await _dio.get(
+        ApiEndpoints.getAdDraftEndpoint,
+        queryParameters: {'draft_id': id},
       );
       return unwrapFrappe(res);
     } on DioException catch (e) {

@@ -12,16 +12,20 @@ class PrimaryButton extends StatelessWidget {
     this.icon,
     this.backgroundColor,
     this.textColor,
+    this.onDisabledTap,
+    this.disabledBorderColor,
+    this.disabledTextColor,
   });
 
   final String text;
   final VoidCallback? onPressed;
   final bool loading;
   final IconData? icon;
-
-  /// Optional overrides
   final Color? backgroundColor;
   final Color? textColor;
+  final VoidCallback? onDisabledTap;
+  final Color? disabledBorderColor;
+  final Color? disabledTextColor;
 
   @override
   Widget build(BuildContext context) {
@@ -29,25 +33,34 @@ class PrimaryButton extends StatelessWidget {
 
     final isDisabled = onPressed == null || loading;
 
-    final bgColor =
-        backgroundColor ?? (isDisabled ? colors.primaryHover : colors.primary);
+    // Active (filled)
+    final activeBg = backgroundColor ?? colors.primary;
+    final activeFg = textColor ?? colors.white;
 
-    final fgColor =
-        textColor ?? (isDisabled ? colors.textPrimary : Colors.white);
+    // Disabled (outlined)
+    final disBorder = disabledBorderColor ?? colors.textPrimary;
+    final disFg = disabledTextColor ?? colors.textPrimary;
+
+    final bgColor = isDisabled ? Colors.transparent : activeBg;
+    final fgColor = isDisabled ? disFg : activeFg;
+
+    // If disabled but we want a tap action, we can't rely on ElevatedButton's disabled state.
+    final effectiveOnPressed = isDisabled ? (onDisabledTap) : onPressed;
 
     return SizedBox(
       height: 56,
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: isDisabled ? null : onPressed,
+        onPressed: effectiveOnPressed,
         style: ElevatedButton.styleFrom(
           elevation: 0,
           backgroundColor: bgColor,
-          disabledBackgroundColor: bgColor,
           foregroundColor: fgColor,
-          disabledForegroundColor: fgColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
+            side: isDisabled
+                ? BorderSide(color: disBorder, width: 1.2)
+                : BorderSide.none,
           ),
         ),
         child: loading

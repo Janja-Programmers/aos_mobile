@@ -10,13 +10,15 @@ class LocalePickerPage extends StatefulWidget {
   final List<Map<String, dynamic>> items;
   final String? initialValue;
   final ValueChanged<String> onChanged;
+  final Widget Function(Map<String, dynamic> item)? leadingBuilder;
 
   const LocalePickerPage({
     super.key,
     required this.title,
     required this.items,
-    this.initialValue,
     required this.onChanged,
+    this.initialValue,
+    this.leadingBuilder,
   });
 
   @override
@@ -69,8 +71,13 @@ class _LocalePickerPageState extends State<LocalePickerPage> {
 
     setState(() {
       _filtered = _allItems.where((it) {
-        final label = (it['name'] ?? '').toString().toLowerCase();
-        return label.contains(query);
+        final name = (it['name'] ?? '').toString().toLowerCase();
+        final code = (it['code'] ?? '').toString().toLowerCase();
+        final symbol = (it['symbol'] ?? '').toString().toLowerCase();
+
+        return name.contains(query) ||
+            code.contains(query) ||
+            symbol.contains(query);
       }).toList();
     });
   }
@@ -116,7 +123,7 @@ class _LocalePickerPageState extends State<LocalePickerPage> {
           Expanded(
             child: ListView.separated(
               itemCount: _filtered.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const SizedBox.shrink(),
               itemBuilder: (_, i) {
                 final it = _filtered[i];
                 final code = (it['code'] ?? '').toString();
@@ -125,6 +132,7 @@ class _LocalePickerPageState extends State<LocalePickerPage> {
                 final selected = code == _selectedCode;
 
                 return ListTile(
+                  leading: widget.leadingBuilder?.call(it),
                   title: Text(label, style: context.p),
                   trailing: selected
                       ? Icon(Icons.check, color: colors.primary)

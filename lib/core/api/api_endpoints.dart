@@ -38,6 +38,8 @@ class ApiEndpoints {
   static final String createAdEndpoint = '/api/method/aos.api.ads.create_ad';
   static final String saveAdDraftEndpoint =
       '/api/method/aos.api.ads.save_ad_draft';
+  static final String getAdDraftEndpoint =
+      '/api/method/aos.api.ads.get_ad_draft';
 
   // Reviews Endpoints
   static final String createAdReviewEndpoint =

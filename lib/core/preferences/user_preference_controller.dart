@@ -78,6 +78,27 @@ class UserPreferenceController extends AsyncNotifier<UserPreferenceState?> {
     state = AsyncData(newState);
   }
 
+  /// Update Local Currency
+  Future<void> updateCurrency(String code) async {
+    if (!_localization.currencies.any((c) => c["code"] == code)) {
+      return;
+    }
+
+    final current = state.value;
+
+    final newState = UserPreferenceState(
+      country: current?.country,
+      language: current?.language ?? _localization.systemDefaultLanguage,
+      currency: code,
+    );
+
+    state = const AsyncLoading();
+
+    await _store.save(newState);
+
+    state = AsyncData(newState);
+  }
+
   /// Sync when user logs in
   Future<void> syncOnLogin({
     required Future<Either<Failure, Map<String, dynamic>>> Function()

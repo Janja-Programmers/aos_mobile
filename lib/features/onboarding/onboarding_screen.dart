@@ -4,9 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
-import 'package:africaonlinestores/features/onboarding/widgets/progress_indicator.dart';
 import 'package:africaonlinestores/features/onboarding/steps/country_step.dart';
+import 'package:africaonlinestores/features/onboarding/steps/currency_step.dart';
 import 'package:africaonlinestores/features/onboarding/steps/language_step.dart';
+import 'package:africaonlinestores/features/onboarding/widgets/progress_indicator.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -20,7 +21,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _currentStep = 0;
 
   void _next() {
-    if (_currentStep == 0) {
+    if (_currentStep < 2) {
       _controller.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -47,7 +48,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
             OnboardingProgressIndicator(
               currentStep: _currentStep,
-              totalSteps: 2,
+              totalSteps: 3,
             ),
 
             const SizedBox(height: 16),
@@ -63,12 +64,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     onContinue: _next,
                     onSkip: _complete,
                     showBack: true,
-                    onBack: () {
-                      _controller.previousPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    },
+                    onBack: () => _controller.previousPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    ),
+                  ),
+                  CurrencyStep(
+                    onContinue: _next,
+                    onSkip: _complete,
+                    showBack: true,
+                    onBack: () => _controller.previousPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    ),
                   ),
                 ],
               ),

@@ -47,7 +47,6 @@ dependencies:
   http: ^1.6.0
   intl: ^0.20.2
   equatable: ^2.0.8
-  country_codes: ^3.3.0
 
 dev_dependencies:
   flutter_test:

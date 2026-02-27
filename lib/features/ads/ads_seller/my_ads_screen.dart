@@ -62,7 +62,7 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
   String _emptyDescription() {
     switch (_status) {
       case 'Draft':
-        return 'You have no saved drafts.\nStart creating a listing and finish later.';
+        return 'You have no saved drafts.';
       case 'Reviewing':
         return 'You have no ads currently under review.';
       case 'Declined':
@@ -76,11 +76,11 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
   String _emptyPrimaryLabel() {
     switch (_status) {
       case 'Draft':
-        return 'Create Draft';
+        return 'Create An Ad';
       case 'Reviewing':
-        return 'Post Ad for Review';
+        return 'Create An Ad';
       case 'Declined':
-        return 'Create New Ad';
+        return 'Create An Ad';
       case 'Active':
       default:
         return 'Post Your First Ad';

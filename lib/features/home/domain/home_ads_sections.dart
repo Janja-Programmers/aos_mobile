@@ -4,20 +4,28 @@ const homeAdsSections = <HomeAdsSection>[
   /// 🔥 Flash Sales
   HomeAdsSection(
     key: 'flash_sales',
-    title: 'Flash Sales',
+    title: 'Flash Sales in AOS',
     promotionType: 'flash_sale',
   ),
 
   /// 💸 Top Deals
-  HomeAdsSection(key: 'top_deals', title: 'Top Deals', promotionType: 'deal'),
+  HomeAdsSection(
+    key: 'top_deals',
+    title: 'Top Deals in AOS',
+    promotionType: 'deal',
+  ),
 
   /// 🆕 New Products
-  HomeAdsSection(key: 'new_products', title: 'New Products', sort: 'recent'),
+  HomeAdsSection(
+    key: 'new_products',
+    title: 'New Products in AOS',
+    sort: 'recent',
+  ),
 
   /// 🏠 Home & Furniture
   HomeAdsSection(
     key: 'home_furniture',
-    title: 'Home & Furniture',
+    title: 'Home & Furniture in AOS',
     preferredCategoryNames: ['Home, Furniture & Appliances'],
     seeAllCategoryId: 'Home, Furniture & Appliances',
   ),

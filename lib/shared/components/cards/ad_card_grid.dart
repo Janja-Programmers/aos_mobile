@@ -122,15 +122,15 @@ class AdGridCard extends ConsumerWidget {
                       const SizedBox(height: 6),
 
                       Text(
-                        priceText(ad),
-                        style: context.pStrong.copyWith(fontSize: 15),
+                        ad.priceDisplay,
+                        style: context.body.copyWith(fontSize: 15),
                       ),
 
                       if (isService)
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            "per ${ad.priceUnit}",
+                            ad.priceUnit,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: context.p.copyWith(

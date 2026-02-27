@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/localization/localization_provider.dart';
+import 'package:africaonlinestores/features/account/shared/providers/user_preference_provider.dart';
 import 'package:africaonlinestores/features/home/domain/market_place.dart';
 
 class MarketContextController extends AsyncNotifier<MarketContext> {

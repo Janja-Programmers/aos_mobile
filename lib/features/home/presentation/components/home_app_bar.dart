@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
 
 class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const HomeAppBar({

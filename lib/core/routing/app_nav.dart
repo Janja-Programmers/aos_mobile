@@ -48,7 +48,7 @@ class AppNavigation {
       );
     }
 
-    if (item.requiresAuth && auth.user == null) {
+    if (item.requiresAuth && !auth.isLoggedIn) {
       await showLoginRequiredSheet(context, ref);
       return;
     }

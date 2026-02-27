@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,6 +19,7 @@ import 'package:africaonlinestores/features/ads/shared/ui/ad_review_create.dart'
 import 'package:africaonlinestores/features/seller/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/seller/data/seller_controller.dart';
 
+import 'package:africaonlinestores/features/home/domain/market_place.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_detail_action_buttons.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_seller_store_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_reviews_section.dart';
@@ -52,10 +54,17 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
 
   final _searchCtrl = TextEditingController();
 
+  MarketContext? _market;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _market = await ref.read(marketContextProvider.future);
+      if (mounted) {
+        await _load();
+      }
+    });
   }
 
   @override
@@ -130,7 +139,11 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
 
     final res = await ref
         .read(adsApiProvider)
-        .listAds(categoryId: _ad!.categoryName, limit: 7);
+        .listAds(
+          country: _market!.country,
+          categoryId: _ad!.categoryName,
+          limit: 7,
+        );
 
     if (!mounted) return;
 

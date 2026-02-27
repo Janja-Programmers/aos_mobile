@@ -110,6 +110,8 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
     for (final entry in statuses.entries) {
       final res = await ref.read(adsApiProvider).myAds(status: entry.value);
 
+      if (!mounted) return;
+
       res.fold((_) => newCounts[entry.key] = 0, (data) {
         final dataMap = (data['data'] ?? const {}) as Map;
 

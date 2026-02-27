@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/home/shared/utils/helpers.dart';
+import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
@@ -46,6 +46,7 @@ class AdGridCard extends ConsumerWidget {
             ),
           ],
         ),
+
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -71,8 +72,6 @@ class AdGridCard extends ConsumerWidget {
                           ),
                   ),
                 ),
-
-                /// Wishlist (32x32)
                 Positioned(
                   top: 8,
                   right: 8,
@@ -83,70 +82,92 @@ class AdGridCard extends ConsumerWidget {
 
             const SizedBox(height: 8),
 
-            /// TITLE
-            Text(
-              ad.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: context.pStrong.copyWith(fontSize: 16),
-            ),
-
-            const SizedBox(height: 2),
-
-            /// LOCATION
-            if (subtitle.isNotEmpty)
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.p.copyWith(
-                  fontSize: 12,
-                  color: colors.textSecondary,
-                ),
-              ),
-
-            const SizedBox(height: 6),
-
-            /// PRICE
-            Text(priceText(ad), style: context.pStrong.copyWith(fontSize: 16)),
-
-            /// Service pricing type
-            if (isService)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(
-                  "per ${ad.priceUnit}",
-                  style: context.p.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: colors.primary,
-                  ),
-                ),
-              ),
-
-            const SizedBox(height: 4),
-
-            /// RATING
-            if (ad.totalReviews > 0)
-              Row(
+            /// FLEXIBLE CONTENT AREA
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  ...List.generate(
-                    5,
-                    (i) => Icon(
-                      i < ad.averageRating.round()
-                          ? Icons.star
-                          : Icons.star_border,
-                      size: 14,
-                      color: Colors.orange,
-                    ),
+                  /// TOP TEXT BLOCK
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      /// TITLE
+                      Text(
+                        ad.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.pStrong.copyWith(fontSize: 15),
+                      ),
+
+                      if (subtitle.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.p.copyWith(
+                            fontSize: 12,
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    "(${humanizeCount(ad.totalReviews)})",
-                    style: context.pMuted.copyWith(fontSize: 12),
+
+                  /// BOTTOM PRICE + RATING BLOCK
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 6),
+
+                      Text(
+                        priceText(ad),
+                        style: context.pStrong.copyWith(fontSize: 15),
+                      ),
+
+                      if (isService)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            "per ${ad.priceUnit}",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.p.copyWith(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: colors.primary,
+                            ),
+                          ),
+                        ),
+
+                      if (ad.totalReviews > 0) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            ...List.generate(
+                              5,
+                              (i) => Icon(
+                                i < ad.averageRating.round()
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                size: 13,
+                                color: Colors.orange,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "(${humanizeCount(ad.totalReviews)})",
+                              style: context.pMuted.copyWith(fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
+            ),
           ],
         ),
       ),

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/providers.dart';
-import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 
 class SelectLocationScreen extends ConsumerStatefulWidget {
   const SelectLocationScreen({super.key, this.selectedId});
@@ -45,7 +45,7 @@ class _SelectLocationScreenState extends ConsumerState<SelectLocationScreen> {
   @override
   Widget build(BuildContext context) {
     final q = _searchCtrl.text.trim();
-    const accentRed = Color(0xFFDA1E28);
+    final accentRed = context.appColors.primaryRedSoft;
 
     return Scaffold(
       appBar: AppBar(
@@ -172,7 +172,7 @@ class _LocationTile extends StatelessWidget {
               width: 22,
               height: 22,
               decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
-              child: const Icon(Icons.check, size: 16, color: Colors.white),
+              child: Icon(Icons.check, size: 16, color: colors.white),
             )
           : null,
     );

@@ -16,125 +16,124 @@ class SelectCategoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(categoriesControllerProvider);
+    final asyncState = ref.watch(categoriesControllerProvider);
     final scheme = Theme.of(context).colorScheme;
-
-    final nodes = parent != null ? parent!.children : state.parents;
+    final colors = context.appColors;
 
     return Scaffold(
-      backgroundColor: context.appColors.border,
+      backgroundColor: colors.border,
       appBar: AppBar(
-        backgroundColor: context.appColors.surface,
+        backgroundColor: colors.surface,
         title: Text(parent?.name ?? 'Select Category', style: context.h5),
       ),
+      body: asyncState.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
 
-      body: state.loading && state.parents.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: nodes.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
+        error: (_, _) => const Center(child: Text('Failed to load categories')),
 
-              itemBuilder: (context, i) {
-                final n = nodes[i];
-                final hasChildren = n.children.isNotEmpty;
-                final iconUrl = buildCategoryIconUrl(n.icon);
+        data: (state) {
+          final nodes = parent != null ? parent!.children : state.parents;
 
-                final colors = context.appColors;
+          if (nodes.isEmpty) {
+            return const Center(child: Text('No categories available'));
+          }
 
-                return Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () async {
-                      if (hasChildren) {
-                        final result = await context.push<Map<String, dynamic>>(
-                          AppRoutes.selectCategory,
-                          extra: n,
-                        );
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: nodes.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (context, i) {
+              final n = nodes[i];
+              final hasChildren = n.children.isNotEmpty;
+              final iconUrl = buildCategoryIconUrl(n.icon);
 
-                        if (result != null && context.mounted) {
-                          Navigator.of(context).pop(result);
-                        }
-                      } else {
-                        Navigator.of(
-                          context,
-                        ).pop({'id': n.id, 'label': n.name});
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () async {
+                    if (hasChildren) {
+                      final result = await context.push<Map<String, dynamic>>(
+                        AppRoutes.selectCategory,
+                        extra: n,
+                      );
+
+                      if (result != null && context.mounted) {
+                        Navigator.of(context).pop(result);
                       }
-                    },
-
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 14,
-                      ),
-
-                      child: Row(
-                        children: [
-                          // Icon container
-                          Container(
-                            height: 44,
-                            width: 44,
-                            decoration: BoxDecoration(
-                              color: scheme.onSurfaceVariant,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-
-                            child: iconUrl == null
-                                ? Icon(
-                                    Icons.category_outlined,
-                                    color: colors.primary,
-                                  )
-                                : ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      buildFileUrl(iconUrl) ?? iconUrl,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, _, _) => Icon(
-                                        Icons.category_outlined,
-                                        color: colors.primary,
-                                      ),
+                    } else {
+                      Navigator.of(context).pop({'id': n.id, 'label': n.name});
+                    }
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
+                    child: Row(
+                      children: [
+                        // Icon
+                        Container(
+                          height: 44,
+                          width: 44,
+                          decoration: BoxDecoration(
+                            color: scheme.onSurfaceVariant,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: iconUrl == null
+                              ? Icon(
+                                  Icons.category_outlined,
+                                  color: colors.primary,
+                                )
+                              : ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    buildFileUrl(iconUrl) ?? iconUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, _, _) => Icon(
+                                      Icons.category_outlined,
+                                      color: colors.primary,
                                     ),
                                   ),
-                          ),
+                                ),
+                        ),
 
-                          const SizedBox(width: 12),
+                        const SizedBox(width: 12),
 
-                          // Text
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(n.name, style: context.pStrong),
-
-                                if (hasChildren) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '${n.children.length} subcategories',
-                                    style: context.pMuted,
-                                  ),
-                                ],
+                        // Text
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(n.name, style: context.pStrong),
+                              if (hasChildren) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${n.children.length} subcategories',
+                                  style: context.pMuted,
+                                ),
                               ],
-                            ),
+                            ],
                           ),
+                        ),
 
-                          // Chevron
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            color: colors.textPrimary,
-                          ),
-                        ],
-                      ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: colors.textPrimary,
+                        ),
+                      ],
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

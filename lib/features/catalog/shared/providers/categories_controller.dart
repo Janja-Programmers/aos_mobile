@@ -1,52 +1,48 @@
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
-import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/catalog/data/categories_api.dart';
 import 'package:africaonlinestores/features/catalog/domain/categories_state.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
+import 'package:africaonlinestores/features/catalog/shared/providers/category_ads_provider.dart';
 
 final categoriesControllerProvider =
-    StateNotifierProvider<CategoriesController, CategoriesState>((ref) {
-  final api = ref.watch(categoriesApiProvider);
-  return CategoriesController(api: api)..loadCategories();
-});
+    AsyncNotifierProvider<CategoriesController, CategoriesState>(
+      CategoriesController.new,
+    );
 
-class CategoriesController extends StateNotifier<CategoriesState> {
-  CategoriesController({required CategoriesApi api})
-      : _api = api,
-        super(const CategoriesState());
+class CategoriesController extends AsyncNotifier<CategoriesState> {
+  late final CategoriesApi _api;
 
-  final CategoriesApi _api;
+  @override
+  Future<CategoriesState> build() async {
+    _api = ref.read(categoriesApiProvider);
+    return _loadCategories();
+  }
 
-  Future<Either<Failure, List<CategoryNode>>> loadCategories() async {
-    if (state.loading) {
-      return Either.right(state.parents);
-    }
-
-    state = state.copyWith(loading: true, clearError: true);
-
+  Future<CategoriesState> _loadCategories() async {
     final res = await _api.getCategories();
 
     if (res.isLeft) {
       final f = res.leftOrNull ?? const Failure('Failed to load categories.');
-      state = state.copyWith(loading: false, errorMessage: f.message);
-      return Either.left(f);
+      return CategoriesState(loading: false, errorMessage: f.message);
     }
 
     final payload = res.rightOrNull ?? <String, dynamic>{};
     final ok = payload['ok'] == true;
 
     if (!ok) {
-      final f = Failure((payload['message'] ?? 'Failed to load categories.').toString());
-      state = state.copyWith(loading: false, errorMessage: f.message);
-      return Either.left(f);
+      return CategoriesState(
+        loading: false,
+        errorMessage: (payload['message'] ?? 'Failed to load categories.')
+            .toString(),
+      );
     }
 
     final dataRaw = payload['data'];
     final parents = <CategoryNode>[];
+
     if (dataRaw is List) {
       for (final e in dataRaw) {
         if (e is Map) {
@@ -57,20 +53,24 @@ class CategoriesController extends StateNotifier<CategoriesState> {
 
     final selected = parents.isNotEmpty ? parents.first.id : null;
 
-    state = state.copyWith(
+    return CategoriesState(
       loading: false,
       parents: parents,
-      selectedParentId: state.selectedParentId ?? selected,
-      clearError: true,
+      selectedParentId: selected,
     );
+  }
 
-    return Either.right(parents);
+  Future<void> reload() async {
+    state = const AsyncLoading();
+    state = AsyncData(await _loadCategories());
   }
 
   void selectParent(String id) {
-    if (id == state.selectedParentId) return;
-    state = state.copyWith(selectedParentId: id);
-  }
+    final current = state.value;
+    if (current == null) return;
 
-  void clearError() => state = state.copyWith(clearError: true);
+    if (id == current.selectedParentId) return;
+
+    state = AsyncData(current.copyWith(selectedParentId: id));
+  }
 }

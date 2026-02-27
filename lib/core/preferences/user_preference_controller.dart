@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/localization/localization_state.dart';
+import 'package:africaonlinestores/core/localization/localization_provider.dart';
 import 'package:africaonlinestores/core/preferences/user_preference_state.dart';
 import 'package:africaonlinestores/core/preferences/user_preference_store.dart';
-import 'package:africaonlinestores/core/providers.dart';
 
 class UserPreferenceController extends AsyncNotifier<UserPreferenceState?> {
   late final LocalizationState _localization;

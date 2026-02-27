@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/routing/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/validators.dart';
@@ -11,6 +10,7 @@ import 'package:africaonlinestores/core/utils/validators.dart';
 import 'package:africaonlinestores/features/account/ui/legal_docs_widgets.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_section.dart';
+import 'package:africaonlinestores/features/account/shared/providers/user_preference_provider.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/app_text_fields.dart';
@@ -136,6 +136,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             fullName: _name.text.trim(),
 
             // ✅ Send preference if exists, else null
+            country: prefs?.country,
             language: prefs?.language,
             currency: prefs?.currency,
           );

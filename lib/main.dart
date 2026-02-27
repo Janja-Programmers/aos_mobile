@@ -3,13 +3,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/bootstrap/app_bootstrap_controller.dart';
-import 'package:africaonlinestores/core/providers.dart'
-    show userPreferenceControllerProvider;
 import 'package:africaonlinestores/core/routing/app_router.dart';
 import 'package:africaonlinestores/core/theme/app_theme.dart';
 import 'package:africaonlinestores/core/theme/theme_controller.dart';
 import 'package:africaonlinestores/core/theme/theme_prefs.dart';
 import 'package:africaonlinestores/core/utils/local_resolver.dart';
+
+import 'package:africaonlinestores/features/account/shared/providers/user_preference_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

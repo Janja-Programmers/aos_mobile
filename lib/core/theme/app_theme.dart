@@ -30,7 +30,7 @@ class AppTheme {
 
       appBarTheme: AppBarTheme(
         backgroundColor: tokens.surface,
-        foregroundColor: tokens.surface,
+        foregroundColor: tokens.textPrimary,
         elevation: 0,
         centerTitle: true,
       ),

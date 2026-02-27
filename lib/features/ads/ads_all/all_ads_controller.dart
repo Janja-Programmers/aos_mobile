@@ -1,10 +1,11 @@
+import 'package:africaonlinestores/features/home/domain/market_place.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
-
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/ads_all/all_ads_state.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
 
 /// ================= Mode =================
 
@@ -47,7 +48,7 @@ final allAdsControllerProvider = StateNotifierProvider.autoDispose
 class AllAdsController extends StateNotifier<AllAdsState> {
   AllAdsController(this.ref, this.args)
     : super(AllAdsState(selectedCategoryId: args.initialCategoryId)) {
-    load(initial: true);
+    _init();
   }
 
   final Ref ref;
@@ -58,9 +59,27 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
   bool get isWishlist => args.mode == AllAdsMode.wishlist;
 
-  // ================= Fetch =================
+  MarketContext? _market;
+
+  // ================= INIT =================
+
+  Future<void> _init() async {
+    try {
+      _market = await ref.read(marketContextProvider.future);
+      await load(initial: true);
+    } catch (e) {
+      state = state.copyWith(
+        loading: false,
+        loadingMore: false,
+        error: 'Failed to resolve market.',
+      );
+    }
+  }
+
+  // ================= FETCH =================
 
   Future<void> load({bool initial = false}) async {
+    if (_market == null) return;
     if (state.loading || state.loadingMore) return;
     if (!state.hasMore && !initial) return;
 
@@ -75,6 +94,8 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     final res = isWishlist
         ? await api.listWishlist(limit: _limit, offset: _offset)
         : await api.listAds(
+            country: _market!.country,
+            locationId: _market!.locationId,
             categoryId: state.selectedCategoryId ?? args.parentCategoryId,
             limit: _limit,
             offset: _offset,
@@ -110,9 +131,11 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     );
   }
 
-  // ================= Actions =================
+  // ================= ACTIONS =================
 
   Future<void> refresh() async {
+    if (_market == null) return;
+
     _offset = 0;
 
     state = state.copyWith(hasMore: true, items: [], error: null);
@@ -130,7 +153,6 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     if (isWishlist) return;
 
     state = state.copyWith(selectedCategoryId: id);
-
     refresh();
   }
 }

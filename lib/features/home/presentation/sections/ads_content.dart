@@ -1,11 +1,11 @@
-import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
+import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_models.dart';
 import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_categories_preview_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_grid_ads_section.dart';
@@ -14,8 +14,7 @@ import 'package:africaonlinestores/features/home/presentation/components/home_ho
 import 'package:africaonlinestores/features/home/presentation/components/home_ranking_tips_section.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
 import 'package:africaonlinestores/features/home/presentation/shimmers/home_page_skeleton.dart';
-
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/features/home/shared/providers/home_page_providers.dart';
 
 class AdListContentView extends ConsumerWidget {
   const AdListContentView({

@@ -1,9 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
-
+import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
-import 'package:africaonlinestores/features/home/wishlist/controller/wishlist_state.dart';
+import 'package:africaonlinestores/features/wishlist/controller/wishlist_state.dart';
+
+final wishlistControllerProvider =
+    AsyncNotifierProvider<WishlistController, WishlistState>(
+      WishlistController.new,
+    );
 
 class WishlistController extends AsyncNotifier<WishlistState> {
   @override

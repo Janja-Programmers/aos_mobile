@@ -3,17 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/features/ads/ads_all/all_ads_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/pickers/select_location_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_app_bar.dart';
 import 'package:africaonlinestores/features/home/domain/location_picker.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_list_scaffold.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/ads_content.dart';
+import 'package:africaonlinestores/features/home/shared/providers/home_page_providers.dart';
+import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class AdListScreen extends ConsumerStatefulWidget {
   const AdListScreen({super.key});
@@ -54,8 +55,12 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
         .read(marketContextProvider.notifier)
         .setLocation(id: picked.id!, label: picked.label);
 
-    // Invalidate homepage to reload everything
-    ref.invalidate(homePageControllerProvider);
+    // Now read updated market
+    final updatedMarket = await ref.read(marketContextProvider.future);
+
+    await ref
+        .read(homePageControllerProvider.notifier)
+        .reloadForMarket(updatedMarket);
   }
 
   @override
@@ -115,7 +120,10 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
       body: AdListContentView(
         onTapLocation: _openLocationPicker,
         onRefresh: () async {
-          ref.invalidate(homePageControllerProvider);
+          final market = await ref.read(marketContextProvider.future);
+          await ref
+              .read(homePageControllerProvider.notifier)
+              .reloadForMarket(market);
         },
       ),
     );

@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/features/account/shared/providers/user_preference_provider.dart';
+import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 
 class ApiClient {
   final Ref _ref;
+
+  final _sessionExpiredCtrl = StreamController<void>.broadcast();
+  Stream<void> get sessionExpiredStream => _sessionExpiredCtrl.stream;
 
   ApiClient({required String baseUrl, required Ref ref})
     : _ref = ref,
@@ -33,6 +39,22 @@ class ApiClient {
             options.headers.addAll(_contextHeaders);
           }
           handler.next(options);
+        },
+      ),
+    );
+
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onError: (error, handler) {
+          final status = error.response?.statusCode;
+          final path = error.requestOptions.path;
+
+          if ((status == 401 || status == 403) &&
+              !path.contains('auth.logout')) {
+            _sessionExpiredCtrl.add(null);
+          }
+
+          handler.next(error);
         },
       ),
     );
@@ -92,34 +114,47 @@ class ApiClient {
   }
 
   /// Synchronous resolution (cheap)
+
   String? _resolveCountryCode() {
     final prefsAsync = _ref.read(userPreferenceControllerProvider);
-
     final prefs = prefsAsync.maybeWhen(data: (v) => v, orElse: () => null);
-
     final code = prefs?.country;
     return (code == null || code.isEmpty) ? null : code;
   }
 
-  Map<String, dynamic>? _injectCountry(
+  Map<String, dynamic>? _injectCountryIntoQuery(
     Map<String, dynamic>? queryParameters,
     bool withCountry,
   ) {
     if (!withCountry) return queryParameters;
-
     final country = _resolveCountryCode();
     if (country == null) return queryParameters;
-
     return {...?queryParameters, 'country': country};
+  }
+
+  Map<String, dynamic>? _injectCountryIntoBody(
+    Map<String, dynamic>? body,
+    bool withCountry,
+  ) {
+    if (!withCountry) return body;
+    final country = _resolveCountryCode();
+    if (country == null) return body;
+    return {...?body, 'country': country};
   }
 
   Future<Response<T>> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,
     bool withCountry = false,
+    CountryPlacement countryPlacement = CountryPlacement.query,
     Options? options,
   }) {
-    final qp = _injectCountry(queryParameters, withCountry);
+    final qp =
+        (countryPlacement == CountryPlacement.query ||
+            countryPlacement == CountryPlacement.both)
+        ? _injectCountryIntoQuery(queryParameters, withCountry)
+        : queryParameters;
+
     return dio.get<T>(path, queryParameters: qp, options: options);
   }
 
@@ -128,10 +163,22 @@ class ApiClient {
     Map<String, dynamic>? data,
     Map<String, dynamic>? queryParameters,
     bool withCountry = false,
+    CountryPlacement countryPlacement = CountryPlacement.query,
     Options? options,
   }) {
-    final qp = _injectCountry(queryParameters, withCountry);
-    return dio.post<T>(path, data: data, queryParameters: qp, options: options);
+    final qp =
+        (countryPlacement == CountryPlacement.query ||
+            countryPlacement == CountryPlacement.both)
+        ? _injectCountryIntoQuery(queryParameters, withCountry)
+        : queryParameters;
+
+    final body =
+        (countryPlacement == CountryPlacement.body ||
+            countryPlacement == CountryPlacement.both)
+        ? _injectCountryIntoBody(data, withCountry)
+        : data;
+
+    return dio.post<T>(path, data: body, queryParameters: qp, options: options);
   }
 }
 

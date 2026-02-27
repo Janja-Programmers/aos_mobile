@@ -1,9 +1,5 @@
 class AuthUser {
-  AuthUser({
-    required this.email,
-    required this.fullName,
-    this.userImage = '',
-  });
+  AuthUser({required this.email, required this.fullName, this.userImage = ''});
 
   final String email;
   final String fullName;
@@ -33,10 +29,8 @@ class AuthState {
   final AuthUser? user;
   final String? errorMessage;
 
-  factory AuthState.initial() => const AuthState(
-        initializing: true,
-        isLoggedIn: false,
-      );
+  factory AuthState.initial() =>
+      const AuthState(initializing: true, isLoggedIn: false);
 
   AuthState copyWith({
     bool? initializing,

@@ -15,6 +15,22 @@ class AdsApi {
 
   Dio get _dio => _client.dio;
 
+  static const _allowedSorts = {
+    'rating_high',
+    'price_low',
+    'price_high',
+    'recent',
+  };
+
+  static const _allowedPromotionTypes = {'offer', 'deal', 'flash_sale'};
+
+  static const _allowedPriceTypes = {
+    'Fixed',
+    'Negotiable',
+    'Contact for price',
+    'Free',
+  };
+
   Future<Either<Failure, List<Map<String, dynamic>>>> getLocations() async {
     try {
       final res = await _client.get(
@@ -133,31 +149,61 @@ class AdsApi {
   }
 
   Future<Either<Failure, Map<String, dynamic>>> listAds({
+    required String country,
     String? locationId,
     String? categoryId,
     String? q,
     String? sort,
+    String? promotionType,
     String? priceType,
     double? priceMin,
     double? priceMax,
+    double? ratingMin,
     int limit = 20,
     int offset = 0,
   }) async {
     try {
+      if (sort != null && !_allowedSorts.contains(sort)) {
+        return Either.left(Failure('Invalid sort value: $sort'));
+      }
+
+      if (promotionType != null &&
+          !_allowedPromotionTypes.contains(promotionType)) {
+        return Either.left(Failure('Invalid promotion type: $promotionType'));
+      }
+
+      if (priceType != null && !_allowedPriceTypes.contains(priceType)) {
+        return Either.left(Failure('Invalid price type: $priceType'));
+      }
+
+      final queryParams = <String, dynamic>{
+        'country': country,
+
+        if (locationId?.trim().isNotEmpty == true)
+          'location': locationId!.trim(),
+        if (categoryId?.trim().isNotEmpty == true)
+          'category': categoryId!.trim(),
+        if (q?.trim().isNotEmpty == true) 'q': q!.trim(),
+        if (sort?.trim().isNotEmpty == true) 'sort': sort!.trim(),
+        if (promotionType?.trim().isNotEmpty == true)
+          'promotion_type': promotionType!.trim(),
+        if (priceType?.trim().isNotEmpty == true)
+          'price_type': priceType!.trim(),
+
+        if (priceMin != null) 'price_min': priceMin,
+
+        if (priceMax != null) 'price_max': priceMax,
+
+        if (ratingMin != null) 'rating_min': ratingMin,
+
+        'limit': limit,
+        'offset': offset,
+      };
+
       final res = await _client.get(
         ApiEndpoints.listAdsEndpoint,
         withCountry: true,
-        queryParameters: {
-          if (locationId?.trim().isNotEmpty == true) 'location': locationId,
-          if (categoryId?.trim().isNotEmpty == true) 'category': categoryId,
-          if (q?.trim().isNotEmpty == true) 'q': q,
-          if (sort?.trim().isNotEmpty == true) 'sort': sort,
-          if (priceType?.trim().isNotEmpty == true) 'price_type': priceType,
-          'price_min': ?priceMin,
-          'price_max': ?priceMax,
-          'limit': limit,
-          'offset': offset,
-        },
+        queryParameters: queryParams,
       );
 
       return unwrapFrappe(res);

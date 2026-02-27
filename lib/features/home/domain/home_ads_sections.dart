@@ -1,65 +1,56 @@
 import 'package:africaonlinestores/features/home/domain/home_ads_section.dart';
 
-/// Home "rails" configuration.
-///
-/// NOTE: category matching is done by name (case-insensitive) against the
-/// catalog tree. If you prefer stable ids, replace `preferredCategoryNames`
-/// with explicit ids once your catalog data is finalized.
 const homeAdsSections = <HomeAdsSection>[
+  /// 🔥 Flash Sales
   HomeAdsSection(
     key: 'flash_sales',
     title: 'Flash Sales',
-    preferredCategoryNames: ['Electronics'],
-    seeAllCategoryId: 'Electronics',
-  ),
-  HomeAdsSection(
-    key: 'new_products',
-    title: 'New Products',
-    sort: 'recent',
-    seeAllCategoryId: '',
+    promotionType: 'flash_sale',
   ),
 
+  /// 💸 Top Deals
+  HomeAdsSection(key: 'top_deals', title: 'Top Deals', promotionType: 'deal'),
+
+  /// 🆕 New Products
+  HomeAdsSection(key: 'new_products', title: 'New Products', sort: 'recent'),
+
+  /// 🏠 Home & Furniture
   HomeAdsSection(
-    key: 'deals',
-    title: 'Deals',
-    sort: 'recent',
-    seeAllCategoryId: '',
+    key: 'home_furniture',
+    title: 'Home & Furniture',
+    preferredCategoryNames: ['Home, Furniture & Appliances'],
+    seeAllCategoryId: 'Home, Furniture & Appliances',
   ),
 
+  /// 💄 Beauty
   HomeAdsSection(
-    key: 'home_accessories',
-    title: 'Home Accessories AOS',
-    preferredCategoryNames: <String>['Home Accessories'],
-    seeAllCategoryId: 'Home Accessories',
+    key: 'beauty',
+    title: 'Beauty',
+    preferredCategoryNames: ['Beauty & Personal Care'],
+    seeAllCategoryId: 'Beauty & Personal Care',
   ),
+
+  /// 👶 Babies & Kids
   HomeAdsSection(
-    key: 'health_beauty',
-    title: 'Health & Beauty AOS',
-    preferredCategoryNames: <String>['Hair Beauty', 'Health and Beauty'],
-    seeAllCategoryId: 'Hair Beauty',
-  ),
-  HomeAdsSection(
-    key: 'baby_kids',
-    title: 'Baby & Kids AOS',
+    key: 'babies',
+    title: 'Babies & Kids',
     preferredCategoryNames: ['Babies & Kids'],
     seeAllCategoryId: 'Babies & Kids',
   ),
+
+  /// 👗 Women's Fashion
   HomeAdsSection(
-    key: 'fashion',
-    title: 'Fashion AOS',
+    key: 'womens_fashion',
+    title: 'Women\'s Fashion',
     preferredCategoryNames: ['Women\'s Fashion'],
     seeAllCategoryId: 'Women\'s Fashion',
   ),
+
+  /// 💻 Electronics
   HomeAdsSection(
-    key: 'laptops_and_computers',
-    title: 'Electronics AOS',
-    preferredCategoryNames: <String>['Electronics'],
+    key: 'electronics',
+    title: 'Electronics',
+    preferredCategoryNames: ['Electronics'],
     seeAllCategoryId: 'Electronics',
-  ),
-  HomeAdsSection(
-    key: 'furniture',
-    title: 'Furniture AOS',
-    preferredCategoryNames: <String>['Furniture'],
-    seeAllCategoryId: 'Furniture',
   ),
 ];

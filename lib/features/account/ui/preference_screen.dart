@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/core/localization/localization_provider.dart';
 import 'package:africaonlinestores/core/preferences/user_preference_state.dart';
-import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/account/ui/widgets/locale_picker_page.dart';
 import 'package:africaonlinestores/features/account/ui/widgets/pref_card.dart';
+import 'package:africaonlinestores/features/account/shared/providers/user_preference_provider.dart';
 
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
@@ -65,7 +66,7 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
 
           final countryLabel = _labelFor(localization.countries, _country);
           final languageLabel = _labelFor(localization.languages, _language);
-          final currencyLabel = _labelFor(localization.currencies, _currency);
+          final currencyLabel = _currency;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),

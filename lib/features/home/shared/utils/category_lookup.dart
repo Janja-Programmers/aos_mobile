@@ -1,36 +1,24 @@
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 
-String? findCategoryIdByNames(
-  List<CategoryNode> roots,
-  List<String> preferredNames,
+String? findParentCategoryIdByNames(
+  List<CategoryNode> parents,
+  List<String> targetNames,
 ) {
-  if (roots.isEmpty || preferredNames.isEmpty) return null;
+  if (parents.isEmpty || targetNames.isEmpty) {
+    return null;
+  }
 
-  final wanted = preferredNames
+  final normalizedTargets = targetNames
       .map((e) => e.trim().toLowerCase())
-      .where((e) => e.isNotEmpty)
-      .toList();
-  if (wanted.isEmpty) return null;
+      .toSet();
 
-  CategoryNode? match;
+  for (final parent in parents) {
+    final parentName = parent.name.trim().toLowerCase();
 
-  void visit(CategoryNode node) {
-    if (match != null) return;
-    final n = node.name.trim().toLowerCase();
-    if (wanted.contains(n) || wanted.any((w) => n.contains(w))) {
-      match = node;
-      return;
-    }
-    for (final c in node.children) {
-      visit(c);
-      if (match != null) return;
+    if (normalizedTargets.contains(parentName)) {
+      return parent.id;
     }
   }
 
-  for (final r in roots) {
-    visit(r);
-    if (match != null) break;
-  }
-
-  return match?.id;
+  return null;
 }

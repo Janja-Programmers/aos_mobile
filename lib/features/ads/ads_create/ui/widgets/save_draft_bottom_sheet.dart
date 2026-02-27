@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 import 'package:africaonlinestores/features/ads/ads_create/utils/create_ad_payload.dart';
 import 'package:africaonlinestores/features/ads/ads_create/utils/cancel_action.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 
 import 'package:africaonlinestores/shared/components/app_confirm_sheet.dart';
 

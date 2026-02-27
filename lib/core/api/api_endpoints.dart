@@ -29,12 +29,12 @@ class ApiEndpoints {
   // Catalog Endpoints
   static final String getCategoriesEndpoint =
       '/api/method/aos.api.catalog.get_categories';
+  static final String getCategorySchemaEndpoint =
+      '/api/method/aos.api.catalog.get_category_schema';
 
   // Ads / Listings Endpoints
   static final String getLocationsEndpoint =
       '/api/method/aos.api.localization.get_locations';
-  static final String getCategorySchemaEndpoint =
-      '/api/method/aos.api.attributes.get_category_schema';
   static final String createAdEndpoint = '/api/method/aos.api.ads.create_ad';
   static final String saveAdDraftEndpoint =
       '/api/method/aos.api.ads.save_ad_draft';

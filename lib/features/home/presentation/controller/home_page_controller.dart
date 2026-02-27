@@ -2,85 +2,119 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/features/home/domain/market_place.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
 import 'package:africaonlinestores/features/home/domain/home_ads_sections.dart';
+import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
 import 'package:africaonlinestores/features/home/shared/utils/category_lookup.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
 
 class HomePageController extends AsyncNotifier<HomePageState> {
   static const _discoverLimit = 20;
+
   int _offset = 0;
+  bool _initializing = false;
+  String? _lastMarketKey;
 
   @override
   Future<HomePageState> build() async {
-    final market = await ref.watch(marketContextProvider.future);
+    final market = await ref.read(marketContextProvider.future);
+
+    final marketKey = "${market.country}-${market.locationId}";
+
+    if (_lastMarketKey == marketKey && state.value != null) {
+      return state.value!;
+    }
+
+    _lastMarketKey = marketKey;
+    _offset = 0;
+
     return _loadInitial(market);
   }
 
   Future<HomePageState> _loadInitial(MarketContext market) async {
-    final initialState = HomePageState.initial(homeAdsSections);
-    state = AsyncData(initialState);
+    if (_initializing) {
+      return state.value ?? HomePageState.initial(homeAdsSections);
+    }
 
-    final Map<String, List> sectionResults = {};
+    _initializing = true;
 
-    final futures = homeAdsSections.map((section) async {
-      String? categoryId;
+    try {
+      final initialState = HomePageState.initial(homeAdsSections);
+      final Map<String, List> sectionResults = {};
 
-      if (section.preferredCategoryNames.isNotEmpty) {
-        final catsState = ref.read(categoriesControllerProvider);
-        categoryId = findCategoryIdByNames(
-          catsState.parents,
-          section.preferredCategoryNames,
-        );
-      }
+      // 🔥 Ensure categories are loaded ONCE before resolving sections
+      final catsState = await ref.watch(categoriesControllerProvider.future);
 
-      final res = await ref
+      final futures = homeAdsSections.map((section) async {
+        String? categoryId;
+
+        if (section.preferredCategoryNames.isNotEmpty) {
+          categoryId = findParentCategoryIdByNames(
+            catsState.parents,
+            section.preferredCategoryNames, // ✅ FIXED HERE
+          );
+
+          if (categoryId == null || categoryId.trim().isEmpty) {
+            sectionResults[section.key] = [];
+            return;
+          }
+        }
+
+        final res = await ref
+            .read(adsApiProvider)
+            .listAds(
+              country: market.country,
+              locationId: market.locationId,
+              categoryId: categoryId,
+              sort: section.sort,
+              promotionType: section.promotionType,
+              limit: section.limit,
+              offset: 0,
+            );
+
+        final items = res.fold<List>((_) => [], (payload) {
+          final raw = payload['data']?['items'];
+          if (raw is! List) return [];
+          return raw;
+        });
+
+        sectionResults[section.key] = items;
+      });
+
+      await Future.wait(futures);
+
+      // Discover section
+      final discoverRes = await ref
           .read(adsApiProvider)
           .listAds(
+            country: market.country,
             locationId: market.locationId,
-            categoryId: categoryId,
-            sort: section.sort,
-            limit: section.limit,
+            limit: _discoverLimit,
             offset: 0,
           );
 
-      final items = res.fold<List>((_) => [], (payload) {
-        final raw = payload['data']?['items'];
-        if (raw is! List) return [];
-        return raw;
-      });
+      final discoverItems = discoverRes.fold<List>(
+        (_) => [],
+        (payload) => payload['data']?['items'] ?? [],
+      );
 
-      sectionResults[section.key] = items;
-    });
-
-    await Future.wait(futures);
-
-    final discoverRes = await ref
-        .read(adsApiProvider)
-        .listAds(
-          locationId: market.locationId,
-          limit: _discoverLimit,
-          offset: _offset,
-        );
-
-    final discoverItems = discoverRes.fold<List>(
-      (_) => [],
-      (payload) => payload['data']?['items'] ?? [],
-    );
-
-    return initialState.copyWith(
-      sectionItems: sectionResults.map(
-        (k, v) => MapEntry(k, v.map((e) => AOSAdListItem.fromJson(e)).toList()),
-      ),
-      discoverItems: discoverItems
-          .map((e) => AOSAdListItem.fromJson(e))
-          .toList(),
-      initialLoading: false,
-      hasMore: discoverItems.length == _discoverLimit,
-    );
+      return initialState.copyWith(
+        sectionItems: sectionResults.map(
+          (k, v) =>
+              MapEntry(k, v.map((e) => AOSAdListItem.fromJson(e)).toList()),
+        ),
+        discoverItems: discoverItems
+            .map((e) => AOSAdListItem.fromJson(e))
+            .toList(),
+        initialLoading: false,
+        hasMore: discoverItems.length == _discoverLimit,
+      );
+    } finally {
+      _initializing = false;
+    }
   }
 
   Future<void> loadMore() async {
@@ -96,6 +130,7 @@ class HomePageController extends AsyncNotifier<HomePageState> {
     final res = await ref
         .read(adsApiProvider)
         .listAds(
+          country: market.country,
           locationId: market.locationId,
           limit: _discoverLimit,
           offset: _offset,
@@ -115,5 +150,11 @@ class HomePageController extends AsyncNotifier<HomePageState> {
         hasMore: parsed.length == _discoverLimit,
       ),
     );
+  }
+
+  Future<void> reloadForMarket(MarketContext market) async {
+    _offset = 0;
+    state = const AsyncLoading();
+    state = AsyncData(await _loadInitial(market));
   }
 }

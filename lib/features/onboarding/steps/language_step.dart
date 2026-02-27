@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
-
-import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/picker_field.dart';
+import 'package:africaonlinestores/core/localization/localization_provider.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+
+import 'package:africaonlinestores/features/account/shared/providers/user_preference_provider.dart';
+import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/picker_field.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 
 class LanguageStep extends ConsumerStatefulWidget {

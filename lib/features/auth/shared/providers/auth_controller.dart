@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -9,16 +8,12 @@ import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
+import 'package:africaonlinestores/features/auth/data/auth_api_provider.dart';
 import 'package:africaonlinestores/features/auth/data/auth_api.dart';
 import 'package:africaonlinestores/features/auth/data/google_auth_service.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
-
-final authRefreshProvider = StreamProvider<void>((ref) {
-  // A lightweight stream that emits whenever authController changes.
-  // It is used to refresh GoRouter.
-  final ctrl = ref.watch(authControllerProvider.notifier);
-  return ctrl.changes;
-});
+import 'package:africaonlinestores/features/account/shared/providers/user_preference_provider.dart';
+import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
 
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
   (ref) {
@@ -50,9 +45,11 @@ class AuthController extends StateNotifier<AuthState> {
   final AuthApi _api;
   final ApiClient _apiClient;
   final SessionStorage _storage;
+  bool _isLoggingOut = false;
 
   final _changesCtrl = StreamController<void>.broadcast();
   Stream<void> get changes => _changesCtrl.stream;
+  StreamSubscription<void>? _sessionSub;
 
   void _emit() {
     if (!_changesCtrl.isClosed) _changesCtrl.add(null);
@@ -67,7 +64,17 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> init() async {
     try {
+      // 🔥 Listen to session expiry events
+      _sessionSub ??= _apiClient.sessionExpiredStream.listen((_) async {
+        if (!state.isLoggedIn || _isLoggingOut) return;
+
+        _isLoggingOut = true;
+        await logout();
+        _isLoggingOut = false;
+      });
+
       final sid = await _storage.getSid();
+
       if (sid == null) {
         state = state.copyWith(initializing: false, isLoggedIn: false);
         _emit();
@@ -118,6 +125,7 @@ class AuthController extends StateNotifier<AuthState> {
     _emit();
   }
 
+  // AUTH
   Future<Either<Failure, void>> login({
     required String email,
     required String password,
@@ -189,6 +197,7 @@ class AuthController extends StateNotifier<AuthState> {
     required String email,
     required String password,
     required String fullName,
+    String? country,
     String? language,
     String? currency,
   }) async {
@@ -196,6 +205,7 @@ class AuthController extends StateNotifier<AuthState> {
       email: email,
       password: password,
       fullName: fullName,
+      country: country ?? '',
       language: language ?? '',
       currency: currency ?? '',
     );
@@ -207,6 +217,7 @@ class AuthController extends StateNotifier<AuthState> {
     return ok ? Either.right(msg) : Either.left(Failure(msg));
   }
 
+  // OTP
   Future<Either<Failure, String>> verifyOtp({
     required String email,
     required String otp,
@@ -361,6 +372,7 @@ class AuthController extends StateNotifier<AuthState> {
 
   @override
   void dispose() {
+    _sessionSub?.cancel();
     _changesCtrl.close();
     super.dispose();
   }

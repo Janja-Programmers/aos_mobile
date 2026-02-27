@@ -19,9 +19,7 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
-    final state = ref.watch(categoriesControllerProvider);
-
-    final items = state.parents.take(limit).toList();
+    final asyncState = ref.watch(categoriesControllerProvider);
 
     return SliverToBoxAdapter(
       child: Padding(
@@ -35,7 +33,7 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     'Categories',
-                    style: context.title, // 18 w600 from DS
+                    style: context.title,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -54,9 +52,9 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
 
             const SizedBox(height: 12),
 
-            /// LOADING
-            if (state.loading && items.isEmpty)
-              SizedBox(
+            /// BODY
+            asyncState.when(
+              loading: () => SizedBox(
                 height: 95,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
@@ -64,36 +62,43 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
                   separatorBuilder: (_, _) => const SizedBox(width: 20),
                   itemBuilder: (_, _) => const CategoryShimmer(),
                 ),
-              )
-            /// CONTENT
-            else if (items.isNotEmpty)
-              SizedBox(
-                height: 95,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 20),
-                  itemBuilder: (context, i) {
-                    final c = items[i];
-                    return _CategoryTile(
-                      item: c,
-                      onTap: () => context.pushNamed(
-                        AppRoutes.nAllAds,
-                        pathParameters: {'categoryId': c.id},
-                      ),
-                    );
-                  },
-                ),
-              )
-            /// ERROR
-            else if (state.errorMessage != null)
-              Padding(
+              ),
+
+              error: (err, _) => Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
-                  state.errorMessage!,
+                  'Failed to load categories',
                   style: context.body.copyWith(color: colors.error),
                 ),
               ),
+
+              data: (state) {
+                final items = state.parents.take(limit).toList();
+
+                if (items.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+
+                return SizedBox(
+                  height: 95,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 20),
+                    itemBuilder: (context, i) {
+                      final c = items[i];
+                      return _CategoryTile(
+                        item: c,
+                        onTap: () => context.pushNamed(
+                          AppRoutes.nAllAds,
+                          pathParameters: {'categoryId': c.id},
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),

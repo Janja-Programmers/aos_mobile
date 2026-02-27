@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 
 class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   AdDraftController(this._ref) : super(const AsyncValue.data(AdDraft())) {

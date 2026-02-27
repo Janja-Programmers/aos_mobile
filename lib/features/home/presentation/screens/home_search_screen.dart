@@ -1,18 +1,19 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/providers.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/features/home/shared/providers/voice_input_controller.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeSearchScreen extends ConsumerStatefulWidget {
   const HomeSearchScreen({super.key});
@@ -104,9 +105,12 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
       _error = null;
     });
 
+    // 🔥 Resolve market explicitly
+    final market = await ref.read(marketContextProvider.future);
+
     final res = await ref
         .read(adsApiProvider)
-        .listAds(q: q, limit: 20, offset: 0);
+        .listAds(country: market.country, q: q, limit: 20, offset: 0);
 
     if (!mounted) return;
 

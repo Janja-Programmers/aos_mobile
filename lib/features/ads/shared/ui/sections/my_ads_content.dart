@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/features/home/shared/utils/helpers.dart';
 
 class MyAdsContentView extends StatelessWidget {
   const MyAdsContentView({
@@ -42,7 +44,9 @@ class _MyAdTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final url = buildFileUrl(ad.coverImage);
+    final url = buildFileUrl(ad.primaryImage);
+    final price = buildPriceDisplay(ad);
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -61,7 +65,7 @@ class _MyAdTile extends StatelessWidget {
                 child: SizedBox(
                   width: 56,
                   height: 56,
-                  child: ad.coverImage.isEmpty
+                  child: ad.primaryImage.isEmpty
                       ? Container(color: scheme.surface)
                       : Image.network(
                           url ?? '',
@@ -85,17 +89,32 @@ class _MyAdTile extends StatelessWidget {
                       style: context.pStrong,
                     ),
                     const SizedBox(height: 4),
+
                     Text(
                       '${ad.locationName}, ${ad.country}',
                       style: context.pMuted.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${ad.currency} ${ad.price.toString()}',
-                      style: context.pStrong,
-                    ),
+
+                    if (price.show) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(price.current!, style: context.pStrong),
+                          if (price.original != null) ...[
+                            const SizedBox(width: 6),
+                            Text(
+                              price.original!,
+                              style: context.p.copyWith(
+                                fontSize: 12,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

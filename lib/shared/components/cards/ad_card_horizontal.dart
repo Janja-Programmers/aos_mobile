@@ -17,6 +17,8 @@ class AdHorizontalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final price = buildPriceDisplay(ad);
+    final isService = ad.priceUnit.isNotEmpty;
 
     return InkWell(
       onTap: onTap,
@@ -29,7 +31,7 @@ class AdHorizontalCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: colors.black.withOpacity(0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -39,16 +41,61 @@ class AdHorizontalCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// IMAGE
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: SizedBox(
-                height: 120,
-                width: double.infinity,
-                child: Image.network(
-                  buildFileUrl(ad.coverImage) ?? '',
-                  fit: BoxFit.cover,
+            /// IMAGE
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: ad.primaryImage.isEmpty
+                        ? Container(
+                            color: colors.elevated,
+                            child: Icon(
+                              Icons.image_outlined,
+                              color: colors.textMuted,
+                            ),
+                          )
+                        : Image.network(
+                            buildFileUrl(ad.primaryImage) ?? '',
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Container(
+                              color: colors.elevated,
+                              child: Icon(
+                                Icons.image_outlined,
+                                color: colors.textMuted,
+                              ),
+                            ),
+                          ),
+                  ),
                 ),
-              ),
+
+                /// OFFER BADGE
+                if (ad.hasActiveOffer)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "-${ad.offerPercent}%",
+                        style: TextStyle(
+                          color: colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
 
             const SizedBox(height: 8),
@@ -60,9 +107,36 @@ class AdHorizontalCard extends StatelessWidget {
               style: context.pStrong.copyWith(fontSize: 14),
             ),
 
-            const SizedBox(height: 4),
-
-            Text(priceText(ad), style: context.pStrong.copyWith(fontSize: 15)),
+            if (price.show) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Text(  
+                    price.current!,
+                    style: context.body.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  if (price.original != null) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      price.original!,
+                      style: context.body.copyWith(
+                        fontSize: 11,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              if (isService)
+                Text(
+                  ad.priceUnit,
+                  style: context.p.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: colors.primary,
+                  ),
+                ),
+            ],
           ],
         ),
       ),

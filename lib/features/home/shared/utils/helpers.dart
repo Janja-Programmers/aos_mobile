@@ -1,44 +1,36 @@
-import 'package:intl/intl.dart';
-
 import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 
-String humanizePrice(num value) {
-  final formatter = NumberFormat('#,##0.##');
-  return formatter.format(value);
+class PriceDisplay {
+  final bool show;
+  final String? current;
+  final String? original;
+
+  const PriceDisplay({required this.show, this.current, this.original});
 }
 
-String priceText(AOSAdListItem ad) {
+PriceDisplay buildPriceDisplay(AOSAdListItem ad) {
   final type = ad.priceType.trim().toLowerCase();
 
-  if (type == 'free') return 'Free';
-  if (type == 'contact for price') return 'Contact for price';
+  // Free / Contact
+  if (type == 'free' || type == 'contact for price') {
+    return const PriceDisplay(show: false);
+  }
 
-  final display = ad.priceDisplay.trim();
-  if (display.isEmpty) return '';
+  final current = ad.currentPrice;
+  final original = ad.originalPrice;
 
-  // Try to split currency + amount
-  final parts = display.split(' ');
-  if (parts.length < 2) return display;
+  if (current == null || current.isEmpty) {
+    return const PriceDisplay(show: false);
+  }
 
-  final currency = parts.first;
-  final rawAmount = parts.sublist(1).join(' ');
+  // Offer active
+  if (ad.hasActiveOffer && original != null && original.isNotEmpty) {
+    return PriceDisplay(show: true, current: current, original: original);
+  }
 
-  // Remove commas if already present
-  final numeric = rawAmount.replaceAll(',', '');
-
-  final parsed = num.tryParse(numeric);
-  if (parsed == null) return display;
-
-  final humanized = humanizePrice(parsed);
-
-  return '$currency $humanized';
-}
-
-String formattedOriginalPrice(AOSAdListItem ad) {
-  if (ad.price == null) return '';
-  final cur = ad.currency.trim();
-  return '$cur ${humanizePrice(ad.price!)}';
+  // Normal price
+  return PriceDisplay(show: true, current: current);
 }
 
 String humanizeCount(int value) {

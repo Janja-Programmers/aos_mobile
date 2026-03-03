@@ -8,8 +8,6 @@ import 'package:africaonlinestores/features/home/domain/market_place.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
 import 'package:africaonlinestores/features/home/domain/home_ads_sections.dart';
 import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
-import 'package:africaonlinestores/features/home/shared/utils/category_lookup.dart';
-import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
 
 class HomePageController extends AsyncNotifier<HomePageState> {
   static const _discoverLimit = 20;
@@ -45,23 +43,10 @@ class HomePageController extends AsyncNotifier<HomePageState> {
       final initialState = HomePageState.initial(homeAdsSections);
       final Map<String, List> sectionResults = {};
 
-      // 🔥 Ensure categories are loaded ONCE before resolving sections
-      final catsState = await ref.watch(categoriesControllerProvider.future);
-
       final futures = homeAdsSections.map((section) async {
-        String? categoryId;
-
-        if (section.preferredCategoryNames.isNotEmpty) {
-          categoryId = findParentCategoryIdByNames(
-            catsState.parents,
-            section.preferredCategoryNames, // ✅ FIXED HERE
-          );
-
-          if (categoryId == null || categoryId.trim().isEmpty) {
-            sectionResults[section.key] = [];
-            return;
-          }
-        }
+        final String? categoryId = section.preferredCategoryNames.isNotEmpty
+            ? section.preferredCategoryNames.first
+            : null;
 
         final res = await ref
             .read(adsApiProvider)

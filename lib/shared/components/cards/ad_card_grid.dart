@@ -29,6 +29,7 @@ class AdGridCard extends ConsumerWidget {
     ].join(', ');
 
     final isService = ad.priceUnit.isNotEmpty;
+    final price = buildPriceDisplay(ad);
 
     return InkWell(
       onTap: onTap,
@@ -40,25 +41,25 @@ class AdGridCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: colors.black.withOpacity(0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// IMAGE
             Stack(
               children: [
+                /// IMAGE
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: SizedBox(
                     height: imageHeight,
                     width: double.infinity,
-                    child: ad.coverImage.isEmpty
+                    child: ad.primaryImage.isEmpty
                         ? Container(
                             color: colors.elevated,
                             child: Icon(
@@ -67,11 +68,53 @@ class AdGridCard extends ConsumerWidget {
                             ),
                           )
                         : Image.network(
-                            buildFileUrl(ad.coverImage) ?? '',
+                            buildFileUrl(ad.primaryImage) ?? '',
                             fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Container(
+                              color: colors.elevated,
+                              child: Icon(
+                                Icons.image_outlined,
+                                color: colors.textMuted,
+                              ),
+                            ),
                           ),
                   ),
                 ),
+
+                /// OFFER BADGE
+                if (ad.hasActiveOffer)
+                  Positioned(
+                    top: 8,
+                    right: 48,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.primary,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colors.black.withOpacity(0.15),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+
+                      child: Text(
+                        "-${ad.offerPercent}%",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                /// WISHLIST BUTTON
                 Positioned(
                   top: 8,
                   right: 8,
@@ -92,7 +135,6 @@ class AdGridCard extends ConsumerWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      /// TITLE
                       Text(
                         ad.title,
                         maxLines: 2,
@@ -119,27 +161,41 @@ class AdGridCard extends ConsumerWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 6),
+                      if (price.show) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Text(
+                              price.current!,
+                              style: context.body.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            if (price.original != null) ...[
+                              const SizedBox(width: 6),
+                              Text(
+                                price.original!,
+                                style: context.p.copyWith(
+                                  fontSize: 12,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
 
-                      Text(
-                        ad.priceDisplay,
-                        style: context.body.copyWith(fontSize: 15),
-                      ),
-
-                      if (isService)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
+                        if (isService)
+                          Text(
                             ad.priceUnit,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: context.p.copyWith(
+                            style: context.body.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
                               color: colors.primary,
                             ),
                           ),
-                        ),
+                      ],
 
                       if (ad.totalReviews > 0) ...[
                         const SizedBox(height: 4),
@@ -152,7 +208,7 @@ class AdGridCard extends ConsumerWidget {
                                     ? Icons.star
                                     : Icons.star_border,
                                 size: 13,
-                                color: Colors.orange,
+                                color: colors.orange,
                               ),
                             ),
                             const SizedBox(width: 4),

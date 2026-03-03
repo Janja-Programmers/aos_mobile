@@ -20,7 +20,7 @@ class AdListItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
-
+    final price = buildPriceDisplay(ad);
     final isService = ad.priceUnit.isNotEmpty;
 
     final wishlistState = ref.watch(wishlistControllerProvider).value;
@@ -41,34 +41,70 @@ class AdListItem extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// IMAGE
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: SizedBox(
-                width: 80,
-                height: 80,
-                child: ad.coverImage.isEmpty
-                    ? Container(
-                        color: colors.elevated,
-                        child: Icon(
-                          Icons.image_outlined,
-                          color: colors.textMuted,
-                        ),
-                      )
-                    : Image.network(
-                        buildFileUrl(ad.coverImage) ?? '',
-                        fit: BoxFit.cover,
+            /// IMAGE
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    height: 120,
+                    width: double.infinity,
+                    child: ad.primaryImage.isEmpty
+                        ? Container(
+                            color: colors.elevated,
+                            child: Icon(
+                              Icons.image_outlined,
+                              color: colors.textMuted,
+                            ),
+                          )
+                        : Image.network(
+                            buildFileUrl(ad.primaryImage) ?? '',
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Container(
+                              color: colors.elevated,
+                              child: Icon(
+                                Icons.image_outlined,
+                                color: colors.textMuted,
+                              ),
+                            ),
+                          ),
+                  ),
+                ),
+
+                /// OFFER BADGE
+                if (ad.hasActiveOffer)
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
                       ),
-              ),
+                      decoration: BoxDecoration(
+                        color: colors.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "-${ad.offerPercent}%",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
 
             const SizedBox(width: 12),
 
-            /// INFO COLUMN
+            /// INFO
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// TITLE
                   Text(
                     ad.title,
                     maxLines: 2,
@@ -80,36 +116,43 @@ class AdListItem extends ConsumerWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 6),
-
-                  /// PRICE + SERVICE UNIT
-                  Row(
-                    children: [
-                      Text(
-                        priceText(ad),
-                        style: context.pStrong.copyWith(
-                          fontSize: 15,
-                          color: colors.primary,
-                        ),
-                      ),
-                      if (isService) ...[
-                        const SizedBox(width: 6),
+                  if (price.show) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
                         Text(
-                          "per ${ad.priceUnit}",
-                          style: context.p.copyWith(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: colors.textMuted,
+                          price.current!,
+                          style: context.body.copyWith(
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
+                        if (price.original != null) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            price.original!,
+                            style: context.body.copyWith(
+                              fontSize: 12,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                        ],
+                        if (isService) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            "per ${ad.priceUnit}",
+                            style: context.p.copyWith(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: colors.textMuted,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
+                    ),
+                  ],
 
-                  const SizedBox(height: 6),
-
-                  /// RATING
-                  if (ad.totalReviews > 0)
+                  if (ad.totalReviews > 0) ...[
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         const Icon(Icons.star, size: 14, color: Colors.amber),
@@ -120,13 +163,14 @@ class AdListItem extends ConsumerWidget {
                         ),
                       ],
                     ),
+                  ],
                 ],
               ),
             ),
 
             const SizedBox(width: 8),
 
-            /// WISHLIST BUTTON
+            /// WISHLIST
             Material(
               color: Colors.transparent,
               shape: const CircleBorder(),

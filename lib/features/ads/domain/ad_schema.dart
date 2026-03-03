@@ -64,13 +64,13 @@ class AdAttributeSchema {
     final required = m['required'] == true || m['is_required'] == true;
     final options = <String>[];
     final raw = m['options'] ?? m['choices'];
+
     if (raw is List) {
       for (final o in raw) {
         if (o == null) continue;
         options.add(o.toString());
       }
     } else if (raw is String && raw.trim().isNotEmpty) {
-      // Some backends send newline/comma separated options.
       final parts = raw.contains('\n') ? raw.split('\n') : raw.split(',');
       for (final p in parts) {
         final v = p.trim();
@@ -94,11 +94,13 @@ class PricingSchema {
     this.allowedTypes = const <String>[],
     this.allowedUnits = const <String>[],
     this.isService = false,
+    this.showPriceUnit = false,
     this.meta = const <String, dynamic>{},
   });
 
   final PricingRequirement requirement;
   final bool isService;
+  final bool showPriceUnit;
   final List<String> allowedTypes;
   final List<String> allowedUnits;
 
@@ -107,23 +109,43 @@ class PricingSchema {
 
   static PricingRequirement _parseRequirement(String raw) {
     final v = raw.trim().toLowerCase();
-    if (v == 'hidden') return PricingRequirement.hidden;
-    if (v == 'required') return PricingRequirement.required;
-    if (v == 'optional') return PricingRequirement.optional;
-    return PricingRequirement.optional;
+    switch (v) {
+      case 'hidden':
+        return PricingRequirement.hidden;
+      case 'required':
+        return PricingRequirement.required;
+      case 'optional':
+      default:
+        return PricingRequirement.optional;
+    }
+  }
+
+  static bool _parseBool(dynamic v) {
+    if (v == null) return false;
+    if (v is bool) return v;
+    if (v is num) return v == 1;
+    if (v is String) {
+      final val = v.toLowerCase();
+      return val == 'true' || val == '1';
+    }
+    return false;
   }
 
   static PricingSchema fromAny(dynamic raw) {
     if (raw is Map) {
       final m = Map<String, dynamic>.from(raw);
 
+      // ✅ FIX 1: Correct key mapping
       final req = _parseRequirement(
-        (m['requirement'] ?? m['mode'] ?? 'optional').toString(),
+        (m['pricing_requirement'] ??
+                m['requirement'] ??
+                m['mode'] ??
+                'optional')
+            .toString(),
       );
 
+      // ✅ FIX 2: Correct allowed types
       final types = <String>[];
-      final units = <String>[];
-
       if (m['allowed_price_types'] is List) {
         for (final t in (m['allowed_price_types'] as List)) {
           if (t == null) continue;
@@ -131,24 +153,29 @@ class PricingSchema {
         }
       }
 
-      if (m['price_units'] is List) {
-        for (final u in (m['price_units'] as List)) {
+      // ✅ FIX 3: Correct allowed units key
+      final units = <String>[];
+      if (m['allowed_price_units'] is List) {
+        for (final u in (m['allowed_price_units'] as List)) {
           if (u == null) continue;
           units.add(u.toString());
         }
       }
 
-      /// ✅ PARSE is_service
-      final isService =
-          m['is_service'] == true ||
-          m['isService'] == true ||
-          m['service'] == true;
+      // ✅ FIX 4: Properly parse is_service (handles 1, true, "1", etc.)
+      final isService = _parseBool(
+        m['is_service'] ?? m['isService'] ?? m['service'],
+      );
+
+      // ✅ FIX 5: show_price_unit flag
+      final showPriceUnit = _parseBool(m['show_price_unit']);
 
       return PricingSchema(
         requirement: req,
         allowedTypes: types,
         allowedUnits: units,
         isService: isService,
+        showPriceUnit: showPriceUnit,
         meta: m,
       );
     }
@@ -172,7 +199,6 @@ class AdCategorySchema {
   final Map<String, dynamic> meta;
 
   static AdCategorySchema fromBackendPayload(Map<String, dynamic> payload) {
-    // We try multiple key shapes because backend is source of truth and may evolve.
     final data = (payload['data'] is Map)
         ? Map<String, dynamic>.from(payload['data'] as Map)
         : payload;

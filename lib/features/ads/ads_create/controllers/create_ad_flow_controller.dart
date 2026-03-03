@@ -30,8 +30,24 @@ class CreateAdFlowController extends StateNotifier<CreateAdFlowState> {
 
   void markCompleted(int i) {
     final updated = {...state.completed, i};
-
     state = state.copyWith(completed: updated);
+  }
+
+  int get furthestReachableStep {
+    if (state.completed.isEmpty) return 0;
+    final maxCompleted = state.completed.reduce((a, b) => a > b ? a : b);
+    return maxCompleted + 1;
+  }
+
+  bool canNavigateTo(int index) {
+    if (state.posting) return false;
+    if (index <= furthestReachableStep) return true;
+    return false;
+  }
+
+  void markAttempted(int i) {
+    final updated = {...state.attempted, i};
+    state = state.copyWith(attempted: updated);
   }
 
   void reset() {

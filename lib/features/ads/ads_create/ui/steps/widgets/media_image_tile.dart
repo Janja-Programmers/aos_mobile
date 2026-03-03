@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 
@@ -24,6 +25,7 @@ class MediaImageTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final url = buildFileUrl(image.url);
+    final colors = context.appColors;
 
     return SizedBox(
       width: 110,
@@ -35,7 +37,7 @@ class MediaImageTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             child: url == null
                 ? Container(
-                    color: Colors.grey.shade200,
+                    color: colors.border,
                     child: const Icon(Icons.image_not_supported),
                   )
                 : Image.network(
@@ -44,7 +46,7 @@ class MediaImageTile extends StatelessWidget {
                     width: 110,
                     height: 110,
                     errorBuilder: (_, _, _) => Container(
-                      color: Colors.grey.shade200,
+                      color: colors.border,
                       child: const Icon(Icons.broken_image),
                     ),
                   ),
@@ -52,36 +54,52 @@ class MediaImageTile extends StatelessWidget {
 
           // -------- 3 DOT MENU --------
           Positioned(
-            top: 4,
-            right: 2,
-            child: PopupMenuButton<String>(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 140),
-              onSelected: (value) {
-                if (value == 'primary') onMarkPrimary?.call();
-                if (value == 'edit') onEdit?.call();
-                if (value == 'delete') onDelete?.call();
-              },
-              itemBuilder: (_) => [
-                if (showPrimaryOption && onMarkPrimary != null)
-                  const PopupMenuItem(
-                    value: 'primary',
-                    height: 36,
-                    child: Text('Mark as primary'),
+            top: 6,
+            right: 6,
+            child: Container(
+              height: 28,
+              width: 28,
+              decoration: BoxDecoration(
+                color: colors.black,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.black.withOpacity(0.1),
+                    blurRadius: 4,
                   ),
-                if (onEdit != null)
-                  const PopupMenuItem(
-                    value: 'edit',
-                    height: 36,
-                    child: Text('Edit'),
-                  ),
-                if (onDelete != null)
-                  const PopupMenuItem(
-                    value: 'delete',
-                    height: 36,
-                    child: Text('Delete'),
-                  ),
-              ],
+                ],
+              ),
+              child: PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert, color: colors.white, size: 18),
+                padding: EdgeInsets.zero,
+                splashRadius: 18,
+                constraints: const BoxConstraints(minWidth: 140),
+                onSelected: (value) {
+                  if (value == 'primary') onMarkPrimary?.call();
+                  if (value == 'edit') onEdit?.call();
+                  if (value == 'delete') onDelete?.call();
+                },
+                itemBuilder: (_) => [
+                  if (showPrimaryOption && onMarkPrimary != null)
+                    const PopupMenuItem(
+                      value: 'primary',
+                      height: 36,
+                      child: Text('Mark as primary'),
+                    ),
+                  if (onEdit != null)
+                    const PopupMenuItem(
+                      value: 'edit',
+                      height: 36,
+                      child: Text('Edit'),
+                    ),
+                  if (onDelete != null)
+                    const PopupMenuItem(
+                      value: 'delete',
+                      height: 36,
+                      child: Text('Delete'),
+                    ),
+                ],
+              ),
             ),
           ),
 
@@ -93,13 +111,13 @@ class MediaImageTile extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.red,
+                  color: colors.primary,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text(
-                  'Primary',
+                child: Text(
+                  'Cover',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: colors.white,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),

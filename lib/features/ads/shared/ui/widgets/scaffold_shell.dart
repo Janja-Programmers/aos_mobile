@@ -14,6 +14,8 @@ class ScaffoldShell extends StatelessWidget {
     required this.bottom,
     required this.onBackPressed,
     required this.onCancelPressed,
+    required this.onStepTapped,
+    required this.isStepAccessible,
     this.title = 'Create Ad',
   });
 
@@ -26,6 +28,10 @@ class ScaffoldShell extends StatelessWidget {
 
   final VoidCallback onBackPressed;
   final VoidCallback onCancelPressed;
+
+  final void Function(int index) onStepTapped;
+  final bool Function(int index) isStepAccessible;
+
   final String title;
 
   @override
@@ -51,6 +57,8 @@ class ScaffoldShell extends StatelessWidget {
               steps: steps,
               currentIndex: currentIndex,
               completed: completed,
+              onStepTapped: onStepTapped,
+              isStepAccessible: isStepAccessible,
             ),
           Expanded(child: child),
         ],

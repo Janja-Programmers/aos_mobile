@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/core/core.dart';
-
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 class PriceTypePicker extends StatelessWidget {
   const PriceTypePicker({
     super.key,
     required this.selected,
+    required this.options,
     required this.onChanged,
   });
 
   final String? selected;
+  final List<String> options;
   final ValueChanged<String> onChanged;
 
   @override
@@ -22,23 +23,45 @@ class PriceTypePicker extends StatelessWidget {
         Text('Price Type', style: context.pStrong),
         const SizedBox(height: 10),
 
-        _OptionTile(
-          title: 'Fixed Price',
-          subtitle: 'Price is firm and non-negotiable',
-          selected: selected == 'Fixed',
-          onTap: () => onChanged('Fixed'),
-        ),
-
-        const SizedBox(height: 10),
-
-        _OptionTile(
-          title: 'Negotiable',
-          subtitle: 'Buyers can make offers on this item',
-          selected: selected == 'Negotiable',
-          onTap: () => onChanged('Negotiable'),
+        ...options.map(
+          (type) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _OptionTile(
+              title: _title(type),
+              subtitle: _subtitle(type),
+              selected: selected == type,
+              onTap: () => onChanged(type),
+            ),
+          ),
         ),
       ],
     );
+  }
+
+  String _title(String type) {
+    switch (type) {
+      case 'Fixed':
+        return 'Fixed Price';
+      case 'Negotiable':
+        return 'Negotiable';
+      case 'Contact for price':
+        return 'Contact for Price';
+      default:
+        return type;
+    }
+  }
+
+  String _subtitle(String type) {
+    switch (type) {
+      case 'Fixed':
+        return 'Price is firm and non-negotiable';
+      case 'Negotiable':
+        return 'Buyers can make offers on this item';
+      case 'Contact for price':
+        return 'Buyers must contact you for pricing';
+      default:
+        return '';
+    }
   }
 }
 

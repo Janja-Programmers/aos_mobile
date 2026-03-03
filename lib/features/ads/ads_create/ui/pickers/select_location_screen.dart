@@ -110,12 +110,12 @@ class _SelectLocationScreenState extends ConsumerState<SelectLocationScreen> {
                   itemBuilder: (context, index) {
                     if (showAllCities && index == 0) {
                       return _LocationTile(
-                        label: 'All Cities',
+                        label: 'All Locations',
                         selected: isAllSelected,
                         accent: accentRed,
                         onTap: () => Navigator.of(
                           context,
-                        ).pop({'id': '', 'label': 'All Cities'}),
+                        ).pop({'id': '', 'label': 'All Location'}),
                       );
                     }
 

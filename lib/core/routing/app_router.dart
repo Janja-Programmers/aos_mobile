@@ -6,6 +6,10 @@ import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 import 'package:africaonlinestores/features/account/shared/routing/account_routes.dart';
+import 'package:africaonlinestores/features/ads/ads_create/create_ad_flow_screen.dart';
+import 'package:africaonlinestores/features/ads/ads_create/ui/pickers/select_category_screen.dart';
+import 'package:africaonlinestores/features/ads/ads_create/ui/pickers/select_location_screen.dart';
+import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/auth/shared/routing/auth_routes.dart';
 import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
@@ -32,6 +36,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: AppRoutes.nOnboarding,
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingScreen(),
+      ),
+
+      // 🚀 CREATE AD (OUTSIDE SHELL)
+      GoRoute(
+        name: AppRoutes.nCreateAd,
+        path: AppRoutes.createAd,
+        builder: (_, _) => const CreateAdFlowScreen(),
+      ),
+
+      // Picker Routes
+      GoRoute(
+        name: AppRoutes.nSelectCategory,
+        path: AppRoutes.selectCategory,
+        builder: (context, state) => SelectCategoryScreen(
+          parent: state.extra is CategoryNode
+              ? state.extra as CategoryNode
+              : null,
+        ),
+      ),
+
+      GoRoute(
+        name: AppRoutes.nSelectLocation,
+        path: AppRoutes.selectLocation,
+        builder: (_, _) => const SelectLocationScreen(),
       ),
 
       // 🏠 Main app shell (bottom navigation)

@@ -78,7 +78,7 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
 
     final header = marketAsync.when(
       loading: () => HomeAppBar(
-        locationLabel: 'All Cities',
+        locationLabel: 'All Locations',
         onTapLocation: () {},
         onTapFavorites: () {
           context.pushNamed(
@@ -91,7 +91,7 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
         search: searchBar,
       ),
       error: (_, _) => HomeAppBar(
-        locationLabel: 'All Cities',
+        locationLabel: 'All Locations',
         onTapLocation: () {},
         onTapFavorites: () {
           context.pushNamed(
@@ -103,7 +103,7 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
         search: searchBar,
       ),
       data: (market) => HomeAppBar(
-        locationLabel: market.locationLabel ?? 'All Cities',
+        locationLabel: market.locationLabel ?? 'All Locations',
         onTapLocation: _openLocationPicker,
         onTapFavorites: () {
           context.pushNamed(

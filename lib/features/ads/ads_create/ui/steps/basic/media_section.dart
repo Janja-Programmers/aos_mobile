@@ -170,30 +170,21 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
             height: 110,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: draft.images.length < 4
-                  ? draft.images.length + 1 + (_uploadingImage ? 1 : 0)
-                  : draft.images.length + (_uploadingImage ? 1 : 0),
               separatorBuilder: (_, _) => const SizedBox(width: 12),
+              itemCount:
+                  draft.images.length + (draft.images.length < 4 ? 1 : 0),
               itemBuilder: (_, i) {
-                // Loading tile
-                if (_uploadingImage &&
-                    i == draft.images.length &&
-                    draft.images.length < 4) {
-                  return const SizedBox(
-                    width: 100,
-                    child: Center(child: CircularProgressIndicator()),
+                if (draft.images.length < 4 && i == 0) {
+                  return AddPhotoTile(
+                    onUpload: _uploadingImage ? () {} : _uploadPhotos,
+                    onTakePhoto: _uploadingImage ? () {} : _takePhoto,
                   );
                 }
 
-                // Add more card
-                if (i == draft.images.length && draft.images.length < 4) {
-                  return AddMoreCard(
-                    onTakePhoto: _uploadingImage ? null : _takePhoto,
-                    onUploadPhoto: _uploadingImage ? null : _uploadPhotos,
-                  );
-                }
+                // Shift index if AddTile exists
+                final imageIndex = draft.images.length < 4 ? i - 1 : i;
 
-                final img = draft.images[i];
+                final img = draft.images[imageIndex];
 
                 return MediaImageTile(
                   image: img,

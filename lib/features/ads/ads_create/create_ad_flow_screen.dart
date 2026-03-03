@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
@@ -67,6 +68,8 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
   Future<void> _goTo(int i) async {
     final ctrl = ref.read(createAdFlowControllerProvider.notifier);
 
+    if (!ctrl.canNavigateTo(i)) return;
+
     ctrl.setIndex(i);
 
     if (!_pageCtrl.hasClients) return;
@@ -82,7 +85,7 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
     final ctrl = ref.read(createAdFlowControllerProvider.notifier);
 
     if (index == 0) {
-      if (mounted) Navigator.pop(context);
+     if(mounted)  context.pop;
       return;
     }
 
@@ -102,12 +105,10 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
   }) async {
     final flowCtrl = ref.read(createAdFlowControllerProvider.notifier);
 
-    // If nothing changed → exit silently
     if (!AdDirtyChecker.isDirty(draft)) {
       flowCtrl.reset();
       ref.read(adDraftControllerProvider.notifier).reset();
-
-      if (mounted) Navigator.pop(context);
+       if(mounted)  context.pop;
       return;
     }
 
@@ -115,37 +116,26 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) {
-        return SaveDraftConfirmSheet(draft: draft, schema: schema);
-      },
+      builder: (_) => SaveDraftConfirmSheet(draft: draft, schema: schema),
     );
 
-    if (!mounted || action == null) return;
-
-    // ---------- DISCARD ----------
-    if (action == CancelAction.discard) {
+    if (action == CancelAction.discard && mounted) {
       flowCtrl.reset();
       ref.read(adDraftControllerProvider.notifier).reset();
-
       ShowSnack(context, 'Ad Draft discarded').success();
-
-      if (mounted) Navigator.pop(context);
-      return;
+      Navigator.pop(context);
     }
 
-    // ---------- SAVED ----------
-    if (action == CancelAction.saveAndExit) {
+    if (action == CancelAction.saveAndExit && mounted) {
       flowCtrl.reset();
       ref.read(adDraftControllerProvider.notifier).reset();
-
       ShowSnack(context, 'Draft saved successfully').success();
-
-      if (mounted) Navigator.pop(context);
+         context.pop;
     }
   }
 
   Future<void> _post({
-    required AdDraft d,
+    required AdDraft draft,
     required AdCategorySchema schema,
   }) async {
     final ctrl = ref.read(createAdFlowControllerProvider.notifier);
@@ -154,26 +144,21 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
 
     try {
       final api = ref.read(adsApiProvider);
-
-      final payload = CreateAdPayloadBuilder.build(d: d, schema: schema);
+      final payload = CreateAdPayloadBuilder.build(d: draft, schema: schema);
 
       final res = await api.createAd(payload: payload);
 
-      if (res.isLeft) {
-        if (!mounted) return;
+      if (res.isLeft && mounted) {
         ShowSnack(context, res.leftOrNull!.message).error();
         return;
       }
 
-      if (!mounted) return;
-
       ctrl.reset();
       ref.read(adDraftControllerProvider.notifier).reset();
 
-      Navigator.of(context).pop(true);
+      if (mounted) context.pop(true);
     } catch (e) {
-      if (!mounted) return;
-      ShowSnack(context, 'Failed to submit: $e').error();
+      if (mounted) ShowSnack(context, 'Failed to submit: $e').error();
     } finally {
       ctrl.stopPosting();
     }
@@ -181,28 +166,12 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isEditMode = widget.adId != null;
-    final screenTitle = isEditMode ? 'Update Ad' : 'Create Ad';
-
-    /* ---------------- Flow State ---------------- */
-
     final flowState = ref.watch(createAdFlowControllerProvider);
-
     final flowCtrl = ref.read(createAdFlowControllerProvider.notifier);
 
-    final index = flowState.index;
-    final posting = flowState.posting;
-    final completed = flowState.completed;
-
-    /* ---------------- Draft ---------------- */
-
-    final draft =
-        ref
-            .watch(adDraftControllerProvider)
-            .maybeWhen(data: (v) => v, orElse: () => null) ??
-        const AdDraft();
-
-    /* ---------------- Schema ---------------- */
+    final draft = ref
+        .watch(adDraftControllerProvider)
+        .maybeWhen(data: (v) => v, orElse: () => const AdDraft());
 
     final categoryId = draft.categoryId;
 
@@ -215,60 +184,39 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
           )
         : ref.watch(adCategorySchemaProvider(categoryId));
 
-    /* ---------------- UI ---------------- */
 
     return schemaAsync.when(
       loading: () => ScaffoldShell(
-        title: screenTitle,
-        currentIndex: index,
-        completed: completed,
-        steps: const ['Basic'],
-        posting: posting,
+        title: 'Create Ad',
+        currentIndex: flowState.index,
+        completed: flowState.completed,
+        steps: const ['Basic', 'Details', 'Description', 'Pricing'],
+        posting: flowState.posting,
         bottom: const SizedBox.shrink(),
-        onBackPressed: () => _handleBack(index),
+        onBackPressed: () => _handleBack(flowState.index),
         onCancelPressed: () {},
+        onStepTapped: (_) {},
+        isStepAccessible: (_) => false,
         child: const Center(child: CircularProgressIndicator()),
       ),
-
-      error: (e, _) => ScaffoldShell(
-        title: screenTitle,
-        currentIndex: index,
-        completed: completed,
-        steps: const ['Basic'],
-        posting: posting,
+      error: (_, _) => ScaffoldShell(
+        title: 'Create Ad',
+        currentIndex: flowState.index,
+        completed: flowState.completed,
+        steps: const ['Basic', 'Details', 'Description', 'Pricing'],
+        posting: flowState.posting,
         bottom: const SizedBox.shrink(),
-        onBackPressed: () => _handleBack(index),
+        onBackPressed: () => _handleBack(flowState.index),
         onCancelPressed: () {},
-        child: Center(child: Text(e.toString())),
+        onStepTapped: (_) {},
+        isStepAccessible: (_) => false,
+        child: const Center(child: Text('Failed to load category schema')),
       ),
-
       data: (schema) {
-        /* ---------------- Steps ---------------- */
-
         final steps = CreateAdStepsBuilder.build(schema: schema);
 
-        final labels = steps.map((e) => e.label).toList();
-
-        /* ---------------- Safe Index ---------------- */
-
-        final safeIndex = index.clamp(0, steps.length - 1);
-
-        if (safeIndex != index) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              flowCtrl.setIndex(safeIndex);
-            }
-          });
-        }
-
-        final isLast = safeIndex == steps.length - 1;
-
-        /* ---------------- Validation ---------------- */
-
-        final canContinue =
-            steps[safeIndex].validator?.call(draft, schema) ?? true;
-
-        /* ---------------- Bottom Button ---------------- */
+        final index = flowState.index;
+        final isLast = index == steps.length - 1;
 
         final bottom = SafeArea(
           top: false,
@@ -276,33 +224,49 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
             padding: const EdgeInsets.all(16),
             child: PrimaryButton(
               text: isLast ? 'Post Ad' : 'Continue',
-              loading: posting,
+              loading: flowState.posting,
               icon: Icons.arrow_forward,
-              onPressed: (posting || !canContinue)
+              onPressed: flowState.posting
                   ? null
                   : () async {
-                      flowCtrl.markCompleted(safeIndex);
+                      final validator = steps[index].validator;
+                      final result = validator?.call(draft, schema);
 
-                      if (!isLast) {
-                        await _goTo(safeIndex + 1);
+                      if (result != null && !result.isValid) {
+                        flowCtrl.markAttempted(index);
+
+                        final firstError = result.fieldErrors.values.first;
+
+                        if (mounted) {
+                          ShowSnack(context, firstError).error();
+                        }
+
                         return;
                       }
 
-                      await _post(d: draft, schema: schema);
+                      flowCtrl.markCompleted(index);
+
+                      if (!isLast) {
+                        await _goTo(index + 1);
+                      } else {
+                        await _post(draft: draft, schema: schema);
+                      }
                     },
             ),
           ),
         );
 
         return ScaffoldShell(
-          title: screenTitle,
-          currentIndex: safeIndex,
-          completed: completed,
-          steps: labels,
-          posting: posting,
+          title: 'Create Ad',
+          currentIndex: index,
+          completed: flowState.completed,
+          steps: steps.map((e) => e.label).toList(),
+          posting: flowState.posting,
           bottom: bottom,
-          onBackPressed: () => _handleBack(safeIndex),
+          onBackPressed: () => _handleBack(index),
           onCancelPressed: () => _handleCancel(draft: draft, schema: schema),
+          onStepTapped: (i) => _goTo(i),
+          isStepAccessible: (i) => flowCtrl.canNavigateTo(i),
           child: PageView.builder(
             controller: _pageCtrl,
             physics: const NeverScrollableScrollPhysics(),

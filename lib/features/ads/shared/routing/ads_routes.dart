@@ -4,11 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:africaonlinestores/core/routing/app_routes.dart';
 import 'package:africaonlinestores/features/ads/ads_all/all_ads_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_all/all_ads_screen.dart';
-import 'package:africaonlinestores/features/ads/ads_create/create_ad_flow_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_seller/my_ads_screen.dart';
-import 'package:africaonlinestores/features/ads/ads_create/ui/pickers/select_category_screen.dart';
-import 'package:africaonlinestores/features/ads/ads_create/ui/pickers/select_location_screen.dart';
-import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_details_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_list_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/home_search_screen.dart';
@@ -86,28 +82,6 @@ class AdsRoutes {
       name: AppRoutes.nMyAds,
       path: AppRoutes.myAds,
       builder: (_, _) => const MyAdsScreen(),
-    ),
-
-    GoRoute(
-      name: AppRoutes.nCreateAd,
-      path: AppRoutes.createAd,
-      builder: (_, _) => const CreateAdFlowScreen(),
-    ),
-
-    GoRoute(
-      name: AppRoutes.nSelectCategory,
-      path: AppRoutes.selectCategory,
-      builder: (context, state) => SelectCategoryScreen(
-        parent: state.extra is CategoryNode
-            ? state.extra as CategoryNode
-            : null,
-      ),
-    ),
-
-    GoRoute(
-      name: AppRoutes.nSelectLocation,
-      path: AppRoutes.selectLocation,
-      builder: (_, _) => const SelectLocationScreen(),
     ),
   ];
 

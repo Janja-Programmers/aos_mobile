@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
+
+import 'package:africaonlinestores/features/ads/ads_create/controllers/create_ad_flow_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/picker_field.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/basic/media_section.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/widgets/section_tile.dart';
+import 'package:africaonlinestores/features/ads/ads_create/utils/create_ad_validator.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 class BasicStep extends ConsumerStatefulWidget {
   const BasicStep({super.key});
@@ -37,6 +39,13 @@ class _BasicStepState extends ConsumerState<BasicStep> {
       _titleCtrl.text = draft.title;
     }
 
+    final flowState = ref.watch(createAdFlowControllerProvider);
+    final showErrors = flowState.attempted.contains(flowState.index);
+    final validation = CreateAdValidator.basic(draft);
+    final titleError = showErrors ? validation.fieldErrors['title'] : null;
+
+    final inputDecorationTheme = Theme.of(context).inputDecorationTheme;
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 120),
       children: [
@@ -49,10 +58,10 @@ class _BasicStepState extends ConsumerState<BasicStep> {
           maxLength: 80,
           onChanged: (v) =>
               ref.read(adDraftControllerProvider.notifier).updateTitle(v),
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: 'Provide a descriptive title',
-          ),
-          style: context.p,
+            errorText: titleError,
+          ).applyDefaults(inputDecorationTheme),
         ),
         const SizedBox(height: 18),
 

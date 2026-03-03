@@ -7,10 +7,12 @@ import 'package:africaonlinestores/features/ads/ads_create/ui/steps/basic_step.d
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/details_step.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/description_step.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/pricing_step.dart';
+import 'package:africaonlinestores/features/ads/ads_create/ui/steps/validators/validation_result.dart';
 
 import 'package:africaonlinestores/features/ads/ads_create/utils/create_ad_validator.dart';
 
-typedef StepValidator = bool Function(AdDraft draft, AdCategorySchema schema);
+typedef StepValidator =
+    ValidationResult Function(AdDraft draft, AdCategorySchema schema);
 
 class CreateAdStepDef {
   const CreateAdStepDef({
@@ -26,51 +28,43 @@ class CreateAdStepDef {
 
 class CreateAdStepsBuilder {
   static List<CreateAdStepDef> build({required AdCategorySchema schema}) {
-    final steps = <CreateAdStepDef>[];
-
-    // ---------------- Basic ----------------
-    steps.add(
+    return [
+      // ---------------- Basic ----------------
       CreateAdStepDef(
         label: 'Basic',
         widget: const BasicStep(),
         validator: (draft, _) => CreateAdValidator.basic(draft),
       ),
-    );
 
-    // ---------------- Details ----------------
-    if (schema.attributes.isNotEmpty) {
-      steps.add(
-        CreateAdStepDef(
-          label: 'Details',
-          widget: DetailsStep(schema: schema),
-          validator: CreateAdValidator.details,
-        ),
-      );
-    }
+      // ---------------- Details ----------------
+      CreateAdStepDef(
+        label: 'Details',
+        widget: DetailsStep(schema: schema),
+        validator: (draft, s) {
+          // If no attributes required → auto valid
+          if (s.attributes.isEmpty) {
+            return ValidationResult.valid();
+          }
 
-    // ---------------- Description ----------------
-    steps.add(
-      const CreateAdStepDef(
-        label: 'Description',
-        widget: DescriptionStep(),
-        // Optional step → no validator
+          return CreateAdValidator.details(draft, s);
+        },
       ),
-    );
 
-    // ---------------- Pricing ----------------
-    if (schema.pricing.requirement != PricingRequirement.hidden) {
-      steps.add(
-        CreateAdStepDef(
-          label: 'Pricing',
-          widget: PricingStep(
-            schema: schema.pricing,
-            isService: schema.pricing.isService,
-          ),
-          validator: (d, s) => CreateAdValidator.pricing(d, s.pricing),
-        ),
-      );
-    }
+      // ---------------- Description ----------------
+      CreateAdStepDef(
+        label: 'Description',
+        widget: const DescriptionStep(),
+        validator: (draft, _) => CreateAdValidator.description(draft),
+      ),
 
-    return steps;
+      // ---------------- Pricing ----------------
+      CreateAdStepDef(
+        label: 'Pricing',
+        widget: PricingStep(schema: schema.pricing),
+        validator: (draft, s) {
+          return CreateAdValidator.pricing(draft, s.pricing);
+        },
+      ),
+    ];
   }
 }

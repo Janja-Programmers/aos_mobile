@@ -39,54 +39,53 @@ class ActionMediaCard extends StatelessWidget {
   }
 }
 
-class AddMoreCard extends StatelessWidget {
-  final VoidCallback? onTakePhoto;
-  final VoidCallback? onUploadPhoto;
+class AddPhotoTile extends StatelessWidget {
+  final VoidCallback onUpload;
+  final VoidCallback onTakePhoto;
 
-  const AddMoreCard({super.key, this.onTakePhoto, this.onUploadPhoto});
+  const AddPhotoTile({
+    super.key,
+    required this.onUpload,
+    required this.onTakePhoto,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 100,
-      child: Column(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: onTakePhoto,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.camera_alt_outlined,
-                    color: context.appColors.primary,
-                  ),
-                ),
-              ),
+      width: 110,
+      height: 110,
+      child: GestureDetector(
+        onTapDown: (details) async {
+          final selected = await showMenu<String>(
+            context: context,
+            position: RelativeRect.fromLTRB(
+              details.globalPosition.dx,
+              details.globalPosition.dy,
+              details.globalPosition.dx,
+              details.globalPosition.dy,
+            ),
+            items: const [
+              PopupMenuItem(value: 'upload', child: Text('Upload Images')),
+              PopupMenuItem(value: 'camera', child: Text('Take Photo')),
+            ],
+          );
+
+          if (selected == 'upload') onUpload();
+          if (selected == 'camera') onTakePhoto();
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: context.appColors.border,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Center(
+            child: Icon(
+              Icons.camera_alt_outlined,
+              size: 32,
+              color: context.appColors.primary,
             ),
           ),
-          const SizedBox(height: 6),
-          Expanded(
-            child: GestureDetector(
-              onTap: onUploadPhoto,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.photo_library_outlined,
-                    color: context.appColors.primary,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

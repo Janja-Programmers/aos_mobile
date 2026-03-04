@@ -17,64 +17,52 @@ class PriceTypePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    if (options.isEmpty) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Price Type', style: context.pStrong),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
 
-        ...options.map(
-          (type) => Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _OptionTile(
-              title: _title(type),
-              subtitle: _subtitle(type),
-              selected: selected == type,
-              onTap: () => onChanged(type),
-            ),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            children: [
+              for (int i = 0; i < options.length - 1; i++) ...[
+                _RowOption(
+                  type: options[i],
+                  selected: selected == options[i],
+                  onTap: () => onChanged(options[i]),
+                ),
+                if (i != options.length - 1)
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: colors.border.withOpacity(0.6),
+                  ),
+              ],
+            ],
           ),
         ),
       ],
     );
   }
-
-  String _title(String type) {
-    switch (type) {
-      case 'Fixed':
-        return 'Fixed Price';
-      case 'Negotiable':
-        return 'Negotiable';
-      case 'Contact for price':
-        return 'Contact for Price';
-      default:
-        return type;
-    }
-  }
-
-  String _subtitle(String type) {
-    switch (type) {
-      case 'Fixed':
-        return 'Price is firm and non-negotiable';
-      case 'Negotiable':
-        return 'Buyers can make offers on this item';
-      case 'Contact for price':
-        return 'Buyers must contact you for pricing';
-      default:
-        return '';
-    }
-  }
 }
 
-class _OptionTile extends StatelessWidget {
-  const _OptionTile({
-    required this.title,
-    required this.subtitle,
+class _RowOption extends StatelessWidget {
+  const _RowOption({
+    required this.type,
     required this.selected,
     required this.onTap,
   });
 
-  final String title;
-  final String subtitle;
+  final String type;
   final bool selected;
   final VoidCallback onTap;
 
@@ -83,17 +71,10 @@ class _OptionTile extends StatelessWidget {
     final colors = context.appColors;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: selected ? colors.primary : colors.border,
-            width: 1.4,
-          ),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Row(
           children: [
             Icon(
@@ -106,9 +87,9 @@ class _OptionTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: context.pStrong),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: context.pMuted),
+                  Text(_title(type), style: context.pStrong),
+                  const SizedBox(height: 4),
+                  Text(_subtitle(type), style: context.pMuted),
                 ],
               ),
             ),
@@ -116,5 +97,27 @@ class _OptionTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static String _title(String type) {
+    switch (type) {
+      case 'Fixed':
+        return 'Fixed Price';
+      case 'Negotiable':
+        return 'Negotiable';
+      default:
+        return type;
+    }
+  }
+
+  static String _subtitle(String type) {
+    switch (type) {
+      case 'Fixed':
+        return 'Price is firm and non-negotiable';
+      case 'Negotiable':
+        return 'Buyers can make offers on this item';
+      default:
+        return '';
+    }
   }
 }

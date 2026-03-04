@@ -1,7 +1,7 @@
-import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/pricing_rules.dart';
 
 enum PriceVisibility { specify, contact }
@@ -26,7 +26,7 @@ class PriceVisibilityToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: colors.border.withOpacity(0.3),
+        color: colors.border.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -58,6 +58,10 @@ class PriceVisibilityToggle extends StatelessWidget {
     required VoidCallback onTap,
     required AppColorTokens colors,
   }) {
+    final IconData icon = label == 'Specify price'
+        ? Icons.local_offer_outlined
+        : Icons.messenger_outline_sharp;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -65,15 +69,27 @@ class PriceVisibilityToggle extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? colors.primary : Colors.transparent,
+          color: selected
+              ? colors.primary.withOpacity(0.2)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : colors.textPrimary,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: selected ? colors.primary : colors.textPrimary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? colors.primary : colors.textPrimary,
+              ),
+            ),
+          ],
         ),
       ),
     );

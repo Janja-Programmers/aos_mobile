@@ -36,7 +36,8 @@ class PickerField extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          color: colors.border,
+          border: BoxBorder.all(color: colors.border),
+          color: Colors.transparent,
         ),
         child: Row(
           children: [

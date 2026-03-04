@@ -40,12 +40,12 @@ class ScheduleOfferCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: colors.primary.withOpacity(.1),
+                  color: colors.primary.withOpacity(.05),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  Icons.calendar_today_outlined,
-                  size: 18,
+                  Icons.calendar_month,
+                  size: 20,
                   color: colors.primary,
                 ),
               ),
@@ -60,6 +60,8 @@ class ScheduleOfferCard extends StatelessWidget {
                 value: enabled,
                 onChanged: onToggle,
                 activeColor: colors.primary,
+                inactiveThumbColor: colors.black,
+                activeThumbColor: colors.primary,
               ),
             ],
           ),
@@ -117,18 +119,99 @@ class DateBox extends StatelessWidget {
         Text(label, style: context.pMuted),
 
         const SizedBox(height: 6),
-
         InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () async {
+            final colors = context.appColors;
+            final now = DateTime.now();
+
             final picked = await showDatePicker(
               context: context,
-              initialDate: date ?? DateTime.now(),
-              firstDate: DateTime.now(),
-              lastDate: DateTime(2100),
+              initialDate: date ?? now,
+              firstDate: now,
+              lastDate: now.add(const Duration(days: 21)),
+              builder: (context, child) {
+                final base = ThemeData.light();
+
+                return Theme(
+                  data: base.copyWith(
+                    useMaterial3: true,
+
+                    colorScheme: ColorScheme.light(
+                      primary: colors.primary,
+                      onPrimary: colors.white,
+                      surface: colors.white,
+                      onSurface: colors.black,
+                    ),
+
+                    dialogBackgroundColor: colors.white,
+
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(
+                        foregroundColor: colors.primary,
+                      ),
+                    ),
+
+                    datePickerTheme: DatePickerThemeData(
+                      backgroundColor: colors.white,
+
+                      dayBackgroundColor: WidgetStateProperty.resolveWith((
+                        states,
+                      ) {
+                        if (states.contains(WidgetState.selected)) {
+                          return colors.primary;
+                        }
+                        return null;
+                      }),
+
+                      dayForegroundColor: WidgetStateProperty.resolveWith((
+                        states,
+                      ) {
+                        if (states.contains(WidgetState.selected)) {
+                          return colors.white;
+                        }
+
+                        if (states.contains(WidgetState.disabled)) {
+                          return colors.primary.withOpacity(.4);
+                        }
+
+                        return colors.black;
+                      }),
+
+                      todayBackgroundColor: WidgetStateProperty.resolveWith((
+                        states,
+                      ) {
+                        if (!states.contains(WidgetState.selected)) {
+                          return colors.white;
+                        }
+                        return null;
+                      }),
+
+                      todayForegroundColor: WidgetStateProperty.resolveWith((
+                        states,
+                      ) {
+                        if (!states.contains(WidgetState.selected)) {
+                          return colors.primary;
+                        }
+                        return null;
+                      }),
+
+                      todayBorder: BorderSide(color: colors.primary),
+
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: colors.primary),
+                      ),
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
             );
 
-            if (picked != null) onPicked(picked);
+            if (picked != null) {
+              onPicked(picked);
+            }
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -140,9 +223,7 @@ class DateBox extends StatelessWidget {
             child: Row(
               children: [
                 const Icon(Icons.calendar_today_outlined, size: 16),
-
                 const SizedBox(width: 8),
-
                 Expanded(
                   child: Text(
                     date != null

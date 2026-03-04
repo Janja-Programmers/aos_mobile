@@ -132,7 +132,7 @@ class DetailsStep extends ConsumerWidget {
                   decoration: InputDecoration(
                     labelText: a.required ? '${a.label} *' : a.label,
                     labelStyle: context.p,
-                    hintStyle: context.p,
+                    hintStyle: context.pMuted,
                   ),
                   onChanged: (v) {
                     final parsed = double.tryParse(v.trim());

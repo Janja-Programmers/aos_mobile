@@ -11,6 +11,9 @@ import 'package:africaonlinestores/features/ads/ads_create/ui/steps/widgets/sect
 import 'package:africaonlinestores/features/ads/ads_create/utils/create_ad_validator.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 
+import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
+import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
+
 class BasicStep extends ConsumerStatefulWidget {
   const BasicStep({super.key});
 
@@ -103,9 +106,30 @@ class _BasicStepState extends ConsumerState<BasicStep> {
           leading: const Icon(Icons.category_outlined),
           placeholder: "Select a category",
           onTap: () async {
+            final categoriesState = ref
+                .read(categoriesControllerProvider)
+                .value;
+
+            CategoryNode? parentNode;
+
+            if (categoriesState != null && draft.categoryId != null) {
+              // find selected node and its parent
+              for (final p in categoriesState.parents) {
+                for (final c in p.children) {
+                  if (c.id == draft.categoryId) {
+                    parentNode = p;
+                    break;
+                  }
+                }
+                if (parentNode != null) break;
+              }
+            }
+
             final res = await context.push<Map<String, dynamic>>(
               AppRoutes.selectCategory,
+              extra: parentNode,
             );
+
             if (res == null) return;
 
             final id = (res['id'] ?? '').toString();

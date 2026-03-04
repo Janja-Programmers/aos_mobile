@@ -13,14 +13,14 @@ import 'package:africaonlinestores/features/ads/shared/providers/ad_schema_provi
 
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 
+import 'package:africaonlinestores/features/ads/ads_create/controllers/create_ad_flow_controller.dart';
+import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/ad_submit_success_dialog.dart';
+import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/create_ad_steps.dart';
+import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/save_draft_bottom_sheet.dart';
 import 'package:africaonlinestores/features/ads/ads_create/utils/ad_dirty_checker.dart';
 import 'package:africaonlinestores/features/ads/ads_create/utils/cancel_action.dart';
 import 'package:africaonlinestores/features/ads/ads_create/utils/create_ad_payload.dart';
-import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/create_ad_steps.dart';
-import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/save_draft_bottom_sheet.dart';
 import 'package:africaonlinestores/features/ads/shared/ui/widgets/scaffold_shell.dart';
-
-import 'package:africaonlinestores/features/ads/ads_create/controllers/create_ad_flow_controller.dart';
 
 class CreateAdFlowScreen extends ConsumerStatefulWidget {
   final String? adId;
@@ -85,7 +85,7 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
     final ctrl = ref.read(createAdFlowControllerProvider.notifier);
 
     if (index == 0) {
-     if(mounted)  context.pop;
+      if (mounted) context.pop;
       return;
     }
 
@@ -108,7 +108,7 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
     if (!AdDirtyChecker.isDirty(draft)) {
       flowCtrl.reset();
       ref.read(adDraftControllerProvider.notifier).reset();
-       if(mounted)  context.pop;
+      if (mounted) context.pop;
       return;
     }
 
@@ -130,7 +130,7 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
       flowCtrl.reset();
       ref.read(adDraftControllerProvider.notifier).reset();
       ShowSnack(context, 'Draft saved successfully').success();
-         context.pop;
+      context.pop;
     }
   }
 
@@ -155,6 +155,18 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
 
       ctrl.reset();
       ref.read(adDraftControllerProvider.notifier).reset();
+
+      if (!mounted) return;
+
+      final result = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const AdSubmitSuccessDialog(),
+      );
+
+      if (result == true && mounted) {
+        context.pop(true); // leave create flow
+      }
 
       if (mounted) context.pop(true);
     } catch (e) {
@@ -183,7 +195,6 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
             ),
           )
         : ref.watch(adCategorySchemaProvider(categoryId));
-
 
     return schemaAsync.when(
       loading: () => ScaffoldShell(
@@ -218,6 +229,12 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
         final index = flowState.index;
         final isLast = index == steps.length - 1;
 
+        final stepDef = steps[index];
+        final validator = stepDef.validator;
+
+        final result = validator?.call(draft, schema);
+        final isValid = result?.isValid ?? true;
+
         final bottom = SafeArea(
           top: false,
           child: Padding(
@@ -225,25 +242,13 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
             child: PrimaryButton(
               text: isLast ? 'Post Ad' : 'Continue',
               loading: flowState.posting,
-              icon: Icons.arrow_forward,
-              onPressed: flowState.posting
+              icon: isLast ? Icons.check : Icons.arrow_forward,
+
+              // Disabled when invalid
+              onPressed: (flowState.posting || !isValid)
                   ? null
                   : () async {
-                      final validator = steps[index].validator;
-                      final result = validator?.call(draft, schema);
-
-                      if (result != null && !result.isValid) {
-                        flowCtrl.markAttempted(index);
-
-                        final firstError = result.fieldErrors.values.first;
-
-                        if (mounted) {
-                          ShowSnack(context, firstError).error();
-                        }
-
-                        return;
-                      }
-
+                      flowCtrl.markAttempted(index);
                       flowCtrl.markCompleted(index);
 
                       if (!isLast) {
@@ -252,6 +257,17 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
                         await _post(draft: draft, schema: schema);
                       }
                     },
+
+              // 👇 This is the important part
+              onDisabledTap: () {
+                if (result != null && !result.isValid) {
+                  flowCtrl.markAttempted(index);
+
+                  final firstError = result.fieldErrors.values.first;
+
+                  ShowSnack(context, firstError).error();
+                }
+              },
             ),
           ),
         );

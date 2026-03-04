@@ -6,24 +6,28 @@ class MarketContext extends Equatable {
     required this.displayCountryCode,
     this.locationId,
     this.locationLabel,
+    this.currency,
   });
 
-  final String country; // "Kenya"
-  final String displayCountryCode; // "KE"
+  final String country;
+  final String displayCountryCode;
   final String? locationId;
   final String? locationLabel;
+  final String? currency;
 
   MarketContext copyWith({
     String? country,
     String? displayCountryCode,
     String? locationId,
     String? locationLabel,
+    String? currency,
   }) {
     return MarketContext(
       country: country ?? this.country,
       displayCountryCode: displayCountryCode ?? this.displayCountryCode,
       locationId: locationId ?? this.locationId,
       locationLabel: locationLabel ?? this.locationLabel,
+      currency: currency ?? this.currency,
     );
   }
 
@@ -33,5 +37,6 @@ class MarketContext extends Equatable {
     displayCountryCode,
     locationId,
     locationLabel,
+    currency,
   ];
 }

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/widgets/schedule_offer_card.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/pricing_rules.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
 
 class OfferSection extends StatefulWidget {
   const OfferSection({
@@ -30,13 +33,32 @@ class OfferSection extends StatefulWidget {
 }
 
 class _OfferSectionState extends State<OfferSection> {
+  late final TextEditingController _controller;
   bool schedule = false;
 
   @override
   void initState() {
     super.initState();
+    _controller = TextEditingController(
+      text: widget.offerPrice?.toString() ?? '',
+    );
 
     schedule = widget.startDate != null || widget.endDate != null;
+  }
+
+  @override
+  void didUpdateWidget(covariant OfferSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.offerPrice != oldWidget.offerPrice) {
+      _controller.text = widget.offerPrice?.toString() ?? '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   bool get hasError {
@@ -45,51 +67,68 @@ class _OfferSectionState extends State<OfferSection> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Offer Price (Optional)', style: context.pStrong),
-        const SizedBox(height: 10),
+    return Consumer(
+      builder: (context, ref, _) {
+        final market = ref.watch(marketContextProvider).value;
+        final currency = market?.currency ?? '';
 
-        TextFormField(
-          initialValue: widget.offerPrice?.toString() ?? '',
-          keyboardType: TextInputType.number,
-          style: context.p,
-          decoration: InputDecoration(
-            hintText: 'Enter discounted price',
-            hintStyle: context.pMuted,
-            errorText: hasError ? 'Offer price must be lower than price' : null,
-          ),
-          onChanged: (v) {
-            final n = double.tryParse(v.trim());
-            widget.onOfferPriceChanged(n);
-            setState(() {});
-          },
-        ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Offer Price (Optional)', style: context.pStrong),
+            const SizedBox(height: 10),
 
-        /// ⏱ Schedule toggle
-        if ((widget.offerPrice ?? 0) > 0) ...[
-          const SizedBox(height: 16),
+            TextFormField(
+              controller: _controller,
+              keyboardType: TextInputType.number,
+              style: context.p,
+              decoration: InputDecoration(
+                hintText: 'Enter discounted price',
+                hintStyle: context.pMuted,
+                errorText: hasError
+                    ? 'Offer price must be lower than price'
+                    : null,
+                prefix: Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Text(currency, style: context.pStrong),
+                ),
+              ),
+              onChanged: (v) {
+                final n = double.tryParse(v.trim());
+                widget.onOfferPriceChanged(n);
 
-          ScheduleOfferCard(
-            enabled: schedule,
-            startDate: widget.startDate,
-            endDate: widget.endDate,
+                if (n == null || n <= 0) {
+                  schedule = false;
+                  widget.onStartChanged(null);
+                  widget.onEndChanged(null);
+                }
 
-            onToggle: (v) {
-              setState(() => schedule = v);
+                setState(() {});
+              },
+            ),
 
-              if (!v) {
-                widget.onStartChanged(null);
-                widget.onEndChanged(null);
-              }
-            },
+            if ((widget.offerPrice ?? 0) > 0) ...[
+              const SizedBox(height: 16),
 
-            onStartPicked: widget.onStartChanged,
-            onEndPicked: widget.onEndChanged,
-          ),
-        ],
-      ],
+              ScheduleOfferCard(
+                enabled: schedule,
+                startDate: widget.startDate,
+                endDate: widget.endDate,
+                onToggle: (v) {
+                  setState(() => schedule = v);
+
+                  if (!v) {
+                    widget.onStartChanged(null);
+                    widget.onEndChanged(null);
+                  }
+                },
+                onStartPicked: widget.onStartChanged,
+                onEndPicked: widget.onEndChanged,
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }

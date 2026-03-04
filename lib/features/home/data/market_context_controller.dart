@@ -24,7 +24,15 @@ class MarketContextController extends AsyncNotifier<MarketContext> {
       orElse: () => {"name": "Kenya", "code": fallbackCode},
     );
 
-    return MarketContext(country: resolved["name"], displayCountryCode: code);
+    final currency = prefs?.currency?.isNotEmpty == true
+        ? prefs!.currency!
+        : localization.systemDefaultCurrency ?? 'KES';
+
+    return MarketContext(
+      country: resolved["name"],
+      displayCountryCode: code,
+      currency: currency,
+    );
   }
 
   Future<void> setLocation({required String id, required String label}) async {

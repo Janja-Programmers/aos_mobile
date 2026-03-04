@@ -1,11 +1,11 @@
-import 'package:africaonlinestores/features/ads/shared/pricing/pricing_policy.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/pricing/pricing_policy.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 
-class GoodsPricingPolicy implements PricingPolicy {
+class ServicePricingPolicy implements PricingPolicy {
   @override
   List<String> allowedTypes(PricingSchema schema) {
-    return const ['Fixed', 'Negotiable'];
+    return schema.allowedTypes;
   }
 
   @override
@@ -15,7 +15,7 @@ class GoodsPricingPolicy implements PricingPolicy {
 
   @override
   bool requireUnit(AdDraft d, PricingSchema schema) {
-    return false;
+    return d.priceType == 'Fixed' || d.priceType == 'Negotiable';
   }
 
   @override
@@ -35,7 +35,15 @@ class GoodsPricingPolicy implements PricingPolicy {
     }
 
     if (draft.priceType == 'Contact for price') {
-      apply(draft.copyWith(priceType: 'Fixed'));
+      apply(
+        draft.copyWith(
+          price: null,
+          priceUnit: null,
+          offerPrice: null,
+          offerStart: null,
+          offerEnd: null,
+        ),
+      );
     }
   }
 }

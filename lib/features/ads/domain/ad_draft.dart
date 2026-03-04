@@ -44,6 +44,10 @@ class AdDraft {
     this.offerPrice,
     this.offerStart,
     this.offerEnd,
+
+    // ----- META -----
+    this.freeConsultation,
+    this.requiresDeposit,
   });
 
   // ---------- BASIC ----------
@@ -77,6 +81,10 @@ class AdDraft {
   final DateTime? offerStart; // backend: offer_start
   final DateTime? offerEnd; // backend: offer_end
 
+  // ----- META -----
+  final bool? freeConsultation;
+  final bool? requiresDeposit;
+
   // ------------------------------------------------------------------
   // COPY WITH
   // ------------------------------------------------------------------
@@ -100,6 +108,8 @@ class AdDraft {
     DateTime? offerStart,
     DateTime? offerEnd,
     bool clearOffer = false,
+    bool? freeConsultation,
+    bool? requiresDeposit,
   }) {
     return AdDraft(
       title: title ?? this.title,
@@ -121,6 +131,10 @@ class AdDraft {
       offerPrice: clearOffer ? null : (offerPrice ?? this.offerPrice),
       offerStart: clearOffer ? null : (offerStart ?? this.offerStart),
       offerEnd: clearOffer ? null : (offerEnd ?? this.offerEnd),
+
+      // Pricing
+      freeConsultation: freeConsultation ?? this.freeConsultation,
+      requiresDeposit: requiresDeposit ?? this.requiresDeposit,
     );
   }
 }

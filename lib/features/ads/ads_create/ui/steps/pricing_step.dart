@@ -5,9 +5,12 @@ import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/features/ads/ads_create/ui/steps/pricing/contact_info.dart';
+import 'package:africaonlinestores/features/ads/ads_create/ui/steps/pricing/offer_section.dart';
+import 'package:africaonlinestores/features/ads/ads_create/ui/steps/pricing/price_visibility_toggle.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/pricing/price_amount_field.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/pricing/price_type_picker.dart';
-import 'package:africaonlinestores/features/ads/ads_create/ui/steps/pricing/offer_section.dart';
+import 'package:africaonlinestores/features/ads/ads_create/ui/steps/pricing/service_unit_picker.dart';
 
 class PricingStep extends ConsumerWidget {
   const PricingStep({super.key, required this.schema});
@@ -20,47 +23,46 @@ class PricingStep extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final draft = ref.watch(adDraftControllerProvider).value;
+    final draftAsync = ref.watch(adDraftControllerProvider);
+    final draft = draftAsync.value;
     if (draft == null) return const SizedBox.shrink();
 
     final ctrl = ref.read(adDraftControllerProvider.notifier);
 
     final isService = schema.isService;
-
-    final allowedTypes = isService
-        ? schema.allowedTypes
-        : const ['Fixed', 'Negotiable'];
+    final allowedTypes = schema.allowedTypes;
 
     final priceType = draft.priceType;
 
+    final isContact = priceType == 'Contact for price';
     final isFixed = priceType == 'Fixed';
     final isNegotiable = priceType == 'Negotiable';
-    final isContact = priceType == 'Contact for price';
 
-    // Default price type when required
-    if (schema.requirement == PricingRequirement.required &&
-        (priceType == null || !allowedTypes.contains(priceType))) {
+    // Validate type safely (allow Contact)
+    final isValidType = allowedTypes.contains(priceType) || isContact;
+
+    if (!isValidType && allowedTypes.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ctrl.setPriceType(allowedTypes.first);
       });
     }
 
-    // ===== Cleanup Enforcement =====
+    // Cleanup logic (safe)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!allowedTypes.contains(priceType)) {
-        ctrl.setPriceType(allowedTypes.first);
+      if (priceType == null) return;
+
+      if (!schema.allowedTypes.contains(priceType)) {
+        ctrl.setPriceType(schema.allowedTypes.first);
         return;
       }
 
-      // Negotiable → clear offer
-      if (isNegotiable) {
+      if (priceType == 'Negotiable') {
         ctrl.setOfferPrice(null);
         ctrl.setOfferStart(null);
         ctrl.setOfferEnd(null);
       }
 
-      // Contact → clear everything
-      if (isContact) {
+      if (priceType == 'Contact for price') {
         ctrl.setPrice(null);
         ctrl.setPriceUnit(null);
         ctrl.setOfferPrice(null);
@@ -76,45 +78,73 @@ class PricingStep extends ConsumerWidget {
         Text('Set Pricing', style: context.h5),
         const SizedBox(height: 16),
 
-        // ===== Price Type Picker =====
-        PriceTypePicker(
-          selected: priceType,
-          options: allowedTypes,
-          onChanged: (value) {
-            ctrl.setPriceType(value);
+        // =========================
+        // VISIBILITY TOGGLE
+        // =========================
+        PriceVisibilityToggle(
+          priceType: priceType,
+          onSpecify: () {
+            if (priceType != 'Fixed') {
+              ctrl.setPriceType('Fixed');
+            }
+          },
+          onContact: () {
+            if (!isContact) {
+              ctrl.setPriceType('Contact for price');
+            }
           },
         ),
 
         const SizedBox(height: 20),
 
-        // ===== Price Amount =====
+        // =========================
+        // CONTACT MODE
+        // =========================
+        if (isContact) const ContactInfoCard(),
+
+        // =========================
+        // SPECIFY MODE
+        // =========================
         if (isFixed || isNegotiable)
           PriceAmountField(price: draft.price, onChanged: ctrl.setPrice),
 
-        if (isService && (isFixed || isNegotiable)) ...[
-          const SizedBox(height: 16),
-          _ServiceUnitPicker(
-            units: schema.allowedUnits,
-            selected: draft.priceUnit,
-            onChanged: ctrl.setPriceUnit,
+        if (!isContact) ...[
+          PriceTypePicker(
+            selected: priceType,
+            options: allowedTypes,
+            onChanged: (value) {
+              if (value != priceType) {
+                ctrl.setPriceType(value);
+              }
+            },
           ),
+
+          const SizedBox(height: 20),
+
+          if (isService && (isFixed || isNegotiable)) ...[
+            const SizedBox(height: 16),
+            ServiceUnitPicker(
+              units: schema.allowedUnits,
+              selected: draft.priceUnit,
+              onChanged: ctrl.setPriceUnit,
+            ),
+          ],
+
+          const SizedBox(height: 20),
+
+          if (isFixed)
+            OfferSection(
+              offerPrice: draft.offerPrice,
+              price: draft.price,
+              startDate: draft.offerStart,
+              endDate: draft.offerEnd,
+              onOfferPriceChanged: ctrl.setOfferPrice,
+              onStartChanged: (date) =>
+                  _showThemedDatePicker(context, date, ctrl.setOfferStart),
+              onEndChanged: (date) =>
+                  _showThemedDatePicker(context, date, ctrl.setOfferEnd),
+            ),
         ],
-
-        const SizedBox(height: 20),
-
-        // ===== Offer Section (Only Fixed) =====
-        if (isFixed)
-          OfferSection(
-            offerPrice: draft.offerPrice,
-            price: draft.price,
-            startDate: draft.offerStart,
-            endDate: draft.offerEnd,
-            onOfferPriceChanged: ctrl.setOfferPrice,
-            onStartChanged: (date) =>
-                _showThemedDatePicker(context, date, ctrl.setOfferStart),
-            onEndChanged: (date) =>
-                _showThemedDatePicker(context, date, ctrl.setOfferEnd),
-          ),
       ],
     );
   }
@@ -149,29 +179,5 @@ class PricingStep extends ConsumerWidget {
     if (picked != null) {
       onPicked(picked);
     }
-  }
-}
-
-class _ServiceUnitPicker extends StatelessWidget {
-  const _ServiceUnitPicker({
-    required this.units,
-    required this.selected,
-    required this.onChanged,
-  });
-
-  final List<String> units;
-  final String? selected;
-  final void Function(String?) onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<String>(
-      value: selected,
-      decoration: const InputDecoration(labelText: 'Price Unit'),
-      items: units
-          .map((u) => DropdownMenuItem(value: u, child: Text(u)))
-          .toList(),
-      onChanged: onChanged,
-    );
   }
 }

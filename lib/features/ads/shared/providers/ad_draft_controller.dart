@@ -9,6 +9,11 @@ import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 
+final adDraftControllerProvider =
+    StateNotifierProvider<AdDraftController, AsyncValue<AdDraft>>(
+      (ref) => AdDraftController(ref),
+    );
+
 class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   AdDraftController(this._ref) : super(const AsyncValue.data(AdDraft())) {
     _draft = const AdDraft();
@@ -214,6 +219,16 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     state = AsyncValue.data(_draft);
   }
 
+  // ================= PRICING =================
+
+  void setFreeConsultation(bool v) {
+    state = state.whenData((d) => d.copyWith(freeConsultation: v));
+  }
+
+  void setRequiresDeposit(bool v) {
+    state = state.whenData((d) => d.copyWith(requiresDeposit: v));
+  }
+
   // ================= RESET =================
 
   void reset() {
@@ -221,8 +236,3 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     state = AsyncValue.data(_draft);
   }
 }
-
-final adDraftControllerProvider =
-    StateNotifierProvider<AdDraftController, AsyncValue<AdDraft>>(
-      (ref) => AdDraftController(ref),
-    );

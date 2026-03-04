@@ -35,6 +35,22 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
   String _tabKeyForStatus(String apiStatus) =>
       apiStatus == 'Draft' ? 'Drafts' : apiStatus;
 
+  Future<void> _setAdStatus({
+    required String adId,
+    required String action,
+  }) async {
+    final res = await ref
+        .read(adsApiProvider)
+        .setAdStatus(adId: adId, action: action);
+
+    if (!mounted) return;
+
+    res.fold((f) => ShowSnack(context, f.message).error(), (_) {
+      ShowSnack(context, 'Status updated successfully').success();
+      _load();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -97,18 +113,22 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
       _error = null;
     });
 
+    final Map<String, int> newCounts = {};
+
+    final api = ref.read(adsApiProvider);
+
+    // -------------------------
+    // Load counts
+    // -------------------------
+
     final statuses = {
       'Active': 'Active',
       'Reviewing': 'Reviewing',
-      'Drafts': 'Draft',
       'Declined': 'Declined',
     };
 
-    final Map<String, int> newCounts = {};
-
-    // Load counts for all tabs
     for (final entry in statuses.entries) {
-      final res = await ref.read(adsApiProvider).myAds(status: entry.value);
+      final res = await api.myAds(status: entry.value);
 
       if (!mounted) return;
 
@@ -126,8 +146,74 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
       });
     }
 
-    // Load current tab items
-    final res = await ref.read(adsApiProvider).myAds(status: _status);
+    // -------------------------
+    // Draft count
+    // -------------------------
+
+    final draftsRes = await api.listAdDrafts();
+
+    if (!mounted) return;
+
+    draftsRes.fold((_) => newCounts['Drafts'] = 0, (data) {
+      final dataMap = (data['data'] ?? const {}) as Map;
+      final items = dataMap['items'];
+
+      if (items is List) {
+        newCounts['Drafts'] = items.length;
+      } else {
+        newCounts['Drafts'] = 0;
+      }
+    });
+
+    // -------------------------
+    // Load items for current tab
+    // -------------------------
+
+    if (_status == 'Draft') {
+      final res = await api.listAdDrafts();
+
+      if (!mounted) return;
+
+      res.fold(
+        (f) {
+          setState(() {
+            _loading = false;
+            _error = f.message;
+            _items = const [];
+            _counts = newCounts;
+          });
+        },
+        (data) {
+          final dataMap = (data['data'] ?? const {}) as Map;
+
+          final itemsRaw = dataMap['items'];
+          final list = <AOSAdListItem>[];
+
+          if (itemsRaw is List) {
+            for (final e in itemsRaw) {
+              if (e is Map) {
+                list.add(AOSAdListItem.fromDraft(Map<String, dynamic>.from(e)));
+              }
+            }
+          }
+
+          setState(() {
+            _loading = false;
+            _error = null;
+            _items = list;
+            _counts = newCounts;
+          });
+        },
+      );
+
+      return;
+    }
+
+    // -------------------------
+    // Normal ads (Active / Reviewing / Declined)
+    // -------------------------
+
+    final res = await api.myAds(status: _status);
 
     if (!mounted) return;
 
@@ -218,10 +304,26 @@ class _MyAdsScreenState extends ConsumerState<MyAdsScreen> {
                   )
                 : MyAdsContentView(
                     items: _items,
-                    onEdit: (ad) =>
-                        ShowSnack(context, 'Edit coming soon.').info(),
-                    onMarkSold: (ad) =>
-                        ShowSnack(context, 'Status update coming soon.').info(),
+                    onEdit: (ad) {
+                      if (_status == 'Draft') {
+                        context.pushNamed(
+                          AppRoutes.nCreateAd,
+                          queryParameters: {'draftId': ad.id},
+                        );
+                      } else {
+                        context.pushNamed(
+                          AppRoutes.nCreateAd,
+                          queryParameters: {'adId': ad.id},
+                        );
+                      }
+                    },
+                    onMarkSold: (ad) async {
+                      final action = _status == 'Declined'
+                          ? 'renew'
+                          : 'mark_sold';
+
+                      await _setAdStatus(adId: ad.id, action: action);
+                    },
                   ),
           ),
         ],

@@ -62,7 +62,6 @@ class AOSAdListItem {
       currentPrice: (json['current_price'] ?? '').toString().trim().isEmpty
           ? null
           : json['current_price'].toString(),
-
       originalPrice: (json['original_price'] ?? '').toString().trim().isEmpty
           ? null
           : json['original_price'].toString(),
@@ -81,7 +80,33 @@ class AOSAdListItem {
     );
   }
 
-  // 🔥 Helpful computed property
+  /// Draft serializer
+  factory AOSAdListItem.fromDraft(Map<String, dynamic> json) {
+    return AOSAdListItem(
+      id: (json['id'] ?? json['name'] ?? '').toString(),
+      title: (json['title'] ?? '').toString(),
+      country: (json['country'] ?? '').toString(),
+      locationName: (json['location_name'] ?? json['location'] ?? '')
+          .toString(),
+      categoryName: (json['category_name'] ?? json['category'] ?? '')
+          .toString(),
+      currentPrice: null,
+      originalPrice: null,
+      offerPercent: 0,
+      isOfferActive: false,
+      priceType: '',
+      priceUnit: '',
+      primaryImage: (json['primary_image'] ?? '').toString(),
+      imagesCount: int.tryParse((json['images_count'] ?? 0).toString()) ?? 0,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
+      isWishlisted: false,
+      averageRating: 0,
+      totalReviews: 0,
+    );
+  }
+
   bool get hasActiveOffer => isOfferActive && offerPercent > 0;
 }
 

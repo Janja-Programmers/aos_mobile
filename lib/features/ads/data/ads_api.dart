@@ -131,6 +131,39 @@ class AdsApi {
     }
   }
 
+  Future<Either<Failure, Map<String, dynamic>>> updateAdDraft({
+    required String draftId,
+    required Map<String, dynamic> payload,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiEndpoints.updateAdDraftEndpoint,
+        queryParameters: {'draft_id': draftId, "payload": payload},
+      );
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to create ad.'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> submitAdDraft({
+    required String adId,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiEndpoints.submitAdDraftEndpoint,
+        queryParameters: {'draft_id': adId},
+      );
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to create ad.'));
+    }
+  }
+
   Future<Either<Failure, Map<String, dynamic>>> saveAdDraft({
     required Map<String, dynamic> payload,
   }) async {
@@ -138,6 +171,24 @@ class AdsApi {
       final res = await _dio.post(
         ApiEndpoints.saveAdDraftEndpoint,
         data: {'payload_json': payload},
+      );
+
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to save draft.'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> setAdStatus({
+    required String adId,
+    required String action,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiEndpoints.setAdStatusEndpoint,
+        queryParameters: {'ad_id': adId, "action": action},
       );
 
       return unwrapFrappe(res);
@@ -214,6 +265,71 @@ class AdsApi {
     }
   }
 
+  Future<Either<Failure, Map<String, dynamic>>> listAdDrafts({
+    // required String country,
+    String? locationId,
+    String? categoryId,
+    String? q,
+    String? sort,
+    String? promotionType,
+    String? priceType,
+    double? priceMin,
+    double? priceMax,
+    double? ratingMin,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      if (sort != null && !_allowedSorts.contains(sort)) {
+        return Either.left(Failure('Invalid sort value: $sort'));
+      }
+
+      if (promotionType != null &&
+          !_allowedPromotionTypes.contains(promotionType)) {
+        return Either.left(Failure('Invalid promotion type: $promotionType'));
+      }
+
+      if (priceType != null && !_allowedPriceTypes.contains(priceType)) {
+        return Either.left(Failure('Invalid price type: $priceType'));
+      }
+
+      final queryParams = <String, dynamic>{
+        // 'country': country,
+        if (locationId?.trim().isNotEmpty == true)
+          'location': locationId!.trim(),
+        if (categoryId?.trim().isNotEmpty == true)
+          'category': categoryId!.trim(),
+        if (q?.trim().isNotEmpty == true) 'q': q!.trim(),
+        if (sort?.trim().isNotEmpty == true) 'sort': sort!.trim(),
+        if (promotionType?.trim().isNotEmpty == true)
+          'promotion_type': promotionType!.trim(),
+        if (priceType?.trim().isNotEmpty == true)
+          'price_type': priceType!.trim(),
+
+        'price_min': ?priceMin,
+
+        'price_max': ?priceMax,
+
+        'rating_min': ?ratingMin,
+
+        'limit': limit,
+        'offset': offset,
+      };
+
+      final res = await _client.get(
+        ApiEndpoints.listAdDraftsEndpoint,
+        withCountry: true,
+        queryParameters: queryParams,
+      );
+
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to fetch ads.'));
+    }
+  }
+
   Future<Either<Failure, Map<String, dynamic>>> myAds({
     String status = 'Active',
     int limit = 20,
@@ -233,12 +349,12 @@ class AdsApi {
   }
 
   Future<Either<Failure, Map<String, dynamic>>> getAd({
-    required String id,
+    required String adId,
   }) async {
     try {
       final res = await _dio.get(
         ApiEndpoints.getAdEndpoint,
-        queryParameters: {'ad_id': id},
+        queryParameters: {'ad_id': adId},
       );
       return unwrapFrappe(res);
     } on DioException catch (e) {
@@ -249,12 +365,12 @@ class AdsApi {
   }
 
   Future<Either<Failure, Map<String, dynamic>>> getAdDraft({
-    required String id,
+    required String draftId,
   }) async {
     try {
       final res = await _dio.get(
         ApiEndpoints.getAdDraftEndpoint,
-        queryParameters: {'draft_id': id},
+        queryParameters: {'draft_id': draftId},
       );
       return unwrapFrappe(res);
     } on DioException catch (e) {

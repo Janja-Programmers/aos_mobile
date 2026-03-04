@@ -11,8 +11,6 @@ import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provide
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_schema_provider.dart';
 
-import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
-
 import 'package:africaonlinestores/features/ads/ads_create/controllers/create_ad_flow_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/ad_submit_success_dialog.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/create_ad_steps.dart';
@@ -21,6 +19,9 @@ import 'package:africaonlinestores/features/ads/ads_create/utils/ad_dirty_checke
 import 'package:africaonlinestores/features/ads/ads_create/utils/cancel_action.dart';
 import 'package:africaonlinestores/features/ads/ads_create/utils/create_ad_payload.dart';
 import 'package:africaonlinestores/features/ads/shared/ui/widgets/scaffold_shell.dart';
+
+import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/utils/enums.dart';
 
 class CreateAdFlowScreen extends ConsumerStatefulWidget {
   final String? adId;
@@ -42,20 +43,17 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      // Preload data for update
-      // if (widget.adId != null) {
-      //   ref.read(
-      //     adDraftControllerProvider.notifier,
-      //   ); //TODO: Functionality for loadForEdit(widget.adId!);
-      // }
+      ref.read(createAdFlowControllerProvider.notifier).reset();
 
-      //  final draftCtrl = ref.read(adDraftControllerProvider.notifier);
+      final draftCtrl = ref.read(adDraftControllerProvider.notifier);
 
-      // if (widget.draftId != null) {
-      //   draftCtrl.loadFromDraft(widget.draftId!);
-      // } else if (widget.adId != null) {
-      //   draftCtrl.loadFromAd(widget.adId!);
-      // }
+      if (widget.draftId != null) {
+        draftCtrl.loadFromDraft(widget.draftId!);
+      } else if (widget.adId != null) {
+        draftCtrl.loadFromAd(widget.adId!);
+      } else {
+        draftCtrl.createNew();
+      }
     });
   }
 
@@ -85,7 +83,7 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
     final ctrl = ref.read(createAdFlowControllerProvider.notifier);
 
     if (index == 0) {
-      if (mounted) context.pop;
+      if (mounted) context.pop();
       return;
     }
 
@@ -108,7 +106,7 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
     if (!AdDirtyChecker.isDirty(draft)) {
       flowCtrl.reset();
       ref.read(adDraftControllerProvider.notifier).reset();
-      if (mounted) context.pop;
+      if (mounted) context.pop();
       return;
     }
 
@@ -123,14 +121,14 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
       flowCtrl.reset();
       ref.read(adDraftControllerProvider.notifier).reset();
       ShowSnack(context, 'Ad Draft discarded').success();
-      Navigator.pop(context);
+      context.pop();
     }
 
     if (action == CancelAction.saveAndExit && mounted) {
       flowCtrl.reset();
       ref.read(adDraftControllerProvider.notifier).reset();
       ShowSnack(context, 'Draft saved successfully').success();
-      context.pop;
+      context.pop();
     }
   }
 
@@ -146,7 +144,9 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
       final api = ref.read(adsApiProvider);
       final payload = CreateAdPayloadBuilder.build(d: draft, schema: schema);
 
-      final res = await api.createAd(payload: payload);
+      final res = draft.source == DraftSource.existingAd
+          ? await api.updateAdDraft(draftId: draft.adId!, payload: payload)
+          : await api.createAd(payload: payload);
 
       if (res.isLeft && mounted) {
         ShowSnack(context, res.leftOrNull!.message).error();
@@ -165,7 +165,7 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
       );
 
       if (result == true && mounted) {
-        context.pop(true); // leave create flow
+        context.pop(true);
       }
 
       if (mounted) context.pop(true);
@@ -183,7 +183,10 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
 
     final draft = ref
         .watch(adDraftControllerProvider)
-        .maybeWhen(data: (v) => v, orElse: () => const AdDraft());
+        .maybeWhen(
+          data: (v) => v,
+          orElse: () => const AdDraft(source: DraftSource.newAd),
+        );
 
     final categoryId = draft.categoryId;
 
@@ -243,8 +246,6 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
               text: isLast ? 'Post Ad' : 'Continue',
               loading: flowState.posting,
               icon: isLast ? Icons.check : Icons.arrow_forward,
-
-              // Disabled when invalid
               onPressed: (flowState.posting || !isValid)
                   ? null
                   : () async {
@@ -257,8 +258,6 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
                         await _post(draft: draft, schema: schema);
                       }
                     },
-
-              // 👇 This is the important part
               onDisabledTap: () {
                 if (result != null && !result.isValid) {
                   flowCtrl.markAttempted(index);

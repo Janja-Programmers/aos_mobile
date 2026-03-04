@@ -42,7 +42,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         name: AppRoutes.nCreateAd,
         path: AppRoutes.createAd,
-        builder: (_, _) => const CreateAdFlowScreen(),
+        builder: (context, state) {
+          final adId = state.uri.queryParameters['adId'];
+          final draftId = state.uri.queryParameters['draftId'];
+
+          return CreateAdFlowScreen(adId: adId, draftId: draftId);
+        },
       ),
 
       // Picker Routes

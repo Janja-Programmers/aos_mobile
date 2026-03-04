@@ -82,7 +82,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
       _err = null;
     });
 
-    final res = await ref.read(adsApiProvider).getAd(id: widget.id);
+    final res = await ref.read(adsApiProvider).getAd(adId: widget.id);
     if (!mounted) return;
 
     res.fold(

@@ -81,21 +81,20 @@ class PricingStep extends ConsumerWidget {
         // =========================
         // VISIBILITY TOGGLE
         // =========================
-        PriceVisibilityToggle(
-          priceType: priceType,
-          onSpecify: () {
-            if (priceType != 'Fixed') {
-              ctrl.setPriceType('Fixed');
-            }
-          },
-          onContact: () {
-            if (!isContact) {
-              ctrl.setPriceType('Contact for price');
-            }
-          },
-        ),
-
-        const SizedBox(height: 20),
+        if (!isService)
+          PriceVisibilityToggle(
+            priceType: priceType,
+            onSpecify: () {
+              if (priceType != 'Fixed') {
+                ctrl.setPriceType('Fixed');
+              }
+            },
+            onContact: () {
+              if (!isContact) {
+                ctrl.setPriceType('Contact for price');
+              }
+            },
+          ),
 
         // =========================
         // CONTACT MODE

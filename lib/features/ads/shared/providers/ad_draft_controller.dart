@@ -8,6 +8,7 @@ import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:africaonlinestores/shared/utils/enums.dart';
 
 final adDraftControllerProvider =
     StateNotifierProvider<AdDraftController, AsyncValue<AdDraft>>(
@@ -15,42 +16,93 @@ final adDraftControllerProvider =
     );
 
 class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
-  AdDraftController(this._ref) : super(const AsyncValue.data(AdDraft())) {
-    _draft = const AdDraft();
-  }
+  AdDraftController(this._ref)
+    : _draft = const AdDraft(source: DraftSource.newAd),
+      super(const AsyncValue.data(AdDraft(source: DraftSource.newAd)));
 
   final Ref _ref;
-  late AdDraft _draft;
+  AdDraft _draft;
 
   AdDraft get draft => _draft;
+
+  // ================= SETUP =================
+
+  void createNew() {
+    _draft = const AdDraft(source: DraftSource.newAd);
+    state = AsyncValue.data(_draft);
+  }
+
+  Future<void> loadFromDraft(String draftId) async {
+    final api = _ref.read(adsApiProvider);
+
+    state = const AsyncValue.loading();
+
+    final res = await api.getAdDraft(draftId: draftId);
+
+    if (res.isLeft) {
+      state = AsyncValue.error(res.leftOrNull!, StackTrace.current);
+      return;
+    }
+
+    final draft = AdDraft.fromDraft(res.rightOrNull!);
+
+    _draft = draft.copyWith(
+      source: DraftSource.adDraft,
+      draftId: draftId,
+      adId: null,
+    );
+
+    state = AsyncValue.data(_draft);
+  }
+
+  Future<void> loadFromAd(String adId) async {
+    final api = _ref.read(adsApiProvider);
+
+    state = const AsyncValue.loading();
+
+    final res = await api.getAd(adId: adId);
+
+    if (res.isLeft) {
+      state = AsyncValue.error(res.leftOrNull!, StackTrace.current);
+      return;
+    }
+
+    final draft = AdDraft.fromAd(res.rightOrNull!);
+
+    _draft = draft.copyWith(
+      source: DraftSource.existingAd,
+      adId: adId,
+      draftId: null,
+    );
+
+    state = AsyncValue.data(_draft);
+  }
 
   // ================= BASIC =================
 
   void updateTitle(String v) {
-    _draft = _draft.copyWith(title: v);
-    state = AsyncValue.data(_draft);
+    _setDraft(_draft.copyWith(title: v));
   }
 
   void setLocation({required String id, required String label}) {
-    _draft = _draft.copyWith(locationId: id, locationLabel: label);
-    state = AsyncValue.data(_draft);
+    _setDraft(_draft.copyWith(locationId: id, locationLabel: label));
   }
 
   void setCountry(String? id) {
-    _draft = _draft.copyWith(countryId: id);
-    state = AsyncValue.data(_draft);
+    _setDraft(_draft.copyWith(countryId: id));
   }
 
   void setCategory({required String id, required String label}) {
-    _draft = _draft.copyWith(
-      categoryId: id,
-      categoryLabel: label,
-      attributes: const <String, dynamic>{},
-      priceType: null,
-      price: null,
-      priceUnit: null,
+    _setDraft(
+      _draft.copyWith(
+        categoryId: id,
+        categoryLabel: label,
+        attributes: const <String, dynamic>{},
+        priceType: null,
+        price: null,
+        priceUnit: null,
+      ),
     );
-    state = AsyncValue.data(_draft);
   }
 
   void setDescription(String v) {
@@ -69,59 +121,47 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
       next[key] = value;
     }
 
-    _draft = _draft.copyWith(attributes: next);
-    state = AsyncValue.data(_draft);
+    _setDraft(_draft.copyWith(attributes: next));
   }
 
   // ================= PRICING =================
 
   void setPriceType(String? v) {
-    _draft = _draft.copyWith(
-      priceType: (v == null || v.trim().isEmpty) ? null : v,
+    _setDraft(
+      _draft.copyWith(priceType: (v == null || v.trim().isEmpty) ? null : v),
     );
-    state = AsyncValue.data(_draft);
   }
 
   void setCurrency(String? v) {
-    _draft = _draft.copyWith(
-      currency: (v == null || v.trim().isEmpty) ? null : v,
+    _setDraft(
+      _draft.copyWith(currency: (v == null || v.trim().isEmpty) ? null : v),
     );
-    state = AsyncValue.data(_draft);
   }
 
   void setPrice(double? v) {
-    _draft = _draft.copyWith(price: v);
-    state = AsyncValue.data(_draft);
+    _setDraft(_draft.copyWith(price: v));
   }
 
   void setPriceUnit(String? v) {
-    _draft = _draft.copyWith(
-      priceUnit: (v == null || v.trim().isEmpty) ? null : v,
+    _setDraft(
+      _draft.copyWith(priceUnit: (v == null || v.trim().isEmpty) ? null : v),
     );
-    state = AsyncValue.data(_draft);
   }
 
   void clearPricing() {
-    _draft = _draft.copyWith(priceType: null, price: null, priceUnit: null);
-    state = AsyncValue.data(_draft);
+    _setDraft(_draft.copyWith(priceType: null, price: null, priceUnit: null));
   }
 
   void setOfferPrice(double? value) {
-    state = state.whenData((draft) {
-      return draft.copyWith(offerPrice: value);
-    });
+    _setDraft(_draft.copyWith(offerPrice: value));
   }
 
   void setOfferStart(DateTime? value) {
-    state = state.whenData((draft) {
-      return draft.copyWith(offerStart: value);
-    });
+    _setDraft(_draft.copyWith(offerStart: value));
   }
 
   void setOfferEnd(DateTime? value) {
-    state = state.whenData((draft) {
-      return draft.copyWith(offerEnd: value);
-    });
+    _setDraft(_draft.copyWith(offerEnd: value));
   }
 
   // ================= MEDIA =================
@@ -208,15 +248,13 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
     final url = res.rightOrNull!;
 
-    _draft = _draft.copyWith(videoUrl: url);
-    state = AsyncValue.data(_draft);
+    _setDraft(_draft.copyWith(videoUrl: url));
 
     return Either.right(url);
   }
 
   void clearVideo() {
-    _draft = _draft.copyWith(videoUrl: null);
-    state = AsyncValue.data(_draft);
+    _setDraft(_draft.copyWith(videoUrl: null));
   }
 
   // ================= PRICING =================
@@ -230,9 +268,12 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   }
 
   // ================= RESET =================
+  void _setDraft(AdDraft next) {
+    _draft = next;
+    state = AsyncValue.data(next);
+  }
 
   void reset() {
-    _draft = const AdDraft();
-    state = AsyncValue.data(_draft);
+    _setDraft(const AdDraft(source: DraftSource.newAd));
   }
 }

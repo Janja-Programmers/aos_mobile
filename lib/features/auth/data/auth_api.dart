@@ -14,11 +14,19 @@ class AuthApi {
 
   Future<Either<Failure, Map<String, dynamic>>> googleLogin({
     required String idToken,
+    String? country,
+    String? language,
+    String? currency,
   }) async {
     try {
       final res = await _client.post(
         ApiEndpoints.googleLoginEndpoint,
-        data: {'id_token': idToken},
+        data: {
+          'id_token': idToken,
+          'country': ?country,
+          'language': ?language,
+          'currency': ?currency,
+        },
       );
       return unwrapFrappe(res);
     } catch (e) {

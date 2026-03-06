@@ -3,6 +3,8 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/buttons/social_button.dart';
@@ -24,6 +26,7 @@ class PlatformSocialSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = context.l10n;
 
     Widget dividerRow({required String label}) {
       return Row(
@@ -42,8 +45,10 @@ class PlatformSocialSection extends StatelessWidget {
       return Column(
         children: [
           const SizedBox(height: 18),
-          dividerRow(label: 'Or Continue with'),
+
+          dividerRow(label: l10n.auth_or_continue),
           const SizedBox(height: 14),
+
           Row(
             children: [
               Expanded(
@@ -53,7 +58,7 @@ class PlatformSocialSection extends StatelessWidget {
                     width: 22,
                     height: 22,
                   ),
-                  label: 'Google',
+                  label: l10n.auth_google,
                   loading: googleLoading,
                   onPressed: onGoogle,
                 ),
@@ -67,7 +72,7 @@ class PlatformSocialSection extends StatelessWidget {
                     width: 22,
                     height: 22,
                   ),
-                  label: 'Apple',
+                  label: l10n.auth_apple,
                   loading: googleLoading,
                   onPressed: onGoogle,
                 ),
@@ -82,7 +87,8 @@ class PlatformSocialSection extends StatelessWidget {
     return Column(
       children: [
         const SizedBox(height: 18),
-        dividerRow(label: 'Or'),
+
+        dividerRow(label: l10n.auth_or),
         const SizedBox(height: 14),
 
         SocialButton(
@@ -91,7 +97,7 @@ class PlatformSocialSection extends StatelessWidget {
             width: 22,
             height: 22,
           ),
-          label: 'Continue with Google',
+          label: l10n.auth_continue_google,
           loading: googleLoading,
           onPressed: onGoogle,
         ),

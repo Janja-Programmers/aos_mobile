@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 
 class OtpResendRow extends StatefulWidget {
   const OtpResendRow({
@@ -55,18 +56,23 @@ class _OtpResendRowState extends State<OtpResendRow> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text("Didn't receive the code? ", style: context.p),
+        Text(l10n.auth_resend_code, style: context.p),
 
         if (_canResend)
           GestureDetector(
             onTap: _handleResend,
-            child: Text('Resend', style: context.pStrong),
+            child: Text(l10n.auth_resend, style: context.pStrong),
           )
         else
-          Text('Resend in ${_secondsLeft}s', style: context.pMuted),
+          Text(
+            '${l10n.auth_resend_in} ${_secondsLeft}s',
+            style: context.pMuted,
+          ),
       ],
     );
   }

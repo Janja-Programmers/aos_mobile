@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,12 +58,12 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      _market = await ref.read(marketContextProvider.future);
-      if (mounted) {
-        await _load();
-      }
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) async {
+    //   _market = await ref.read(marketContextProvider.future);
+    //   if (mounted) {
+    //     await _load();
+    //   }
+    // });
   }
 
   @override

@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -64,6 +66,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _login() async {
+    final l10n = context.l10n;
+
     if (_loginLoading) return;
     if (!_formKey.currentState!.validate()) return;
 
@@ -81,10 +85,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
 
       await result.fold(
-        (f) async {
-          ShowSnack(context, f.message).error();
+        (e) async {
+          ShowSnack(context, l10n.auth_unexpected_error(e.toString())).error();
 
-          final msg = f.message.toLowerCase();
+          final msg = e.message.toLowerCase();
           final email = _emailCtrl.text.trim().toLowerCase();
 
           if (msg.contains('verify your email')) {
@@ -109,7 +113,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ShowSnack(context, 'Unexpected error: $e').error();
+      ShowSnack(context, l10n.auth_unexpected_error(e.toString())).error();
     } finally {
       // Only set loading off if navigation didn’t happen
       if (mounted && _loginLoading) setState(() => _loginLoading = false);
@@ -118,12 +122,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _googleSignIn() async {
     if (_busy) return;
+    final prefs = ref.read(userPreferenceControllerProvider);
 
     setState(() => _googleLoading = true);
     try {
       final result = await ref
           .read(authControllerProvider.notifier)
-          .signInWithGoogle();
+          .signInWithGoogle(
+            country: prefs.country,
+            language: prefs.language,
+            currency: prefs.currency,
+          );
 
       if (!mounted) return;
 
@@ -142,6 +151,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: scheme.surface,
@@ -164,10 +174,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 2),
-              Text('Hello, Welcome Back', style: context.h1),
+
+              Text(l10n.auth_login_title, style: context.h1),
               const SizedBox(height: 6),
-              Text('Login to your account below', style: context.p),
+
+              Text(l10n.auth_login_subtitle, style: context.p),
               const SizedBox(height: 26),
+
               Form(
                 key: _formKey,
                 child: Column(
@@ -175,7 +188,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     AppFormField(
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
-                      label: 'Email Address',
+                      label: l10n.auth_email_address,
                       validator: Validators.email,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [
@@ -184,8 +197,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
+
                     AppPasswordFormField(
                       controller: _passwordCtrl,
+                      label: l10n.auth_password,
                       validator: Validators.passwordRequired,
                       onFieldSubmitted: (_) => _login(),
                       textInputAction: TextInputAction.done,
@@ -195,6 +210,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 10),
+
               Row(
                 children: [
                   Checkbox(
@@ -203,36 +219,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     activeColor: scheme.primary,
                     checkColor: scheme.tertiary,
                   ),
-                  Expanded(child: Text('Remember Me', style: context.p)),
+                  Expanded(
+                    child: Text(l10n.auth_remember_me, style: context.p),
+                  ),
                   TextButton(
                     onPressed: () {
                       context.pushNamed(AppRoutes.nForgotPassword);
                     },
-                    child: Text('Forgot Password?', style: context.p),
+                    child: Text(l10n.auth_forgot_password, style: context.p),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
+
               PrimaryButton(
-                text: 'Login',
+                text: l10n.auth_login_button,
                 onPressed: _busy ? null : _login,
                 loading: _loginLoading,
               ),
+
               PlatformSocialSection(
                 loading: _busy,
                 googleLoading: _googleLoading,
                 onGoogle: _googleSignIn,
                 onApple: () =>
-                    ShowSnack(context, 'Apple signup coming soon.').info(),
+                    ShowSnack(context, l10n.auth_apple_signup_coming).info(),
               ),
               const SizedBox(height: 18),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Don\'t have an account? ', style: context.p),
+                  Text(l10n.auth_no_account, style: context.p),
+
                   GestureDetector(
                     onTap: () => context.pushNamed(AppRoutes.nRegister),
-                    child: Text('Register', style: context.pStrong),
+                    child: Text(l10n.auth_register, style: context.pStrong),
                   ),
                 ],
               ),

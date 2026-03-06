@@ -5,7 +5,6 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/widgets/schedule_offer_card.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/pricing_rules.dart';
-import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
 
 class OfferSection extends StatefulWidget {
   const OfferSection({
@@ -69,8 +68,8 @@ class _OfferSectionState extends State<OfferSection> {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (context, ref, _) {
-        final market = ref.watch(marketContextProvider).value;
-        final currency = market?.currency ?? '';
+        // final market = ref.watch(marketContextProvider).value;
+        // final currency = market?.currency ?? '';
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +89,7 @@ class _OfferSectionState extends State<OfferSection> {
                     : null,
                 prefix: Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: Text(currency, style: context.pStrong),
+                  child: Text("KES", style: context.pStrong),
                 ),
               ),
               onChanged: (v) {

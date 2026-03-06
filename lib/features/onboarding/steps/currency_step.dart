@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/localization/localization_provider.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/account/ui/widgets/locale_picker_page.dart';
-import 'package:africaonlinestores/features/account/shared/providers/user_preference_provider.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/picker_field.dart';
+
+import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
+import 'package:africaonlinestores/features/localization/localization_controller.dart';
+
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 
-class CurrencyStep extends ConsumerStatefulWidget {
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
+
+class CurrencyStep extends ConsumerWidget {
   final VoidCallback? onContinue;
   final VoidCallback? onSkip;
   final bool showBack;
@@ -24,188 +28,147 @@ class CurrencyStep extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<CurrencyStep> createState() => _CurrencyStepState();
-}
-
-class _CurrencyStepState extends ConsumerState<CurrencyStep> {
-  String? selectedCurrency;
-
-  @override
-  void initState() {
-    super.initState();
-    final prefs = ref.read(userPreferenceControllerProvider).value;
-    selectedCurrency = prefs?.currency;
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
-    final localizationAsync = ref.watch(localizationControllerProvider);
-    final prefsAsync = ref.watch(userPreferenceControllerProvider);
-    final isSaving = prefsAsync.isLoading;
+    final localization = ref.watch(localizationControllerProvider);
+    final onboarding = ref.watch(onboardingControllerProvider);
+    final controller = ref.read(onboardingControllerProvider.notifier);
 
-    return localizationAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
-      data: (localization) {
-        final rawCurrencies = localization.currencies;
+    final rawCurrencies = localization.currencies;
+    final selectedCurrency = onboarding.currency;
 
-        // Normalize to what LocalePickerPage expects: {code, name}
-        final currencies = rawCurrencies.map((c) {
-          final code = (c["code"] ?? "").toString().toUpperCase();
-          final symbol = (c["symbol"] ?? "").toString().trim();
+    final currencies = rawCurrencies.map((c) {
+      final code = (c["code"] ?? "").toString().toUpperCase();
+      final symbol = (c["symbol"] ?? "").toString().trim();
+      final display = symbol.isEmpty ? code : "$code ($symbol)";
 
-          final display = symbol.isEmpty ? code : "$code ($symbol)";
+      return {"code": code, "name": display, "symbol": symbol};
+    }).toList();
 
-          return <String, dynamic>{
-            "code": code,
-            "name": display, // used by picker
-            "symbol": symbol,
-          };
-        }).toList();
+    Map<String, dynamic>? selectedItem() {
+      final code = (selectedCurrency ?? "USD").toUpperCase();
 
-        bool isValid(String? code) =>
-            code != null && currencies.any((c) => c["code"] == code);
-
-        // Ensure we always have a valid selection if possible
-        if (!isValid(selectedCurrency)) {
-          if (isValid(localization.systemDefaultCurrency)) {
-            selectedCurrency = localization.systemDefaultCurrency;
-          } else {
-            selectedCurrency = currencies.isNotEmpty
-                ? (currencies.first["code"] as String?)
-                : null;
-          }
-        }
-
-        Map<String, dynamic>? selectedItem() {
-          if (selectedCurrency == null || currencies.isEmpty) return null;
-          return currencies.firstWhere(
-            (c) => c["code"] == selectedCurrency,
-            orElse: () => currencies.first,
-          );
-        }
-
-        final selected = selectedItem();
-        final selectedDisplay = selected?["name"] as String?;
-        final selectedCode = (selected?["code"] as String?)?.toUpperCase();
-
-        return Container(
-          color: scheme.surface,
-          padding: const EdgeInsets.all(24),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: IntrinsicHeight(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 12),
-
-                        if (widget.showBack)
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: IconButton(
-                              onPressed: widget.onBack,
-                              icon: const Icon(Icons.arrow_back),
-                            ),
-                          ),
-
-                        const SizedBox(height: 8),
-
-                        Center(
-                          child: CircleAvatar(
-                            radius: 56,
-                            backgroundColor: scheme.primary.withOpacity(0.1),
-                            child: Icon(
-                              Icons.currency_exchange,
-                              size: 64,
-                              color: scheme.primary,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        Text("Choose Your Currency", style: context.h4),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Prices will be shown in your selected currency",
-                          style: context.pMuted,
-                          textAlign: TextAlign.center,
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        PickerField(
-                          value: selectedDisplay ?? selectedCode,
-                          placeholder: currencies.isEmpty
-                              ? "No currencies available"
-                              : "Select your currency",
-                          leading: const Icon(Icons.currency_exchange),
-                          trailing: const Icon(Icons.arrow_drop_down),
-                          onTap: currencies.isEmpty
-                              ? null
-                              : () async {
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => LocalePickerPage(
-                                        title: "Select Currency",
-                                        items: currencies,
-                                        initialValue: selectedCurrency,
-                                        onChanged: (code) {
-                                          setState(
-                                            () => selectedCurrency = code,
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                        ),
-
-                        const Spacer(),
-
-                        PrimaryButton(
-                          text: "Get Started",
-                          loading: isSaving,
-                          onPressed:
-                              selectedCurrency == null ||
-                                  isSaving ||
-                                  currencies.isEmpty
-                              ? null
-                              : () async {
-                                  await ref
-                                      .read(
-                                        userPreferenceControllerProvider
-                                            .notifier,
-                                      )
-                                      .updateCurrency(selectedCurrency!);
-
-                                  widget.onContinue?.call();
-                                },
-                        ),
-
-                        TextButton(
-                          onPressed: widget.onSkip,
-                          child: Text("Skip for now", style: context.p),
-                        ),
-
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
+      try {
+        return currencies.firstWhere(
+          (c) => (c["code"] ?? "").toString().toUpperCase() == code,
         );
-      },
+      } catch (_) {
+        return currencies.firstWhere(
+          (c) => (c["code"] ?? "").toString().toUpperCase() == "USD",
+          orElse: () => currencies.first,
+        );
+      }
+    }
+
+    final selected = selectedItem();
+    final selectedDisplay = selected?["name"];
+    final selectedCode = (selected?["code"] as String?)?.toUpperCase();
+
+    final currency = selectedCode ?? "USD";
+
+    return Container(
+      color: scheme.surface,
+      padding: const EdgeInsets.all(24),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 12),
+
+                    if (showBack)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          onPressed: onBack,
+                          icon: const Icon(Icons.arrow_back),
+                        ),
+                      ),
+
+                    const SizedBox(height: 8),
+
+                    Center(
+                      child: CircleAvatar(
+                        radius: 56,
+                        backgroundColor: scheme.primary.withOpacity(0.1),
+                        child: Icon(
+                          Icons.currency_exchange,
+                          size: 64,
+                          color: scheme.primary,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    Text(l10n.onboarding_currency_title, style: context.h4),
+
+                    const SizedBox(height: 8),
+
+                    Text(
+                      l10n.onboarding_currency_subtitle,
+                      style: context.pMuted,
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    PickerField(
+                      value: selectedDisplay ?? selectedCode,
+                      placeholder: currencies.isEmpty
+                          ? l10n.common_no_currencies
+                          : l10n.onboarding_currency_placeholder,
+                      leading: const Icon(Icons.currency_exchange),
+                      trailing: const Icon(Icons.arrow_drop_down),
+                      onTap: currencies.isEmpty
+                          ? null
+                          : () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => LocalePickerPage(
+                                    title: l10n.onboarding_currency_picker,
+                                    items: currencies,
+                                    initialValue: selectedCurrency,
+                                    onChanged: (code) {
+                                      controller.setCurrency(code);
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                    ),
+
+                    const Spacer(),
+
+                    PrimaryButton(
+                      text: l10n.common_get_started,
+                      onPressed: () {
+                        controller.setCurrency(currency);
+                        controller.nextStep();
+                        onContinue?.call();
+                      },
+                    ),
+
+                    TextButton(
+                      onPressed: onSkip,
+                      child: Text(l10n.common_skip_for_now),
+                    ),
+
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

@@ -49,3 +49,7 @@ app.*.map.json
 # xcode related
 /ios/Flutter/flutter_export_environment.sh
 /ios/Flutter/Generated.xcconfig
+
+# Flutter generated localization
+lib/l10n/gen/*.dart
+untranslated.txt

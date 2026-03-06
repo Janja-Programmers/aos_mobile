@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
+import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,10 +13,119 @@ import 'package:africaonlinestores/features/home/domain/location_picker.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_list_scaffold.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/ads_content.dart';
 import 'package:africaonlinestores/features/home/shared/providers/home_page_providers.dart';
-import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// class AdListScreen extends ConsumerStatefulWidget {
+//   const AdListScreen({super.key});
+
+//   @override
+//   ConsumerState<AdListScreen> createState() => _AdListScreenState();
+// }
+
+// class _AdListScreenState extends ConsumerState<AdListScreen> {
+//   final _searchCtrl = TextEditingController();
+
+//   @override
+//   void dispose() {
+//     _searchCtrl.dispose();
+//     super.dispose();
+//   }
+
+// Future<void> _openLocationPicker() async {
+//   final marketAsync = ref.read(marketContextProvider);
+
+//   final currentLocationId = marketAsync.maybeWhen(
+//     data: (m) => m.locationId,
+//     orElse: () => null,
+//   );
+
+//   final result = await Navigator.of(context).push(
+//     MaterialPageRoute(
+//       builder: (_) => SelectLocationScreen(selectedId: currentLocationId),
+//     ),
+//   );
+
+//   final picked = LocationPick.fromPopResult(result);
+//   if (picked == null || picked.id == null) {
+//     return;
+//   }
+
+//   await ref
+//       .read(marketContextProvider.notifier)
+//       .setLocation(id: picked.id!, label: picked.label);
+
+//   // Now read updated market
+//   final updatedMarket = await ref.read(marketContextProvider.future);
+
+//   await ref
+//       .read(homePageControllerProvider.notifier)
+//       .reloadForMarket(updatedMarket);
+// }
+
+// Widget build(BuildContext context) {
+//   final marketAsync = ref.watch(marketContextProvider);
+//   final searchBar = AppSearchBar(
+//     readOnly: true,
+//     controller: _searchCtrl,
+//     onTap: () => context.pushNamed(AppRoutes.nSearch),
+//     onSubmitted: (_) {},
+//     onMicTap: () => context.pushNamed(AppRoutes.nSearch),
+//     onCameraTap: () => context.pushNamed(AppRoutes.nSearch),
+//   );
+//   final header = marketAsync.when(
+//     loading: () => HomeAppBar(
+//       locationLabel: 'All Locations',
+//       onTapLocation: () {},
+//       onTapFavorites: () {
+//         context.pushNamed(
+//           AppRoutes.nAllAds,
+//           extra: const AllAdsArgs('', null, mode: AllAdsMode.wishlist),
+//         );
+//       },
+//       onTapNotifications: () => ShowSnack(context, 'Coming Soon!').info(),
+//       search: searchBar,
+//     ),
+//     error: (_, _) => HomeAppBar(
+//       locationLabel: 'All Locations',
+//       onTapLocation: () {},
+//       onTapFavorites: () {
+//         context.pushNamed(
+//           AppRoutes.nAllAds,
+//           extra: const AllAdsArgs('', null, mode: AllAdsMode.wishlist),
+//         );
+//       },
+//       onTapNotifications: () => ShowSnack(context, 'Coming Soon!').info(),
+//       search: searchBar,
+//     ),
+//     data: (market) => HomeAppBar(
+//       locationLabel: market.locationLabel ?? 'All Locations',
+//       onTapLocation: _openLocationPicker,
+//       onTapFavorites: () {
+//         context.pushNamed(
+//           AppRoutes.nAllAds,
+//           extra: const AllAdsArgs('', null, mode: AllAdsMode.wishlist),
+//         );
+//       },
+//       onTapNotifications: () => ShowSnack(context, 'Coming Soon!').info(),
+//       search: searchBar,
+//     ),
+//   );
+//   return AdListScaffold(
+//     header: header,
+//     body: AdListContentView(
+//       onTapLocation: _openLocationPicker,
+//       onRefresh: () async {
+//         final market = await ref.read(marketContextProvider.future);
+//         await ref
+//             .read(homePageControllerProvider.notifier)
+//             .reloadForMarket(market);
+//       },
+//     ),
+//   );
+// }
 
 class AdListScreen extends ConsumerStatefulWidget {
   const AdListScreen({super.key});
@@ -32,99 +143,24 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
     super.dispose();
   }
 
-  Future<void> _openLocationPicker() async {
-    final marketAsync = ref.read(marketContextProvider);
-
-    final currentLocationId = marketAsync.maybeWhen(
-      data: (m) => m.locationId,
-      orElse: () => null,
-    );
-
-    final result = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SelectLocationScreen(selectedId: currentLocationId),
-      ),
-    );
-
-    final picked = LocationPick.fromPopResult(result);
-    if (picked == null || picked.id == null) {
-      return;
-    }
-
-    await ref
-        .read(marketContextProvider.notifier)
-        .setLocation(id: picked.id!, label: picked.label);
-
-    // Now read updated market
-    final updatedMarket = await ref.read(marketContextProvider.future);
-
-    await ref
-        .read(homePageControllerProvider.notifier)
-        .reloadForMarket(updatedMarket);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final marketAsync = ref.watch(marketContextProvider);
+    final onboarding = ref.watch(userPreferenceControllerProvider);
 
-    final searchBar = AppSearchBar(
-      readOnly: true,
-      controller: _searchCtrl,
-      onTap: () => context.pushNamed(AppRoutes.nSearch),
-      onSubmitted: (_) {},
-      onMicTap: () => context.pushNamed(AppRoutes.nSearch),
-      onCameraTap: () => context.pushNamed(AppRoutes.nSearch),
-    );
+    final country = onboarding.country;
+    final language = onboarding.language;
+    final currency = onboarding.currency;
 
-    final header = marketAsync.when(
-      loading: () => HomeAppBar(
-        locationLabel: 'All Locations',
-        onTapLocation: () {},
-        onTapFavorites: () {
-          context.pushNamed(
-            AppRoutes.nAllAds,
-
-            extra: const AllAdsArgs('', null, mode: AllAdsMode.wishlist),
-          );
-        },
-        onTapNotifications: () => ShowSnack(context, 'Coming Soon!').info(),
-        search: searchBar,
-      ),
-      error: (_, _) => HomeAppBar(
-        locationLabel: 'All Locations',
-        onTapLocation: () {},
-        onTapFavorites: () {
-          context.pushNamed(
-            AppRoutes.nAllAds,
-            extra: const AllAdsArgs('', null, mode: AllAdsMode.wishlist),
-          );
-        },
-        onTapNotifications: () => ShowSnack(context, 'Coming Soon!').info(),
-        search: searchBar,
-      ),
-      data: (market) => HomeAppBar(
-        locationLabel: market.locationLabel ?? 'All Locations',
-        onTapLocation: _openLocationPicker,
-        onTapFavorites: () {
-          context.pushNamed(
-            AppRoutes.nAllAds,
-            extra: const AllAdsArgs('', null, mode: AllAdsMode.wishlist),
-          );
-        },
-        onTapNotifications: () => ShowSnack(context, 'Coming Soon!').info(),
-        search: searchBar,
-      ),
-    );
-    return AdListScaffold(
-      header: header,
-      body: AdListContentView(
-        onTapLocation: _openLocationPicker,
-        onRefresh: () async {
-          final market = await ref.read(marketContextProvider.future);
-          await ref
-              .read(homePageControllerProvider.notifier)
-              .reloadForMarket(market);
-        },
+    return Scaffold(
+      appBar: AppBar(title: const Text("Ad List")),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Text(
+          "🌍 Country: $country\n"
+          "💱 Currency: $currency\n"
+          "🗣 Language: $language",
+          style: const TextStyle(fontSize: 18),
+        ),
       ),
     );
   }

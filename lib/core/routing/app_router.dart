@@ -13,32 +13,44 @@ import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/auth/shared/routing/auth_routes.dart';
 import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
-import 'package:africaonlinestores/features/onboarding/onboarding_screen.dart';
+import 'package:africaonlinestores/features/onboarding/screens/onboarding_screen.dart';
 
-import 'package:africaonlinestores/core/bootstrap/app_bootstrap_controller.dart';
+import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/core/routing/app_shell.dart';
 import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/routing/route_guards.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authControllerProvider);
+
   final authStream = ref.watch(authControllerProvider.notifier).stream;
-  final bootstrapAsync = ref.watch(appBootstrapProvider);
+
+  final bootstrapState = ref.watch(appBootstrapProvider);
+
+  final bootstrapStream = ref
+      .watch(appBootstrapControllerProvider.notifier)
+      .stream;
 
   return GoRouter(
     initialLocation: AppRoutes.home,
-    refreshListenable: GoRouterRefreshStream(authStream),
+
+    refreshListenable: Listenable.merge([
+      GoRouterRefreshStream(authStream),
+      GoRouterRefreshStream(bootstrapStream),
+    ]),
+
     routes: [
-      // 🔓 Public auth routes
+      /// AUTH
       ...AuthRoutes.routes(),
 
-      // 🧭 Onboarding
+      /// ONBOARDING
       GoRoute(
         name: AppRoutes.nOnboarding,
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingScreen(),
       ),
 
-      // 🚀 CREATE AD (OUTSIDE SHELL)
+      /// CREATE AD
       GoRoute(
         name: AppRoutes.nCreateAd,
         path: AppRoutes.createAd,
@@ -50,24 +62,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Picker Routes
+      /// CATEGORY PICKER
       GoRoute(
         name: AppRoutes.nSelectCategory,
         path: AppRoutes.selectCategory,
-        builder: (context, state) => SelectCategoryScreen(
-          parent: state.extra is CategoryNode
+        builder: (context, state) {
+          final parent = state.extra is CategoryNode
               ? state.extra as CategoryNode
-              : null,
-        ),
+              : null;
+
+          return SelectCategoryScreen(parent: parent);
+        },
       ),
 
+      /// LOCATION PICKER
       GoRoute(
         name: AppRoutes.nSelectLocation,
         path: AppRoutes.selectLocation,
         builder: (_, _) => const SelectLocationScreen(),
       ),
 
-      // 🏠 Main app shell (bottom navigation)
+      /// MAIN SHELL
       ShellRoute(
         builder: (context, state, child) {
           return AppShell(child: child);
@@ -79,37 +94,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
     ],
-
     redirect: (context, state) {
-      final bootstrap = bootstrapAsync.value;
-      if (bootstrap == null || !bootstrap.isReady) {
-        return null;
-      }
+      if (!bootstrapState.isReady) return null;
 
-      final completed = bootstrap.onboardingCompleted;
-      final loc = state.matchedLocation;
+      final location = state.uri.toString();
 
-      final isOnboarding = loc == AppRoutes.onboarding;
-      final isAuthRoute = loc.startsWith('/auth');
-      final isAccountRoute = loc.startsWith('/account');
-      final isSellerRoute = loc.startsWith('/seller');
+      final isOnboarding = RouteGuards.isOnboarding(location);
+      final isAuthRoute = RouteGuards.isAuthRoute(location);
+      final isProtected = RouteGuards.isProtectedRoute(location);
 
-      // 🚨 Force onboarding if not completed
-      if (!completed && !isOnboarding) {
+      /// Force onboarding
+      if (!bootstrapState.onboardingCompleted && !isOnboarding) {
         return AppRoutes.onboarding;
       }
 
-      // ✅ Prevent returning to onboarding after completion
-      if (completed && isOnboarding) {
+      /// Prevent returning to onboarding
+      if (bootstrapState.onboardingCompleted && isOnboarding) {
         return AppRoutes.home;
       }
 
-      // 🔐 Protect account & seller routes
-      if (!auth.isLoggedIn && (isAccountRoute || isSellerRoute)) {
+      /// Protect authenticated routes
+      if (!auth.isLoggedIn && isProtected) {
         return AppRoutes.login;
       }
 
-      // 🔁 Logged-in users shouldn’t see auth pages
+      /// Logged-in users shouldn't see auth pages
       if (auth.isLoggedIn && isAuthRoute) {
         return AppRoutes.home;
       }
@@ -121,7 +130,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
-    _sub = stream.asBroadcastStream().listen((_) => notifyListeners());
+    _sub = stream.listen((_) => notifyListeners());
   }
 
   late final StreamSubscription<dynamic> _sub;

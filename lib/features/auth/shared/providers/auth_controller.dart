@@ -12,7 +12,6 @@ import 'package:africaonlinestores/features/auth/data/auth_api_provider.dart';
 import 'package:africaonlinestores/features/auth/data/auth_api.dart';
 import 'package:africaonlinestores/features/auth/data/google_auth_service.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
-import 'package:africaonlinestores/features/account/shared/providers/user_preference_provider.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
 
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
@@ -172,15 +171,6 @@ class AuthController extends StateNotifier<AuthState> {
     _emit();
     _ref.invalidate(wishlistControllerProvider);
 
-    // Trigger preference sync (no locale controller anymore)
-    final prefApi = _ref.read(userPreferenceApiProvider);
-    await _ref
-        .read(userPreferenceControllerProvider.notifier)
-        .syncOnLogin(
-          getRemotePrefs: prefApi.getMyPreferences,
-          updateRemotePrefs: prefApi.updateMyPreferences,
-        );
-
     return Either.right(null);
   }
 
@@ -323,14 +313,23 @@ class AuthController extends StateNotifier<AuthState> {
     return ok ? Either.right(msg) : Either.left(Failure(msg));
   }
 
-  Future<Either<Failure, void>> signInWithGoogle() async {
+  Future<Either<Failure, void>> signInWithGoogle({
+    String? country,
+    String? language,
+    String? currency,
+  }) async {
     try {
       final idToken = await GoogleAuthService.signInAndGetIdToken();
       if (idToken == null || idToken.isEmpty) {
         return Either.left(const Failure('Google sign-in cancelled.'));
       }
 
-      final res = await _api.googleLogin(idToken: idToken);
+      final res = await _api.googleLogin(
+        idToken: idToken,
+        country: country ?? '',
+        language: language ?? '',
+        currency: currency ?? '',
+      );
       if (res.isLeft) return Either.left(res.leftOrNull!);
 
       final payload = res.rightOrNull ?? {};

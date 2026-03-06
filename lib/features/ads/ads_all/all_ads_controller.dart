@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/ads_all/all_ads_state.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
-import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
 
 /// ================= Mode =================
 
@@ -65,7 +64,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
   Future<void> _init() async {
     try {
-      _market = await ref.read(marketContextProvider.future);
+      // _market = await ref.read(marketContextProvider.future);
       await load(initial: true);
     } catch (e) {
       state = state.copyWith(

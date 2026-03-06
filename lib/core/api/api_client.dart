@@ -6,7 +6,7 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/account/shared/providers/user_preference_provider.dart';
+import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 
 class ApiClient {
@@ -116,10 +116,9 @@ class ApiClient {
   /// Synchronous resolution (cheap)
 
   String? _resolveCountryCode() {
-    final prefsAsync = _ref.read(userPreferenceControllerProvider);
-    final prefs = prefsAsync.maybeWhen(data: (v) => v, orElse: () => null);
-    final code = prefs?.country;
-    return (code == null || code.isEmpty) ? null : code;
+    final prefs = _ref.read(userPreferenceControllerProvider);
+    final code = prefs.country;
+    return (code.isEmpty) ? null : code;
   }
 
   Map<String, dynamic>? _injectCountryIntoQuery(

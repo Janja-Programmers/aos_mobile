@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/localization/localization_provider.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/account/ui/widgets/locale_picker_page.dart';
-import 'package:africaonlinestores/features/account/shared/providers/user_preference_provider.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/picker_field.dart';
+import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
+import 'package:africaonlinestores/features/localization/localization_controller.dart';
+
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 
-class CountryStep extends ConsumerStatefulWidget {
+class CountryStep extends ConsumerWidget {
   final VoidCallback onContinue;
   final VoidCallback onSkip;
   final bool showBack;
@@ -24,194 +27,153 @@ class CountryStep extends ConsumerStatefulWidget {
     this.onBack,
   });
 
-  @override
-  ConsumerState<CountryStep> createState() => _CountryStepState();
-}
-
-class _CountryStepState extends ConsumerState<CountryStep> {
-  String? selectedCountry;
-
-  String _flagEmoji(String countryCode) {
+  String flagEmoji(String countryCode) {
     final code = countryCode.toUpperCase();
     if (code.length != 2) return "🏳️";
-    final int first = code.codeUnitAt(0) - 65 + 0x1F1E6;
-    final int second = code.codeUnitAt(1) - 65 + 0x1F1E6;
+    final first = code.codeUnitAt(0) - 65 + 0x1F1E6;
+    final second = code.codeUnitAt(1) - 65 + 0x1F1E6;
     return String.fromCharCode(first) + String.fromCharCode(second);
   }
 
-  String? _deviceCountryCode() {
-    return WidgetsBinding.instance.platformDispatcher.locale.countryCode;
-  }
-
   @override
-  void initState() {
-    super.initState();
-    final prefs = ref.read(userPreferenceControllerProvider).value;
-    selectedCountry = prefs?.country;
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
+    final l10n = context.l10n;
 
-    final localizationAsync = ref.watch(localizationControllerProvider);
-    final prefsAsync = ref.watch(userPreferenceControllerProvider);
-    final isSaving = prefsAsync.isLoading;
+    final localization = ref.watch(localizationControllerProvider);
+    final onboarding = ref.watch(onboardingControllerProvider);
+    final controller = ref.read(onboardingControllerProvider.notifier);
 
-    return localizationAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
-      data: (localization) {
-        final countries = localization.countries;
+    final countries = localization.countries;
+    final selectedCountry = onboarding.country;
 
-        bool isValid(String? code) =>
-            code != null && countries.any((c) => c["code"] == code);
-
-        final deviceCode = _deviceCountryCode()?.toUpperCase();
-
-        // ✅ Prefill (device -> server fallback -> first)
-        if (!isValid(selectedCountry)) {
-          if (isValid(deviceCode)) {
-            selectedCountry = deviceCode;
-          } else if (isValid(localization.systemDefaultCountry)) {
-            selectedCountry = localization.systemDefaultCountry;
-          } else {
-            selectedCountry = countries.isNotEmpty
-                ? (countries.first["code"] as String?)
-                : null;
-          }
-        }
-
-        Map<String, dynamic>? selectedItem() {
-          if (selectedCountry == null || countries.isEmpty) return null;
-          return countries.firstWhere(
-            (c) => c["code"] == selectedCountry,
-            orElse: () => countries.first,
-          );
-        }
-
-        final selected = selectedItem();
-        final selectedName = selected?["name"] as String?;
-        final selectedCode = (selected?["code"] as String?)?.toUpperCase();
-
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: IntrinsicHeight(
-                    child: Column(
-                      children: [
-                        if (widget.showBack)
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: IconButton(
-                              icon: const Icon(Icons.arrow_back),
-                              onPressed: widget.onBack,
-                            ),
-                          ),
-
-                        const SizedBox(height: 16),
-
-                        Center(
-                          child: CircleAvatar(
-                            radius: 56, // smaller for small screens
-                            backgroundColor: colors.primary.withOpacity(0.1),
-                            child: Icon(
-                              Icons.location_on,
-                              size: 64,
-                              color: colors.primary,
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        Text("Set Your Country", style: context.h4),
-                        const SizedBox(height: 8),
-                        Text(
-                          "We'll show you products and sellers near you",
-                          style: context.pMuted,
-                          textAlign: TextAlign.center,
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        PickerField(
-                          value: selectedName,
-                          placeholder: "Select your country",
-                          leading: selectedCode == null
-                              ? const Icon(Icons.public)
-                              : Text(
-                                  _flagEmoji(selectedCode),
-                                  style: const TextStyle(fontSize: 22),
-                                ),
-                          trailing: const Icon(Icons.arrow_drop_down),
-                          onTap: countries.isEmpty
-                              ? null
-                              : () async {
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => LocalePickerPage(
-                                        title: "Select Country",
-                                        items: countries,
-                                        initialValue: selectedCountry,
-                                        leadingBuilder: (it) => Text(
-                                          _flagEmoji(
-                                            (it["code"] as String)
-                                                .toUpperCase(),
-                                          ),
-                                          style: const TextStyle(fontSize: 22),
-                                        ),
-                                        onChanged: (code) {
-                                          setState(
-                                            () => selectedCountry = code,
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                        ),
-
-                        const Spacer(),
-
-                        PrimaryButton(
-                          text: "Continue",
-                          loading: isSaving,
-                          onPressed: selectedCountry == null || isSaving
-                              ? null
-                              : () async {
-                                  await ref
-                                      .read(
-                                        userPreferenceControllerProvider
-                                            .notifier,
-                                      )
-                                      .updateCountry(selectedCountry!);
-
-                                  widget.onContinue();
-                                },
-                        ),
-
-                        TextButton(
-                          onPressed: widget.onSkip,
-                          child: Text("Skip for now", style: context.pMuted),
-                        ),
-
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
+    Map<String, dynamic>? selectedItem() {
+      if (selectedCountry == null) return null;
+      try {
+        return countries.firstWhere(
+          (c) =>
+              (c["code"] ?? "").toString().toUpperCase() ==
+              selectedCountry.toUpperCase(),
         );
-      },
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final selected = selectedItem();
+    final selectedName = selected?["name"] as String?;
+    final selectedCode = (selected?["code"] as String?)?.toUpperCase();
+
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  children: [
+                    if (showBack)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: onBack,
+                        ),
+                      ),
+
+                    const SizedBox(height: 16),
+
+                    Center(
+                      child: CircleAvatar(
+                        radius: 56,
+                        backgroundColor: colors.primary.withOpacity(0.1),
+                        child: Icon(
+                          Icons.location_on,
+                          size: 64,
+                          color: colors.primary,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    Text(l10n.onboarding_country_title, style: context.h4),
+
+                    const SizedBox(height: 8),
+
+                    Text(
+                      l10n.onboarding_country_subtitle,
+                      style: context.pMuted,
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    PickerField(
+                      value: selectedName,
+                      placeholder: l10n.onboarding_country_title,
+                      leading: selectedCode == null
+                          ? const Icon(Icons.public)
+                          : Text(
+                              flagEmoji(selectedCode),
+                              style: const TextStyle(fontSize: 22),
+                            ),
+                      trailing: const Icon(Icons.arrow_drop_down),
+                      onTap: countries.isEmpty
+                          ? null
+                          : () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => LocalePickerPage(
+                                    title: l10n.onboarding_country_picker,
+                                    items: countries,
+                                    initialValue: selectedCountry,
+                                    leadingBuilder: (it) => Text(
+                                      flagEmoji(
+                                        (it["code"] as String).toUpperCase(),
+                                      ),
+                                      style: const TextStyle(fontSize: 22),
+                                    ),
+                                    onChanged: (code) {
+                                      controller.setCountry(code);
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                    ),
+
+                    const Spacer(),
+
+                    PrimaryButton(
+                      text: l10n.common_continue,
+                      onPressed: selectedCountry == null
+                          ? null
+                          : () {
+                              controller.nextStep();
+                              onContinue();
+                            },
+                    ),
+
+                    TextButton(
+                      onPressed: onSkip,
+                      child: Text(
+                        l10n.common_skip_for_now,
+                        style: context.pMuted,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

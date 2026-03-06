@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/components/app_text_fields.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
@@ -34,6 +36,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Future<void> _sendOtp() async {
     final email = _emailCtrl.text.trim();
     final err = Validators.email(email);
+    final l10n = context.l10n;
+
     if (err != null) {
       ShowSnack(context, err).error();
       return;
@@ -56,7 +60,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      ShowSnack(context, 'Unexpected error: $e').error();
+      ShowSnack(context, l10n.auth_unexpected_error(e.toString())).error();
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -65,6 +69,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: scheme.surface,
@@ -80,10 +85,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
           children: [
-            Text('Forgot Password', style: context.h3),
+            Text(l10n.auth_forgot_password, style: context.h3),
             const SizedBox(height: 8),
             Text(
-              'Enter your email address to reset your password',
+              l10n.auth_mail_reset_password,
               style: context.p,
             ),
             const SizedBox(height: 22),
@@ -94,7 +99,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   AppFormField(
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
-                    label: 'Email Address',
+                    label: l10n.auth_email_address,
                     validator: Validators.email,
                     textInputAction: TextInputAction.done,
                     autofillHints: const [
@@ -104,7 +109,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   ),
                   const SizedBox(height: 22),
                   PrimaryButton(
-                    text: 'Send OTP',
+                    text: l10n.auth_send_otp,
                     onPressed: _loading ? null : _sendOtp,
                     loading: _loading,
                   ),

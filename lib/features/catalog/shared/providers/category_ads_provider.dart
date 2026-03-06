@@ -4,7 +4,6 @@ import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/features/catalog/data/categories_api.dart';
-import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
 
 final categoriesApiProvider = Provider<CategoriesApi>((ref) {
   return CategoriesApi(ref.watch(apiClientProvider));
@@ -15,13 +14,13 @@ final forYouAdsProvider = FutureProvider.family<List<AOSAdListItem>, String>((
   categoryId,
 ) async {
   // 🔥 Resolve market explicitly
-  final market = await ref.read(marketContextProvider.future);
+  // final market = await ref.read(marketContextProvider.future);
 
   final adsApi = ref.read(adsApiProvider);
 
   final res = await adsApi.listAds(
-    country: market.country,
-    locationId: market.locationId,
+    country: "Kenya",
+    locationId: "",
     categoryId: categoryId,
     limit: 10,
     offset: 0,

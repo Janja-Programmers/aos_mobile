@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -106,11 +105,11 @@ class _HomeSearchScreenState extends ConsumerState<HomeSearchScreen> {
     });
 
     // 🔥 Resolve market explicitly
-    final market = await ref.read(marketContextProvider.future);
+    // final market = await ref.read(marketContextProvider.future);
 
     final res = await ref
         .read(adsApiProvider)
-        .listAds(country: market.country, q: q, limit: 20, offset: 0);
+        .listAds(country: "Kenya", q: q, limit: 20, offset: 0);
 
     if (!mounted) return;
 

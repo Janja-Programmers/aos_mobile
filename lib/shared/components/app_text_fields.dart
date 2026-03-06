@@ -111,7 +111,7 @@ class AppPasswordFormField extends StatefulWidget {
   const AppPasswordFormField({
     super.key,
     this.controller,
-    this.label = 'Password',
+    this.label,
     this.validator,
     this.onFieldSubmitted,
     this.enabled,
@@ -120,7 +120,7 @@ class AppPasswordFormField extends StatefulWidget {
   });
 
   final TextEditingController? controller;
-  final String label;
+  final String? label;
   final FormFieldValidator<String>? validator;
   final ValueChanged<String>? onFieldSubmitted;
   final bool? enabled;
@@ -138,7 +138,7 @@ class _AppPasswordFormFieldState extends State<AppPasswordFormField> {
   Widget build(BuildContext context) {
     return AppFormField(
       controller: widget.controller,
-      label: widget.label,
+      label: widget.label ?? '',
       obscureText: _obscure,
       validator: widget.validator,
       onFieldSubmitted: widget.onFieldSubmitted,

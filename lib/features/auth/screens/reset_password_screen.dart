@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 
 import 'package:africaonlinestores/shared/components/app_success_sheet.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/app_text_fields.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({
@@ -42,6 +45,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   }
 
   Future<void> _save() async {
+    final l10n = context.l10n;
     if (!_formKey.currentState!.validate()) return;
 
     final pw1 = _pwCtrl.text;
@@ -60,34 +64,38 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
       if (!mounted) return;
 
-      await result.fold((f) async => ShowSnack(context, f.message).error(), (
-        _,
-      ) async {
-        await showModalBottomSheet(
-          context: context,
-          isScrollControlled: false,
-          backgroundColor: Colors.transparent,
-          builder: (_) => AppSuccessSheet(
-            title: 'Password Updated\nSuccessfully',
-            message: 'Your password has been updated successfully',
-            buttonText: 'Proceed To Login',
-            onPressed: () {
-              if (!context.mounted) return;
+      await result.fold(
+        (e) async => ShowSnack(
+          context,
+          l10n.auth_unexpected_error(e.toString()),
+        ).error(),
+        (_) async {
+          await showModalBottomSheet(
+            context: context,
+            isScrollControlled: false,
+            backgroundColor: Colors.transparent,
+            builder: (_) => AppSuccessSheet(
+              title: l10n.auth_password_updated_title,
+              message: l10n.auth_password_updated_message,
+              buttonText: l10n.auth_password_updated_button,
+              onPressed: () {
+                if (!context.mounted) return;
 
-              // Close the sheet first (Navigator owns overlays).
-              Navigator.of(context).pop();
+                // Close the sheet first (Navigator owns overlays).
+                Navigator.of(context).pop();
 
-              // Then route using go_router.
-              context.go(
-                '${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}',
-              );
-            },
-          ),
-        );
-      });
+                // Then route using go_router.
+                context.go(
+                  '${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}',
+                );
+              },
+            ),
+          );
+        },
+      );
     } catch (e) {
       if (!mounted) return;
-      ShowSnack(context, 'Unexpected error: $e').error();
+      ShowSnack(context, l10n.auth_unexpected_error(e.toString())).error();
     } finally {
       if (mounted) setState(() => _loading = false);
     }

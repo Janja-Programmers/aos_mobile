@@ -3,16 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/routing/app_routes.dart';
 import 'package:africaonlinestores/core/utils/validators.dart';
 
 import 'package:africaonlinestores/features/account/ui/legal_docs_widgets.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_section.dart';
-import 'package:africaonlinestores/features/account/shared/providers/user_preference_provider.dart';
+import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+
 import 'package:africaonlinestores/shared/components/app_text_fields.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
@@ -108,12 +110,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _register() async {
+    final l10n = context.l10n;
+
     if (!_accept) {
       if (mounted) {
-        ShowSnack(
-          context,
-          'Please accept Terms & Conditions and Privacy Policy',
-        ).error();
+        ShowSnack(context, l10n.auth_accept_terms_error).error();
       }
       return;
     }
@@ -124,9 +125,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     setState(() => _registerLoading = true);
 
     try {
-      final prefsAsync = ref.read(userPreferenceControllerProvider);
-
-      final prefs = prefsAsync.maybeWhen(data: (v) => v, orElse: () => null);
+      final prefs = ref.read(userPreferenceControllerProvider);
 
       final result = await ref
           .read(authControllerProvider.notifier)
@@ -134,27 +133,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             email: _email.text.trim().toLowerCase(),
             password: _password.text,
             fullName: _name.text.trim(),
-
-            // ✅ Send preference if exists, else null
-            country: prefs?.country,
-            language: prefs?.language,
-            currency: prefs?.currency,
+            country: prefs.country,
+            language: prefs.language,
+            currency: prefs.currency,
           );
 
       if (!mounted) return;
 
-      await result.fold((f) async => ShowSnack(context, f.message).error(), (
-        msg,
-      ) async {
-        ShowSnack(context, msg).success();
-        await context.pushNamed(
-          AppRoutes.nVerifyOtp,
-          extra: _email.text.trim().toLowerCase(),
-        );
-      });
+      await result.fold(
+        (f) async => ShowSnack(
+          context,
+          l10n.auth_unexpected_error(f.message.toString()),
+        ).error(),
+        (msg) async {
+          ShowSnack(context, msg).success();
+          await context.pushNamed(
+            AppRoutes.nVerifyOtp,
+            extra: _email.text.trim().toLowerCase(),
+          );
+        },
+      );
     } catch (e) {
       if (!mounted) return;
-      ShowSnack(context, 'Unexpected error: $e').error();
+      ShowSnack(context, l10n.auth_unexpected_error(e.toString())).error();
     } finally {
       if (mounted) {
         setState(() => _registerLoading = false);
@@ -165,11 +166,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Future<void> _googleSignIn() async {
     if (_busy) return;
 
+    final l10n = context.l10n;
+
+    final prefs = ref.read(userPreferenceControllerProvider);
+
     setState(() => _googleLoading = true);
     try {
       final result = await ref
           .read(authControllerProvider.notifier)
-          .signInWithGoogle();
+          .signInWithGoogle(
+            country: prefs.country,
+            language: prefs.language,
+            currency: prefs.currency,
+          );
 
       if (!mounted) return;
 
@@ -179,7 +188,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ShowSnack(context, 'Unexpected error: $e').error();
+      ShowSnack(context, l10n.auth_unexpected_error(e.toString())).error();
     } finally {
       if (mounted) setState(() => _googleLoading = false);
     }
@@ -188,6 +197,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: scheme.surface,
@@ -210,13 +220,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 2),
-              Text('Register', style: context.h1),
 
+              Text(l10n.auth_register_title, style: context.h1),
               const SizedBox(height: 6),
-              Text(
-                'Enter your details below to create your account',
-                style: context.p,
-              ),
+
+              Text(l10n.auth_register_subtitle, style: context.p),
               const SizedBox(height: 26),
 
               Form(
@@ -225,16 +233,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   children: [
                     AppFormField(
                       controller: _name,
-                      label: 'Full Name',
+                      label: l10n.auth_full_name,
                       validator: Validators.required,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.name],
                     ),
                     const SizedBox(height: 16),
+
                     AppFormField(
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
-                      label: 'Email Address',
+                      label: l10n.auth_email_address,
                       validator: Validators.email,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [
@@ -243,16 +252,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
+
                     AppPasswordFormField(
                       controller: _password,
+                      label: l10n.auth_confirm_password,
                       validator: Validators.passwordRequired,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [AutofillHints.newPassword],
                     ),
                     const SizedBox(height: 16),
+
                     AppPasswordFormField(
                       controller: _confirm,
-                      label: 'Confirm Password',
+                      label: l10n.auth_confirm_password,
                       validator: (v) =>
                           Validators.confirmPassword(v, _password.text),
                       textInputAction: TextInputAction.done,
@@ -261,8 +273,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 10),
+
               Row(
                 children: [
                   Checkbox(
@@ -276,23 +288,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       text: TextSpan(
                         style: context.p,
                         children: [
-                          const TextSpan(text: 'I agree to the '),
+                          TextSpan(text: l10n.auth_agree_prefix),
                           TextSpan(
-                            text: 'Terms & Conditions',
+                            text: l10n.auth_terms_and_conditions,
                             style: const TextStyle(fontWeight: FontWeight.w700),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => _openLegalSheet(
-                                title: 'Terms & Conditions',
+                                title: l10n.auth_terms_and_conditions,
                                 child: const TermsConditionsContent(),
                               ),
                           ),
-                          const TextSpan(text: ' and '),
+                          TextSpan(text: l10n.auth_and),
                           TextSpan(
-                            text: 'Privacy Policy',
+                            text: l10n.auth_privacy_policy,
                             style: const TextStyle(fontWeight: FontWeight.w700),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => _openLegalSheet(
-                                title: 'Privacy Policy',
+                                title: l10n.auth_privacy_policy,
                                 child: const PrivacyPolicyContent(),
                               ),
                           ),
@@ -303,10 +315,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 10),
+
               PrimaryButton(
-                text: 'Register',
+                text: l10n.auth_register_button,
                 onPressed: _busy ? null : _register,
                 loading: _registerLoading,
               ),
@@ -316,14 +328,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 googleLoading: _googleLoading,
                 onGoogle: _googleSignIn,
                 onApple: () =>
-                    ShowSnack(context, 'Apple signup coming soon.').info(),
+                    ShowSnack(context, l10n.auth_apple_signup_coming).info(),
               ),
-
               const SizedBox(height: 18),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Already have an account? ', style: context.p),
+                  Text(l10n.auth_already_have_account, style: context.p),
                   GestureDetector(
                     onTap: () => context.pushNamed(
                       AppRoutes.nLogin,
@@ -331,11 +343,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         'email': _email.text.trim().toLowerCase(),
                       },
                     ),
-                    child: Text('Login', style: context.pStrong),
+                    child: Text(l10n.auth_login, style: context.pStrong),
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
             ],
           ),

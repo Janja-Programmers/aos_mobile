@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
+import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/otp_resend_row.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/otp_section.dart';
-import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/app_success_sheet.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class VerifyOTPScreen extends ConsumerStatefulWidget {
   const VerifyOTPScreen({
@@ -33,8 +35,10 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
   String _otp = '';
 
   Future<void> _verify() async {
+    final l10n = context.l10n;
+
     if (_otp.length != 6) {
-      ShowSnack(context, 'Enter the 6-digit code').error();
+      ShowSnack(context, l10n.auth_digit_code).error();
       return;
     }
 
@@ -70,9 +74,9 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
           isScrollControlled: false,
           backgroundColor: Colors.transparent,
           builder: (_) => AppSuccessSheet(
-            title: 'Email Verified\nSuccessfully',
-            message: 'Your email has been verified successfully',
-            buttonText: 'Proceed To Login',
+            title: l10n.auth_email_verified_title,
+            message: l10n.auth_email_verified_message,
+            buttonText: l10n.auth_password_updated_button,
             onPressed: () {
               if (!context.mounted) return;
 
@@ -89,13 +93,15 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      ShowSnack(context, 'Unexpected error: $e').error();
+      ShowSnack(context, l10n.auth_unexpected_error(e.toString())).error();
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _resend() async {
+    final l10n = context.l10n;
+
     try {
       final ctrl = ref.read(authControllerProvider.notifier);
 
@@ -106,22 +112,29 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
       if (!mounted) return;
 
       result.fold(
-        (f) => ShowSnack(context, f.message).error(),
-        (msg) => ShowSnack(context, msg).success(),
+        (f) => ShowSnack(
+          context,
+          l10n.auth_unexpected_error(f.toString()),
+        ).error(),
+        (msg) => ShowSnack(
+          context,
+          l10n.auth_unexpected_error(msg.toString()),
+        ).success(),
       );
     } catch (e) {
       if (!mounted) return;
-      ShowSnack(context, 'Unexpected error: $e').error();
+      ShowSnack(context, l10n.auth_unexpected_error(e.toString())).error();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenTitle = 'Email Verification';
-    final header = 'Enter Verification Code';
-    final subtitle = 'We have sent the verification code to';
-
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+
+    final screenTitle = l10n.auth_email_verification_title;
+    final header = l10n.auth_enter_verification_code;
+    final subtitle = l10n.auth_verification_code_sent_to;
 
     return Scaffold(
       backgroundColor: scheme.surface,

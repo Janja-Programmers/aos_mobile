@@ -54,8 +54,7 @@
       "error": {}
     }
   },
-  "auth_apple_signup_coming": "Apple signup coming soon.",
-  "@auth_apple_signup_coming": {},
+ 
   "auth_already_have_account": "Already have an account? ",
   "@auth_already_have_account": {},
   "auth_login": "Login",
@@ -74,16 +73,8 @@
   "@auth_no_account": {},
   "auth_register": "Register",
   "@auth_register": {},
-  "auth_or_continue": "or Continue with",
-  "@auth_or_continue": {},
   "auth_continue_google": "Continue with Google",
   "@auth_continue_google": {},
-  "auth_continue_apple": "Continue with Apple",
-  "@auth_continue_apple": {},
-  "auth_apple": "Apple",
-  "@auth_apple": {},
-  "auth_google": "Google",
-  "@auth_google": {},
   "auth_or": "or",
   "@auth_or": {},
   "auth_send_otp": "Send OTP",

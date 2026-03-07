@@ -31,8 +31,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _rememberMe = true;
   bool _loginLoading = false;
   bool _googleLoading = false;
+  bool _appleLoading = false;
 
-  bool get _busy => _loginLoading || _googleLoading;
+  bool get _busy => _loginLoading || _googleLoading || _appleLoading;
 
   @override
   void initState() {
@@ -148,6 +149,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _appleSignIn() async {
+    if (_busy) return;
+
+    final prefs = ref.read(userPreferenceControllerProvider);
+
+    setState(() => _appleLoading = true);
+
+    try {
+      final result = await ref
+          .read(authControllerProvider.notifier)
+          .signInWithApple(
+            country: prefs.country,
+            language: prefs.language,
+            currency: prefs.currency,
+          );
+
+      if (!mounted) return;
+
+      result.fold(
+        (f) => ShowSnack(context, f.message).error(),
+        (_) => context.goNamed(AppRoutes.nHome),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ShowSnack(context, 'Unexpected error: $e').error();
+    } finally {
+      if (mounted) setState(() => _appleLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -241,9 +272,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               PlatformSocialSection(
                 loading: _busy,
                 googleLoading: _googleLoading,
+                appleLoading: _appleLoading,
                 onGoogle: _googleSignIn,
-                onApple: () =>
-                    ShowSnack(context, l10n.auth_apple_signup_coming).info(),
+                onApple: _appleSignIn,
               ),
               const SizedBox(height: 18),
 

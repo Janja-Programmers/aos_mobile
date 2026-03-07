@@ -30,7 +30,6 @@
       "error": {}
     }
   },
-  "auth_apple_signup_coming": "Usajili wa Apple unakuja hivi karibuni.",
   "auth_already_have_account": "Tayari una akaunti? ",
   "auth_login": "Ingia",
   "auth_login_title": "Habari, Karibu Tena",
@@ -40,11 +39,7 @@
   "auth_login_button": "Ingia",
   "auth_no_account": "Huna akaunti?",
   "auth_register": "Jisajili",
-  "auth_or_continue": "au endelea na",
   "auth_continue_google": "Endelea na Google",
-  "auth_continue_apple": "Endelea na Apple",
-  "auth_apple": "Apple",
-  "auth_google": "Google",
   "auth_or": "au",
   "auth_send_otp": "Tuma OTP",
   "auth_mail_reset_password": "Tia neno pepe ili ugeuze nenosiri la akaunti yako",

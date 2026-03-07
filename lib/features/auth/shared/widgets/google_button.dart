@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/core/theme/app_theme.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
-class SocialButton extends StatelessWidget {
-  const SocialButton({
+class GoogleButton extends StatelessWidget {
+  const GoogleButton({
     super.key,
     required this.icon,
     required this.label,
@@ -31,7 +30,7 @@ class SocialButton extends StatelessWidget {
           backgroundColor: Colors.transparent,
           foregroundColor: context.appColors.primary,
           side: BorderSide(color: colors.border),
-          shape: const RoundedRectangleBorder(borderRadius: AppTheme.pill),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14),),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

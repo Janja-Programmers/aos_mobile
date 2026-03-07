@@ -47,6 +47,7 @@ dependencies:
   http: ^1.6.0
   intl: ^0.20.2
   equatable: ^2.0.8
+  sign_in_with_apple: ^7.0.1
 
 dev_dependencies:
   flutter_test:
@@ -66,7 +67,6 @@ flutter:
     - assets/images/logo.png
     - assets/icons/app_icon.png
     - assets/icons/google.svg
-    - assets/icons/apple.svg
 
   # fonts:
   #   - family: Schyler

@@ -12,6 +12,7 @@ class AuthApi {
   AuthApi(this._client);
   final ApiClient _client;
 
+  /// GOOGLE LOGIN
   Future<Either<Failure, Map<String, dynamic>>> googleLogin({
     required String idToken,
     String? country,
@@ -23,9 +24,33 @@ class AuthApi {
         ApiEndpoints.googleLoginEndpoint,
         data: {
           'id_token': idToken,
-          'country': ?country,
-          'language': ?language,
-          'currency': ?currency,
+          'country': country ?? '',
+          'language': language ?? '',
+          'currency': currency ?? '',
+        },
+      );
+
+      return unwrapFrappe(res);
+    } catch (e) {
+      return _mapError(e);
+    }
+  }
+
+  /// APPLE LOGIN
+  Future<Either<Failure, Map<String, dynamic>>> appleLogin({
+    required String idToken,
+    String? country,
+    String? language,
+    String? currency,
+  }) async {
+    try {
+      final res = await _client.post(
+        ApiEndpoints.appleLoginEndpoint,
+        data: {
+          'id_token': idToken,
+          'country': country ?? '',
+          'language': language ?? '',
+          'currency': currency ?? '',
         },
       );
       return unwrapFrappe(res);
@@ -34,6 +59,7 @@ class AuthApi {
     }
   }
 
+  /// REGISTER
   Future<Either<Failure, Map<String, dynamic>>> register({
     required String email,
     required String password,
@@ -50,9 +76,9 @@ class AuthApi {
           'email': email,
           'password': password,
           'full_name': fullName,
-          'country': ?country,
-          'language': ?language,
-          'currency': ?currency,
+          'country': country ?? '',
+          'language': language ?? '',
+          'currency': currency ?? '',
         },
       );
 
@@ -62,6 +88,7 @@ class AuthApi {
     }
   }
 
+  /// VERIFY OTP
   Future<Either<Failure, Map<String, dynamic>>> verifyOtp({
     required String email,
     required String otp,
@@ -79,6 +106,7 @@ class AuthApi {
     }
   }
 
+  /// RESEND OTP
   Future<Either<Failure, Map<String, dynamic>>> resendOtp({
     required String email,
   }) async {
@@ -95,6 +123,7 @@ class AuthApi {
     }
   }
 
+  /// LOGIN
   Future<Either<Failure, Map<String, dynamic>>> login({
     required String email,
     required String password,
@@ -110,6 +139,7 @@ class AuthApi {
     }
   }
 
+  /// CURRENT USER
   Future<Either<Failure, Map<String, dynamic>>> me() async {
     try {
       final res = await _client.get(ApiEndpoints.meEndpoint);
@@ -119,6 +149,7 @@ class AuthApi {
     }
   }
 
+  /// LOGOUT
   Future<Either<Failure, Map<String, dynamic>>> logout() async {
     try {
       final res = await _client.post(ApiEndpoints.logoutEndpoint);
@@ -128,7 +159,7 @@ class AuthApi {
     }
   }
 
-  // Forgot password
+  /// FORGOT PASSWORD REQUEST
   Future<Either<Failure, Map<String, dynamic>>> forgotPasswordRequest({
     required String email,
   }) async {
@@ -143,6 +174,7 @@ class AuthApi {
     }
   }
 
+  /// FORGOT PASSWORD VERIFY OTP
   Future<Either<Failure, Map<String, dynamic>>> forgotPasswordVerifyOtp({
     required String email,
     required String otp,
@@ -158,6 +190,7 @@ class AuthApi {
     }
   }
 
+  /// RESET PASSWORD
   Future<Either<Failure, Map<String, dynamic>>> forgotPasswordReset({
     required String email,
     required String resetToken,
@@ -180,6 +213,7 @@ class AuthApi {
     }
   }
 
+  /// CHANGE PASSWORD
   Future<Either<Failure, Map<String, dynamic>>> changePassword({
     required String currentPassword,
     required String newPassword,
@@ -200,6 +234,7 @@ class AuthApi {
     }
   }
 
+  /// ERROR MAPPER
   Either<Failure, Map<String, dynamic>> _mapError(Object e) {
     if (e is DioException) {
       return Either.left(mapDioException(e));

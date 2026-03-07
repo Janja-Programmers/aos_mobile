@@ -30,7 +30,6 @@
       "error": {}
     }
   },
-  "auth_apple_signup_coming": "Apple 注册即将推出。",
   "auth_already_have_account": "已经有账户？",
   "auth_login": "登录",
   "auth_login_title": "欢迎回来",
@@ -40,10 +39,6 @@
   "auth_login_button": "登录",
   "auth_no_account": "没有账户？",
   "auth_register": "注册",
-  "auth_or_continue": "或继续使用",
   "auth_continue_google": "使用 Google 继续",
-  "auth_continue_apple": "使用 Apple 继续",
-  "auth_apple": "Apple",
-  "auth_google": "Google",
   "auth_or": "或"
 }

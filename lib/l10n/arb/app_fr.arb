@@ -30,7 +30,7 @@
       "error": {}
     }
   },
-  "auth_apple_signup_coming": "Inscription Apple bientôt disponible.",
+  
   "auth_already_have_account": "Vous avez déjà un compte ? ",
   "auth_login": "Connexion",
   "auth_login_title": "Bonjour, bon retour",
@@ -40,10 +40,6 @@
   "auth_login_button": "Connexion",
   "auth_no_account": "Vous n'avez pas de compte ?",
   "auth_register": "S'inscrire",
-  "auth_or_continue": "ou continuer avec",
   "auth_continue_google": "Continuer avec Google",
-  "auth_continue_apple": "Continuer avec Apple",
-  "auth_apple": "Apple",
-  "auth_google": "Google",
   "auth_or": "ou"
 }

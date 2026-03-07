@@ -34,10 +34,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _confirm = TextEditingController();
 
   bool _googleLoading = false;
+  bool _appleLoading = false;
   bool _registerLoading = false;
   bool _accept = true;
 
-  bool get _busy => _registerLoading || _googleLoading;
+  bool get _busy => _registerLoading || _googleLoading || _appleLoading;
 
   @override
   void dispose() {
@@ -194,6 +195,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
   }
 
+  Future<void> _appleSignIn() async {
+    if (_busy) return;
+
+    final prefs = ref.read(userPreferenceControllerProvider);
+
+    setState(() => _appleLoading = true);
+
+    try {
+      final result = await ref
+          .read(authControllerProvider.notifier)
+          .signInWithApple(
+            country: prefs.country,
+            language: prefs.language,
+            currency: prefs.currency,
+          );
+
+      if (!mounted) return;
+
+      result.fold(
+        (f) => ShowSnack(context, f.message).error(),
+        (_) => context.goNamed(AppRoutes.nHome),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ShowSnack(context, 'Unexpected error: $e').error();
+    } finally {
+      if (mounted) setState(() => _appleLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -294,9 +325,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             style: const TextStyle(fontWeight: FontWeight.w700),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => _openLegalSheet(
-                                title: l10n.auth_terms_and_conditions,
-                                child: const TermsConditionsContent(),
-                              ),
+                                    title: l10n.auth_terms_and_conditions,
+                                    child: const TermsConditionsContent(),
+                                  ),
                           ),
                           TextSpan(text: l10n.auth_and),
                           TextSpan(
@@ -304,9 +335,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             style: const TextStyle(fontWeight: FontWeight.w700),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => _openLegalSheet(
-                                title: l10n.auth_privacy_policy,
-                                child: const PrivacyPolicyContent(),
-                              ),
+                                    title: l10n.auth_privacy_policy,
+                                    child: const PrivacyPolicyContent(),
+                                  ),
                           ),
                           const TextSpan(text: '.'),
                         ],
@@ -326,9 +357,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               PlatformSocialSection(
                 loading: _busy,
                 googleLoading: _googleLoading,
+                appleLoading: _appleLoading,
                 onGoogle: _googleSignIn,
-                onApple: () =>
-                    ShowSnack(context, l10n.auth_apple_signup_coming).info(),
+                onApple: _appleSignIn,
               ),
               const SizedBox(height: 18),
 

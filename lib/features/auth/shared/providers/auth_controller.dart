@@ -11,6 +11,7 @@ import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/features/auth/data/auth_api_provider.dart';
 import 'package:africaonlinestores/features/auth/data/auth_api.dart';
 import 'package:africaonlinestores/features/auth/data/google_auth_service.dart';
+import 'package:africaonlinestores/features/auth/data/apple_auth_service.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
 
@@ -53,7 +54,7 @@ class AuthController extends StateNotifier<AuthState> {
   void _emit() {
     if (!_changesCtrl.isClosed) _changesCtrl.add(null);
   }
-
+  
   /// Update the cached user data (used after profile update).
   void setUserFromMap(Map<String, dynamic> userMap) {
     if (!state.isLoggedIn) return;
@@ -124,7 +125,7 @@ class AuthController extends StateNotifier<AuthState> {
     _emit();
   }
 
-  // AUTH
+  // EMAIL LOGIN
   Future<Either<Failure, void>> login({
     required String email,
     required String password,
@@ -313,6 +314,7 @@ class AuthController extends StateNotifier<AuthState> {
     return ok ? Either.right(msg) : Either.left(Failure(msg));
   }
 
+  // GOOGLE LOGIN
   Future<Either<Failure, void>> signInWithGoogle({
     String? country,
     String? language,
@@ -360,6 +362,63 @@ class AuthController extends StateNotifier<AuthState> {
       return Either.right(null);
     } catch (e) {
       return Either.left(Failure('Google sign-in failed: $e'));
+    }
+  }
+
+  // APPLE LOGIN
+  Future<Either<Failure, void>> signInWithApple({
+    String? country,
+    String? language,
+    String? currency,
+  }) async {
+    try {
+      final credential = await AppleAuthService().signIn();
+
+      final idToken = credential?.identityToken;
+
+      if (idToken == null || idToken.isEmpty) {
+        return Either.left(const Failure('Apple sign-in cancelled.'));
+      }
+
+      final res = await _api.appleLogin(
+        idToken: idToken,
+        country: country ?? '',
+        language: language ?? '',
+        currency: currency ?? '',
+      );
+
+      if (res.isLeft) return Either.left(res.leftOrNull!);
+
+      final payload = res.rightOrNull ?? {};
+      if (payload['ok'] != true) {
+        return Either.left(
+          Failure((payload['message'] ?? 'Apple login failed').toString()),
+        );
+      }
+
+      final data = Map<String, dynamic>.from(payload['data'] ?? {});
+      final sid = (data['sid'] ?? '').toString();
+
+      if (sid.isEmpty) {
+        return Either.left(const Failure('No session returned.'));
+      }
+
+      await _apiClient.setSid(sid);
+      await _storage.setSid(sid);
+
+      state = state.copyWith(
+        isLoggedIn: true,
+        sid: sid,
+        user: AuthUser.fromMap(Map<String, dynamic>.from(data['user'] ?? {})),
+        clearError: true,
+      );
+
+      _emit();
+      _ref.invalidate(wishlistControllerProvider);
+
+      return Either.right(null);
+    } catch (e) {
+      return Either.left(Failure('Apple sign-in failed: $e'));
     }
   }
 

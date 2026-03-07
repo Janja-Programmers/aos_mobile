@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
-import 'package:africaonlinestores/core/providers.dart ' show apiClientProvider;
+import 'package:africaonlinestores/core/providers.dart' show apiClientProvider;
 import 'package:africaonlinestores/features/localization/localization_state.dart';
 
 final localizationControllerProvider =

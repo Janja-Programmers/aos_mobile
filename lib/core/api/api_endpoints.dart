@@ -18,6 +18,8 @@ class ApiEndpoints {
       '/api/method/aos.api.auth.change_password';
   static final String googleLoginEndpoint =
       '/api/method/aos.api.auth.google_login';
+  static final String appleLoginEndpoint =
+      '/api/method/aos.api.auth.apple_login';
 
   // Accounts Endpoints
   static final String getProfileEndpoint =

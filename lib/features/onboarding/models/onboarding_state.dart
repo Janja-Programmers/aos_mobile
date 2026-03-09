@@ -1,34 +1,42 @@
 class OnboardingState {
   final int step;
-  final String? language;
-  final String? country;
-  final String? currency;
+
+  final String? languageCode;
+  final String? countryCode;
+  final String? currencyCode;
+
   final bool didInitDefaults;
 
   const OnboardingState({
     required this.step,
-    this.language,
-    this.country,
-    this.currency,
-    this.didInitDefaults = false,
+    this.languageCode,
+    this.countryCode,
+    this.currencyCode,
+    required this.didInitDefaults,
   });
 
   factory OnboardingState.initial() {
-    return const OnboardingState(step: 0, didInitDefaults: false);
+    return const OnboardingState(
+      step: 0,
+      languageCode: null,
+      countryCode: null,
+      currencyCode: null,
+      didInitDefaults: false,
+    );
   }
 
   OnboardingState copyWith({
     int? step,
-    String? language,
-    String? country,
-    String? currency,
+    String? languageCode,
+    String? countryCode,
+    String? currencyCode,
     bool? didInitDefaults,
   }) {
     return OnboardingState(
       step: step ?? this.step,
-      language: language ?? this.language,
-      country: country ?? this.country,
-      currency: currency ?? this.currency,
+      languageCode: languageCode ?? this.languageCode,
+      countryCode: countryCode ?? this.countryCode,
+      currencyCode: currencyCode ?? this.currencyCode,
       didInitDefaults: didInitDefaults ?? this.didInitDefaults,
     );
   }

@@ -12,7 +12,7 @@ const List<Locale> kSupportedLocales = <Locale>[
 ];
 
 Locale? resolveLocale(UserPreferenceState? prefs) {
-  final raw = prefs?.language;
+  final raw = prefs?.languageCode;
   if (raw == null) return null;
 
   final code = raw.trim().toLowerCase();

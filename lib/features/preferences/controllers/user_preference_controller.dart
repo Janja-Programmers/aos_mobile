@@ -19,37 +19,59 @@ class UserPreferenceController extends StateNotifier<UserPreferenceState> {
     _load();
   }
 
-  /// Load saved preferences from storage
+  /// Load saved preferences from SharedPreferences
   void _load() {
     final prefs = _storage.loadPreferences();
     state = prefs;
   }
 
+  /// Sync preferences received from API (after login)
+  Future<void> syncFromServer({
+    required String languageCode,
+    required String countryCode,
+    required String currencyCode,
+  }) async {
+    state = state.copyWith(isLoading: true);
+
+    final updated = UserPreferenceState(
+      languageCode: languageCode.toLowerCase(),
+      countryCode: countryCode.toUpperCase(),
+      currencyCode: currencyCode.toUpperCase(),
+    );
+
+    await _storage.savePreferences(updated);
+
+    state = updated.copyWith(isLoading: false);
+  }
+
   /// Update language
-  Future<void> updateLanguage(String language) async {
+  Future<void> updateLanguageCode(String languageCode) async {
     state = state.copyWith(isSaving: true);
 
-    final updated = state.copyWith(language: language);
+    final updated = state.copyWith(languageCode: languageCode.toLowerCase());
+
     await _storage.savePreferences(updated);
 
     state = updated.copyWith(isSaving: false);
   }
 
   /// Update country
-  Future<void> updateCountry(String country) async {
+  Future<void> updateCountryCode(String countryCode) async {
     state = state.copyWith(isSaving: true);
 
-    final updated = state.copyWith(country: country);
+    final updated = state.copyWith(countryCode: countryCode.toUpperCase());
+
     await _storage.savePreferences(updated);
 
     state = updated.copyWith(isSaving: false);
   }
 
   /// Update currency
-  Future<void> updateCurrency(String currency) async {
+  Future<void> updateCurrencyCode(String currencyCode) async {
     state = state.copyWith(isSaving: true);
 
-    final updated = state.copyWith(currency: currency);
+    final updated = state.copyWith(currencyCode: currencyCode.toUpperCase());
+
     await _storage.savePreferences(updated);
 
     state = updated.copyWith(isSaving: false);
@@ -57,16 +79,16 @@ class UserPreferenceController extends StateNotifier<UserPreferenceState> {
 
   /// Update multiple preferences at once
   Future<void> updatePreferences({
-    String? language,
-    String? country,
-    String? currency,
+    String? languageCode,
+    String? countryCode,
+    String? currencyCode,
   }) async {
     state = state.copyWith(isSaving: true);
 
     final updated = state.copyWith(
-      language: language,
-      country: country,
-      currency: currency,
+      languageCode: languageCode?.toLowerCase(),
+      countryCode: countryCode?.toUpperCase(),
+      currencyCode: currencyCode?.toUpperCase(),
     );
 
     await _storage.savePreferences(updated);
@@ -74,11 +96,11 @@ class UserPreferenceController extends StateNotifier<UserPreferenceState> {
     state = updated.copyWith(isSaving: false);
   }
 
-  /// Reset preferences (useful for logout/dev)
+  /// Reset preferences (dev/testing only)
   Future<void> reset() async {
     state = state.copyWith(isSaving: true);
 
-    await _storage.clear();
+    await _storage.clearAll();
 
     state = UserPreferenceState.initial();
   }

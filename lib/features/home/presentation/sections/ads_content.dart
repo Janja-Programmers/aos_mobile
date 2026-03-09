@@ -28,7 +28,7 @@ class AdListContentView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(body: Text("Hello Content"));
+    return const Scaffold(body: Text("Hello Content"));
   }
 }
 //     final pageAsync = ref.watch(homePageControllerProvider);

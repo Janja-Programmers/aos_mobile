@@ -5,23 +5,11 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:go_router/go_router.dart';
 
-/// Guest header card used on Account screen when user is NOT authenticated.
-/// Store: lib/ui/screens/account/widgets/account_guest_header_card.dart
-///
-/// Usage:
-///   const AccountGuestHeaderCard()
-///
-/// Optional:
-///   AccountGuestHeaderCard(
-///     onLogin: () => context.pushNamed(AppRoutes.nLogin),
-///     onSignUp: () => context.push(AppRoutes.signUp),
-///   )
 class AccountGuestHeaderCard extends StatelessWidget {
   const AccountGuestHeaderCard({
     super.key,
     this.title = 'Welcome to AOS',
-    this.subtitle =
-        'Sign in to access your account, manage listings, and more.',
+    this.subtitle = 'Sign in to access your account, manage ads, and more.',
     this.onLogin,
     this.onSignUp,
   });

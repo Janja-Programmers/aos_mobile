@@ -1,9 +1,9 @@
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/providers.dart' show apiClientProvider;
-import 'package:africaonlinestores/features/localization/localization_state.dart';
+
+import 'package:africaonlinestores/features/localization/models/localization_state.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final localizationControllerProvider =
     StateNotifierProvider<LocalizationController, LocalizationState>((ref) {
@@ -21,31 +21,44 @@ class LocalizationController extends StateNotifier<LocalizationState> {
   Future<void> _load() async {
     try {
       final response = await _api.dio.get(ApiEndpoints.getLocaleBundleEndpoint);
+
       final data = response.data["message"]["data"];
 
-      final countries = List<Map<String, dynamic>>.from(
-        data["countries"] ?? [],
-      );
+      /// Countries
+      final countries = List<Map<String, dynamic>>.from(data["countries"] ?? [])
+          .map((c) {
+            return {
+              "name": (c["name"] ?? "").toString(),
+              "code": (c["code"] ?? "").toString().toUpperCase(),
+            };
+          })
+          .toList();
 
-      final languages = List<Map<String, dynamic>>.from(
-        data["languages"] ?? [],
-      );
+      /// Languages
+      final languages = List<Map<String, dynamic>>.from(data["languages"] ?? [])
+          .map((l) {
+            return {
+              "name": (l["name"] ?? "").toString(),
+              "code": (l["code"] ?? "").toString().toLowerCase(),
+            };
+          })
+          .toList();
 
+      /// Currencies
       final rawCurrencies = List<Map<String, dynamic>>.from(
         data["currencies"] ?? [],
       );
 
-      /// Normalize currencies for picker compatibility
       final currencies = rawCurrencies.map((c) {
-        final code = (c["code"] ?? "").toString().toUpperCase();
+        final code = (c["name"] ?? "").toString().toUpperCase();
         final symbol = (c["symbol"] ?? "").toString().trim();
 
         final display = symbol.isEmpty ? code : "$code ($symbol)";
 
         return <String, dynamic>{
           "code": code,
-          "name": display,
           "symbol": symbol,
+          "display": display,
         };
       }).toList();
 
@@ -54,6 +67,7 @@ class LocalizationController extends StateNotifier<LocalizationState> {
         languages: languages,
         currencies: currencies,
         isLoading: false,
+        error: null,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -61,14 +75,20 @@ class LocalizationController extends StateNotifier<LocalizationState> {
   }
 
   bool isValidCountry(String code) {
-    return state.countries.any((c) => c["code"] == code);
+    return state.countries.any(
+      (c) => (c["code"] ?? "").toString().toUpperCase() == code.toUpperCase(),
+    );
   }
 
   bool isValidLanguage(String code) {
-    return state.languages.any((l) => l["code"] == code);
+    return state.languages.any(
+      (l) => (l["code"] ?? "").toString().toLowerCase() == code.toLowerCase(),
+    );
   }
 
   bool isValidCurrency(String code) {
-    return state.currencies.any((c) => c["code"] == code);
+    return state.currencies.any(
+      (c) => (c["code"] ?? "").toString().toUpperCase() == code.toUpperCase(),
+    );
   }
 }

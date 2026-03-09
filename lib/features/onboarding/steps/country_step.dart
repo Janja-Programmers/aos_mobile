@@ -7,11 +7,12 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/account/ui/widgets/locale_picker_page.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/picker_field.dart';
 import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
-import 'package:africaonlinestores/features/localization/localization_controller.dart';
+import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
 
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/utils/flag_emoji.dart';
 
 class CountryStep extends ConsumerWidget {
   final VoidCallback onContinue;
@@ -27,14 +28,6 @@ class CountryStep extends ConsumerWidget {
     this.onBack,
   });
 
-  String flagEmoji(String countryCode) {
-    final code = countryCode.toUpperCase();
-    if (code.length != 2) return "🏳️";
-    final first = code.codeUnitAt(0) - 65 + 0x1F1E6;
-    final second = code.codeUnitAt(1) - 65 + 0x1F1E6;
-    return String.fromCharCode(first) + String.fromCharCode(second);
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
@@ -45,15 +38,16 @@ class CountryStep extends ConsumerWidget {
     final controller = ref.read(onboardingControllerProvider.notifier);
 
     final countries = localization.countries;
-    final selectedCountry = onboarding.country;
+    final selectedCountryCode = onboarding.countryCode;
 
     Map<String, dynamic>? selectedItem() {
-      if (selectedCountry == null) return null;
+      if (selectedCountryCode == null || countries.isEmpty) return null;
+
       try {
         return countries.firstWhere(
           (c) =>
               (c["code"] ?? "").toString().toUpperCase() ==
-              selectedCountry.toUpperCase(),
+              selectedCountryCode.toUpperCase(),
         );
       } catch (_) {
         return null;
@@ -130,7 +124,7 @@ class CountryStep extends ConsumerWidget {
                                   builder: (_) => LocalePickerPage(
                                     title: l10n.onboarding_country_picker,
                                     items: countries,
-                                    initialValue: selectedCountry,
+                                    initialValue: selectedCountryCode,
                                     leadingBuilder: (it) => Text(
                                       flagEmoji(
                                         (it["code"] as String).toUpperCase(),
@@ -138,7 +132,7 @@ class CountryStep extends ConsumerWidget {
                                       style: const TextStyle(fontSize: 22),
                                     ),
                                     onChanged: (code) {
-                                      controller.setCountry(code);
+                                      controller.setCountryCode(code);
                                     },
                                   ),
                                 ),
@@ -150,7 +144,7 @@ class CountryStep extends ConsumerWidget {
 
                     PrimaryButton(
                       text: l10n.common_continue,
-                      onPressed: selectedCountry == null
+                      onPressed: selectedCountryCode == null
                           ? null
                           : () {
                               controller.nextStep();

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,7 +22,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   void initState() {
     super.initState();
 
-    scheduleMicrotask(() {
+    /// Initialize defaults after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
           .read(onboardingControllerProvider.notifier)
           .initializeDefaultsIfNeeded();
@@ -41,7 +40,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final steps = <Widget>[
       WelcomeStep(onContinue: controller.nextStep),
 
-      LanguageStep(onContinue: controller.nextStep),
+      LanguageStep(onContinue: controller.nextStep, onSkip: controller.finish),
 
       CountryStep(
         onContinue: controller.nextStep,
@@ -58,7 +57,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
     ];
 
-    final safeIndex = state.step.clamp(0, steps.length - 1);
+    final int safeIndex = state.step.clamp(0, steps.length - 1).toInt();
 
     return Scaffold(
       backgroundColor: colors.surface,

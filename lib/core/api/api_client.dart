@@ -117,7 +117,7 @@ class ApiClient {
 
   String? _resolveCountryCode() {
     final prefs = _ref.read(userPreferenceControllerProvider);
-    final code = prefs.country;
+    final code = prefs.countryCode;
     return (code.isEmpty) ? null : code;
   }
 

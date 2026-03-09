@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/localization/localization_controller.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
-import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
-
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 import 'package:africaonlinestores/features/account/ui/widgets/locale_picker_page.dart';
 import 'package:africaonlinestores/features/account/ui/widgets/pref_card.dart';
+import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
+import 'package:africaonlinestores/features/preferences/data/preferences_api_provider.dart';
+import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:africaonlinestores/shared/utils/flag_emoji.dart';
 
 class PreferenceScreen extends ConsumerStatefulWidget {
   const PreferenceScreen({super.key});
@@ -35,9 +37,9 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
     final prefs = ref.watch(userPreferenceControllerProvider);
 
     if (!_dirty) {
-      _country ??= prefs.country;
-      _language ??= prefs.language;
-      _currency ??= prefs.currency;
+      _country ??= prefs.countryCode;
+      _language ??= prefs.languageCode;
+      _currency ??= prefs.currencyCode;
     }
 
     final isSaving = prefs.isSaving;
@@ -59,7 +61,7 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
 
     final countryLabel = _labelFor(localization.countries, _country);
     final languageLabel = _labelFor(localization.languages, _language);
-    final currencyLabel = _currency;
+    final currencyLabel = _labelFor(localization.currencies, _currency);
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -81,7 +83,7 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
 
             /// Language
             PrefCard(
-              leading: Icons.language,
+              leading: Icons.translate,
               title: 'Language',
               value: languageLabel ?? '—',
               description: 'Controls how text appears in the app.',
@@ -101,7 +103,7 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
 
             /// Country
             PrefCard(
-              leading: Icons.location_on,
+              leading: Icons.location_on_outlined,
               title: 'Country',
               value: countryLabel ?? '—',
               description:
@@ -167,6 +169,10 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
           title: title,
           items: items,
           initialValue: initialValue,
+          leadingBuilder: (it) => Text(
+            flagEmoji((it["code"] ?? "").toString().toUpperCase()),
+            style: const TextStyle(fontSize: 22),
+          ),
           onChanged: onChanged,
         ),
       ),
@@ -176,9 +182,15 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
   String? _labelFor(List<Map<String, dynamic>> items, String? code) {
     if (code == null) return null;
 
-    final match = items.firstWhere((e) => e['code'] == code, orElse: () => {});
+    try {
+      final match = items.firstWhere(
+        (e) => (e['code'] ?? '').toString().toUpperCase() == code.toUpperCase(),
+      );
 
-    return match.isNotEmpty ? match['name'] : null;
+      return (match['name'] ?? match['display'] ?? code).toString();
+    } catch (_) {
+      return code;
+    }
   }
 
   Future<void> _onSavePressed() async {
@@ -193,11 +205,25 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
     final ctrl = ref.read(userPreferenceControllerProvider.notifier);
 
     try {
+      /// 1️⃣ Update local preferences
       await ctrl.updatePreferences(
-        country: _country,
-        language: _language,
-        currency: _currency,
+        countryCode: _country,
+        languageCode: _language,
+        currencyCode: _currency,
       );
+
+      /// 2️⃣ Update server if logged in
+      final auth = ref.read(authControllerProvider);
+
+      if (auth.isAuthenticated) {
+        final api = ref.read(userPreferenceApiProvider);
+
+        await api.updateMyPreferences({
+          "country": _country,
+          "language": _language,
+          "currency": _currency,
+        });
+      }
 
       if (!mounted) return;
 

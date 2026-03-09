@@ -29,22 +29,31 @@ class AuthState {
   final AuthUser? user;
   final String? errorMessage;
 
+  bool get isAuthenticated => user != null && sid != null;
+  bool get isGuest => !isAuthenticated;
+
   factory AuthState.initial() =>
       const AuthState(initializing: true, isLoggedIn: false);
+
+  AuthState loggedOut() {
+    return const AuthState(initializing: false, isLoggedIn: false);
+  }
 
   AuthState copyWith({
     bool? initializing,
     bool? isLoggedIn,
     String? sid,
+    bool clearSid = false,
     AuthUser? user,
+    bool clearUser = false,
     String? errorMessage,
     bool clearError = false,
   }) {
     return AuthState(
       initializing: initializing ?? this.initializing,
       isLoggedIn: isLoggedIn ?? this.isLoggedIn,
-      sid: sid ?? this.sid,
-      user: user ?? this.user,
+      sid: clearSid ? null : (sid ?? this.sid),
+      user: clearUser ? null : (user ?? this.user),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }

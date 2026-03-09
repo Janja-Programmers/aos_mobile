@@ -77,9 +77,11 @@ class _BasicStepState extends ConsumerState<BasicStep> {
           leading: const Icon(Icons.place_outlined),
           placeholder: "Select your location",
           onTap: () async {
-            final res = await context.push<Map<String, dynamic>>(
-              AppRoutes.selectLocation,
+            final res = await context.pushNamed<Map<String, dynamic>>(
+              AppRoutes.nSelectLocation,
+              extra: false,
             );
+
             if (res == null) return;
 
             final id = (res['id'] ?? '').toString();

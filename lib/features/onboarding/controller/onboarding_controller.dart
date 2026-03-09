@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 
-import 'package:africaonlinestores/features/localization/localization_controller.dart';
+import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
+import 'package:africaonlinestores/features/onboarding/models/onboarding_state.dart';
 import 'package:africaonlinestores/core/utils/device_locale.dart';
 
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
-import 'package:africaonlinestores/features/onboarding/models/onboarding_state.dart';
 
 final onboardingControllerProvider =
     StateNotifierProvider<OnboardingController, OnboardingState>((ref) {
@@ -23,45 +23,52 @@ class OnboardingController extends StateNotifier<OnboardingState> {
     if (state.didInitDefaults) return;
 
     final localization = ref.read(localizationControllerProvider);
+
     if (localization.isLoading || localization.error != null) {
       return;
     }
 
     final prefs = ref.read(userPreferenceControllerProvider);
 
+    /// ---------- LANGUAGE RESOLUTION ----------
     final supportedLanguages = localization.languages;
-    final savedLang = prefs.language.trim().toLowerCase();
+
+    final savedLang = prefs.languageCode.trim().toLowerCase();
     final deviceLang = DeviceLocale.languageCode();
 
     bool hasLanguage(String? code) {
       if (code == null || code.isEmpty) return false;
+
       return supportedLanguages.any(
-        (l) => (l['code'] ?? '').toString().trim().toLowerCase() == code,
+        (l) => (l['code'] ?? '').toString().toLowerCase() == code,
       );
     }
 
     final resolvedLang = hasLanguage(savedLang)
         ? savedLang
-        : (hasLanguage(deviceLang)
-              ? deviceLang
-              : (supportedLanguages.isNotEmpty
-                    ? (supportedLanguages.first['code'] ?? '')
-                          .toString()
-                          .trim()
-                          .toLowerCase()
-                    : null));
+        : hasLanguage(deviceLang)
+        ? deviceLang
+        : (supportedLanguages.isNotEmpty
+              ? (supportedLanguages.first['code'] ?? '')
+                    .toString()
+                    .toLowerCase()
+              : null);
 
-    // Only set if user hasn't picked anything yet.
-    final nextLanguage = state.language ?? resolvedLang;
+    final nextLanguage = state.languageCode ?? resolvedLang;
 
-    // ---------- COUNTRY RESOLUTION ----------
+    /// ---------- COUNTRY RESOLUTION ----------
     final supportedCountries = localization.countries;
-    final savedCountry = prefs.country.trim().toUpperCase();
+
+    final savedCountry = prefs.countryCode.trim().toUpperCase();
     final deviceCountry = DeviceLocale.countryCode()?.toUpperCase();
 
     bool hasCountry(String? code) {
       if (code == null || code.isEmpty) return false;
-      final normalized = code.substring(0, 2);
+
+      final normalized = code.length >= 2
+          ? code.substring(0, 2).toUpperCase()
+          : code;
+
       return supportedCountries.any((c) {
         final cCode = (c['code'] ?? '').toString().toUpperCase();
         return cCode.startsWith(normalized);
@@ -70,67 +77,61 @@ class OnboardingController extends StateNotifier<OnboardingState> {
 
     final resolvedCountry = hasCountry(savedCountry)
         ? savedCountry
-        : (hasCountry(deviceCountry)
-              ? deviceCountry
-              : (supportedCountries.isNotEmpty
-                    ? (supportedCountries.first['code'] ?? '')
-                          .toString()
-                          .toUpperCase()
-                    : null));
+        : hasCountry(deviceCountry)
+        ? deviceCountry
+        : (supportedCountries.isNotEmpty
+              ? (supportedCountries.first['code'] ?? '')
+                    .toString()
+                    .toUpperCase()
+              : null);
 
-    // ---------- CURRENCY RESOLUTION ----------
-    String? currencyFromCountry(String? countryCode) {
-      if (countryCode == null) return null;
+    /// ---------- CURRENCY RESOLUTION ----------
+    final savedCurrency = prefs.currencyCode.trim().toUpperCase();
 
-      final match = supportedCountries.firstWhere(
-        (c) => (c['code'] ?? '').toString().toUpperCase() == countryCode,
-        orElse: () => {},
-      );
-
-      return match.isNotEmpty
-          ? (match['currency'] ?? '').toString().toUpperCase()
-          : null;
-    }
-
-    final resolvedCurrency = currencyFromCountry(resolvedCountry);
+    final resolvedCurrency = savedCurrency.isNotEmpty ? savedCurrency : 'USD';
 
     state = state.copyWith(
-      language: nextLanguage,
-      country: state.country ?? resolvedCountry,
-      currency: state.currency ?? resolvedCurrency,
+      languageCode: nextLanguage,
+      countryCode: state.countryCode ?? resolvedCountry,
+      currencyCode: state.currencyCode ?? resolvedCurrency,
       didInitDefaults: true,
     );
   }
 
-  void nextStep() => state = state.copyWith(step: state.step + 1);
-  void previousStep() => state = state.copyWith(step: state.step - 1);
-
-  /// Called by UI when user changes language in picker
-  void setLanguage(String code) {
-    state = state.copyWith(language: code.trim().toLowerCase());
+  void nextStep() {
+    state = state.copyWith(step: state.step + 1);
   }
 
-  void setCountry(String code) {
-    state = state.copyWith(country: code);
+  void previousStep() {
+    state = state.copyWith(step: state.step - 1);
   }
 
-  void setCurrency(String code) {
-    state = state.copyWith(currency: code);
+  /// Called by UI when user changes language
+  void setLanguageCode(String code) {
+    state = state.copyWith(languageCode: code.trim().toLowerCase());
+  }
+
+  void setCountryCode(String code) {
+    state = state.copyWith(countryCode: code.trim().toUpperCase());
+  }
+
+  void setCurrencyCode(String code) {
+    state = state.copyWith(currencyCode: code.trim().toUpperCase());
   }
 
   Future<void> finish() async {
     final prefs = ref.read(userPreferenceControllerProvider.notifier);
 
-    if (state.language != null) {
-      await prefs.updateLanguage(state.language!);
+    if (state.languageCode != null) {
+      await prefs.updateLanguageCode(state.languageCode!);
     }
 
-    if (state.country != null) {
-      await prefs.updateCountry(state.country!);
+    if (state.countryCode != null) {
+      await prefs.updateCountryCode(state.countryCode!);
     }
 
-    if (state.currency != null) {
-      await prefs.updateCurrency(state.currency!);
+    if (state.currencyCode != null) {
+      await prefs.updateCurrencyCode(state.currencyCode!);
     }
 
     await ref

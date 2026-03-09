@@ -7,7 +7,7 @@ import 'package:africaonlinestores/features/account/ui/widgets/locale_picker_pag
 import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/picker_field.dart';
 
 import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
-import 'package:africaonlinestores/features/localization/localization_controller.dart';
+import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
 
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 
@@ -36,37 +36,38 @@ class CurrencyStep extends ConsumerWidget {
     final onboarding = ref.watch(onboardingControllerProvider);
     final controller = ref.read(onboardingControllerProvider.notifier);
 
-    final rawCurrencies = localization.currencies;
-    final selectedCurrency = onboarding.currency;
+    if (localization.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-    final currencies = rawCurrencies.map((c) {
-      final code = (c["code"] ?? "").toString().toUpperCase();
-      final symbol = (c["symbol"] ?? "").toString().trim();
-      final display = symbol.isEmpty ? code : "$code ($symbol)";
+    if (localization.error != null) {
+      return Center(child: Text("Failed to load currencies", style: context.p));
+    }
 
-      return {"code": code, "name": display, "symbol": symbol};
-    }).toList();
+    final currencies = localization.currencies;
+    final selectedCurrencyCode = onboarding.currencyCode;
 
     Map<String, dynamic>? selectedItem() {
-      final code = (selectedCurrency ?? "USD").toUpperCase();
+      if (currencies.isEmpty) return null;
+
+      final code = (selectedCurrencyCode ?? "USD").toUpperCase();
 
       try {
         return currencies.firstWhere(
           (c) => (c["code"] ?? "").toString().toUpperCase() == code,
         );
       } catch (_) {
-        return currencies.firstWhere(
-          (c) => (c["code"] ?? "").toString().toUpperCase() == "USD",
-          orElse: () => currencies.first,
-        );
+        return currencies.first;
       }
     }
 
     final selected = selectedItem();
-    final selectedDisplay = selected?["name"];
-    final selectedCode = (selected?["code"] as String?)?.toUpperCase();
 
-    final currency = selectedCode ?? "USD";
+    final currencyLabel = (selected?["display"] ?? selected?["code"])
+        ?.toString();
+
+    final currencyCode = (selected?["code"] ?? selectedCurrencyCode)
+        ?.toString();
 
     return Container(
       color: scheme.surface,
@@ -121,7 +122,7 @@ class CurrencyStep extends ConsumerWidget {
                     const SizedBox(height: 20),
 
                     PickerField(
-                      value: selectedDisplay ?? selectedCode,
+                      value: currencyLabel,
                       placeholder: currencies.isEmpty
                           ? l10n.common_no_currencies
                           : l10n.onboarding_currency_placeholder,
@@ -135,9 +136,9 @@ class CurrencyStep extends ConsumerWidget {
                                   builder: (_) => LocalePickerPage(
                                     title: l10n.onboarding_currency_picker,
                                     items: currencies,
-                                    initialValue: selectedCurrency,
+                                    initialValue: selectedCurrencyCode,
                                     onChanged: (code) {
-                                      controller.setCurrency(code);
+                                      controller.setCurrencyCode(code);
                                     },
                                   ),
                                 ),
@@ -149,11 +150,16 @@ class CurrencyStep extends ConsumerWidget {
 
                     PrimaryButton(
                       text: l10n.common_get_started,
-                      onPressed: () {
-                        controller.setCurrency(currency);
-                        controller.nextStep();
-                        onContinue?.call();
-                      },
+                      onPressed: currencies.isEmpty
+                          ? null
+                          : () {
+                              if (currencyCode != null) {
+                                controller.setCurrencyCode(currencyCode);
+                              }
+
+                              controller.nextStep();
+                              onContinue?.call();
+                            },
                     ),
 
                     TextButton(

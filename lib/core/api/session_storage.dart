@@ -12,7 +12,7 @@ class SessionStorage {
 
   // Using a single instance is fine; secure storage is lightweight.
   const SessionStorage({FlutterSecureStorage? secureStorage})
-      : _secure = secureStorage ?? const FlutterSecureStorage();
+    : _secure = secureStorage ?? const FlutterSecureStorage();
 
   final FlutterSecureStorage _secure;
 

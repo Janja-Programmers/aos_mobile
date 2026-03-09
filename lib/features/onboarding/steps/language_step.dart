@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/localization/localization_controller.dart';
+import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
@@ -22,7 +22,7 @@ class LanguageStep extends ConsumerStatefulWidget {
 }
 
 class _LanguageStepState extends ConsumerState<LanguageStep> {
-  String? selectedLanguage;
+  String? selectedLanguageCode;
 
   @override
   void initState() {
@@ -34,12 +34,12 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
           .initializeDefaultsIfNeeded();
     });
 
-    // Prefer onboarding state's auto-detected default.
     final onboarding = ref.read(onboardingControllerProvider);
-    selectedLanguage = onboarding.language;
+    selectedLanguageCode = onboarding.languageCode;
 
-    // If onboarding didn't set it yet, fall back to saved preference.
-    selectedLanguage ??= ref.read(userPreferenceControllerProvider).language;
+    selectedLanguageCode ??= ref
+        .read(userPreferenceControllerProvider)
+        .languageCode;
   }
 
   @override
@@ -52,43 +52,41 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
 
     final isSaving = prefs.isSaving;
 
-    // Sync localization state handling
     if (localization.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (localization.error != null) {
-      return const SizedBox.shrink();
+      return Center(child: Text('Failed to load languages', style: context.p));
     }
 
     final languages = localization.languages;
 
-    bool isValid(String? code) =>
-        code != null && languages.any((l) => l["code"] == code);
-
-    // Auto-fill once from onboarding controller (detected + validated there),
-    // but only if the user hasn't picked locally yet.
-    if (selectedLanguage == null && isValid(onboarding.language)) {
-      selectedLanguage = onboarding.language;
+    bool isValid(String? code) {
+      if (code == null) return false;
+      return languages.any((l) => (l["code"] ?? "") == code);
     }
 
-    // If still not valid, pick a safe default from the list (once).
-    if (!isValid(selectedLanguage)) {
-      selectedLanguage = languages.isNotEmpty
-          ? (languages.first["code"] as String?)
-          : null;
+    /// Sync with onboarding defaults (safe)
+    if (selectedLanguageCode == null && isValid(onboarding.languageCode)) {
+      selectedLanguageCode = onboarding.languageCode;
+    }
+
+    /// Safe fallback
+    if (!isValid(selectedLanguageCode) && languages.isNotEmpty) {
+      selectedLanguageCode = languages.first["code"] as String?;
     }
 
     String? selectedName() {
-      final code = selectedLanguage;
+      final code = selectedLanguageCode;
       if (code == null) return null;
 
-      final match = languages.firstWhere(
-        (l) => l["code"] == code,
-        orElse: () => {},
-      );
-
-      return match.isNotEmpty ? match["name"] as String? : null;
+      try {
+        final match = languages.firstWhere((l) => (l["code"] ?? "") == code);
+        return match["name"]?.toString();
+      } catch (_) {
+        return null;
+      }
     }
 
     return Container(
@@ -105,6 +103,7 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(height: 24),
+
                     Center(
                       child: CircleAvatar(
                         radius: 56,
@@ -116,14 +115,19 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 24),
+
                     Text("Choose Your Language", style: context.h4),
+
                     const SizedBox(height: 8),
+
                     Text(
                       "The app will display in your selected language",
                       style: context.pMuted,
                       textAlign: TextAlign.center,
                     ),
+
                     const SizedBox(height: 20),
 
                     PickerField(
@@ -141,15 +145,18 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
                                   builder: (_) => LocalePickerPage(
                                     title: "Select Language",
                                     items: languages,
-                                    initialValue: selectedLanguage,
+                                    initialValue: selectedLanguageCode,
                                     onChanged: (code) {
-                                      setState(() => selectedLanguage = code);
+                                      setState(() {
+                                        selectedLanguageCode = code;
+                                      });
+
                                       ref
                                           .read(
                                             onboardingControllerProvider
                                                 .notifier,
                                           )
-                                          .setLanguage(code);
+                                          .setLanguageCode(code);
                                     },
                                   ),
                                 ),
@@ -163,17 +170,16 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
                       text: "Continue",
                       loading: isSaving,
                       onPressed:
-                          selectedLanguage == null ||
+                          selectedLanguageCode == null ||
                               isSaving ||
                               languages.isEmpty
                           ? null
                           : () async {
-                              // Persist selection globally.
                               await ref
                                   .read(
                                     userPreferenceControllerProvider.notifier,
                                   )
-                                  .updateLanguage(selectedLanguage!);
+                                  .updateLanguageCode(selectedLanguageCode!);
 
                               widget.onContinue?.call();
                             },

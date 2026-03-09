@@ -83,4 +83,6 @@ class ApiEndpoints {
       '/api/method/aos.api.accounts.get_my_preference';
   static final String updatePreferencesEndpoint =
       '/api/method/aos.api.accounts.update_my_preference';
+
+  static final String deleteEndpoint = '';
 }

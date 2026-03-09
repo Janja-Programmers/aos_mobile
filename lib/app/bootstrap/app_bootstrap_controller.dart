@@ -46,7 +46,7 @@ class AppBootstrapController extends StateNotifier<AppBootstrapState> {
   }
 
   Future<void> resetOnboarding() async {
-    await _storage.clear();
+    await _storage.clearAll();
 
     state = state.copyWith(onboardingCompleted: false);
 

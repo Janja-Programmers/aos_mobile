@@ -134,9 +134,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             email: _email.text.trim().toLowerCase(),
             password: _password.text,
             fullName: _name.text.trim(),
-            country: prefs.country,
-            language: prefs.language,
-            currency: prefs.currency,
+            country: prefs.countryCode,
+            language: prefs.languageCode,
+            currency: prefs.currencyCode,
           );
 
       if (!mounted) return;
@@ -176,9 +176,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       final result = await ref
           .read(authControllerProvider.notifier)
           .signInWithGoogle(
-            country: prefs.country,
-            language: prefs.language,
-            currency: prefs.currency,
+            country: prefs.countryCode,
+            language: prefs.languageCode,
+            currency: prefs.currencyCode,
           );
 
       if (!mounted) return;
@@ -206,9 +206,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       final result = await ref
           .read(authControllerProvider.notifier)
           .signInWithApple(
-            country: prefs.country,
-            language: prefs.language,
-            currency: prefs.currency,
+            country: prefs.countryCode,
+            language: prefs.languageCode,
+            currency: prefs.currencyCode,
           );
 
       if (!mounted) return;
@@ -325,9 +325,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             style: const TextStyle(fontWeight: FontWeight.w700),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => _openLegalSheet(
-                                    title: l10n.auth_terms_and_conditions,
-                                    child: const TermsConditionsContent(),
-                                  ),
+                                title: l10n.auth_terms_and_conditions,
+                                child: const TermsConditionsContent(),
+                              ),
                           ),
                           TextSpan(text: l10n.auth_and),
                           TextSpan(
@@ -335,9 +335,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             style: const TextStyle(fontWeight: FontWeight.w700),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => _openLegalSheet(
-                                    title: l10n.auth_privacy_policy,
-                                    child: const PrivacyPolicyContent(),
-                                  ),
+                                title: l10n.auth_privacy_policy,
+                                child: const PrivacyPolicyContent(),
+                              ),
                           ),
                           const TextSpan(text: '.'),
                         ],

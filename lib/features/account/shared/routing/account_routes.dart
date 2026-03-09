@@ -4,7 +4,7 @@ import 'package:africaonlinestores/core/routing/app_routes.dart';
 import 'package:africaonlinestores/features/account/ui/account_screen.dart';
 import 'package:africaonlinestores/features/account/ui/notification_screen.dart';
 import 'package:africaonlinestores/features/account/ui/password_security_screen.dart';
-import 'package:africaonlinestores/features/account/ui/preference_screen.dart';
+import 'package:africaonlinestores/features/account/ui/user_preference_screen.dart';
 import 'package:africaonlinestores/features/account/ui/privacy_policy_screen.dart';
 import 'package:africaonlinestores/features/account/ui/terms_conditions_screen.dart';
 import 'package:africaonlinestores/features/account/ui/update_profile_screen.dart';

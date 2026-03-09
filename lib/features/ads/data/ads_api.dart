@@ -118,6 +118,22 @@ class AdsApi {
     }
   }
 
+  Future<Either<Failure, Map<String, dynamic>>> deleteMedia({
+    required Map<String, dynamic> payload,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiEndpoints.deleteEndpoint,
+        queryParameters: {},
+      );
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to create ad.'));
+    }
+  }
+
   Future<Either<Failure, Map<String, dynamic>>> createAd({
     required Map<String, dynamic> payload,
   }) async {

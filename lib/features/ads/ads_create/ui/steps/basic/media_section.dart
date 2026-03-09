@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:africaonlinestores/features/ads/ads_create/ui/steps/widgets/edit_image_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -213,18 +214,17 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
                           await file.writeAsBytes(response.bodyBytes);
 
                           // Open editor
-                          // final editedFile = await Navigator.push<File?>(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (_) => EditImagePage(file: file),
-                          //   ),
-                          // );
-                          final editedFile = File('');
+                          final editedFile = await Navigator.push<File?>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EditImagePage(file: file),
+                            ),
+                          );
 
                           // Replace image at index
                           await ref
                               .read(adDraftControllerProvider.notifier)
-                              .replaceImageAt(i, editedFile);
+                              .replaceImageAt(i, editedFile!);
                         },
                 );
               },

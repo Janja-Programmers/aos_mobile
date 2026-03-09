@@ -51,6 +51,8 @@ class AddPhotoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return SizedBox(
       width: 110,
       height: 110,
@@ -58,6 +60,7 @@ class AddPhotoTile extends StatelessWidget {
         onTapDown: (details) async {
           final selected = await showMenu<String>(
             context: context,
+            color: colors.white,
             position: RelativeRect.fromLTRB(
               details.globalPosition.dx,
               details.globalPosition.dy,
@@ -65,24 +68,45 @@ class AddPhotoTile extends StatelessWidget {
               details.globalPosition.dy,
             ),
             items: const [
-              PopupMenuItem(value: 'upload', child: Text('Upload Images')),
-              PopupMenuItem(value: 'camera', child: Text('Take Photo')),
+              PopupMenuItem(
+                value: 'upload',
+                child: Row(
+                  children: [
+                    Icon(Icons.photo_library_outlined, size: 20),
+                    SizedBox(width: 10),
+                    Text('Upload Photos'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'camera',
+                child: Row(
+                  children: [
+                    Icon(Icons.camera_alt_outlined, size: 20),
+                    SizedBox(width: 10),
+                    Text('Take Photo'),
+                  ],
+                ),
+              ),
             ],
           );
 
           if (selected == 'upload') onUpload();
           if (selected == 'camera') onTakePhoto();
         },
+
         child: Container(
           decoration: BoxDecoration(
-            color: context.appColors.border,
+            color: colors.black.withOpacity(.7),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Center(
-            child: Icon(
-              Icons.camera_alt_outlined,
-              size: 32,
-              color: context.appColors.primary,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.add_a_photo_outlined, size: 32, color: colors.white),
+                Text("Add", style: context.p.copyWith(color: colors.white)),
+              ],
             ),
           ),
         ),

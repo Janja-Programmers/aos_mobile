@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
@@ -69,16 +70,16 @@ class _LeadingIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
 
     return Container(
       width: 38,
       height: 38,
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withOpacity(0.55),
+        color:colors.border,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(icon, size: 20, color: scheme.onSurface.withOpacity(0.75)),
+      child: Icon(icon, size: 20, color: colors.black),
     );
   }
 }

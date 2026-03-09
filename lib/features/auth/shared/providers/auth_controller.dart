@@ -13,6 +13,8 @@ import 'package:africaonlinestores/features/auth/data/auth_api.dart';
 import 'package:africaonlinestores/features/auth/data/google_auth_service.dart';
 import 'package:africaonlinestores/features/auth/data/apple_auth_service.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
+import 'package:africaonlinestores/features/preferences/data/preferences_api_provider.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
 
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
@@ -54,19 +56,19 @@ class AuthController extends StateNotifier<AuthState> {
   void _emit() {
     if (!_changesCtrl.isClosed) _changesCtrl.add(null);
   }
-  
-  /// Update the cached user data (used after profile update).
+
+  /// Update cached user (after profile update)
   void setUserFromMap(Map<String, dynamic> userMap) {
-    if (!state.isLoggedIn) return;
+    if (!state.isAuthenticated) return;
     state = state.copyWith(user: AuthUser.fromMap(userMap));
     _emit();
   }
 
+  /// Initialize session from SharedPreferences
   Future<void> init() async {
     try {
-      // 🔥 Listen to session expiry events
       _sessionSub ??= _apiClient.sessionExpiredStream.listen((_) async {
-        if (!state.isLoggedIn || _isLoggingOut) return;
+        if (!state.isAuthenticated || _isLoggingOut) return;
 
         _isLoggingOut = true;
         await logout();
@@ -105,6 +107,8 @@ class AuthController extends StateNotifier<AuthState> {
         clearError: true,
       );
 
+      await _syncUserPreferences();
+
       _emit();
     } catch (_) {
       await _clearSession();
@@ -118,11 +122,42 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(
       initializing: false,
       isLoggedIn: false,
-      sid: null,
-      user: null,
+      clearSid: true,
+      clearUser: true,
     );
 
     _emit();
+  }
+
+  Future<void> _syncUserPreferences() async {
+    try {
+      final prefApi = _ref.read(userPreferenceApiProvider);
+      final prefCtrl = _ref.read(userPreferenceControllerProvider.notifier);
+
+      final res = await prefApi.getMyPreferences();
+
+      if (res.isLeft) return;
+
+      final payload = res.rightOrNull ?? const {};
+
+      if (payload['ok'] != true) return;
+
+      final data = Map<String, dynamic>.from(payload['data'] ?? const {});
+
+      final country = Map<String, dynamic>.from(data['country'] ?? const {});
+      final language = Map<String, dynamic>.from(data['language'] ?? const {});
+      final currency = Map<String, dynamic>.from(data['currency'] ?? const {});
+
+      final countryCode = (country['code'] ?? '').toString();
+      final languageCode = (language['code'] ?? '').toString();
+      final currencyCode = (currency['name'] ?? '').toString();
+
+      await prefCtrl.syncFromServer(
+        countryCode: countryCode,
+        languageCode: languageCode,
+        currencyCode: currencyCode,
+      );
+    } catch (_) {}
   }
 
   // EMAIL LOGIN
@@ -161,6 +196,7 @@ class AuthController extends StateNotifier<AuthState> {
       await _storage.clearRememberedEmail();
     }
 
+    // Update auth state
     state = state.copyWith(
       initializing: false,
       isLoggedIn: true,
@@ -168,6 +204,9 @@ class AuthController extends StateNotifier<AuthState> {
       user: AuthUser.fromMap(Map<String, dynamic>.from(data['user'] ?? {})),
       clearError: true,
     );
+
+    // Sync preferences from server → SharedPreferences
+    await _syncUserPreferences();
 
     _emit();
     _ref.invalidate(wishlistControllerProvider);
@@ -356,6 +395,9 @@ class AuthController extends StateNotifier<AuthState> {
         user: AuthUser.fromMap(Map<String, dynamic>.from(data['user'] ?? {})),
         clearError: true,
       );
+
+      await _syncUserPreferences();
+
       _emit();
       _ref.invalidate(wishlistControllerProvider);
 
@@ -412,6 +454,8 @@ class AuthController extends StateNotifier<AuthState> {
         user: AuthUser.fromMap(Map<String, dynamic>.from(data['user'] ?? {})),
         clearError: true,
       );
+
+      await _syncUserPreferences();
 
       _emit();
       _ref.invalidate(wishlistControllerProvider);

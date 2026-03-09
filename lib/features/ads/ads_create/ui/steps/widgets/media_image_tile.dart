@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 
@@ -71,6 +73,7 @@ class MediaImageTile extends StatelessWidget {
               ),
               child: PopupMenuButton<String>(
                 icon: Icon(Icons.more_vert, color: colors.white, size: 18),
+                color: colors.white,
                 padding: EdgeInsets.zero,
                 splashRadius: 18,
                 constraints: const BoxConstraints(minWidth: 140),
@@ -84,19 +87,46 @@ class MediaImageTile extends StatelessWidget {
                     const PopupMenuItem(
                       value: 'primary',
                       height: 36,
-                      child: Text('Mark as primary'),
+                      child: Row(
+                        children: [
+                          Icon(Icons.star_border, size: 18),
+                          SizedBox(width: 10),
+                          Text('Make cover photo'),
+                        ],
+                      ),
                     ),
+
                   if (onEdit != null)
                     const PopupMenuItem(
                       value: 'edit',
                       height: 36,
-                      child: Text('Edit'),
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined, size: 18),
+                          SizedBox(width: 10),
+                          Text('Edit'),
+                        ],
+                      ),
                     ),
+
                   if (onDelete != null)
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'delete',
                       height: 36,
-                      child: Text('Delete'),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.delete_outline,
+                            size: 18,
+                            color: colors.primary,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Delete',
+                            style: context.p.copyWith(color: colors.primary),
+                          ),
+                        ],
+                      ),
                     ),
                 ],
               ),
@@ -107,7 +137,6 @@ class MediaImageTile extends StatelessWidget {
           if (isPrimary)
             Positioned(
               bottom: 6,
-              left: 6,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(

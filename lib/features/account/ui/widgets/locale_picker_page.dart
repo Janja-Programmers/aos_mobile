@@ -126,8 +126,9 @@ class _LocalePickerPageState extends State<LocalePickerPage> {
               separatorBuilder: (_, _) => const SizedBox.shrink(),
               itemBuilder: (_, i) {
                 final it = _filtered[i];
+
                 final code = (it['code'] ?? '').toString();
-                final label = (it['name'] ?? '').toString();
+                final label = (it['name'] ?? it['display'] ?? code).toString();
 
                 final selected = code == _selectedCode;
 

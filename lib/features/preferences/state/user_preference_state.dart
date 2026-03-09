@@ -1,80 +1,86 @@
 class UserPreferenceState {
-  final String language;
-  final String country;
-  final String currency;
+  final String languageCode;
+  final String countryCode;
+  final String currencyCode;
+
   final bool isSaving;
   final bool isLoading;
   final String? error;
 
   const UserPreferenceState({
-    required this.language,
-    required this.country,
-    required this.currency,
+    required this.languageCode,
+    required this.countryCode,
+    required this.currencyCode,
     this.isSaving = false,
     this.isLoading = false,
     this.error,
   });
 
+  /// Default preferences used before API / storage load
   factory UserPreferenceState.initial() {
     return const UserPreferenceState(
-      language: 'en',
-      country: 'US',
-      currency: 'USD',
+      languageCode: 'en',
+      countryCode: 'US',
+      currencyCode: 'USD',
     );
   }
 
   factory UserPreferenceState.loading() {
     return const UserPreferenceState(
-      language: 'en',
-      country: 'US',
-      currency: 'USD',
+      languageCode: 'en',
+      countryCode: 'US',
+      currencyCode: 'USD',
       isLoading: true,
     );
   }
 
   factory UserPreferenceState.error(String message) {
     return UserPreferenceState(
-      language: 'en',
-      country: 'US',
-      currency: 'USD',
+      languageCode: 'en',
+      countryCode: 'US',
+      currencyCode: 'USD',
       error: message,
     );
   }
 
   UserPreferenceState copyWith({
-    String? language,
-    String? country,
-    String? currency,
+    String? languageCode,
+    String? countryCode,
+    String? currencyCode,
     bool? isSaving,
     bool? isLoading,
     String? error,
+    bool clearError = false,
   }) {
     return UserPreferenceState(
-      language: language ?? this.language,
-      country: country ?? this.country,
-      currency: currency ?? this.currency,
+      languageCode: languageCode ?? this.languageCode,
+      countryCode: countryCode ?? this.countryCode,
+      currencyCode: currencyCode ?? this.currencyCode,
       isSaving: isSaving ?? this.isSaving,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: clearError ? null : error ?? this.error,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    "country": country,
-    "language": language,
-    "currency": currency,
-  };
+  /// API payload format
+  Map<String, dynamic> toJson() {
+    return {
+      "country": countryCode,
+      "language": languageCode,
+      "currency": currencyCode,
+    };
+  }
 
   factory UserPreferenceState.fromJson(Map<String, dynamic> json) {
     return UserPreferenceState(
-      country: json["country"],
-      language: json["language"],
-      currency: json["currency"],
+      countryCode: (json["country"] ?? '').toString().toUpperCase(),
+      languageCode: (json["language"] ?? 'en').toString().toLowerCase(),
+      currencyCode: (json["currency"] ?? 'USD').toString().toUpperCase(),
     );
   }
 
   @override
   String toString() {
-    return 'UserPreferenceState(country: $country, language: $language, currency: $currency)';
+    return 'UserPreferenceState(countryCode: $countryCode, languageCode: $languageCode, currencyCode: $currencyCode)';
   }
 }

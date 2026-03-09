@@ -10,7 +10,7 @@ class LocalizationState {
     required this.countries,
     required this.languages,
     required this.currencies,
-    this.isLoading = false,
+    required this.isLoading,
     this.error,
   });
 
@@ -20,6 +20,7 @@ class LocalizationState {
       languages: [],
       currencies: [],
       isLoading: true,
+      error: null,
     );
   }
 
@@ -35,7 +36,7 @@ class LocalizationState {
       languages: languages ?? this.languages,
       currencies: currencies ?? this.currencies,
       isLoading: isLoading ?? this.isLoading,
-      error: error,
+      error: error ?? this.error,
     );
   }
 }

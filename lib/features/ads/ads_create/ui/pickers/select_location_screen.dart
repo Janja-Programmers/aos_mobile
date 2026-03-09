@@ -7,10 +7,15 @@ import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provide
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 
 class SelectLocationScreen extends ConsumerStatefulWidget {
-  const SelectLocationScreen({super.key, this.selectedId});
+  const SelectLocationScreen({
+    super.key,
+    this.selectedId,
+    this.showAllLocations = true,
+  });
 
-  /// Pass current selected location id (null => All Cities selected)
   final String? selectedId;
+
+  final bool showAllLocations;
 
   @override
   ConsumerState<SelectLocationScreen> createState() =>
@@ -74,7 +79,7 @@ class _SelectLocationScreenState extends ConsumerState<SelectLocationScreen> {
               .toList();
 
           // ✅ Only show All Cities when NOT searching
-          final showAllCities = q.isEmpty;
+          final showAllCities = widget.showAllLocations && q.isEmpty;
           final foundCount = filtered.length + (showAllCities ? 1 : 0);
 
           final selectedId = (widget.selectedId ?? '').trim();

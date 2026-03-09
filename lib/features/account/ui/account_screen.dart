@@ -8,6 +8,7 @@ import 'package:africaonlinestores/core/theme/theme_controller.dart';
 
 import 'package:africaonlinestores/features/account/ui/widgets/account_guest_header_card.dart';
 import 'package:africaonlinestores/features/account/ui/widgets/account_sections.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 
 import 'package:africaonlinestores/shared/components/account_option_tile.dart';
@@ -19,7 +20,7 @@ import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
 
-  Widget _buildAccountHeader(BuildContext context, user) {
+  Widget _buildAccountHeader(BuildContext context, AuthUser? user) {
     if (user == null) {
       return AccountGuestHeaderCard(
         onLogin: () => context.pushNamed(AppRoutes.nLogin),
@@ -44,6 +45,7 @@ class AccountScreen extends ConsumerWidget {
 
     final auth = ref.watch(authControllerProvider);
     final user = auth.user;
+    final isAuthenticated = auth.isAuthenticated;
 
     final scheme = Theme.of(context).colorScheme;
 
@@ -68,21 +70,24 @@ class AccountScreen extends ConsumerWidget {
           _buildAccountHeader(context, user),
           const SizedBox(height: 14),
 
-          GetVerifiedBanner(
-            onTap: () {
-              ShowSnack(context, 'Coming Soon!').info();
-              // context.push(AppRoutes.getVerified);
-            },
-          ),
+          /// Verified banner (only for logged in users)
+          if (isAuthenticated)
+            GetVerifiedBanner(
+              onTap: () {
+                ShowSnack(context, 'Coming Soon!').info();
+              },
+            ),
+
           const SizedBox(height: 18),
 
+          /// Account settings
           const AccountSectionTitle('Account settings'),
           const SizedBox(height: 8),
 
           AccountCard(
             child: Column(
               children: [
-                if (user != null)
+                if (isAuthenticated)
                   AccountOptionTile(
                     icon: Icons.lock_outline,
                     title: 'Password & Security',
@@ -93,6 +98,12 @@ class AccountScreen extends ConsumerWidget {
                   icon: Icons.notifications_none,
                   title: 'Notifications Preferences',
                   onTap: () => context.pushNamed(AppRoutes.nNotifications),
+                ),
+
+                AccountOptionTile(
+                  icon: Icons.tune,
+                  title: 'Application Preferences',
+                  onTap: () => context.pushNamed(AppRoutes.nPreference),
                 ),
 
                 AppSwitchTile(
@@ -109,19 +120,16 @@ class AccountScreen extends ConsumerWidget {
               ],
             ),
           ),
+
           const SizedBox(height: 18),
 
+          /// Other
           const AccountSectionTitle('Other'),
           const SizedBox(height: 8),
 
           AccountCard(
             child: Column(
               children: [
-                AccountOptionTile(
-                  icon: Icons.language_outlined,
-                  title: 'Preferences',
-                  onTap: () => context.pushNamed(AppRoutes.nPreference),
-                ),
                 AccountOptionTile(
                   icon: Icons.privacy_tip_outlined,
                   title: 'Privacy Policy',
@@ -136,9 +144,11 @@ class AccountScreen extends ConsumerWidget {
               ],
             ),
           ),
+
           const SizedBox(height: 18),
 
-          if (user != null) ...[
+          /// Logout
+          if (isAuthenticated) ...[
             SizedBox(
               height: 54,
               child: OutlinedButton.icon(
@@ -191,13 +201,13 @@ class AccountScreen extends ConsumerWidget {
   }
 
   static String _initialsFromName(String? name) {
-    final n = (name)!.trim();
+    final n = name?.trim() ?? '';
     if (n.isEmpty) return 'U';
     return n.substring(0, 1).toUpperCase();
   }
 }
 
-/// Reusable rounded card wrapper (matches target look)
+/// Reusable rounded circle icon button
 class _CircleIconButton extends StatelessWidget {
   const _CircleIconButton({required this.icon, required this.onPressed});
 
@@ -209,7 +219,7 @@ class _CircleIconButton extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(8),
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
         onTap: onPressed,

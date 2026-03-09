@@ -1,22 +1,9 @@
-import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
+import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/core/core.dart';
-
-import 'package:africaonlinestores/features/ads/ads_all/all_ads_controller.dart';
-import 'package:africaonlinestores/features/ads/ads_create/ui/pickers/select_location_screen.dart';
-import 'package:africaonlinestores/features/home/presentation/components/home_app_bar.dart';
-import 'package:africaonlinestores/features/home/domain/location_picker.dart';
-import 'package:africaonlinestores/features/home/presentation/screens/ad_list_scaffold.dart';
-import 'package:africaonlinestores/features/home/presentation/sections/ads_content.dart';
-import 'package:africaonlinestores/features/home/shared/providers/home_page_providers.dart';
-
-import 'package:africaonlinestores/shared/components/app_search_bar.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 // class AdListScreen extends ConsumerStatefulWidget {
 //   const AdListScreen({super.key});
@@ -147,19 +134,50 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
   Widget build(BuildContext context) {
     final onboarding = ref.watch(userPreferenceControllerProvider);
 
-    final country = onboarding.country;
-    final language = onboarding.language;
-    final currency = onboarding.currency;
+    final l10n = context.l10n;
+
+    final country = onboarding.countryCode;
+    final language = onboarding.languageCode;
+    final currency = onboarding.currencyCode;
+
+    final auth = ref.watch(authControllerProvider);
+    final isAuthenticated = auth.isAuthenticated;
 
     return Scaffold(
       appBar: AppBar(title: const Text("Ad List")),
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: Text(
-          "🌍 Country: $country\n"
-          "💱 Currency: $currency\n"
-          "🗣 Language: $language",
-          style: const TextStyle(fontSize: 18),
+        child: Column(
+          children: [
+            Text(
+              "🌍 Country: $country\n"
+              "💱 Currency: $currency\n"
+              "🗣 Language: $language\n"
+              "L10N CHECKER: ${l10n.auth_login}\n"
+              "User: $isAuthenticated",
+              style: const TextStyle(fontSize: 18),
+            ),
+
+            TextButton.icon(
+              onPressed: () async {
+                await ref
+                    .read(userPreferenceControllerProvider.notifier)
+                    .reset();
+
+                await ref
+                    .read(appBootstrapControllerProvider.notifier)
+                    .resetOnboarding();
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Preferences cleared")),
+                  );
+                }
+              },
+              icon: const Icon(Icons.delete_outline),
+              label: const Text("RESET SP"),
+            ),
+          ],
         ),
       ),
     );

@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +9,7 @@ import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_section.dart';
+import "package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart";
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/app_text_fields.dart';
@@ -87,34 +87,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       await result.fold(
         (e) async {
-          ShowSnack(context, l10n.auth_unexpected_error(e.toString())).error();
+          ShowSnack(context, l10n.auth_unexpected_error(e.message)).error();
 
           final msg = e.message.toLowerCase();
           final email = _emailCtrl.text.trim().toLowerCase();
 
           if (msg.contains('verify your email')) {
-            // Navigate to OTP verification
             await context.pushNamed(
               AppRoutes.nVerifyOtp,
               extra: {'email': email, 'purpose': OtpPurpose.emailVerification},
             );
 
-            // Set loading off after navigation
             if (mounted) setState(() => _loginLoading = false);
             return;
           }
         },
         (_) async {
-          // Navigate to Home
           context.goNamed(AppRoutes.nHome);
 
-          // Set loading off after navigation
           if (mounted) setState(() => _loginLoading = false);
         },
       );
     } catch (e) {
       if (!mounted) return;
-      ShowSnack(context, l10n.auth_unexpected_error(e.toString())).error();
+      ShowSnack(context, "Error").error();
     } finally {
       // Only set loading off if navigation didn’t happen
       if (mounted && _loginLoading) setState(() => _loginLoading = false);
@@ -130,9 +126,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final result = await ref
           .read(authControllerProvider.notifier)
           .signInWithGoogle(
-            country: prefs.country,
-            language: prefs.language,
-            currency: prefs.currency,
+            country: prefs.countryCode,
+            language: prefs.languageCode,
+            currency: prefs.currencyCode,
           );
 
       if (!mounted) return;
@@ -143,7 +139,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ShowSnack(context, 'Unexpected error: $e').error();
+      ShowSnack(context, 'Unexpected error').error();
     } finally {
       if (mounted) setState(() => _googleLoading = false);
     }
@@ -160,9 +156,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final result = await ref
           .read(authControllerProvider.notifier)
           .signInWithApple(
-            country: prefs.country,
-            language: prefs.language,
-            currency: prefs.currency,
+            country: prefs.countryCode,
+            language: prefs.languageCode,
+            currency: prefs.currencyCode,
           );
 
       if (!mounted) return;
@@ -173,7 +169,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ShowSnack(context, 'Unexpected error: $e').error();
+      ShowSnack(context, 'Unexpected error').error();
     } finally {
       if (mounted) setState(() => _appleLoading = false);
     }

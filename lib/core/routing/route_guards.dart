@@ -29,8 +29,6 @@ class RouteGuards {
 
   /// Routes that require authentication
   static bool isProtectedRoute(String location) {
-    return isAccountRoute(location) ||
-        isSellerRoute(location) ||
-        isCreateAdRoute(location);
+    return isSellerRoute(location) || isCreateAdRoute(location);
   }
 }

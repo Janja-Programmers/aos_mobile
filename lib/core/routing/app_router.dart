@@ -79,7 +79,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         name: AppRoutes.nSelectLocation,
         path: AppRoutes.selectLocation,
-        builder: (_, _) => const SelectLocationScreen(),
+        builder: (context, state) {
+          final showAllLocations = state.extra is bool
+              ? state.extra as bool
+              : true;
+
+          return SelectLocationScreen(showAllLocations: showAllLocations);
+        },
       ),
 
       /// MAIN SHELL

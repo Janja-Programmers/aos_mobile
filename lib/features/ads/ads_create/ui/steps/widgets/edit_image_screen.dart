@@ -1,15 +1,25 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image/image.dart' as img;
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
+
 class EditImageScreen extends ConsumerStatefulWidget {
-  const EditImageScreen({super.key, required this.file});
+  const EditImageScreen({
+    super.key,
+    required this.file,
+    required this.fileId,
+    required this.index,
+  });
 
   final File file;
+  final String fileId;
+  final int index;
 
   @override
   ConsumerState<EditImageScreen> createState() => _EditImageScreenState();
@@ -17,13 +27,19 @@ class EditImageScreen extends ConsumerStatefulWidget {
 
 class _EditImageScreenState extends ConsumerState<EditImageScreen> {
   late File _file;
+
   bool _busy = false;
+
+  /// Track temporary files created during editing
+  final List<File> _tempFiles = [];
 
   @override
   void initState() {
     super.initState();
     _file = widget.file;
   }
+
+  // ================= CROP =================
 
   Future<void> _crop() async {
     final cropped = await ImageCropper().cropImage(
@@ -36,11 +52,20 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
 
     if (cropped == null) return;
 
-    setState(() => _file = File(cropped.path));
+    final file = File(cropped.path);
+
+    _tempFiles.add(file);
+
+    setState(() {
+      _file = file;
+    });
   }
+
+  // ================= ROTATE =================
 
   Future<void> _rotate() async {
     final bytes = await _file.readAsBytes();
+
     final image = img.decodeImage(bytes);
 
     if (image == null) return;
@@ -48,17 +73,26 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
     final rotated = img.copyRotate(image, angle: 90);
 
     final dir = await getTemporaryDirectory();
+
     final path =
         "${dir.path}/rotated_${DateTime.now().millisecondsSinceEpoch}.jpg";
 
     final file = File(path)..writeAsBytesSync(img.encodeJpg(rotated));
 
-    setState(() => _file = file);
+    _tempFiles.add(file);
+
+    setState(() {
+      _file = file;
+    });
   }
+
+  // ================= COMPRESS =================
 
   Future<void> _compress() async {
     final dir = await getTemporaryDirectory();
-    final target = "${dir.path}/compressed.jpg";
+
+    final target =
+        "${dir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg";
 
     final result = await FlutterImageCompress.compressAndGetFile(
       _file.path,
@@ -67,9 +101,17 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
     );
 
     if (result != null) {
-      setState(() => _file = File(result.path));
+      final file = File(result.path);
+
+      _tempFiles.add(file);
+
+      setState(() {
+        _file = file;
+      });
     }
   }
+
+  // ================= REMOVE BG (future feature) =================
 
   Future<void> _removeBg() async {
     setState(() => _busy = true);
@@ -81,56 +123,109 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
     setState(() => _busy = false);
   }
 
-  void _done() async {
-    await _compress();
-    if (!mounted) return;
-    Navigator.pop(context, _file);
+  // ================= DONE =================
+
+  Future<void> _done() async {
+    if (_busy) return;
+
+    setState(() => _busy = true);
+
+    try {
+      // compress final image
+      await _compress();
+
+      if (!mounted) return;
+
+      final controller = ref.read(adDraftControllerProvider.notifier);
+
+      // replace image in draft
+      await controller.replaceImageAt(widget.index, _file);
+
+      if (!mounted) return;
+
+      Navigator.pop(context);
+    } catch (e) {
+      debugPrint("EditImageScreen _done error: $e");
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
   }
+
+  // ================= CLEANUP =================
+
+  @override
+  void dispose() {
+    for (final file in _tempFiles) {
+      try {
+        if (file.existsSync()) {
+          file.deleteSync();
+        }
+      } catch (_) {}
+    }
+
+    super.dispose();
+  }
+
+  // ================= UI =================
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Edit Image"),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _busy ? null : _done,
-            child: const Text("Done"),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Edit Image"),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.pop(context),
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          /// Image preview
-          Expanded(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: Image.file(_file, fit: BoxFit.contain),
+          actions: [
+            _busy
+                ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : TextButton(onPressed: _done, child: const Text("Done")),
+          ],
+        ),
+        body: Column(
+          children: [
+            /// Image preview
+            Expanded(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Image.file(
+                      _file,
+                      key: ValueKey(_file.path), // prevents preview glitches
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
 
-          /// Tools
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _tool(Icons.crop, "Crop", _crop),
-                _tool(Icons.rotate_right, "Rotate", _rotate),
-                _tool(Icons.auto_fix_high, "Remove BG", _removeBg),
-              ],
+            /// Tools
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _tool(Icons.crop, "Crop", _crop),
+                  _tool(Icons.rotate_right, "Rotate", _rotate),
+                  _tool(Icons.auto_fix_high, "Remove BG", _removeBg),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

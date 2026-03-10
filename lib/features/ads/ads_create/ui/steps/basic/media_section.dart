@@ -203,7 +203,11 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
                     final edited = await Navigator.push<File>(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => EditImageScreen(file: file),
+                        builder: (_) => EditImageScreen(
+                          file: file,
+                          fileId: img.fileId,
+                          index: imageIndex,
+                        ),
                       ),
                     );
 

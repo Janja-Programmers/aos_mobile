@@ -145,6 +145,23 @@ class AdsApi {
     }
   }
 
+  Future<Either<Failure, Map<String, dynamic>>> removeBackground({
+    required String fileId,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiEndpoints.removeBackgroundEndpoint,
+        queryParameters: {'file_id': fileId},
+      );
+
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to remove background.'));
+    }
+  }
+
   Future<Either<Failure, Map<String, dynamic>>> createAd({
     required Map<String, dynamic> payload,
   }) async {

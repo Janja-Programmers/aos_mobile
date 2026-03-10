@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:africaonlinestores/features/ads/ads_create/ui/steps/widgets/edit_image_screen.dart';
+import 'package:africaonlinestores/features/ads/ads_create/ui/steps/widgets/edit_image/edit_image_screen.dart';
 import 'package:africaonlinestores/shared/utils/url_to_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

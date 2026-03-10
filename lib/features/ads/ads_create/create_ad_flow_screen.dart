@@ -1,5 +1,3 @@
-import 'package:africaonlinestores/features/ads/ads_create/controllers/create_ad_flow_state.dart';
-import 'package:africaonlinestores/features/ads/ads_create/utils/create_ad_step_runner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,12 +8,14 @@ import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 import 'package:africaonlinestores/features/ads/domain/pricing_schema.dart';
 
 import 'package:africaonlinestores/features/ads/ads_create/controllers/create_ad_flow_controller.dart';
+import 'package:africaonlinestores/features/ads/ads_create/controllers/create_ad_flow_state.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/ad_submit_success_dialog.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/create_ad_steps.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/save_draft_bottom_sheet.dart';
 import 'package:africaonlinestores/features/ads/ads_create/utils/ad_dirty_checker.dart';
 import 'package:africaonlinestores/features/ads/ads_create/utils/cancel_action.dart';
 import 'package:africaonlinestores/features/ads/ads_create/utils/create_ad_payload.dart';
+import 'package:africaonlinestores/features/ads/ads_create/utils/create_ad_step_runner.dart';
 
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
@@ -200,7 +200,6 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
       ),
     );
 
-    final result = runner.validate();
     final isValid = runner.isValid;
 
     final bottom = SafeArea(
@@ -273,7 +272,7 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
 
     return schemaAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) {
+      error: (_, _) {
         final steps = CreateAdStepsBuilder.build(
           schema: const AdCategorySchema(
             category: AdCategory(id: '', name: '', isService: false),

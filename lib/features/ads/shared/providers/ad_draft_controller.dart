@@ -226,6 +226,44 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     _deletingFiles.remove(fileId);
   }
 
+  Future<Either<Failure, String>> removeImageBackground(int index) async {
+    if (index < 0 || index >= _draft.images.length) {
+      return Either.left(const Failure("Invalid image index"));
+    }
+
+    final api = _ref.read(adsApiProvider);
+
+    final image = _draft.images[index];
+
+    if (image.fileId.isEmpty) {
+      return Either.left(const Failure("Image has no fileId"));
+    }
+
+    final res = await api.removeBackground(fileId: image.fileId);
+
+    if (res.isLeft) {
+      return Either.left(res.leftOrNull!);
+    }
+
+    final data = res.rightOrNull!["data"];
+
+    final newFileId = data["file_id"];
+    final newUrl = data["file_url"];
+
+    final newImage = image.copyWith(fileId: newFileId, url: newUrl);
+
+    final images = List<AdMediaImage>.from(_draft.images);
+
+    images[index] = newImage;
+
+    replaceImages(images);
+
+    // delete previous image silently
+    unawaited(deleteFileSilently(image.fileId));
+
+    return Either.right(newUrl);
+  }
+
   // ----------------- EDIT IMAGE -----------------
   Future<void> replaceImageAt(int index, File file) async {
     final api = _ref.read(adsApiProvider);

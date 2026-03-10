@@ -29,6 +29,8 @@ class ApiEndpoints {
   static final String uploadFileEndpoint = '/api/method/upload_file';
   static final String deleteFileEndpoint =
       '/api/method/aos.api.files.delete_file';
+  static final String removeBackgroundEndpoint =
+      '/api/method/aos.api.files.remove_background';
 
   // Catalog Endpoints
   static final String getCategoriesEndpoint =

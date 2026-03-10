@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/enums.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/pricing_rules.dart';
 
 class CreateAdPayloadBuilder {

@@ -1,6 +1,6 @@
+import 'package:africaonlinestores/features/ads/domain/pricing_schema.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/pricing/pricing_policy.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
-import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 
 class ServicePricingPolicy implements PricingPolicy {
   @override
@@ -15,6 +15,8 @@ class ServicePricingPolicy implements PricingPolicy {
 
   @override
   bool requireUnit(AdDraft d, PricingSchema schema) {
+    if (schema.allowedUnits.isEmpty) return false;
+
     return d.priceType == 'Fixed' || d.priceType == 'Negotiable';
   }
 
@@ -25,7 +27,7 @@ class ServicePricingPolicy implements PricingPolicy {
 
   @override
   bool requireOfferDates(AdDraft d) {
-    return d.offerPrice != null;
+    return d.offerPrice != null && d.offerPrice! > 0;
   }
 
   @override

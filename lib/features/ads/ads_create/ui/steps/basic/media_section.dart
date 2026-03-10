@@ -1,17 +1,16 @@
 import 'dart:io';
+
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/widgets/edit_image_screen.dart';
+import 'package:africaonlinestores/shared/utils/url_to_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/widgets/action_media_card.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/widgets/media_image_tile.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/widgets/media_video_tile.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/widgets/section_tile.dart';
 
-import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 
 class MediaSection extends ConsumerStatefulWidget {
@@ -140,32 +139,28 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
         // ===================== PHOTOS =====================
         const SectionTitle(title: "Photos *"),
         const SizedBox(height: 12),
-
         if (draft.images.isEmpty)
-          _uploadingImage
-              ? const SizedBox(
-                  height: 100,
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              : Row(
-                  children: [
-                    Expanded(
-                      child: ActionMediaCard(
-                        icon: Icons.upload_outlined,
-                        label: 'Upload Photos',
-                        onTap: _uploadingImage ? null : _uploadPhotos,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ActionMediaCard(
-                        icon: Icons.camera_alt_outlined,
-                        label: 'Take Photo',
-                        onTap: _uploadingImage ? null : _takePhoto,
-                      ),
-                    ),
-                  ],
-                )
+          Row(
+            children: [
+              Expanded(
+                child: ActionMediaCard(
+                  icon: Icons.upload_outlined,
+                  label: 'Upload Photos',
+                  loading: _uploadingImage,
+                  onTap: _uploadPhotos,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ActionMediaCard(
+                  icon: Icons.camera_alt_outlined,
+                  label: 'Take Photo',
+                  loading: _uploadingImage,
+                  onTap: _takePhoto,
+                ),
+              ),
+            ],
+          )
         else
           SizedBox(
             height: 110,
@@ -177,8 +172,9 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
               itemBuilder: (_, i) {
                 if (draft.images.length < 4 && i == 0) {
                   return AddPhotoTile(
-                    onUpload: _uploadingImage ? () {} : _uploadPhotos,
-                    onTakePhoto: _uploadingImage ? () {} : _takePhoto,
+                    loading: _uploadingImage,
+                    onUpload: _uploadPhotos,
+                    onTakePhoto: _takePhoto,
                   );
                 }
 
@@ -189,43 +185,34 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
 
                 return MediaImageTile(
                   image: img,
-                  isPrimary: i == 0,
-                  showPrimaryOption: i != 0,
+                  isPrimary: imageIndex == 0,
+                  showPrimaryOption: imageIndex != 0,
                   onDelete: _uploadingImage
                       ? null
                       : () => ref
                             .read(adDraftControllerProvider.notifier)
-                            .removeImage(i),
-                  onMarkPrimary: _uploadingImage ? null : () => _markPrimary(i),
-                  onEdit: _uploadingImage
+                            .removeImage(imageIndex),
+                  onMarkPrimary: _uploadingImage
                       ? null
-                      : () async {
-                          final imageUrl = img.url;
-                          final fullUrl = buildFileUrl(imageUrl);
+                      : () => _markPrimary(imageIndex),
+                  onEdit: () async {
+                    final file = await urlToFile(img.url);
 
-                          if (fullUrl == null) return;
+                    if (!context.mounted) return;
 
-                          // Download image first
-                          final response = await http.get(Uri.parse(fullUrl));
-                          if (response.statusCode != 200) return;
+                    final edited = await Navigator.push<File>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditImageScreen(file: file),
+                      ),
+                    );
 
-                          final dir = await getTemporaryDirectory();
-                          final file = File('${dir.path}/edit_temp.png');
-                          await file.writeAsBytes(response.bodyBytes);
+                    if (edited == null) return;
 
-                          // Open editor
-                          final editedFile = await Navigator.push<File?>(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => EditImagePage(file: file),
-                            ),
-                          );
-
-                          // Replace image at index
-                          await ref
-                              .read(adDraftControllerProvider.notifier)
-                              .replaceImageAt(i, editedFile!);
-                        },
+                    await ref
+                        .read(adDraftControllerProvider.notifier)
+                        .replaceImageAt(imageIndex, edited);
+                  },
                 );
               },
             ),
@@ -237,22 +224,23 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
         const SectionTitle(title: 'Videos'),
         const SizedBox(height: 12),
 
-        if (draft.videoUrl == null)
+        if (draft.videoUrl == null || draft.videoUrl!.isEmpty)
           Row(
             children: [
               Expanded(
                 child: ActionMediaCard(
                   icon: Icons.upload_outlined,
                   label: 'Upload Video',
+                  loading: _uploadingVideo,
                   onTap: _uploadVideoFromGallery,
                 ),
               ),
               const SizedBox(width: 12),
-
               Expanded(
                 child: ActionMediaCard(
                   icon: Icons.video_library_outlined,
                   label: 'Take Video',
+                  loading: _uploadingVideo,
                   onTap: _takeVideo,
                 ),
               ),
@@ -260,6 +248,7 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
           )
         else
           MediaVideoTile(
+            key: ValueKey(draft.videoUrl),
             videoUrl: draft.videoUrl!,
             onDelete: () =>
                 ref.read(adDraftControllerProvider.notifier).clearVideo(),

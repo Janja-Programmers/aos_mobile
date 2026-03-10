@@ -4,8 +4,8 @@ import 'package:africaonlinestores/features/ads/shared/utils/pricing/goods_prici
 import 'package:africaonlinestores/features/ads/shared/utils/pricing/service_pricing_policy.dart';
 
 class PricingPolicyResolver {
-  static PricingPolicy resolve(PricingSchema schema) {
-    if (schema.isService) {
+  static PricingPolicy resolve(AdCategorySchema schema) {
+    if (schema.category.isService) {
       return ServicePricingPolicy();
     }
     return GoodsPricingPolicy();

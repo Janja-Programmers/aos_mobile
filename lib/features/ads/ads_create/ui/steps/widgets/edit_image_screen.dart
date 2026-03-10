@@ -1,195 +1,158 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image/image.dart' as img;
-import 'package:http/http.dart' as http;
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 
-class EditImagePage extends StatefulWidget {
+class EditImageScreen extends ConsumerStatefulWidget {
+  const EditImageScreen({super.key, required this.file});
+
   final File file;
 
-  const EditImagePage({super.key, required this.file});
-
   @override
-  State<EditImagePage> createState() => _EditImagePageState();
+  ConsumerState<EditImageScreen> createState() => _EditImageScreenState();
 }
 
-class _EditImagePageState extends State<EditImagePage> {
-  late File _currentFile;
-  bool _processing = false;
+class _EditImageScreenState extends ConsumerState<EditImageScreen> {
+  late File _file;
+  bool _busy = false;
 
   @override
   void initState() {
     super.initState();
-    _currentFile = widget.file;
+    _file = widget.file;
   }
 
-  // ================= CROP =================
   Future<void> _crop() async {
     final cropped = await ImageCropper().cropImage(
-      sourcePath: _currentFile.path,
+      sourcePath: _file.path,
       uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Crop',
-          toolbarColor: Colors.white,
-          toolbarWidgetColor: Colors.black,
-        ),
-        IOSUiSettings(title: 'Crop'),
+        AndroidUiSettings(toolbarTitle: "Crop", lockAspectRatio: false),
+        IOSUiSettings(title: "Crop"),
       ],
     );
 
     if (cropped == null) return;
 
-    setState(() {
-      _currentFile = File(cropped.path);
-    });
+    setState(() => _file = File(cropped.path));
   }
 
-  // ================= REMOVE BG =================
-  Future<void> _removeBg() async {
-    setState(() => _processing = true);
+  Future<void> _rotate() async {
+    final bytes = await _file.readAsBytes();
+    final image = img.decodeImage(bytes);
 
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('https://api.remove.bg/v1.0/removebg'),
-    );
+    if (image == null) return;
 
-    request.headers['X-Api-Key'] = 'YOUR_REMOVE_BG_API_KEY';
-
-    request.files.add(
-      await http.MultipartFile.fromPath('image_file', _currentFile.path),
-    );
-
-    request.fields['size'] = 'auto';
-
-    final response = await request.send();
-
-    if (response.statusCode == 200) {
-      final bytes = await response.stream.toBytes();
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/no_bg.png');
-      await file.writeAsBytes(bytes);
-
-      setState(() {
-        _currentFile = file;
-      });
-    }
-
-    setState(() => _processing = false);
-  }
-
-  // ================= CHANGE BG COLOR =================
-  Future<void> _changeBackground(Color color) async {
-    setState(() => _processing = true);
-
-    final bytes = await _currentFile.readAsBytes();
-    final image = img.decodeImage(bytes)!;
-
-    final background = img.Image(width: image.width, height: image.height);
-
-    final fillColor = img.ColorRgb8(color.red, color.green, color.blue);
-
-    img.fill(background, color: fillColor);
-
-    img.compositeImage(background, image, blend: img.BlendMode.alpha);
+    final rotated = img.copyRotate(image, angle: 90);
 
     final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/bg_changed.png');
-    await file.writeAsBytes(img.encodePng(background));
+    final path =
+        "${dir.path}/rotated_${DateTime.now().millisecondsSinceEpoch}.jpg";
 
-    setState(() {
-      _currentFile = file;
-      _processing = false;
-    });
+    final file = File(path)..writeAsBytesSync(img.encodeJpg(rotated));
+
+    setState(() => _file = file);
   }
 
-  // ================= UI =================
+  Future<void> _compress() async {
+    final dir = await getTemporaryDirectory();
+    final target = "${dir.path}/compressed.jpg";
+
+    final result = await FlutterImageCompress.compressAndGetFile(
+      _file.path,
+      target,
+      quality: 80,
+    );
+
+    if (result != null) {
+      setState(() => _file = File(result.path));
+    }
+  }
+
+  Future<void> _removeBg() async {
+    setState(() => _busy = true);
+
+    /// TODO: integrate remove.bg API
+
+    await Future.delayed(const Duration(milliseconds: 700));
+
+    setState(() => _busy = false);
+  }
+
+  void _done() async {
+    await _compress();
+    if (!mounted) return;
+    Navigator.pop(context, _file);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: const Text("Edit Image"),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text("Edit Image"),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(context, _currentFile);
-            },
+            onPressed: _busy ? null : _done,
             child: const Text("Done"),
           ),
         ],
       ),
       body: Column(
         children: [
+          /// Image preview
           Expanded(
-            child: Stack(
-              children: [
-                Center(child: Image.file(_currentFile)),
-                if (_processing)
-                  const Center(child: CircularProgressIndicator()),
-              ],
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Image.file(_file, fit: BoxFit.contain),
+                ),
+              ),
             ),
           ),
 
-          const SizedBox(height: 12),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _EditButton(icon: Icons.crop, label: "Crop", onTap: _crop),
-              _EditButton(
-                icon: Icons.auto_fix_high,
-                label: "Remove BG",
-                onTap: _removeBg,
-              ),
-              _EditButton(
-                icon: Icons.palette,
-                label: "Background",
-                onTap: () => _changeBackground(Colors.white),
-              ),
-            ],
+          /// Tools
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _tool(Icons.crop, "Crop", _crop),
+                _tool(Icons.rotate_right, "Rotate", _rotate),
+                _tool(Icons.auto_fix_high, "Remove BG", _removeBg),
+              ],
+            ),
           ),
-
-          const SizedBox(height: 20),
         ],
       ),
     );
   }
-}
 
-class _EditButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _EditButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(18),
+  Widget _tool(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: _busy ? null : onTap,
+      child: Column(
+        children: [
+          Container(
+            height: 54,
+            width: 54,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
               color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon),
           ),
-        ),
-        const SizedBox(height: 6),
-        Text(label),
-      ],
+          const SizedBox(height: 6),
+          Text(label, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
     );
   }
 }

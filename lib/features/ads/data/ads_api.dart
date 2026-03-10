@@ -86,6 +86,7 @@ class AdsApi {
         ApiEndpoints.getCategorySchemaEndpoint,
         queryParameters: {'category': categoryId},
       );
+
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -94,9 +95,12 @@ class AdsApi {
     }
   }
 
-  Future<Either<Failure, String>> uploadMedia({required File file}) async {
+  Future<Either<Failure, Map<String, String>>> uploadMedia({
+    required File file,
+  }) async {
     try {
       final filename = file.path.split(Platform.pathSeparator).last;
+
       final form = FormData.fromMap({
         'file': await MultipartFile.fromFile(file.path, filename: filename),
         'is_private': '0',
@@ -105,11 +109,18 @@ class AdsApi {
       final res = await _dio.post(ApiEndpoints.uploadFileEndpoint, data: form);
 
       final body = res.data;
+
       if (body is Map && body['message'] is Map) {
-        final msg = Map<String, dynamic>.from(body['message'] as Map);
+        final msg = Map<String, dynamic>.from(body['message']);
+
         final url = (msg['file_url'] ?? '').toString();
-        if (url.isNotEmpty) return Either.right(url);
+        final fileId = (msg['name'] ?? '').toString();
+
+        if (url.isNotEmpty && fileId.isNotEmpty) {
+          return Either.right({'url': url, 'fileId': fileId});
+        }
       }
+
       return Either.left(const Failure('Failed to upload file.'));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -118,19 +129,19 @@ class AdsApi {
     }
   }
 
-  Future<Either<Failure, Map<String, dynamic>>> deleteMedia({
-    required Map<String, dynamic> payload,
+  Future<Either<Failure, Map<String, dynamic>>> deleteFile({
+    required String fileId,
   }) async {
     try {
       final res = await _dio.post(
-        ApiEndpoints.deleteEndpoint,
-        queryParameters: {},
+        ApiEndpoints.deleteFileEndpoint,
+        queryParameters: {'file_id': fileId},
       );
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure('Failed to create ad.'));
+      return Either.left(const Failure('Failed to fetch ad details.'));
     }
   }
 

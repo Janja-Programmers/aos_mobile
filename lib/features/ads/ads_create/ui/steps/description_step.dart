@@ -42,7 +42,7 @@ class _DescriptionStepState extends ConsumerState<DescriptionStep> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 120),
       children: [
-        Text('Item Description', style: context.pStrong),
+        Text('Item Description *', style: context.pStrong),
         const SizedBox(height: 10),
 
         Text(

@@ -80,9 +80,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: AppRoutes.nSelectLocation,
         path: AppRoutes.selectLocation,
         builder: (context, state) {
-          final showAllLocations = state.extra is bool
-              ? state.extra as bool
-              : true;
+          final showAllLocations = (state.extra as bool?) ?? true;
 
           return SelectLocationScreen(showAllLocations: showAllLocations);
         },

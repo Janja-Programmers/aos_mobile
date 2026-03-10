@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/features/ads/shared/utils/pricing_rules.dart';
 
 enum PriceVisibility { specify, contact }
 
@@ -21,7 +20,8 @@ class PriceVisibilityToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final isContact = isContactForPrice(priceType);
+
+    final isContact = priceType == 'Contact for price';
 
     return Container(
       padding: const EdgeInsets.all(4),

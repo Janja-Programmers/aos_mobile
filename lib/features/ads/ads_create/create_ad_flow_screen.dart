@@ -1,15 +1,13 @@
+import 'package:africaonlinestores/features/ads/ads_create/controllers/create_ad_flow_state.dart';
+import 'package:africaonlinestores/features/ads/ads_create/utils/create_ad_step_runner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
-
+import 'package:africaonlinestores/features/ads/domain/category.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
-
-import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
-import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
-import 'package:africaonlinestores/features/ads/shared/providers/ad_schema_provider.dart';
+import 'package:africaonlinestores/features/ads/domain/pricing_schema.dart';
 
 import 'package:africaonlinestores/features/ads/ads_create/controllers/create_ad_flow_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/ad_submit_success_dialog.dart';
@@ -18,9 +16,15 @@ import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/save_draft
 import 'package:africaonlinestores/features/ads/ads_create/utils/ad_dirty_checker.dart';
 import 'package:africaonlinestores/features/ads/ads_create/utils/cancel_action.dart';
 import 'package:africaonlinestores/features/ads/ads_create/utils/create_ad_payload.dart';
+
+import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ad_schema_provider.dart';
 import 'package:africaonlinestores/features/ads/shared/ui/widgets/scaffold_shell.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/enums.dart';
 
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:africaonlinestores/shared/utils/enums.dart';
 
 class CreateAdFlowScreen extends ConsumerStatefulWidget {
@@ -176,6 +180,73 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
     }
   }
 
+  Widget _buildFlow(
+    BuildContext context,
+    List<CreateAdStepDef> steps,
+    AdDraft draft,
+    CreateAdFlowState flowState,
+    CreateAdFlowController flowCtrl,
+  ) {
+    final index = flowState.index.clamp(0, steps.length - 1);
+
+    final runner = CreateAdStepRunner(
+      steps: steps,
+      index: index,
+      draft: draft,
+      schema: const AdCategorySchema(
+        category: AdCategory(id: '', name: '', isService: false),
+        attributes: [],
+        pricing: PricingSchema(requirement: PricingRequirement.hidden),
+      ),
+    );
+
+    final result = runner.validate();
+    final isValid = runner.isValid;
+
+    final bottom = SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: PrimaryButton(
+          text: runner.isLast ? 'Post Ad' : 'Continue',
+          loading: flowState.posting,
+          icon: runner.isLast ? Icons.check : Icons.arrow_forward,
+          onPressed: (flowState.posting || !isValid)
+              ? null
+              : () async {
+                  flowCtrl.markAttempted(index);
+                  flowCtrl.markCompleted(index);
+
+                  if (!runner.isLast) {
+                    await _goTo(index + 1);
+                  } else {
+                    await _post(draft: draft, schema: runner.schema);
+                  }
+                },
+        ),
+      ),
+    );
+
+    return ScaffoldShell(
+      title: 'Create Ad',
+      currentIndex: index,
+      completed: flowState.completed,
+      steps: steps.map((e) => e.label).toList(),
+      posting: flowState.posting,
+      bottom: bottom,
+      onBackPressed: () => _handleBack(index),
+      onCancelPressed: () => _handleCancel(draft: draft, schema: runner.schema),
+      onStepTapped: (i) => _goTo(i),
+      isStepAccessible: (i) => flowCtrl.canNavigateTo(i),
+      child: PageView.builder(
+        controller: _pageCtrl,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: steps.length,
+        itemBuilder: (_, i) => steps[i].widget,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final flowState = ref.watch(createAdFlowControllerProvider);
@@ -193,6 +264,7 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
     final schemaAsync = categoryId == null || categoryId.trim().isEmpty
         ? const AsyncValue<AdCategorySchema>.data(
             AdCategorySchema(
+              category: AdCategory(id: '', name: '', isService: false),
               attributes: [],
               pricing: PricingSchema(requirement: PricingRequirement.hidden),
             ),
@@ -200,66 +272,55 @@ class _CreateAdFlowScreenState extends ConsumerState<CreateAdFlowScreen> {
         : ref.watch(adCategorySchemaProvider(categoryId));
 
     return schemaAsync.when(
-      loading: () => ScaffoldShell(
-        title: 'Create Ad',
-        currentIndex: flowState.index,
-        completed: flowState.completed,
-        steps: const ['Basic', 'Details', 'Description', 'Pricing'],
-        posting: flowState.posting,
-        bottom: const SizedBox.shrink(),
-        onBackPressed: () => _handleBack(flowState.index),
-        onCancelPressed: () {},
-        onStepTapped: (_) {},
-        isStepAccessible: (_) => false,
-        child: const Center(child: CircularProgressIndicator()),
-      ),
-      error: (_, _) => ScaffoldShell(
-        title: 'Create Ad',
-        currentIndex: flowState.index,
-        completed: flowState.completed,
-        steps: const ['Basic', 'Details', 'Description', 'Pricing'],
-        posting: flowState.posting,
-        bottom: const SizedBox.shrink(),
-        onBackPressed: () => _handleBack(flowState.index),
-        onCancelPressed: () {},
-        onStepTapped: (_) {},
-        isStepAccessible: (_) => false,
-        child: const Center(child: Text('Failed to load category schema')),
-      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) {
+        final steps = CreateAdStepsBuilder.build(
+          schema: const AdCategorySchema(
+            category: AdCategory(id: '', name: '', isService: false),
+            attributes: [],
+            pricing: PricingSchema(requirement: PricingRequirement.hidden),
+          ),
+        );
+
+        return _buildFlow(context, steps, draft, flowState, flowCtrl);
+      },
       data: (schema) {
         final steps = CreateAdStepsBuilder.build(schema: schema);
 
-        final index = flowState.index;
-        final isLast = index == steps.length - 1;
+        final index = flowState.index.clamp(0, steps.length - 1);
 
-        final stepDef = steps[index];
-        final validator = stepDef.validator;
+        final runner = CreateAdStepRunner(
+          steps: steps,
+          index: index,
+          draft: draft,
+          schema: schema,
+        );
 
-        final result = validator?.call(draft, schema);
-        final isValid = result?.isValid ?? true;
+        final result = runner.validate();
+        final isValid = runner.isValid;
 
         final bottom = SafeArea(
           top: false,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: PrimaryButton(
-              text: isLast ? 'Post Ad' : 'Continue',
+              text: runner.isLast ? 'Post Ad' : 'Continue',
               loading: flowState.posting,
-              icon: isLast ? Icons.check : Icons.arrow_forward,
+              icon: runner.isLast ? Icons.check : Icons.arrow_forward,
               onPressed: (flowState.posting || !isValid)
                   ? null
                   : () async {
                       flowCtrl.markAttempted(index);
                       flowCtrl.markCompleted(index);
 
-                      if (!isLast) {
+                      if (!runner.isLast) {
                         await _goTo(index + 1);
                       } else {
                         await _post(draft: draft, schema: schema);
                       }
                     },
               onDisabledTap: () {
-                if (result != null && !result.isValid) {
+                if (!result.isValid) {
                   flowCtrl.markAttempted(index);
 
                   final firstError = result.fieldErrors.values.first;

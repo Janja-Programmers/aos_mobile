@@ -6,7 +6,7 @@ class AppTheme {
   AppTheme._();
 
   static const BorderRadius pill = BorderRadius.all(Radius.circular(999));
-  static const BorderRadius fieldRadius = BorderRadius.all(Radius.circular(22));
+  static const BorderRadius fieldRadius = BorderRadius.all(Radius.circular(12));
 
   static ThemeData light() {
     const tokens = AppColorTokens.light;
@@ -37,7 +37,7 @@ class AppTheme {
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: tokens.surface,
+        fillColor: Colors.transparent,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 18,

@@ -136,19 +136,26 @@ class MediaImageTile extends StatelessWidget {
           // -------- PRIMARY BADGE --------
           if (isPrimary)
             Positioned(
-              bottom: 6,
+              left: 0,
+              right: 0,
+              bottom: 0,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(vertical: 6),
                 decoration: BoxDecoration(
                   color: colors.primary,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
+                  ),
                 ),
-                child: Text(
-                  'Cover',
-                  style: TextStyle(
-                    color: colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                child: Center(
+                  child: Text(
+                    'Cover',
+                    style: TextStyle(
+                      color: colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),

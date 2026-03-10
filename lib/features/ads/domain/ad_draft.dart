@@ -3,15 +3,44 @@ import 'dart:convert';
 import 'package:africaonlinestores/shared/utils/enums.dart';
 
 class AdMediaImage {
-  AdMediaImage({required this.url, this.isPrimary = false, this.sortOrder});
+  AdMediaImage({
+    required this.url,
+    required this.fileId,
+    this.isPrimary = false,
+    this.sortOrder,
+  });
 
   final String url;
+  final String fileId;
   final bool isPrimary;
   final int? sortOrder;
 
-  AdMediaImage copyWith({String? url, bool? isPrimary, int? sortOrder}) {
+  factory AdMediaImage.fromUpload(Map<String, String> media) {
+    return AdMediaImage(
+      url: media['url'] ?? '',
+      fileId: media['fileId'] ?? '',
+      isPrimary: false,
+    );
+  }
+
+  Map<String, dynamic> toPayload() {
+    return {
+      "image": url,
+      "name": fileId,
+      "is_primary": isPrimary ? 1 : 0,
+      "sort_order": sortOrder,
+    };
+  }
+
+  AdMediaImage copyWith({
+    String? url,
+    String? fileId,
+    bool? isPrimary,
+    int? sortOrder,
+  }) {
     return AdMediaImage(
       url: url ?? this.url,
+      fileId: fileId ?? this.fileId,
       isPrimary: isPrimary ?? this.isPrimary,
       sortOrder: sortOrder ?? this.sortOrder,
     );
@@ -35,6 +64,7 @@ class AdDraft {
     // ---------- MEDIA ----------
     this.images = const <AdMediaImage>[],
     this.videoUrl,
+    this.videoFileId,
 
     // ---------- DETAILS ----------
     this.attributes = const <String, dynamic>{},
@@ -75,6 +105,7 @@ class AdDraft {
   // ---------- MEDIA ----------
   final List<AdMediaImage> images;
   final String? videoUrl;
+  final String? videoFileId;
 
   // ---------- DETAILS ----------
   final Map<String, dynamic> attributes;
@@ -115,6 +146,7 @@ class AdDraft {
 
     List<AdMediaImage>? images,
     String? videoUrl,
+    String? videoFileId,
     Map<String, dynamic>? attributes,
 
     String? description,
@@ -147,6 +179,7 @@ class AdDraft {
 
       images: images ?? this.images,
       videoUrl: videoUrl ?? this.videoUrl,
+      videoFileId: videoFileId ?? this.videoFileId,
 
       attributes: attributes ?? this.attributes,
 
@@ -174,6 +207,7 @@ class AdDraft {
         .map(
           (e) => AdMediaImage(
             url: e['image'] ?? '',
+            fileId: e['name'] ?? '',
             isPrimary: (e['is_primary'] ?? 0) == 1,
             sortOrder: e['sort_order'],
           ),
@@ -247,6 +281,7 @@ class AdDraft {
         .map(
           (e) => AdMediaImage(
             url: e['image'] ?? '',
+            fileId: e['name'] ?? '',
             isPrimary: (e['is_primary'] ?? 0) == 1,
           ),
         )

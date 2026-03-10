@@ -115,7 +115,6 @@ class _BasicStepState extends ConsumerState<BasicStep> {
             CategoryNode? parentNode;
 
             if (categoriesState != null && draft.categoryId != null) {
-              // find selected node and its parent
               for (final p in categoriesState.parents) {
                 for (final c in p.children) {
                   if (c.id == draft.categoryId) {
@@ -127,15 +126,19 @@ class _BasicStepState extends ConsumerState<BasicStep> {
               }
             }
 
-            final res = await context.push<Map<String, dynamic>>(
-              AppRoutes.selectCategory,
-              extra: parentNode,
+            final res = await context.pushNamed<Map<String, dynamic>>(
+              AppRoutes.nSelectCategory,
+              extra: {
+                "initialParent": parentNode,
+                "openChildren": parentNode != null,
+              },
             );
 
             if (res == null) return;
 
             final id = (res['id'] ?? '').toString();
             final label = (res['label'] ?? '').toString();
+
             if (id.isEmpty) return;
 
             ref

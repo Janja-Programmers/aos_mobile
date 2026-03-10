@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,6 +25,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   AdDraft _draft;
 
   AdDraft get draft => _draft;
+  final _deletingFiles = <String>{};
 
   // ================= SETUP =================
 
@@ -198,29 +200,54 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     replaceImages(images);
   }
 
-  void removeImage(int index) {
+  Future<void> removeImage(int index) async {
     if (index < 0 || index >= _draft.images.length) return;
 
-    final next = List<AdMediaImage>.from(_draft.images)..removeAt(index);
+    final image = _draft.images[index];
 
+    final next = List<AdMediaImage>.from(_draft.images)..removeAt(index);
     replaceImages(next);
+    if (image.fileId.trim().isNotEmpty) {
+      unawaited(deleteFileSilently(image.fileId));
+    }
+  }
+
+  Future<void> deleteFileSilently(String fileId) async {
+    if (_deletingFiles.contains(fileId)) return;
+
+    _deletingFiles.add(fileId);
+
+    final api = _ref.read(adsApiProvider);
+
+    final res = await api.deleteFile(fileId: fileId);
+
+    if (res.isLeft) {}
+
+    _deletingFiles.remove(fileId);
   }
 
   // ----------------- EDIT IMAGE -----------------
   Future<void> replaceImageAt(int index, File file) async {
     final api = _ref.read(adsApiProvider);
 
+    final old = _draft.images[index];
+
     final res = await api.uploadMedia(file: file);
     if (res.isLeft) return;
 
-    final url = res.rightOrNull!;
+    final uploaded = AdMediaImage.fromUpload(res.rightOrNull!);
+
     final images = List<AdMediaImage>.from(_draft.images);
 
     final isPrimary = images[index].isPrimary;
 
-    images[index] = AdMediaImage(url: url, isPrimary: isPrimary);
+    images[index] = uploaded.copyWith(isPrimary: isPrimary);
 
     replaceImages(images);
+
+    if (old.fileId.isNotEmpty) {
+      unawaited(deleteFileSilently(old.fileId));
+    }
   }
 
   Future<Either<Failure, String>> uploadAndAddImage(File file) async {
@@ -229,15 +256,15 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
     if (res.isLeft) return Either.left(res.leftOrNull!);
 
-    final url = res.rightOrNull!;
+    final media = AdMediaImage.fromUpload(res.rightOrNull!);
 
     final next = List<AdMediaImage>.from(_draft.images);
 
-    next.add(AdMediaImage(url: url, isPrimary: next.isEmpty));
+    next.add(media.copyWith(isPrimary: next.isEmpty));
 
     replaceImages(next);
 
-    return Either.right(url);
+    return Either.right(media.url);
   }
 
   Future<Either<Failure, String>> uploadAndSetVideo(File file) async {
@@ -246,15 +273,24 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
     if (res.isLeft) return Either.left(res.leftOrNull!);
 
-    final url = res.rightOrNull!;
+    final media = res.rightOrNull!;
 
-    _setDraft(_draft.copyWith(videoUrl: url));
+    final url = media['url']!;
+    final fileId = media['fileId']!;
+
+    _setDraft(_draft.copyWith(videoUrl: url, videoFileId: fileId));
 
     return Either.right(url);
   }
 
-  void clearVideo() {
-    _setDraft(_draft.copyWith(videoUrl: null));
+  Future<void> clearVideo() async {
+    final fileId = _draft.videoFileId;
+
+    _setDraft(_draft.copyWith(videoUrl: null, videoFileId: null));
+
+    if (fileId != null && fileId.isNotEmpty) {
+      unawaited(deleteFileSilently(fileId));
+    }
   }
 
   // ================= PRICING =================

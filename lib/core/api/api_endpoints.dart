@@ -27,6 +27,8 @@ class ApiEndpoints {
   static final String updateProfileEndpoint =
       '/api/method/aos.api.accounts.update_profile';
   static final String uploadFileEndpoint = '/api/method/upload_file';
+  static final String deleteFileEndpoint =
+      '/api/method/aos.api.files.delete_file';
 
   // Catalog Endpoints
   static final String getCategoriesEndpoint =
@@ -83,6 +85,4 @@ class ApiEndpoints {
       '/api/method/aos.api.accounts.get_my_preference';
   static final String updatePreferencesEndpoint =
       '/api/method/aos.api.accounts.update_my_preference';
-
-  static final String deleteEndpoint = '';
 }

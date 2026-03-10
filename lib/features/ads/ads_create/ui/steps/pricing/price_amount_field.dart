@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 
 class PriceAmountField extends ConsumerStatefulWidget {
   const PriceAmountField({
@@ -36,8 +37,8 @@ class _PriceAmountFieldState extends ConsumerState<PriceAmountField> {
 
   @override
   Widget build(BuildContext context) {
-    // final market = ref.watch(marketContextProvider).value;
-    // final currency = market?.currency ?? '';
+    final prefs = ref.watch(userPreferenceControllerProvider);
+    final currency = prefs.currencyCode;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,7 +48,7 @@ class _PriceAmountFieldState extends ConsumerState<PriceAmountField> {
 
         TextFormField(
           controller: _controller,
-          keyboardType: TextInputType.number,
+          keyboardType: const TextInputType.numberWithOptions(),
           style: context.p,
           decoration: InputDecoration(
             hintText: 'Enter price',
@@ -55,7 +56,7 @@ class _PriceAmountFieldState extends ConsumerState<PriceAmountField> {
             prefixIconConstraints: const BoxConstraints(minWidth: 0),
             prefixIcon: Padding(
               padding: const EdgeInsets.only(left: 12, right: 6),
-              child: Text("KES", style: context.pStrong),
+              child: Text(currency, style: context.pStrong),
             ),
           ),
           onChanged: (v) {
@@ -63,6 +64,7 @@ class _PriceAmountFieldState extends ConsumerState<PriceAmountField> {
             widget.onChanged(n);
           },
         ),
+        const SizedBox(height: 20),
       ],
     );
   }

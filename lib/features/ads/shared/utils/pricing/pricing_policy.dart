@@ -1,5 +1,5 @@
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
-import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
+import 'package:africaonlinestores/features/ads/domain/pricing_schema.dart';
 
 abstract class PricingPolicy {
   List<String> allowedTypes(PricingSchema schema);

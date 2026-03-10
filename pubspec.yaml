@@ -48,6 +48,7 @@ dependencies:
   intl: ^0.20.2
   equatable: ^2.0.8
   sign_in_with_apple: ^7.0.1
+  flutter_image_compress: ^2.4.0
 
 dev_dependencies:
   flutter_test:
@@ -65,6 +66,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/logo.png
+    - assets/images/welcome.png
     - assets/icons/app_icon.png
     - assets/icons/google.svg
 

@@ -27,44 +27,68 @@ class CreateAdStepDef {
 }
 
 class CreateAdStepsBuilder {
+  const CreateAdStepsBuilder._();
+
   static List<CreateAdStepDef> build({required AdCategorySchema schema}) {
     return [
       // ---------------- Basic ----------------
-      CreateAdStepDef(
+      const CreateAdStepDef(
         label: 'Basic',
-        widget: const BasicStep(),
-        validator: (draft, _) => CreateAdValidator.basic(draft),
+        widget: BasicStep(),
+        validator: _validateBasic,
       ),
 
       // ---------------- Details ----------------
       CreateAdStepDef(
         label: 'Details',
         widget: DetailsStep(schema: schema),
-        validator: (draft, s) {
-          // If no attributes required → auto valid
-          if (s.attributes.isEmpty) {
-            return ValidationResult.valid();
-          }
-
-          return CreateAdValidator.details(draft, s);
-        },
+        validator: _validateDetails,
       ),
 
       // ---------------- Description ----------------
-      CreateAdStepDef(
+      const CreateAdStepDef(
         label: 'Description',
-        widget: const DescriptionStep(),
-        validator: (draft, _) => CreateAdValidator.description(draft),
+        widget: DescriptionStep(),
+        validator: _validateDescription,
       ),
 
       // ---------------- Pricing ----------------
       CreateAdStepDef(
         label: 'Pricing',
-        widget: PricingStep(schema: schema.pricing),
-        validator: (draft, s) {
-          return CreateAdValidator.pricing(draft, s.pricing);
-        },
+        widget: PricingStep(schema: schema),
+        validator: _validatePricing,
       ),
     ];
+  }
+
+  // ---------------- Validators ----------------
+
+  static ValidationResult _validateBasic(AdDraft draft, AdCategorySchema _) {
+    return CreateAdValidator.basic(draft);
+  }
+
+  static ValidationResult _validateDetails(
+    AdDraft draft,
+    AdCategorySchema schema,
+  ) {
+    if (schema.attributes.isEmpty) {
+      return ValidationResult.valid();
+    }
+
+    return CreateAdValidator.details(draft, schema);
+  }
+
+  static ValidationResult _validateDescription(
+    AdDraft draft,
+    AdCategorySchema _,
+  ) {
+    return CreateAdValidator.description(draft);
+  }
+
+  static ValidationResult _validatePricing(
+    AdDraft draft,
+    AdCategorySchema schema,
+  ) {
+    return CreateAdValidator.pricing(draft, schema);
   }
 }

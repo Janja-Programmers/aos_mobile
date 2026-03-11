@@ -37,101 +37,127 @@ final voiceInputControllerProvider =
       return VoiceInputController();
     });
 
-/// Small wrapper around speech_to_text.
-///
-/// Conventions:
-/// - Keep speech logic out of UI.
-/// - Expose minimal state + toggle/start/stop.
 class VoiceInputController extends StateNotifier<VoiceInputState> {
   VoiceInputController() : super(const VoiceInputState());
 
   final stt.SpeechToText _speech = stt.SpeechToText();
+
   bool _initialized = false;
   Timer? _autoStopTimer;
 
+  /// Ensure speech engine ready
   Future<void> _ensureInitialized() async {
     if (_initialized) return;
 
     try {
-      // Ask permission first for better UX.
       final status = await Permission.microphone.request();
+
       if (!status.isGranted) {
         state = state.copyWith(
           isAvailable: false,
           isListening: false,
-          error: 'Microphone permission denied.',
+          error: "Microphone permission denied",
         );
-        _initialized = true; // avoid repeating prompts
+        _initialized = true;
         return;
       }
 
-      final ok = await _speech.initialize(
+      final available = await _speech.initialize(
         onError: (e) {
           state = state.copyWith(isListening: false, error: e.errorMsg);
         },
         onStatus: (s) {
-          // speech_to_text emits "notListening" / "listening".
-          if (s == 'notListening') {
+          if (s == "done" || s == "notListening") {
             state = state.copyWith(isListening: false);
           }
         },
       );
 
       _initialized = true;
-      state = state.copyWith(isAvailable: ok, error: null);
+
+      state = state.copyWith(isAvailable: available, error: null);
     } catch (_) {
       _initialized = true;
+
       state = state.copyWith(
         isAvailable: false,
         isListening: false,
-        error: 'Speech recognition unavailable.',
+        error: "Speech recognition unavailable",
       );
     }
   }
 
+  /// Reset last words
+  void reset() {
+    state = state.copyWith(lastWords: '', error: null);
+  }
+
+  /// Toggle listening
   Future<void> toggleListening({
     required void Function(String words, {required bool isFinal}) onWords,
   }) async {
     if (state.isListening) {
-      await stop();
+      await stopListening();
       return;
     }
-    await start(onWords: onWords);
+
+    await startListening(onWords: onWords);
   }
 
-  Future<void> start({
+  /// Start speech listening
+  Future<void> startListening({
     required void Function(String words, {required bool isFinal}) onWords,
   }) async {
     await _ensureInitialized();
-    if (!state.isAvailable) return;
+
+    if (!state.isAvailable || state.isListening) return;
 
     _autoStopTimer?.cancel();
-    state = state.copyWith(isListening: true, error: null);
+
+    state = state.copyWith(isListening: true, error: null, lastWords: '');
 
     await _speech.listen(
-      onResult: (r) {
-        final words = (r.recognizedWords).trim();
-        if (words.isEmpty) return;
-        state = state.copyWith(lastWords: words);
-        onWords(words, isFinal: r.finalResult);
-      },
       listenMode: stt.ListenMode.confirmation,
       partialResults: true,
       cancelOnError: true,
+      onResult: (r) {
+        final words = r.recognizedWords.trim();
+
+        if (words.isEmpty) return;
+
+        state = state.copyWith(lastWords: words);
+
+        onWords(words, isFinal: r.finalResult);
+      },
     );
 
-    // Safety: auto-stop after a short period if user forgets.
+    /// Auto stop if user stays silent
     _autoStopTimer = Timer(const Duration(seconds: 20), () {
-      stop();
+      stopListening();
     });
   }
 
-  Future<void> stop() async {
+  /// Stop listening
+  Future<void> stopListening() async {
     _autoStopTimer?.cancel();
     _autoStopTimer = null;
+
     try {
       await _speech.stop();
     } catch (_) {}
+
+    state = state.copyWith(isListening: false);
+  }
+
+  /// Cancel completely
+  Future<void> cancel() async {
+    _autoStopTimer?.cancel();
+    _autoStopTimer = null;
+
+    try {
+      await _speech.cancel();
+    } catch (_) {}
+
     state = state.copyWith(isListening: false);
   }
 

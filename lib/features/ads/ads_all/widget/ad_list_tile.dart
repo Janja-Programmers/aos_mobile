@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/home/shared/utils/helpers.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 
@@ -13,24 +14,30 @@ class AdListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final price = buildPriceDisplay(ad);
+    final price = resolveAdPrice(ad);
+    final imageUrl = buildFileUrl(ad.primaryImage);
 
     return ListTile(
       onTap: onTap,
-      leading: ad.primaryImage.isEmpty
+
+      /// IMAGE
+      leading: imageUrl == null || imageUrl.isEmpty
           ? const Icon(Icons.image)
-          : AppNetworkImage(url: ad.primaryImage),
+          : AppNetworkImage(url: imageUrl),
 
-      title: Text(ad.title),
+      /// TITLE
+      title: Text(ad.title, maxLines: 2, overflow: TextOverflow.ellipsis),
 
+      /// PRICE
       subtitle: price.show
           ? Row(
               children: [
                 Text(
-                  price.current!,
+                  price.current ?? '',
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                if (price.original != null) ...[
+
+                if (price.original != null && price.original!.isNotEmpty) ...[
                   const SizedBox(width: 6),
                   Text(
                     price.original!,

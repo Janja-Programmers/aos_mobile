@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/core.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
@@ -44,8 +45,15 @@ class _MyAdTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final url = buildFileUrl(ad.primaryImage);
-    final price = buildPriceDisplay(ad);
+    final colors = context.appColors;
+
+    final imageUrl = buildFileUrl(ad.primaryImage);
+    final price = resolveAdPrice(ad);
+
+    final location = [
+      if (ad.locationName.isNotEmpty) ad.locationName,
+      if (ad.country.isNotEmpty) ad.country,
+    ].join(', ');
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -60,15 +68,23 @@ class _MyAdTile extends StatelessWidget {
         children: [
           Row(
             children: [
+              /// IMAGE
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: SizedBox(
                   width: 56,
                   height: 56,
-                  child: ad.primaryImage.isEmpty
-                      ? Container(color: scheme.surface)
+                  child: imageUrl == null || imageUrl.isEmpty
+                      ? Container(
+                          color: scheme.surface,
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.image_outlined,
+                            color: scheme.primary,
+                          ),
+                        )
                       : Image.network(
-                          url ?? '',
+                          imageUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (_, _, _) => Icon(
                             Icons.category_outlined,
@@ -77,7 +93,10 @@ class _MyAdTile extends StatelessWidget {
                         ),
                 ),
               ),
+
               const SizedBox(width: 12),
+
+              /// INFO
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,21 +107,27 @@ class _MyAdTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: context.pStrong,
                     ),
-                    const SizedBox(height: 4),
 
-                    Text(
-                      '${ad.locationName}, ${ad.country}',
-                      style: context.pMuted.copyWith(
-                        fontWeight: FontWeight.bold,
+                    if (location.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        location,
+                        style: context.pMuted.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
+                    ],
 
+                    /// PRICE
                     if (price.show) ...[
                       const SizedBox(height: 4),
+
                       Row(
                         children: [
-                          Text(price.current!, style: context.pStrong),
-                          if (price.original != null) ...[
+                          Text(price.current ?? '', style: context.pStrong),
+
+                          if (price.original != null &&
+                              price.original!.isNotEmpty) ...[
                             const SizedBox(width: 6),
                             Text(
                               price.original!,
@@ -120,7 +145,10 @@ class _MyAdTile extends StatelessWidget {
               ),
             ],
           ),
+
           const SizedBox(height: 12),
+
+          /// ACTIONS
           Row(
             children: [
               Expanded(
@@ -132,14 +160,16 @@ class _MyAdTile extends StatelessWidget {
                   ),
                 ),
               ),
+
               const SizedBox(width: 12),
+
               Expanded(
                 child: FilledButton(
                   onPressed: () => onMarkSold(ad),
                   child: Text(
                     'Mark as sold',
                     style: context.p.copyWith(
-                      color: Colors.white,
+                      color: colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

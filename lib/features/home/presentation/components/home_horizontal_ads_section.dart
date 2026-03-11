@@ -35,7 +35,7 @@ class HomeHorizontalAdsSection extends StatelessWidget {
 
           /// Horizontal List
           SizedBox(
-            height: 280, // Design system spec
+            height: 280,
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               scrollDirection: Axis.horizontal,

@@ -4,178 +4,134 @@ import 'package:africaonlinestores/core/core.dart';
 class AppSearchBar extends StatefulWidget {
   const AppSearchBar({
     super.key,
-    this.controller,
+    required this.controller,
+    this.onTap,
+    this.onSubmitted,
     this.onMicTap,
     this.onCameraTap,
-    this.onSubmitted,
     this.readOnly = false,
-    this.onTap,
-    this.hintText = 'Search here...',
-    this.textAlign = TextAlign.start,
     this.autofocus = false,
+    this.hintText = "Search here...",
   });
 
-  final TextEditingController? controller;
+  final TextEditingController controller;
+  final VoidCallback? onTap;
+  final ValueChanged<String>? onSubmitted;
   final VoidCallback? onMicTap;
   final VoidCallback? onCameraTap;
-  final ValueChanged<String>? onSubmitted;
-
-  /// If true, user cannot type. Useful when tapping should open a new page.
   final bool readOnly;
-
-  /// If provided, will run when the field is tapped.
-  /// Common use: navigate to search screen.
-  final VoidCallback? onTap;
-
-  final String hintText;
-  final TextAlign textAlign;
   final bool autofocus;
+  final String hintText;
 
   @override
   State<AppSearchBar> createState() => _AppSearchBarState();
 }
 
 class _AppSearchBarState extends State<AppSearchBar> {
-  static const InputBorder _noBorder = InputBorder.none;
-
-  late final FocusNode _focusNode;
-
   @override
   void initState() {
     super.initState();
-    _focusNode = FocusNode();
-    _focusNode.addListener(_onFocusChanged);
+    widget.controller.addListener(_onTextChanged);
   }
 
-  void _onFocusChanged() {
-    if (mounted) setState(() {});
+  @override
+  void didUpdateWidget(covariant AppSearchBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_onTextChanged);
+      widget.controller.addListener(_onTextChanged);
+    }
   }
 
   @override
   void dispose() {
-    _focusNode.removeListener(_onFocusChanged);
-    _focusNode.dispose();
+    widget.controller.removeListener(_onTextChanged);
     super.dispose();
   }
 
-  void _handleTap() {
-    // If caller wants navigation (or any custom behavior), let them handle it.
-    if (widget.onTap != null) {
-      widget.onTap!();
-
-      // If it's readOnly, do not keep focus (avoids keyboard flashing).
-      if (widget.readOnly) {
-        _focusNode.unfocus();
-      }
-      return;
-    }
-
-    // Default behavior: if it's NOT readOnly, allow typing by requesting focus.
-    if (!widget.readOnly) {
-      _focusNode.requestFocus();
-    }
+  void _onTextChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
 
-    final borderColor = scheme.primary;
-    final iconColor = colors.textMuted;
-
-    final isFocused = _focusNode.hasFocus && !widget.readOnly;
-    final outlineColor = isFocused ? borderColor : iconColor;
-
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        height: 44,
-        decoration: BoxDecoration(
-          color: scheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: outlineColor, width: 1),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: widget.controller,
-                focusNode: _focusNode,
-                readOnly: widget.readOnly,
-                autofocus: widget.autofocus,
-                onTap: _handleTap,
-                textInputAction: TextInputAction.search,
-                textAlign: widget.textAlign,
-                onSubmitted: widget.onSubmitted,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: scheme.onSurface,
-                  decoration: TextDecoration.none,
-                ),
-                decoration: InputDecoration(
-                  hintText: widget.hintText,
-                  hintStyle: TextStyle(fontSize: 15, color: iconColor),
-                  prefixIcon: Icon(Icons.search, size: 20, color: iconColor),
-
-                  border: _noBorder,
-                  enabledBorder: _noBorder,
-                  focusedBorder: _noBorder,
-                  disabledBorder: _noBorder,
-                  errorBorder: _noBorder,
-                  focusedErrorBorder: _noBorder,
-
-                  filled: false,
-                  fillColor: Colors.transparent,
-
-                  isDense: true,
-                  isCollapsed: true,
-                ),
-              ),
-            ),
-            if (widget.onMicTap != null) ...[
-              _TinyIconButton(
-                icon: Icons.mic_none,
-                color: iconColor,
-                onTap: widget.onMicTap!,
-              ),
-            ],
-            if (widget.onMicTap != null && widget.onCameraTap != null)
-              const SizedBox(width: 8),
-            if (widget.onCameraTap != null) ...[
-              _TinyIconButton(
-                icon: Icons.camera_alt_outlined,
-                color: iconColor,
-                onTap: widget.onCameraTap!,
-              ),
-            ],
-          ],
-        ),
+    return Container(
+      height: 54,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
       ),
-    );
-  }
-}
+      child: Row(
+        children: [
+          const SizedBox(width: 12),
+          Icon(Icons.search, color: colors.textMuted),
+          const SizedBox(width: 10),
 
-class _TinyIconButton extends StatelessWidget {
-  const _TinyIconButton({
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
+          Expanded(
+            child: widget.readOnly
+                ? InkWell(
+                    onTap: widget.onTap,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        widget.controller.text.isEmpty
+                            ? widget.hintText
+                            : widget.controller.text,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: widget.controller.text.isEmpty
+                              ? colors.textMuted
+                              : colors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  )
+                : TextField(
+                    controller: widget.controller,
+                    autofocus: widget.autofocus,
+                    readOnly: false,
+                    onTap: widget.onTap,
+                    onSubmitted: widget.onSubmitted,
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      hintText: widget.hintText,
+                      hintStyle: TextStyle(color: colors.textMuted),
+                      border: InputBorder.none,
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.transparent),
+                      ),
+                      isDense: true,
+                    ),
+                  ),
+          ),
 
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
+          if (!widget.readOnly && widget.controller.text.isNotEmpty)
+            IconButton(
+              icon: Icon(Icons.close, color: colors.textMuted),
+              onPressed: widget.controller.clear,
+            ),
 
-  @override
-  Widget build(BuildContext context) {
-    return InkResponse(
-      onTap: onTap,
-      radius: 22,
-      child: SizedBox(
-        width: 28,
-        height: 28,
-        child: Center(child: Icon(icon, size: 20, color: color)),
+          if (widget.onMicTap != null)
+            IconButton(
+              icon: Icon(Icons.mic, color: colors.textPrimary),
+              onPressed: widget.onMicTap,
+            ),
+
+          if (widget.onCameraTap != null)
+            IconButton(
+              icon: Icon(Icons.camera_alt_outlined, color: colors.textPrimary),
+              onPressed: widget.onCameraTap,
+            ),
+
+          const SizedBox(width: 6),
+        ],
       ),
     );
   }

@@ -1,145 +1,177 @@
-// import 'dart:async';
+import 'dart:async';
 
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-// import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
-// import 'package:africaonlinestores/features/home/domain/market_place.dart';
-// import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
-// import 'package:africaonlinestores/features/home/domain/home_ads_sections.dart';
-// import 'package:africaonlinestores/features/home/shared/providers/marketplace_provider.dart';
+import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:africaonlinestores/features/home/domain/home_ads_sections.dart';
+import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
+import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 
-// class HomePageController extends AsyncNotifier<HomePageState> {
-//   static const _discoverLimit = 20;
+final homePageControllerProvider =
+    AsyncNotifierProvider<HomePageController, HomePageState>(
+      HomePageController.new,
+    );
 
-//   int _offset = 0;
-//   bool _initializing = false;
-//   String? _lastMarketKey;
+class HomePageController extends AsyncNotifier<HomePageState> {
+  static const int _discoverLimit = 20;
 
-//   @override
-//   Future<HomePageState> build() async {
-//     final market = await ref.read(marketContextProvider.future);
+  int _offset = 0;
+  bool _initializing = false;
+  String? _lastMarketKey;
 
-//     final marketKey = "${market.country}-${market.locationId}";
+  @override
+  Future<HomePageState> build() async {
+    final prefs = ref.watch(userPreferenceControllerProvider);
 
-//     if (_lastMarketKey == marketKey && state.value != null) {
-//       return state.value!;
-//     }
+    final countryCode = prefs.countryCode;
 
-//     _lastMarketKey = marketKey;
-//     _offset = 0;
+    final marketKey = '${countryCode.toUpperCase()}.';
 
-//     return _loadInitial(market);
-//   }
+    if (state.hasValue && _lastMarketKey == marketKey) {
+      return state.value!;
+    }
 
-//   Future<HomePageState> _loadInitial(MarketContext market) async {
-//     if (_initializing) {
-//       return state.value ?? HomePageState.initial(homeAdsSections);
-//     }
+    _lastMarketKey = marketKey;
+    _offset = 0;
 
-//     _initializing = true;
+    return _loadInitial(countryCode: countryCode);
+  }
 
-//     try {
-//       final initialState = HomePageState.initial(homeAdsSections);
-//       final Map<String, List> sectionResults = {};
+  List<AOSAdListItem> _parseItems(Map<String, dynamic> payload) {
+    final raw = payload['data']?['items'];
+    if (raw is! List) return const [];
 
-//       final futures = homeAdsSections.map((section) async {
-//         final String? categoryId = section.preferredCategoryNames.isNotEmpty
-//             ? section.preferredCategoryNames.first
-//             : null;
+    return raw
+        .map((e) => AOSAdListItem.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
 
-//         final res = await ref
-//             .read(adsApiProvider)
-//             .listAds(
-//               country: market.country,
-//               locationId: market.locationId,
-//               categoryId: categoryId,
-//               sort: section.sort,
-//               promotionType: section.promotionType,
-//               limit: section.limit,
-//               offset: 0,
-//             );
+  Future<HomePageState> _loadInitial({
+    required String countryCode,
+    String? locationId,
+  }) async {
+    if (_initializing) {
+      return state.value ?? HomePageState.initial(homeAdsSections);
+    }
 
-//         final items = res.fold<List>((_) => [], (payload) {
-//           final raw = payload['data']?['items'];
-//           if (raw is! List) return [];
-//           return raw;
-//         });
+    _initializing = true;
 
-//         sectionResults[section.key] = items;
-//       });
+    try {
+      final initialState = HomePageState.initial(homeAdsSections);
+      final sectionResults = <String, List<AOSAdListItem>>{};
 
-//       await Future.wait(futures);
+      await Future.wait(
+        homeAdsSections.map((section) async {
+          final categoryId = section.preferredCategoryNames.isNotEmpty
+              ? section.preferredCategoryNames.first
+              : null;
 
-//       // Discover section
-//       final discoverRes = await ref
-//           .read(adsApiProvider)
-//           .listAds(
-//             country: market.country,
-//             locationId: market.locationId,
-//             limit: _discoverLimit,
-//             offset: 0,
-//           );
+          final res = await ref
+              .read(adsApiProvider)
+              .listAds(
+                locationId: locationId,
+                categoryId: categoryId,
+                sort: section.sort,
+                promotionType: section.promotionType,
+                limit: section.limit,
+                offset: 0,
+              );
 
-//       final discoverItems = discoverRes.fold<List>(
-//         (_) => [],
-//         (payload) => payload['data']?['items'] ?? [],
-//       );
+          final items = res.fold<List<AOSAdListItem>>(
+            (_) => const [],
+            (payload) => _parseItems(Map<String, dynamic>.from(payload)),
+          );
 
-//       return initialState.copyWith(
-//         sectionItems: sectionResults.map(
-//           (k, v) =>
-//               MapEntry(k, v.map((e) => AOSAdListItem.fromJson(e)).toList()),
-//         ),
-//         discoverItems: discoverItems
-//             .map((e) => AOSAdListItem.fromJson(e))
-//             .toList(),
-//         initialLoading: false,
-//         hasMore: discoverItems.length == _discoverLimit,
-//       );
-//     } finally {
-//       _initializing = false;
-//     }
-//   }
+          sectionResults[section.key] = items;
+        }),
+      );
 
-//   Future<void> loadMore() async {
-//     final current = state.value;
-//     if (current == null || current.loadingMore || !current.hasMore) return;
+      final discoverRes = await ref
+          .read(adsApiProvider)
+          .listAds(locationId: locationId, limit: _discoverLimit, offset: 0);
 
-//     state = AsyncData(current.copyWith(loadingMore: true));
+      final discoverItems = discoverRes.fold<List<AOSAdListItem>>(
+        (_) => const [],
+        (payload) => _parseItems(Map<String, dynamic>.from(payload)),
+      );
 
-//     _offset += _discoverLimit;
+      return initialState.copyWith(
+        sectionItems: sectionResults,
+        discoverItems: discoverItems,
+        initialLoading: false,
+        loadingMore: false,
+        hasMore: discoverItems.length == _discoverLimit,
+      );
+    } finally {
+      _initializing = false;
+    }
+  }
 
-//     final market = await ref.read(marketContextProvider.future);
+  Future<void> changeLocation(String? locationId) async {
+    final current = state.value;
 
-//     final res = await ref
-//         .read(adsApiProvider)
-//         .listAds(
-//           country: market.country,
-//           locationId: market.locationId,
-//           limit: _discoverLimit,
-//           offset: _offset,
-//         );
+    if (current?.locationId == locationId) return;
 
-//     final newItems = res.fold<List>(
-//       (_) => [],
-//       (payload) => payload['data']?['items'] ?? [],
-//     );
+    final prefs = ref.read(userPreferenceControllerProvider);
 
-//     final parsed = newItems.map((e) => AOSAdListItem.fromJson(e)).toList();
+    _offset = 0;
 
-//     state = AsyncData(
-//       current.copyWith(
-//         discoverItems: [...current.discoverItems, ...parsed],
-//         loadingMore: false,
-//         hasMore: parsed.length == _discoverLimit,
-//       ),
-//     );
-//   }
+    state = const AsyncLoading();
 
-//   Future<void> reloadForMarket(MarketContext market) async {
-//     _offset = 0;
-//     state = const AsyncLoading();
-//     state = AsyncData(await _loadInitial(market));
-//   }
-// }
+    final next = await _loadInitial(
+      countryCode: prefs.countryCode,
+      locationId: locationId,
+    );
+
+    state = AsyncData(next.copyWith(locationId: locationId));
+  }
+
+  Future<void> loadMore() async {
+    final current = state.value;
+    if (current == null || current.loadingMore || !current.hasMore) return;
+
+    state = AsyncData(current.copyWith(loadingMore: true));
+
+    _offset = current.discoverItems.length;
+
+    final locationId = state.value?.locationId;
+
+    final res = await ref
+        .read(adsApiProvider)
+        .listAds(
+          locationId: locationId,
+          limit: _discoverLimit,
+          offset: _offset,
+        );
+
+    final parsed = res.fold<List<AOSAdListItem>>(
+      (_) => const [],
+      (payload) => _parseItems(Map<String, dynamic>.from(payload)),
+    );
+
+    final latest = state.value ?? current;
+
+    state = AsyncData(
+      latest.copyWith(
+        discoverItems: [...latest.discoverItems, ...parsed],
+        loadingMore: false,
+        hasMore: parsed.length == _discoverLimit,
+      ),
+    );
+  }
+
+  Future<void> refresh() async {
+    final prefs = ref.read(userPreferenceControllerProvider);
+
+    _offset = 0;
+    state = const AsyncLoading();
+
+    final next = await _loadInitial(
+      countryCode: prefs.countryCode,
+      locationId: state.value?.locationId,
+    );
+
+    state = AsyncData(next);
+  }
+}

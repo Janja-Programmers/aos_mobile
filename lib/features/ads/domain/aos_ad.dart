@@ -12,7 +12,6 @@ class AOSAdListItem {
     required this.priceType,
     required this.priceUnit,
     required this.primaryImage,
-    required this.imagesCount,
     required this.createdAt,
     required this.isWishlisted,
     required this.averageRating,
@@ -26,12 +25,11 @@ class AOSAdListItem {
   final String categoryName;
   final String? currentPrice;
   final String? originalPrice;
-  final int offerPercent;
+  final double offerPercent;
   final bool isOfferActive;
   final String priceType;
   final String priceUnit;
   final String primaryImage;
-  final int imagesCount;
   final DateTime? createdAt;
   final bool isWishlisted;
   final double averageRating;
@@ -65,12 +63,11 @@ class AOSAdListItem {
       originalPrice: (json['original_price'] ?? '').toString().trim().isEmpty
           ? null
           : json['original_price'].toString(),
-      offerPercent: int.tryParse((json['offer_percent'] ?? 0).toString()) ?? 0,
+      offerPercent: parseDouble(json['offer_percent']) ?? 0,
       isOfferActive: json['is_offer_active'] == true,
       priceType: (json['price_type'] ?? '').toString(),
       priceUnit: (json['price_unit'] ?? '').toString(),
       primaryImage: primary,
-      imagesCount: int.tryParse((json['images_count'] ?? 0).toString()) ?? 0,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
@@ -97,7 +94,6 @@ class AOSAdListItem {
       priceType: '',
       priceUnit: '',
       primaryImage: (json['primary_image'] ?? '').toString(),
-      imagesCount: int.tryParse((json['images_count'] ?? 0).toString()) ?? 0,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
@@ -106,8 +102,6 @@ class AOSAdListItem {
       totalReviews: 0,
     );
   }
-
-  bool get hasActiveOffer => isOfferActive && offerPercent > 0;
 }
 
 class AOSAdDetails {
@@ -129,7 +123,6 @@ class AOSAdDetails {
     required this.isWishlisted,
     required this.averageRating,
     required this.totalReviews,
-    required this.imagesCount,
     required this.images,
     required this.video,
     required this.specs,
@@ -145,12 +138,11 @@ class AOSAdDetails {
   final String categoryName;
   final String? currentPrice;
   final String? originalPrice;
-  final int offerPercent;
+  final double offerPercent;
   final bool isOfferActive;
   final String priceType;
   final String priceUnit;
   final String primaryImage;
-  final int imagesCount;
   final DateTime? createdAt;
   final bool isWishlisted;
   final double averageRating;
@@ -235,12 +227,11 @@ class AOSAdDetails {
       originalPrice: (json['original_price'] ?? '').toString().trim().isEmpty
           ? null
           : json['original_price'].toString(),
-      offerPercent: int.tryParse((json['offer_percent'] ?? 0).toString()) ?? 0,
+      offerPercent: parseDouble(json['offer_percent']) ?? 0,
       isOfferActive: json['is_offer_active'] == true,
       priceType: (json['price_type'] ?? '').toString(),
       priceUnit: (json['price_unit'] ?? '').toString(),
       primaryImage: primary,
-      imagesCount: int.tryParse((json['images_count'] ?? 0).toString()) ?? 0,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
@@ -256,8 +247,6 @@ class AOSAdDetails {
       specs: specs,
     );
   }
-
-  bool get hasActiveOffer => isOfferActive && offerPercent > 0;
 }
 
 double? parseDouble(dynamic v) {

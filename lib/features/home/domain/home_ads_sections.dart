@@ -4,15 +4,17 @@ const homeAdsSections = <HomeAdsSection>[
   /// 🔥 Flash Sales
   HomeAdsSection(
     key: 'flash_sales',
-    title: 'Flash Sales in AOS',
+    title: 'AOS Flash Sales',
     promotionType: 'flash_sale',
+    seeAllCategoryId: '',
   ),
 
-  /// 💸 Top Deals
+  /// 🔥 Services
   HomeAdsSection(
-    key: 'top_deals',
-    title: 'Top Deals in AOS',
-    promotionType: 'deal',
+    key: 'services',
+    title: 'Services Near You',
+    preferredCategoryNames: ['Services'],
+    seeAllCategoryId: '',
   ),
 
   /// 🆕 New Products
@@ -20,14 +22,56 @@ const homeAdsSections = <HomeAdsSection>[
     key: 'new_products',
     title: 'New Products in AOS',
     sort: 'recent',
+    seeAllCategoryId: '',
+  ),
+
+  /// 💸 Electronic Deals
+  HomeAdsSection(
+    key: 'electronic_deal',
+    title: 'AOS Electronic Deals',
+    preferredCategoryNames: ["Electronics"],
+    promotionType: 'deal',
+    seeAllCategoryId: '',
+  ),
+
+  /// 💸 Top Deals
+  HomeAdsSection(
+    key: 'deal',
+    title: 'AOS Deals',
+    promotionType: 'deal',
+    seeAllCategoryId: '',
   ),
 
   /// 🏠 Home & Furniture
   HomeAdsSection(
-    key: 'home_furniture',
-    title: 'Home & Furniture in AOS',
+    key: 'furniture',
+    title: 'Furniture',
     preferredCategoryNames: ['Home, Furniture & Appliances'],
     seeAllCategoryId: 'Home, Furniture & Appliances',
+  ),
+
+  /// 💸 Electronics
+  HomeAdsSection(
+    key: 'electronics',
+    title: 'Electronics',
+    preferredCategoryNames: ["Electronics"],
+    seeAllCategoryId: '',
+  ),
+
+  /// 👗 Fashion
+  HomeAdsSection(
+    key: 'fashion',
+    title: 'Fashion',
+    preferredCategoryNames: ['Women\'s Fashion', 'Men\'s Fashion'],
+    seeAllCategoryId: 'Women\'s Fashion',
+  ),
+
+  /// 👶 Babies & Kids
+  HomeAdsSection(
+    key: 'kids',
+    title: 'Babies & Kids',
+    preferredCategoryNames: ['Babies & Kids'],
+    seeAllCategoryId: 'Babies & Kids',
   ),
 
   /// 💄 Beauty
@@ -36,29 +80,5 @@ const homeAdsSections = <HomeAdsSection>[
     title: 'Beauty',
     preferredCategoryNames: ['Beauty & Personal Care'],
     seeAllCategoryId: 'Beauty & Personal Care',
-  ),
-
-  /// 👶 Babies & Kids
-  HomeAdsSection(
-    key: 'babies',
-    title: 'Babies & Kids',
-    preferredCategoryNames: ['Babies & Kids'],
-    seeAllCategoryId: 'Babies & Kids',
-  ),
-
-  /// 👗 Women's Fashion
-  HomeAdsSection(
-    key: 'womens_fashion',
-    title: 'Women\'s Fashion',
-    preferredCategoryNames: ['Women\'s Fashion'],
-    seeAllCategoryId: 'Women\'s Fashion',
-  ),
-
-  /// 💻 Electronics
-  HomeAdsSection(
-    key: 'electronics',
-    title: 'Electronics',
-    preferredCategoryNames: ['Electronics'],
-    seeAllCategoryId: 'Electronics',
   ),
 ];

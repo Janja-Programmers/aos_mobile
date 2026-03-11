@@ -93,7 +93,6 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     final res = isWishlist
         ? await api.listWishlist(limit: _limit, offset: _offset)
         : await api.listAds(
-            country: _market!.country,
             locationId: _market!.locationId,
             categoryId: state.selectedCategoryId ?? args.parentCategoryId,
             limit: _limit,

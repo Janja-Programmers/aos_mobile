@@ -32,8 +32,8 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
   /// Keeping this in the AppBar makes the layout consistent across screens.
   final EdgeInsets searchPadding;
 
-  // AppSearchBar is height 44 by design.
-  static const double _searchHeight = 44;
+  // AppSearchBar is height 60 by design.
+  static const double _searchHeight = 54;
 
   @override
   Size get preferredSize {

@@ -5,7 +5,7 @@ import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
-import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
+// import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
 class AuthApi {
@@ -71,7 +71,7 @@ class AuthApi {
     try {
       final res = await _client.post(
         ApiEndpoints.registerEndpoint,
-        countryPlacement: CountryPlacement.body,
+        // countryPlacement: CountryPlacement.body,
         data: {
           'email': email,
           'password': password,

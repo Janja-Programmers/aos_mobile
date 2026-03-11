@@ -138,11 +138,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
 
     final res = await ref
         .read(adsApiProvider)
-        .listAds(
-          country: _market!.country,
-          categoryId: _ad!.categoryName,
-          limit: 7,
-        );
+        .listAds(categoryId: _ad!.categoryName, limit: 7);
 
     if (!mounted) return;
 

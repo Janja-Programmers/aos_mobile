@@ -35,7 +35,7 @@ class AdsApi {
     try {
       final res = await _client.get(
         ApiEndpoints.getLocationsEndpoint,
-        withCountry: true,
+        marketContext: true,
       );
 
       final unwrapped = unwrapFrappe(res);
@@ -244,13 +244,13 @@ class AdsApi {
   }
 
   Future<Either<Failure, Map<String, dynamic>>> listAds({
-    required String country,
     String? locationId,
     String? categoryId,
+    String? sellerId,
     String? q,
     String? sort,
-    String? promotionType,
     String? priceType,
+    String? promotionType,
     double? priceMin,
     double? priceMax,
     double? ratingMin,
@@ -272,23 +272,20 @@ class AdsApi {
       }
 
       final queryParams = <String, dynamic>{
-        'country': country,
-
         if (locationId?.trim().isNotEmpty == true)
           'location': locationId!.trim(),
         if (categoryId?.trim().isNotEmpty == true)
           'category': categoryId!.trim(),
+        if (sellerId?.trim().isNotEmpty == true) 'seller': sellerId!.trim(),
         if (q?.trim().isNotEmpty == true) 'q': q!.trim(),
         if (sort?.trim().isNotEmpty == true) 'sort': sort!.trim(),
-        if (promotionType?.trim().isNotEmpty == true)
-          'promotion_type': promotionType!.trim(),
         if (priceType?.trim().isNotEmpty == true)
           'price_type': priceType!.trim(),
+        if (promotionType?.trim().isNotEmpty == true)
+          'promotion_type': promotionType!.trim(),
 
         'price_min': ?priceMin,
-
         'price_max': ?priceMax,
-
         'rating_min': ?ratingMin,
 
         'limit': limit,
@@ -297,7 +294,7 @@ class AdsApi {
 
       final res = await _client.get(
         ApiEndpoints.listAdsEndpoint,
-        withCountry: true,
+        marketContext: true,
         queryParameters: queryParams,
       );
 
@@ -310,7 +307,6 @@ class AdsApi {
   }
 
   Future<Either<Failure, Map<String, dynamic>>> listAdDrafts({
-    // required String country,
     String? locationId,
     String? categoryId,
     String? q,
@@ -338,7 +334,6 @@ class AdsApi {
       }
 
       final queryParams = <String, dynamic>{
-        // 'country': country,
         if (locationId?.trim().isNotEmpty == true)
           'location': locationId!.trim(),
         if (categoryId?.trim().isNotEmpty == true)
@@ -362,7 +357,7 @@ class AdsApi {
 
       final res = await _client.get(
         ApiEndpoints.listAdDraftsEndpoint,
-        withCountry: true,
+        marketContext: true,
         queryParameters: queryParams,
       );
 

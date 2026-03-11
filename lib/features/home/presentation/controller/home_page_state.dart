@@ -3,6 +3,7 @@ import 'package:africaonlinestores/features/home/domain/home_ads_section.dart';
 
 class HomePageState {
   const HomePageState({
+    this.locationId,
     required this.sections,
     required this.sectionItems,
     required this.discoverItems,
@@ -11,6 +12,7 @@ class HomePageState {
     required this.hasMore,
   });
 
+  final String? locationId;
   final List<HomeAdsSection> sections;
   final Map<String, List<AOSAdListItem>> sectionItems;
   final List<AOSAdListItem> discoverItems;
@@ -20,6 +22,8 @@ class HomePageState {
   final bool hasMore;
 
   HomePageState copyWith({
+    String? locationId,
+    List<HomeAdsSection>? sections,
     Map<String, List<AOSAdListItem>>? sectionItems,
     List<AOSAdListItem>? discoverItems,
     bool? initialLoading,
@@ -27,7 +31,8 @@ class HomePageState {
     bool? hasMore,
   }) {
     return HomePageState(
-      sections: sections,
+      locationId: locationId ?? this.locationId,
+      sections: sections ?? this.sections,
       sectionItems: sectionItems ?? this.sectionItems,
       discoverItems: discoverItems ?? this.discoverItems,
       initialLoading: initialLoading ?? this.initialLoading,
@@ -36,10 +41,14 @@ class HomePageState {
     );
   }
 
-  factory HomePageState.initial(List<HomeAdsSection> sections) {
+  factory HomePageState.initial(
+    List<HomeAdsSection> sections, {
+    String? locationId,
+  }) {
     return HomePageState(
+      locationId: locationId,
       sections: sections,
-      sectionItems: {},
+      sectionItems: const {},
       discoverItems: const [],
       initialLoading: true,
       loadingMore: false,

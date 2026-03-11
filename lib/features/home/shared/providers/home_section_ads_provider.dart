@@ -50,7 +50,6 @@ final homeSectionAdsProvider = FutureProvider.autoDispose
       final res = await ref
           .read(adsApiProvider)
           .listAds(
-            country: market.country,
             locationId: market.locationId,
             categoryId: categoryId,
             sort: req.section.sort,

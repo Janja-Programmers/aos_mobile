@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/search/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -69,7 +70,7 @@ class AdsRoutes {
     GoRoute(
       name: AppRoutes.nSearch,
       path: AppRoutes.search,
-      builder: (context, state) => const HomeSearchScreen(),
+      builder: (context, state) => const SearchScreen(),
     ),
   ];
 

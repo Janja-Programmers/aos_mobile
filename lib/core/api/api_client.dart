@@ -121,21 +121,28 @@ class ApiClient {
     return (code.isEmpty) ? null : code;
   }
 
-  Map<String, dynamic>? _injectCountryIntoQuery(
+  String? _resolveCurrencyCode() {
+    final prefs = _ref.read(userPreferenceControllerProvider);
+    final code = prefs.currencyCode;
+    return (code.isEmpty) ? null : code;
+  }
+
+  Map<String, dynamic>? _injectmarketContextIntoQuery(
     Map<String, dynamic>? queryParameters,
-    bool withCountry,
+    bool marketContext,
   ) {
-    if (!withCountry) return queryParameters;
+    if (!marketContext) return queryParameters;
     final country = _resolveCountryCode();
-    if (country == null) return queryParameters;
-    return {...?queryParameters, 'country': country};
+    final currency = _resolveCurrencyCode();
+    if (country == null || currency == null) return queryParameters;
+    return {...?queryParameters, 'country': country, 'currency': currency};
   }
 
   Map<String, dynamic>? _injectCountryIntoBody(
     Map<String, dynamic>? body,
-    bool withCountry,
+    bool marketContext,
   ) {
-    if (!withCountry) return body;
+    if (!marketContext) return body;
     final country = _resolveCountryCode();
     if (country == null) return body;
     return {...?body, 'country': country};
@@ -144,14 +151,14 @@ class ApiClient {
   Future<Response<T>> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,
-    bool withCountry = false,
+    bool marketContext = false,
     CountryPlacement countryPlacement = CountryPlacement.query,
     Options? options,
   }) {
     final qp =
         (countryPlacement == CountryPlacement.query ||
             countryPlacement == CountryPlacement.both)
-        ? _injectCountryIntoQuery(queryParameters, withCountry)
+        ? _injectmarketContextIntoQuery(queryParameters, marketContext)
         : queryParameters;
 
     return dio.get<T>(path, queryParameters: qp, options: options);
@@ -161,20 +168,20 @@ class ApiClient {
     String path, {
     Map<String, dynamic>? data,
     Map<String, dynamic>? queryParameters,
-    bool withCountry = false,
+    bool marketContext = false,
     CountryPlacement countryPlacement = CountryPlacement.query,
     Options? options,
   }) {
     final qp =
         (countryPlacement == CountryPlacement.query ||
             countryPlacement == CountryPlacement.both)
-        ? _injectCountryIntoQuery(queryParameters, withCountry)
+        ? _injectmarketContextIntoQuery(queryParameters, marketContext)
         : queryParameters;
 
     final body =
         (countryPlacement == CountryPlacement.body ||
             countryPlacement == CountryPlacement.both)
-        ? _injectCountryIntoBody(data, withCountry)
+        ? _injectCountryIntoBody(data, marketContext)
         : data;
 
     return dio.post<T>(path, data: body, queryParameters: qp, options: options);

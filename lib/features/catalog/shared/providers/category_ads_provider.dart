@@ -19,7 +19,6 @@ final forYouAdsProvider = FutureProvider.family<List<AOSAdListItem>, String>((
   final adsApi = ref.read(adsApiProvider);
 
   final res = await adsApi.listAds(
-    country: "Kenya",
     locationId: "",
     categoryId: categoryId,
     limit: 10,

@@ -20,36 +20,38 @@ class AdListItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
-    final price = buildPriceDisplay(ad);
+
+    final price = resolveAdPrice(ad);
     final isService = ad.priceUnit.isNotEmpty;
+    final imageUrl = buildFileUrl(ad.primaryImage);
 
     final wishlistState = ref.watch(wishlistControllerProvider).value;
     final wish = wishlistState?.ids.contains(ad.id) ?? false;
     final pending = wishlistState?.pending.contains(ad.id) ?? false;
 
     return InkWell(
+      borderRadius: BorderRadius.circular(14),
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: colors.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: colors.border),
         ),
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// IMAGE
             /// IMAGE
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(14),
+                  ),
                   child: SizedBox(
-                    height: 120,
+                    height: 130,
                     width: double.infinity,
-                    child: ad.primaryImage.isEmpty
+                    child: imageUrl == null || imageUrl.isEmpty
                         ? Container(
                             color: colors.elevated,
                             child: Icon(
@@ -58,7 +60,7 @@ class AdListItem extends ConsumerWidget {
                             ),
                           )
                         : Image.network(
-                            buildFileUrl(ad.primaryImage) ?? '',
+                            imageUrl,
                             fit: BoxFit.cover,
                             errorBuilder: (_, _, _) => Container(
                               color: colors.elevated,
@@ -71,11 +73,60 @@ class AdListItem extends ConsumerWidget {
                   ),
                 ),
 
+                /// WISHLIST
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Material(
+                    color: Colors.white,
+                    shape: const CircleBorder(),
+                    elevation: 2,
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: pending
+                          ? null
+                          : () async {
+                              final ok = await ref
+                                  .read(wishlistControllerProvider.notifier)
+                                  .toggle(ad.id);
+
+                              if (!ok && context.mounted) {
+                                ShowSnack(
+                                  context,
+                                  'Unexpected error. Please try again.',
+                                ).error();
+                              }
+                            },
+                      child: SizedBox(
+                        height: 32,
+                        width: 32,
+                        child: Center(
+                          child: pending
+                              ? const SizedBox(
+                                  height: 14,
+                                  width: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Icon(
+                                  wish ? Icons.favorite : Icons.favorite_border,
+                                  size: 18,
+                                  color: wish
+                                      ? colors.primary
+                                      : colors.textPrimary,
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
                 /// OFFER BADGE
-                if (ad.hasActiveOffer)
+                if (ad.isOfferActive)
                   Positioned(
-                    top: 6,
-                    right: 6,
+                    top: 8,
+                    left: 8,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 6,
@@ -98,59 +149,70 @@ class AdListItem extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(width: 12),
-
             /// INFO
-            Expanded(
+            Padding(
+              padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  /// TITLE
                   Text(
                     ad.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: context.p.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: colors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
                   ),
 
-                  if (price.show) ...[
-                    const SizedBox(height: 6),
+                  const SizedBox(height: 4),
+
+                  /// LOCATION
+                  Text(
+                    "${ad.locationName}, ${ad.country}",
+                    style: context.pMuted.copyWith(fontSize: 11),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  /// PRICE
+                  if (price.show)
                     Row(
                       children: [
                         Text(
-                          price.current!,
+                          price.current ?? '',
                           style: context.body.copyWith(
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
+
                         if (price.original != null) ...[
                           const SizedBox(width: 6),
                           Text(
                             price.original!,
                             style: context.body.copyWith(
-                              fontSize: 12,
-                              decoration: TextDecoration.lineThrough,
-                            ),
-                          ),
-                        ],
-                        if (isService) ...[
-                          const SizedBox(width: 6),
-                          Text(
-                            "per ${ad.priceUnit}",
-                            style: context.p.copyWith(
                               fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: colors.textMuted,
+                              decoration: TextDecoration.lineThrough,
                             ),
                           ),
                         ],
                       ],
                     ),
+
+                  /// SERVICE UNIT
+                  if (isService) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      "per ${ad.priceUnit}",
+                      style: context.p.copyWith(
+                        fontSize: 11,
+                        color: colors.primary,
+                      ),
+                    ),
                   ],
 
+                  /// REVIEWS
                   if (ad.totalReviews > 0) ...[
                     const SizedBox(height: 6),
                     Row(
@@ -158,57 +220,13 @@ class AdListItem extends ConsumerWidget {
                         const Icon(Icons.star, size: 14, color: Colors.amber),
                         const SizedBox(width: 4),
                         Text(
-                          "${ad.averageRating} (${ad.totalReviews})",
+                          "${ad.averageRating} (${humanizeCount(ad.totalReviews)})",
                           style: context.pMuted.copyWith(fontSize: 11),
                         ),
                       ],
                     ),
                   ],
                 ],
-              ),
-            ),
-
-            const SizedBox(width: 8),
-
-            /// WISHLIST
-            Material(
-              color: Colors.transparent,
-              shape: const CircleBorder(),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: pending
-                    ? null
-                    : () async {
-                        final ok = await ref
-                            .read(wishlistControllerProvider.notifier)
-                            .toggle(ad.id);
-
-                        if (!ok) {
-                          if (!context.mounted) return;
-                          ShowSnack(
-                            context,
-                            'Unexpected error. Please try again.',
-                          ).error();
-                        }
-                      },
-                child: SizedBox(
-                  height: 32,
-                  width: 32,
-                  child: Center(
-                    child: pending
-                        ? const SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(
-                            wish ? Icons.favorite : Icons.favorite_border,
-                            size: 18,
-                            color: wish ? colors.primary : colors.textPrimary,
-                          ),
-                  ),
-                ),
               ),
             ),
           ],

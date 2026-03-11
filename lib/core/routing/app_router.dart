@@ -14,6 +14,7 @@ import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/auth/shared/routing/auth_routes.dart';
 import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
 import 'package:africaonlinestores/features/onboarding/screens/onboarding_screen.dart';
+import 'package:africaonlinestores/features/home/presentation/screens/ad_details_screen.dart';
 
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/core/routing/app_shell.dart';
@@ -60,6 +61,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
           return CreateAdFlowScreen(adId: adId, draftId: draftId);
         },
+      ),
+
+      /// AD DETAIL
+      GoRoute(
+        name: AppRoutes.nAdDetails,
+        path: AppRoutes.adDetails,
+        builder: (context, state) => AdDetailsScreen(id: _param(state, 'id')),
       ),
 
       /// CATEGORY PICKER
@@ -131,6 +139,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
   );
 });
+
+String _param(GoRouterState state, String key) =>
+    Uri.decodeComponent(state.pathParameters[key] ?? '');
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {

@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/features/search/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,12 +5,11 @@ import 'package:africaonlinestores/core/routing/app_routes.dart';
 import 'package:africaonlinestores/features/ads/ads_all/all_ads_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_all/all_ads_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_seller/my_ads_screen.dart';
-import 'package:africaonlinestores/features/home/presentation/screens/ad_details_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_list_screen.dart';
-import 'package:africaonlinestores/features/home/presentation/screens/home_search_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/marketing_tips_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/photography_tips_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/ranking_tips_screen.dart';
+import 'package:africaonlinestores/features/search/search_screen.dart';
 
 class AdsRoutes {
   const AdsRoutes._();
@@ -41,12 +39,6 @@ class AdsRoutes {
           mode: args?.mode ?? AllAdsMode.normal,
         );
       },
-    ),
-
-    GoRoute(
-      name: AppRoutes.nAdDetails,
-      path: AppRoutes.adDetails,
-      builder: (context, state) => AdDetailsScreen(id: _param(state, 'id')),
     ),
 
     GoRoute(
@@ -85,13 +77,6 @@ class AdsRoutes {
       builder: (_, _) => const MyAdsScreen(),
     ),
   ];
-
-  /// ---------------------------
-  /// Helpers
-  /// ---------------------------
-
-  static String _param(GoRouterState state, String key) =>
-      Uri.decodeComponent(state.pathParameters[key] ?? '');
 }
 
 class AdNavigation {

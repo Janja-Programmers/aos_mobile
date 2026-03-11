@@ -61,7 +61,7 @@ class AdCardBody extends StatelessWidget {
 
           if (isService)
             Text(
-              "per ${ad.priceUnit}",
+              ad.priceUnit,
               style: context.p.copyWith(fontSize: 11, color: colors.primary),
             ),
         ],
@@ -70,7 +70,7 @@ class AdCardBody extends StatelessWidget {
 
         Row(
           children: [
-            const Icon(Icons.star, size: 14, color: Colors.amber),
+            Icon(Icons.star, size: 14, color: colors.amber),
             const SizedBox(width: 4),
             Text(
               "${ad.averageRating} (${humanizeCount(ad.totalReviews)})",

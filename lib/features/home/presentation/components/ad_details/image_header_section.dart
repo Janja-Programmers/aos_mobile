@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:video_player/video_player.dart';
+import 'package:flutter/rendering.dart';
+
+import 'package:africaonlinestores/core/core.dart';
 
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-import 'package:africaonlinestores/features/home/presentation/components/ad_details/full_screen_video_page.dart';
 
 class ImageHeaderSection extends StatefulWidget {
   const ImageHeaderSection({
@@ -27,6 +29,8 @@ class ImageHeaderSection extends StatefulWidget {
 
 class _ImageHeaderSectionState extends State<ImageHeaderSection> {
   VideoPlayerController? _vc;
+  ChewieController? _chewieController;
+
   Future<void>? _init;
   String? _currentVideoUrl;
 
@@ -85,6 +89,11 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
     final media = _buildMedia();
     if (media.length <= 1) return;
 
+    final current = widget.selected.clamp(0, media.length - 1);
+    final item = media[current];
+
+    if (item.isVideo) return;
+
     _autoScrollTimer = Timer.periodic(_autoScrollInterval, (_) {
       if (!mounted || !_pageController.hasClients) return;
 
@@ -103,7 +112,18 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
   }
 
   void _disposeInline() {
-    _vc?.dispose();
+    try {
+      _chewieController?.pause();
+      _chewieController?.dispose();
+    } catch (_) {}
+
+    _chewieController = null;
+
+    try {
+      _vc?.pause();
+      _vc?.dispose();
+    } catch (_) {}
+
     _vc = null;
     _init = null;
     _currentVideoUrl = null;
@@ -156,35 +176,58 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
       return;
     }
 
-    _disposeInline();
+    if (_vc != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _disposeInline();
+      });
+    }
 
     final controller = VideoPlayerController.networkUrl(Uri.parse(resolved));
     _vc = controller;
     _currentVideoUrl = resolved;
 
     _init = controller.initialize().then((_) {
-      controller
-        ..setLooping(true)
-        ..setVolume(0.0)
-        ..play();
+      controller.initialize().then((_) {
+        controller.setLooping(false);
+
+        _chewieController = ChewieController(
+          videoPlayerController: controller,
+          autoPlay: true,
+          looping: false,
+          allowFullScreen: true,
+          allowPlaybackSpeedChanging: false,
+          showControls: true,
+        );
+
+        controller.addListener(() {
+          if (!controller.value.isInitialized) return;
+
+          final position = controller.value.position;
+          final duration = controller.value.duration;
+
+          if (position >= duration) {
+            final media = _buildMedia();
+            final next = (widget.selected + 1) % media.length;
+
+            widget.onSelect(next);
+
+            _pageController.animateToPage(
+              next,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOut,
+            );
+
+            _startAutoScrollIfNeeded();
+          }
+        });
+
+        if (mounted) setState(() {});
+      });
+
       if (mounted) setState(() {});
     });
 
     if (mounted) setState(() {});
-  }
-
-  void _openFullscreenVideo() {
-    if (_currentVideoUrl == null || _currentVideoUrl!.isEmpty) return;
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => FullscreenVideoPage(
-          videoPath: _currentVideoUrl!,
-          thumbnailPath: widget.images.isNotEmpty ? widget.images.first : null,
-        ),
-      ),
-    );
   }
 
   void _jumpToPageSafe(int index) {
@@ -228,9 +271,7 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
                     posterImage: posterImage,
                     vc: _vc,
                     init: _init,
-                    onTapVideo: media.first.isVideo
-                        ? _openFullscreenVideo
-                        : null,
+                    chewieController: _chewieController,
                   )
                 : Stack(
                     children: [
@@ -268,9 +309,7 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
                               posterImage: posterImage,
                               vc: vc,
                               init: init,
-                              onTapVideo: item.isVideo
-                                  ? _openFullscreenVideo
-                                  : null,
+                              chewieController: _chewieController,
                             );
                           },
                         ),
@@ -290,9 +329,7 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
                               height: 6,
                               width: active ? 18 : 6,
                               decoration: BoxDecoration(
-                                color: active
-                                    ? colors.primary
-                                    : Colors.white.withOpacity(0.45),
+                                color: active ? colors.primary : colors.surface,
                                 borderRadius: BorderRadius.circular(99),
                               ),
                             );
@@ -355,17 +392,18 @@ class _MainMediaOrInlineVideo extends StatelessWidget {
     required this.posterImage,
     required this.vc,
     required this.init,
-    this.onTapVideo,
+    required this.chewieController,
   });
 
   final _MediaItem item;
   final String? posterImage;
   final VideoPlayerController? vc;
   final Future<void>? init;
-  final VoidCallback? onTapVideo;
+  final ChewieController? chewieController;
 
   @override
   Widget build(BuildContext context) {
+    // IMAGE CASE
     if (!item.isVideo) {
       return Image.network(
         buildFileUrl(item.url) ?? '',
@@ -375,72 +413,28 @@ class _MainMediaOrInlineVideo extends StatelessWidget {
       );
     }
 
-    final child = Stack(
-      fit: StackFit.expand,
-      children: [
-        if (init == null || vc == null)
-          _VideoPoster(posterImage: posterImage)
-        else
-          FutureBuilder<void>(
-            future: init,
-            builder: (context, snap) {
-              if (snap.connectionState != ConnectionState.done ||
-                  !vc!.value.isInitialized) {
-                return _VideoPoster(posterImage: posterImage);
-              }
-              final size = vc!.value.size;
-              return FittedBox(
-                fit: BoxFit.cover,
-                child: SizedBox(
-                  width: size.width,
-                  height: size.height,
-                  child: VideoPlayer(vc!),
-                ),
-              );
-            },
-          ),
+    // VIDEO CASE
 
-        Center(
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.35),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.fullscreen, color: Colors.white, size: 26),
-          ),
-        ),
-        Positioned(
-          left: 12,
-          bottom: 12,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.55),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.videocam_rounded, size: 16, color: Colors.white),
-                SizedBox(width: 6),
-                Text(
-                  'Video',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+    if (init == null || vc == null) {
+      return _VideoPoster(posterImage: posterImage);
+    }
+
+    return FutureBuilder<void>(
+      future: init,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done ||
+            vc == null ||
+            !vc!.value.isInitialized) {
+          return _VideoPoster(posterImage: posterImage);
+        }
+
+        if (chewieController == null) {
+          return _VideoPoster(posterImage: posterImage);
+        }
+
+        return Chewie(controller: chewieController!);
+      },
     );
-
-    if (onTapVideo == null) return child;
-    return InkWell(onTap: onTapVideo, child: child);
   }
 }
 
@@ -494,6 +488,7 @@ class _Thumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final borderColor = active
         ? colors.primary
         : Theme.of(context).dividerColor.withOpacity(0.2);
@@ -522,18 +517,18 @@ class _Thumb extends StatelessWidget {
             )
           else
             const Center(child: Icon(Icons.videocam_outlined, size: 18)),
-          Container(color: Colors.black.withOpacity(0.12)),
+          Container(color: colors.black.withOpacity(0.12)),
           Center(
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.45),
+                color: colors.black.withOpacity(0.45),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.play_arrow_rounded,
                 size: 18,
-                color: Colors.white,
+                color: colors.white,
               ),
             ),
           ),
@@ -550,8 +545,10 @@ class _Thumb extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: borderColor, width: active ? 2 : 1),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: content,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: content,
+        ),
       ),
     );
   }

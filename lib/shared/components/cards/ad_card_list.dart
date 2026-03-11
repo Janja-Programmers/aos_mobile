@@ -204,7 +204,7 @@ class AdListItem extends ConsumerWidget {
                   if (isService) ...[
                     const SizedBox(height: 2),
                     Text(
-                      "per ${ad.priceUnit}",
+                      ad.priceUnit,
                       style: context.p.copyWith(
                         fontSize: 11,
                         color: colors.primary,

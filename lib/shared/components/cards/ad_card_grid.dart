@@ -28,7 +28,7 @@ class AdGridCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            AdCardImage(ad: ad, height: 140),
+            AdCardImage(ad: ad, height: 100),
 
             Padding(
               padding: const EdgeInsets.all(10),

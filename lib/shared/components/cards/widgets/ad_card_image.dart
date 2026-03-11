@@ -27,7 +27,12 @@ class AdCardImage extends StatelessWidget {
                     color: colors.elevated,
                     child: Icon(Icons.image_outlined, color: colors.textMuted),
                   )
-                : Image.network(imageUrl, fit: BoxFit.cover),
+                : Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) =>
+                        const Center(child: Icon(Icons.broken_image_outlined)),
+                  ),
           ),
         ),
 

@@ -128,12 +128,6 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
   // ================= PRICING =================
 
-  void setPriceType(String? v) {
-    _setDraft(
-      _draft.copyWith(priceType: (v == null || v.trim().isEmpty) ? null : v),
-    );
-  }
-
   void setCurrency(String? v) {
     _setDraft(
       _draft.copyWith(currency: (v == null || v.trim().isEmpty) ? null : v),
@@ -154,16 +148,65 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     _setDraft(_draft.copyWith(priceType: null, price: null, priceUnit: null));
   }
 
+  void setPriceType(String? v) {
+    final type = (v == null || v.trim().isEmpty) ? null : v;
+
+    if (type != "Fixed") {
+      _setDraft(
+        _draft.copyWith(
+          priceType: type,
+          scheduleOfferDates: false,
+          clearAllOffer: true,
+        ),
+      );
+      return;
+    }
+
+    _setDraft(_draft.copyWith(priceType: type));
+  }
+
   void setOfferPrice(double? value) {
+    if (value == null || value <= 0) {
+      _setDraft(
+        _draft.copyWith(scheduleOfferDates: false, clearAllOffer: true),
+      );
+      return;
+    }
+
     _setDraft(_draft.copyWith(offerPrice: value));
   }
 
   void setOfferStart(DateTime? value) {
-    _setDraft(_draft.copyWith(offerStart: value));
+    if (value == null) {
+      _setDraft(_draft.copyWith(clearOfferStart: true));
+      return;
+    }
+
+    _setDraft(_draft.copyWith(offerStart: value, scheduleOfferDates: true));
   }
 
   void setOfferEnd(DateTime? value) {
-    _setDraft(_draft.copyWith(offerEnd: value));
+    if (value == null) {
+      _setDraft(_draft.copyWith(clearOfferEnd: true));
+      return;
+    }
+
+    _setDraft(_draft.copyWith(offerEnd: value, scheduleOfferDates: true));
+  }
+
+  void setScheduleOfferDates(bool v) {
+    if (!v) {
+      _setDraft(
+        _draft.copyWith(
+          scheduleOfferDates: false,
+          clearOfferStart: true,
+          clearOfferEnd: true,
+        ),
+      );
+      return;
+    }
+
+    _setDraft(_draft.copyWith(scheduleOfferDates: true));
   }
 
   // ================= MEDIA =================

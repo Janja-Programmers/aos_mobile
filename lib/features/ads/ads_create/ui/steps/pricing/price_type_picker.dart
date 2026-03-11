@@ -19,7 +19,12 @@ class PriceTypePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    if (options.isEmpty) return const SizedBox.shrink();
+    /// Only allow these price types
+    final visibleOptions = options
+        .where((o) => o == 'Fixed' || o == 'Negotiable')
+        .toList();
+
+    if (visibleOptions.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,13 +39,13 @@ class PriceTypePicker extends StatelessWidget {
           ),
           child: Column(
             children: [
-              for (int i = 0; i < options.length - 1; i++) ...[
+              for (int i = 0; i < visibleOptions.length; i++) ...[
                 _RowOption(
-                  type: options[i],
-                  selected: selected == options[i],
-                  onTap: () => onChanged(options[i]),
+                  type: visibleOptions[i],
+                  selected: selected == visibleOptions[i],
+                  onTap: () => onChanged(visibleOptions[i]),
                 ),
-                if (i != options.length - 1)
+                if (i != visibleOptions.length - 1)
                   Divider(
                     height: 1,
                     thickness: 1,

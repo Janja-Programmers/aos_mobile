@@ -1,5 +1,4 @@
 import 'package:africaonlinestores/features/ads/ads_create/ui/steps/validators/validation_result.dart';
-
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 
@@ -141,7 +140,7 @@ class CreateAdValidator {
     }
 
     // Validate offer dates
-    if (policy.requireOfferDates(d)) {
+    if (policy.requireOfferDates(d) && (d.scheduleOfferDates ?? false)) {
       if (d.offerStart == null) {
         errors['offerStart'] = 'Select offer start date';
       }

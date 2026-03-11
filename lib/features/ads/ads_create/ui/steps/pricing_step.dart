@@ -39,13 +39,13 @@ class PricingStep extends ConsumerWidget {
         .watch(adDraftControllerProvider)
         .maybeWhen(data: (v) => v, orElse: () => null);
 
-    /// Draft state (user choice)
-    final isContactMode = draft?.priceType == "Contact for price";
-    final isFixedPrice = draft?.priceType == "Fixed";
-
     if (draft == null) return const SizedBox.shrink();
 
     final ctrl = ref.read(adDraftControllerProvider.notifier);
+
+    /// Draft state (user choice)
+    final isContactMode = draft.priceType == "Contact for price";
+    final isFixedPrice = draft.priceType == "Fixed";
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 120),
@@ -65,13 +65,13 @@ class PricingStep extends ConsumerWidget {
                 ctrl.setPriceType('Fixed');
               }
             },
-
             onContact: () {
               if (!isContactMode) {
                 ctrl.setPriceType('Contact for price');
               }
             },
           ),
+
         const SizedBox(height: 20),
 
         /// =========================
@@ -102,6 +102,7 @@ class PricingStep extends ConsumerWidget {
             options: allowedTypes,
             onChanged: ctrl.setPriceType,
           ),
+
           const SizedBox(height: 20),
 
           /// =========================
@@ -109,15 +110,17 @@ class PricingStep extends ConsumerWidget {
           /// =========================
           if (isFixedPrice)
             OfferSection(
-              offerPrice: draft.offerPrice,
               price: draft.price,
+              offerPrice: draft.offerPrice,
               startDate: draft.offerStart,
               endDate: draft.offerEnd,
+              scheduleOfferDates: draft.scheduleOfferDates ?? false,
               onOfferPriceChanged: ctrl.setOfferPrice,
               onStartChanged: (date) =>
                   _showThemedDatePicker(context, date, ctrl.setOfferStart),
               onEndChanged: (date) =>
                   _showThemedDatePicker(context, date, ctrl.setOfferEnd),
+              onScheduleChanged: ctrl.setScheduleOfferDates,
             ),
         ],
       ],

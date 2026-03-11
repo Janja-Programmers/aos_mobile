@@ -86,9 +86,42 @@ class CreateAdPayloadBuilder {
             payload['price_unit'] = d.priceUnit;
           }
         }
+
+        final canSendOffer =
+            priceType == 'Fixed' &&
+            d.offerPrice != null &&
+            d.offerPrice! > 0 &&
+            d.price != null &&
+            d.offerPrice! < d.price!;
+
+        if (canSendOffer) {
+          payload['offer_price'] = d.offerPrice;
+
+          if (d.scheduleOfferDates ?? false) {
+            if (d.offerStart != null) {
+              payload['offer_start_date'] = _formatDate(d.offerStart!);
+            }
+
+            if (d.offerEnd != null) {
+              payload['offer_end_date'] = _formatDate(d.offerEnd!);
+            }
+
+            payload['schedule_offer_dates'] = 1;
+          } else {
+            payload['schedule_offer_dates'] = 0;
+          }
+        }
       }
     }
 
+    print("PAYLOAD: ${payload.toString()}");
+
     return payload;
+  }
+
+  static String _formatDate(DateTime d) {
+    return "${d.year.toString().padLeft(4, '0')}-"
+        "${d.month.toString().padLeft(2, '0')}-"
+        "${d.day.toString().padLeft(2, '0')}";
   }
 }

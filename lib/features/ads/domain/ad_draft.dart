@@ -86,6 +86,7 @@ class AdDraft {
     // ----- META -----
     this.freeConsultation,
     this.requiresDeposit,
+    this.scheduleOfferDates,
   });
 
   final DraftSource source;
@@ -113,18 +114,16 @@ class AdDraft {
   // ---------- DESCRIPTION ----------
   final String description;
 
-  // ---------- PRICING ----------
-  final String? priceType; // backend: price_type
-  final String? currency; // backend: currency
-  final double? price; // backend: price
-  final String? priceUnit; // backend: price_unit
+  final String? priceType;
+  final String? currency;
+  final double? price;
+  final String? priceUnit;
 
-  // ---------- OFFER ----------
-  final double? offerPrice; // backend: offer_price
-  final DateTime? offerStart; // backend: offer_start
-  final DateTime? offerEnd; // backend: offer_end
+  final double? offerPrice;
+  final DateTime? offerStart;
+  final DateTime? offerEnd;
+  final bool? scheduleOfferDates;
 
-  // ----- META -----
   final bool? freeConsultation;
   final bool? requiresDeposit;
 
@@ -159,10 +158,15 @@ class AdDraft {
     double? offerPrice,
     DateTime? offerStart,
     DateTime? offerEnd,
-    bool clearOffer = false,
+
+    bool clearOfferPrice = false,
+    bool clearOfferStart = false,
+    bool clearOfferEnd = false,
+    bool clearAllOffer = false,
 
     bool? freeConsultation,
     bool? requiresDeposit,
+    bool? scheduleOfferDates,
   }) {
     return AdDraft(
       source: source ?? this.source,
@@ -190,12 +194,19 @@ class AdDraft {
       price: price ?? this.price,
       priceUnit: priceUnit ?? this.priceUnit,
 
-      offerPrice: clearOffer ? null : (offerPrice ?? this.offerPrice),
-      offerStart: clearOffer ? null : (offerStart ?? this.offerStart),
-      offerEnd: clearOffer ? null : (offerEnd ?? this.offerEnd),
+      offerPrice: (clearAllOffer || clearOfferPrice)
+          ? null
+          : (offerPrice ?? this.offerPrice),
+      offerStart: (clearAllOffer || clearOfferStart)
+          ? null
+          : (offerStart ?? this.offerStart),
+      offerEnd: (clearAllOffer || clearOfferEnd)
+          ? null
+          : (offerEnd ?? this.offerEnd),
 
       freeConsultation: freeConsultation ?? this.freeConsultation,
       requiresDeposit: requiresDeposit ?? this.requiresDeposit,
+      scheduleOfferDates: scheduleOfferDates ?? this.scheduleOfferDates,
     );
   }
 
@@ -258,12 +269,20 @@ class AdDraft {
 
       // PRICING
       priceType: item['price_type'],
+      currency: item['currency'],
+      price: (item['price'] as num?)?.toDouble(),
       priceUnit: item['price_unit'],
 
       // Offer
-      offerPrice: null,
-      offerStart: null,
-      offerEnd: null,
+      offerPrice: (item['offer_price'] as num?)?.toDouble(),
+      offerStart: item['offer_start'] != null
+          ? DateTime.tryParse(item['offer_start'])
+          : null,
+      offerEnd: item['offer_end'] != null
+          ? DateTime.tryParse(item['offer_end'])
+          : null,
+      scheduleOfferDates:
+          item['offer_start'] != null || item['offer_end'] != null,
     );
   }
 
@@ -334,6 +353,17 @@ class AdDraft {
       currency: data['currency'],
       price: (data['price'] as num?)?.toDouble(),
       priceUnit: data['price_unit'],
+
+      offerPrice: (data['offer_price'] as num?)?.toDouble(),
+      offerStart: data['offer_start'] != null
+          ? DateTime.tryParse(data['offer_start'])
+          : null,
+      offerEnd: data['offer_end'] != null
+          ? DateTime.tryParse(data['offer_end'])
+          : null,
+      scheduleOfferDates:
+          data['schedule_offer_dates'] ??
+          (data['offer_start'] != null || data['offer_end'] != null),
     );
   }
 }

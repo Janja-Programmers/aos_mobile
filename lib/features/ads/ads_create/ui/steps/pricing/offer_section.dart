@@ -14,19 +14,23 @@ class OfferSection extends StatefulWidget {
     required this.offerPrice,
     required this.startDate,
     required this.endDate,
+    this.scheduleOfferDates,
     required this.onOfferPriceChanged,
     required this.onStartChanged,
     required this.onEndChanged,
+    required this.onScheduleChanged,
   });
 
   final double? price;
   final double? offerPrice;
   final DateTime? startDate;
   final DateTime? endDate;
+  final bool? scheduleOfferDates;
 
   final ValueChanged<double?> onOfferPriceChanged;
   final ValueChanged<DateTime?> onStartChanged;
   final ValueChanged<DateTime?> onEndChanged;
+  final ValueChanged<bool> onScheduleChanged;
 
   @override
   State<OfferSection> createState() => _OfferSectionState();
@@ -34,7 +38,7 @@ class OfferSection extends StatefulWidget {
 
 class _OfferSectionState extends State<OfferSection> {
   late final TextEditingController _controller;
-  bool schedule = false;
+  late final FocusNode _focusNode;
 
   @override
   void initState() {
@@ -42,22 +46,31 @@ class _OfferSectionState extends State<OfferSection> {
     _controller = TextEditingController(
       text: widget.offerPrice?.toString() ?? '',
     );
-
-    schedule = widget.startDate != null || widget.endDate != null;
+    _focusNode = FocusNode();
   }
 
   @override
   void didUpdateWidget(covariant OfferSection oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    if (_focusNode.hasFocus) return;
+
     if (widget.offerPrice != oldWidget.offerPrice) {
-      _controller.text = widget.offerPrice?.toString() ?? '';
+      final newText = widget.offerPrice?.toString() ?? '';
+      if (_controller.text != newText) {
+        _controller.value = _controller.value.copyWith(
+          text: newText,
+          selection: TextSelection.collapsed(offset: newText.length),
+          composing: TextRange.empty,
+        );
+      }
     }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -80,7 +93,10 @@ class _OfferSectionState extends State<OfferSection> {
 
             TextFormField(
               controller: _controller,
-              keyboardType: const TextInputType.numberWithOptions(),
+              focusNode: _focusNode,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               style: context.p,
               decoration: InputDecoration(
                 hintText: 'Enter discounted price',
@@ -94,11 +110,22 @@ class _OfferSectionState extends State<OfferSection> {
                 ),
               ),
               onChanged: (v) {
-                final n = double.tryParse(v.trim());
+                final raw = v.trim();
+
+                if (raw.isEmpty) {
+                  widget.onOfferPriceChanged(null);
+                  widget.onScheduleChanged(false);
+                  widget.onStartChanged(null);
+                  widget.onEndChanged(null);
+                  setState(() {});
+                  return;
+                }
+
+                final n = double.tryParse(raw);
                 widget.onOfferPriceChanged(n);
 
                 if (n == null || n <= 0) {
-                  schedule = false;
+                  widget.onScheduleChanged(false);
                   widget.onStartChanged(null);
                   widget.onEndChanged(null);
                 }
@@ -107,15 +134,14 @@ class _OfferSectionState extends State<OfferSection> {
               },
             ),
 
-            if ((widget.offerPrice ?? 0) > 0) ...[
+            if (widget.offerPrice != null && widget.offerPrice! > 0) ...[
               const SizedBox(height: 16),
-
               ScheduleOfferCard(
-                enabled: schedule,
+                enabled: widget.scheduleOfferDates ?? false,
                 startDate: widget.startDate,
                 endDate: widget.endDate,
                 onToggle: (v) {
-                  setState(() => schedule = v);
+                  widget.onScheduleChanged(v);
 
                   if (!v) {
                     widget.onStartChanged(null);

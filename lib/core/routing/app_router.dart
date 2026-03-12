@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:africaonlinestores/features/reviews/presentation/review_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,12 +9,16 @@ import 'package:africaonlinestores/features/account/shared/routing/account_route
 import 'package:africaonlinestores/features/ads/ads_create/create_ad_flow_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/pickers/select_category_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_create/ui/pickers/select_location_screen.dart';
+
+import 'package:africaonlinestores/features/reviews/presentation/review_create_screen.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/auth/shared/routing/auth_routes.dart';
 import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
 import 'package:africaonlinestores/features/onboarding/screens/onboarding_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_details_screen.dart';
+
+import 'package:africaonlinestores/features/seller/presentation/seller_store_screen.dart';
 
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/core/routing/app_shell.dart';
@@ -91,6 +95,37 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final showAllLocations = (state.extra as bool?) ?? true;
 
           return SelectLocationScreen(showAllLocations: showAllLocations);
+        },
+      ),
+
+      // SELLER ROUTE
+      GoRoute(
+        name: AppRoutes.nSeller,
+        path: AppRoutes.seller,
+        builder: (context, state) =>
+            SellerStorefrontScreen(sellerId: _param(state, 'sellerId')),
+      ),
+
+      // REVIEW ROUTE
+      GoRoute(
+        name: AppRoutes.nReview,
+        path: AppRoutes.review,
+        builder: (context, state) =>
+            ReviewScreen(reviews: [], totalReviews: 0, onSeeAll: () {}),
+      ),
+
+      // CREATE REVIEW ROUTE
+      GoRoute(
+        name: AppRoutes.nCreateReview,
+        path: AppRoutes.createReview,
+        builder: (context, state) {
+          final adId = state.uri.queryParameters['adId'];
+
+          if (adId == null || adId.isEmpty) {
+            throw Exception("adId is required for ReviewCreateScreen");
+          }
+
+          return ReviewCreateScreen(adId: adId);
         },
       ),
 

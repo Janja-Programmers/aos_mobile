@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
@@ -15,6 +17,7 @@ class MiniCategoryPanel extends StatelessWidget {
     final colors = context.appColors;
 
     final shown = items.length > 4 ? items.take(4).toList() : items;
+    final l10n = context.l10n;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
@@ -26,7 +29,7 @@ class MiniCategoryPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "You might be looking for",
+            l10n.home_you_might_be_looking_for,
             style: context.bodyStrong.copyWith(fontSize: 16, height: 1.2),
           ),
           const SizedBox(height: 10),

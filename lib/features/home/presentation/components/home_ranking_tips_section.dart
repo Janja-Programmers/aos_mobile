@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 /// Info card block ("Photography Tips" / "Marketing Tips" / "Ranking Tips")
@@ -14,23 +15,24 @@ class HomeRankingTipsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = context.l10n;
 
     final items = <_TipHeroItem>[
-      const _TipHeroItem(
-        title: 'Photography tips\nthat sell',
-        subtitle: 'Learn',
+      _TipHeroItem(
+        title: l10n.home_photography_tips,
+        subtitle: l10n.home_learn,
         icon: Icons.camera_alt_outlined,
         routeName: AppRoutes.nPhotoTips,
       ),
-      const _TipHeroItem(
-        title: 'Boost your\nmarketing reach',
-        subtitle: 'Learn',
+      _TipHeroItem(
+        title: l10n.home_boost_marketing_reach,
+        subtitle: l10n.home_learn,
         icon: Icons.trending_up,
         routeName: AppRoutes.nMarketTips,
       ),
-      const _TipHeroItem(
-        title: 'Try all the best\nranking tips',
-        subtitle: 'Learn',
+      _TipHeroItem(
+        title: l10n.home_ranking_tips,
+        subtitle: l10n.home_learn,
         icon: Icons.lightbulb_outline,
         routeName: AppRoutes.nRankTips,
       ),

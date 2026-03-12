@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
@@ -51,6 +52,7 @@ class _SelectLocationScreenState extends ConsumerState<SelectLocationScreen> {
   Widget build(BuildContext context) {
     final q = _searchCtrl.text.trim();
     final accentRed = context.appColors.primaryRedSoft;
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
@@ -115,12 +117,12 @@ class _SelectLocationScreenState extends ConsumerState<SelectLocationScreen> {
                   itemBuilder: (context, index) {
                     if (showAllCities && index == 0) {
                       return _LocationTile(
-                        label: 'All Locations',
+                        label: l10n.location_all_locations,
                         selected: isAllSelected,
                         accent: accentRed,
                         onTap: () => Navigator.of(
                           context,
-                        ).pop({'id': '', 'label': 'All Location'}),
+                        ).pop({'id': '', 'label': l10n.location_all_locations}),
                       );
                     }
 

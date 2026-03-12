@@ -34,9 +34,12 @@ class _BasicStepState extends ConsumerState<BasicStep> {
   @override
   Widget build(BuildContext context) {
     final draftAsync = ref.watch(adDraftControllerProvider);
-    final draft = draftAsync.maybeWhen(data: (v) => v, orElse: () => null);
-    if (draft == null) return const SizedBox.shrink();
 
+    /// Always keep the latest draft even during AsyncLoading
+    final draft =
+        draftAsync.value ?? ref.read(adDraftControllerProvider.notifier).draft;
+
+    /// Initialise title once
     if (!_initialised) {
       _initialised = true;
       _titleCtrl.text = draft.title;
@@ -44,6 +47,7 @@ class _BasicStepState extends ConsumerState<BasicStep> {
 
     final flowState = ref.watch(createAdFlowControllerProvider);
     final showErrors = flowState.attempted.contains(flowState.index);
+
     final validation = CreateAdValidator.basic(draft);
     final titleError = showErrors ? validation.fieldErrors['title'] : null;
 
@@ -66,6 +70,7 @@ class _BasicStepState extends ConsumerState<BasicStep> {
             errorText: titleError,
           ).applyDefaults(inputDecorationTheme),
         ),
+
         const SizedBox(height: 18),
 
         /// ---------------- LOCATION ----------------
@@ -86,6 +91,7 @@ class _BasicStepState extends ConsumerState<BasicStep> {
 
             final id = (res['id'] ?? '').toString();
             final label = (res['label'] ?? '').toString();
+
             if (id.isEmpty) return;
 
             ref
@@ -93,10 +99,12 @@ class _BasicStepState extends ConsumerState<BasicStep> {
                 .setLocation(id: id, label: label);
           },
         ),
+
         const SizedBox(height: 24),
 
-        /// ---------------- MEDIA SECTION ----------------
+        /// ---------------- MEDIA ----------------
         const MediaSection(),
+
         const SizedBox(height: 24),
 
         /// ---------------- CATEGORY ----------------
@@ -108,13 +116,11 @@ class _BasicStepState extends ConsumerState<BasicStep> {
           leading: const Icon(Icons.category_outlined),
           placeholder: "Select a category",
           onTap: () async {
-            final categoriesState = ref
-                .read(categoriesControllerProvider)
-                .value;
+            final categoriesState = ref.read(categoriesControllerProvider);
 
             CategoryNode? parentNode;
 
-            if (categoriesState != null && draft.categoryId != null) {
+            if (draft.categoryId != null) {
               for (final p in categoriesState.parents) {
                 for (final c in p.children) {
                   if (c.id == draft.categoryId) {

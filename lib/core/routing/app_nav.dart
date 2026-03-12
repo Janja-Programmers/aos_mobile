@@ -14,7 +14,7 @@ class AppNavigation {
     WidgetRef ref,
     int index,
   ) async {
-    final item = AppNavConfig.items[index];
+    final item = AppNavConfig.items(context)[index];
     final auth = ref.read(authControllerProvider);
 
     Future<void> showLoginRequiredSheet(

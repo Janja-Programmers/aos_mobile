@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/account/shared/utils/avator_image.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 class AccountCard extends StatelessWidget {
   const AccountCard({super.key, required this.child});
@@ -101,6 +103,8 @@ class GetVerifiedBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
+    final l10n = context.l10n;
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
@@ -124,30 +128,30 @@ class GetVerifiedBanner extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.18),
+                  color: colors.white.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.verified_outlined, color: Colors.white),
+                child: Icon(Icons.verified_outlined, color: colors.white),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Get Verified',
+                      l10n.account_get_verified,
                       style: TextStyle(
-                        color: Colors.white,
+                        color: colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
-                      'Boost trust and credibility',
+                      l10n.account_boost_trust,
                       style: TextStyle(
-                        color: Colors.white70,
+                        color: colors.white,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -159,14 +163,10 @@ class GetVerifiedBanner extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.18),
+                  color: colors.white.withOpacity(0.18),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.arrow_forward,
-                  color: Colors.white,
-                  size: 18,
-                ),
+                child: Icon(Icons.arrow_forward, color: colors.white, size: 18),
               ),
             ],
           ),

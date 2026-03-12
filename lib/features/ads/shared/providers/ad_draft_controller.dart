@@ -393,4 +393,6 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   void reset() {
     _setDraft(const AdDraft(source: DraftSource.newAd));
   }
+
+  AdDraft get safeDraft => state.value ?? _draft;
 }

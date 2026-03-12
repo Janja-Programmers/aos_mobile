@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
@@ -12,6 +13,7 @@ class WelcomeStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -42,18 +44,21 @@ class WelcomeStep extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      "Buy, Sell, and Discover\nWorldwide",
+                      l10n.account_guest_title,
                       style: context.h3.copyWith(fontWeight: FontWeight.w700),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      "Welcome to AOS. Join millions of users around the globe trading electronics, cars, real estate, fashion, and everyday essentials.",
+                      l10n.account_guest_description,
                       style: context.pMuted.copyWith(height: 1.5),
                       textAlign: TextAlign.center,
                     ),
                     const Spacer(),
-                    PrimaryButton(text: "Get Started", onPressed: onContinue),
+                    PrimaryButton(
+                      text: l10n.common_get_started,
+                      onPressed: onContinue,
+                    ),
                   ],
                 ),
               ),

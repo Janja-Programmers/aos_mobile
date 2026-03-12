@@ -1,26 +1,36 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+
+import 'package:africaonlinestores/features/reviews/data/review_api.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+
+import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
-class ReviewScreen extends ConsumerStatefulWidget {
-  const ReviewScreen({super.key, required this.adId});
+class ReviewCreateScreen extends ConsumerStatefulWidget {
+  const ReviewCreateScreen({super.key, required this.adId});
 
   final String adId;
 
   @override
-  ConsumerState<ReviewScreen> createState() => _ReviewScreenState();
+  ConsumerState<ReviewCreateScreen> createState() => _ReviewCreateScreenState();
 }
 
-class _ReviewScreenState extends ConsumerState<ReviewScreen> {
+class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
   final _formKey = GlobalKey<FormState>();
+
   final _titleCtrl = TextEditingController();
   final _commentCtrl = TextEditingController();
+
+  final ImagePicker _picker = ImagePicker();
+
+  final List<File> _images = [];
 
   double _rating = 0.0;
   bool _loading = false;
@@ -28,11 +38,37 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   @override
   void initState() {
     super.initState();
-    _commentCtrl.addListener(() {
-      setState(() {});
+    _commentCtrl.addListener(() => setState(() {}));
+  }
+
+  /// 📸 Pick Image
+  Future<void> _pickImage() async {
+    final picked = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (picked == null) return;
+
+    setState(() {
+      _images.add(File(picked.path));
     });
   }
 
+  /// ☁ Upload Images
+  Future<List<String>> _uploadImages() async {
+    final urls = <String>[];
+
+    for (final file in _images) {
+      final res = await ref.read(adsApiProvider).uploadMedia(file: file);
+
+      res.fold((_) {}, (data) {
+        final url = data['file_url'];
+        if (url != null) urls.add(url);
+      });
+    }
+
+    return urls;
+  }
+
+  /// 🚀 Submit Review
   Future<void> _submit() async {
     if (_rating == 0) {
       ShowSnack(context, 'Please select a rating').error();
@@ -43,20 +79,23 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
     setState(() => _loading = true);
 
+    final imageUrls = await _uploadImages();
+
     final res = await ref
-        .read(adsApiProvider)
+        .read(reviewApiProvider)
         .createAdReview(
           ad: widget.adId,
           rating: _rating,
           title: _titleCtrl.text.trim(),
           comment: _commentCtrl.text.trim(),
+          images: imageUrls,
         );
 
     setState(() => _loading = false);
 
     res.fold((failure) => ShowSnack(context, failure.message).error(), (_) {
       ShowSnack(context, 'Review submitted successfully').success();
-      Navigator.pop(context, true); // return true for refresh
+      Navigator.pop(context, true);
     });
   }
 
@@ -78,11 +117,53 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           onTap: () => setState(() => _rating = index.toDouble()),
           child: Icon(
             _rating >= index ? Icons.star_rounded : Icons.star_border_rounded,
-            size: 30,
+            size: 32,
             color: colors.warning,
           ),
         );
       }),
+    );
+  }
+
+  /// 📷 Image Preview Grid
+  Widget _buildImagePreview() {
+    if (_images.isEmpty) return const SizedBox();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: _images.map((file) {
+          return Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.file(
+                  file,
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                ),
+              ),
+
+              /// remove image
+              Positioned(
+                right: 0,
+                top: 0,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _images.remove(file);
+                    });
+                  },
+                  child: const Icon(Icons.close, size: 18, color: Colors.red),
+                ),
+              ),
+            ],
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -92,10 +173,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
     return Scaffold(
       backgroundColor: colors.surface,
-      appBar: AppBar(
-        leading: const Icon(Icons.arrow_back),
-        title: Text("Review", style: context.h5),
-      ),
+      appBar: AppBar(title: Text("Review", style: context.h5)),
       body: Column(
         children: [
           Expanded(
@@ -112,7 +190,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      /// Overall Ratings
+                      /// ⭐ Rating
                       Text("Overall Ratings", style: context.pStrong),
                       const SizedBox(height: 12),
 
@@ -120,7 +198,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
                       const SizedBox(height: 20),
 
-                      /// Review Title
+                      /// Title
                       Text("Review Title", style: context.pStrong),
                       const SizedBox(height: 8),
 
@@ -137,7 +215,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
                       const SizedBox(height: 20),
 
-                      /// Review Detail
+                      /// Comment
                       Text("Review Detail", style: context.pStrong),
                       const SizedBox(height: 8),
 
@@ -148,15 +226,14 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                         decoration: const InputDecoration(
                           fillColor: Colors.transparent,
                           hintText:
-                              'The Calla lounge chair has a stylish design with functional armrests.',
-                          counterText: "", // hides default counter
+                              'The product has a stylish design and works perfectly.',
+                          counterText: "",
                         ),
                         validator: (v) => v == null || v.trim().isEmpty
                             ? 'Comment required'
                             : null,
                       ),
 
-                      /// Custom Counter Bottom Left
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
@@ -167,11 +244,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
                       const SizedBox(height: 16),
 
-                      /// Add Photo Row
+                      /// 📷 Add Photo
                       InkWell(
-                        onTap: () {
-                          // TODO: implement image picker
-                        },
+                        onTap: _pickImage,
                         child: Row(
                           children: [
                             const Icon(Icons.camera_alt_outlined, size: 20),
@@ -180,6 +255,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                           ],
                         ),
                       ),
+
+                      _buildImagePreview(),
                     ],
                   ),
                 ),

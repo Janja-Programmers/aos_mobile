@@ -419,44 +419,6 @@ class AdsApi {
     }
   }
 
-  Future<Either<Failure, Map<String, dynamic>>> getAdReviews({
-    required String adId,
-    int limit = 10,
-    int offset = 0,
-  }) async {
-    try {
-      final res = await _dio.get(
-        ApiEndpoints.getAdReviewsEndpoint,
-        queryParameters: {'ad': adId, 'limit': limit, 'offset': offset},
-      );
-      return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Failed to fetch reviews.'));
-    }
-  }
-
-  Future<Either<Failure, void>> createAdReview({
-    required String ad,
-    required double rating,
-    required String title,
-    required String comment,
-  }) async {
-    try {
-      final res = await _dio.post(
-        ApiEndpoints.createAdReviewEndpoint,
-        data: {"ad": ad, "rating": rating, "title": title, "comment": comment},
-      );
-
-      return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Failed to fetch reviews.'));
-    }
-  }
-
   Future<Either<Failure, Map<String, dynamic>>> listWishlist({
     int limit = 200,
     int offset = 0,

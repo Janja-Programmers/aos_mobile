@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/account/shared/utils/avator_image.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
@@ -38,6 +39,11 @@ class AdSellerInfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final ImageProvider? img = resolveAvatarImage(
+      avatar,
+      "Https://aos-staging.m.frappe.cloud",
+    );
+    final initial = shopName.characters.first;
 
     return SectionCard(
       title: 'Seller Information',
@@ -48,14 +54,11 @@ class AdSellerInfoSection extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                radius: 28,
-                backgroundColor: colors.surface,
-                backgroundImage: avatar != null && avatar!.isNotEmpty
-                    ? NetworkImage(avatar!)
-                    : null,
-                child: avatar == null || avatar!.isEmpty
-                    ? Icon(Icons.store, color: colors.white)
-                    : null,
+                radius: 24,
+                backgroundColor: colors.border,
+                backgroundImage: img,
+                onBackgroundImageError: img != null ? (_, _) {} : null,
+                child: img == null ? Text(initial, style: context.h2) : null,
               ),
               const SizedBox(width: 12),
 

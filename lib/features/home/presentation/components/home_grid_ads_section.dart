@@ -10,13 +10,13 @@ class GridAdsSection extends StatelessWidget {
     super.key,
     required this.title,
     required this.items,
-    this.onSeeAll,
+    required this.onSeeAll,
     this.isService = false,
   });
 
   final String title;
   final List<AOSAdListItem> items;
-  final VoidCallback? onSeeAll;
+  final VoidCallback onSeeAll;
   final bool isService;
 
   @override
@@ -38,7 +38,7 @@ class GridAdsSection extends StatelessWidget {
         ),
 
         SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.all(20),
           sliver: SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,

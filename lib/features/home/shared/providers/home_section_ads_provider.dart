@@ -35,7 +35,7 @@ final homeSectionAdsProvider = FutureProvider.autoDispose
       String? categoryId;
 
       if (req.section.preferredCategoryNames.isNotEmpty) {
-        final catsState = await ref.watch(categoriesControllerProvider.future);
+        final catsState = ref.read(categoriesControllerProvider);
 
         categoryId = findParentCategoryIdByNames(
           catsState.parents,

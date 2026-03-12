@@ -30,6 +30,13 @@ class AppRoutes {
   // Search
   static const search = '/search';
 
+  // Seller
+  static const seller = '/seller/:sellerId';
+
+  // Reviews
+  static const review = '/review';
+  static const createReview = '/review/create-review';
+
   // Ads - static paths first
   static const allAds = '/ads/all';
   static const adList = '/ads/list';
@@ -41,7 +48,7 @@ class AppRoutes {
   // Ads - MOST generic dynamic route LAST
   static const adDetails = '/ads/detail/:id';
 
-  // ✅ Route names (use pushNamed/goNamed)
+  // NAMED Route names (use pushNamed/goNamed)
   static const nHome = 'home';
   static const nOnboarding = 'onboarding';
   static const nAdList = 'adList';
@@ -74,4 +81,8 @@ class AppRoutes {
 
   static const nTerms = 'terms';
   static const nPrivacy = 'privacy';
+
+  static const nSeller = 'seller';
+  static const nReview = 'review';
+  static const nCreateReview = 'createReview';
 }

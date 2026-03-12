@@ -1,22 +1,22 @@
+import 'package:africaonlinestores/features/reviews/domain/review_model.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
-import 'package:africaonlinestores/features/ads/domain/aos_review.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/section_card.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:intl/intl.dart';
 
-class AdReviewsSection extends StatelessWidget {
-  const AdReviewsSection({
+class ReviewScreen extends StatelessWidget {
+  const ReviewScreen({
     super.key,
     required this.reviews,
     required this.totalReviews,
     required this.onSeeAll,
   });
 
-  final List<AOSReview> reviews;
+  final List<AdReview> reviews;
   final int totalReviews;
   final VoidCallback onSeeAll;
 

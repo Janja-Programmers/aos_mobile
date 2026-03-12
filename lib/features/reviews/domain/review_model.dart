@@ -1,5 +1,5 @@
-class AOSReview {
-  const AOSReview({
+class AdReview {
+  const AdReview({
     required this.id,
     required this.rating,
     required this.title,
@@ -19,13 +19,13 @@ class AOSReview {
   final int likeCount;
   final int dislikeCount;
 
-  factory AOSReview.fromJson(Map<String, dynamic> json) {
+  factory AdReview.fromJson(Map<String, dynamic> json) {
     double parseDouble(dynamic v) {
       if (v == null) return 0;
       return double.tryParse(v.toString()) ?? 0;
     }
 
-    return AOSReview(
+    return AdReview(
       id: (json['name'] ?? '').toString(),
       rating: parseDouble(json['rating']),
       title: (json['title'] ?? '').toString(),

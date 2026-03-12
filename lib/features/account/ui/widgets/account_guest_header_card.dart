@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
@@ -8,8 +9,8 @@ import 'package:go_router/go_router.dart';
 class AccountGuestHeaderCard extends StatelessWidget {
   const AccountGuestHeaderCard({
     super.key,
-    this.title = 'Welcome to AOS',
-    this.subtitle = 'Sign in to access your account, manage ads, and more.',
+    required this.title,
+    required this.subtitle,
     this.onLogin,
     this.onSignUp,
   });
@@ -23,6 +24,7 @@ class AccountGuestHeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
+    final l10n = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -50,10 +52,18 @@ class AccountGuestHeaderCard extends StatelessWidget {
             ),
             const SizedBox(height: 14),
 
-            Text(title, textAlign: TextAlign.center, style: context.h4),
+            Text(
+              l10n.account_guest_title,
+              textAlign: TextAlign.center,
+              style: context.h4,
+            ),
             const SizedBox(height: 6),
 
-            Text(subtitle, textAlign: TextAlign.center, style: context.pMuted),
+            Text(
+              l10n.account_guest_description,
+              textAlign: TextAlign.center,
+              style: context.pMuted,
+            ),
             const SizedBox(height: 16),
 
             Row(
@@ -74,7 +84,7 @@ class AccountGuestHeaderCard extends StatelessWidget {
                         ),
                         foregroundColor: scheme.primary,
                       ),
-                      child: Text('Login', style: context.p),
+                      child: Text(l10n.auth_login, style: context.p),
                     ),
                   ),
                 ),
@@ -94,7 +104,7 @@ class AccountGuestHeaderCard extends StatelessWidget {
                         foregroundColor: scheme.surface,
                       ),
                       child: Text(
-                        'Register',
+                        l10n.auth_register,
                         style: AppTextStylesX(context).button,
                       ),
                     ),

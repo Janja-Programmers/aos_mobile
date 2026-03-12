@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 class HomeAdsSection {
   const HomeAdsSection({
     required this.key,
-    required this.title,
     this.preferredCategoryNames = const <String>[],
     this.sort,
     this.promotionType,
@@ -13,7 +12,6 @@ class HomeAdsSection {
   });
 
   final String key;
-  final String title;
   final List<String> preferredCategoryNames;
   final String? sort;
   final String? promotionType;

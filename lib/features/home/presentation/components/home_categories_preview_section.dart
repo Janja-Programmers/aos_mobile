@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
@@ -19,7 +21,9 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
-    final asyncState = ref.watch(categoriesControllerProvider);
+    final l10n = context.l10n;
+
+    final state = ref.watch(categoriesControllerProvider);
 
     return SliverToBoxAdapter(
       child: Padding(
@@ -32,7 +36,7 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Categories',
+                    l10n.nav_categories,
                     style: context.title,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -40,7 +44,7 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
                 TextButton(
                   onPressed: () => context.pushNamed(AppRoutes.nCategories),
                   child: Text(
-                    'See all',
+                    l10n.common_see_all,
                     style: context.p.copyWith(
                       color: colors.primary,
                       fontWeight: FontWeight.w500,
@@ -53,26 +57,30 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
             const SizedBox(height: 12),
 
             /// BODY
-            asyncState.when(
-              loading: () => SizedBox(
-                height: 95,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 6,
-                  separatorBuilder: (_, _) => const SizedBox(width: 20),
-                  itemBuilder: (_, _) => const CategoryShimmer(),
-                ),
-              ),
+            Builder(
+              builder: (_) {
+                if (state.loading) {
+                  return SizedBox(
+                    height: 95,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: 6,
+                      separatorBuilder: (_, _) => const SizedBox(width: 20),
+                      itemBuilder: (_, _) => const CategoryShimmer(),
+                    ),
+                  );
+                }
 
-              error: (err, _) => Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  'Failed to load categories',
-                  style: context.body.copyWith(color: colors.error),
-                ),
-              ),
+                if (state.errorMessage != null) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Failed to load categories',
+                      style: context.body.copyWith(color: colors.error),
+                    ),
+                  );
+                }
 
-              data: (state) {
                 final items = state.parents.take(limit).toList();
 
                 if (items.isEmpty) {
@@ -124,10 +132,9 @@ class _CategoryTile extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: SizedBox(
-        width: 72, // SPEC
+        width: 72,
         child: Column(
           children: [
-            /// ICON CIRCLE
             Container(
               width: 50,
               height: 50,
@@ -160,7 +167,6 @@ class _CategoryTile extends StatelessWidget {
 
             const SizedBox(height: 8),
 
-            /// LABEL
             Text(
               item.name,
               maxLines: 2,

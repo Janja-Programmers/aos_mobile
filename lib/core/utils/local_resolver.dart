@@ -9,6 +9,7 @@ const List<Locale> kSupportedLocales = <Locale>[
   Locale('sw'),
   Locale('fr'),
   Locale('ar'),
+  Locale('zh'),
 ];
 
 Locale? resolveLocale(UserPreferenceState? prefs) {

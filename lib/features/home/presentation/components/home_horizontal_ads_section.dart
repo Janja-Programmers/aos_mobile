@@ -10,12 +10,12 @@ class HomeHorizontalAdsSection extends StatelessWidget {
     super.key,
     required this.title,
     required this.items,
-    this.onSeeAll,
+    required this.onSeeAll,
   });
 
   final String title;
   final List<AOSAdListItem> items;
-  final VoidCallback? onSeeAll;
+  final VoidCallback onSeeAll;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class HomeHorizontalAdsSection extends StatelessWidget {
         children: [
           /// Section Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+            padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
             child: SectionHeader(title: title, onSeeAll: onSeeAll),
           ),
 
@@ -37,7 +37,7 @@ class HomeHorizontalAdsSection extends StatelessWidget {
           SizedBox(
             height: 280,
             child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               itemCount: items.length,

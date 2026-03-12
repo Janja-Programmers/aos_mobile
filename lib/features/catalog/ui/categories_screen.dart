@@ -29,7 +29,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final asyncState = ref.watch(categoriesControllerProvider);
+    final state = ref.watch(categoriesControllerProvider);
     final ctrl = ref.read(categoriesControllerProvider.notifier);
 
     return Scaffold(
@@ -59,17 +59,21 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: asyncState.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+        child: Builder(
+          builder: (_) {
+            if (state.loading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          error: (_, _) => Center(
-            child: Text(
-              'Failed to load categories',
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          ),
+            if (state.errorMessage != null) {
+              return Center(
+                child: Text(
+                  state.errorMessage!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              );
+            }
 
-          data: (state) {
             final parents = state.parents;
 
             if (parents.isEmpty) {

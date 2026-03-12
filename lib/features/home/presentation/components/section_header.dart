@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
@@ -13,12 +14,13 @@ class SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = context.l10n;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
         color: colors.primary.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
@@ -34,18 +36,15 @@ class SectionHeader extends StatelessWidget {
           if (onSeeAll != null)
             InkWell(
               onTap: onSeeAll,
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(112),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 decoration: BoxDecoration(
                   color: colors.primary.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  'See all',
+                  l10n.common_see_all,
                   style: context.p.copyWith(
                     color: colors.primary,
                     fontWeight: FontWeight.w600,

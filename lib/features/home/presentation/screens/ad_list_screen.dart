@@ -6,6 +6,7 @@ import 'package:africaonlinestores/features/home/presentation/components/home_ap
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_controller.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_list_scaffold.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/ads_content.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
@@ -59,6 +60,8 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
   /// =============================
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     /// Watch location label only
     final locationLabel = ref.watch(
       homePageControllerProvider.select((state) => state.value?.locationId),
@@ -79,7 +82,7 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
     );
 
     final header = HomeAppBar(
-      locationLabel: locationLabel ?? 'All Locations',
+      locationLabel: locationLabel ?? l10n.location_all_locations,
       onTapLocation: _openLocationPicker,
       onTapFavorites: () {
         context.pushNamed(

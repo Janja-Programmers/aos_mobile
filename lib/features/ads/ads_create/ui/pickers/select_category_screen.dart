@@ -16,9 +16,28 @@ class SelectCategoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncState = ref.watch(categoriesControllerProvider);
+    final state = ref.watch(categoriesControllerProvider);
+
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
+
+    if (state.loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (state.errorMessage != null) {
+      return const Scaffold(
+        body: Center(child: Text('Failed to load categories')),
+      );
+    }
+
+    final nodes = parent != null ? parent!.children : state.parents;
+
+    if (nodes.isEmpty) {
+      return const Scaffold(
+        body: Center(child: Text('No categories available')),
+      );
+    }
 
     return Scaffold(
       backgroundColor: colors.border,
@@ -26,111 +45,92 @@ class SelectCategoryScreen extends ConsumerWidget {
         backgroundColor: colors.surface,
         title: Text(parent?.name ?? 'Select Category', style: context.h5),
       ),
-      body: asyncState.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+      body: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: nodes.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
+        itemBuilder: (context, i) {
+          final n = nodes[i];
+          final hasChildren = n.children.isNotEmpty;
+          final iconUrl = buildCategoryIconUrl(n.icon);
 
-        error: (_, _) => const Center(child: Text('Failed to load categories')),
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () async {
+                if (hasChildren) {
+                  final result = await context.push<Map<String, dynamic>>(
+                    AppRoutes.selectCategory,
+                    extra: n,
+                  );
 
-        data: (state) {
-          final nodes = parent != null ? parent!.children : state.parents;
-
-          if (nodes.isEmpty) {
-            return const Center(child: Text('No categories available'));
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: nodes.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, i) {
-              final n = nodes[i];
-              final hasChildren = n.children.isNotEmpty;
-              final iconUrl = buildCategoryIconUrl(n.icon);
-
-              return Material(
-                color: Colors.transparent,
-                child: InkWell(
+                  if (result != null && context.mounted) {
+                    Navigator.of(context).pop(result);
+                  }
+                } else {
+                  Navigator.of(context).pop({'id': n.id, 'label': n.name});
+                }
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  onTap: () async {
-                    if (hasChildren) {
-                      final result = await context.push<Map<String, dynamic>>(
-                        AppRoutes.selectCategory,
-                        extra: n,
-                      );
-
-                      if (result != null && context.mounted) {
-                        Navigator.of(context).pop(result);
-                      }
-                    } else {
-                      Navigator.of(context).pop({'id': n.id, 'label': n.name});
-                    }
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 14,
-                    ),
-                    child: Row(
-                      children: [
-                        // Icon
-                        Container(
-                          height: 44,
-                          width: 44,
-                          decoration: BoxDecoration(
-                            color: scheme.onSurfaceVariant,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: iconUrl == null
-                              ? Icon(
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      height: 44,
+                      width: 44,
+                      decoration: BoxDecoration(
+                        color: scheme.onSurfaceVariant,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: iconUrl == null
+                          ? Icon(Icons.category_outlined, color: colors.primary)
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                buildFileUrl(iconUrl) ?? iconUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => Icon(
                                   Icons.category_outlined,
                                   color: colors.primary,
-                                )
-                              : ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    buildFileUrl(iconUrl) ?? iconUrl,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, _, _) => Icon(
-                                      Icons.category_outlined,
-                                      color: colors.primary,
-                                    ),
-                                  ),
                                 ),
-                        ),
-
-                        const SizedBox(width: 12),
-
-                        // Text
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(n.name, style: context.pStrong),
-                              if (hasChildren) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${n.children.length} subcategories',
-                                  style: context.pMuted,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          color: colors.textPrimary,
-                        ),
-                      ],
+                              ),
+                            ),
                     ),
-                  ),
+
+                    const SizedBox(width: 12),
+
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(n.name, style: context.pStrong),
+                          if (hasChildren) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              '${n.children.length} subcategories',
+                              style: context.pMuted,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: colors.textPrimary,
+                    ),
+                  ],
                 ),
-              );
-            },
+              ),
+            ),
           );
         },
       ),

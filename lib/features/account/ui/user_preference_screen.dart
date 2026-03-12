@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
@@ -32,6 +34,7 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = context.l10n;
 
     final localization = ref.watch(localizationControllerProvider);
     final prefs = ref.watch(userPreferenceControllerProvider);
@@ -71,25 +74,25 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
           onPressed: () => Navigator.pop(context),
           color: colors.textPrimary,
         ),
-        title: Text('Preferences', style: context.h3),
+        title: Text(l10n.settings_preferences, style: context.h3),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Manage how the app works for you', style: context.p),
+            Text(l10n.settings_manage_app, style: context.p),
             const SizedBox(height: 16),
 
             /// Language
             PrefCard(
               leading: Icons.translate,
-              title: 'Language',
+              title: l10n.settings_language,
               value: languageLabel ?? '—',
-              description: 'Controls how text appears in the app.',
+              description: l10n.settings_language_description,
               onTap: () => _openPicker(
                 context,
-                title: 'Languages',
+                title: l10n.settings_language,
                 items: localization.languages,
                 initialValue: _language,
                 onChanged: (v) {
@@ -104,13 +107,12 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
             /// Country
             PrefCard(
               leading: Icons.location_on_outlined,
-              title: 'Country',
+              title: l10n.settings_country,
               value: countryLabel ?? '—',
-              description:
-                  'Determines nearby listings and where your ads appear.',
+              description: l10n.settings_country_description,
               onTap: () => _openPicker(
                 context,
-                title: 'Country',
+                title: l10n.settings_country,
                 items: localization.countries,
                 initialValue: _country,
                 onChanged: (v) {
@@ -125,12 +127,12 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
             /// Currency
             PrefCard(
               leading: Icons.attach_money,
-              title: 'Currency',
+              title: l10n.settings_currency,
               value: currencyLabel ?? '—',
-              description: 'Used for prices when viewing and posting listings.',
+              description: l10n.settings_currency_description,
               onTap: () => _openPicker(
                 context,
-                title: 'Currency',
+                title: l10n.settings_currency,
                 items: localization.currencies,
                 initialValue: _currency,
                 onChanged: (v) {

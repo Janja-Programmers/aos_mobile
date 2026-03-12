@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/core/theme/theme_controller.dart';
@@ -21,15 +23,19 @@ class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
 
   Widget _buildAccountHeader(BuildContext context, AuthUser? user) {
+    final l10n = context.l10n;
+
     if (user == null) {
       return AccountGuestHeaderCard(
         onLogin: () => context.pushNamed(AppRoutes.nLogin),
         onSignUp: () => context.pushNamed(AppRoutes.nRegister),
+        title: l10n.account_guest_title,
+        subtitle: l10n.account_guest_description,
       );
     }
 
     return AccountHeaderCard(
-      fullName: user.fullName.isNotEmpty ? user.fullName : 'Account',
+      fullName: user.fullName.isNotEmpty ? user.fullName : l10n.nav_account,
       email: user.email,
       initials: _initialsFromName(user.fullName),
       baseUrl: AppConfig.normalizedBaseUrl,
@@ -48,11 +54,12 @@ class AccountScreen extends ConsumerWidget {
     final isAuthenticated = auth.isAuthenticated;
 
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: scheme.surface,
       appBar: AppBar(
-        title: Text('Account', style: context.h4),
+        title: Text(l10n.nav_account, style: context.h4),
         leading: _CircleIconButton(
           icon: Icons.arrow_back,
           onPressed: () {
@@ -81,7 +88,7 @@ class AccountScreen extends ConsumerWidget {
           const SizedBox(height: 18),
 
           /// Account settings
-          const AccountSectionTitle('Account settings'),
+          AccountSectionTitle(l10n.account_settings),
           const SizedBox(height: 8),
 
           AccountCard(
@@ -90,25 +97,25 @@ class AccountScreen extends ConsumerWidget {
                 if (isAuthenticated)
                   AccountOptionTile(
                     icon: Icons.lock_outline,
-                    title: 'Password & Security',
+                    title: l10n.account_passwords_security,
                     onTap: () => context.pushNamed(AppRoutes.nPasswordSecurity),
                   ),
 
                 AccountOptionTile(
                   icon: Icons.notifications_none,
-                  title: 'Notifications Preferences',
+                  title: l10n.account_notifications_preferences,
                   onTap: () => context.pushNamed(AppRoutes.nNotifications),
                 ),
 
                 AccountOptionTile(
                   icon: Icons.tune,
-                  title: 'Application Preferences',
+                  title: l10n.app_preferences,
                   onTap: () => context.pushNamed(AppRoutes.nPreference),
                 ),
 
                 AppSwitchTile(
                   icon: Icons.dark_mode_outlined,
-                  title: 'Dark Mode',
+                  title: l10n.settings_dark_mode,
                   value: isDarkMode,
                   showDivider: false,
                   onChanged: (val) {
@@ -124,7 +131,7 @@ class AccountScreen extends ConsumerWidget {
           const SizedBox(height: 18),
 
           /// Other
-          const AccountSectionTitle('Other'),
+          AccountSectionTitle(l10n.common_other),
           const SizedBox(height: 8),
 
           AccountCard(
@@ -132,12 +139,12 @@ class AccountScreen extends ConsumerWidget {
               children: [
                 AccountOptionTile(
                   icon: Icons.privacy_tip_outlined,
-                  title: 'Privacy Policy',
+                  title: l10n.settings_privacy_policy,
                   onTap: () => context.pushNamed(AppRoutes.nPrivacy),
                 ),
                 AccountOptionTile(
                   icon: Icons.description_outlined,
-                  title: 'Terms & Conditions',
+                  title: l10n.settings_terms_conditions,
                   showDivider: false,
                   onTap: () => context.pushNamed(AppRoutes.nTerms),
                 ),

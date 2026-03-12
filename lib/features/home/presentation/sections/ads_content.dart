@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,9 +13,11 @@ import 'package:africaonlinestores/features/home/presentation/components/home_ca
 import 'package:africaonlinestores/features/home/presentation/components/home_grid_ads_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_hero_carousel_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_horizontal_ads_section.dart';
-import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_ranking_tips_section.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_controller.dart';
+import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
+
+import 'package:africaonlinestores/features/home/shared/utils/helpers.dart';
 
 class AdListContentView extends ConsumerWidget {
   const AdListContentView({
@@ -30,6 +33,7 @@ class AdListContentView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final pageAsync = ref.watch(homePageControllerProvider);
     final colors = context.appColors;
+    final l10n = context.l10n;
 
     return pageAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -55,7 +59,7 @@ class AdListContentView extends ConsumerWidget {
                 /// FLASH SALES
                 _sectionSliver(context, state, 'flash_sales'),
 
-                /// SERVICES NEAR YOU
+                /// SERVICES
                 _sectionSliver(context, state, 'services'),
 
                 /// NEW PRODUCTS
@@ -86,30 +90,30 @@ class AdListContentView extends ConsumerWidget {
                     child: HomeBrandSection(
                       promos: [
                         HomePromoItem(
-                          title: 'Top Deals',
-                          subtitle: 'Best Prices',
-                          ctaText: 'Shop Now',
+                          title: l10n.home_top_deals,
+                          subtitle: l10n.home_best_prices,
+                          ctaText: l10n.home_shop_now,
                           color: colors.success,
                           icon: Icons.apartment,
                         ),
                         HomePromoItem(
                           title: 'New Arrivals',
                           subtitle: 'Fresh Stock',
-                          ctaText: 'Shop Now',
+                          ctaText: l10n.home_shop_now,
                           color: colors.warning,
                           icon: Icons.apartment,
                         ),
                         HomePromoItem(
                           title: 'Summer Sale',
                           subtitle: 'Upto 40%',
-                          ctaText: 'Shop Now',
+                          ctaText: l10n.home_shop_now,
                           color: colors.info,
                           icon: Icons.apartment,
                         ),
                       ],
                       categories: [
                         HomeCategoryItem(
-                          title: 'Electronics',
+                          title: l10n.home_electronics,
                           icon: Icons.desktop_windows_outlined,
                           onTap: () => context.pushNamed(
                             AppRoutes.nAllAds,
@@ -117,7 +121,7 @@ class AdListContentView extends ConsumerWidget {
                           ),
                         ),
                         HomeCategoryItem(
-                          title: 'Fashion',
+                          title: l10n.home_fashion,
                           icon: Icons.checkroom_outlined,
                           onTap: () => context.pushNamed(
                             AppRoutes.nAllAds,
@@ -149,12 +153,12 @@ class AdListContentView extends ConsumerWidget {
                 /// BEAUTY
                 _sectionSliver(context, state, 'beauty'),
 
-                /// DISCOVER GRID
+                /// DISCOVER
                 SliverPadding(
                   padding: const EdgeInsets.only(top: 6),
                   sliver: GridAdsSection(
                     items: state.discoverItems,
-                    title: 'Discover more',
+                    title: l10n.common_discover_more,
                     onSeeAll: () => context.pushNamed(
                       AppRoutes.nAllAds,
                       pathParameters: {'categoryId': 'Electronics'},
@@ -170,7 +174,7 @@ class AdListContentView extends ConsumerWidget {
                         ? const Center(child: CircularProgressIndicator())
                         : (!state.hasMore && state.discoverItems.isNotEmpty)
                         ? Text(
-                            'No more ads',
+                            l10n.ads_no_more_ads,
                             style: context.p.copyWith(color: colors.primary),
                             textAlign: TextAlign.center,
                           )
@@ -192,31 +196,32 @@ class AdListContentView extends ConsumerWidget {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    VoidCallback? seeAll;
-
     final section = state.sections.firstWhere(
       (s) => s.key == key,
       orElse: () => state.sections.first,
     );
 
-    if (section.seeAllCategoryId != null &&
-        section.seeAllCategoryId!.trim().isNotEmpty) {
-      seeAll = () => context.pushNamed(
+    final categoryId =
+        (section.seeAllCategoryId != null &&
+            section.seeAllCategoryId!.trim().isNotEmpty)
+        ? section.seeAllCategoryId!
+        : key;
+
+    void seeAll() {
+      context.pushNamed(
         AppRoutes.nAllAds,
-        pathParameters: {'categoryId': section.seeAllCategoryId!},
+        pathParameters: {'categoryId': categoryId},
       );
     }
 
+    final title = homeSectionTitle(context, key);
+
     if (key == 'new_products') {
-      return GridAdsSection(
-        title: section.title,
-        items: items,
-        onSeeAll: seeAll,
-      );
+      return GridAdsSection(title: title, items: items, onSeeAll: seeAll);
     }
 
     return HomeHorizontalAdsSection(
-      title: section.title,
+      title: title,
       items: items,
       onSeeAll: seeAll,
     );

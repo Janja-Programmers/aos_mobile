@@ -114,8 +114,6 @@ class CreateAdPayloadBuilder {
       }
     }
 
-    print("PAYLOAD: ${payload.toString()}");
-
     return payload;
   }
 

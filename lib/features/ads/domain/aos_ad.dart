@@ -78,25 +78,37 @@ class AOSAdListItem {
   }
 
   /// Draft serializer
+  /// Draft serializer
   factory AOSAdListItem.fromDraft(Map<String, dynamic> json) {
     return AOSAdListItem(
       id: (json['id'] ?? json['name'] ?? '').toString(),
-      title: (json['title'] ?? '').toString(),
+
+      /// drafts use hint fields
+      title: (json['title'] ?? 'Untitled draft').toString(),
       country: (json['country'] ?? '').toString(),
-      locationName: (json['location_name'] ?? json['location'] ?? '')
-          .toString(),
-      categoryName: (json['category_name'] ?? json['category'] ?? '')
-          .toString(),
-      currentPrice: null,
-      originalPrice: null,
-      offerPercent: 0,
-      isOfferActive: false,
-      priceType: '',
-      priceUnit: '',
+      locationName: (json['location'] ?? '').toString(),
+      categoryName: (json['category'] ?? '').toString(),
+      currentPrice: (json['current_price'] ?? '').toString().trim().isEmpty
+          ? null
+          : json['current_price'].toString(),
+
+      originalPrice: (json['original_price'] ?? '').toString().trim().isEmpty
+          ? null
+          : json['original_price'].toString(),
+
+      offerPercent: json['offer_percent'] ?? 0,
+      isOfferActive: json['is_offer_active'] ?? false,
+      priceType: (json['price_type'] ?? '').toString(),
+      priceUnit: (json['price_unit'] ?? '').toString(),
+
+      /// drafts usually have no image yet
       primaryImage: (json['primary_image'] ?? '').toString(),
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'].toString())
+
+      /// drafts use modified timestamp
+      createdAt: json['modified'] != null
+          ? DateTime.tryParse(json['modified'].toString())
           : null,
+
       isWishlisted: false,
       averageRating: 0,
       totalReviews: 0,

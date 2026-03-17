@@ -33,9 +33,12 @@ class AdHorizontalCard extends StatelessWidget {
               child: AdCardImage(ad: ad, height: 100),
             ),
 
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: AdCardBody(ad: ad),
+            SizedBox(
+              height: 110,
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: AdCardBody(ad: ad),
+              ),
             ),
           ],
         ),

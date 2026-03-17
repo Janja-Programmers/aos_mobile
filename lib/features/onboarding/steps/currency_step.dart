@@ -4,12 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/account/ui/widgets/locale_picker_page.dart';
-import 'package:africaonlinestores/features/ads/ads_create/ui/widgets/picker_field.dart';
-
 import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
 import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
 
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/components/picker_field.dart';
 
 import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 

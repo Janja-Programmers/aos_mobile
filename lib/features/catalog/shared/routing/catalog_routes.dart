@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
-import 'package:africaonlinestores/features/catalog/ui/categories_screen.dart';
+import 'package:africaonlinestores/features/catalog/presentation/categories_screen.dart';
 
 class CatalogRoutes {
   const CatalogRoutes._();

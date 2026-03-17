@@ -1,11 +1,12 @@
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/routing/navigation.dart';
+
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+import 'package:africaonlinestores/shared/enums/deal_type.dart';
 
 import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_models.dart';
 import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_section.dart';
@@ -115,25 +116,23 @@ class AdListContentView extends ConsumerWidget {
                         HomeCategoryItem(
                           title: l10n.home_electronics,
                           icon: Icons.desktop_windows_outlined,
-                          onTap: () => context.pushNamed(
-                            AppRoutes.nAllAds,
-                            pathParameters: {'categoryId': 'Electronics'},
-                          ),
+                          onTap: () =>
+                              openAllAds(context, categoryId: 'Electronics'),
                         ),
                         HomeCategoryItem(
                           title: l10n.home_fashion,
                           icon: Icons.checkroom_outlined,
-                          onTap: () => context.pushNamed(
-                            AppRoutes.nAllAds,
-                            pathParameters: {'categoryId': "Women's Fashion"},
+                          onTap: () => openAllAds(
+                            context,
+                            categoryId: "Women's Fashion",
                           ),
                         ),
                         HomeCategoryItem(
                           title: 'Garden Supplies',
                           icon: Icons.home_outlined,
-                          onTap: () => context.pushNamed(
-                            AppRoutes.nAllAds,
-                            pathParameters: {'categoryId': 'Garden Supplies'},
+                          onTap: () => openAllAds(
+                            context,
+                            categoryId: 'Garden Supplies',
                           ),
                         ),
                       ],
@@ -159,10 +158,7 @@ class AdListContentView extends ConsumerWidget {
                   sliver: GridAdsSection(
                     items: state.discoverItems,
                     title: l10n.common_discover_more,
-                    onSeeAll: () => context.pushNamed(
-                      AppRoutes.nAllAds,
-                      pathParameters: {'categoryId': 'Electronics'},
-                    ),
+                    onSeeAll: () => openAllAds(context),
                   ),
                 ),
 
@@ -208,10 +204,22 @@ class AdListContentView extends ConsumerWidget {
         : key;
 
     void seeAll() {
-      context.pushNamed(
-        AppRoutes.nAllAds,
-        pathParameters: {'categoryId': categoryId},
-      );
+      switch (key) {
+        case 'flash_sales':
+          openAllAds(context, dealType: DealType.flashSale);
+          break;
+
+        case 'deal':
+          openAllAds(context, dealType: DealType.deals);
+          break;
+
+        case 'new_products':
+          openAllAds(context, dealType: DealType.newProducts);
+          break;
+
+        default:
+          openAllAds(context, categoryId: categoryId);
+      }
     }
 
     final title = homeSectionTitle(context, key);

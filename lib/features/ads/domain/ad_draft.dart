@@ -1,6 +1,4 @@
-import 'dart:convert';
-
-import 'package:africaonlinestores/shared/utils/enums.dart';
+import 'package:africaonlinestores/shared/enums/ads.dart';
 
 class AdMediaImage {
   AdMediaImage({
@@ -74,7 +72,6 @@ class AdDraft {
 
     // ---------- PRICING ----------
     this.priceType,
-    this.currency,
     this.price,
     this.priceUnit,
 
@@ -115,7 +112,6 @@ class AdDraft {
   final String description;
 
   final String? priceType;
-  final String? currency;
   final double? price;
   final String? priceUnit;
 
@@ -151,7 +147,6 @@ class AdDraft {
     String? description,
 
     String? priceType,
-    String? currency,
     double? price,
     String? priceUnit,
 
@@ -190,7 +185,6 @@ class AdDraft {
       description: description ?? this.description,
 
       priceType: priceType ?? this.priceType,
-      currency: currency ?? this.currency,
       price: price ?? this.price,
       priceUnit: priceUnit ?? this.priceUnit,
 
@@ -211,7 +205,7 @@ class AdDraft {
   }
 
   factory AdDraft.fromAd(Map<String, dynamic> json) {
-    final item = json['item'] as Map<String, dynamic>;
+    final item = json;
 
     // -------- images ----------
     final images = (item['images'] as List? ?? [])
@@ -246,7 +240,7 @@ class AdDraft {
     }
 
     return AdDraft(
-      source: DraftSource.existingAd,
+      source: DraftSource.edit,
       adId: item['id'],
 
       // BASIC
@@ -269,11 +263,10 @@ class AdDraft {
 
       // PRICING
       priceType: item['price_type'],
-      currency: item['currency'],
       price: (item['price'] as num?)?.toDouble(),
       priceUnit: item['price_unit'],
 
-      // Offer
+      // OFFER
       offerPrice: (item['offer_price'] as num?)?.toDouble(),
       offerStart: item['offer_start'] != null
           ? DateTime.tryParse(item['offer_start'])
@@ -281,21 +274,26 @@ class AdDraft {
       offerEnd: item['offer_end'] != null
           ? DateTime.tryParse(item['offer_end'])
           : null,
+
       scheduleOfferDates:
           item['offer_start'] != null || item['offer_end'] != null,
     );
   }
 
   factory AdDraft.fromDraft(Map<String, dynamic> json) {
-    final payload = json['payload_json'];
+    final data = (json['item'] ?? {}) as Map<String, dynamic>;
+    print("JSON RECEIVED INTO FROMDRAFT: ${data.toString()}");
+    // -------------------------------
+    // BASIC (fallback to hint fields)
+    // -------------------------------
+    final title = data['title'] ?? '';
+    final category = data['category'];
+    final location = data['location'];
+    final country = data['country'];
 
-    Map<String, dynamic> data = {};
-
-    if (payload != null && payload is String && payload.isNotEmpty) {
-      data = jsonDecode(payload);
-    }
-
-    // -------- images ----------
+    // -------------------------------
+    // MEDIA
+    // -------------------------------
     final images = (data['images'] as List? ?? [])
         .map(
           (e) => AdMediaImage(
@@ -306,7 +304,9 @@ class AdDraft {
         )
         .toList();
 
-    // -------- attributes ----------
+    // -------------------------------
+    // ATTRIBUTES
+    // -------------------------------
     final attrs = <String, dynamic>{};
 
     final details = data['details'] as List? ?? [];
@@ -326,17 +326,45 @@ class AdDraft {
       }
     }
 
-    return AdDraft(
-      source: DraftSource.adDraft,
+    // -------------------------------
+    // DESCRIPTION
+    // -------------------------------
+    final description = data['description'] ?? '';
+
+    // -------------------------------
+    // PRICING
+    // -------------------------------
+    final priceType = data['price_type'];
+    final price = (data['price'] as num?)?.toDouble();
+    final priceUnit = data['price_unit'];
+
+    final offerPrice = (data['offer_price'] as num?)?.toDouble();
+    final offerStart = data['offer_start'] != null
+        ? DateTime.tryParse(data['offer_start'])
+        : null;
+
+    final offerEnd = data['offer_end'] != null
+        ? DateTime.tryParse(data['offer_end'])
+        : null;
+
+    final scheduleOfferDates =
+        data['schedule_offer_dates'] ??
+        (data['offer_start'] != null || data['offer_end'] != null);
+
+    // -------------------------------
+    // FINAL MODEL
+    // -------------------------------
+    final draft = AdDraft(
+      source: DraftSource.draft,
       draftId: json['id'],
 
       // BASIC
-      title: data['title'] ?? '',
-      countryId: data['country'],
-      locationId: data['location'],
-      locationLabel: data['location'],
-      categoryId: data['category'],
-      categoryLabel: data['category'],
+      title: title,
+      countryId: country,
+      locationId: location,
+      locationLabel: location,
+      categoryId: category,
+      categoryLabel: category,
 
       // MEDIA
       images: images,
@@ -346,24 +374,19 @@ class AdDraft {
       attributes: attrs,
 
       // DESCRIPTION
-      description: data['description'] ?? '',
+      description: description,
 
       // PRICING
-      priceType: data['price_type'],
-      currency: data['currency'],
-      price: (data['price'] as num?)?.toDouble(),
-      priceUnit: data['price_unit'],
+      priceType: priceType,
+      price: price,
+      priceUnit: priceUnit,
 
-      offerPrice: (data['offer_price'] as num?)?.toDouble(),
-      offerStart: data['offer_start'] != null
-          ? DateTime.tryParse(data['offer_start'])
-          : null,
-      offerEnd: data['offer_end'] != null
-          ? DateTime.tryParse(data['offer_end'])
-          : null,
-      scheduleOfferDates:
-          data['schedule_offer_dates'] ??
-          (data['offer_start'] != null || data['offer_end'] != null),
+      offerPrice: offerPrice,
+      offerStart: offerStart,
+      offerEnd: offerEnd,
+      scheduleOfferDates: scheduleOfferDates,
     );
+
+    return draft;
   }
 }

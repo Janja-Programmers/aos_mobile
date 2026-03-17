@@ -1,18 +1,22 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:africaonlinestores/core/routing/app_routes.dart';
-import 'package:africaonlinestores/features/ads/ads_all/all_ads_controller.dart';
-import 'package:africaonlinestores/features/ads/ads_create/ui/pickers/select_location_screen.dart';
+import 'package:africaonlinestores/core/routing/navigation.dart';
+
+import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_location_screen.dart';
 import 'package:africaonlinestores/features/home/domain/location_picker.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_app_bar.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_controller.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_list_scaffold.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/ads_content.dart';
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
-import 'package:africaonlinestores/shared/components/app_search_bar.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+
+import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+import 'package:africaonlinestores/shared/enums/ads_mode.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class AdListScreen extends ConsumerStatefulWidget {
   const AdListScreen({super.key});
@@ -84,12 +88,7 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
     final header = HomeAppBar(
       locationLabel: locationLabel ?? l10n.location_all_locations,
       onTapLocation: _openLocationPicker,
-      onTapFavorites: () {
-        context.pushNamed(
-          AppRoutes.nAllAds,
-          extra: const AllAdsArgs('', null, mode: AllAdsMode.wishlist),
-        );
-      },
+      onTapFavorites: () => openAllAds(context, mode: AllAdsMode.wishlist),
       onTapNotifications: () => ShowSnack(context, 'Coming Soon!').info(),
       search: searchBar,
     );

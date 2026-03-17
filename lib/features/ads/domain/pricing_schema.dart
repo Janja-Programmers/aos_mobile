@@ -1,4 +1,4 @@
-import 'package:africaonlinestores/features/ads/shared/utils/enums.dart';
+import 'package:africaonlinestores/shared/enums/ads.dart';
 
 class PricingSchema {
   const PricingSchema({

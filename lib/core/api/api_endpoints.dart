@@ -42,18 +42,17 @@ class ApiEndpoints {
   static final String getLocationsEndpoint =
       '/api/method/aos.api.localization.get_locations';
   static final String createAdEndpoint = '/api/method/aos.api.ads.create_ad';
-  static final String saveAdDraftEndpoint =
-      '/api/method/aos.api.ads.save_ad_draft';
+  static final String upsertAdDraftEndpoint =
+      '/api/method/aos.api.ads.upsert_ad_draft';
   static final String getAdDraftEndpoint =
-      '/api/method/aos.api.ads.get_ad_draft';
+      '/api/method/aos.api.ads.get_my_ad_draft';
   static final String listAdDraftsEndpoint =
-      '/api/method/aos.api.ads.list_ad_drafts';
+      '/api/method/aos.api.ads.list_my_ad_drafts';
   static final String submitAdDraftEndpoint =
       '/api/method/aos.api.ads.submit_ad_draft';
-  static final String updateAdDraftEndpoint =
-      '/api/method/aos.api.ads.update_ad_draft';
   static final String setAdStatusEndpoint =
       '/api/method/aos.api.ads.set_ad_status';
+  static final String updateAdEndpoint = '/api/method/aos.api.ads.update_ad';
 
   // Reviews Endpoints
   static final String createAdReviewEndpoint =
@@ -71,8 +70,9 @@ class ApiEndpoints {
 
   // Read Ads
   static final String listAdsEndpoint = '/api/method/aos.api.ads.list_ads';
-  static final String myAdsEndpoint = '/api/method/aos.api.ads.my_ads';
+  static final String myAdsEndpoint = '/api/method/aos.api.ads.list_my_ads';
   static final String getAdEndpoint = '/api/method/aos.api.ads.get_ad';
+  static final String getMyAdEndpoint = '/api/method/aos.api.ads.get_my_ad';
 
   // Seller Endpoints
   static final String getSellerEndpoint =

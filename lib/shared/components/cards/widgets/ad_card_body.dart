@@ -21,14 +21,12 @@ class AdCardBody extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Flexible(
-          child: Text(
-            ad.title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: context.pStrong.copyWith(fontSize: 13),
-          ),
+        Text(
+          ad.title,
+          overflow: TextOverflow.ellipsis,
+          style: context.pStrong.copyWith(fontSize: 13),
         ),
+
         const SizedBox(height: 3),
 
         Text(
@@ -41,12 +39,27 @@ class AdCardBody extends StatelessWidget {
         const SizedBox(height: 3),
 
         if (price.show) ...[
-          Text(
-            price.current ?? '',
-            style: context.body.copyWith(
-              fontWeight: FontWeight.w800,
-              fontSize: 15,
-            ),
+          Row(
+            children: [
+              Text(
+                price.current ?? '',
+                style: context.body.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                ),
+              ),
+
+              const SizedBox(width: 6),
+
+              if (isService)
+                Text(
+                  ad.priceUnit,
+                  style: context.p.copyWith(
+                    fontSize: 12,
+                    color: colors.primary,
+                  ),
+                ),
+            ],
           ),
 
           if (price.original != null && price.original!.isNotEmpty)
@@ -57,12 +70,6 @@ class AdCardBody extends StatelessWidget {
                 decoration: TextDecoration.lineThrough,
                 color: colors.textMuted,
               ),
-            ),
-
-          if (isService)
-            Text(
-              ad.priceUnit,
-              style: context.p.copyWith(fontSize: 11, color: colors.primary),
             ),
         ],
 

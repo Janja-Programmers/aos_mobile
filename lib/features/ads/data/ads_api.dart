@@ -129,15 +129,13 @@ class AdsApi {
     }
   }
 
-  Future<Either<Failure, Map<String, dynamic>>> deleteFile({
-    required String fileId,
-  }) async {
+  Future<Either<Failure, bool>> deleteFile({required String fileId}) async {
     try {
-      final res = await _dio.post(
+      await _dio.post(
         ApiEndpoints.deleteFileEndpoint,
         queryParameters: {'file_id': fileId},
       );
-      return unwrapFrappe(res);
+      return Either.right(true);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
@@ -175,36 +173,54 @@ class AdsApi {
     }
   }
 
-  Future<Either<Failure, Map<String, dynamic>>> updateAdDraft({
+  Future<Either<Failure, Map<String, dynamic>>> updateAd({
+    required String adId,
+    required Map<String, dynamic> payload,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiEndpoints.updateAdEndpoint,
+        data: {'ad_id': adId, ...payload},
+      );
+
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to update draft.'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> upsertAdDraft({
     required String draftId,
     required Map<String, dynamic> payload,
   }) async {
     try {
       final res = await _dio.post(
-        ApiEndpoints.updateAdDraftEndpoint,
-        queryParameters: {'draft_id': draftId, "payload": payload},
+        ApiEndpoints.upsertAdDraftEndpoint,
+        data: {'draft_id': draftId, 'payload': payload},
       );
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure('Failed to create ad.'));
+      return Either.left(const Failure('Failed to update draft.'));
     }
   }
 
   Future<Either<Failure, Map<String, dynamic>>> submitAdDraft({
-    required String adId,
+    required String draftId,
   }) async {
     try {
       final res = await _dio.post(
         ApiEndpoints.submitAdDraftEndpoint,
-        queryParameters: {'draft_id': adId},
+        queryParameters: {'draft_id': draftId},
       );
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure('Failed to create ad.'));
+      return Either.left(const Failure('Failed to submit draft.'));
     }
   }
 
@@ -213,8 +229,8 @@ class AdsApi {
   }) async {
     try {
       final res = await _dio.post(
-        ApiEndpoints.saveAdDraftEndpoint,
-        data: {'payload_json': payload},
+        ApiEndpoints.upsertAdDraftEndpoint,
+        data: {'payload': payload},
       );
 
       return unwrapFrappe(res);
@@ -393,6 +409,22 @@ class AdsApi {
     try {
       final res = await _dio.get(
         ApiEndpoints.getAdEndpoint,
+        queryParameters: {'ad_id': adId},
+      );
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to fetch ad details.'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> getMyAd({
+    required String adId,
+  }) async {
+    try {
+      final res = await _dio.get(
+        ApiEndpoints.getMyAdEndpoint,
         queryParameters: {'ad_id': adId},
       );
       return unwrapFrappe(res);

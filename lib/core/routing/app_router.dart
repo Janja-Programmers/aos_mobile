@@ -1,15 +1,14 @@
 import 'dart:async';
-import 'package:africaonlinestores/features/reviews/presentation/review_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 import 'package:africaonlinestores/features/account/shared/routing/account_routes.dart';
-import 'package:africaonlinestores/features/ads/ads_create/create_ad_flow_screen.dart';
-import 'package:africaonlinestores/features/ads/ads_create/ui/pickers/select_category_screen.dart';
-import 'package:africaonlinestores/features/ads/ads_create/ui/pickers/select_location_screen.dart';
-
+import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_category_screen.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_location_screen.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/screens/ad_form_screen.dart';
+import 'package:africaonlinestores/features/reviews/presentation/review_screen.dart';
 import 'package:africaonlinestores/features/reviews/presentation/review_create_screen.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
@@ -24,6 +23,8 @@ import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/core/routing/app_shell.dart';
 import 'package:africaonlinestores/core/routing/app_routes.dart';
 import 'package:africaonlinestores/core/routing/route_guards.dart';
+
+import 'package:africaonlinestores/shared/enums/ads.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authControllerProvider);
@@ -62,8 +63,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final adId = state.uri.queryParameters['adId'];
           final draftId = state.uri.queryParameters['draftId'];
+          final statusStr = state.uri.queryParameters['status'];
 
-          return CreateAdFlowScreen(adId: adId, draftId: draftId);
+          AdStatus? status;
+
+          if (statusStr != null) {
+            status = AdStatus.values.firstWhere(
+              (e) => e.name == statusStr,
+              orElse: () => AdStatus.reviewing,
+            );
+          }
+
+          final mode = adId != null || draftId != null
+              ? AdFormMode.edit
+              : AdFormMode.create;
+
+          return AdFormScreen(
+            mode: mode,
+            adId: adId,
+            draftId: draftId,
+            status: status,
+          );
         },
       ),
 

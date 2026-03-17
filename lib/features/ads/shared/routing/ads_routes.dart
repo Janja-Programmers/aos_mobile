@@ -2,14 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
-import 'package:africaonlinestores/features/ads/ads_all/all_ads_controller.dart';
-import 'package:africaonlinestores/features/ads/ads_all/all_ads_screen.dart';
-import 'package:africaonlinestores/features/ads/ads_seller/my_ads_screen.dart';
+
+import 'package:africaonlinestores/features/ads/ads_all/presentation/screens/all_ads_screen.dart';
+import 'package:africaonlinestores/features/ads/ads_listing/presentation/screens/ad_listing_screen.dart';
+
 import 'package:africaonlinestores/features/home/presentation/screens/ad_list_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/marketing_tips_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/photography_tips_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/ranking_tips_screen.dart';
+
 import 'package:africaonlinestores/features/search/search_screen.dart';
+
+import 'package:africaonlinestores/shared/enums/ads_mode.dart';
+import 'package:africaonlinestores/shared/enums/deal_type.dart';
 
 class AdsRoutes {
   const AdsRoutes._();
@@ -31,12 +36,20 @@ class AdsRoutes {
       name: AppRoutes.nAllAds,
       path: AppRoutes.allAds,
       builder: (context, state) {
-        final args = state.extra as AllAdsArgs?;
+        final categoryId = state.uri.queryParameters['categoryId'];
+        final dealTypeParam = state.uri.queryParameters['dealType'];
+
+        final dealType = DealTypeX.fromString(dealTypeParam);
+
+        final mode = state.uri.queryParameters['mode'] == 'wishlist'
+            ? AllAdsMode.wishlist
+            : AllAdsMode.normal;
 
         return AllAdsScreen(
-          parentCategoryId: args?.parentCategoryId ?? '',
-          initialCategoryId: args?.initialCategoryId,
-          mode: args?.mode ?? AllAdsMode.normal,
+          parentCategoryId: categoryId,
+          initialCategoryId: categoryId,
+          mode: mode,
+          dealType: dealType,
         );
       },
     ),
@@ -74,7 +87,7 @@ class AdsRoutes {
     GoRoute(
       name: AppRoutes.nMyAds,
       path: AppRoutes.myAds,
-      builder: (_, _) => const MyAdsScreen(),
+      builder: (_, _) => const AdListingScreen(),
     ),
   ];
 }

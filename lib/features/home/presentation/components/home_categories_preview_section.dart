@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/routing/navigation.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
@@ -97,10 +98,7 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
                       final c = items[i];
                       return _CategoryTile(
                         item: c,
-                        onTap: () => context.pushNamed(
-                          AppRoutes.nAllAds,
-                          pathParameters: {'categoryId': c.id},
-                        ),
+                        onTap: () => openAllAds(context, categoryId: c.id),
                       );
                     },
                   ),

@@ -2,29 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/features/ads/domain/category.dart';
-import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
-import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
-import 'package:africaonlinestores/features/ads/domain/pricing_schema.dart';
+import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/utils/either.dart';
 
+import 'package:africaonlinestores/features/ads/ads_form/controllers/ad_form_actions_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_form/controllers/ad_form_controller.dart';
-
 import 'package:africaonlinestores/features/ads/ads_form/presentation/widgets/ad_submit_success_dialog.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/widgets/create_ad_steps.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/widgets/save_draft_bottom_sheet.dart';
-
+import 'package:africaonlinestores/features/ads/ads_form/presentation/screens/scaffold_shell.dart';
 import 'package:africaonlinestores/features/ads/ads_form/utils/ad_dirty_checker.dart';
 import 'package:africaonlinestores/features/ads/ads_form/utils/cancel_action.dart';
 import 'package:africaonlinestores/features/ads/ads_form/utils/ad_form_payload.dart';
 import 'package:africaonlinestores/features/ads/ads_form/utils/ad_form_step_runner.dart';
 
-import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:africaonlinestores/features/ads/domain/category.dart';
+import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
+import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
+import 'package:africaonlinestores/features/ads/domain/pricing_schema.dart';
+
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_schema_provider.dart';
-import 'package:africaonlinestores/features/ads/ads_form/presentation/screens/scaffold_shell.dart';
-import 'package:africaonlinestores/shared/enums/ads.dart';
 
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/enums/ads.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class AdFormScreen extends ConsumerStatefulWidget {
@@ -47,6 +48,7 @@ class AdFormScreen extends ConsumerStatefulWidget {
 
 class _AdFormScreenState extends ConsumerState<AdFormScreen> {
   final PageController _pageCtrl = PageController();
+  bool _isCancelling = false;
 
   @override
   void initState() {
@@ -113,89 +115,76 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
     required AdDraft draft,
     required AdCategorySchema schema,
   }) async {
+    if (_isCancelling) return;
+    _isCancelling = true;
+
     final flowCtrl = ref.read(adFormControllerProvider(widget.mode).notifier);
 
-    if (!AdDirtyChecker.isDirty(draft)) {
-      flowCtrl.reset();
-      ref.read(adDraftControllerProvider.notifier).reset();
-      if (mounted) context.pop();
-      return;
-    }
-
-    final action = await showModalBottomSheet<CancelAction>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => SaveDraftConfirmSheet(draft: draft, schema: schema),
-    );
-
-    if (!mounted || action == null) return;
-
-    final api = ref.read(adsApiProvider);
-
-    if (action == CancelAction.discard) {
-      flowCtrl.reset();
-      ref.read(adDraftControllerProvider.notifier).reset();
-
-      ShowSnack(context, 'Ad Draft discarded').success();
-      context.pop();
-      return;
-    }
-
-    if (action == CancelAction.saveAndExit) {
-      try {
-        final payload = AdFormPayloadBuilder.build(d: draft, schema: schema);
-
-        switch (draft.source) {
-          // -------------------------------
-          // NEW DIRTY DRAFT → CREATE DRAFT
-          // -------------------------------
-          case DraftSource.create:
-            final res = await api.saveAdDraft(payload: payload);
-
-            if (res.isLeft) {
-              if (mounted) ShowSnack(context, res.leftOrNull!.message).error();
-              return;
-            }
-            break;
-
-          // -------------------------------
-          // EDITING EXISTING DRAFT
-          // -------------------------------
-          case DraftSource.draft:
-            if (draft.draftId != null) {
-              final res = await api.upsertAdDraft(
-                draftId: draft.draftId!,
-                payload: payload,
-              );
-
-              if (res.isLeft) {
-                if (mounted) {
-                  ShowSnack(context, res.leftOrNull!.message).error();
-                }
-                return;
-              }
-            }
-            break;
-
-          // -------------------------------
-          // EDITING REAL AD → NO DRAFT SAVE
-          // -------------------------------
-          case DraftSource.edit:
-            break;
-        }
-
+    try {
+      // -------------------------------
+      // NOT DIRTY → JUST EXIT
+      // -------------------------------
+      if (!AdDirtyChecker.isDirty(draft)) {
         flowCtrl.reset();
-        ref.read(adDraftControllerProvider.notifier).reset();
-
-        if (mounted) ShowSnack(context, 'Draft saved successfully').success();
 
         if (mounted) context.pop();
-      } catch (e) {
-        if (mounted) {
-          ShowSnack(context, 'Failed to save draft: $e').error();
-        }
+
+        await Future.microtask(() {
+          ref.read(adDraftControllerProvider.notifier).reset();
+        });
+
+        return;
       }
+
+      // -------------------------------
+      // ASK USER
+      // -------------------------------
+      _isCancelling = true;
+
+      final action = await showModalBottomSheet<CancelAction>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => SaveDraftConfirmSheet(draft: draft, schema: schema),
+      );
+
+      if (!mounted || action == null) return;
+
+      final actions = ref.read(adActionsControllerProvider);
+
+      final res = await actions.handleCancel(
+        draft: draft,
+        schema: schema,
+        action: action,
+      );
+
+      if (!mounted) return;
+
+      if (res.isLeft) {
+        ShowSnack(context, res.leftOrNull!.message).error();
+        return;
+      }
+
+      // -------------------------------
+      // UI SIDE EFFECTS (IMPORTANT)
+      // -------------------------------
+      if (action == CancelAction.discard && mounted) {
+        ShowSnack(context, 'Ad Draft discarded').success();
+      }
+
+      if (action == CancelAction.saveAndExit && mounted) {
+        ShowSnack(context, 'Draft saved successfully').success();
+      }
+
+      flowCtrl.reset();
+
+      if (mounted) context.pop();
+
+      await Future.microtask(() {
+        ref.read(adDraftControllerProvider.notifier).reset();
+      });
+    } finally {
+      _isCancelling = false;
     }
   }
 
@@ -207,28 +196,10 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
     ctrl.startPosting();
 
     try {
-      final api = ref.read(adsApiProvider);
+      final actions = ref.read(adActionsControllerProvider);
       final payload = AdFormPayloadBuilder.build(d: draft, schema: schema);
 
-      final res = switch (draft.source) {
-        DraftSource.create => await api.createAd(payload: payload),
-
-        DraftSource.draft => () async {
-          final saveRes = await api.upsertAdDraft(
-            draftId: draft.draftId!,
-            payload: payload,
-          );
-
-          if (saveRes.isLeft) return saveRes;
-
-          return await api.submitAdDraft(draftId: draft.draftId!);
-        }(),
-
-        DraftSource.edit => await api.updateAd(
-          adId: draft.adId!,
-          payload: payload,
-        ),
-      };
+      final res = await actions.submitAd(draft: draft, payload: payload);
 
       if (!mounted) return;
 
@@ -251,19 +222,17 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
 
       if (mounted) context.pop(true);
     } catch (e) {
-      if (mounted) ShowSnack(context, 'Failed to submit: $e').error();
+      if (mounted) ShowSnack(context, 'Failed to submit!').error();
     } finally {
       ctrl.stopPosting();
     }
   }
 
-  bool handleFailure(BuildContext context, result) {
-    final f = result.leftOrNull;
-    if (f != null) {
-      ShowSnack(context, f.message).error();
+  bool handleFailure(BuildContext context, Either<Failure, dynamic> result) {
+    return result.fold((failure) {
+      ShowSnack(context, failure.message).error();
       return true;
-    }
-    return false;
+    }, (_) => false);
   }
 
   @override
@@ -355,7 +324,10 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
       posting: flowState.posting,
       bottom: bottom,
       onBackPressed: () => _handleBack(index),
-      onCancelPressed: () => _handleCancel(draft: draft, schema: schema),
+      onCancelPressed: () {
+        if (_isCancelling) return;
+        _handleCancel(draft: draft, schema: schema);
+      },
       onStepTapped: (i) => _goTo(i),
       isStepAccessible: (i) => flowCtrl.canNavigateTo(i),
       child: PageView.builder(

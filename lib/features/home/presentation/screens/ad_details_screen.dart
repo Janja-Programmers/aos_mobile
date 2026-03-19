@@ -7,7 +7,7 @@ import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
-import 'package:africaonlinestores/features/ads/ads_report/report_ad_screen.dart';
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 
 import 'package:africaonlinestores/features/home/presentation/controller/ad_detail_controller.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_detail_action_buttons.dart';
@@ -201,15 +201,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                             );
                           },
 
-                          onReport: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ReportAdScreen(adId: ad.id),
-                              ),
-                            );
-                          },
-
+                          onReport: () => AdNavigation.toReport(context, ad.id),
                           onPostSimilar: () {},
                         );
                       },

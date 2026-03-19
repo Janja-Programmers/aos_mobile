@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +9,7 @@ import 'package:africaonlinestores/features/account/shared/routing/account_route
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_category_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_location_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/screens/ad_form_screen.dart';
+import 'package:africaonlinestores/features/ads/ads_report/presentation/report_ad_screen.dart';
 import 'package:africaonlinestores/features/reviews/presentation/review_screen.dart';
 import 'package:africaonlinestores/features/reviews/presentation/review_create_screen.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
@@ -46,14 +48,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ]),
 
     routes: [
-      /// AUTH
+      /// AUTH routes
       ...AuthRoutes.routes(),
 
-      /// ONBOARDING
+      /// ONBOARDING routes
       GoRoute(
         name: AppRoutes.nOnboarding,
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingScreen(),
+      ),
+
+      GoRoute(
+        name: AppRoutes.nReportAd,
+        path: AppRoutes.reportAd,
+        builder: (context, state) {
+          final adId = state.pathParameters['adId'];
+
+          if (adId == null || adId.isEmpty) {
+            return const Scaffold(body: Center(child: Text('Missing adId')));
+          }
+
+          return ReportAdScreen(adId: adId);
+        },
       ),
 
       /// CREATE AD
@@ -142,7 +158,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final adId = state.uri.queryParameters['adId'];
 
           if (adId == null || adId.isEmpty) {
-            throw Exception("adId is required for ReviewCreateScreen");
+            return const Scaffold(body: Center(child: Text('Missing adId')));
           }
 
           return ReviewCreateScreen(adId: adId);
@@ -161,6 +177,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
     ],
+
     redirect: (context, state) {
       if (!bootstrapState.isReady) return null;
 
@@ -182,7 +199,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       /// Protect authenticated routes
       if (!auth.isLoggedIn && isProtected) {
-        return AppRoutes.login;
+        final isGoingToAuth = location.startsWith('/auth');
+
+        if (isGoingToAuth) return null;
+
+        return '${AppRoutes.login}?redirect=${Uri.encodeComponent(location)}';
       }
 
       /// Logged-in users shouldn't see auth pages

@@ -1,7 +1,14 @@
 import 'package:africaonlinestores/core/routing/app_routes.dart';
 
-/// Helper utilities to classify routes.
 class RouteGuards {
+  static const _protectedPrefixes = [
+    AppRoutes.sellerBase,
+    AppRoutes.myAds,
+    AppRoutes.createAd,
+    AppRoutes.account,
+    AppRoutes.reportAdBase,
+  ];
+
   static bool isOnboarding(String location) {
     return location.startsWith(AppRoutes.onboarding);
   }
@@ -10,25 +17,13 @@ class RouteGuards {
     return location.startsWith('/auth');
   }
 
-  static bool isAccountRoute(String location) {
-    return location.startsWith('/account');
-  }
-
-  static bool isSellerRoute(String location) {
-    return location.startsWith('/seller');
-  }
-
-  static bool isCreateAdRoute(String location) {
-    return location.startsWith(AppRoutes.createAd);
-  }
-
-  /// Routes accessible without authentication
+  /// Public routes
   static bool isPublicRoute(String location) {
     return isAuthRoute(location) || isOnboarding(location);
   }
 
-  /// Routes that require authentication
+  /// Protected routes (require login)
   static bool isProtectedRoute(String location) {
-    return isSellerRoute(location) || isCreateAdRoute(location);
+    return _protectedPrefixes.any(location.startsWith);
   }
 }

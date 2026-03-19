@@ -110,7 +110,11 @@ class AdNavigation {
   static void toAllAds(BuildContext context, String categoryId) {
     context.pushNamed(
       AppRoutes.nAllAds,
-      pathParameters: {'categoryId': categoryId},
+      queryParameters: {'categoryId': categoryId},
     );
+  }
+
+  static void toReport(BuildContext context, String adId) {
+    context.pushNamed(AppRoutes.nReportAd, pathParameters: {'adId': adId});
   }
 }

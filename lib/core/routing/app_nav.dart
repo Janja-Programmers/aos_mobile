@@ -26,7 +26,7 @@ class AppNavigation {
       await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: scheme.surface,
         builder: (sheetContext) {
           return AppConfirmSheet(
             icon: Icons.lock_outlined,

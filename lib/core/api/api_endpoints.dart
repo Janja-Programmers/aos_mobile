@@ -54,6 +54,12 @@ class ApiEndpoints {
       '/api/method/aos.api.ads.set_ad_status';
   static final String updateAdEndpoint = '/api/method/aos.api.ads.update_ad';
 
+  // Report Endpoints
+  static final String listReportReasonsEndpoint =
+      '/api/method/aos.api.reports.list_report_reasons';
+  static final String reportAdEndpoint =
+      '/api/method/aos.api.reports.report_ad';
+
   // Reviews Endpoints
   static final String createAdReviewEndpoint =
       '/api/method/aos.api.reviews.create_review';

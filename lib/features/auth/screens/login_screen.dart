@@ -97,23 +97,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               AppRoutes.nVerifyOtp,
               extra: {'email': email, 'purpose': OtpPurpose.emailVerification},
             );
-
-            if (mounted) setState(() => _loginLoading = false);
-            return;
           }
         },
         (_) async {
-          context.goNamed(AppRoutes.nHome);
-
-          if (mounted) setState(() => _loginLoading = false);
+          _handlePostLoginRedirect();
         },
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ShowSnack(context, "Error").error();
     } finally {
-      // Only set loading off if navigation didn’t happen
-      if (mounted && _loginLoading) setState(() => _loginLoading = false);
+      if (mounted) setState(() => _loginLoading = false);
     }
   }
 
@@ -122,6 +116,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final prefs = ref.read(userPreferenceControllerProvider);
 
     setState(() => _googleLoading = true);
+
     try {
       final result = await ref
           .read(authControllerProvider.notifier)
@@ -135,9 +130,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       result.fold(
         (f) => ShowSnack(context, f.message).error(),
-        (_) => context.goNamed(AppRoutes.nHome),
+        (_) => _handlePostLoginRedirect(),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ShowSnack(context, 'Unexpected error').error();
     } finally {
@@ -165,13 +160,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       result.fold(
         (f) => ShowSnack(context, f.message).error(),
-        (_) => context.goNamed(AppRoutes.nHome),
+        (_) => _handlePostLoginRedirect(),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ShowSnack(context, 'Unexpected error').error();
     } finally {
       if (mounted) setState(() => _appleLoading = false);
+    }
+  }
+
+  void _handlePostLoginRedirect() {
+    final state = GoRouterState.of(context);
+    final redirect = state.uri.queryParameters['redirect'];
+
+    final target = (redirect != null && redirect.isNotEmpty)
+        ? Uri.decodeComponent(redirect)
+        : null;
+
+    // 🔥 Remove login from stack
+    context.pop();
+
+    // 🔥 Navigate properly
+    if (target != null && target.isNotEmpty && !target.startsWith('/auth')) {
+      context.push(target);
+    } else {
+      context.pushNamed(AppRoutes.nHome);
     }
   }
 

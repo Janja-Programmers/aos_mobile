@@ -41,7 +41,7 @@ class AppConfirmSheet extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Material(
-        color: Colors.transparent,
+        color: scheme.surface,
         child: Container(
           padding: EdgeInsets.fromLTRB(
             18,

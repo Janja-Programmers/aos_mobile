@@ -31,7 +31,12 @@ class AppRoutes {
   static const search = '/search';
 
   // Seller
+  static const sellerBase = '/seller';
   static const seller = '/seller/:sellerId';
+
+  // Reports
+  static const reportAdBase = '/report-ad';
+  static const reportAd = '/report-ad/:adId';
 
   // Reviews
   static const review = '/review';
@@ -84,5 +89,6 @@ class AppRoutes {
 
   static const nSeller = 'seller';
   static const nReview = 'review';
+  static const nReportAd = 'reportAd';
   static const nCreateReview = 'createReview';
 }

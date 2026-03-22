@@ -2,15 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
+
+import 'package:africaonlinestores/features/reviews/controllers/review_create_controller.dart';
+import 'package:africaonlinestores/features/reviews/presentation/widgets/image_picker_bottom_sheet.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
-import 'package:africaonlinestores/features/reviews/data/review_api.dart';
-import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
-
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/media/review_media_helper.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ReviewCreateScreen extends ConsumerStatefulWidget {
@@ -28,12 +28,9 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
   final _titleCtrl = TextEditingController();
   final _commentCtrl = TextEditingController();
 
-  final ImagePicker _picker = ImagePicker();
-
   final List<File> _images = [];
 
   double _rating = 0.0;
-  bool _loading = false;
 
   @override
   void initState() {
@@ -41,34 +38,15 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
     _commentCtrl.addListener(() => setState(() {}));
   }
 
-  /// 📸 Pick Image
   Future<void> _pickImage() async {
-    final picked = await _picker.pickImage(source: ImageSource.gallery);
+    if (_images.length >= ReviewMediaHelper.maxImages) return;
 
-    if (picked == null) return;
+    final file = await showImageSourcePicker(context);
+    if (file == null) return;
 
-    setState(() {
-      _images.add(File(picked.path));
-    });
+    setState(() => _images.add(file));
   }
 
-  /// ☁ Upload Images
-  Future<List<String>> _uploadImages() async {
-    final urls = <String>[];
-
-    for (final file in _images) {
-      final res = await ref.read(adsApiProvider).uploadMedia(file: file);
-
-      res.fold((_) {}, (data) {
-        final url = data['file_url'];
-        if (url != null) urls.add(url);
-      });
-    }
-
-    return urls;
-  }
-
-  /// 🚀 Submit Review
   Future<void> _submit() async {
     if (_rating == 0) {
       ShowSnack(context, 'Please select a rating').error();
@@ -77,36 +55,58 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
 
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _loading = true);
+    final ctrl = ref.read(reviewCreateControllerProvider(widget.adId).notifier);
 
-    final imageUrls = await _uploadImages();
+    final imageUrls = await ReviewMediaHelper.upload(ref: ref, files: _images);
 
-    final res = await ref
-        .read(reviewApiProvider)
-        .createAdReview(
-          ad: widget.adId,
-          rating: _rating,
-          title: _titleCtrl.text.trim(),
-          comment: _commentCtrl.text.trim(),
-          images: imageUrls,
-        );
+    final success = await ctrl.submit(
+      rating: _rating,
+      title: _titleCtrl.text.trim(),
+      comment: _commentCtrl.text.trim(),
+      images: imageUrls,
+    );
 
-    setState(() => _loading = false);
+    final state = ref.read(reviewCreateControllerProvider(widget.adId));
 
-    res.fold((failure) => ShowSnack(context, failure.message).error(), (_) {
+    if (!mounted) return;
+
+    if (success) {
       ShowSnack(context, 'Review submitted successfully').success();
       Navigator.pop(context, true);
-    });
+    } else {
+      ShowSnack(context, state.error ?? 'Something went wrong').error();
+    }
+  }
+
+  void _handleDisabledTap() {
+    if (_rating == 0) {
+      ShowSnack(context, 'Please select a rating').error();
+      return;
+    }
+
+    if (_titleCtrl.text.trim().isEmpty) {
+      ShowSnack(context, 'Title required').error();
+      return;
+    }
+
+    if (_commentCtrl.text.trim().isEmpty) {
+      ShowSnack(context, 'Review Detail required').error();
+      return;
+    }
   }
 
   bool get _canSubmit =>
       _rating > 0 &&
       _titleCtrl.text.trim().isNotEmpty &&
-      _commentCtrl.text.trim().isNotEmpty &&
-      !_loading;
+      _commentCtrl.text.trim().isNotEmpty;
 
-  /// ⭐ Interactive Stars
-  Widget buildInteractiveStars() {
+  InputDecoration _dec(BuildContext context, {required String hint}) {
+    return InputDecoration(
+      hintText: hint,
+    ).applyDefaults(Theme.of(context).inputDecorationTheme);
+  }
+
+  Widget buildStars() {
     final colors = context.appColors;
 
     return Row(
@@ -125,51 +125,52 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
     );
   }
 
-  /// 📷 Image Preview Grid
-  Widget _buildImagePreview() {
+  Widget _preview() {
+    final colors = context.appColors;
     if (_images.isEmpty) return const SizedBox();
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: _images.map((file) {
-          return Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.file(
-                  file,
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _images.map((file) {
+        return Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.file(file, width: 80, height: 80, fit: BoxFit.cover),
+            ),
+            Positioned(
+              right: 2,
+              top: 2,
+              child: GestureDetector(
+                onTap: () => setState(() => _images.remove(file)),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: colors.black.withOpacity(0.6),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.black.withOpacity(0.25),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(Icons.close, size: 16, color: colors.white),
                 ),
               ),
-
-              /// remove image
-              Positioned(
-                right: 0,
-                top: 0,
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _images.remove(file);
-                    });
-                  },
-                  child: const Icon(Icons.close, size: 18, color: Colors.red),
-                ),
-              ),
-            ],
-          );
-        }).toList(),
-      ),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final state = ref.watch(reviewCreateControllerProvider(widget.adId));
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -184,30 +185,23 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: colors.white,
+                    color: colors.surface,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      /// ⭐ Rating
                       Text("Overall Ratings", style: context.pStrong),
                       const SizedBox(height: 12),
-
-                      buildInteractiveStars(),
+                      buildStars(),
 
                       const SizedBox(height: 20),
 
-                      /// Title
                       Text("Review Title", style: context.pStrong),
                       const SizedBox(height: 8),
-
                       TextFormField(
                         controller: _titleCtrl,
-                        decoration: const InputDecoration(
-                          hintText: 'Example: Easy to use',
-                          fillColor: Colors.transparent,
-                        ),
+                        decoration: _dec(context, hint: 'Example: Easy to use'),
                         validator: (v) => v == null || v.trim().isEmpty
                             ? 'Title required'
                             : null,
@@ -215,48 +209,42 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
 
                       const SizedBox(height: 20),
 
-                      /// Comment
                       Text("Review Detail", style: context.pStrong),
                       const SizedBox(height: 8),
-
                       TextFormField(
                         controller: _commentCtrl,
                         maxLines: 4,
                         maxLength: 200,
-                        decoration: const InputDecoration(
-                          fillColor: Colors.transparent,
-                          hintText:
+                        decoration: _dec(
+                          context,
+                          hint:
                               'The product has a stylish design and works perfectly.',
-                          counterText: "",
                         ),
                         validator: (v) => v == null || v.trim().isEmpty
                             ? 'Comment required'
                             : null,
                       ),
 
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          "${_commentCtrl.text.length}/200",
-                          style: context.pMuted,
-                        ),
+                      Text(
+                        "${_commentCtrl.text.length}/200",
+                        style: context.pMuted,
                       ),
 
                       const SizedBox(height: 16),
 
-                      /// 📷 Add Photo
                       InkWell(
                         onTap: _pickImage,
                         child: Row(
                           children: [
-                            const Icon(Icons.camera_alt_outlined, size: 20),
+                            const Icon(Icons.camera_alt_outlined),
                             const SizedBox(width: 8),
                             Text("Add a photo", style: context.p),
                           ],
                         ),
                       ),
 
-                      _buildImagePreview(),
+                      const SizedBox(height: 12),
+                      _preview(),
                     ],
                   ),
                 ),
@@ -264,13 +252,13 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
             ),
           ),
 
-          /// Submit Button
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             child: PrimaryButton(
               text: "Submit",
-              loading: _loading,
+              loading: state.submitting,
               onPressed: _canSubmit ? _submit : null,
+              onDisabledTap: _handleDisabledTap,
             ),
           ),
         ],

@@ -6,6 +6,8 @@ class AdReview {
     required this.comment,
     required this.reviewer,
     required this.creation,
+    this.isLiked = false,
+    this.isDisliked = false,
     required this.likeCount,
     required this.dislikeCount,
   });
@@ -16,6 +18,8 @@ class AdReview {
   final String comment;
   final String reviewer;
   final DateTime? creation;
+  final bool isLiked;
+  final bool isDisliked;
   final int likeCount;
   final int dislikeCount;
 
@@ -25,14 +29,18 @@ class AdReview {
       return double.tryParse(v.toString()) ?? 0;
     }
 
+    final reviewerObj = json['reviewer'];
+
     return AdReview(
-      id: (json['name'] ?? '').toString(),
+      id: (json['id'] ?? '').toString(),
       rating: parseDouble(json['rating']),
       title: (json['title'] ?? '').toString(),
       comment: (json['comment'] ?? '').toString(),
-      reviewer: (json['reviewer'] ?? '').toString(),
-      creation: json['creation'] != null
-          ? DateTime.tryParse(json['creation'].toString())
+      reviewer: reviewerObj is Map
+          ? (reviewerObj['full_name'] ?? '')
+          : (reviewerObj ?? '').toString(),
+      creation: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
           : null,
       likeCount: int.tryParse((json['like_count'] ?? 0).toString()) ?? 0,
       dislikeCount: int.tryParse((json['dislike_count'] ?? 0).toString()) ?? 0,

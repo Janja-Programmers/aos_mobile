@@ -47,10 +47,8 @@ class ApiClient {
       InterceptorsWrapper(
         onError: (error, handler) {
           final status = error.response?.statusCode;
-          final path = error.requestOptions.path;
 
-          if ((status == 401 || status == 403) &&
-              !path.contains('auth.logout')) {
+          if (status == 401) {
             _sessionExpiredCtrl.add(null);
           }
 

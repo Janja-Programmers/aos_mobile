@@ -12,7 +12,7 @@ class AdSubmitSuccessDialog extends StatelessWidget {
     final colors = context.appColors;
 
     return Dialog(
-      backgroundColor: colors.white,
+      backgroundColor: colors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24),
       child: Padding(

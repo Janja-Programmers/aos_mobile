@@ -122,6 +122,8 @@ class _SellButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -137,7 +139,7 @@ class _SellButton extends StatelessWidget {
                 context.appColors.primary,
               ),
             ),
-            child: const Icon(Icons.add, size: 24, color: Colors.white),
+            child: Icon(Icons.add, size: 24, color: colors.white),
           ),
           const SizedBox(height: 2),
           Text("Selling", style: context.pStrong),

@@ -24,7 +24,7 @@ class AdDetailActionBar extends StatelessWidget {
               icon: Icons.home_outlined,
               filled: false,
               label: null,
-              onTap: () => context.pushNamed(AppRoutes.nHome),
+              onTap: onCall ?? () => context.pushNamed(AppRoutes.nHome),
             ),
             const SizedBox(width: 10),
 
@@ -70,17 +70,16 @@ class _AdDetailActionButton extends StatelessWidget {
   final VoidCallback onTap;
   final String? label;
 
-  static const _radius = BorderRadius.all(Radius.circular(10));
+  static const _radius = BorderRadius.all(Radius.circular(999));
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final appColors = context.appColors;
 
     final isIconOnly = label == null || label!.trim().isEmpty;
 
-    final iconColor = filled ? appColors.border : scheme.primary;
-    final textColor = filled ? appColors.border : scheme.primary;
+    final iconColor = filled ? appColors.white : appColors.primary;
+    final textColor = filled ? appColors.white : appColors.primary;
 
     final filledStyle = FilledButton.styleFrom(
       shape: const RoundedRectangleBorder(borderRadius: _radius),

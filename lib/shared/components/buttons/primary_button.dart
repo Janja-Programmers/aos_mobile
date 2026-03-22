@@ -35,7 +35,7 @@ class PrimaryButton extends StatelessWidget {
 
     // Active (filled)
     final activeBg = backgroundColor ?? colors.primary;
-    final activeFg = textColor ?? colors.textPrimary;
+    final activeFg = textColor ?? colors.white;
 
     // Disabled (outlined)
     final disBorder = disabledBorderColor ?? colors.textPrimary;

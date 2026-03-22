@@ -22,7 +22,7 @@ class MiniCategoryPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       decoration: BoxDecoration(
-        color: colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(

@@ -74,7 +74,7 @@ class SelectCategoryScreen extends ConsumerWidget {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: colors.white,
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 padding: const EdgeInsets.symmetric(

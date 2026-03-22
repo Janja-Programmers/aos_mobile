@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -242,7 +243,7 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final colors = context.appColors;
 
     final media = _buildMedia();
     final safeSelected = media.isEmpty
@@ -482,7 +483,7 @@ class _Thumb extends StatelessWidget {
 
   final _MediaItem item;
   final bool active;
-  final ColorScheme colors;
+  final AppColorTokens colors;
   final VoidCallback onTap;
   final String? videoPoster;
 
@@ -528,7 +529,7 @@ class _Thumb extends StatelessWidget {
               child: Icon(
                 Icons.play_arrow_rounded,
                 size: 18,
-                color: colors.white,
+                color: colors.surface,
               ),
             ),
           ),

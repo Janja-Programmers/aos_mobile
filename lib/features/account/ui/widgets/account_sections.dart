@@ -128,7 +128,7 @@ class GetVerifiedBanner extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: colors.white.withOpacity(0.18),
+                  color: colors.surface.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(Icons.verified_outlined, color: colors.white),
@@ -163,7 +163,7 @@ class GetVerifiedBanner extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: colors.white.withOpacity(0.18),
+                  color: colors.surface.withOpacity(0.18),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.arrow_forward, color: colors.white, size: 18),

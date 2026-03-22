@@ -153,7 +153,7 @@ class DateBox extends StatelessWidget {
                     ),
 
                     datePickerTheme: DatePickerThemeData(
-                      backgroundColor: colors.white,
+                      backgroundColor: colors.surface,
 
                       dayBackgroundColor: WidgetStateProperty.resolveWith((
                         states,

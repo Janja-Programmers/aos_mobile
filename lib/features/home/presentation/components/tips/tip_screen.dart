@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/core.dart';
+
 class TipsScreen extends StatelessWidget {
   const TipsScreen({
     super.key,
@@ -18,8 +20,10 @@ class TipsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: colors.surface,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -39,12 +43,12 @@ class TipsScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 40),
-                    Icon(icon, size: 48, color: Colors.white),
+                    Icon(icon, size: 48, color: colors.white),
                     const SizedBox(height: 16),
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: colors.white,
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
                       ),
@@ -52,10 +56,7 @@ class TipsScreen extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: colors.white, fontSize: 16),
                     ),
                   ],
                 ),

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/ads/ads_report/controllers/report_ad_controller.dart';
+import 'package:africaonlinestores/features/ads/ads_report/presentation/widgets/report_info_card.dart';
 import 'package:africaonlinestores/features/ads/ads_report/presentation/widgets/report_reason_tile.dart';
 import 'package:africaonlinestores/features/ads/ads_report/models/report_reason.dart';
 
@@ -40,7 +41,7 @@ class _ReportAdScreenState extends ConsumerState<ReportAdScreen> {
   }
 
   bool get _canSubmit {
-    final state = ref.read(reportAdControllerProvider);
+    final state = ref.watch(reportAdControllerProvider);
     return _selectedReasonId != null && !state.submitting;
   }
 
@@ -94,7 +95,7 @@ class _ReportAdScreenState extends ConsumerState<ReportAdScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final dividerColor = Theme.of(context).dividerColor.withOpacity(.55);
+    final dividerColor = Theme.of(context).dividerColor.withValues(alpha: 0.55);
     final muted = Theme.of(context).hintColor;
 
     final state = ref.watch(reportAdControllerProvider);
@@ -119,7 +120,7 @@ class _ReportAdScreenState extends ConsumerState<ReportAdScreen> {
                       children: [
                         Container(
                           decoration: BoxDecoration(
-                            color: colors.white,
+                            color: colors.surface,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: reasons.isEmpty
@@ -131,33 +132,37 @@ class _ReportAdScreenState extends ConsumerState<ReportAdScreen> {
                                   ),
                                 )
                               : Column(
-                                  children: List.generate(reasons.length, (i) {
-                                    final reason = reasons[i];
-                                    final isSelected =
-                                        _selectedReasonId == reason.id;
+                                  children: [
+                                    const ReportInfoCard(),
+                                    const SizedBox(height: 12),
+                                    ...List.generate(reasons.length, (i) {
+                                      final reason = reasons[i];
+                                      final isSelected =
+                                          _selectedReasonId == reason.id;
 
-                                    return Column(
-                                      children: [
-                                        ReportReasonTile(
-                                          label: reason.title,
-                                          icon: _iconForReason(reason),
-                                          selected: isSelected,
-                                          mutedColor: muted,
-                                          onTap: () {
-                                            setState(() {
-                                              _selectedReasonId = reason.id;
-                                            });
-                                          },
-                                        ),
-                                        if (i != reasons.length - 1)
-                                          Divider(
-                                            height: 1,
-                                            thickness: 1,
-                                            color: dividerColor,
+                                      return Column(
+                                        children: [
+                                          ReportReasonTile(
+                                            label: reason.title,
+                                            icon: _iconForReason(reason),
+                                            selected: isSelected,
+                                            mutedColor: muted,
+                                            onTap: () {
+                                              setState(() {
+                                                _selectedReasonId = reason.id;
+                                              });
+                                            },
                                           ),
-                                      ],
-                                    );
-                                  }),
+                                          if (i != reasons.length - 1)
+                                            Divider(
+                                              height: 1,
+                                              thickness: 1,
+                                              color: dividerColor,
+                                            ),
+                                        ],
+                                      );
+                                    }),
+                                  ],
                                 ),
                         ),
                         const SizedBox(height: 18),
@@ -175,7 +180,7 @@ class _ReportAdScreenState extends ConsumerState<ReportAdScreen> {
                             hintText:
                                 'Provide any additional information that help us review this report...',
                             filled: true,
-                            fillColor: colors.white,
+                            fillColor: colors.surface,
                             counterText: '',
                             contentPadding: const EdgeInsets.all(16),
                             border: OutlineInputBorder(

@@ -68,7 +68,7 @@ class _VoiceListeningIndicatorState extends State<VoiceListeningIndicator>
                   color: colors.primary,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.mic, color: Colors.white, size: 34),
+                child: Icon(Icons.mic, color: colors.white, size: 34),
               ),
             ],
           );

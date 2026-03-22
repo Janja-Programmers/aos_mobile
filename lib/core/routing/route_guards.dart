@@ -5,8 +5,9 @@ class RouteGuards {
     AppRoutes.sellerBase,
     AppRoutes.myAds,
     AppRoutes.createAd,
-    AppRoutes.account,
+    AppRoutes.updateProfile,
     AppRoutes.reportAdBase,
+    AppRoutes.reviewAdBase,
   ];
 
   static bool isOnboarding(String location) {

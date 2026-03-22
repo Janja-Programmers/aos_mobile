@@ -1,24 +1,22 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 import 'package:africaonlinestores/features/account/shared/routing/account_routes.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_category_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_location_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/screens/ad_form_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_report/presentation/report_ad_screen.dart';
-import 'package:africaonlinestores/features/reviews/presentation/review_screen.dart';
-import 'package:africaonlinestores/features/reviews/presentation/review_create_screen.dart';
-import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 import 'package:africaonlinestores/features/auth/shared/routing/auth_routes.dart';
+import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
-import 'package:africaonlinestores/features/onboarding/screens/onboarding_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_details_screen.dart';
-
+import 'package:africaonlinestores/features/onboarding/screens/onboarding_screen.dart';
 import 'package:africaonlinestores/features/seller/presentation/seller_store_screen.dart';
 
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
@@ -51,25 +49,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       /// AUTH routes
       ...AuthRoutes.routes(),
 
+      /// REVIEW routes
+      ...ReviewsRoutes.routes(),
+
       /// ONBOARDING routes
       GoRoute(
         name: AppRoutes.nOnboarding,
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingScreen(),
-      ),
-
-      GoRoute(
-        name: AppRoutes.nReportAd,
-        path: AppRoutes.reportAd,
-        builder: (context, state) {
-          final adId = state.pathParameters['adId'];
-
-          if (adId == null || adId.isEmpty) {
-            return const Scaffold(body: Center(child: Text('Missing adId')));
-          }
-
-          return ReportAdScreen(adId: adId);
-        },
       ),
 
       /// CREATE AD
@@ -142,26 +129,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             SellerStorefrontScreen(sellerId: _param(state, 'sellerId')),
       ),
 
-      // REVIEW ROUTE
+      // REPORT Ad
       GoRoute(
-        name: AppRoutes.nReview,
-        path: AppRoutes.review,
-        builder: (context, state) =>
-            ReviewScreen(reviews: [], totalReviews: 0, onSeeAll: () {}),
-      ),
-
-      // CREATE REVIEW ROUTE
-      GoRoute(
-        name: AppRoutes.nCreateReview,
-        path: AppRoutes.createReview,
+        name: AppRoutes.nReportAd,
+        path: AppRoutes.reportAd,
         builder: (context, state) {
-          final adId = state.uri.queryParameters['adId'];
+          final adId = state.pathParameters['adId'];
 
           if (adId == null || adId.isEmpty) {
             return const Scaffold(body: Center(child: Text('Missing adId')));
           }
 
-          return ReviewCreateScreen(adId: adId);
+          return ReportAdScreen(adId: adId);
         },
       ),
 

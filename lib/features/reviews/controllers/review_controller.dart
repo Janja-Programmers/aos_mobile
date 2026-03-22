@@ -1,23 +1,182 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
+import 'package:africaonlinestores/core/utils/either.dart';
+
+import 'package:africaonlinestores/features/reviews/controllers/review_state.dart';
 import 'package:africaonlinestores/features/reviews/data/review_api.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_model.dart';
 
-final reviewsProvider = FutureProvider.family<List<AdReview>, String>((
-  ref,
-  adId,
-) async {
-  final api = ref.read(reviewApiProvider);
+final reviewControllerProvider =
+    StateNotifierProvider.family<ReviewController, ReviewState, String>((
+      ref,
+      adId,
+    ) {
+      return ReviewController(ref, adId);
+    });
 
-  final result = await api.getAdReviews(adId: adId);
+class ReviewController extends StateNotifier<ReviewState> {
+  ReviewController(this.ref, this.adId) : super(const ReviewState()) {
+    loadReviews();
+  }
 
-  return result.fold((failure) => throw Exception(failure.message), (payload) {
-    final items = payload['data']?['items'];
+  final Ref ref;
+  final String adId;
 
-    if (items is! List) return const [];
+  /// ---------------------------
+  /// Load Reviews
+  /// ---------------------------
+  Future<void> loadReviews() async {
+    state = state.copyWith(loading: true, error: null);
 
-    return items
-        .map((e) => AdReview.fromJson(Map<String, dynamic>.from(e)))
-        .toList();
-  });
-});
+    final api = ref.read(reviewApiProvider);
+
+    final result = await api.getAdReviews(adId: adId);
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(loading: false, error: failure.message);
+      },
+      (payload) {
+        final items = payload['data']?['reviews'];
+
+        final reviews = (items is List)
+            ? items.map((e) {
+                return AdReview.fromJson(Map<String, dynamic>.from(e));
+              }).toList()
+            : <AdReview>[];
+
+        state = state.copyWith(loading: false, reviews: reviews);
+      },
+    );
+  }
+
+  /// ---------------------------
+  /// Submit Review
+  /// ---------------------------
+  Future<bool> submit({
+    required double rating,
+    required String title,
+    required String comment,
+    required List<String> images,
+  }) async {
+    state = state.copyWith(submitting: true, error: null);
+
+    final api = ref.read(reviewApiProvider);
+
+    final res = await api.createAdReview(
+      ad: adId,
+      rating: rating,
+      title: title,
+      comment: comment,
+      images: images,
+    );
+
+    return res.fold(
+      (failure) {
+        state = state.copyWith(submitting: false, error: failure.message);
+        return false;
+      },
+      (_) async {
+        state = state.copyWith(submitting: false);
+
+        /// refresh after submit
+        await loadReviews();
+
+        return true;
+      },
+    );
+  }
+
+  /// ---------------------------
+  /// Toggle Review
+  /// ---------------------------
+  Future<Either<String, void>> toggleReaction({
+    required String reviewId,
+    required bool isLikeAction, // true = like, false = dislike
+  }) async {
+    final api = ref.read(reviewApiProvider);
+
+    final current = state.reviews.firstWhere((r) => r.id == reviewId);
+
+    bool newLiked = current.isLiked;
+    bool newDisliked = current.isDisliked;
+
+    int likeCount = current.likeCount;
+    int dislikeCount = current.dislikeCount;
+
+    String reaction;
+
+    if (isLikeAction) {
+      /// LIKE toggle
+      if (current.isLiked) {
+        // Unlike
+        newLiked = false;
+        likeCount = (likeCount - 1).clamp(0, 999999);
+        reaction = "Unlike";
+      } else {
+        // Like
+        newLiked = true;
+        likeCount += 1;
+        reaction = "Like";
+
+        /// remove dislike if exists
+        if (current.isDisliked) {
+          newDisliked = false;
+          dislikeCount = (dislikeCount - 1).clamp(0, 999999);
+        }
+      }
+    } else {
+      /// DISLIKE toggle
+      if (current.isDisliked) {
+        // Undislike
+        newDisliked = false;
+        dislikeCount = (dislikeCount - 1).clamp(0, 999999);
+        reaction = "Undislike";
+      } else {
+        // Dislike
+        newDisliked = true;
+        dislikeCount += 1;
+        reaction = "Dislike";
+
+        /// remove like if exists
+        if (current.isLiked) {
+          newLiked = false;
+          likeCount = (likeCount - 1).clamp(0, 999999);
+        }
+      }
+    }
+
+    /// ✅ optimistic update
+    final updated = state.reviews.map((r) {
+      if (r.id != reviewId) return r;
+
+      return AdReview(
+        id: r.id,
+        rating: r.rating,
+        title: r.title,
+        comment: r.comment,
+        reviewer: r.reviewer,
+        creation: r.creation,
+        likeCount: likeCount,
+        dislikeCount: dislikeCount,
+        isLiked: newLiked,
+        isDisliked: newDisliked,
+      );
+    }).toList();
+
+    state = state.copyWith(reviews: updated);
+
+    final res = await api.toggleReview(reviewId: reviewId, reaction: reaction);
+
+    return res.fold(
+      (failure) {
+        loadReviews();
+        return Either.left(failure.message);
+      },
+      (_) {
+        return Either.right(null);
+      },
+    );
+  }
+}

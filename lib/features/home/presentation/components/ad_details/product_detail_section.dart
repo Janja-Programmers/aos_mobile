@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/features/home/presentation/components/ad_details/section_card.dart';
+import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 class AdProductDetailsSection extends StatelessWidget {

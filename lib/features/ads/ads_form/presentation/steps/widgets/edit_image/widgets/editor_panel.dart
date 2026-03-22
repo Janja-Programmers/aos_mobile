@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/tool_button.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/background_picker.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/gradient_picker.dart';
@@ -28,12 +30,14 @@ class EditorPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 18),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black12)],
+      decoration: BoxDecoration(
+        color: colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        boxShadow: [const BoxShadow(blurRadius: 10, color: Colors.black12)],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

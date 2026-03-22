@@ -97,8 +97,8 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     error: Color(0xFFFF4D4D),
     info: Color(0xFF4DA3FF),
 
-    white: Colors.black,
-    black: Colors.white,
+    white: Colors.white,
+    black: Colors.black,
     orange: Colors.orange,
     amber: Colors.amber,
     red: Colors.red,

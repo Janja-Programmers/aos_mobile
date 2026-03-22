@@ -78,7 +78,7 @@ class AdListItem extends ConsumerWidget {
                   top: 8,
                   right: 8,
                   child: Material(
-                    color: Colors.white,
+                    color: colors.white,
                     shape: const CircleBorder(),
                     elevation: 2,
                     child: InkWell(
@@ -138,8 +138,8 @@ class AdListItem extends ConsumerWidget {
                       ),
                       child: Text(
                         "-${ad.offerPercent}%",
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                         ),

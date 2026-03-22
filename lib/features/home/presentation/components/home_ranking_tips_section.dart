@@ -103,7 +103,7 @@ class _Card extends StatelessWidget {
           child: Ink(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: colors.white,
+              color: colors.surface,
               borderRadius: BorderRadius.circular(22),
               border: Border.all(color: colors.border),
             ),

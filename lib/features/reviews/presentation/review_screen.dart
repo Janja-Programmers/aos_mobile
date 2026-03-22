@@ -1,158 +1,92 @@
-import 'package:africaonlinestores/features/reviews/domain/review_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
-import 'package:africaonlinestores/features/home/presentation/components/ad_details/section_card.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:intl/intl.dart';
 
-class ReviewScreen extends StatelessWidget {
-  const ReviewScreen({
-    super.key,
-    required this.reviews,
-    required this.totalReviews,
-    required this.onSeeAll,
-  });
+import 'package:africaonlinestores/features/reviews/controllers/review_controller.dart';
+import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
+import 'package:africaonlinestores/features/reviews/presentation/widgets/chip.dart';
+import 'package:africaonlinestores/features/reviews/presentation/widgets/review_card.dart';
+import 'package:africaonlinestores/features/reviews/presentation/widgets/summary_card.dart';
 
-  final List<AdReview> reviews;
-  final int totalReviews;
-  final VoidCallback onSeeAll;
+import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
+class ReviewScreen extends ConsumerWidget {
+  const ReviewScreen({super.key, required this.adId});
 
-    if (reviews.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return SectionCard(
-      title: 'Product reviews',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: 170,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: reviews.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                final r = reviews[index];
-
-                return _ReviewCard(
-                  reviewer: r.reviewer,
-                  rating: r.rating,
-                  comment: r.comment,
-                  date: r.creation,
-                  likeCount: r.likeCount,
-                  dislikeCount: r.dislikeCount,
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          OutlinedButton(
-            onPressed: onSeeAll,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: colors.textPrimary,
-              side: BorderSide(color: colors.textPrimary),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
-              ),
-            ),
-            child: Text('See all reviews ($totalReviews)', style: context.p),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ReviewCard extends StatelessWidget {
-  const _ReviewCard({
-    required this.reviewer,
-    required this.rating,
-    required this.comment,
-    required this.date,
-    required this.likeCount,
-    required this.dislikeCount,
-  });
-
-  final String reviewer;
-  final double rating;
-  final String comment;
-  final DateTime? date;
-  final int likeCount;
-  final int dislikeCount;
+  final String adId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
 
-    final dateText = date != null
-        ? DateFormat('MMM dd, yyyy').format(date!)
-        : '';
+    final state = ref.watch(reviewControllerProvider(adId));
 
-    return Container(
-      width: 270,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: colors.surface,
-        border: Border.all(color: colors.border.withOpacity(0.2)),
+    final totalReviews = state.reviews.length;
+    final reviews = state.reviews;
+
+    return Scaffold(
+      backgroundColor: colors.surface,
+
+      /// APP BAR
+      appBar: AppBar(
+        title: Text('Reviews ($totalReviews)', style: context.h5),
+        centerTitle: true,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+
+      body: Column(
         children: [
-          /// Stars + Date
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: List.generate(
-                  5,
-                  (i) => Icon(
-                    i < rating.round() ? Icons.star : Icons.star_border,
-                    size: 16,
-                    color: colors.warning,
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                /// ⭐ SUMMARY CARD
+                SummaryCard(totalReviews: totalReviews),
+
+                const SizedBox(height: 16),
+
+                /// FILTERS
+                const Row(
+                  children: [
+                    StatusChip(label: 'All Reviews', selected: true),
+                    SizedBox(width: 10),
+                    StatusChip(label: 'Newest'),
+                    SizedBox(width: 10),
+                    StatusChip(label: 'Filter', hasDropdown: true),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                /// REVIEWS LIST
+                ...reviews.map(
+                  (review) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: ReviewCard(review: review),
                   ),
                 ),
-              ),
-              Text(dateText, style: context.pMuted),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          Expanded(
-            child: Text(
-              comment,
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-              style: context.p,
+              ],
             ),
           ),
-          const SizedBox(height: 8),
 
-          Text(reviewer, style: context.pMuted),
-          const SizedBox(height: 6),
+          /// ✍️ BOTTOM BUTTON
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                height: 52,
+                width: double.infinity,
+                child: PrimaryButton(
+                  onPressed: () {
+                    print("ADID: adId");
 
-          Row(
-            children: [
-              Text('Helpful?', style: context.pMuted),
-              const SizedBox(width: 10),
-              const Icon(Icons.thumb_up_outlined, size: 16),
-              const SizedBox(width: 6),
-              Text('($likeCount)', style: context.pMuted),
-              const SizedBox(width: 10),
-              const Icon(Icons.thumb_down_outlined, size: 16),
-              const SizedBox(width: 6),
-              Text('($dislikeCount)', style: context.pMuted),
-            ],
+                    ReviewNavigation.toCreateReview(context, adId);
+                  },
+                  text: 'Write a Review',
+                ),
+              ),
+            ),
           ),
         ],
       ),

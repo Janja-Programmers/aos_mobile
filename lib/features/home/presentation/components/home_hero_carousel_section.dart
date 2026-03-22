@@ -152,7 +152,7 @@ class _PromoCard extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: colors.white,
+                    color: colors.surface,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(

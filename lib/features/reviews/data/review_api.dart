@@ -71,4 +71,28 @@ class ReviewApi {
       return Either.left(const Failure('Failed to create review.'));
     }
   }
+
+  /// CREATE REVIEW
+  Future<Either<Failure, void>> toggleReview({
+    required String reviewId,
+    required String reaction,
+  }) async {
+    try {
+      final res = await _client.post(
+        ApiEndpoints.toggleAdReviewEndpoint,
+        data: {"review": reviewId, "reaction": reaction},
+      );
+
+      final parsed = unwrapFrappe(res);
+
+      return parsed.fold(
+        (failure) => Either.left(failure),
+        (_) => Either.right(null),
+      );
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to toggle review.'));
+    }
+  }
 }

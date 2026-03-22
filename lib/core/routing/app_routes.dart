@@ -39,8 +39,9 @@ class AppRoutes {
   static const reportAd = '/report-ad/:adId';
 
   // Reviews
+  static const reviewAdBase = '/review/create-review';
   static const review = '/review';
-  static const createReview = '/review/create-review';
+  static const createReview = '/review/create-review/:adId';
 
   // Ads - static paths first
   static const allAds = '/ads/all';

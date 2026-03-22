@@ -24,6 +24,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
 
     required this.white,
     required this.black,
+    required this.blue,
     required this.orange,
     required this.amber,
     required this.red,
@@ -48,6 +49,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
 
   final Color white;
   final Color black;
+  final Color blue;
   final Color orange;
   final Color amber;
   final Color red;
@@ -73,6 +75,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
 
     white: Colors.white,
     black: Colors.black,
+    blue: Colors.blue,
     orange: Colors.orange,
     amber: Colors.amber,
     red: Colors.red,
@@ -99,6 +102,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
 
     white: Colors.white,
     black: Colors.black,
+    blue: Colors.blue,
     orange: Colors.orange,
     amber: Colors.amber,
     red: Colors.red,
@@ -123,6 +127,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     Color? info,
     Color? white,
     Color? black,
+    Color? blue,
     Color? orange,
     Color? amber,
     Color? red,
@@ -145,6 +150,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
       info: info ?? this.info,
       white: white ?? this.white,
       black: black ?? this.black,
+      blue: blue ?? this.blue,
       orange: orange ?? this.orange,
       amber: amber ?? this.amber,
       red: red ?? this.red,
@@ -178,6 +184,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
 
       white: Color.lerp(white, other.white, t) ?? white,
       black: Color.lerp(black, other.black, t) ?? black,
+      blue: Color.lerp(blue, other.blue, t) ?? blue,
       orange: Color.lerp(orange, other.orange, t) ?? orange,
       amber: Color.lerp(amber, other.amber, t) ?? amber,
       red: Color.lerp(red, other.red, t) ?? red,

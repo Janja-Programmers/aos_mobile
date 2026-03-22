@@ -180,11 +180,14 @@ class AdSellerInfoSection extends StatelessWidget {
                   ),
                   child: Text(
                     'Review Product',
-                    style: context.p.copyWith(color: colors.primary),
+                    style: context.p.copyWith(
+                      color: colors.primary,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton(
                   onPressed: onReport,
@@ -195,7 +198,10 @@ class AdSellerInfoSection extends StatelessWidget {
                   ),
                   child: Text(
                     'Report Product',
-                    style: context.p.copyWith(color: colors.primary),
+                    style: context.p.copyWith(
+                      color: colors.primary,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ),

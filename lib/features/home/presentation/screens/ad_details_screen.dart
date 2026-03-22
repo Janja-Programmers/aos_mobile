@@ -10,7 +10,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 
 import 'package:africaonlinestores/features/home/presentation/controller/ad_detail_controller.dart';
-import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_detail_action_buttons.dart';
+import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_seller_store_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ads_header_info_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/image_header_section.dart';
@@ -20,10 +20,11 @@ import 'package:africaonlinestores/features/home/shared/providers/similar_ads_pr
 import 'package:africaonlinestores/features/reviews/controllers/review_controller.dart';
 import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
 import 'package:africaonlinestores/features/reviews/presentation/sections/review_ad_section.dart';
-
-import 'package:africaonlinestores/features/seller/data/seller_provider.dart';
+import 'package:africaonlinestores/features/seller/providers/seller_profile_provider.dart';
+import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart';
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 
 class AdDetailsScreen extends ConsumerStatefulWidget {
   const AdDetailsScreen({super.key, required this.id});
@@ -185,18 +186,14 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                           totalAds: seller.totalAds,
                           joined: seller.joined,
                           isFollowing: seller.isFollowing,
-
-                          onVisitStore: () {
-                            context.pushNamed(
-                              AppRoutes.nSeller,
-                              pathParameters: {'sellerId': ad.sellerId},
-                            );
-                          },
-
+                          onVisitStore: () => SellerNavigation.toSellerStore(
+                            context,
+                            ad.sellerId,
+                          ),
                           onReview: () =>
                               ReviewNavigation.toCreateReview(context, ad.id),
                           onReport: () => AdNavigation.toReport(context, ad.id),
-                          onPostSimilar: () {},
+                          onPostSimilar: () => AdNavigation.toCreate(context),
                         );
                       },
                     ),
@@ -213,9 +210,11 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                       data: (items) {
                         if (items.isEmpty) return const SizedBox.shrink();
 
-                        return GridAdsSectionBox(
-                          title: "Similar Products",
-                          items: items.where((e) => e.id != ad.id).toList(),
+                        return SectionCard(
+                          child: GridAdsSectionBox(
+                            title: "Similar Products",
+                            items: items.where((e) => e.id != ad.id).toList(),
+                          ),
                         );
                       },
                     ),

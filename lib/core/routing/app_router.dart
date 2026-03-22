@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +16,8 @@ import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_details_screen.dart';
 import 'package:africaonlinestores/features/onboarding/screens/onboarding_screen.dart';
-import 'package:africaonlinestores/features/seller/presentation/seller_store_screen.dart';
+import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
+import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart';
 
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/core/routing/app_shell.dart';
@@ -51,6 +51,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       /// REVIEW routes
       ...ReviewsRoutes.routes(),
+
+      // SELLER ROUTE
+      ...SellerRoutes.routes(),
 
       /// ONBOARDING routes
       GoRoute(
@@ -119,14 +122,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
           return SelectLocationScreen(showAllLocations: showAllLocations);
         },
-      ),
-
-      // SELLER ROUTE
-      GoRoute(
-        name: AppRoutes.nSeller,
-        path: AppRoutes.seller,
-        builder: (context, state) =>
-            SellerStorefrontScreen(sellerId: _param(state, 'sellerId')),
       ),
 
       // REPORT Ad

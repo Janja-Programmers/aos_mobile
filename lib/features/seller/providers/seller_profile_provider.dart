@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/seller/data/seller_controller.dart';
+import 'package:africaonlinestores/features/seller/controllers/seller_state_controller.dart';
 import 'package:africaonlinestores/features/seller/domain/aos_seller.dart';
 
 final sellerProfileProvider = FutureProvider.family<AOSSellerProfile, String>((

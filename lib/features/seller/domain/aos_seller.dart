@@ -3,6 +3,7 @@ class AOSSellerProfile {
     required this.shopName,
     required this.avatar,
     required this.shopBanner,
+    required this.aboutShop,
     required this.rating,
     required this.totalReviews,
     required this.totalFollowers,
@@ -14,6 +15,7 @@ class AOSSellerProfile {
   final String shopName;
   final String avatar;
   final String? shopBanner;
+  final String? aboutShop;
   final double rating;
   final int totalReviews;
   final int totalFollowers;
@@ -33,6 +35,9 @@ class AOSSellerProfile {
       shopBanner: (json['shop_banner'] ?? '').toString().trim().isEmpty
           ? null
           : json['shop_banner'].toString(),
+      aboutShop: (json['about_shop'] ?? '').toString().trim().isEmpty
+          ? null
+          : json['about_shop'].toString(),
       rating: parseDouble(json['rating']),
       totalReviews: int.tryParse((json['total_reviews'] ?? 0).toString()) ?? 0,
       totalFollowers:

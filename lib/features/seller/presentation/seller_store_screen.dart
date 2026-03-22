@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/seller/data/seller_provider.dart';
-import 'package:africaonlinestores/features/seller/presentation/widgets/seller_bottom_bar.dart';
-import 'package:africaonlinestores/features/seller/presentation/widgets/seller_header.dart';
-import 'package:africaonlinestores/features/seller/presentation/widgets/seller_products_grid.dart';
-import 'package:africaonlinestores/features/seller/presentation/widgets/seller_products_toolbar.dart';
+import 'package:africaonlinestores/features/seller/presentation/sections/seller_about_section.dart';
+import 'package:africaonlinestores/features/seller/presentation/sections/seller_products_section.dart';
+import 'package:africaonlinestores/features/seller/providers/seller_state_controller_provider.dart';
+import 'package:africaonlinestores/features/seller/presentation/sections/seller_header_section.dart';
+
+import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';
 
 class SellerStorefrontScreen extends ConsumerWidget {
   const SellerStorefrontScreen({super.key, required this.sellerId});
@@ -14,7 +15,7 @@ class SellerStorefrontScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sellerAsync = ref.watch(sellerProfileProvider(sellerId));
+    final state = ref.watch(sellerStateProvider(sellerId));
 
     return Scaffold(
       appBar: AppBar(
@@ -25,32 +26,48 @@ class SellerStorefrontScreen extends ConsumerWidget {
         ],
       ),
 
-      body: sellerAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+      body: Builder(
+        builder: (_) {
+          /// 🔄 LOADING
+          if (state.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        error: (e, _) => Center(child: Text(e.toString())),
+          /// ❌ ERROR
+          if (state.error != null) {
+            return Center(child: Text(state.error!));
+          }
 
-        data: (seller) {
+          final seller = state.seller;
+
+          /// ⚠️ SAFETY
+          if (seller == null) {
+            return const Center(child: Text('Seller not found'));
+          }
+
+          /// ✅ DATA
           return Column(
             children: [
-              /// Seller header
-              SellerHeaderCard(seller: seller),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    SellerHeaderSection(seller: seller, sellerId: sellerId),
+                    const SizedBox(height: 12),
 
-              const SizedBox(height: 12),
+                    SellerAboutSection(about: seller.aboutShop),
+                    const SizedBox(height: 16),
 
-              /// Toolbar
-              const SellerProductsToolbar(),
-
-              const SizedBox(height: 12),
-
-              /// Products
-              Expanded(child: SellerProductsGrid(sellerId: sellerId)),
+                    SellerProductsSection(sellerId: sellerId),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
             ],
           );
         },
       ),
-
-      bottomNavigationBar: const SellerBottomBar(),
+      bottomNavigationBar: AdDetailActionBar(onCall: () {}, onMessage: () {}),
     );
   }
 }

@@ -38,7 +38,7 @@ class GridAdsSectionBox extends StatelessWidget {
       children: [
         /// Header
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Row(
             children: [
               Expanded(child: Text(title, style: context.h5)),
@@ -64,26 +64,23 @@ class GridAdsSectionBox extends StatelessWidget {
         ),
 
         /// Grid
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: items.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 16,
-              childAspectRatio: aspectRatio,
-            ),
-            itemBuilder: (context, i) {
-              final ad = items[i];
-              return AdGridCard(
-                ad: ad,
-                onTap: () => AdNavigation.toDetail(context, ad.id),
-              );
-            },
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 16,
+            childAspectRatio: aspectRatio,
           ),
+          itemBuilder: (context, i) {
+            final ad = items[i];
+            return AdGridCard(
+              ad: ad,
+              onTap: () => AdNavigation.toDetail(context, ad.id),
+            );
+          },
         ),
       ],
     );

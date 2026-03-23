@@ -26,6 +26,7 @@ class AppRoutes {
   static const photoTips = '/photoTips';
   static const marketTips = '/marketTips';
   static const rankTips = '/rankTips';
+  static const sellerTips = '/sellerTips';
 
   // Search
   static const search = '/search';
@@ -63,6 +64,7 @@ class AppRoutes {
   static const nPhotoTips = 'photoTips';
   static const nMarketTips = 'marketTips';
   static const nRankTips = 'rankTips';
+  static const nSellerTips = 'sellerTips';
 
   static const nSearch = 'search';
 

@@ -43,7 +43,7 @@ class TipCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: iconBg,
+              color: iconBg.withOpacity(.15),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: iconColor, size: 24),

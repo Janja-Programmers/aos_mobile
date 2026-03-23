@@ -70,14 +70,13 @@ class AdListingEmptyView extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            if (onLearnMore != null)
-              TextButton(
-                onPressed: onLearnMore,
-                child: Text(
-                  'Learn how to sell faster',
-                  style: context.p.copyWith(color: colors.primary),
-                ),
+            TextButton(
+              onPressed: onLearnMore,
+              child: Text(
+                'Learn how to sell faster',
+                style: context.p.copyWith(color: colors.primary),
               ),
+            ),
 
             const SizedBox(height: 32),
           ],

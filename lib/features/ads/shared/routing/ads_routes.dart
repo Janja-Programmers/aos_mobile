@@ -10,6 +10,7 @@ import 'package:africaonlinestores/features/home/presentation/screens/ad_list_sc
 import 'package:africaonlinestores/features/home/presentation/sections/tips/marketing_tips_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/photography_tips_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/ranking_tips_screen.dart';
+import 'package:africaonlinestores/features/seller/presentation/selling_tips_screen.dart';
 
 import 'package:africaonlinestores/features/search/search_screen.dart';
 
@@ -88,6 +89,12 @@ class AdsRoutes {
       name: AppRoutes.nMyAds,
       path: AppRoutes.myAds,
       builder: (_, _) => const AdListingScreen(),
+    ),
+
+    GoRoute(
+      name: AppRoutes.nSellerTips,
+      path: AppRoutes.sellerTips,
+      builder: (context, state) => const SellingTipsScreen(),
     ),
   ];
 }

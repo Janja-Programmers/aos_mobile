@@ -50,6 +50,7 @@ class AdListingScreen extends ConsumerWidget {
                     ),
                     onPrimaryAction: () =>
                         context.pushNamed(AppRoutes.nCreateAd),
+                    onLearnMore: () => context.pushNamed(AppRoutes.nSellerTips),
                   )
                 : AdListingContentView(
                     items: state.items,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/features/home/presentation/components/tips/tip_card.dart';
-import 'package:africaonlinestores/features/home/presentation/components/tips/tip_screen.dart';
+import 'package:africaonlinestores/shared/components/tips/tip_card.dart';
+import 'package:africaonlinestores/shared/components/tips/tip_screen.dart';
 
 class MarketingTipsScreen extends StatelessWidget {
   const MarketingTipsScreen({super.key});

@@ -25,7 +25,7 @@ class AppNavConfig {
         label: l10n.nav_selling,
         icon: Icons.add,
         activeIcon: Icons.add,
-        routeName: AppRoutes.nMyAds,
+        routeName: AppRoutes.nStartSelling,
         requiresAuth: true,
       ),
       AppNavItem(

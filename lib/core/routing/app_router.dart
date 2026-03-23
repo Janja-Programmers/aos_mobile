@@ -18,6 +18,7 @@ import 'package:africaonlinestores/features/home/presentation/screens/ad_details
 import 'package:africaonlinestores/features/onboarding/screens/onboarding_screen.dart';
 import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
 import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart';
+import 'package:africaonlinestores/features/seller/presentation/start_selling_screen.dart';
 
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/core/routing/app_shell.dart';
@@ -148,6 +149,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ...AdsRoutes.routes(),
           ...CatalogRoutes.routes(),
           ...AccountRoutes.routes(),
+          GoRoute(
+            name: AppRoutes.nStartSelling,
+            path: AppRoutes.startSelling,
+            builder: (context, state) => const StartSellingScreen(),
+          ),
         ],
       ),
     ],

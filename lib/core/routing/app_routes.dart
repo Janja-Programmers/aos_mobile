@@ -31,8 +31,8 @@ class AppRoutes {
   static const search = '/search';
 
   // Seller
-  static const sellerBase = '/seller';
-  static const sellerStore = '/seller-detail/:sellerId';
+  static const startSelling = '/seller';
+  static const sellerStore = '/seller/detail/:sellerId';
 
   // Reports
   static const reportAdBase = '/report-ad';
@@ -89,6 +89,7 @@ class AppRoutes {
   static const nPrivacy = 'privacy';
 
   static const nSellerStore = 'sellerStore';
+  static const nStartSelling = 'seller';
   static const nReview = 'review';
   static const nReportAd = 'reportAd';
   static const nCreateReview = 'createReview';

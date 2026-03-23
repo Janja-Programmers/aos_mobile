@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/features/account/shared/utils/avator_image.dart';
 import 'package:flutter/material.dart';
 
@@ -16,6 +17,7 @@ class AdSellerInfoSection extends StatelessWidget {
     required this.totalAds,
     required this.joined,
     required this.isFollowing,
+    this.isVerified = false,
     required this.onVisitStore,
     required this.onReview,
     required this.onReport,
@@ -30,6 +32,7 @@ class AdSellerInfoSection extends StatelessWidget {
   final int totalAds;
   final String joined;
   final bool isFollowing;
+  final bool isVerified;
 
   final VoidCallback onVisitStore;
   final VoidCallback onReview;
@@ -41,7 +44,7 @@ class AdSellerInfoSection extends StatelessWidget {
     final colors = context.appColors;
     final ImageProvider? img = resolveAvatarImage(
       avatar,
-      "Https://aos-staging.m.frappe.cloud",
+      AppConfig.normalizedBaseUrl,
     );
     final initial = shopName.characters.first;
 
@@ -70,23 +73,24 @@ class AdSellerInfoSection extends StatelessWidget {
                       children: [
                         Text(shopName, style: context.pStrong),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(6),
-                            color: colors.success.withOpacity(0.08),
-                          ),
-                          child: Text(
-                            'Verified',
-                            style: context.p.copyWith(
-                              color: colors.success,
-                              fontSize: 12,
+                        if (isVerified)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(6),
+                              color: colors.success.withOpacity(0.08),
+                            ),
+                            child: Text(
+                              'Verified',
+                              style: context.p.copyWith(
+                                color: colors.success,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 4),

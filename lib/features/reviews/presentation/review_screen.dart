@@ -11,6 +11,7 @@ import 'package:africaonlinestores/features/reviews/presentation/widgets/review_
 import 'package:africaonlinestores/features/reviews/presentation/widgets/summary_card.dart';
 
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 
 class ReviewScreen extends ConsumerWidget {
   const ReviewScreen({super.key, required this.adId});
@@ -24,6 +25,7 @@ class ReviewScreen extends ConsumerWidget {
     final state = ref.watch(reviewControllerProvider(adId));
 
     final totalReviews = state.reviews.length;
+    final summary = state.summary;
     final reviews = state.reviews;
 
     return Scaffold(
@@ -42,7 +44,11 @@ class ReviewScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 /// ⭐ SUMMARY CARD
-                SummaryCard(totalReviews: totalReviews),
+                SummaryCard(
+                  totalReviews: summary?.totalReviews ?? 0,
+                  averageRating: summary?.averageRating ?? 0,
+                  distribution: summary?.distribution ?? {},
+                ),
 
                 const SizedBox(height: 16),
 
@@ -63,7 +69,7 @@ class ReviewScreen extends ConsumerWidget {
                 ...reviews.map(
                   (review) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: ReviewCard(review: review),
+                    child: SectionCard(child: ReviewCard(review: review)),
                   ),
                 ),
               ],
@@ -78,11 +84,8 @@ class ReviewScreen extends ConsumerWidget {
                 height: 52,
                 width: double.infinity,
                 child: PrimaryButton(
-                  onPressed: () {
-                    print("ADID: adId");
-
-                    ReviewNavigation.toCreateReview(context, adId);
-                  },
+                  onPressed: () =>
+                      ReviewNavigation.toCreateReview(context, adId),
                   text: 'Write a Review',
                 ),
               ),

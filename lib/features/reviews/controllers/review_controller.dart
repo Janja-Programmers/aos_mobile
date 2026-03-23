@@ -6,6 +6,7 @@ import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/features/reviews/controllers/review_state.dart';
 import 'package:africaonlinestores/features/reviews/data/review_api.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_model.dart';
+import 'package:africaonlinestores/features/reviews/domain/review_summary.dart';
 
 final reviewControllerProvider =
     StateNotifierProvider.family<ReviewController, ReviewState, String>((
@@ -27,7 +28,7 @@ class ReviewController extends StateNotifier<ReviewState> {
   /// Load Reviews
   /// ---------------------------
   Future<void> loadReviews() async {
-    state = state.copyWith(loading: true, error: null);
+    state = state.copyWith(loading: true, clearError: true);
 
     final api = ref.read(reviewApiProvider);
 
@@ -38,7 +39,14 @@ class ReviewController extends StateNotifier<ReviewState> {
         state = state.copyWith(loading: false, error: failure.message);
       },
       (payload) {
-        final items = payload['data']?['reviews'];
+        final data = payload['data'];
+
+        final summaryJson = data?['summary'];
+        final items = data?['reviews'];
+
+        final summary = summaryJson != null
+            ? ReviewSummary.fromJson(Map<String, dynamic>.from(summaryJson))
+            : null;
 
         final reviews = (items is List)
             ? items.map((e) {
@@ -46,7 +54,11 @@ class ReviewController extends StateNotifier<ReviewState> {
               }).toList()
             : <AdReview>[];
 
-        state = state.copyWith(loading: false, reviews: reviews);
+        state = state.copyWith(
+          loading: false,
+          reviews: reviews,
+          summary: summary,
+        );
       },
     );
   }
@@ -93,7 +105,7 @@ class ReviewController extends StateNotifier<ReviewState> {
   /// ---------------------------
   Future<Either<String, void>> toggleReaction({
     required String reviewId,
-    required bool isLikeAction, // true = like, false = dislike
+    required bool isLikeAction,
   }) async {
     final api = ref.read(reviewApiProvider);
 
@@ -113,7 +125,7 @@ class ReviewController extends StateNotifier<ReviewState> {
         // Unlike
         newLiked = false;
         likeCount = (likeCount - 1).clamp(0, 999999);
-        reaction = "Unlike";
+        reaction = "Like";
       } else {
         // Like
         newLiked = true;
@@ -132,7 +144,7 @@ class ReviewController extends StateNotifier<ReviewState> {
         // Undislike
         newDisliked = false;
         dislikeCount = (dislikeCount - 1).clamp(0, 999999);
-        reaction = "Undislike";
+        reaction = "Dislike";
       } else {
         // Dislike
         newDisliked = true;

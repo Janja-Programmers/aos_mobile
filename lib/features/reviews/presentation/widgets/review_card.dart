@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
@@ -30,109 +29,107 @@ class ReviewCard extends StatelessWidget {
         ? '${_month(review.creation!.month)} ${review.creation!.day}, ${review.creation!.year}'
         : '';
 
-    return SectionCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /// HEADER
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: colors.primaryRedSoft,
-                child: Text(
-                  avatarLetter,
-                  style: context.pStrong.copyWith(color: colors.surface),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        /// HEADER
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: colors.primaryRedSoft,
+              child: Text(
+                avatarLetter,
+                style: context.pStrong.copyWith(color: colors.surface),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(review.reviewer, style: context.pStrong),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        _StarRating(rating: review.rating.toInt()),
-                        const SizedBox(width: 8),
-                        Text(
-                          formattedDate,
-                          style: context.p.copyWith(color: colors.textMuted),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(review.reviewer, style: context.pStrong),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      _StarRating(rating: review.rating.toInt()),
+                      const SizedBox(width: 8),
+                      Text(
+                        formattedDate,
+                        style: context.p.copyWith(color: colors.textMuted),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
 
-          const SizedBox(height: 12),
+        const SizedBox(height: 12),
 
-          Text(review.comment, style: context.p),
+        Text(review.comment, style: context.p),
 
-          const SizedBox(height: 14),
+        const SizedBox(height: 14),
 
-          /// FOOTER
-          Row(
-            children: [
-              Text(
-                'Helpful?',
-                style: context.p.copyWith(color: colors.textMuted),
+        /// FOOTER
+        Row(
+          children: [
+            Text(
+              'Helpful?',
+              style: context.p.copyWith(color: colors.textMuted),
+            ),
+
+            const SizedBox(width: 10),
+
+            /// 👍 LIKE
+            GestureDetector(
+              onTap: onLike,
+              child: Row(
+                children: [
+                  Icon(
+                    review.isLiked
+                        ? Icons.thumb_up
+                        : Icons.thumb_up_alt_outlined,
+                    size: 16,
+                    color: review.isLiked ? colors.primary : colors.textMuted,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '(${review.likeCount})',
+                    style: context.p.copyWith(color: colors.textMuted),
+                  ),
+                ],
               ),
+            ),
 
-              const SizedBox(width: 10),
+            const SizedBox(width: 12),
 
-              /// 👍 LIKE
-              GestureDetector(
-                onTap: onLike,
-                child: Row(
-                  children: [
-                    Icon(
-                      review.isLiked
-                          ? Icons.thumb_up
-                          : Icons.thumb_up_alt_outlined,
-                      size: 16,
-                      color: review.isLiked ? colors.primary : colors.textMuted,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '(${review.likeCount})',
-                      style: context.p.copyWith(color: colors.textMuted),
-                    ),
-                  ],
-                ),
+            /// 👎 DISLIKE
+            GestureDetector(
+              onTap: onDislike,
+              child: Row(
+                children: [
+                  Icon(
+                    review.isDisliked
+                        ? Icons.thumb_down
+                        : Icons.thumb_down_alt_outlined,
+                    size: 16,
+                    color: review.isDisliked
+                        ? colors.primary
+                        : colors.textMuted,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '(${review.dislikeCount})',
+                    style: context.p.copyWith(color: colors.textMuted),
+                  ),
+                ],
               ),
-
-              const SizedBox(width: 12),
-
-              /// 👎 DISLIKE
-              GestureDetector(
-                onTap: onDislike,
-                child: Row(
-                  children: [
-                    Icon(
-                      review.isDisliked
-                          ? Icons.thumb_down
-                          : Icons.thumb_down_alt_outlined,
-                      size: 16,
-                      color: review.isDisliked
-                          ? colors.primary
-                          : colors.textMuted,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '(${review.dislikeCount})',
-                      style: context.p.copyWith(color: colors.textMuted),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

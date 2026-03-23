@@ -10,6 +10,7 @@ class AOSSellerProfile {
     required this.totalAds,
     required this.joined,
     required this.isFollowing,
+    required this.isVerified,
   });
 
   final String shopName;
@@ -22,6 +23,7 @@ class AOSSellerProfile {
   final int totalAds;
   final String joined;
   final bool isFollowing;
+  final bool isVerified;
 
   factory AOSSellerProfile.fromJson(Map<String, dynamic> json) {
     double parseDouble(dynamic v) {
@@ -44,7 +46,19 @@ class AOSSellerProfile {
           int.tryParse((json['total_followers'] ?? 0).toString()) ?? 0,
       totalAds: int.tryParse((json['total_ads'] ?? 0).toString()) ?? 0,
       joined: (json['joined'] ?? '').toString(),
-      isFollowing: json['is_following'] == true,
+      isFollowing: json['is_following'].toBool(),
+      isVerified: json['is_verified'].toBool(),
     );
+  }
+}
+
+extension BoolParser on dynamic {
+  bool toBool() {
+    if (this is bool) return this;
+    if (this is int) return this == 1;
+    if (this is String) {
+      return this == '1' || this.toLowerCase() == 'true';
+    }
+    return false;
   }
 }

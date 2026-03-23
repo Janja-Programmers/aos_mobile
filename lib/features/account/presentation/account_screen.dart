@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
+import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,8 +10,8 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/core/theme/theme_controller.dart';
 
-import 'package:africaonlinestores/features/account/ui/widgets/account_guest_header_card.dart';
-import 'package:africaonlinestores/features/account/ui/widgets/account_sections.dart';
+import 'package:africaonlinestores/features/account/presentation/widgets/account_guest_header_card.dart';
+import 'package:africaonlinestores/features/account/presentation/widgets/account_sections.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 
@@ -85,7 +87,27 @@ class AccountScreen extends ConsumerWidget {
               },
             ),
 
-          const SizedBox(height: 18),
+          if (isAuthenticated)
+            AccountCard(
+              child: Column(
+                children: [
+                  AccountOptionTile(
+                    icon: Icons.list_alt_sharp,
+                    title: "My Listings",
+                    onTap: () => AdNavigation.toMyAds(context),
+                  ),
+
+                  AccountOptionTile(
+                    icon: Icons.business_center_outlined,
+                    title: "My Storefront",
+                    onTap: () =>
+                        SellerNavigation.toSellerStore(context, user!.email),
+                  ),
+
+                  const SizedBox(height: 18),
+                ],
+              ),
+            ),
 
           /// Account settings
           AccountSectionTitle(l10n.account_settings),

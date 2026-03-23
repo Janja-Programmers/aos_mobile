@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
-import 'package:africaonlinestores/features/account/ui/widgets/locale_picker_page.dart';
+import 'package:africaonlinestores/shared/components/locale_picker_page.dart';
 import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
 import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
 

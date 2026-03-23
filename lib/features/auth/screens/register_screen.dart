@@ -8,7 +8,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/routing/app_routes.dart';
 import 'package:africaonlinestores/core/utils/validators.dart';
 
-import 'package:africaonlinestores/features/account/ui/legal_docs_widgets.dart';
+import 'package:africaonlinestores/shared/widgets/legal_docs_widgets.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_section.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';

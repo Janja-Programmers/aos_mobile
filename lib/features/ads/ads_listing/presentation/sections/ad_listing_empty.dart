@@ -74,7 +74,10 @@ class AdListingEmptyView extends StatelessWidget {
               onPressed: onLearnMore,
               child: Text(
                 'Learn how to sell faster',
-                style: context.p.copyWith(color: colors.primary),
+                style: context.p.copyWith(
+                  color: colors.primary,
+                  decoration: TextDecoration.underline,
+                ),
               ),
             ),
 

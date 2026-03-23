@@ -102,7 +102,6 @@ class GetVerifiedBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
     final l10n = context.l10n;
 
@@ -110,13 +109,15 @@ class GetVerifiedBanner extends StatelessWidget {
       borderRadius: BorderRadius.circular(14),
       onTap: onTap,
       child: Ink(
-        height: 74,
+        height: 84,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           gradient: LinearGradient(
             colors: [
-              scheme.error.withOpacity(0.95),
-              scheme.error.withOpacity(0.80),
+              colors.red.withOpacity(.85),
+              colors.red.withOpacity(.9),
+              colors.red.withOpacity(.95),
+              colors.red,
             ],
           ),
         ),
@@ -128,7 +129,7 @@ class GetVerifiedBanner extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: colors.surface.withOpacity(0.18),
+                  color: colors.red,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(Icons.verified_outlined, color: colors.white),
@@ -150,8 +151,10 @@ class GetVerifiedBanner extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       l10n.account_boost_trust,
+                      maxLines: 2,
                       style: TextStyle(
                         color: colors.white,
+
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -159,15 +162,19 @@ class GetVerifiedBanner extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(width: 12),
               Container(
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: colors.surface.withOpacity(0.18),
-                  shape: BoxShape.circle,
+                  color: colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  shape: BoxShape.rectangle,
                 ),
-                child: Icon(Icons.arrow_forward, color: colors.white, size: 18),
+                child: Icon(Icons.arrow_forward, color: colors.red, size: 18),
               ),
+
+              const SizedBox(height: 18),
             ],
           ),
         ),

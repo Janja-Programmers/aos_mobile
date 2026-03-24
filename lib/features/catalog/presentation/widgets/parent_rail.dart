@@ -48,11 +48,11 @@ class ParentsRail extends StatelessWidget {
               decoration: BoxDecoration(
                 color: selected
                     ? scheme.primary.withOpacity(0.08)
-                    : Colors.transparent,
+                    : context.appColors.surface,
                 border: Border(
                   left: BorderSide(
                     width: 3,
-                    color: selected ? scheme.primary : Colors.transparent,
+                    color: selected ? scheme.primary : context.appColors.surface,
                   ),
                 ),
               ),

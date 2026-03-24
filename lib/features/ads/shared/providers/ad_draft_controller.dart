@@ -9,6 +9,8 @@ import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:africaonlinestores/features/files/data/files_api_provider.dart';
+
 import 'package:africaonlinestores/shared/enums/ads.dart';
 
 final adDraftControllerProvider =
@@ -290,7 +292,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
     _deletingFiles.add(fileId);
 
-    final api = _ref.read(adsApiProvider);
+    final api = _ref.read(filesApiProvider);
 
     await api.deleteFile(fileId: fileId);
 
@@ -302,7 +304,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
       return Either.left(const Failure("Invalid image index"));
     }
 
-    final api = _ref.read(adsApiProvider);
+    final api = _ref.read(filesApiProvider);
 
     final image = _draft.images[index];
 
@@ -337,7 +339,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
   // ----------------- EDIT IMAGE -----------------
   Future<void> replaceImageAt(int index, File file) async {
-    final api = _ref.read(adsApiProvider);
+    final api = _ref.read(filesApiProvider);
 
     final old = _draft.images[index];
 
@@ -360,7 +362,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   }
 
   Future<Either<Failure, String>> uploadAndAddImage(File file) async {
-    final api = _ref.read(adsApiProvider);
+    final api = _ref.read(filesApiProvider);
     final res = await api.uploadMedia(file: file);
 
     if (res.isLeft) return Either.left(res.leftOrNull!);
@@ -377,7 +379,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   }
 
   Future<Either<Failure, String>> uploadAndSetVideo(File file) async {
-    final api = _ref.read(adsApiProvider);
+    final api = _ref.read(filesApiProvider);
     final res = await api.uploadMedia(file: file);
 
     if (res.isLeft) return Either.left(res.leftOrNull!);

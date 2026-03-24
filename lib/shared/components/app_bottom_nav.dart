@@ -97,7 +97,7 @@ class _NavItem extends StatelessWidget {
             decoration: BoxDecoration(
               color: active
                   ? context.appColors.primary.withOpacity(0.1)
-                  : Colors.transparent,
+                  : context.appColors.surface,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(

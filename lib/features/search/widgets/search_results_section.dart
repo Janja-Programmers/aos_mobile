@@ -54,7 +54,7 @@ class SearchResultsSection extends StatelessWidget {
         final ad = items[i];
 
         return Material(
-          color: Colors.transparent,
+          color: context.appColors.surface,
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
             onTap: () => onTapItem(ad.id),

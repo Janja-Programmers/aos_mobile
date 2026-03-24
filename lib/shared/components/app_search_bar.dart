@@ -104,8 +104,10 @@ class _AppSearchBarState extends State<AppSearchBar> {
                       hintText: widget.hintText,
                       hintStyle: TextStyle(color: colors.textMuted),
                       border: InputBorder.none,
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.transparent),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: context.appColors.surface,
+                        ),
                       ),
                       isDense: true,
                     ),

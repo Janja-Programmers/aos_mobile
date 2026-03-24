@@ -41,7 +41,7 @@ class PrimaryButton extends StatelessWidget {
     final disBorder = disabledBorderColor ?? colors.textPrimary;
     final disFg = disabledTextColor ?? colors.textPrimary;
 
-    final bgColor = isDisabled ? Colors.transparent : activeBg;
+    final bgColor = isDisabled ? colors.surface : activeBg;
     final fgColor = isDisabled ? disFg : activeFg;
 
     // If disabled but we want a tap action, we can't rely on ElevatedButton's disabled state.

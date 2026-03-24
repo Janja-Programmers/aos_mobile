@@ -179,7 +179,7 @@ extension AppTextStylesY on BuildContext {
       _base(size: 12, weight: FontWeight.w400, color: appColors.textMuted);
 
   TextStyle get errorText =>
-      _base(size: 13, weight: FontWeight.w400, color: Colors.red);
+      _base(size: 13, weight: FontWeight.w400, color: appColors.red);
 
   // ---------- Navigation ----------
 
@@ -192,18 +192,18 @@ extension AppTextStylesY on BuildContext {
   // ---------- Carousel ----------
 
   TextStyle get carouselTitle =>
-      _base(size: 22, weight: FontWeight.w800, color: Colors.white);
+      _base(size: 22, weight: FontWeight.w800, color: appColors.white);
 
   TextStyle get carouselSubtitle => _base(
     size: 14,
     weight: FontWeight.w600,
-    color: Colors.white.withOpacity(0.9),
+    color: appColors.white.withOpacity(0.9),
   );
 
   TextStyle get carouselDescription => _base(
     size: 12,
     weight: FontWeight.w400,
-    color: Colors.white.withOpacity(0.7),
+    color: appColors.white.withOpacity(0.7),
   );
 }
 

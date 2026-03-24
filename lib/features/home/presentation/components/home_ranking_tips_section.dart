@@ -96,7 +96,7 @@ class _Card extends StatelessWidget {
     return SizedBox(
       width: 240,
       child: Material(
-        color: Colors.transparent,
+        color: context.appColors.surface,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(22),

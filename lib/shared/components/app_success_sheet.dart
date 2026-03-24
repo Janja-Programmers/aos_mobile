@@ -39,7 +39,7 @@ class AppSuccessSheet extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Material(
-          color: Colors.transparent,
+          color: context.appColors.surface,
           child: Container(
             padding: EdgeInsets.fromLTRB(
               22,

@@ -69,9 +69,7 @@ class PriceVisibilityToggle extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected
-              ? colors.primary.withOpacity(0.2)
-              : Colors.transparent,
+          color: selected ? colors.primary.withOpacity(0.2) : colors.surface,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(

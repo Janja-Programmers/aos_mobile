@@ -51,8 +51,8 @@ class SearchBarSection extends StatelessWidget {
                   hintText: "Search here...",
                   border: InputBorder.none,
                   hintStyle: TextStyle(color: colors.textMuted),
-                  focusedBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.transparent),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: context.appColors.surface),
                   ),
                 ),
               ),

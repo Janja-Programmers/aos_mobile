@@ -1,25 +1,24 @@
-import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
-import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 
-import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/config/app_config.dart';
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/theme_controller.dart';
 
 import 'package:africaonlinestores/features/account/presentation/widgets/account_guest_header_card.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/account_sections.dart';
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
+import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart';
 
 import 'package:africaonlinestores/shared/components/account_option_tile.dart';
 import 'package:africaonlinestores/shared/components/app_confirm_sheet.dart';
 import 'package:africaonlinestores/shared/components/app_switch_tile.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -82,9 +81,7 @@ class AccountScreen extends ConsumerWidget {
           /// Verified banner (only for logged in users)
           if (isAuthenticated)
             GetVerifiedBanner(
-              onTap: () {
-                ShowSnack(context, 'Coming Soon!').info();
-              },
+              onTap: () => SellerNavigation.toSellerVerification(context),
             ),
 
           if (isAuthenticated)
@@ -187,7 +184,7 @@ class AccountScreen extends ConsumerWidget {
                   await showModalBottomSheet<void>(
                     context: parentContext,
                     isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
+                    backgroundColor: context.appColors.surface,
                     builder: (sheetContext) {
                       return AppConfirmSheet(
                         icon: Icons.warning_rounded,

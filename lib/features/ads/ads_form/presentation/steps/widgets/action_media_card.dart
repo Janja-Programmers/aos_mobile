@@ -27,7 +27,7 @@ class ActionMediaCard extends StatelessWidget {
         height: 50,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.transparent,
+          color: colors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: colors.border),
         ),

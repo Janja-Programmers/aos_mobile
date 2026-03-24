@@ -27,7 +27,7 @@ class GoogleButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: loading ? null : onPressed,
         style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.transparent,
+          backgroundColor: context.appColors.surface,
           foregroundColor: context.appColors.primary,
           side: BorderSide(color: colors.border),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14),),

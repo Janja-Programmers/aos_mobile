@@ -282,7 +282,6 @@ class AdDraft {
 
   factory AdDraft.fromDraft(Map<String, dynamic> json) {
     final data = (json['item'] ?? {}) as Map<String, dynamic>;
-    print("JSON RECEIVED INTO FROMDRAFT: ${data.toString()}");
     // -------------------------------
     // BASIC (fallback to hint fields)
     // -------------------------------

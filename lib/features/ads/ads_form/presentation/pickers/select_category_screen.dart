@@ -55,7 +55,7 @@ class SelectCategoryScreen extends ConsumerWidget {
           final iconUrl = buildCategoryIconUrl(n.icon);
 
           return Material(
-            color: Colors.transparent,
+            color: colors.surface,
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () async {

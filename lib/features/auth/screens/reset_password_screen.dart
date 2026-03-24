@@ -73,7 +73,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
           await showModalBottomSheet(
             context: context,
             isScrollControlled: false,
-            backgroundColor: Colors.transparent,
+            backgroundColor: context.appColors.surface,
             builder: (_) => AppSuccessSheet(
               title: l10n.auth_password_updated_title,
               message: l10n.auth_password_updated_message,

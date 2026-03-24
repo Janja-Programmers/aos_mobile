@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:africaonlinestores/shared/components/app_success_sheet.dart';
 import 'package:africaonlinestores/shared/components/app_text_fields.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class PasswordSecurityScreen extends ConsumerStatefulWidget {
   const PasswordSecurityScreen({super.key});
@@ -68,7 +68,7 @@ class _PasswordSecurityScreenState
         await showModalBottomSheet(
           context: parentContext,
           isScrollControlled: true,
-          backgroundColor: Colors.transparent,
+          backgroundColor: context.appColors.surface,
           builder: (_) => AppSuccessSheet(
             title: 'Password Updated\nSuccessfully',
             message: msg,
@@ -227,7 +227,7 @@ class _SegmentButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
 
     return InkWell(
       borderRadius: _pill,
@@ -236,7 +236,7 @@ class _SegmentButton extends StatelessWidget {
         height: 36,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? scheme.primary : Colors.transparent,
+          color: selected ? colors.primary : colors.surface,
           borderRadius: _pill,
         ),
         child: selected

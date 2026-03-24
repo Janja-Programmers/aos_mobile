@@ -114,8 +114,8 @@ class _AppCarouselState extends State<AppCarousel> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Colors.black.withOpacity(0.15),
-                              Colors.black.withOpacity(0.35),
+                              colors.black.withOpacity(0.15),
+                              colors.black.withOpacity(0.35),
                             ],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,

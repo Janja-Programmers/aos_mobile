@@ -66,7 +66,7 @@ class DsTypography {
 
   /// 16 / w600
   static TextStyle button(BuildContext context) =>
-      _base(size: 16, weight: FontWeight.w600, color: Colors.white);
+      _base(size: 16, weight: FontWeight.w600, color: context.appColors.white);
 
   /// 13 / w500
   static TextStyle chip(BuildContext context) => _base(

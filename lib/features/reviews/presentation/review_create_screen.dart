@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/features/files/data/files_api_provider.dart';
 import 'package:africaonlinestores/features/reviews/controllers/review_create_controller.dart';
 import 'package:africaonlinestores/features/reviews/presentation/widgets/image_picker_bottom_sheet.dart';
 
@@ -10,7 +11,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
-import 'package:africaonlinestores/shared/media/review_media_helper.dart';
+import 'package:africaonlinestores/shared/media/media_helper.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ReviewCreateScreen extends ConsumerStatefulWidget {
@@ -30,6 +31,8 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
 
   final List<File> _images = [];
 
+  static const int maxImages = 4;
+
   double _rating = 0.0;
 
   @override
@@ -38,14 +41,25 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
     _commentCtrl.addListener(() => setState(() {}));
   }
 
+  // -------------------------
+  // PICK IMAGE
+  // -------------------------
+
   Future<void> _pickImage() async {
-    if (_images.length >= ReviewMediaHelper.maxImages) return;
+    if (_images.length >= maxImages) {
+      ShowSnack(context, 'Maximum $maxImages images allowed').error();
+      return;
+    }
 
     final file = await showImageSourcePicker(context);
     if (file == null) return;
 
     setState(() => _images.add(file));
   }
+
+  // -------------------------
+  // SUBMIT
+  // -------------------------
 
   Future<void> _submit() async {
     if (_rating == 0) {
@@ -57,7 +71,12 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
 
     final ctrl = ref.read(reviewCreateControllerProvider(widget.adId).notifier);
 
-    final imageUrls = await ReviewMediaHelper.upload(ref: ref, files: _images);
+    // ✅ Upload using new MediaHelper
+    final imageUrls = await MediaHelper.uploadMultiple(
+      ref: ref,
+      files: _images,
+      uploadFn: (file) => ref.read(filesApiProvider).uploadMedia(file: file),
+    );
 
     final success = await ctrl.submit(
       rating: _rating,
@@ -77,6 +96,10 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
       ShowSnack(context, state.error ?? 'Something went wrong').error();
     }
   }
+
+  // -------------------------
+  // DISABLED TAP HANDLER
+  // -------------------------
 
   void _handleDisabledTap() {
     if (_rating == 0) {
@@ -106,6 +129,10 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
     ).applyDefaults(Theme.of(context).inputDecorationTheme);
   }
 
+  // -------------------------
+  // STARS
+  // -------------------------
+
   Widget buildStars() {
     final colors = context.appColors;
 
@@ -124,6 +151,10 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
       }),
     );
   }
+
+  // -------------------------
+  // IMAGE PREVIEW
+  // -------------------------
 
   Widget _preview() {
     final colors = context.appColors;
@@ -166,6 +197,10 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
       }).toList(),
     );
   }
+
+  // -------------------------
+  // BUILD
+  // -------------------------
 
   @override
   Widget build(BuildContext context) {

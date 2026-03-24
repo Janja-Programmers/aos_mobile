@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/ads/ads_form/controllers/ad_form_actions_controller.dart';
@@ -144,7 +145,7 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
       final action = await showModalBottomSheet<CancelAction>(
         context: context,
         isScrollControlled: true,
-        backgroundColor: Colors.transparent,
+        backgroundColor: context.appColors.surface,
         builder: (_) => SaveDraftConfirmSheet(draft: draft, schema: schema),
       );
 

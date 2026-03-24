@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/core.dart';
+
 class MediaAddTile extends StatelessWidget {
   final VoidCallback onTap;
   final String label;
@@ -16,11 +18,13 @@ class MediaAddTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return GestureDetector(
       onTap: loading ? null : onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.grey.shade200,
+          color: colors.surface,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Center(
@@ -29,7 +33,7 @@ class MediaAddTile extends StatelessWidget {
               : Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon, color: Colors.red),
+                    Icon(icon, color: colors.red),
                     const SizedBox(height: 6),
                     Text(label),
                   ],

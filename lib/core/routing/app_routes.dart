@@ -45,6 +45,10 @@ class AppRoutes {
   static const review = '/review';
   static const createReview = '/review/create-review/:adId';
 
+  // Chat
+  static const chats = '/chats';
+  static const messages = '/chats/message/:conversationId';
+
   // Ads - static paths first
   static const allAds = '/ads/all';
   static const adList = '/ads/list';
@@ -97,4 +101,7 @@ class AppRoutes {
   static const nReview = 'review';
   static const nReportAd = 'reportAd';
   static const nCreateReview = 'createReview';
+
+  static const nChats = 'chats';
+  static const nMessages = 'chatMessage';
 }

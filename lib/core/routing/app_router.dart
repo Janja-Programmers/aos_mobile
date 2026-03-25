@@ -14,6 +14,7 @@ import 'package:africaonlinestores/features/auth/shared/providers/auth_controlle
 import 'package:africaonlinestores/features/auth/shared/routing/auth_routes.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
+import 'package:africaonlinestores/features/chats/navigation/chat_routes.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_details_screen.dart';
 import 'package:africaonlinestores/features/onboarding/screens/onboarding_screen.dart';
 import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
@@ -149,6 +150,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ...AdsRoutes.routes(),
           ...CatalogRoutes.routes(),
           ...AccountRoutes.routes(),
+          ...ChatRoutes.routes(),
+
           GoRoute(
             name: AppRoutes.nStartSelling,
             path: AppRoutes.startSelling,

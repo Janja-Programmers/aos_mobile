@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'package:africaonlinestores/core/config/app_config.dart';
+import 'package:africaonlinestores/features/chats/controllers/chat_providers.dart';
+import 'package:africaonlinestores/features/chats/data/chat_realtime_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -41,12 +44,17 @@ class AuthController extends StateNotifier<AuthState> {
        _api = api,
        _apiClient = apiClient,
        _storage = storage,
-       super(AuthState.initial());
+       super(AuthState.initial()) {
+    _realtime = ref.read(chatRealtimeServiceProvider);
+  }
 
   final Ref _ref;
   final AuthApi _api;
   final ApiClient _apiClient;
   final SessionStorage _storage;
+
+  late final ChatRealtimeService _realtime;
+
   bool _isLoggingOut = false;
 
   final _changesCtrl = StreamController<void>.broadcast();
@@ -64,6 +72,39 @@ class AuthController extends StateNotifier<AuthState> {
     _emit();
   }
 
+  /// SESSISON Refreshing
+  Future<bool> _refreshSession() async {
+    final sid = await _storage.getSid();
+    if (sid == null || sid.isEmpty) return false;
+
+    try {
+      await _apiClient.setSid(sid);
+      final res = await _api.me();
+
+      if (res.isLeft) return false;
+
+      final payload = res.rightOrNull ?? {};
+      if (payload['ok'] != true) return false;
+
+      final user = Map<String, dynamic>.from(payload['data']?['user'] ?? {});
+      state = state.copyWith(
+        isLoggedIn: true,
+        sid: sid,
+        user: AuthUser.fromMap(user),
+        clearError: true,
+      );
+
+      // Reconnect socket if needed
+      _realtime.connect(baseUrl: AppConfig.normalizedBaseUrl, sid: sid);
+      await _syncUserPreferences();
+      _emit();
+
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Initialize session from SharedPreferences
   Future<void> init() async {
     try {
@@ -71,7 +112,13 @@ class AuthController extends StateNotifier<AuthState> {
         if (!state.isAuthenticated || _isLoggingOut) return;
 
         _isLoggingOut = true;
-        await logout();
+
+        // Try silent refresh first
+        final refreshed = await _refreshSession();
+        if (!refreshed) {
+          await logout();
+        }
+
         _isLoggingOut = false;
       });
 
@@ -99,17 +146,7 @@ class AuthController extends StateNotifier<AuthState> {
 
       final user = Map<String, dynamic>.from(payload['data']?['user'] ?? {});
 
-      state = state.copyWith(
-        initializing: false,
-        isLoggedIn: true,
-        sid: sid,
-        user: AuthUser.fromMap(user),
-        clearError: true,
-      );
-
-      await _syncUserPreferences();
-
-      _emit();
+      await _completeLogin(sid: sid, user: user);
     } catch (_) {
       await _clearSession();
     }
@@ -186,30 +223,10 @@ class AuthController extends StateNotifier<AuthState> {
       return Either.left(const Failure('Login failed (no session).'));
     }
 
-    await _apiClient.setSid(sid);
-    await _storage.setSid(sid);
-
-    await _storage.setRememberMe(rememberMe);
-    if (rememberMe) {
-      await _storage.setRememberedEmail(email);
-    } else {
-      await _storage.clearRememberedEmail();
-    }
-
-    // Update auth state
-    state = state.copyWith(
-      initializing: false,
-      isLoggedIn: true,
+    await _completeLogin(
       sid: sid,
-      user: AuthUser.fromMap(Map<String, dynamic>.from(data['user'] ?? {})),
-      clearError: true,
+      user: Map<String, dynamic>.from(data['user'] ?? {}),
     );
-
-    // Sync preferences from server → SharedPreferences
-    await _syncUserPreferences();
-
-    _emit();
-    _ref.invalidate(wishlistControllerProvider);
 
     return Either.right(null);
   }
@@ -219,6 +236,7 @@ class AuthController extends StateNotifier<AuthState> {
       await _api.logout();
     } catch (_) {}
 
+    _realtime.disconnect();
     await _clearSession();
     _ref.invalidate(wishlistControllerProvider);
   }
@@ -386,20 +404,10 @@ class AuthController extends StateNotifier<AuthState> {
         return Either.left(const Failure('No session returned.'));
       }
 
-      await _apiClient.setSid(sid);
-      await _storage.setSid(sid);
-
-      state = state.copyWith(
-        isLoggedIn: true,
+      await _completeLogin(
         sid: sid,
-        user: AuthUser.fromMap(Map<String, dynamic>.from(data['user'] ?? {})),
-        clearError: true,
+        user: Map<String, dynamic>.from(data['user'] ?? {}),
       );
-
-      await _syncUserPreferences();
-
-      _emit();
-      _ref.invalidate(wishlistControllerProvider);
 
       return Either.right(null);
     } catch (e) {
@@ -445,20 +453,10 @@ class AuthController extends StateNotifier<AuthState> {
         return Either.left(const Failure('No session returned.'));
       }
 
-      await _apiClient.setSid(sid);
-      await _storage.setSid(sid);
-
-      state = state.copyWith(
-        isLoggedIn: true,
+      await _completeLogin(
         sid: sid,
-        user: AuthUser.fromMap(Map<String, dynamic>.from(data['user'] ?? {})),
-        clearError: true,
+        user: Map<String, dynamic>.from(data['user'] ?? {}),
       );
-
-      await _syncUserPreferences();
-
-      _emit();
-      _ref.invalidate(wishlistControllerProvider);
 
       return Either.right(null);
     } catch (e) {
@@ -472,10 +470,35 @@ class AuthController extends StateNotifier<AuthState> {
     return (remember, remember ? email : '');
   }
 
+  Future<void> _completeLogin({
+    required String sid,
+    required Map<String, dynamic> user,
+  }) async {
+    await _apiClient.setSid(sid);
+    await _storage.setSid(sid);
+
+    state = state.copyWith(
+      initializing: false,
+      isLoggedIn: true,
+      sid: sid,
+      user: AuthUser.fromMap(user),
+      clearError: true,
+    );
+
+    // 🔥 CONNECT REALTIME HERE (centralized)
+    _realtime.connect(baseUrl: AppConfig.normalizedBaseUrl, sid: sid);
+
+    await _syncUserPreferences();
+
+    _emit();
+    _ref.invalidate(wishlistControllerProvider);
+  }
+
   @override
   void dispose() {
     _sessionSub?.cancel();
     _changesCtrl.close();
+    _realtime.disconnect();
     super.dispose();
   }
 }

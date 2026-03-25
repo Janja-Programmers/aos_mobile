@@ -9,8 +9,9 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 
-import 'package:africaonlinestores/features/home/presentation/controller/ad_detail_controller.dart';
 import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';
+import 'package:africaonlinestores/features/chats/utils/chart_actions.dart';
+import 'package:africaonlinestores/features/home/presentation/controller/ad_detail_controller.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_seller_store_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ads_header_info_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/image_header_section.dart';
@@ -225,7 +226,19 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
               ),
 
               /// ACTION BAR
-              AdDetailActionBar(onCall: () {}, onMessage: () {}),
+              AdDetailActionBar(
+                onCall: () {},
+
+                onMessage: () {
+                  ChatActions.startChat(
+                    context: context,
+                    ref: ref,
+                    user: ad.sellerId,
+                    displayName: ad.sellerId,
+                    initialMessage: "Hi, I'm interested in ${ad.title}",
+                  );
+                },
+              ),
             ],
           );
         },

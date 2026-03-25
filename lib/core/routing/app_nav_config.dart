@@ -32,7 +32,7 @@ class AppNavConfig {
         label: l10n.nav_contact,
         icon: Icons.chat_bubble_outline,
         activeIcon: Icons.chat_bubble,
-        routeName: AppRoutes.nHome,
+        routeName: AppRoutes.nChats,
       ),
       AppNavItem(
         label: l10n.nav_account,

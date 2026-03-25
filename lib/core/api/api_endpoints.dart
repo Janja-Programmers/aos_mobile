@@ -99,4 +99,20 @@ class ApiEndpoints {
       '/api/method/aos.api.accounts.get_my_preference';
   static final String updatePreferencesEndpoint =
       '/api/method/aos.api.accounts.update_my_preference';
+
+  // Chat Endpoints
+  static final String openConversationEndpoint =
+      '/api/method/aos.api.chat.open_conversation';
+  static final String listConversationsEndpoint =
+      '/api/method/aos.api.chat.list_conversations';
+  static final String deleteConversationEndpoint =
+      '/api/method/aos.api.chat.delete_conversation';
+  static final String sendMessageEndpoint =
+      '/api/method/aos.api.chat.send_message';
+  static final String listMessagesEndpoint =
+      '/api/method/aos.api.chat.list_messages';
+  static final String markDeliveredEndpoint =
+      '/api/method/aos.api.chat.mark_delivered';
+  static final String markReadEndpoint = '/api/method/aos.api.chat.mark_read';
+  static final String typingEndpoint = '/api/method/aos.api.chat.typing';
 }

@@ -4,6 +4,7 @@ class RouteGuards {
   static const _protectedPrefixes = [
     AppRoutes.sellerStore,
     AppRoutes.myAds,
+    AppRoutes.chats,
     AppRoutes.createAd,
     AppRoutes.updateProfile,
     AppRoutes.reportAdBase,

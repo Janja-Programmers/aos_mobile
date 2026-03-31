@@ -40,7 +40,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onChatOpened();
     });
@@ -75,7 +74,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (_sentInitial) return;
 
     final text = widget.initialMessage;
-
     if (text == null || text.trim().isEmpty) return;
 
     final messagesState = ref.read(
@@ -96,6 +94,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
 
     await controller.sendTempMessage(text);
+    _scrollToBottom();
   }
 
   @override
@@ -138,6 +137,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 return ListView.builder(
                   controller: _scrollController,
                   reverse: true,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final msg = messages[messages.length - 1 - index];
@@ -152,8 +152,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           // -------------------------
           // Typing indicator
           // -------------------------
-          if (!isTyping) const SizedBox.shrink(),
-          TypingIndicator(isTyping: isTyping),
+          if (isTyping) const TypingIndicator(isTyping: true),
 
           // -------------------------
           // Input
@@ -163,15 +162,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               final notifier = ref.read(
                 chatMessagesControllerProvider(widget.conversationId).notifier,
               );
-
               await notifier.sendTempMessage(text);
-
               _scrollToBottom();
             },
-
-            onTyping: (isTyping) {
+            onTyping: (_) {
+              // -------------------------
+              // Debounced typing (2 sec)
+              // -------------------------
               _typingTimer?.cancel();
-
               ref
                   .read(chatRepositoryProvider)
                   .sendTyping(
@@ -204,5 +202,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         );
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _typingTimer?.cancel();
+    super.dispose();
   }
 }

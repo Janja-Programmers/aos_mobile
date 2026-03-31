@@ -15,32 +15,37 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _controller,
-            onChanged: (text) {
-              widget.onTyping(text.isNotEmpty);
-            },
-            decoration: const InputDecoration(
-              hintText: "Type a message...",
-              border: InputBorder.none,
+    final inputDecorationTheme = Theme.of(context).inputDecorationTheme;
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              onChanged: (text) {
+                widget.onTyping(text.isNotEmpty);
+              },
+              decoration: const InputDecoration(
+                hintText: "Type a message...",
+                border: InputBorder.none,
+              )..applyDefaults(inputDecorationTheme),
             ),
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.send),
-          onPressed: () {
-            final text = _controller.text.trim();
-            if (text.isEmpty) return;
+          IconButton(
+            icon: const Icon(Icons.send),
+            onPressed: () {
+              final text = _controller.text.trim();
+              if (text.isEmpty) return;
 
-            widget.onSend(text);
-            _controller.clear();
-            widget.onTyping(false);
-          },
-        ),
-      ],
+              widget.onSend(text);
+              _controller.clear();
+              widget.onTyping(false);
+            },
+          ),
+        ],
+      ),
     );
   }
 }

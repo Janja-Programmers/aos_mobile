@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/features/ads/ads_all/controllers/all_ads_params.dart';
+import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,6 +26,7 @@ class AllAdsScreen extends ConsumerWidget {
     required this.parentCategoryId,
     this.initialCategoryId,
     this.dealType = DealType.all,
+    this.sort,
     this.showPills = true,
     this.bannerUrl,
     this.mode = AllAdsMode.normal,
@@ -32,23 +35,23 @@ class AllAdsScreen extends ConsumerWidget {
   final String? parentCategoryId;
   final String? initialCategoryId;
   final DealType dealType;
+  final AdsSort? sort;
   final bool showPills;
   final String? bannerUrl;
   final AllAdsMode mode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.read(allAdsControllerProvider.notifier);
-    final state = ref.watch(allAdsControllerProvider);
+    final params = AllAdsParams(
+      parentCategoryId: parentCategoryId,
+      initialCategoryId: initialCategoryId,
+      dealType: dealType,
+      sort: sort,
+      mode: mode,
+    );
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.init(
-        parentCategoryId: parentCategoryId,
-        initialCategoryId: initialCategoryId,
-        dealType: dealType,
-        mode: mode,
-      );
-    });
+    final state = ref.watch(allAdsControllerProvider(params));
+    final controller = ref.read(allAdsControllerProvider(params).notifier);
 
     // final isWishlist = mode == AllAdsMode.wishlist;
 
@@ -100,18 +103,18 @@ class AllAdsScreen extends ConsumerWidget {
             ),
 
             /// 4️⃣ SORT / FILTER ROW
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: StickyHeaderDelegate(
-                height: 56,
-                child: ViewToggleBar(
-                  view: state.view,
-                  onToggle: controller.toggleView,
-                  onSort: () => showSortSheet(context),
-                  onFilter: () => showFilterSheet(context),
-                ),
-              ),
-            ),
+            // SliverPersistentHeader(
+            //   pinned: true,
+            //   delegate: StickyHeaderDelegate(
+            //     height: 56,
+            //     child: ViewToggleBar(
+            //       view: state.view,
+            //       onToggle: controller.toggleView,
+            //       onSort: () => showSortSheet(context),
+            //       onFilter: () => showFilterSheet(context),
+            //     ),
+            //   ),
+            // ),
 
             /// CONTENT
             _buildContent(state, context),
@@ -163,15 +166,21 @@ class AllAdsScreen extends ConsumerWidget {
     if (state.view == ViewMode.grid) {
       final width = MediaQuery.of(context).size.width;
 
-      final aspectRatio = width < 360 ? 0.58 : 0.62;
+      double aspectRatio;
+
+      if (width < 360) {
+        aspectRatio = 0.58;
+      } else {
+        aspectRatio = 0.8;
+      }
 
       return SliverPadding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         sliver: SliverGrid(
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 16,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 12,
             childAspectRatio: aspectRatio,
           ),
           delegate: SliverChildBuilderDelegate((context, i) {

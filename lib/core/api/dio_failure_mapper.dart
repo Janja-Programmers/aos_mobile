@@ -38,6 +38,10 @@ Failure mapDioException(DioException e) {
   final status = e.response?.statusCode;
   final messageFromServer = _extractServerMessage(e.response?.data);
 
+  print('STATUS: $status');
+  print('RAW RESPONSE: ${e.response?.data}');
+  print('EXTRACTED MESSAGE: $messageFromServer');
+
   if (status == 401) {
     return Failure(
       messageFromServer ?? 'Unauthorized. Please log in again.',
@@ -70,6 +74,14 @@ Failure mapDioException(DioException e) {
     );
   }
 
+  if (status == 417) {
+    return Failure(
+      messageFromServer ?? 'Request failed.',
+      statusCode: status,
+      type: FailureType.server,
+    );
+  }
+
   if (status != null && status >= 500) {
     return Failure(
       messageFromServer ?? 'Server error. Please try again later.',
@@ -92,15 +104,24 @@ String? _extractServerMessage(dynamic data) {
   // 3) {ok: false, message: "..."}
   try {
     if (data is Map) {
+      // 🔥 Handle Frappe errors
+      if (data['_server_messages'] != null) {
+        final messages = data['_server_messages'];
+        if (messages is List && messages.isNotEmpty) {
+          final parsed = messages.first;
+          if (parsed is String) {
+            final decoded = parsed;
+            return decoded;
+          }
+        }
+      }
+
       final msg = data['message'];
       if (msg is Map && msg['message'] != null) {
         return msg['message'].toString();
       }
       if (msg != null && msg is! Map) {
         return msg.toString();
-      }
-      if (data['message'] != null && data['message'] is! Map) {
-        return data['message'].toString();
       }
     }
   } catch (_) {

@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/shared/enums/ads_mode.dart';
+import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
@@ -13,6 +14,7 @@ class AllAdsState {
     this.view = ViewMode.grid,
     this.selectedCategoryId,
     this.selectedDealType = DealType.all,
+    this.selectedSort,
     this.children = const [],
   });
 
@@ -30,6 +32,8 @@ class AllAdsState {
   /// Active deals pill
   final DealType selectedDealType;
 
+  final AdsSort? selectedSort;
+
   /// Children of parent category
   final List<CategoryNode> children;
 
@@ -42,6 +46,7 @@ class AllAdsState {
     ViewMode? view,
     String? selectedCategoryId,
     DealType? selectedDealType,
+    AdsSort? selectedSort,
     List<CategoryNode>? children,
   }) {
     return AllAdsState(
@@ -53,6 +58,7 @@ class AllAdsState {
       view: view ?? this.view,
       selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
       selectedDealType: selectedDealType ?? this.selectedDealType,
+      selectedSort: selectedSort ?? this.selectedSort,
       children: children ?? this.children,
     );
   }

@@ -28,12 +28,15 @@ class AdGridCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            AdCardImage(ad: ad, height: 100),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+              child: AdCardImage(ad: ad, height: 85),
+            ),
 
             SizedBox(
-              height: 130,
+              // height: 90,
               child: Padding(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
                 child: AdCardBody(ad: ad),
               ),
             ),

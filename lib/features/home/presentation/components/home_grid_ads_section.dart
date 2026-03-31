@@ -28,7 +28,7 @@ class GridAdsSection extends StatelessWidget {
     if (width < 360) {
       aspectRatio = 0.58;
     } else {
-      aspectRatio = isService ? 0.56 : 0.62;
+      aspectRatio = isService ? 0.78 : 0.8;
     }
 
     return SliverMainAxisGroup(
@@ -38,12 +38,12 @@ class GridAdsSection extends StatelessWidget {
         ),
 
         SliverPadding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           sliver: SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 16,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 12,
               childAspectRatio: aspectRatio,
             ),
             delegate: SliverChildBuilderDelegate((context, i) {

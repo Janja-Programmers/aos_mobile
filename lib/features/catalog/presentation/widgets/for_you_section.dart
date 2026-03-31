@@ -40,7 +40,7 @@ class _ForYouContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 220,
+      height: 300,
       child: HorizontalAdsSectionBox(
         title: 'For you',
         items: items,

@@ -21,6 +21,7 @@ import 'package:africaonlinestores/features/home/shared/providers/similar_ads_pr
 import 'package:africaonlinestores/features/reviews/controllers/review_controller.dart';
 import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
 import 'package:africaonlinestores/features/reviews/presentation/sections/review_ad_section.dart';
+import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
 import 'package:africaonlinestores/features/seller/providers/seller_profile_provider.dart';
 import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart';
 
@@ -66,9 +67,9 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
             child: AppSearchBar(
               readOnly: true,
               controller: _searchCtrl,
-              onTap: () => context.pushNamed(AppRoutes.nSearch),
-              onMicTap: () => context.pushNamed(AppRoutes.nSearch),
-              onCameraTap: () => context.pushNamed(AppRoutes.nSearch),
+              onTap: () => SearchNavigation.toSearchscreen(context),
+              onMicTap: () => SearchNavigation.toSearchscreen(context),
+              onCameraTap: () => SearchNavigation.toSearchscreen(context),
             ),
           ),
         ),
@@ -158,25 +159,24 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
 
                     /// ✅ FIXED: Only affect reviews section
                     if (reviewState.loading)
-                      const Center(child: CircularProgressIndicator())
+                      const SizedBox.shrink()
                     else if (reviewState.error != null)
-                      Text('Error: ${reviewState.error}')
+                      const SizedBox.shrink()
                     else if (reviewState.reviews.isEmpty)
                       const SizedBox.shrink()
                     else
-                      ReviewAdSection(
-                        reviews: reviewState.reviews,
-                        totalReviews: reviewState.reviews.length,
-                        adId: ad.id,
+                      SectionCard(
+                        child: ReviewAdSection(
+                          reviews: reviewState.reviews,
+                          totalReviews: reviewState.reviews.length,
+                          adId: ad.id,
+                        ),
                       ),
 
                     /// SELLER SECTION
                     sellerAsync.when(
-                      loading: () => const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                      error: (_, _) => const SizedBox(),
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
                       data: (seller) {
                         return AdSellerInfoSection(
                           shopName: seller.shopName,

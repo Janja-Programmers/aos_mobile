@@ -12,10 +12,9 @@ import 'package:africaonlinestores/features/home/presentation/sections/tips/phot
 import 'package:africaonlinestores/features/home/presentation/sections/tips/ranking_tips_screen.dart';
 import 'package:africaonlinestores/features/seller/presentation/selling_tips_screen.dart';
 
-import 'package:africaonlinestores/features/search/search_screen.dart';
-
 import 'package:africaonlinestores/shared/enums/ads_mode.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
+import 'package:africaonlinestores/shared/utils/parse_sort.dart';
 
 class AdsRoutes {
   const AdsRoutes._();
@@ -37,10 +36,15 @@ class AdsRoutes {
       name: AppRoutes.nAllAds,
       path: AppRoutes.allAds,
       builder: (context, state) {
-        final categoryId = state.uri.queryParameters['categoryId'];
-        final dealTypeParam = state.uri.queryParameters['dealType'];
+        final categoryId = state.uri.queryParameters['category'];
+
+        final dealTypeParam = state.uri.queryParameters['promotion_type'];
+
+        final sortParam = state.uri.queryParameters['sort'];
 
         final dealType = DealTypeX.fromString(dealTypeParam);
+
+        final sort = parseSort(sortParam);
 
         final mode = state.uri.queryParameters['mode'] == 'wishlist'
             ? AllAdsMode.wishlist
@@ -51,6 +55,7 @@ class AdsRoutes {
           initialCategoryId: categoryId,
           mode: mode,
           dealType: dealType,
+          sort: sort,
         );
       },
     ),
@@ -71,12 +76,6 @@ class AdsRoutes {
       name: AppRoutes.nRankTips,
       path: AppRoutes.rankTips,
       builder: (context, state) => const RankingTipsScreen(),
-    ),
-
-    GoRoute(
-      name: AppRoutes.nSearch,
-      path: AppRoutes.search,
-      builder: (context, state) => const SearchScreen(),
     ),
   ];
 

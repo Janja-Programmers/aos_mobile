@@ -1,47 +1,131 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+import 'package:africaonlinestores/features/ads/ads_all/controllers/all_ads_params.dart';
 import 'package:africaonlinestores/features/ads/ads_all/controllers/all_ads_state.dart';
-import 'package:africaonlinestores/shared/enums/ads_mode.dart';
-import 'package:africaonlinestores/shared/enums/deal_type.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 
+import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
+import 'package:africaonlinestores/features/catalog/shared/providers/category_ads_provider.dart';
+
+import 'package:africaonlinestores/shared/enums/ads_mode.dart';
+import 'package:africaonlinestores/shared/enums/ads_sort.dart';
+import 'package:africaonlinestores/shared/enums/deal_type.dart';
+
 class AllAdsController extends StateNotifier<AllAdsState> {
-  AllAdsController(this.ref) : super(const AllAdsState());
+  AllAdsController(this.ref, this.params) : super(const AllAdsState()) {
+    Future.microtask(_init);
+  }
 
   final Ref ref;
+  final AllAdsParams params;
 
   static const _limit = 20;
   int _offset = 0;
 
-  String? _parentCategoryId;
-  AllAdsMode _mode = AllAdsMode.normal;
+  bool _bootstrapped = false;
 
-  bool get isWishlist => _mode == AllAdsMode.wishlist;
+  bool get isWishlist => params.mode == AllAdsMode.wishlist;
 
-  bool _initialized = false;
+  List<Map<String, dynamic>> _allCategories = [];
 
   /// Initialize controller from screen navigation
-  Future<void> init({
-    String? parentCategoryId,
-    String? initialCategoryId,
-    DealType dealType = DealType.all,
-    AllAdsMode mode = AllAdsMode.normal,
-  }) async {
-    if (_initialized) return;
-
-    _initialized = true;
-
-    _parentCategoryId = parentCategoryId;
-    _mode = mode;
+  Future<void> _init() async {
+    if (_bootstrapped) return;
+    _bootstrapped = true;
 
     state = state.copyWith(
-      selectedCategoryId: initialCategoryId,
-      selectedDealType: dealType,
+      selectedCategoryId: params.initialCategoryId,
+      selectedDealType: params.dealType,
+      selectedSort: params.sort,
     );
 
+    await _loadAllCategories();
+    _resolveChildren();
+
     await load(initial: true);
+  }
+
+  void _resolveChildren() {
+    final selected = state.selectedCategoryId;
+
+    if (selected == null) {
+      final parent = params.parentCategoryId;
+
+      if (parent == null) {
+        state = state.copyWith(children: []);
+        return;
+      }
+
+      final parentNode = _allCategories.firstWhere(
+        (e) => e['id'] == parent,
+        orElse: () => {},
+      );
+
+      if (parentNode.isNotEmpty) {
+        final childrenRaw = parentNode['children'] ?? [];
+
+        state = state.copyWith(
+          children: (childrenRaw as List)
+              .map((e) => CategoryNode.fromJson(e))
+              .toList(),
+        );
+      }
+
+      return;
+    }
+
+    // 1️⃣ Check if selected is a parent
+    final parent = _allCategories.firstWhere(
+      (e) => e['id'] == selected,
+      orElse: () => {},
+    );
+
+    if (parent.isNotEmpty) {
+      // ✅ Parent selected → show its children
+      final childrenRaw = parent['children'] ?? [];
+
+      state = state.copyWith(
+        children: (childrenRaw as List)
+            .map((e) => CategoryNode.fromJson(e))
+            .toList(),
+      );
+      return;
+    }
+
+    // 2️⃣ Selected is a child → find its parent
+    for (final p in _allCategories) {
+      final children = p['children'] ?? [];
+
+      final match = (children as List).firstWhere(
+        (c) => c['id'] == selected,
+        orElse: () => {},
+      );
+
+      if (match.isNotEmpty) {
+        // ✅ Found parent → show siblings
+        state = state.copyWith(
+          children: (children).map((e) => CategoryNode.fromJson(e)).toList(),
+        );
+        return;
+      }
+    }
+
+    // 3️⃣ Fallback
+    state = state.copyWith(children: []);
+  }
+
+  Future<void> _loadAllCategories() async {
+    final api = ref.read(categoriesApiProvider);
+
+    final res = await api.getCategories();
+
+    res.fold((_) {}, (data) {
+      final raw = data['data'] ?? [];
+
+      _allCategories = (raw as List).whereType<Map<String, dynamic>>().toList();
+    });
   }
 
   Future<void> load({bool initial = false}) async {
@@ -56,14 +140,16 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     final api = ref.read(adsApiProvider);
 
-    final categoryId = state.selectedCategoryId ?? _parentCategoryId;
+    final categoryId = state.selectedCategoryId;
     final dealType = state.selectedDealType.apiValue;
+    final sort = state.selectedSort?.apiValue;
 
     final res = isWishlist
         ? await api.listWishlist(limit: _limit, offset: _offset)
         : await api.listAds(
             categoryId: categoryId,
             promotionType: dealType,
+            sort: sort,
             limit: _limit,
             offset: _offset,
           );
@@ -117,7 +203,17 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     _offset = 0;
 
-    state = state.copyWith(selectedCategoryId: id, items: [], hasMore: true);
+    final nextId = id ?? params.parentCategoryId;
+
+    if (state.selectedCategoryId == nextId) return;
+
+    state = state.copyWith(
+      selectedCategoryId: nextId,
+      items: [],
+      hasMore: true,
+    );
+
+    _resolveChildren();
 
     load(initial: true);
   }
@@ -128,6 +224,16 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     _offset = 0;
 
     state = state.copyWith(selectedDealType: type, items: [], hasMore: true);
+
+    load(initial: true);
+  }
+
+  void setSortType(AdsSort sortType) {
+    if (isWishlist) return;
+
+    _offset = 0;
+
+    state = state.copyWith(selectedSort: sortType, items: [], hasMore: true);
 
     load(initial: true);
   }

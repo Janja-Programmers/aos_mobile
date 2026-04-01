@@ -7,13 +7,13 @@ extension DealTypeX on DealType {
       case DealType.all:
         return null;
       case DealType.deals:
-        return 'deals';
+        return 'deal';
       case DealType.offers:
-        return 'offers';
+        return 'offer';
       case DealType.flashSale:
         return 'flash_sale';
       case DealType.newProducts:
-        return 'new_products';
+        return null;
     }
   }
 
@@ -36,9 +36,9 @@ extension DealTypeX on DealType {
   /// Parse from query parameter
   static DealType fromString(String? value) {
     switch (value) {
-      case 'deals':
+      case 'deal':
         return DealType.deals;
-      case 'offers':
+      case 'offer':
         return DealType.offers;
       case 'flash_sale':
         return DealType.flashSale;

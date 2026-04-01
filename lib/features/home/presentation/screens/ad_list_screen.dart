@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/core/routing/app_routes.dart';
 import 'package:africaonlinestores/core/routing/navigation.dart';
 
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_location_screen.dart';
@@ -11,6 +9,7 @@ import 'package:africaonlinestores/features/home/presentation/components/home_ap
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_controller.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_list_scaffold.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/ads_content.dart';
+import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
 
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 
@@ -74,12 +73,8 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
     final searchBar = AppSearchBar(
       controller: _searchCtrl,
       readOnly: true,
-      onTap: () {
-        context.pushNamed(AppRoutes.nSearch);
-      },
-      onMicTap: () {
-        context.pushNamed(AppRoutes.nSearch, queryParameters: {'voice': '1'});
-      },
+      onTap: () => SearchNavigation.toSearchscreen(context),
+      onMicTap: () => SearchNavigation.toSearchscreen(context),
       onCameraTap: () {
         ShowSnack(context, 'Camera Search Coming Soon!').info();
       },

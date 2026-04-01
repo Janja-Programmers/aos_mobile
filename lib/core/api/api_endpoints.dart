@@ -82,15 +82,15 @@ class ApiEndpoints {
 
   // Seller Endpoints
   static final String getSellerEndpoint =
-      '/api/method/aos.api.sellers.get_seller';
+      '/api/method/aos.api.sellers.get_seller_profile';
   static final String toggleSellerEndpoint =
       '/api/method/aos.api.sellers.toggle_follow';
-  static final String updateSellerEndpoint =
-      '/api/method/aos.api.sellers.update_my_seller';
   static final String submitVerificationEndpoint =
       '/api/method/aos.api.sellers.submit_verification';
   static final String getMyVerificationEndpoint =
       '/api/method/aos.api.sellers.get_my_verification';
+  static final String updateMySellerEndpoint =
+      '/api/method/aos.api.sellers.update_my_seller';
 
   // Localization Endpoints
   static final String getLocaleBundleEndpoint =

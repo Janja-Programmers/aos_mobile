@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/routing/navigation.dart';
 
-import 'package:africaonlinestores/features/ads/ads_all/presentation/widgets/horizontal_ads_section.dart';
+import 'package:africaonlinestores/features/catalog/presentation/widgets/horizontal_ads_section.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/category_ads_provider.dart';
 
@@ -40,8 +40,8 @@ class _ForYouContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 220,
-      child: HorizontalAdsSectionBox(
+      height: 300,
+      child: ForYouAdsSectionBox(
         title: 'For you',
         items: items,
         onSeeAll: () => openAllAds(context, categoryId: categoryId),

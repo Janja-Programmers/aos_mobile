@@ -37,27 +37,76 @@ class SellerStateController extends StateNotifier<SellerState> {
     res.fold((f) => state = state.copyWith(loading: false, error: f.message), (
       data,
     ) {
-      final seller = AOSSellerProfile.fromJson(data['data']);
-      state = state.copyWith(loading: false, seller: seller);
+      final sellerJson = data['data'] ?? data;
+
+      final seller = AOSSellerProfile.fromJson(
+        Map<String, dynamic>.from(sellerJson),
+      );
+
+      state = state.copyWith(
+        loading: false,
+        seller: seller,
+        isFollowing: seller.isFollowing,
+      );
     });
   }
 
   /// TOGGLE FOLLOW
   Future<String?> toggleFollow() async {
+    final current = state.isFollowing ?? state.seller?.isFollowing ?? false;
+
     final controller = ref.read(sellerControllerProvider);
 
-    state = state.copyWith(followingLoading: true);
+    state = state.copyWith(followingLoading: true, isFollowing: !current);
 
     final res = await controller.toggleFollow(sellerId: sellerId);
 
     return res.fold(
       (f) {
-        state = state.copyWith(followingLoading: false);
+        /// rollback on error
+        state = state.copyWith(followingLoading: false, isFollowing: current);
         return f.message;
       },
-      (_) async {
-        await load();
+      (_) {
         state = state.copyWith(followingLoading: false);
+        return null;
+      },
+    );
+  }
+
+  /// UPDATE SELLERPROFILE
+  Future<String?> updateSellerProfile({
+    String? shopName,
+    String? aboutShop,
+    String? avatar,
+    String? banner,
+  }) async {
+    final controller = ref.read(sellerControllerProvider);
+
+    state = state.copyWith(loading: true);
+
+    final res = await controller.updateSellerProfile(
+      shopName: shopName,
+      aboutShop: aboutShop,
+      avatar: avatar,
+      banner: banner,
+    );
+
+    return res.fold(
+      (failure) {
+        state = state.copyWith(loading: false);
+        return failure.message;
+      },
+      (data) {
+        final updatedSeller = state.seller?.copyWith(
+          shopName: data['shop_name'],
+          aboutShop: data['about_shop'],
+          avatar: data['avatar'],
+          shopBanner: data['shop_banner'],
+        );
+
+        state = state.copyWith(loading: false, seller: updatedSeller);
+
         return null;
       },
     );

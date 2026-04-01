@@ -12,7 +12,15 @@ final sellerProfileProvider = FutureProvider.family<AOSSellerProfile, String>((
   final result = await controller.getSeller(sellerId: sellerId);
 
   return result.fold((failure) => throw Exception(failure.message), (data) {
-    final sellerJson = data['data'];
+    print("SELLER RAW: $data");
+
+    // 🔥 handle both cases safely
+    final sellerJson = data['data'] ?? data['message']?['data'];
+
+    if (sellerJson == null) {
+      throw Exception("Seller data missing");
+    }
+
     return AOSSellerProfile.fromJson(Map<String, dynamic>.from(sellerJson));
   });
 });

@@ -17,8 +17,9 @@ import 'package:africaonlinestores/features/home/presentation/components/home_ho
 import 'package:africaonlinestores/features/home/presentation/components/home_ranking_tips_section.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_controller.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
-
 import 'package:africaonlinestores/features/home/shared/utils/helpers.dart';
+
+import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 
 class AdListContentView extends ConsumerWidget {
   const AdListContentView({
@@ -197,28 +198,34 @@ class AdListContentView extends ConsumerWidget {
       orElse: () => state.sections.first,
     );
 
-    final categoryId =
-        (section.seeAllCategoryId != null &&
-            section.seeAllCategoryId!.trim().isNotEmpty)
-        ? section.seeAllCategoryId!
-        : key;
-
     void seeAll() {
-      switch (key) {
-        case 'flash_sales':
-          openAllAds(context, dealType: DealType.flashSale);
-          break;
+      final category = (section.preferredCategoryNames.isNotEmpty)
+          ? section.preferredCategoryNames.first
+          : null;
 
-        case 'deal':
-          openAllAds(context, dealType: DealType.deals);
-          break;
+      final promotion = section.promotionType;
 
-        case 'new_products':
-          openAllAds(context, dealType: DealType.newProducts);
-          break;
+      // 🔥 PRIORITY ORDER MATTERS
 
-        default:
-          openAllAds(context, categoryId: categoryId);
+      if (key == 'new_products') {
+        openAllAds(context, sort: AdsSort.recent);
+        return;
+      }
+
+      if (promotion == 'flash_sale') {
+        openAllAds(context, dealType: DealType.flashSale);
+        return;
+      }
+
+      if (promotion == 'deal') {
+        openAllAds(context, categoryId: category, dealType: DealType.deals);
+        return;
+      }
+
+      if (category != null) {
+        openAllAds(context, categoryId: category);
+      } else {
+        openAllAds(context);
       }
     }
 

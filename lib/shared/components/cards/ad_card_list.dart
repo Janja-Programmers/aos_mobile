@@ -39,7 +39,6 @@ class AdListItem extends ConsumerWidget {
           border: Border.all(color: colors.border),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// IMAGE
             Stack(
@@ -49,7 +48,7 @@ class AdListItem extends ConsumerWidget {
                     top: Radius.circular(14),
                   ),
                   child: SizedBox(
-                    height: 130,
+                    height: 90,
                     width: double.infinity,
                     child: imageUrl == null || imageUrl.isEmpty
                         ? Container(
@@ -151,7 +150,7 @@ class AdListItem extends ConsumerWidget {
 
             /// INFO
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

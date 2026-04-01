@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
 
 class DealsPills extends StatelessWidget {
@@ -41,6 +45,8 @@ class DealsPills extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return SizedBox(
       height: 42,
       child: ListView.builder(
@@ -57,14 +63,31 @@ class DealsPills extends StatelessWidget {
             child: ChoiceChip(
               selected: selectedChip,
               onSelected: (_) => onSelect(type),
+              backgroundColor: colors.surface, // unselected
+              selectedColor: colors.primary,
+              showCheckmark: false,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+                side: BorderSide.none,
+              ),
               label: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: 16),
+                    Icon(
+                      icon,
+                      size: 16,
+                      color: selectedChip ? colors.white : colors.textPrimary,
+                    ),
                     const SizedBox(width: 4),
                   ],
-                  Text(_label(type)),
+                  Text(
+                    _label(type),
+                    style: context.p.copyWith(
+                      color: selectedChip ? colors.white : colors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             ),

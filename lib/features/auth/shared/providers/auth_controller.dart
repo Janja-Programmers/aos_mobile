@@ -108,6 +108,7 @@ class AuthController extends StateNotifier<AuthState> {
   /// Initialize session from SharedPreferences
   Future<void> init() async {
     try {
+      // 🔁 Listen for session expiry (401 from backend)
       _sessionSub ??= _apiClient.sessionExpiredStream.listen((_) async {
         if (!state.isAuthenticated || _isLoggingOut) return;
 
@@ -122,33 +123,41 @@ class AuthController extends StateNotifier<AuthState> {
         _isLoggingOut = false;
       });
 
+      // 🔐 Restore SID from storage
       final sid = await _storage.getSid();
 
-      if (sid == null) {
+      if (sid == null || sid.isEmpty) {
         state = state.copyWith(initializing: false, isLoggedIn: false);
         _emit();
         return;
       }
 
+      // 🍪 Attach SID to ApiClient (CookieManager)
       await _apiClient.setSid(sid);
+
+      // ✅ Validate session with backend
       final res = await _api.me();
 
       if (res.isLeft) {
         await _clearSession();
+        _emit();
         return;
       }
 
       final payload = res.rightOrNull ?? {};
       if (payload['ok'] != true) {
         await _clearSession();
+        _emit();
         return;
       }
 
+      // 👤 Extract user
       final user = Map<String, dynamic>.from(payload['data']?['user'] ?? {});
 
       await _completeLogin(sid: sid, user: user);
     } catch (_) {
       await _clearSession();
+      _emit();
     }
   }
 

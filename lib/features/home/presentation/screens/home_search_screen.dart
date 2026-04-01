@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
@@ -35,18 +35,10 @@ class HomeSearchScreen extends StatelessWidget {
           readOnly: true,
 
           /// open search screen normally
-          onTap: () {
-            context.pushNamed(AppRoutes.nSearch);
-          },
+          onTap: () => SearchNavigation.toSearchscreen(context),
 
           /// open search screen and start mic
-          onMicTap: () {
-            context.pushNamed(
-              AppRoutes.nSearch,
-              queryParameters: {"voice": "1"},
-            );
-          },
-
+          onMicTap: () => SearchNavigation.toSearchscreen(context),
           onCameraTap: () {
             ShowSnack(context, "Coming Soon!").info();
           },

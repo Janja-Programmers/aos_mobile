@@ -33,6 +33,7 @@ class AppRoutes {
 
   // Seller
   static const startSelling = '/seller';
+  static const sellerCustomizeStore = '/seller/customize/:sellerId';
   static const sellerStore = '/seller/detail/:sellerId';
 
   // Reports
@@ -90,6 +91,7 @@ class AppRoutes {
   static const nTerms = 'terms';
   static const nPrivacy = 'privacy';
 
+  static const nSellerCustomizeStore = 'sellerCustomizeStore';
   static const nSellerStore = 'sellerStore';
   static const nStartSelling = 'seller';
   static const nReview = 'review';

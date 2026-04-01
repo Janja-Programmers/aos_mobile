@@ -158,25 +158,24 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
 
                     /// ✅ FIXED: Only affect reviews section
                     if (reviewState.loading)
-                      const Center(child: CircularProgressIndicator())
+                      const SizedBox.shrink()
                     else if (reviewState.error != null)
-                      Text('Error: ${reviewState.error}')
+                      const SizedBox.shrink()
                     else if (reviewState.reviews.isEmpty)
                       const SizedBox.shrink()
                     else
-                      ReviewAdSection(
-                        reviews: reviewState.reviews,
-                        totalReviews: reviewState.reviews.length,
-                        adId: ad.id,
+                      SectionCard(
+                        child: ReviewAdSection(
+                          reviews: reviewState.reviews,
+                          totalReviews: reviewState.reviews.length,
+                          adId: ad.id,
+                        ),
                       ),
 
                     /// SELLER SECTION
                     sellerAsync.when(
-                      loading: () => const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                      error: (_, _) => const SizedBox(),
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
                       data: (seller) {
                         return AdSellerInfoSection(
                           shopName: seller.shopName,

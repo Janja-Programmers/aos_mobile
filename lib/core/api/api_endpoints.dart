@@ -85,6 +85,8 @@ class ApiEndpoints {
       '/api/method/aos.api.sellers.get_seller_profile';
   static final String toggleSellerEndpoint =
       '/api/method/aos.api.sellers.toggle_follow';
+  static final String updateMySellerEndpoint =
+      '/api/method/aos.api.sellers.update_my_seller';
 
   // Localization Endpoints
   static final String getLocaleBundleEndpoint =

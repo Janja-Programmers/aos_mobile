@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
+import 'package:africaonlinestores/features/auth/shared/providers/current_user_controlller_provider.dart';
 import 'package:africaonlinestores/features/seller/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/seller/providers/seller_state_controller_provider.dart';
 import 'package:africaonlinestores/features/seller/presentation/widgets/seller_action_tabs.dart';
@@ -28,16 +30,14 @@ class SellerHeaderSection extends ConsumerWidget {
     final colors = context.appColors;
 
     final state = ref.watch(sellerStateProvider(sellerId));
+    final isFollowing = state.isFollowing ?? seller.isFollowing;
+    final isOwner = ref.watch(currentUserControllerProvider(sellerId));
 
     return SectionCard(
       child: Column(
         children: [
           /// Avatar
-          AppCircularAvatar(
-            name: seller.shopName,
-            imageUrl: seller.avatar,
-            radius: 24,
-          ),
+          AppCircularAvatar(name: seller.shopName, imageUrl: seller.avatar),
 
           const SizedBox(height: 12),
 
@@ -47,7 +47,7 @@ class SellerHeaderSection extends ConsumerWidget {
             children: [
               Text(seller.shopName, style: context.h6),
 
-              if (seller.isFollowing) ...[
+              if (seller.isVerified) ...[
                 const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -62,7 +62,6 @@ class SellerHeaderSection extends ConsumerWidget {
                     children: [
                       Icon(Icons.verified, size: 12, color: colors.blue),
                       const SizedBox(width: 4),
-
                       Text('Verified', style: context.p),
                     ],
                   ),
@@ -73,68 +72,80 @@ class SellerHeaderSection extends ConsumerWidget {
 
           const SizedBox(height: 14),
 
-          /// Stats
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _StatItem(
-                title: '${seller.rating.toStringAsFixed(1)}/5',
-                subtitle: 'Rating',
-              ),
-              _StatItem(
-                title: '${seller.totalFollowers}',
-                subtitle: 'Followers',
-              ),
-              _StatItem(title: seller.joined, subtitle: 'Joined'),
-            ],
+          /// Stats Card
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: colors.border,
+            ),
+            child: Row(
+              children: [
+                _StatItem(
+                  title:
+                      '${seller.rating.toStringAsFixed(1)} (${seller.totalReviews})',
+                  subtitle: 'Reviews',
+                ),
+                _divider(colors),
+                _StatItem(
+                  title: '${seller.totalFollowers}',
+                  subtitle: 'Followers',
+                ),
+                _divider(colors),
+                _StatItem(title: '${seller.totalAds}', subtitle: 'Listings'),
+                _divider(colors),
+                _StatItem(title: seller.joined, subtitle: 'Joined'),
+              ],
+            ),
           ),
 
           const SizedBox(height: 14),
 
-          /// Follow button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: state.followingLoading
-                  ? null
-                  : () async {
-                      final wasFollowing = seller.isFollowing;
+          /// Follow Button (ONLY for visitors)
+          if (!isOwner)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: state.followingLoading
+                    ? null
+                    : () async {
+                        final wasFollowing = isFollowing;
 
-                      final error = await ref
-                          .read(sellerStateProvider(sellerId).notifier)
-                          .toggleFollow();
+                        final error = await ref
+                            .read(sellerStateProvider(sellerId).notifier)
+                            .toggleFollow();
 
-                      if (!context.mounted) return;
+                        if (!context.mounted) return;
 
-                      if (error != null) {
-                        ShowSnack(context, error).error();
-                      } else {
-                        ShowSnack(
-                          context,
-                          wasFollowing ? "Unfollowed" : "Following",
-                        ).success();
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: seller.isFollowing
-                    ? colors.surface
-                    : colors.primary,
-                foregroundColor: seller.isFollowing
-                    ? colors.textPrimary
-                    : colors.surface,
-                side: seller.isFollowing
-                    ? BorderSide(color: colors.border)
-                    : null,
+                        if (error != null) {
+                          ShowSnack(context, error).error();
+                        } else {
+                          ShowSnack(
+                            context,
+                            wasFollowing ? "Unfollowed" : "Following",
+                          ).success();
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isFollowing
+                      ? colors.surface
+                      : colors.primary,
+                  foregroundColor: isFollowing
+                      ? colors.textPrimary
+                      : colors.surface,
+                  side: isFollowing ? BorderSide(color: colors.border) : null,
+                ),
+                child: Text(isFollowing ? 'Following' : 'Follow'),
               ),
-              child: Text(seller.isFollowing ? 'Following' : 'Follow'),
             ),
-          ),
+
           const SizedBox(height: 12),
 
           const SellerResponseBadge(),
           const SizedBox(height: 12),
 
-          const SellerActionTabs(),
+          /// Owner-only actions
+          if (isOwner) SellerActionTabs(sellerId: sellerId),
         ],
       ),
     );
@@ -149,12 +160,18 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(title, style: context.pStrong),
-        const SizedBox(height: 2),
-        Text(subtitle, style: context.pMuted),
-      ],
+    return Expanded(
+      child: Column(
+        children: [
+          Text(title, style: context.pStrong),
+          const SizedBox(height: 2),
+          Text(subtitle, style: context.pMuted),
+        ],
+      ),
     );
   }
+}
+
+Widget _divider(AppColorTokens colors) {
+  return Container(width: 1, height: 40, color: colors.black.withOpacity(.5));
 }

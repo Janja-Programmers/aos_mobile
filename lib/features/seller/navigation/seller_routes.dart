@@ -2,20 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/features/seller/presentation/seller_customization_screen.dart';
 import 'package:africaonlinestores/features/seller/presentation/seller_store_screen.dart';
 
 class SellerRoutes {
   const SellerRoutes._();
 
-  static List<GoRoute> routes() => [..._publicRoutes];
+  static List<GoRoute> routes() => [..._publicRoutes, ..._privateRoutes];
 
   static final List<GoRoute> _publicRoutes = [
-    // REVIEW ROUTE
+    /// STORE FRONT
     GoRoute(
       name: AppRoutes.nSellerStore,
       path: AppRoutes.sellerStore,
       builder: (context, state) =>
           SellerStorefrontScreen(sellerId: _param(state, 'sellerId')),
+    ),
+  ];
+
+  static final List<GoRoute> _privateRoutes = [
+    /// CREATE / UPDATE STORE
+    GoRoute(
+      name: AppRoutes.nSellerCustomizeStore,
+      path: AppRoutes.sellerCustomizeStore,
+      builder: (context, state) {
+        final sellerId = _param(state, 'sellerId');
+
+        return StoreCustomizationScreen(sellerId: sellerId);
+      },
     ),
   ];
 }
@@ -26,6 +40,13 @@ class SellerNavigation {
   static void toSellerStore(BuildContext context, String sellerId) {
     context.pushNamed(
       AppRoutes.nSellerStore,
+      pathParameters: {'sellerId': sellerId},
+    );
+  }
+
+  static Future<bool?> toCustomizeStore(BuildContext context, String sellerId) {
+    return context.pushNamed<bool>(
+      AppRoutes.nSellerCustomizeStore,
       pathParameters: {'sellerId': sellerId},
     );
   }

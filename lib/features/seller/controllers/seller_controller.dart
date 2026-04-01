@@ -18,4 +18,18 @@ class SellerController {
   }) {
     return _api.toggleFollow(sellerId: sellerId);
   }
+
+  Future<Either<Failure, Map<String?, dynamic>>> updateSellerProfile({
+    String? shopName,
+    String? aboutShop,
+    String? avatar,
+    String? banner,
+  }) async {
+    return _api.updateSeller(
+      shopName: shopName,
+      aboutShop: aboutShop,
+      avatar: avatar,
+      banner: banner,
+    );
+  }
 }

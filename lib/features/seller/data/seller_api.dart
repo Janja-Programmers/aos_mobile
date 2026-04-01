@@ -52,4 +52,24 @@ class SellerApi {
       return Either.left(const Failure('Failed to toggle follow.'));
     }
   }
+
+  /// UPDATE SELLER PROFILE
+  Future<Either<Failure, Map<String, dynamic>>> updateSeller({
+    String? shopName,
+    String? aboutShop,
+    String? avatar,
+    String? banner,
+  }) async {
+    final res = await _dio.post(
+      ApiEndpoints.updateMySellerEndpoint,
+      data: {
+        'shop_name': ?shopName,
+        'about_shop': ?aboutShop,
+        'avatar': ?avatar,
+        'shop_banner': ?banner,
+      },
+    );
+
+    return Right(res.data['message']);
+  }
 }

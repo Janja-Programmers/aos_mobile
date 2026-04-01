@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+
 class StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   StickyHeaderDelegate({required this.child, required this.height});
 
@@ -19,8 +21,8 @@ class StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     return Material(
-      elevation: overlapsContent ? 2 : 0,
-      color: Theme.of(context).scaffoldBackgroundColor,
+      elevation: 0,
+      color: context.appColors.surface,
       child: child,
     );
   }

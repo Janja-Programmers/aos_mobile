@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/core/routing/app_routes.dart';
 
 import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
 import 'package:africaonlinestores/features/catalog/shared/utils/category_icon_url.dart';
 import 'package:africaonlinestores/features/catalog/presentation/widgets/parent_rail.dart';
 import 'package:africaonlinestores/features/catalog/presentation/widgets/right_pane.dart';
+import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 
@@ -48,10 +46,10 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
               child: AppSearchBar(
                 readOnly: true,
                 controller: _searchCtrl,
-                onTap: () => context.pushNamed(AppRoutes.nSearch),
+                onTap: () => SearchNavigation.toSearchscreen(context),
                 onSubmitted: (_) {},
-                onMicTap: () => context.pushNamed(AppRoutes.nSearch),
-                onCameraTap: () => context.pushNamed(AppRoutes.nSearch),
+                onMicTap: () => SearchNavigation.toSearchscreen(context),
+                onCameraTap: () => SearchNavigation.toSearchscreen(context),
               ),
             ),
           ),

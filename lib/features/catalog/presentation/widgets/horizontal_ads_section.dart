@@ -5,8 +5,8 @@ import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/home/presentation/components/section_header.dart';
 import 'package:africaonlinestores/shared/components/cards/ad_card_horizontal.dart';
 
-class HorizontalAdsSectionBox extends StatelessWidget {
-  const HorizontalAdsSectionBox({
+class ForYouAdsSectionBox extends StatelessWidget {
+  const ForYouAdsSectionBox({
     super.key,
     required this.title,
     required this.items,

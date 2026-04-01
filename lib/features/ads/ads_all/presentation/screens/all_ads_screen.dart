@@ -1,20 +1,23 @@
-import 'package:africaonlinestores/features/ads/ads_all/controllers/all_ads_params.dart';
-import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/ads/ads_all/controllers/all_ads_controller_provider.dart';
+import 'package:africaonlinestores/features/ads/ads_all/controllers/all_ads_params.dart';
 import 'package:africaonlinestores/features/ads/ads_all/controllers/all_ads_state.dart';
-import 'package:africaonlinestores/features/ads/ads_all/presentation/sheets/filter_sheet.dart';
-import 'package:africaonlinestores/features/ads/ads_all/presentation/sheets/sort_sheet.dart';
+// import 'package:africaonlinestores/features/ads/ads_all/presentation/sheets/filter_sheet.dart';
+// import 'package:africaonlinestores/features/ads/ads_all/presentation/sheets/sort_sheet.dart';
 import 'package:africaonlinestores/features/ads/ads_all/presentation/widgets/category_pills.dart';
 import 'package:africaonlinestores/features/ads/ads_all/presentation/widgets/deals_pills.dart';
-import 'package:africaonlinestores/features/ads/ads_all/presentation/widgets/view_toggle_bar.dart';
+// import 'package:africaonlinestores/features/ads/ads_all/presentation/widgets/view_toggle_bar.dart';
 import 'package:africaonlinestores/features/ads/ads_all/presentation/widgets/sticky_header_delegate.dart';
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
+import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
 
 import 'package:africaonlinestores/shared/enums/ads_mode.dart';
+import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
 
 import 'package:africaonlinestores/shared/components/cards/ad_card_grid.dart';
@@ -69,10 +72,27 @@ class AllAdsScreen extends ConsumerWidget {
           slivers: [
             /// 1️⃣ TITLE
             SliverAppBar(
+              backgroundColor: context.appColors.surface,
               pinned: true,
               floating: false,
+              centerTitle: false,
               elevation: 0,
               title: Text(title, style: context.h5),
+
+              actions: [
+                IconButton(
+                  padding: const EdgeInsets.all(10),
+                  constraints: const BoxConstraints(),
+                  color: context.appColors.primary,
+                  icon: Icon(
+                    Icons.search,
+                    color: context.appColors.textPrimary,
+                    size: 23,
+                  ),
+                  onPressed: () => SearchNavigation.toSearchscreen(context),
+                ),
+                const SizedBox(width: 8),
+              ],
             ),
 
             /// 2️⃣ DEALS PILLS
@@ -98,6 +118,7 @@ class AllAdsScreen extends ConsumerWidget {
                   children: state.children,
                   selectedId: state.selectedCategoryId,
                   onSelect: controller.setCategory,
+                  parentLabel: parentCategoryId,
                 ),
               ),
             ),
@@ -159,7 +180,12 @@ class AllAdsScreen extends ConsumerWidget {
     if (state.error != null && state.items.isEmpty) {
       return SliverFillRemaining(
         hasScrollBody: false,
-        child: Center(child: Text(state.error!)),
+        child: Center(
+          child: Text(
+            "No Ads for selected category and type",
+            style: context.bodyStrong,
+          ),
+        ),
       );
     }
 
@@ -185,7 +211,10 @@ class AllAdsScreen extends ConsumerWidget {
           ),
           delegate: SliverChildBuilderDelegate((context, i) {
             final ad = state.items[i];
-            return AdGridCard(ad: ad, onTap: () {});
+            return AdGridCard(
+              ad: ad,
+              onTap: () => AdNavigation.toDetail(context, ad.id),
+            );
           }, childCount: state.items.length),
         ),
       );
@@ -196,7 +225,10 @@ class AllAdsScreen extends ConsumerWidget {
       sliver: SliverList.separated(
         itemBuilder: (context, i) {
           final ad = state.items[i];
-          return AdListItem(ad: ad, onTap: () {});
+          return AdListItem(
+            ad: ad,
+            onTap: () => AdNavigation.toDetail(context, ad.id),
+          );
         },
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemCount: state.items.length,

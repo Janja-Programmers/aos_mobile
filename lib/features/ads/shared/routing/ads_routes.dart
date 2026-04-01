@@ -12,8 +12,6 @@ import 'package:africaonlinestores/features/home/presentation/sections/tips/phot
 import 'package:africaonlinestores/features/home/presentation/sections/tips/ranking_tips_screen.dart';
 import 'package:africaonlinestores/features/seller/presentation/selling_tips_screen.dart';
 
-import 'package:africaonlinestores/features/search/search_screen.dart';
-
 import 'package:africaonlinestores/shared/enums/ads_mode.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
 import 'package:africaonlinestores/shared/utils/parse_sort.dart';
@@ -78,12 +76,6 @@ class AdsRoutes {
       name: AppRoutes.nRankTips,
       path: AppRoutes.rankTips,
       builder: (context, state) => const RankingTipsScreen(),
-    ),
-
-    GoRoute(
-      name: AppRoutes.nSearch,
-      path: AppRoutes.search,
-      builder: (context, state) => const SearchScreen(),
     ),
   ];
 

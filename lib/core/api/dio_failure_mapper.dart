@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 
 /// Convert Dio exceptions into a user-friendly [Failure].
 Failure mapDioException(DioException e) {
@@ -38,9 +39,9 @@ Failure mapDioException(DioException e) {
   final status = e.response?.statusCode;
   final messageFromServer = _extractServerMessage(e.response?.data);
 
-  print('STATUS: $status');
-  print('RAW RESPONSE: ${e.response?.data}');
-  print('EXTRACTED MESSAGE: $messageFromServer');
+  appLogger.i('STATUS: $status');
+  appLogger.i('RAW RESPONSE: ${e.response?.data}');
+  appLogger.i('EXTRACTED MESSAGE: $messageFromServer');
 
   if (status == 401) {
     return Failure(

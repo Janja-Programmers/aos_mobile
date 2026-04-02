@@ -10,6 +10,10 @@ analyzer:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
 
+  strong-mode:
+    implicit-casts: false
+    implicit-dynamic: false
+
 linter:
   rules:
     # ───────── Architecture & Imports ─────────

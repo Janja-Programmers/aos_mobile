@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:africaonlinestores/features/seller/seller_verification/domain/verification.dart';
 import 'package:africaonlinestores/features/seller/seller_verification/presentation/steps/basic_info_step.dart';
 import 'package:africaonlinestores/features/seller/seller_verification/presentation/steps/document_step.dart';
-import 'package:africaonlinestores/features/seller/seller_verification/presentation/steps/reviews_step.dart';
+import 'package:africaonlinestores/features/seller/seller_verification/presentation/steps/review_step.dart';
 
 typedef StepBuilder = Widget Function(BuildContext context);
-
 typedef StepValidator = bool Function(Verification data);
 
 class VerificationStepDef {

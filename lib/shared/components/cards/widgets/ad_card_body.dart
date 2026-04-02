@@ -23,6 +23,7 @@ class AdCardBody extends StatelessWidget {
       children: [
         Text(
           ad.title,
+          maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: context.pStrong.copyWith(fontSize: 13),
         ),
@@ -41,22 +42,30 @@ class AdCardBody extends StatelessWidget {
         if (price.show) ...[
           Row(
             children: [
-              Text(
-                price.current ?? '',
-                style: context.body.copyWith(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 12,
+              Flexible(
+                child: Text(
+                  price.current ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.body.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                  ),
                 ),
               ),
 
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
 
               if (isService)
-                Text(
-                  ad.priceUnit,
-                  style: context.p.copyWith(
-                    fontSize: 11.5,
-                    color: colors.primary,
+                Flexible(
+                  child: Text(
+                    ad.priceUnit,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.p.copyWith(
+                      fontSize: 11.5,
+                      color: colors.primary,
+                    ),
                   ),
                 ),
             ],
@@ -81,9 +90,13 @@ class AdCardBody extends StatelessWidget {
 
             const SizedBox(width: 4),
 
-            Text(
-              "${ad.averageRating} (${humanizeCount(ad.totalReviews)})",
-              style: context.pMuted.copyWith(fontSize: 10),
+            Flexible(
+              child: Text(
+                "${ad.averageRating} (${humanizeCount(ad.totalReviews)})",
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.pMuted.copyWith(fontSize: 10),
+              ),
             ),
           ],
         ),

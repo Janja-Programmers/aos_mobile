@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
@@ -11,8 +12,20 @@ class CatalogRoutes {
       GoRoute(
         name: AppRoutes.nCategories,
         path: AppRoutes.categories,
-        builder: (context, state) => const CategoriesScreen(),
+        builder: (context, state) {
+          final ctx = (state.extra as NavContext?) ?? NavContext.root;
+
+          return CategoriesScreen(navContext: ctx);
+        },
       ),
     ];
+  }
+}
+
+class CatalogNavigation {
+  const CatalogNavigation._();
+
+  static void toAllCategories(BuildContext context) {
+    context.pushNamed(AppRoutes.nCategories, extra: NavContext.pushed);
   }
 }

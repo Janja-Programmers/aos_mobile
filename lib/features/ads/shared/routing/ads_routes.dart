@@ -116,8 +116,12 @@ class AdNavigation {
   static void toAllAds(BuildContext context, String categoryId) {
     context.pushNamed(
       AppRoutes.nAllAds,
-      queryParameters: {'categoryId': categoryId},
+      queryParameters: {'category': categoryId},
     );
+  }
+
+  static void toWishlist(BuildContext context) {
+    context.pushNamed(AppRoutes.nAllAds, queryParameters: {'mode': 'wishlist'});
   }
 
   static void toReport(BuildContext context, String adId) {

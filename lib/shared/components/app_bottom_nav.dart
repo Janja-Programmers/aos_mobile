@@ -43,9 +43,9 @@ class AppBottomNav extends ConsumerWidget {
             _SellButton(onTap: () => AppNavigation.goTo(context, ref, 2)),
 
             _NavItem(
-              label: 'Contact',
-              icon: Icons.contact_phone_outlined,
-              activeIcon: Icons.contact_phone,
+              label: 'Connect',
+              icon: Icons.support_agent_outlined,
+              activeIcon: Icons.support_agent_rounded,
               active: currentIndex == 3,
               onTap: () => AppNavigation.goTo(context, ref, 3),
             ),

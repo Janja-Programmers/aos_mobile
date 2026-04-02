@@ -85,7 +85,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   icon: hasWishlistItems
                       ? Icons.favorite
                       : Icons.favorite_border,
-                  onTap: hasWishlistItems ? onTapFavorites : null,
+                  onTap: onTapFavorites,
                 ),
                 const SizedBox(width: 10),
 

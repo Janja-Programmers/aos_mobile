@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 
@@ -11,6 +10,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
+import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
 
 import 'package:africaonlinestores/shared/shimmer/category_shimmer.dart';
 
@@ -43,7 +43,7 @@ class HomeCategoriesPreviewSection extends ConsumerWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: () => context.pushNamed(AppRoutes.nCategories),
+                  onPressed: () => CatalogNavigation.toAllCategories(context),
                   child: Text(
                     l10n.common_see_all,
                     style: context.p.copyWith(

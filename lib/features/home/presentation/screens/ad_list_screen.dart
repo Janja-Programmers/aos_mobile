@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/routing/navigation.dart';
-
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_location_screen.dart';
 import 'package:africaonlinestores/features/home/domain/location_picker.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_app_bar.dart';
@@ -13,8 +11,8 @@ import 'package:africaonlinestores/features/search/shared/routing/search_routes.
 
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
-import 'package:africaonlinestores/shared/enums/ads_mode.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class AdListScreen extends ConsumerStatefulWidget {
@@ -83,7 +81,7 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
     final header = HomeAppBar(
       locationLabel: locationLabel ?? l10n.location_all_locations,
       onTapLocation: _openLocationPicker,
-      onTapFavorites: () => openAllAds(context, mode: AllAdsMode.wishlist),
+      onTapFavorites: () => AdNavigation.toWishlist(context),
       onTapNotifications: () => ShowSnack(context, 'Coming Soon!').info(),
       search: searchBar,
     );

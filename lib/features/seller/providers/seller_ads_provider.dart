@@ -13,17 +13,13 @@ final sellerAdsProvider = FutureProvider.family<List<AOSAdListItem>, String>((
 
   return res.fold(
     (failure) {
-      print("SELLER ADS ERROR: ${failure.message}");
       return const [];
     },
     (payload) {
-      print("SELLER ADS RAW: $payload");
-
       /// 🔥 FIX: correct path
       final raw = payload['data']?['items'];
 
       if (raw is! List) {
-        print("Invalid items format");
         return const [];
       }
 

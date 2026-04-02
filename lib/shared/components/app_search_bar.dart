@@ -12,6 +12,7 @@ class AppSearchBar extends StatefulWidget {
     this.readOnly = false,
     this.autofocus = false,
     this.hintText = "Search here...",
+    this.margin = const EdgeInsets.symmetric(vertical: 4),
   });
 
   final TextEditingController controller;
@@ -22,6 +23,7 @@ class AppSearchBar extends StatefulWidget {
   final bool readOnly;
   final bool autofocus;
   final String hintText;
+  final EdgeInsetsGeometry margin;
 
   @override
   State<AppSearchBar> createState() => _AppSearchBarState();
@@ -56,84 +58,108 @@ class _AppSearchBarState extends State<AppSearchBar> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final hasText = widget.controller.text.trim().isNotEmpty;
 
-    return Container(
-      height: 54,
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 12),
-          Icon(Icons.search, color: colors.textMuted),
-          const SizedBox(width: 10),
+    return Padding(
+      padding: widget.margin,
+      child: Container(
+        height: 54,
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 12),
 
-          Expanded(
-            child: widget.readOnly
-                ? InkWell(
-                    onTap: widget.onTap,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        widget.controller.text.isEmpty
-                            ? widget.hintText
-                            : widget.controller.text,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: widget.controller.text.isEmpty
-                              ? colors.textMuted
-                              : colors.textPrimary,
+            Icon(Icons.search, color: colors.textMuted),
+
+            const SizedBox(width: 10),
+
+            Expanded(
+              child: widget.readOnly
+                  ? Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: widget.onTap,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          height: double.infinity,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            hasText ? widget.controller.text : widget.hintText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: hasText
+                                  ? colors.textPrimary
+                                  : colors.textMuted,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : TextField(
+                      controller: widget.controller,
+                      autofocus: widget.autofocus,
+                      readOnly: false,
+                      onTap: widget.onTap,
+                      onSubmitted: widget.onSubmitted,
+                      textInputAction: TextInputAction.search,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: widget.hintText,
+                        hintStyle: TextStyle(
+                          color: colors.textMuted,
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
                         ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                        isDense: true,
                       ),
                     ),
-                  )
-                : TextField(
-                    controller: widget.controller,
-                    autofocus: widget.autofocus,
-                    readOnly: false,
-                    onTap: widget.onTap,
-                    onSubmitted: widget.onSubmitted,
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      hintText: widget.hintText,
-                      hintStyle: TextStyle(color: colors.textMuted),
-                      border: InputBorder.none,
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: context.appColors.surface,
-                        ),
-                      ),
-                      isDense: true,
-                    ),
-                  ),
-          ),
-
-          if (!widget.readOnly && widget.controller.text.isNotEmpty)
-            IconButton(
-              icon: Icon(Icons.close, color: colors.textMuted),
-              onPressed: widget.controller.clear,
             ),
 
-          if (widget.onMicTap != null)
-            IconButton(
-              icon: Icon(Icons.mic, color: colors.textPrimary),
-              onPressed: widget.onMicTap,
-            ),
+            if (!widget.readOnly && hasText)
+              IconButton(
+                splashRadius: 20,
+                icon: Icon(Icons.close, color: colors.textMuted),
+                onPressed: () {
+                  widget.controller.clear();
+                },
+              ),
 
-          if (widget.onCameraTap != null)
-            IconButton(
-              icon: Icon(Icons.camera_alt_outlined, color: colors.textPrimary),
-              onPressed: widget.onCameraTap,
-            ),
+            if (widget.onMicTap != null)
+              IconButton(
+                splashRadius: 20,
+                icon: Icon(Icons.mic, color: colors.textPrimary),
+                onPressed: widget.onMicTap,
+              ),
 
-          const SizedBox(width: 6),
-        ],
+            if (widget.onCameraTap != null)
+              IconButton(
+                splashRadius: 20,
+                icon: Icon(
+                  Icons.camera_alt_outlined,
+                  color: colors.textPrimary,
+                ),
+                onPressed: widget.onCameraTap,
+              ),
+
+            const SizedBox(width: 6),
+          ],
+        ),
       ),
     );
   }

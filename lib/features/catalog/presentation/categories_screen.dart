@@ -9,8 +9,12 @@ import 'package:africaonlinestores/features/search/shared/routing/search_routes.
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 
+enum NavContext { root, pushed }
+
 class CategoriesScreen extends ConsumerStatefulWidget {
-  const CategoriesScreen({super.key});
+  const CategoriesScreen({super.key, this.navContext = NavContext.root});
+
+  final NavContext navContext;
 
   @override
   ConsumerState<CategoriesScreen> createState() => _CategoriesScreenState();
@@ -36,13 +40,15 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
         elevation: 0,
         centerTitle: false,
         titleSpacing: 0,
-        leading: const BackButton(),
+        leading: widget.navContext == NavContext.pushed
+            ? const BackButton()
+            : null,
         title: SizedBox(
-          height: 52,
+          height: 80,
           child: Align(
             alignment: Alignment.centerLeft,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+              padding: const EdgeInsets.all(12),
               child: AppSearchBar(
                 readOnly: true,
                 controller: _searchCtrl,

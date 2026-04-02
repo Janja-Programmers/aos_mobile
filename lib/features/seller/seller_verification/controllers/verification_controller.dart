@@ -36,6 +36,21 @@ class SellerVerificationController
     state = state.copyWith(data: state.data.copyWith(documents: docs));
   }
 
+  void setUploading(String type, bool value) {
+    final current = state.uploadingDocs;
+
+    if (value) {
+      state = state.copyWith(uploadingDocs: {...current, type});
+    } else {
+      final updated = Set<String>.from(current)..remove(type);
+      state = state.copyWith(uploadingDocs: updated);
+    }
+  }
+
+  bool isUploading(String type) {
+    return state.uploadingDocs.contains(type);
+  }
+
   void updateDocument(int index, VerificationDocument doc) {
     final docs = [...state.data.documents];
     docs[index] = doc;
@@ -60,9 +75,7 @@ class SellerVerificationController
   }
 
   void goToStep(int step) {
-    if (state.completedSteps.contains(step)) {
-      state = state.copyWith(currentStep: step);
-    }
+    state = state.copyWith(currentStep: step);
   }
 
   // --- Submit ---
@@ -74,11 +87,8 @@ class SellerVerificationController
     try {
       final payload = state.data.toPayload();
       await apiCall(payload);
-
+    } finally {
       state = state.copyWith(isSubmitting: false);
-    } catch (e) {
-      state = state.copyWith(isSubmitting: false);
-      rethrow;
     }
   }
 }

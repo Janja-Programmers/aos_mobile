@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/ads/ads_all/presentation/widgets/ads_all_empty_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -169,6 +170,22 @@ class AllAdsScreen extends ConsumerWidget {
     return 'All Ads';
   }
 
+  String _emptyMessage() {
+    if (mode == AllAdsMode.wishlist) {
+      return "No items in your wishlist";
+    }
+
+    if (parentCategoryId != null && parentCategoryId!.isNotEmpty) {
+      return "No items in $parentCategoryId";
+    }
+
+    if (dealType != DealType.all) {
+      return "No ${dealType.label.toLowerCase()} available";
+    }
+
+    return "No ads found";
+  }
+
   Widget _buildContent(AllAdsState state, BuildContext context) {
     if (state.loading && state.items.isEmpty) {
       return const SliverFillRemaining(
@@ -177,15 +194,10 @@ class AllAdsScreen extends ConsumerWidget {
       );
     }
 
-    if (state.error != null && state.items.isEmpty) {
+    if (state.items.isEmpty) {
       return SliverFillRemaining(
         hasScrollBody: false,
-        child: Center(
-          child: Text(
-            "No Ads for selected category and type",
-            style: context.bodyStrong,
-          ),
-        ),
+        child: AdsEmptyState(message: _emptyMessage()),
       );
     }
 

@@ -12,8 +12,6 @@ final sellerProfileProvider = FutureProvider.family<AOSSellerProfile, String>((
   final result = await controller.getSeller(sellerId: sellerId);
 
   return result.fold((failure) => throw Exception(failure.message), (data) {
-    print("SELLER RAW: $data");
-
     // 🔥 handle both cases safely
     final sellerJson = data['data'] ?? data['message']?['data'];
 

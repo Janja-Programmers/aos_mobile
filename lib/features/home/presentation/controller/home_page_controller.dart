@@ -64,7 +64,7 @@ class HomePageController extends AsyncNotifier<HomePageState> {
       await Future.wait(
         homeAdsSections.map((section) async {
           final categoryId = section.preferredCategoryNames.isNotEmpty
-              ? section.preferredCategoryNames.first
+              ? section.preferredCategoryNames.join(',')
               : null;
 
           final res = await ref

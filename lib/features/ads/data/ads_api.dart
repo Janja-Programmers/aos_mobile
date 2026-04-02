@@ -221,8 +221,7 @@ class AdsApi {
       }
 
       final queryParams = <String, dynamic>{
-        if (locationId?.trim().isNotEmpty == true)
-          'location': locationId!.trim(),
+        if (locationId != null) 'location': locationId.trim(),
         if (categoryId?.trim().isNotEmpty == true)
           'category': categoryId!.trim(),
         if (sellerId?.trim().isNotEmpty == true) 'seller': sellerId!.trim(),

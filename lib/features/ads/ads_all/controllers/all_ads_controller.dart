@@ -50,16 +50,23 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   void _resolveChildren() {
     final selected = state.selectedCategoryId;
 
+    // ✅ CASE 1: No category selected
     if (selected == null) {
-      final parent = params.parentCategoryId;
+      final parentId = params.parentCategoryId;
 
-      if (parent == null) {
-        state = state.copyWith(children: []);
+      // 🔥 FIX: if parent is ALSO null → show root categories
+      if (parentId == null) {
+        state = state.copyWith(
+          children: _allCategories
+              .map((e) => CategoryNode.fromJson(e))
+              .toList(),
+        );
         return;
       }
 
+      // Normal parent → show its children
       final parentNode = _allCategories.firstWhere(
-        (e) => e['id'] == parent,
+        (e) => e['id'] == parentId,
         orElse: () => {},
       );
 
@@ -71,19 +78,20 @@ class AllAdsController extends StateNotifier<AllAdsState> {
               .map((e) => CategoryNode.fromJson(e))
               .toList(),
         );
+      } else {
+        state = state.copyWith(children: []);
       }
 
       return;
     }
 
-    // 1️⃣ Check if selected is a parent
+    // ✅ CASE 2: Selected is a parent → show its children
     final parent = _allCategories.firstWhere(
       (e) => e['id'] == selected,
       orElse: () => {},
     );
 
     if (parent.isNotEmpty) {
-      // ✅ Parent selected → show its children
       final childrenRaw = parent['children'] ?? [];
 
       state = state.copyWith(
@@ -94,7 +102,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
       return;
     }
 
-    // 2️⃣ Selected is a child → find its parent
+    // ✅ CASE 3: Selected is a child → show siblings
     for (final p in _allCategories) {
       final children = p['children'] ?? [];
 
@@ -104,7 +112,6 @@ class AllAdsController extends StateNotifier<AllAdsState> {
       );
 
       if (match.isNotEmpty) {
-        // ✅ Found parent → show siblings
         state = state.copyWith(
           children: (children).map((e) => CategoryNode.fromJson(e)).toList(),
         );
@@ -112,7 +119,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
       }
     }
 
-    // 3️⃣ Fallback
+    // ✅ Fallback
     state = state.copyWith(children: []);
   }
 
@@ -203,7 +210,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     _offset = 0;
 
-    final nextId = id ?? params.parentCategoryId;
+    final nextId = id;
 
     if (state.selectedCategoryId == nextId) return;
 

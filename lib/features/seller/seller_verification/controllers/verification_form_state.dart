@@ -5,20 +5,23 @@ class SellerVerificationState {
   final int currentStep;
   final bool isSubmitting;
   final Set<int> completedSteps;
+  final Set<String> uploadingDocs;
 
   SellerVerificationState({
     required this.data,
     required this.currentStep,
     required this.isSubmitting,
     required this.completedSteps,
-  });
+    Set<String>? uploadingDocs,
+  }) : uploadingDocs = uploadingDocs ?? {};
 
   factory SellerVerificationState.initial() {
     return SellerVerificationState(
       data: Verification(),
       currentStep: 0,
       isSubmitting: false,
-      completedSteps: {},
+      completedSteps: const {},
+      uploadingDocs: const {},
     );
   }
 
@@ -27,12 +30,14 @@ class SellerVerificationState {
     int? currentStep,
     bool? isSubmitting,
     Set<int>? completedSteps,
+    Set<String>? uploadingDocs,
   }) {
     return SellerVerificationState(
       data: data ?? this.data,
       currentStep: currentStep ?? this.currentStep,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       completedSteps: completedSteps ?? this.completedSteps,
+      uploadingDocs: uploadingDocs ?? this.uploadingDocs,
     );
   }
 }

@@ -62,6 +62,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     super.dispose();
   }
 
+  /// OPEN Voice search
   Future<void> _openVoiceSearch() async {
     final result = await showModalBottomSheet<String>(
       context: context,

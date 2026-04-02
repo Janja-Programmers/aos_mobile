@@ -1,8 +1,13 @@
+import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:flutter/material.dart';
+
 import 'package:africaonlinestores/core/core.dart';
+
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-import 'package:africaonlinestores/shared/components/cards/ad_card_grid.dart';
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/search/widgets/search_empty_state.dart';
+
+import 'package:africaonlinestores/shared/components/cards/ad_card_grid.dart';
 
 class SearchResultsSection extends StatelessWidget {
   const SearchResultsSection({
@@ -39,36 +44,30 @@ class SearchResultsSection extends StatelessWidget {
     if (items.isEmpty) {
       return const SearchEmptyState();
     }
-
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      physics: const BouncingScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.62,
-      ),
-      itemCount: items.length,
-      itemBuilder: (context, i) {
-        final ad = items[i];
-
-        return Material(
-          color: context.appColors.surface,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () => onTapItem(ad.id),
-            child: Container(
-              decoration: BoxDecoration(
-                color: colors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: colors.border),
-              ),
-              child: AdGridCard(ad: ad, onTap: () => onTapItem(ad.id)),
+    return SectionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: items.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.75,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
             ),
+            itemBuilder: (_, i) {
+              final ad = items[i];
+              return AdGridCard(
+                ad: ad,
+                onTap: () => AdNavigation.toDetail(context, ad.id),
+              );
+            },
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

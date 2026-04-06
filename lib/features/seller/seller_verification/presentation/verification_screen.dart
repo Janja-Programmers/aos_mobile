@@ -89,6 +89,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
 
       bottom: buildVerificationBottomBar(
         context: context,
+        ref: ref,
         state: state,
         steps: steps,
         controller: controller,

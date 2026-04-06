@@ -1,7 +1,12 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:flutter/material.dart';
+import 'package:africaonlinestores/core/utils/either.dart';
 
+import 'package:africaonlinestores/features/seller/seller_verification/controllers/seller_status_provider.dart';
 import 'package:africaonlinestores/features/seller/seller_verification/controllers/verification_form_state.dart';
 import 'package:africaonlinestores/features/seller/seller_verification/utils/verification_steps_builder.dart';
 
@@ -9,6 +14,7 @@ import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 Widget buildVerificationBottomBar({
   required BuildContext context,
+  required WidgetRef ref,
   required SellerVerificationState state,
   required List<VerificationStepDef> steps,
   required dynamic controller,
@@ -61,17 +67,33 @@ Widget buildVerificationBottomBar({
 
                       if (isLast) {
                         controller.submit((payload) async {
-                          final res = await api.submitVerification(
-                            payload: payload,
+                          final res = await _resolveCall(
+                            api,
+                            payload,
+                            state.mode,
                           );
 
                           res.fold(
-                            (failure) =>
-                                ShowSnack(context, failure.message).error(),
-                            (_) => ShowSnack(
-                              context,
-                              "Verification submitted",
-                            ).success(),
+                            (failure) {
+                              ShowSnack(context, failure.message).error();
+                            },
+                            (_) {
+                              ShowSnack(
+                                context,
+                                state.mode == VerificationMode.update
+                                    ? "Verification updated"
+                                    : "Verification submitted",
+                              ).success();
+
+                              ref.invalidate(sellerStatusProvider);
+
+                              Future.delayed(
+                                const Duration(milliseconds: 400),
+                                () {
+                                  if (context.mounted) Navigator.pop(context);
+                                },
+                              );
+                            },
                           );
                         });
                       } else {
@@ -85,7 +107,11 @@ Widget buildVerificationBottomBar({
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : Text(
-                      isLast ? "Submit" : "Continue",
+                      isLast
+                          ? (state.mode == VerificationMode.update
+                                ? "Update"
+                                : "Submit")
+                          : "Continue",
                       style: context.body.copyWith(color: colors.white),
                     ),
             ),
@@ -94,4 +120,14 @@ Widget buildVerificationBottomBar({
       ),
     ),
   );
+}
+
+Future<Either<Failure, Map<String, dynamic>>> _resolveCall(
+  dynamic api,
+  Map<String, dynamic> payload,
+  VerificationMode mode,
+) {
+  return mode == VerificationMode.update
+      ? api.updateMySeller(payload: payload)
+      : api.submitVerification(payload: payload);
 }

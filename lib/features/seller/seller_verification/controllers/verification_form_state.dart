@@ -1,17 +1,21 @@
 import 'package:africaonlinestores/features/seller/seller_verification/domain/verification.dart';
 
+enum VerificationMode { create, update }
+
 class SellerVerificationState {
   final Verification data;
   final int currentStep;
   final bool isSubmitting;
   final Set<int> completedSteps;
   final Set<String> uploadingDocs;
+  final VerificationMode mode;
 
   SellerVerificationState({
     required this.data,
     required this.currentStep,
     required this.isSubmitting,
     required this.completedSteps,
+    required this.mode,
     Set<String>? uploadingDocs,
   }) : uploadingDocs = uploadingDocs ?? {};
 
@@ -22,6 +26,7 @@ class SellerVerificationState {
       isSubmitting: false,
       completedSteps: const {},
       uploadingDocs: const {},
+      mode: VerificationMode.create,
     );
   }
 
@@ -31,6 +36,7 @@ class SellerVerificationState {
     bool? isSubmitting,
     Set<int>? completedSteps,
     Set<String>? uploadingDocs,
+    VerificationMode? mode,
   }) {
     return SellerVerificationState(
       data: data ?? this.data,
@@ -38,6 +44,7 @@ class SellerVerificationState {
       isSubmitting: isSubmitting ?? this.isSubmitting,
       completedSteps: completedSteps ?? this.completedSteps,
       uploadingDocs: uploadingDocs ?? this.uploadingDocs,
+      mode: mode ?? this.mode,
     );
   }
 }

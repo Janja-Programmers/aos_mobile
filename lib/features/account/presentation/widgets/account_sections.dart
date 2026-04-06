@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
@@ -89,94 +87,6 @@ class AccountHeaderCard extends StatelessWidget {
             const SizedBox(width: 10),
             _SquareIconButton(icon: Icons.edit_outlined, onPressed: onEdit),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class GetVerifiedBanner extends StatelessWidget {
-  const GetVerifiedBanner({super.key, this.onTap});
-
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final l10n = context.l10n;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: onTap,
-      child: Ink(
-        height: 84,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          gradient: LinearGradient(
-            colors: [
-              colors.red.withOpacity(.85),
-              colors.red.withOpacity(.9),
-              colors.red.withOpacity(.95),
-              colors.red,
-            ],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: colors.red,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.verified_outlined, color: colors.white),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      l10n.account_get_verified,
-                      style: TextStyle(
-                        color: colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      l10n.account_boost_trust,
-                      maxLines: 2,
-                      style: TextStyle(
-                        color: colors.white,
-
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  shape: BoxShape.rectangle,
-                ),
-                child: Icon(Icons.arrow_forward, color: colors.red, size: 18),
-              ),
-
-              const SizedBox(height: 18),
-            ],
-          ),
         ),
       ),
     );

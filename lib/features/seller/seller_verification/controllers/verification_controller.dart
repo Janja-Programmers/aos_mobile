@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/features/seller/seller_verification/controllers/verification_form_state.dart';
+import 'package:africaonlinestores/features/seller/seller_verification/domain/verification.dart';
 import 'package:africaonlinestores/features/seller/seller_verification/domain/verification_document.dart';
 
 class SellerVerificationController
@@ -60,6 +61,16 @@ class SellerVerificationController
   void removeDocument(int index) {
     final docs = [...state.data.documents]..removeAt(index);
     state = state.copyWith(data: state.data.copyWith(documents: docs));
+  }
+
+  // UPDATE Verification Data
+  void hydrateFromVerification(Verification verification) {
+    state = state.copyWith(
+      data: verification,
+      currentStep: 0,
+      completedSteps: {},
+      mode: VerificationMode.update,
+    );
   }
 
   // --- Navigation ---

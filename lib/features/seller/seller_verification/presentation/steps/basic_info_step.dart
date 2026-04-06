@@ -248,7 +248,6 @@ class _DropdownField extends StatelessWidget {
     required this.items,
     this.value,
     this.hintText,
-    this.icon,
     this.onChanged,
   });
 
@@ -256,7 +255,6 @@ class _DropdownField extends StatelessWidget {
   final List<String> items;
   final String? value;
   final String? hintText;
-  final IconData? icon;
   final Function(String?)? onChanged;
 
   @override
@@ -278,11 +276,6 @@ class _DropdownField extends StatelessWidget {
         DropdownButtonFormField<String>(
           value: value,
           hint: hintText != null ? Text(hintText!) : null,
-          decoration: InputDecoration(
-            prefixIcon: icon != null
-                ? Icon(icon, size: 20, color: colors.textMuted)
-                : null,
-          ).applyDefaults(Theme.of(context).inputDecorationTheme),
           items: items
               .map((e) => DropdownMenuItem(value: e, child: Text(e)))
               .toList(),

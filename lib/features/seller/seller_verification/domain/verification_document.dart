@@ -38,4 +38,14 @@ class VerificationDocument {
       "attachment": attachment,
     };
   }
+
+  factory VerificationDocument.fromJson(Map<String, dynamic> json) {
+    return VerificationDocument(
+      documentType: json["document_type"],
+      documentNumber: json["document_number"],
+      issueDate: json["issue_date"],
+      expiryDate: json["expiry_date"],
+      attachment: json["attachment"],
+    );
+  }
 }

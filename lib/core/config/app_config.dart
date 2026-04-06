@@ -3,6 +3,7 @@ class AppConfig {
     'AOS_BASE_URL',
     // IMPORTANT: Keep this WITHOUT a trailing slash to avoid `//api/...` URLs.
     defaultValue: 'https://aos-staging.m.frappe.cloud',
+    // defaultValue: ' http://91.99.163.102',
   );
 
   /// Runtime-safe baseUrl (removes any trailing slash in case a value

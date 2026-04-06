@@ -55,4 +55,19 @@ class Verification {
       "verification_documents": documents.map((e) => e.toPayload()).toList(),
     };
   }
+
+  factory Verification.fromJson(Map<String, dynamic> json) {
+    return Verification(
+      businessName: json["business_name"],
+      businessType: json["business_type"],
+      businessCategory: json["business_category"],
+      businessPhoneNumber: json["business_phone_number"],
+      businessEmail: json["business_email"],
+      businessWebsite: json["business_website"],
+      physicalAddress: json["physical_address"],
+      documents: (json["verification_documents"] as List<dynamic>? ?? [])
+          .map((e) => VerificationDocument.fromJson(e))
+          .toList(),
+    );
+  }
 }

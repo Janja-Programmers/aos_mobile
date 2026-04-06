@@ -73,9 +73,7 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
       readOnly: true,
       onTap: () => SearchNavigation.toSearchscreen(context),
       onMicTap: () => SearchNavigation.toSearchscreen(context),
-      onCameraTap: () {
-        ShowSnack(context, 'Camera Search Coming Soon!').info();
-      },
+      onCameraTap: () => SearchNavigation.toSearchscreen(context),
     );
 
     final header = HomeAppBar(

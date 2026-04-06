@@ -50,6 +50,8 @@ class ApiEndpoints {
       '/api/method/aos.api.ads.list_my_ad_drafts';
   static final String submitAdDraftEndpoint =
       '/api/method/aos.api.ads.submit_ad_draft';
+  static final String searchAdByImageEndpoint =
+      '/api/method/aos.api.ads.search_ads_by_image';
   static final String setAdStatusEndpoint =
       '/api/method/aos.api.ads.set_ad_status';
   static final String updateAdEndpoint = '/api/method/aos.api.ads.update_ad';

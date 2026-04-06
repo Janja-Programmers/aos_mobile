@@ -1,6 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:africaonlinestores/core/routing/app_routes.dart';
+
+import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:africaonlinestores/features/files/data/files_api_provider.dart';
 import 'package:africaonlinestores/features/search/storage/search_recent_storage.dart';
 import 'package:africaonlinestores/features/search/voice/voice_search_sheet.dart';
 import 'package:africaonlinestores/features/search/widgets/search_bar_section.dart';
@@ -8,14 +16,7 @@ import 'package:africaonlinestores/features/search/widgets/search_header.dart';
 import 'package:africaonlinestores/features/search/widgets/search_recent_section.dart';
 import 'package:africaonlinestores/features/search/widgets/search_results_section.dart';
 
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
-
-import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
-
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:africaonlinestores/shared/media/media_helper.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -80,6 +81,54 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     unawaited(_saveRecent(result));
     unawaited(_search(result));
+  }
+
+  // CAMERA Search by image
+  Future<void> _openCameraSearch() async {
+    final file = await MediaHelper.pickImageWithChoice(context);
+
+    if (file == null) return;
+
+    _searchCtrl.text = "📷 Image search";
+    _searchCtrl.selection = TextSelection.fromPosition(
+      TextPosition(offset: _searchCtrl.text.length),
+    );
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    final res = await ref.read(filesApiProvider).searchAdByImage(file: file);
+
+    if (!mounted) return;
+
+    res.fold(
+      (f) {
+        setState(() {
+          _error = f.message;
+          _results = [];
+        });
+      },
+      (body) {
+        final raw = body['data']?['items'];
+
+        if (raw is! List) {
+          setState(() => _results = []);
+          return;
+        }
+
+        final list = raw
+            .whereType<Map<String, dynamic>>()
+            .map(AOSAdListItem.fromJson)
+            .toList();
+
+        setState(() => _results = list);
+      },
+    );
+
+    if (!mounted) return;
+    setState(() => _loading = false);
   }
 
   /// LOAD RECENT
@@ -211,13 +260,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               }
             },
             onMicTap: _openVoiceSearch,
-            onCameraTap: () {
-              ShowSnack(context, "Coming Soon").info();
-            },
+            onCameraTap: _openCameraSearch,
           ),
 
           Expanded(
-            child: query.isEmpty
+            child: (_results.isEmpty && query.isEmpty)
                 ? SearchRecentSection(
                     recent: _recent,
                     onDeleteAll: _deleteRecent,

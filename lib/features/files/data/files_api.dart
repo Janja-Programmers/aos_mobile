@@ -63,6 +63,34 @@ class FilesApi {
     }
   }
 
+  Future<Either<Failure, Map<String, dynamic>>> searchAdByImage({
+    required File file,
+  }) async {
+    try {
+      if (!await file.exists()) {
+        return Either.left(const Failure('File does not exist.'));
+      }
+
+      final filename = file.path.split(Platform.pathSeparator).last;
+
+      final formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(file.path, filename: filename),
+        'is_private': '0',
+      });
+
+      final response = await _dio.post(
+        ApiEndpoints.searchAdByImageEndpoint,
+        data: formData,
+      );
+
+      return unwrapFrappe(response);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (e) {
+      return Either.left(const Failure('Failed to upload file.'));
+    }
+  }
+
   Future<Either<Failure, Map<String, dynamic>>> removeBackground({
     required String fileId,
   }) async {

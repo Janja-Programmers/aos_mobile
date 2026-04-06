@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/features/ads/ads_listing/controllers/ad_listing_state.dart';
+import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 
@@ -17,12 +18,18 @@ class AdListingsController extends StateNotifier<AdListingsState> {
 
   final Ref ref;
 
+  /// -------------------------
+  /// INIT
+  /// -------------------------
   Future<void> init() async {
     await _loadCounts();
-    await load('Active');
+    await load(AdTab.active);
   }
 
-  Future<void> load(String tab) async {
+  /// -------------------------
+  /// LOAD LISTINGS
+  /// -------------------------
+  Future<void> load(AdTab tab) async {
     state = state.copyWith(loading: true, error: null, selectedTab: tab);
 
     final api = ref.read(adsApiProvider);
@@ -30,7 +37,7 @@ class AdListingsController extends StateNotifier<AdListingsState> {
     /// -------------------------
     /// DRAFTS
     /// -------------------------
-    if (tab == 'Drafts') {
+    if (tab == AdTab.drafts) {
       final res = await api.listAdDrafts();
 
       res.fold(
@@ -41,7 +48,6 @@ class AdListingsController extends StateNotifier<AdListingsState> {
         ),
         (data) {
           final dataMap = (data['data'] ?? {}) as Map;
-
           final itemsRaw = dataMap['items'];
 
           final list = <AOSAdListItem>[];
@@ -50,10 +56,7 @@ class AdListingsController extends StateNotifier<AdListingsState> {
             for (final e in itemsRaw) {
               if (e is Map) {
                 final map = Map<String, dynamic>.from(e);
-
-                final ad = AOSAdListItem.fromDraft(map);
-
-                list.add(ad);
+                list.add(AOSAdListItem.fromDraft(map));
               }
             }
           }
@@ -68,7 +71,15 @@ class AdListingsController extends StateNotifier<AdListingsState> {
     /// -------------------------
     /// NORMAL ADS
     /// -------------------------
-    final res = await api.myAds(status: tab);
+    final status = tab.backendStatus;
+
+    if (status == null) {
+      // defensive guard (should never happen)
+      state = state.copyWith(loading: false, items: const []);
+      return;
+    }
+
+    final res = await api.myAds(status: status);
 
     res.fold(
       (f) => state = state.copyWith(
@@ -86,21 +97,34 @@ class AdListingsController extends StateNotifier<AdListingsState> {
     );
   }
 
+  /// -------------------------
+  /// LOAD COUNTS
+  /// -------------------------
   Future<void> _loadCounts() async {
     final api = ref.read(adsApiProvider);
 
-    final Map<String, int> newCounts = {};
+    final Map<AdTab, int> newCounts = {};
 
-    final statuses = {
-      'Active': 'Active',
-      'Reviewing': 'Reviewing',
-      'Declined': 'Declined',
-    };
+    final tabs = [
+      AdTab.active,
+      AdTab.reviewing,
+      AdTab.declined,
+      AdTab.sold,
+      AdTab.expired,
+      AdTab.suspended,
+    ];
 
-    for (final entry in statuses.entries) {
-      final res = await api.myAds(status: entry.value);
+    for (final tab in tabs) {
+      final status = tab.backendStatus;
 
-      res.fold((_) => newCounts[entry.key] = 0, (data) {
+      if (status == null) {
+        newCounts[tab] = 0;
+        continue;
+      }
+
+      final res = await api.myAds(status: status);
+
+      res.fold((_) => newCounts[tab] = 0, (data) {
         final dataMap = (data['data'] ?? {}) as Map;
         final pagination = (dataMap['pagination'] ?? {}) as Map;
 
@@ -109,42 +133,53 @@ class AdListingsController extends StateNotifier<AdListingsState> {
             ? totalRaw
             : int.tryParse('$totalRaw') ?? 0;
 
-        newCounts[entry.key] = total;
+        newCounts[tab] = total;
       });
     }
 
-    /// Drafts
+    /// -------------------------
+    /// DRAFTS (separate API)
+    /// -------------------------
     final draftsRes = await api.listAdDrafts();
-    draftsRes.fold((f) {}, (data) {});
 
-    draftsRes.fold((_) => newCounts['Drafts'] = 0, (data) {
+    draftsRes.fold((_) => newCounts[AdTab.drafts] = 0, (data) {
       final dataMap = (data['data'] ?? {}) as Map;
       final items = dataMap['items'];
 
-      newCounts['Drafts'] = items is List ? items.length : 0;
+      newCounts[AdTab.drafts] = items is List ? items.length : 0;
     });
 
     state = state.copyWith(counts: newCounts);
   }
 
+  /// -------------------------
+  /// RELOAD
+  /// -------------------------
   Future<void> reload() async {
     await load(state.selectedTab);
   }
 
-  Future<void> changeTab(String tab) async {
+  /// -------------------------
+  /// CHANGE TAB
+  /// -------------------------
+  Future<void> changeTab(AdTab tab) async {
     await load(tab);
   }
 
+  /// -------------------------
   /// EDIT AD
+  /// -------------------------
   void editAd(AOSAdListItem ad) {
     // navigation handled in UI
   }
 
-  /// MARK AS SOLD
+  /// -------------------------
+  /// MARK AS SOLD / RENEW
+  /// -------------------------
   Future<void> markSold(AOSAdListItem ad) async {
     final api = ref.read(adsApiProvider);
 
-    final action = state.selectedTab == 'Declined' ? 'renew' : 'mark_sold';
+    final action = state.selectedTab == AdTab.declined ? 'renew' : 'mark_sold';
 
     final res = await api.setAdStatus(adId: ad.id, action: action);
 
@@ -154,6 +189,33 @@ class AdListingsController extends StateNotifier<AdListingsState> {
       },
       (_) {
         reload();
+      },
+    );
+  }
+
+  /// -------------------------
+  /// ABANDON DRAFT
+  /// -------------------------
+  Future<void> abandonDraft(AOSAdListItem ad) async {
+    final api = ref.read(adsApiProvider);
+
+    /// Defensive: ensure it's a draft
+    final isDraft = ad.id.startsWith('DRAFT');
+
+    if (!isDraft) {
+      state = state.copyWith(error: 'Invalid draft item.');
+      return;
+    }
+
+    final res = await api.abandonAdDraft(draftId: ad.id);
+
+    await res.fold(
+      (f) {
+        state = state.copyWith(error: f.message);
+      },
+      (_) async {
+        /// Reload current tab (Drafts)
+        await reload();
       },
     );
   }

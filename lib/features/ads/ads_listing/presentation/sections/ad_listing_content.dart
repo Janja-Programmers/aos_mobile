@@ -1,7 +1,10 @@
-import 'package:africaonlinestores/core/core.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+
+import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
+import 'package:africaonlinestores/features/ads/ads_listing/utils/ad_lissting_actions.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
@@ -11,13 +14,18 @@ class AdListingContentView extends StatelessWidget {
   const AdListingContentView({
     super.key,
     required this.items,
+    required this.tab,
     required this.onEdit,
     required this.onMarkSold,
+    required this.onDelete,
   });
 
   final List<AOSAdListItem> items;
+  final AdTab tab;
+
   final void Function(AOSAdListItem ad) onEdit;
   final void Function(AOSAdListItem ad) onMarkSold;
+  final void Function(AOSAdListItem ad) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -25,8 +33,13 @@ class AdListingContentView extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       itemCount: items.length,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (_, i) =>
-          _MyAdTile(ad: items[i], onEdit: onEdit, onMarkSold: onMarkSold),
+      itemBuilder: (_, i) => _MyAdTile(
+        ad: items[i],
+        tab: tab,
+        onEdit: onEdit,
+        onMarkSold: onMarkSold,
+        onDelete: onDelete,
+      ),
     );
   }
 }
@@ -34,13 +47,18 @@ class AdListingContentView extends StatelessWidget {
 class _MyAdTile extends StatelessWidget {
   const _MyAdTile({
     required this.ad,
+    required this.tab,
     required this.onEdit,
     required this.onMarkSold,
+    required this.onDelete,
   });
 
   final AOSAdListItem ad;
+  final AdTab tab;
+
   final void Function(AOSAdListItem ad) onEdit;
   final void Function(AOSAdListItem ad) onMarkSold;
+  final void Function(AOSAdListItem ad) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +73,15 @@ class _MyAdTile extends StatelessWidget {
       if (ad.country.isNotEmpty) ad.country,
     ].join(', ');
 
+    final actions = AdListingActions.forTab(
+      tab: tab,
+      ad: ad,
+      onEdit: onEdit,
+      onMarkSold: onMarkSold,
+      onDelete: () => onDelete(ad), // wire later
+      onContactSupport: () {},
+    );
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -68,7 +95,6 @@ class _MyAdTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              /// IMAGE
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: SizedBox(
@@ -78,25 +104,14 @@ class _MyAdTile extends StatelessWidget {
                       ? Container(
                           color: scheme.surface,
                           alignment: Alignment.center,
-                          child: Icon(
-                            Icons.image_outlined,
-                            color: scheme.primary,
-                          ),
+                          child: const Icon(Icons.image_outlined),
                         )
-                      : Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => Icon(
-                            Icons.category_outlined,
-                            color: scheme.primary,
-                          ),
-                        ),
+                      : Image.network(imageUrl, fit: BoxFit.cover),
                 ),
               ),
 
               const SizedBox(width: 12),
 
-              /// INFO
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,35 +125,12 @@ class _MyAdTile extends StatelessWidget {
 
                     if (location.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      Text(
-                        location,
-                        style: context.pMuted.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      Text(location, style: context.pMuted),
                     ],
 
-                    /// PRICE
                     if (price.show) ...[
                       const SizedBox(height: 4),
-
-                      Row(
-                        children: [
-                          Text(price.current ?? '', style: context.pStrong),
-
-                          if (price.original != null &&
-                              price.original!.isNotEmpty) ...[
-                            const SizedBox(width: 6),
-                            Text(
-                              price.original!,
-                              style: context.p.copyWith(
-                                fontSize: 12,
-                                decoration: TextDecoration.lineThrough,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
+                      Text(price.current ?? '', style: context.pStrong),
                     ],
                   ],
                 ),
@@ -148,34 +140,40 @@ class _MyAdTile extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          /// ACTIONS
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => onEdit(ad),
-                  child: Text(
-                    'Edit',
-                    style: context.p.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: FilledButton(
-                  onPressed: () => onMarkSold(ad),
-                  child: Text(
-                    'Mark as sold',
-                    style: context.p.copyWith(
-                      color: colors.white,
-                      fontWeight: FontWeight.bold,
+          /// FINAL ACTIONS
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: actions.map((a) {
+              switch (a.type) {
+                case AdActionType.primary:
+                  return FilledButton(
+                    onPressed: a.onPressed,
+                    child: Text(
+                      a.label,
+                      style: context.p.copyWith(color: colors.white),
                     ),
-                  ),
-                ),
-              ),
-            ],
+                  );
+
+                case AdActionType.secondary:
+                  return OutlinedButton(
+                    onPressed: a.onPressed,
+                    child: Text(a.label),
+                  );
+
+                case AdActionType.destructive:
+                  return OutlinedButton(
+                    onPressed: a.onPressed,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                    child: Text(a.label),
+                  );
+
+                case AdActionType.disabled:
+                  return FilledButton(onPressed: null, child: Text(a.label));
+              }
+            }).toList(),
           ),
         ],
       ),

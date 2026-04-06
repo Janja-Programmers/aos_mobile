@@ -1,29 +1,39 @@
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
 
 class AdListingsState {
   final bool loading;
   final String? error;
   final List<AOSAdListItem> items;
 
-  final String selectedTab;
-  final Map<String, int> counts;
+  final AdTab selectedTab;
+  final Map<AdTab, int> counts;
 
   const AdListingsState({
     this.loading = false,
     this.error,
     this.items = const [],
-    this.selectedTab = 'Active',
+    this.selectedTab = AdTab.active,
     this.counts = const {},
   });
 
-  List<String> get tabs => const ['Active', 'Reviewing', 'Drafts', 'Declined'];
+  /// All tabs (single source of truth)
+  List<AdTab> get tabs => const [
+    AdTab.drafts,
+    AdTab.reviewing,
+    AdTab.active,
+    AdTab.declined,
+    AdTab.sold,
+    AdTab.expired,
+    AdTab.suspended,
+  ];
 
   AdListingsState copyWith({
     bool? loading,
     String? error,
     List<AOSAdListItem>? items,
-    String? selectedTab,
-    Map<String, int>? counts,
+    AdTab? selectedTab,
+    Map<AdTab, int>? counts,
   }) {
     return AdListingsState(
       loading: loading ?? this.loading,

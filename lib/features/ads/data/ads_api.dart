@@ -7,6 +7,8 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
+import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
+
 class AdsApi {
   AdsApi(this._client);
   final ApiClient _client;
@@ -318,15 +320,20 @@ class AdsApi {
   }
 
   Future<Either<Failure, Map<String, dynamic>>> myAds({
-    String status = 'Active',
+    AdBackendStatus status = AdBackendStatus.active,
     int limit = 20,
     int offset = 0,
   }) async {
     try {
       final res = await _dio.get(
         ApiEndpoints.myAdsEndpoint,
-        queryParameters: {'status': status, 'limit': limit, 'offset': offset},
+        queryParameters: {
+          'status': status.value,
+          'limit': limit,
+          'offset': offset,
+        },
       );
+
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -380,6 +387,23 @@ class AdsApi {
       return Either.left(mapDioException(e));
     } catch (_) {
       return Either.left(const Failure('Failed to fetch ad details.'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> abandonAdDraft({
+    required String draftId,
+  }) async {
+    try {
+      final res = await _dio.post(
+        ApiEndpoints.abandonAdDraftEndpoint,
+        data: {'draft_id': draftId},
+      );
+
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to abandon draft.'));
     }
   }
 

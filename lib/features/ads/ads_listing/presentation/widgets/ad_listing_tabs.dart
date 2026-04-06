@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
+
 class AdListingTabs extends StatelessWidget {
   const AdListingTabs({
     super.key,
@@ -9,13 +11,13 @@ class AdListingTabs extends StatelessWidget {
     this.counts,
   });
 
-  final List<String> tabs;
-  final String selected;
+  final List<AdTab> tabs;
+  final AdTab selected;
 
-  final void Function(String status) onChanged;
+  final void Function(AdTab status) onChanged;
 
-  /// Optional: counts per tab, e.g. {'Active': 3, 'Reviewing': 2}
-  final Map<String, int>? counts;
+  /// counts per tab
+  final Map<AdTab, int>? counts;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +37,7 @@ class AdListingTabs extends StatelessWidget {
             label: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(s),
+                Text(s.label),
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(

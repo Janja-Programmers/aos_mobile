@@ -133,46 +133,12 @@ class PricingStep extends ConsumerWidget {
               endDate: draft.offerEnd,
               scheduleOfferDates: draft.scheduleOfferDates ?? false,
               onOfferPriceChanged: ctrl.setOfferPrice,
-              onStartChanged: (date) =>
-                  _showThemedDatePicker(context, date, ctrl.setOfferStart),
-              onEndChanged: (date) =>
-                  _showThemedDatePicker(context, date, ctrl.setOfferEnd),
+              onStartChanged: ctrl.setOfferStart,
+              onEndChanged: ctrl.setOfferEnd,
               onScheduleChanged: ctrl.setScheduleOfferDates,
             ),
         ],
       ],
     );
-  }
-
-  static Future<void> _showThemedDatePicker(
-    BuildContext context,
-    DateTime? current,
-    void Function(DateTime?) onPicked,
-  ) async {
-    final theme = Theme.of(context);
-
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: current ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: theme.copyWith(
-            colorScheme: theme.colorScheme.copyWith(
-              primary: theme.colorScheme.primary,
-              onPrimary: theme.colorScheme.onPrimary,
-              surface: theme.colorScheme.surface,
-              onSurface: theme.colorScheme.onSurface,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      onPicked(picked);
-    }
   }
 }

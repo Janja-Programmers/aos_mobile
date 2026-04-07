@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/shared/components/app_date_picker.dart';
 import 'package:flutter/material.dart';
 
 class ScheduleOfferCard extends StatelessWidget {
@@ -59,9 +60,19 @@ class ScheduleOfferCard extends StatelessWidget {
               Switch.adaptive(
                 value: enabled,
                 onChanged: onToggle,
-                activeColor: colors.primary,
-                inactiveThumbColor: colors.black,
-                activeThumbColor: colors.primary,
+                trackColor: WidgetStateProperty.resolveWith((states) {
+                  return colors.surface;
+                }),
+                trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+                  return states.contains(WidgetState.selected)
+                      ? colors.primary
+                      : colors.border;
+                }),
+                thumbColor: WidgetStateProperty.resolveWith((states) {
+                  return states.contains(WidgetState.selected)
+                      ? colors.primary
+                      : colors.textPrimary;
+                }),
               ),
             ],
           ),
@@ -74,6 +85,7 @@ class ScheduleOfferCard extends StatelessWidget {
                 Expanded(
                   child: DateBox(
                     label: 'From',
+                    placeholder: 'Start date',
                     date: startDate,
                     onPicked: onStartPicked,
                   ),
@@ -84,6 +96,7 @@ class ScheduleOfferCard extends StatelessWidget {
                 Expanded(
                   child: DateBox(
                     label: 'To',
+                    placeholder: 'End date',
                     date: endDate,
                     onPicked: onEndPicked,
                   ),
@@ -103,9 +116,11 @@ class DateBox extends StatelessWidget {
     required this.label,
     required this.date,
     required this.onPicked,
+    required this.placeholder,
   });
 
   final String label;
+  final String placeholder;
   final DateTime? date;
   final ValueChanged<DateTime?> onPicked;
 
@@ -122,91 +137,9 @@ class DateBox extends StatelessWidget {
         InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () async {
-            final colors = context.appColors;
-            final now = DateTime.now();
-
-            final picked = await showDatePicker(
+            final picked = await showAppDatePicker(
               context: context,
-              initialDate: date ?? now,
-              firstDate: now,
-              lastDate: now.add(const Duration(days: 21)),
-              builder: (context, child) {
-                final base = ThemeData.light();
-
-                return Theme(
-                  data: base.copyWith(
-                    useMaterial3: true,
-
-                    colorScheme: ColorScheme.light(
-                      primary: colors.primary,
-                      onPrimary: colors.white,
-                      surface: colors.white,
-                      onSurface: colors.black,
-                    ),
-
-                    dialogBackgroundColor: colors.white,
-
-                    textButtonTheme: TextButtonThemeData(
-                      style: TextButton.styleFrom(
-                        foregroundColor: colors.primary,
-                      ),
-                    ),
-
-                    datePickerTheme: DatePickerThemeData(
-                      backgroundColor: colors.surface,
-
-                      dayBackgroundColor: WidgetStateProperty.resolveWith((
-                        states,
-                      ) {
-                        if (states.contains(WidgetState.selected)) {
-                          return colors.primary;
-                        }
-                        return null;
-                      }),
-
-                      dayForegroundColor: WidgetStateProperty.resolveWith((
-                        states,
-                      ) {
-                        if (states.contains(WidgetState.selected)) {
-                          return colors.white;
-                        }
-
-                        if (states.contains(WidgetState.disabled)) {
-                          return colors.primary.withOpacity(.4);
-                        }
-
-                        return colors.black;
-                      }),
-
-                      todayBackgroundColor: WidgetStateProperty.resolveWith((
-                        states,
-                      ) {
-                        if (!states.contains(WidgetState.selected)) {
-                          return colors.white;
-                        }
-                        return null;
-                      }),
-
-                      todayForegroundColor: WidgetStateProperty.resolveWith((
-                        states,
-                      ) {
-                        if (!states.contains(WidgetState.selected)) {
-                          return colors.primary;
-                        }
-                        return null;
-                      }),
-
-                      todayBorder: BorderSide(color: colors.primary),
-
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: colors.primary),
-                      ),
-                    ),
-                  ),
-                  child: child!,
-                );
-              },
+              initialDate: date,
             );
 
             if (picked != null) {
@@ -227,10 +160,8 @@ class DateBox extends StatelessWidget {
                 Expanded(
                   child: Text(
                     date != null
-                        ? '${date!.year}-${date!.month}-${date!.day}'
-                        : label == 'From'
-                        ? 'Start date'
-                        : 'End date',
+                        ? '${date!.day}/${date!.month}/${date!.year}'
+                        : placeholder,
                     style: context.p,
                   ),
                 ),

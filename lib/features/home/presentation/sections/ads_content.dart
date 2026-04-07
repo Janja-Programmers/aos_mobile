@@ -18,7 +18,7 @@ import 'package:africaonlinestores/features/home/presentation/components/home_ho
 import 'package:africaonlinestores/features/home/presentation/components/home_ranking_tips_section.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_controller.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
-import 'package:africaonlinestores/features/home/shared/utils/helpers.dart';
+import 'package:africaonlinestores/shared/utils/helpers.dart';
 
 import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 

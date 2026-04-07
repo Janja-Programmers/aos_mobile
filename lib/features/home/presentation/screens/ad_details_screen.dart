@@ -144,8 +144,11 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                       locationName: ad.locationName,
                       country: ad.country,
                       title: ad.title,
+                      rating: ad.averageRating,
+                      reviewCount: ad.totalReviews,
                       currentPrice: ad.currentPrice,
                       priceUnit: ad.priceUnit,
+                      priceType: ad.priceType,
                     ),
 
                     const SizedBox(height: 12),

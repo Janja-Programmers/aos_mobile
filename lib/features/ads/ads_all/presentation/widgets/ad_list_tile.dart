@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-import 'package:africaonlinestores/features/home/shared/utils/helpers.dart';
+import 'package:africaonlinestores/shared/utils/helpers.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_network_image.dart';

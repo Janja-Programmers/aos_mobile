@@ -6,7 +6,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-import 'package:africaonlinestores/features/home/shared/utils/helpers.dart';
+import 'package:africaonlinestores/shared/utils/helpers.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';

@@ -140,8 +140,6 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
       // -------------------------------
       // ASK USER
       // -------------------------------
-      _isCancelling = true;
-
       final action = await showModalBottomSheet<CancelAction>(
         context: context,
         isScrollControlled: true,
@@ -220,8 +218,6 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
       if (result == true && mounted) {
         context.pop(true);
       }
-
-      if (mounted) context.pop(true);
     } catch (e) {
       if (mounted) ShowSnack(context, 'Failed to submit!').error();
     } finally {

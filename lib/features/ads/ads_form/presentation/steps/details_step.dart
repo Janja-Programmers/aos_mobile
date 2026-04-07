@@ -1,15 +1,16 @@
-import 'package:africaonlinestores/shared/enums/ads.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+
+import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_option_sheet.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_attribute.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 
-import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_option_sheet.dart';
+import 'package:africaonlinestores/shared/components/app_date_picker.dart';
 import 'package:africaonlinestores/shared/components/picker_field.dart';
-
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/shared/enums/ads.dart';
 
 class DetailsStep extends ConsumerWidget {
   const DetailsStep({super.key, required this.schema});
@@ -170,19 +171,22 @@ class _AttributeField extends ConsumerWidget {
 
       case AdAttributeType.date:
         final str = value?.toString();
+        final parsed = str != null ? DateTime.tryParse(str) : null;
 
         return PickerField(
           label: attribute.label,
           required: attribute.required,
-          value: str,
+          value: parsed != null
+              ? '${parsed.day}/${parsed.month}/${parsed.year}'
+              : null,
           onTap: () async {
             final now = DateTime.now();
 
-            final picked = await showDatePicker(
+            final picked = await showAppDatePicker(
               context: context,
+              initialDate: parsed ?? now,
               firstDate: DateTime(now.year - 20),
               lastDate: DateTime(now.year + 20),
-              initialDate: str != null ? DateTime.tryParse(str) ?? now : now,
             );
 
             if (picked != null) {

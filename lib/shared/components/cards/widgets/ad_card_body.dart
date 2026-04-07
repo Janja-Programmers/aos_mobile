@@ -4,7 +4,8 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-import 'package:africaonlinestores/features/home/shared/utils/helpers.dart';
+import 'package:africaonlinestores/shared/components/rating_display.dart';
+import 'package:africaonlinestores/shared/utils/helpers.dart';
 
 class AdCardBody extends StatelessWidget {
   const AdCardBody({super.key, required this.ad});
@@ -84,49 +85,8 @@ class AdCardBody extends StatelessWidget {
 
         const SizedBox(height: 2),
 
-        Row(
-          children: [
-            ..._buildStars(ad.averageRating, context),
-
-            const SizedBox(width: 4),
-
-            Flexible(
-              child: Text(
-                "${ad.averageRating} (${humanizeCount(ad.totalReviews)})",
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.pMuted.copyWith(fontSize: 10),
-              ),
-            ),
-          ],
-        ),
+        RatingDisplay(rating: ad.averageRating, reviewCount: ad.totalReviews),
       ],
     );
   }
-}
-
-List<Widget> _buildStars(double rating, BuildContext context) {
-  final colors = context.appColors;
-  const totalStars = 5;
-
-  // If no rating → show all muted
-  if (rating == 0) {
-    return List.generate(
-      totalStars,
-      (_) => Icon(Icons.star_border, size: 14, color: colors.textMuted),
-    );
-  }
-
-  final int fullStars = rating.floor();
-  final bool hasHalfStar = (rating - fullStars) >= 0.5;
-
-  return List.generate(totalStars, (index) {
-    if (index < fullStars) {
-      return Icon(Icons.star, size: 12, color: colors.amber);
-    } else if (index == fullStars && hasHalfStar) {
-      return Icon(Icons.star_half, size: 12, color: colors.amber);
-    } else {
-      return Icon(Icons.star_border, size: 12, color: colors.textMuted);
-    }
-  });
 }

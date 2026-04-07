@@ -8,7 +8,7 @@ import 'package:africaonlinestores/features/ads/ads_listing/utils/ad_lissting_ac
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-import 'package:africaonlinestores/features/home/shared/utils/helpers.dart';
+import 'package:africaonlinestores/shared/utils/helpers.dart';
 
 class AdListingContentView extends StatelessWidget {
   const AdListingContentView({

@@ -194,7 +194,12 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   void setOfferPrice(double? value) {
     if (value == null || value <= 0) {
       _setDraft(
-        _draft.copyWith(scheduleOfferDates: false, clearAllOffer: true),
+        _draft.copyWith(
+          offerPrice: null,
+          scheduleOfferDates: false,
+          clearOfferStart: true,
+          clearOfferEnd: true,
+        ),
       );
       return;
     }
@@ -203,25 +208,29 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   }
 
   void setOfferStart(DateTime? value) {
+    if (_draft.scheduleOfferDates != true) return;
+
     if (value == null) {
       _setDraft(_draft.copyWith(clearOfferStart: true));
       return;
     }
 
-    _setDraft(_draft.copyWith(offerStart: value, scheduleOfferDates: true));
+    _setDraft(_draft.copyWith(offerStart: value));
   }
 
   void setOfferEnd(DateTime? value) {
+    if (_draft.scheduleOfferDates != true) return;
+
     if (value == null) {
       _setDraft(_draft.copyWith(clearOfferEnd: true));
       return;
     }
 
-    _setDraft(_draft.copyWith(offerEnd: value, scheduleOfferDates: true));
+    _setDraft(_draft.copyWith(offerEnd: value));
   }
 
   void setScheduleOfferDates(bool v) {
-    if (!v) {
+    if (!v || _draft.offerPrice == null) {
       _setDraft(
         _draft.copyWith(
           scheduleOfferDates: false,

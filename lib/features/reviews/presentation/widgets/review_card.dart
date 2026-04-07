@@ -74,6 +74,7 @@ class ReviewCard extends StatelessWidget {
 
         /// FOOTER
         Row(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
               'Helpful?',

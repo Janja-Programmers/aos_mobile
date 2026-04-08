@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/core/config/app_config.dart';
+import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 
@@ -59,7 +60,6 @@ class _AppRootState extends ConsumerState<AppRoot> {
 
     // Bootstrap
     Future.microtask(() {
-      appLogger.i('[App] Starting bootstrap initialization');
       ref.read(appBootstrapControllerProvider.notifier).initialize();
     });
 
@@ -68,19 +68,21 @@ class _AppRootState extends ConsumerState<AppRoot> {
       appLogger.i('[App] Setting up realtime listener');
       _setupRealtimeListener();
     });
+
+    Future.microtask(() async {
+      final apiClient = ref.read(apiClientProvider);
+
+      await apiClient.setSid(
+        "45c019dbe25b067f397b389fc984955a3354e7681be4363f89a40ec2",
+      );
+    });
   }
 
   void _setupRealtimeListener() {
-    appLogger.i('[Realtime] Listener initialized');
-
     final realtime = ref.read(realtimeServiceProvider);
 
     // prevent duplicate connect
     if (!realtime.isConnected) {
-      appLogger.i(
-        '[Realtime] Connecting to socket → ${AppConfig.normalizedBaseUrl}',
-      );
-
       realtime.connect(
         baseUrl: "https://aos-staging.duckdns.org",
         siteName: "aos-staging.duckdns.org",

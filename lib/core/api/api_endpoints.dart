@@ -121,4 +121,61 @@ class ApiEndpoints {
       '/api/method/aos.api.chat.mark_delivered';
   static final String markReadEndpoint = '/api/method/aos.api.chat.mark_read';
   static final String typingEndpoint = '/api/method/aos.api.chat.typing';
+
+  // ───────────── SHORTS ─────────────
+
+  // FEED
+  static final String shortsFeedForYou =
+      '/api/method/aos.api.shorts.feed_for_you';
+
+  static final String shortsFeedFollowing =
+      '/api/method/aos.api.shorts.feed_following';
+
+  static final String shortsFeedByAd = '/api/method/aos.api.shorts.feed_by_ad';
+
+  // MANAGEMENT
+  static final String getShort = '/api/method/aos.api.shorts.get_short';
+
+  static final String myShorts = '/api/method/aos.api.shorts.my_shorts';
+
+  static final String deleteShort = '/api/method/aos.api.shorts.delete_short';
+
+  static final String retryProcessing =
+      '/api/method/aos.api.shorts.retry_processing';
+
+  // UPLOAD
+  static final String initShortUpload =
+      '/api/method/aos.api.shorts.init_upload';
+
+  static final String confirmShortUpload =
+      '/api/method/aos.api.shorts.confirm_upload';
+
+  static final String updateShortMetadata =
+      '/api/method/aos.api.shorts.update_short_metadata';
+
+  // ENGAGEMENT
+  static final String toggleShortLike =
+      '/api/method/aos.api.shorts.toggle_like';
+
+  // COMMENTS
+  static final String addShortComment =
+      '/api/method/aos.api.shorts.add_comment';
+
+  static final String replyShortComment =
+      '/api/method/aos.api.shorts.reply_comment';
+
+  static final String listShortComments =
+      '/api/method/aos.api.shorts.list_comments';
+
+  static final String listShortReplies =
+      '/api/method/aos.api.shorts.list_replies';
+
+  static final String deleteShortComment =
+      '/api/method/aos.api.shorts.delete_comment';
+
+  // TRACKING
+  static final String trackShortImpression =
+      '/api/method/aos.api.shorts.track_impression';
+
+  static final String trackShortView = '/api/method/aos.api.shorts.track_view';
 }

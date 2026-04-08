@@ -6,6 +6,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/seller/presentation/widgets/seller_action_tiles.dart';
+import 'package:africaonlinestores/features/shorts/navigation/shorts_routes.dart';
 
 class StartSellingScreen extends StatelessWidget {
   const StartSellingScreen({super.key});
@@ -49,7 +50,7 @@ class StartSellingScreen extends StatelessWidget {
               iconBackgroundColor: colors.primary.withOpacity(.15),
               title: "Post a Short Video",
               subtitle: "Record a 60s video of your product.",
-              onTap: () {},
+              onTap: () => ShortsNavigation.toCreateShort(context),
             ),
             const SizedBox(height: 12),
             ActionTile(
@@ -58,6 +59,14 @@ class StartSellingScreen extends StatelessWidget {
               title: "Go Live",
               subtitle: "Stream live to your followers",
               onTap: () {},
+            ),
+            const SizedBox(height: 12),
+            ActionTile(
+              leading: Icon(Icons.feed_outlined, color: colors.primary),
+              iconBackgroundColor: colors.primary.withOpacity(.15),
+              title: "Feeds for You",
+              subtitle: "View some shorts",
+              onTap: () => ShortsNavigation.toShorts(context),
             ),
           ],
         ),

@@ -106,4 +106,12 @@ class AppRoutes {
 
   static const nChats = 'chats';
   static const nMessages = 'chatMessage';
+
+  // SHORTS routes
+  static const String shorts = '/shorts';
+  static const String nShorts = 'shorts';
+
+  // CREATE SHORT
+  static const String createShort = '/shorts/create';
+  static const String nCreateShort = 'createShort';
 }

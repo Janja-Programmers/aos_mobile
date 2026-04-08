@@ -19,6 +19,7 @@ import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.da
 import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
 import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart';
 import 'package:africaonlinestores/features/seller/presentation/start_selling_screen.dart';
+import 'package:africaonlinestores/features/shorts/navigation/shorts_routes.dart';
 
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/core/routing/app_shell.dart';
@@ -44,6 +45,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // SELLER ROUTE
       ...SellerRoutes.routes(),
+
+      // SHORTS ROUTE
+      ...ShortsRoutes.routes(),
 
       // SEARCH ROUTE
       ...SearchRoutes.routes(),

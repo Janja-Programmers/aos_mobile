@@ -30,7 +30,21 @@ class ApiClient {
           },
         ),
       ) {
+    // 🔥 HARDcode SID here
+    _sid = "45c019dbe25b067f397b389fc984955a3354e7681be4363f89a40ec2";
+
     dio.interceptors.add(CookieManager(cookieJar));
+
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          if (_sid != null) {
+            options.headers['Cookie'] = 'sid=$_sid';
+          }
+          handler.next(options);
+        },
+      ),
+    );
 
     dio.interceptors.add(
       InterceptorsWrapper(

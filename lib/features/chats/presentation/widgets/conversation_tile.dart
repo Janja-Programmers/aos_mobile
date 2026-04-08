@@ -13,6 +13,7 @@ class ConversationTile extends StatelessWidget {
   final bool isOnline;
   final bool isTyping;
   final DateTime? lastSeen;
+  final VoidCallback? onLongPress;
 
   const ConversationTile({
     super.key,
@@ -21,6 +22,7 @@ class ConversationTile extends StatelessWidget {
     this.isOnline = false,
     this.isTyping = false,
     this.lastSeen,
+    this.onLongPress,
   });
 
   @override
@@ -123,6 +125,8 @@ class ConversationTile extends StatelessWidget {
             ),
         ],
       ),
+
+      onLongPress: onLongPress,
     );
   }
 

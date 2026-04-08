@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
-import 'package:africaonlinestores/features/chats/controllers/chat_providers.dart';
+import 'package:africaonlinestores/features/chats/controllers/chat_service_providers.dart';
 import 'package:africaonlinestores/features/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/chats/repository/chat_repository_impl.dart';
 
@@ -54,10 +54,9 @@ class ChatMessagesController
     _messages
       ..clear()
       ..addAll(res.rightOrNull!.reversed);
-    state = AsyncData(_messages);
 
-    // mark delivery + read
-    await repo.markDelivered(conversationId);
+    state = AsyncData(List.of(_messages));
+
     await repo.markRead(conversationId);
   }
 
@@ -78,7 +77,7 @@ class ChatMessagesController
     if (res.isLeft) return;
 
     _messages.insertAll(0, res.rightOrNull!.reversed);
-    state = AsyncData(_messages);
+    state = AsyncData(List.of(_messages));
   }
 
   // -----------------------------
@@ -129,14 +128,15 @@ class ChatMessagesController
 
     // 1. Add temp
     _messages.add(tempMsg);
-    state = AsyncData(_messages);
+    state = AsyncData(List.of(_messages));
 
     // 2. Send
     final realMsg = await sendMessage(text);
 
     if (realMsg == null) {
       _messages.removeWhere((m) => m.id == tempId);
-      state = AsyncData(_messages);
+      state = AsyncData(List.of(_messages));
+
       return;
     }
 
@@ -144,7 +144,7 @@ class ChatMessagesController
     final index = _messages.indexWhere((m) => m.id == tempId);
     if (index != -1) _messages[index] = realMsg;
 
-    state = AsyncData(_messages);
+    state = AsyncData(List.of(_messages));
   }
 
   // -----------------------------
@@ -152,38 +152,44 @@ class ChatMessagesController
   // -----------------------------
   Future<void> _listenRealtime() async {
     final realtime = ref.read(chatRealtimeServiceProvider);
+    final repo = ref.read(chatRepositoryProvider);
 
-    // Wait until socket is connected
-    while (!realtime.isConnected) {
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
+    await _messageSub?.cancel();
 
-    _messageSub = realtime.messages.listen((data) {
+    _messageSub = realtime.messages.listen((data) async {
       final convId = data['conversation_id'];
       if (convId != conversationId) return;
 
       final msgData = data['message'];
+      if (msgData == null) return;
+
       final newMsg = ChatMessage.fromJson(msgData);
 
-      // Deduplicate
+      // Remove matching optimistic temp message before adding real one
+      _messages.removeWhere(
+        (m) =>
+            m.id.startsWith('temp-') &&
+            m.sender == newMsg.sender &&
+            m.content == newMsg.content,
+      );
+
       if (_isDuplicate(newMsg)) return;
 
       _messages.add(newMsg);
-      state = AsyncData(_messages);
+      state = AsyncData(List.of(_messages));
 
-      // Fire-and-forget delivery
-      ref.read(chatRepositoryProvider).markDelivered(conversationId);
+      // Optional ACK to server
+      realtime.sendMessageAck({
+        'conversation_id': conversationId,
+        'message_id': newMsg.id,
+      });
+
+      await repo.markDelivered(conversationId);
     });
   }
 
   bool _isDuplicate(ChatMessage newMsg) {
-    return _messages.any(
-      (m) =>
-          m.id == newMsg.id ||
-          (m.sender == newMsg.sender &&
-              m.content == newMsg.content &&
-              (m.createdAt.difference(newMsg.createdAt).inSeconds.abs() < 5)),
-    );
+    return _messages.any((m) => m.id == newMsg.id);
   }
 
   // -----------------------------

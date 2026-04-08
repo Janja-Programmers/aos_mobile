@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
-import 'package:africaonlinestores/features/chats/controllers/chat_providers.dart';
+import 'package:africaonlinestores/features/chats/controllers/chat_service_providers.dart';
 import 'package:africaonlinestores/features/chats/repository/chat_repository_impl.dart';
 import 'package:africaonlinestores/features/chats/domain/chat_conversation.dart';
 
@@ -64,6 +64,35 @@ class ChatConversationsController
     appLogger.w('[ChatController] Current user: $_currentUser');
   }
 
+  //
+  // DELETE Conversation
+  //
+
+  Future<void> deleteConversation(String conversationId) async {
+    final repo = ref.read(chatRepositoryProvider);
+
+    appLogger.w('[ChatController] Deleting conversation: $conversationId');
+
+    // 🔥 Optimistic update (remove immediately from UI)
+    final previousState = state;
+
+    state = state.whenData((conversations) {
+      return conversations.where((c) => c.id != conversationId).toList();
+    });
+
+    // 🔥 Call repository
+    final res = await repo.deleteConversation(conversationId);
+
+    if (res.isLeft) {
+      // ❌ If delete fails → rollback UI
+      state = previousState;
+
+      appLogger.w('[ChatController] Failed to delete: ${res.leftOrNull}');
+    } else {
+      appLogger.w('[ChatController] Conversation deleted successfully');
+    }
+  }
+
   // -----------------------------
   // Local Updates
   // -----------------------------
@@ -84,16 +113,9 @@ class ChatConversationsController
   // -----------------------------
   // Realtime subscription
   // -----------------------------
+
   Future<void> _subscribeToRealtime() async {
     final realtime = ref.read(chatRealtimeServiceProvider);
-
-    // Wait only for socket to connect
-    while (!realtime.isConnected) {
-      appLogger.w('Not connected');
-
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-    appLogger.w('[ChatController] Realtime connected, subscribing to messages');
 
     _messageSub = realtime.messages.listen((data) {
       final convId = data['conversation_id'];
@@ -109,7 +131,6 @@ class ChatConversationsController
         '[ChatController] Received message in conversation $convId from $sender: $message',
       );
 
-      // Use centralized function
       _updateConversationPreview(
         conversationId: convId,
         lastMessage: message,

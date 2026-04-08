@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/chats/controllers/chat_conversations_controller.dart';
 import 'package:africaonlinestores/features/chats/controllers/chat_presence_controller.dart';
 import 'package:africaonlinestores/features/chats/controllers/chat_typing_controller.dart';
 import 'package:africaonlinestores/features/chats/navigation/chat_routes.dart';
 import 'package:africaonlinestores/features/chats/presentation/widgets/conversation_tile.dart';
+
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ChatListScreen extends ConsumerWidget {
   const ChatListScreen({super.key});
@@ -40,12 +44,17 @@ class ChatListScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final conv = conversations[index];
 
-                // 🔥 Watch ONLY what this tile needs
-                final presenceMap = ref.watch(chatPresenceControllerProvider);
-                final typingMap = ref.watch(chatTypingControllerProvider);
+                final presence = ref.watch(
+                  chatPresenceControllerProvider.select(
+                    (map) => map[conv.user],
+                  ),
+                );
 
-                final presence = presenceMap[conv.user];
-                final isTyping = typingMap[conv.id] == true;
+                final isTyping = ref.watch(
+                  chatTypingControllerProvider.select(
+                    (map) => map[conv.id] == true,
+                  ),
+                );
 
                 // 🔥 Override message if typing
                 final subtitle = isTyping ? "Typing..." : conv.lastMessage;
@@ -71,6 +80,57 @@ class ChatListScreen extends ConsumerWidget {
                         user: conv.user,
                         displayName: conv.displayName,
                       );
+                    },
+                    onLongPress: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          final colors = context.appColors;
+
+                          return AlertDialog(
+                            backgroundColor: colors.surface,
+                            title: Text(
+                              "Delete conversation",
+                              style: context.h5,
+                            ),
+                            content: Text(
+                              "Delete chat with ${conv.displayName}?\nThis action cannot be undone.",
+                              style: context.p,
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text(
+                                  "Cancel",
+                                  style: context.p.copyWith(
+                                    color: colors.primary,
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text(
+                                  "Delete",
+                                  style: context.p.copyWith(
+                                    color: colors.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (confirm == true) {
+                        await ref
+                            .read(chatConversationsControllerProvider.notifier)
+                            .deleteConversation(conv.id);
+
+                        // ✅ Optional: feedback
+                        if (context.mounted) {
+                          ShowSnack(context, "Conversation deleted").success();
+                        }
+                      }
                     },
                   ),
                 );

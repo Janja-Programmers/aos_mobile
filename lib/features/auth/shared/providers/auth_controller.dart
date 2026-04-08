@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'package:africaonlinestores/core/config/app_config.dart';
-import 'package:africaonlinestores/features/chats/controllers/chat_providers.dart';
-import 'package:africaonlinestores/features/chats/data/chat_realtime_service.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -10,6 +8,7 @@ import 'package:africaonlinestores/core/api/session_storage.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/features/auth/data/auth_api_provider.dart';
 import 'package:africaonlinestores/features/auth/data/auth_api.dart';
@@ -44,49 +43,45 @@ class AuthController extends StateNotifier<AuthState> {
        _api = api,
        _apiClient = apiClient,
        _storage = storage,
-       super(AuthState.initial()) {
-    _realtime = ref.read(chatRealtimeServiceProvider);
-  }
+       super(AuthState.initial());
 
   final Ref _ref;
   final AuthApi _api;
   final ApiClient _apiClient;
   final SessionStorage _storage;
 
-  late final ChatRealtimeService _realtime;
-
-  bool _isLoggingOut = false;
-
-  final _changesCtrl = StreamController<void>.broadcast();
-  Stream<void> get changes => _changesCtrl.stream;
+  Future<bool>? _refreshingSession;
   StreamSubscription<void>? _sessionSub;
-
-  void _emit() {
-    if (!_changesCtrl.isClosed) _changesCtrl.add(null);
-  }
 
   /// Update cached user (after profile update)
   void setUserFromMap(Map<String, dynamic> userMap) {
     if (!state.isAuthenticated) return;
     state = state.copyWith(user: AuthUser.fromMap(userMap));
-    _emit();
   }
 
   /// SESSISON Refreshing
   Future<bool> _refreshSession() async {
     final sid = await _storage.getSid();
-    if (sid == null || sid.isEmpty) return false;
+
+    if (sid == null || sid.isEmpty) {
+      return false;
+    }
 
     try {
       await _apiClient.setSid(sid);
+
       final res = await _api.me();
 
       if (res.isLeft) return false;
 
       final payload = res.rightOrNull ?? {};
+
       if (payload['ok'] != true) return false;
 
       final user = Map<String, dynamic>.from(payload['data']?['user'] ?? {});
+
+      if (!mounted) return false;
+
       state = state.copyWith(
         isLoggedIn: true,
         sid: sid,
@@ -94,14 +89,31 @@ class AuthController extends StateNotifier<AuthState> {
         clearError: true,
       );
 
-      // Reconnect socket if needed
-      _realtime.connect(baseUrl: AppConfig.normalizedBaseUrl, sid: sid);
       await _syncUserPreferences();
-      _emit();
 
       return true;
-    } catch (_) {
+    } catch (e) {
+      appLogger.e('[Auth] Refresh session error: $e');
       return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> _fetchValidSession(String sid) async {
+    try {
+      await _apiClient.setSid(sid);
+
+      final res = await _api.me();
+
+      if (res.isLeft) return null;
+
+      final payload = res.rightOrNull ?? {};
+
+      if (payload['ok'] != true) return null;
+
+      return Map<String, dynamic>.from(payload['data']?['user'] ?? {});
+    } catch (e) {
+      appLogger.e('[Auth] Fetch session error: $e');
+      return null;
     }
   }
 
@@ -110,54 +122,43 @@ class AuthController extends StateNotifier<AuthState> {
     try {
       // 🔁 Listen for session expiry (401 from backend)
       _sessionSub ??= _apiClient.sessionExpiredStream.listen((_) async {
-        if (!state.isAuthenticated || _isLoggingOut) return;
+        if (!state.isAuthenticated) return;
 
-        _isLoggingOut = true;
+        if (_refreshingSession != null) {
+          final success = await _refreshingSession!;
+          if (!success) await logout();
+          return;
+        }
 
-        // Try silent refresh first
-        final refreshed = await _refreshSession();
+        _refreshingSession = _refreshSession();
+
+        final refreshed = await _refreshingSession!;
+        _refreshingSession = null;
+
         if (!refreshed) {
           await logout();
         }
-
-        _isLoggingOut = false;
       });
 
-      // 🔐 Restore SID from storage
+      // 🔐 Restore SID
       final sid = await _storage.getSid();
 
       if (sid == null || sid.isEmpty) {
         state = state.copyWith(initializing: false, isLoggedIn: false);
-        _emit();
         return;
       }
 
-      // 🍪 Attach SID to ApiClient (CookieManager)
-      await _apiClient.setSid(sid);
+      // ✅ Use shared validator
+      final user = await _fetchValidSession(sid);
 
-      // ✅ Validate session with backend
-      final res = await _api.me();
-
-      if (res.isLeft) {
+      if (user == null) {
         await _clearSession();
-        _emit();
         return;
       }
-
-      final payload = res.rightOrNull ?? {};
-      if (payload['ok'] != true) {
-        await _clearSession();
-        _emit();
-        return;
-      }
-
-      // 👤 Extract user
-      final user = Map<String, dynamic>.from(payload['data']?['user'] ?? {});
 
       await _completeLogin(sid: sid, user: user);
     } catch (_) {
       await _clearSession();
-      _emit();
     }
   }
 
@@ -165,14 +166,15 @@ class AuthController extends StateNotifier<AuthState> {
     await _storage.clearSid();
     await _apiClient.clearSid();
 
+    // 🔥 reset refresh state
+    _refreshingSession = null;
+
     state = state.copyWith(
       initializing: false,
       isLoggedIn: false,
       clearSid: true,
       clearUser: true,
     );
-
-    _emit();
   }
 
   Future<void> _syncUserPreferences() async {
@@ -245,7 +247,6 @@ class AuthController extends StateNotifier<AuthState> {
       await _api.logout();
     } catch (_) {}
 
-    _realtime.disconnect();
     await _clearSession();
     _ref.invalidate(wishlistControllerProvider);
   }
@@ -494,20 +495,16 @@ class AuthController extends StateNotifier<AuthState> {
       clearError: true,
     );
 
-    // 🔥 CONNECT REALTIME HERE (centralized)
-    _realtime.connect(baseUrl: AppConfig.normalizedBaseUrl, sid: sid);
-
     await _syncUserPreferences();
 
-    _emit();
     _ref.invalidate(wishlistControllerProvider);
   }
 
   @override
   void dispose() {
     _sessionSub?.cancel();
-    _changesCtrl.close();
-    _realtime.disconnect();
+    _refreshingSession = null;
+
     super.dispose();
   }
 }

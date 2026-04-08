@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,21 +30,10 @@ import 'package:africaonlinestores/shared/enums/ads.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authControllerProvider);
 
-  final authStream = ref.watch(authControllerProvider.notifier).stream;
-
   final bootstrapState = ref.watch(appBootstrapProvider);
-
-  final bootstrapStream = ref
-      .watch(appBootstrapControllerProvider.notifier)
-      .stream;
 
   return GoRouter(
     initialLocation: AppRoutes.home,
-
-    refreshListenable: Listenable.merge([
-      GoRouterRefreshStream(authStream),
-      GoRouterRefreshStream(bootstrapStream),
-    ]),
 
     routes: [
       /// AUTH routes
@@ -174,17 +161,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isAuthRoute = RouteGuards.isAuthRoute(location);
       final isProtected = RouteGuards.isProtectedRoute(location);
 
-      /// Force onboarding
       if (!bootstrapState.onboardingCompleted && !isOnboarding) {
         return AppRoutes.onboarding;
       }
 
-      /// Prevent returning to onboarding
       if (bootstrapState.onboardingCompleted && isOnboarding) {
         return AppRoutes.home;
       }
 
-      /// Protect authenticated routes
       if (!auth.isLoggedIn && isProtected) {
         final isGoingToAuth = location.startsWith('/auth');
 
@@ -193,7 +177,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return '${AppRoutes.login}?redirect=${Uri.encodeComponent(location)}';
       }
 
-      /// Logged-in users shouldn't see auth pages
       if (auth.isLoggedIn && isAuthRoute) {
         return AppRoutes.home;
       }
@@ -205,17 +188,3 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
 String _param(GoRouterState state, String key) =>
     Uri.decodeComponent(state.pathParameters[key] ?? '');
-
-class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream<dynamic> stream) {
-    _sub = stream.listen((_) => notifyListeners());
-  }
-
-  late final StreamSubscription<dynamic> _sub;
-
-  @override
-  void dispose() {
-    _sub.cancel();
-    super.dispose();
-  }
-}

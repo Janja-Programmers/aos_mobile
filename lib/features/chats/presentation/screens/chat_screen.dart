@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/chats/controllers/chat_conversations_controller.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
+import 'package:africaonlinestores/features/chats/controllers/chat_conversations_controller.dart';
 import 'package:africaonlinestores/features/chats/controllers/chat_messages_controller.dart';
 import 'package:africaonlinestores/features/chats/controllers/chat_presence_controller.dart';
 import 'package:africaonlinestores/features/chats/controllers/chat_typing_controller.dart';
@@ -158,6 +158,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           // Input
           // -------------------------
           ChatInputBar(
+            initialText: widget.initialMessage,
             onSend: (text) async {
               final notifier = ref.read(
                 chatMessagesControllerProvider(widget.conversationId).notifier,
@@ -166,24 +167,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               _scrollToBottom();
             },
             onTyping: (_) {
-              // -------------------------
-              // Debounced typing (2 sec)
-              // -------------------------
+              // cancel previous timer
               _typingTimer?.cancel();
-              ref
-                  .read(chatRepositoryProvider)
-                  .sendTyping(
-                    conversationId: widget.conversationId,
-                    isTyping: true,
-                  );
 
-              _typingTimer = Timer(const Duration(seconds: 2), () {
+              // start a new debounce timer
+              _typingTimer = Timer(const Duration(seconds: 5), () {
+                // 🔥 ONLY fires if user stopped typing for 5 sec
                 ref
                     .read(chatRepositoryProvider)
                     .sendTyping(
                       conversationId: widget.conversationId,
-                      isTyping: false,
+                      isTyping: true,
                     );
+
+                // optional: auto-stop typing after some time
+                Timer(const Duration(seconds: 3), () {
+                  ref
+                      .read(chatRepositoryProvider)
+                      .sendTyping(
+                        conversationId: widget.conversationId,
+                        isTyping: false,
+                      );
+                });
               });
             },
           ),

@@ -29,6 +29,10 @@ class ChatRepository {
     return api.listConversations();
   }
 
+  Future<Either<Failure, void>> deleteConversation(String conversationId) {
+    return api.deleteConversation(conversationId);
+  }
+
   // -----------------------------
   // Messages
   // -----------------------------

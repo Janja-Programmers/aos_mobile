@@ -24,38 +24,30 @@ class AppBootstrapController extends StateNotifier<AppBootstrapState> {
 
   final OnboardingStorage _storage;
 
-  final _controller = StreamController<AppBootstrapState>.broadcast();
-
-  @override
-  Stream<AppBootstrapState> get stream => _controller.stream;
-
+  // -----------------------------
+  // Initialize app bootstrap
+  // -----------------------------
   Future<void> initialize() async {
     final completed = _storage.isOnboardingComplete();
 
     state = state.copyWith(isReady: true, onboardingCompleted: completed);
-
-    _controller.add(state);
   }
 
+  // -----------------------------
+  // Mark onboarding complete
+  // -----------------------------
   Future<void> completeOnboarding() async {
     await _storage.markOnboardingComplete();
 
     state = state.copyWith(onboardingCompleted: true);
-
-    _controller.add(state);
   }
 
+  // -----------------------------
+  // Reset onboarding (for debug / logout cases)
+  // -----------------------------
   Future<void> resetOnboarding() async {
     await _storage.clearAll();
 
     state = state.copyWith(onboardingCompleted: false);
-
-    _controller.add(state);
-  }
-
-  @override
-  void dispose() {
-    _controller.close();
-    super.dispose();
   }
 }

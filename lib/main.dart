@@ -1,3 +1,7 @@
+import 'package:africaonlinestores/core/config/app_config.dart';
+import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
+
 import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -50,9 +54,44 @@ class _AppRootState extends ConsumerState<AppRoot> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(appBootstrapControllerProvider.notifier).initialize(),
-    );
+
+    appLogger.i('[App] initState → Bootstrapping app');
+
+    // Bootstrap
+    Future.microtask(() {
+      appLogger.i('[App] Starting bootstrap initialization');
+      ref.read(appBootstrapControllerProvider.notifier).initialize();
+    });
+
+    // 🔥 Realtime wiring
+    Future.microtask(() {
+      appLogger.i('[App] Setting up realtime listener');
+      _setupRealtimeListener();
+    });
+  }
+
+  void _setupRealtimeListener() {
+    appLogger.i('[Realtime] Listener initialized');
+
+    final realtime = ref.read(realtimeServiceProvider);
+
+    // prevent duplicate connect
+    if (!realtime.isConnected) {
+      appLogger.i(
+        '[Realtime] Connecting to socket → ${AppConfig.normalizedBaseUrl}',
+      );
+
+      realtime.connect(
+        baseUrl: "https://aos-staging.duckdns.org",
+        siteName: "aos-staging.duckdns.org",
+        sid: "45c019dbe25b067f397b389fc984955a3354e7681be4363f89a40ec2",
+        email: "georgesbobby21@gmail.com",
+      );
+
+      appLogger.i('[Realtime] Connection triggered');
+    } else {
+      appLogger.w('[Realtime] Already connected → skipping');
+    }
   }
 
   @override

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
-import 'package:africaonlinestores/features/chats/controllers/chat_providers.dart';
+import 'package:africaonlinestores/features/chats/controllers/chat_service_providers.dart';
 
 final chatTypingControllerProvider =
     StateNotifierProvider<ChatTypingController, Map<String, bool>>(

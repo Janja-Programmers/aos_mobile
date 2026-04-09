@@ -1,6 +1,5 @@
-import 'package:africaonlinestores/features/shorts/domain/entities/short_metrics.dart';
-
 import 'package:africaonlinestores/features/shorts/data/models/short_metrics_model.dart';
+import 'package:africaonlinestores/features/shorts/domain/short_metrics.dart';
 
 class MetricsMapper {
   const MetricsMapper._();

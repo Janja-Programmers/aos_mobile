@@ -1,4 +1,4 @@
-import 'package:africaonlinestores/features/shorts/domain/entities/short_comment.dart';
+import 'package:africaonlinestores/features/shorts/domain/short_comment.dart';
 import 'package:africaonlinestores/features/shorts/domain/value_objects/comment_id.dart';
 import 'package:africaonlinestores/features/shorts/domain/value_objects/short_id.dart';
 

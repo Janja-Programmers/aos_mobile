@@ -1,58 +1,58 @@
-import 'package:equatable/equatable.dart';
+// import 'package:equatable/equatable.dart';
 
-abstract class ShortsFailure extends Equatable {
-  final String message;
+// abstract class ShortsFailure extends Equatable {
+//   final String message;
 
-  const ShortsFailure(this.message);
+//   const ShortsFailure(this.message);
 
-  @override
-  List<Object?> get props => [message];
-}
+//   @override
+//   List<Object?> get props => [message];
+// }
 
-// ───────────── FEED ─────────────
+// // ───────────── FEED ─────────────
 
-class FeedFailure extends ShortsFailure {
-  const FeedFailure(super.message);
-}
+// class FeedFailure extends ShortsFailure {
+//   const FeedFailure(super.message);
+// }
 
-// ───────────── UPLOAD ─────────────
+// // ───────────── UPLOAD ─────────────
 
-class UploadInitFailure extends ShortsFailure {
-  const UploadInitFailure(super.message);
-}
+// class UploadInitFailure extends ShortsFailure {
+//   const UploadInitFailure(super.message);
+// }
 
-class UploadConfirmFailure extends ShortsFailure {
-  const UploadConfirmFailure(super.message);
-}
+// class UploadConfirmFailure extends ShortsFailure {
+//   const UploadConfirmFailure(super.message);
+// }
 
-class UploadProcessingFailure extends ShortsFailure {
-  const UploadProcessingFailure(super.message);
-}
+// class UploadProcessingFailure extends ShortsFailure {
+//   const UploadProcessingFailure(super.message);
+// }
 
-// ───────────── ENGAGEMENT ─────────────
+// // ───────────── ENGAGEMENT ─────────────
 
-class ToggleLikeFailure extends ShortsFailure {
-  const ToggleLikeFailure(super.message);
-}
+// class ToggleLikeFailure extends ShortsFailure {
+//   const ToggleLikeFailure(super.message);
+// }
 
-// ───────────── COMMENTS ─────────────
+// // ───────────── COMMENTS ─────────────
 
-class CommentFailure extends ShortsFailure {
-  const CommentFailure(super.message);
-}
+// class CommentFailure extends ShortsFailure {
+//   const CommentFailure(super.message);
+// }
 
-// ───────────── TRACKING ─────────────
+// // ───────────── TRACKING ─────────────
 
-class TrackingFailure extends ShortsFailure {
-  const TrackingFailure(super.message);
-}
+// class TrackingFailure extends ShortsFailure {
+//   const TrackingFailure(super.message);
+// }
 
-// ───────────── MANAGEMENT ─────────────
+// // ───────────── MANAGEMENT ─────────────
 
-class ShortNotFoundFailure extends ShortsFailure {
-  const ShortNotFoundFailure(super.message);
-}
+// class ShortNotFoundFailure extends ShortsFailure {
+//   const ShortNotFoundFailure(super.message);
+// }
 
-class DeleteShortFailure extends ShortsFailure {
-  const DeleteShortFailure(super.message);
-}
+// class DeleteShortFailure extends ShortsFailure {
+//   const DeleteShortFailure(super.message);
+// }

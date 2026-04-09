@@ -17,6 +17,10 @@ class ShortModel {
 
   final String? postedOn;
 
+  final bool isReady;
+  final bool isProcessing;
+  final bool isFailed;
+
   const ShortModel({
     required this.id,
     required this.caption,
@@ -27,6 +31,9 @@ class ShortModel {
     required this.metrics,
     required this.rankingScore,
     required this.postedOn,
+    required this.isReady,
+    required this.isProcessing,
+    required this.isFailed,
   });
 
   factory ShortModel.fromJson(Map<String, dynamic> json) {
@@ -49,6 +56,10 @@ class ShortModel {
       rankingScore: (json['ranking_score'] ?? 0).toDouble(),
 
       postedOn: json['posted_on'] as String?,
+
+      isReady: json['is_ready'] ?? false,
+      isProcessing: json['is_processing'] ?? false,
+      isFailed: json['is_failed'] ?? false,
     );
   }
 }

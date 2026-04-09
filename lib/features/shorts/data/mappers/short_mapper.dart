@@ -1,4 +1,4 @@
-import 'package:africaonlinestores/features/shorts/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/domain/short.dart';
 import 'package:africaonlinestores/features/shorts/domain/value_objects/short_id.dart';
 import 'package:africaonlinestores/features/shorts/domain/value_objects/caption.dart';
 import 'package:africaonlinestores/features/shorts/domain/enums/short_status.dart';
@@ -34,14 +34,17 @@ class ShortMapper {
 
   /// 🔥 Core lifecycle logic
   static ShortStatus _resolveStatus(ShortModel model) {
-    // If backend later provides explicit status → use it
-    // For now infer safely
+    if (model.isFailed) return ShortStatus.failed;
 
+    if (model.isReady) return ShortStatus.ready;
+
+    if (model.isProcessing) return ShortStatus.processing;
+
+    // fallback
     if (model.playbackUrl != null && model.playbackUrl!.isNotEmpty) {
       return ShortStatus.ready;
     }
 
-    // Could refine later with backend status field
     return ShortStatus.processing;
   }
 }

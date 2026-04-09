@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';

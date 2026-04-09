@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
 
-import 'package:africaonlinestores/features/shorts/application/screens/post_short_screen.dart';
-import 'package:africaonlinestores/features/shorts/application/screens/shorts_screen.dart';
+import 'package:africaonlinestores/features/shorts/application/screens/post_short/post_short_screen.dart';
+import 'package:africaonlinestores/features/shorts/application/screens/shorts/shorts_screen.dart';
 
 class ShortsRoutes {
   const ShortsRoutes._();

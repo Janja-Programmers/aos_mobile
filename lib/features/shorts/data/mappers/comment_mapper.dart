@@ -12,7 +12,7 @@ class CommentMapper {
       id: CommentId(model.id),
       shortId: ShortId(model.shortId),
       userId: model.userId,
-      content: model.content,
+      comment: model.comment,
       parentId: model.parentId != null ? CommentId(model.parentId!) : null,
       rootId: model.rootId != null ? CommentId(model.rootId!) : null,
       replyCount: model.replyCount,

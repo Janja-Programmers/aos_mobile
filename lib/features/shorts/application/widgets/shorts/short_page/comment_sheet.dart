@@ -7,12 +7,17 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/shorts/application/widgets/shorts/comments/comments_input.dart';
 import 'package:africaonlinestores/features/shorts/application/widgets/shorts/comments/comments_list.dart';
 
+import 'package:africaonlinestores/features/shorts/domain/short.dart';
+
 class CommentsSheet extends ConsumerWidget {
-  const CommentsSheet({super.key});
+  final Short short;
+
+  const CommentsSheet({super.key, required this.short});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
+    final String shortId = short.id.value;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
@@ -29,7 +34,7 @@ class CommentsSheet extends ConsumerWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: colors.white.withOpacity(0.3),
+              color: colors.border,
               borderRadius: BorderRadius.circular(10),
             ),
           ),
@@ -38,11 +43,8 @@ class CommentsSheet extends ConsumerWidget {
 
           // 🧾 TITLE
           Text(
-            "328 Comments",
-            style: context.p.copyWith(
-              color: colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            "${short.metrics.commentCount} Comments",
+            style: context.p.copyWith(fontWeight: FontWeight.bold),
           ),
 
           const SizedBox(height: 12),
@@ -50,12 +52,12 @@ class CommentsSheet extends ConsumerWidget {
           const Divider(height: 1),
 
           // 📜 LIST
-          const Expanded(child: CommentsList()),
+          Expanded(child: CommentsList(shortId: shortId)),
 
           const Divider(height: 1),
 
           // ✍️ INPUT
-          const CommentInput(),
+          CommentInput(shortId: shortId),
         ],
       ),
     );

@@ -4,25 +4,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/shorts/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/application/widgets/shorts/short_page/comment_sheet.dart';
-import 'package:africaonlinestores/features/shorts/domain/short.dart';
 
 class ShortActionsPanel extends ConsumerWidget {
-  final Short short;
-  final int index;
+  final String shortId;
 
-  const ShortActionsPanel({
-    super.key,
-    required this.short,
-    required this.index,
-  });
+  const ShortActionsPanel({super.key, required this.shortId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
 
+    final state = ref.watch(shortsControllerProvider);
     final controller = ref.read(shortsControllerProvider.notifier);
 
+    // ✅ SAFE: find short by ID
+    final short = state.shorts.firstWhere(
+      (e) => e.id.value == shortId,
+      orElse: () => state.shorts.first, // fallback safety
+    );
+
     final metrics = short.metrics;
+
+    // ✅ CRITICAL: resolve index from ID
+    final index = state.shorts.indexWhere((e) => e.id.value == shortId);
+
+    if (index == -1) {
+      // 🔒 safety guard (should never happen)
+      return const SizedBox.shrink();
+    }
 
     return Positioned(
       right: 12,
@@ -36,9 +45,9 @@ class ShortActionsPanel extends ConsumerWidget {
           _iconWithLabel(
             context,
             icon: Icons.favorite,
-            color: metrics.likedByMe ? Colors.red : Colors.white,
+            color: metrics.likedByMe ? colors.primary : colors.white,
             label: _formatCount(metrics.likeCount),
-            onTap: () => controller.toggleLike(index),
+            onTap: () => controller.toggleLike(shortId),
           ),
 
           const SizedBox(height: 18),
@@ -46,13 +55,14 @@ class ShortActionsPanel extends ConsumerWidget {
           _iconWithLabel(
             context,
             icon: Icons.comment,
+            color: colors.white,
             label: _formatCount(metrics.commentCount),
             onTap: () {
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
                 backgroundColor: colors.surface,
-                builder: (_) => const CommentsSheet(),
+                builder: (_) => CommentsSheet(short: short),
               );
             },
           ),
@@ -63,9 +73,7 @@ class ShortActionsPanel extends ConsumerWidget {
             context,
             icon: Icons.share,
             label: "Share",
-            onTap: () {
-              // TODO: implement share
-            },
+            onTap: () {},
           ),
         ],
       ),
@@ -100,7 +108,7 @@ class ShortActionsPanel extends ConsumerWidget {
       children: [
         GestureDetector(
           onTap: onTap,
-          child: Icon(icon, color: color ?? Colors.white, size: 32),
+          child: Icon(icon, color: color ?? colors.white, size: 32),
         ),
         const SizedBox(height: 6),
         Text(

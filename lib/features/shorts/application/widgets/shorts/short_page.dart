@@ -18,7 +18,9 @@ class ShortPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(shortsControllerProvider);
+    final short = ref.watch(
+      shortsControllerProvider.select((s) => s.shorts[index]),
+    );
 
     final controller = ref.read(shortsControllerProvider.notifier);
     final player = controller.getPlayer(index);
@@ -40,13 +42,13 @@ class ShortPage extends ConsumerWidget {
             }
           },
           onDoubleTap: () {
-            controller.toggleLike(index);
+            controller.toggleLike(short.id.value);
           },
         ),
 
         const ShortGradientOverlay(),
 
-        ShortActionsPanel(short: short, index: index),
+        ShortActionsPanel(shortId: short.id.value),
 
         Positioned(
           left: 12,

@@ -1,102 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/shorts/application/widgets/shorts/comments/comments_list/comment_tile.dart';
+import 'package:africaonlinestores/features/shorts/application/providers/shorts_providers.dart';
 
-class CommentsList extends StatelessWidget {
-  const CommentsList({super.key});
+class CommentsList extends ConsumerStatefulWidget {
+  final String shortId;
+
+  const CommentsList({super.key, required this.shortId});
 
   @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      itemCount: 10, // 🔥 replace with API later
-      itemBuilder: (_, index) {
-        return const _CommentItem();
-      },
-    );
-  }
+  ConsumerState<CommentsList> createState() => _CommentsListState();
 }
 
-class _CommentItem extends StatelessWidget {
-  const _CommentItem();
+class _CommentsListState extends ConsumerState<CommentsList> {
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      ref.read(commentsControllerProvider.notifier).init(widget.shortId);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.appColors;
+    final state = ref.watch(commentsControllerProvider);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 👤 Avatar
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: colors.surface.withOpacity(0.5),
-            child: Text("F", style: context.p.copyWith(color: colors.white)),
-          ),
+    if (state.isLoading && state.comments.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-          const SizedBox(width: 10),
+    if (!state.isLoading && state.comments.isEmpty) {
+      return const Center(child: Text("No comments yet"));
+    }
 
-          // 💬 Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "@fashionlover",
-                  style: context.p.copyWith(
-                    color: colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-
-                Text(
-                  "This is amazing! 🔥",
-                  style: context.p.copyWith(color: colors.white),
-                ),
-
-                const SizedBox(height: 6),
-
-                Row(
-                  children: [
-                    Text(
-                      "2h",
-                      style: context.p.copyWith(
-                        color: colors.white.withOpacity(0.6),
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-
-                    Text(
-                      "Reply",
-                      style: context.p.copyWith(
-                        color: colors.white.withOpacity(0.6),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 8),
-
-          // ❤️ Like
-          Column(
-            children: [
-              const Icon(Icons.favorite_border, size: 20),
-              const SizedBox(height: 4),
-              Text("234", style: context.p.copyWith(fontSize: 12)),
-            ],
-          ),
-        ],
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      itemCount: state.comments.length,
+      itemBuilder: (_, index) {
+        return CommentTile(comment: state.comments[index]);
+      },
     );
   }
 }

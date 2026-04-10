@@ -2,7 +2,7 @@ class ShortCommentModel {
   final String id;
   final String shortId;
   final String userId;
-  final String content;
+  final String comment;
 
   final String? parentId;
   final String? rootId;
@@ -16,7 +16,7 @@ class ShortCommentModel {
     required this.id,
     required this.shortId,
     required this.userId,
-    required this.content,
+    required this.comment,
     required this.parentId,
     required this.rootId,
     required this.replyCount,
@@ -27,14 +27,14 @@ class ShortCommentModel {
   factory ShortCommentModel.fromJson(Map<String, dynamic> json) {
     return ShortCommentModel(
       id: json['id'] as String,
-      shortId: json['short_id'] as String,
+      shortId: json['short'] as String,
       userId: json['user'] as String,
-      content: (json['content'] ?? '') as String,
+      comment: (json['comment'] ?? '') as String,
       parentId: json['parent_comment'] as String?,
       rootId: json['root_comment'] as String?,
       replyCount: (json['reply_count'] ?? 0) as int,
       isDeleted: (json['status'] == 'deleted'),
-      createdAt: json['creation'] as String,
+      createdAt: json['created_at'] as String,
     );
   }
 }

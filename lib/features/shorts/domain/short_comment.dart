@@ -12,8 +12,8 @@ class ShortComment extends Equatable {
   /// User who created the comment
   final String userId;
 
-  /// Actual content
-  final String content;
+  /// Actual comment
+  final String comment;
 
   /// Parent comment (null if top-level)
   final CommentId? parentId;
@@ -34,7 +34,7 @@ class ShortComment extends Equatable {
     required this.id,
     required this.shortId,
     required this.userId,
-    required this.content,
+    required this.comment,
     required this.parentId,
     required this.rootId,
     required this.replyCount,
@@ -46,12 +46,12 @@ class ShortComment extends Equatable {
 
   bool get isTopLevel => parentId == null;
 
-  ShortComment copyWith({String? content, int? replyCount, bool? isDeleted}) {
+  ShortComment copyWith({String? comment, int? replyCount, bool? isDeleted}) {
     return ShortComment(
       id: id,
       shortId: shortId,
       userId: userId,
-      content: content ?? this.content,
+      comment: comment ?? this.comment,
       parentId: parentId,
       rootId: rootId,
       replyCount: replyCount ?? this.replyCount,
@@ -65,7 +65,7 @@ class ShortComment extends Equatable {
     id,
     shortId,
     userId,
-    content,
+    comment,
     parentId,
     rootId,
     replyCount,

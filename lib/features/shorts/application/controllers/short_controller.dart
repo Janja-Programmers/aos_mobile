@@ -222,37 +222,42 @@ class ShortsController extends StateNotifier<ShortsState> {
   }
 
   // ───────────── METRICS ─────────────
+  Future<void> toggleLike(String shortId) async {
+    // 🔒 Find the short safely by ID
+    final short = state.shorts.firstWhere(
+      (s) => s.id.value == shortId,
+      orElse: () => throw Exception("Short not found"),
+    );
 
-  Future<void> toggleLike(int index) async {
-    if (index < 0 || index >= state.shorts.length) return;
-
-    final short = state.shorts[index];
     final current = short.metrics;
 
-    final updatedMetrics = current.copyWith(
+    // 🔥 OPTIMISTIC UPDATE
+    final optimisticMetrics = current.copyWith(
       likedByMe: !current.likedByMe,
       likeCount: current.likedByMe
           ? (current.likeCount - 1).clamp(0, 1 << 31)
           : current.likeCount + 1,
     );
 
-    final updatedShort = short.copyWith(metrics: updatedMetrics);
+    _updateShortById(shortId, optimisticMetrics);
 
-    final newList = [...state.shorts];
-    newList[index] = updatedShort;
+    // 🔥 API CALL
+    final res = await engagementApi.toggleLike(shortId: shortId);
 
-    state = state.copyWith(shorts: newList);
+    res.fold(
+      (e) {
+        appLogger.e('❌ TOGGLE LIKE FAILED', error: e);
 
-    final res = await engagementApi.toggleLike(shortId: short.id.value);
+        // 🔥 ROLLBACK
+        _updateShortById(shortId, current);
+      },
+      (serverMetrics) {
+        appLogger.i('✅ LIKE SYNCED');
 
-    res.fold((_) {}, (serverMetrics) {
-      final syncedShort = updatedShort.copyWith(metrics: serverMetrics);
-
-      final syncedList = [...state.shorts];
-      syncedList[index] = syncedShort;
-
-      state = state.copyWith(shorts: syncedList);
-    });
+        // 🔥 FINAL SYNC (source of truth)
+        _updateShortById(shortId, serverMetrics);
+      },
+    );
   }
 
   void incrementCommentCount(int index) {
@@ -270,6 +275,17 @@ class ShortsController extends StateNotifier<ShortsState> {
     newList[index] = updated;
 
     state = state.copyWith(shorts: newList);
+  }
+
+  void _updateShortById(String shortId, dynamic newMetrics) {
+    final updatedList = state.shorts.map((s) {
+      if (s.id.value == shortId) {
+        return s.copyWith(metrics: newMetrics);
+      }
+      return s;
+    }).toList();
+
+    state = state.copyWith(shorts: updatedList);
   }
 
   // ───────────── ACCESS ─────────────

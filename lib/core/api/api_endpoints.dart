@@ -135,6 +135,12 @@ class ApiEndpoints {
   static final String listCallsEndpoint =
       '/api/method/aos.api.calls.list_calls';
 
+  // LIVE Endpoints
+  static final String startLiveEndpoint = '/api/method/aos.api.live.start_live';
+  static final String joinLiveEndpoint = '/api/method/aos.api.live.join_live';
+  static final String endLiveEndpoint = '/api/method/aos.api.live.end_live';
+  static final String getLiveEndpoint = '/api/method/aos.api.live.get_live';
+
   // ───────────── SHORTS ─────────────
 
   // FEED

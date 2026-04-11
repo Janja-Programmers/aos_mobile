@@ -1,0 +1,1 @@
+enum AOSLiveRole { host, viewer }

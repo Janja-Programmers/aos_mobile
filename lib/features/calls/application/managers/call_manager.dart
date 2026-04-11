@@ -1,63 +1,31 @@
 import 'dart:async';
 
-import 'package:africaonlinestores/core/utils/logger.dart';
-import 'package:africaonlinestores/features/calls/domain/call_participant.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:africaonlinestores/features/calls/application/services/livekit_service.dart';
-import 'package:africaonlinestores/features/calls/application/services/livekit_track_events.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
+
+import 'package:africaonlinestores/features/calls/application/services/call_media_service.dart';
 import 'package:africaonlinestores/features/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/calls/domain/call.dart';
+import 'package:africaonlinestores/features/calls/domain/call_participant.dart';
 import 'package:africaonlinestores/features/calls/repository/call_repository_impl.dart';
 import 'package:africaonlinestores/features/calls/utils/call_logger.dart';
 import 'package:africaonlinestores/features/calls/utils/call_timer.dart';
 
 class CallManager extends StateNotifier<CallState> {
   final CallRepository repository;
-  final LiveKitService liveKitService;
+  final CallMediaService mediaService;
   final CallTimer callTimer;
 
   bool _isJoining = false;
   bool _isLeaving = false;
 
-  StreamSubscription? _trackSub;
-
   CallManager({
     required this.repository,
-    required this.liveKitService,
+    required this.mediaService,
     required this.callTimer,
-  }) : super(CallState.initial()) {
-    _listenToTracks();
-  }
-
-  // ================= TRACK EVENTS =================
-  void _listenToTracks() {
-    _trackSub = liveKitService.trackEvents.listen((event) {
-      if (event is RemoteVideoTrackEvent) {
-        state = state.copyWith(isRemoteVideoEnabled: true);
-      }
-
-      if (event is RemoteVideoRemovedEvent) {
-        state = state.copyWith(isRemoteVideoEnabled: false);
-      }
-
-      if (event is LocalVideoTrackEvent) {
-        state = state.copyWith(isLocalVideoEnabled: true);
-      }
-
-      if (event is LocalVideoRemovedEvent) {
-        state = state.copyWith(isLocalVideoEnabled: false);
-      }
-
-      if (event is TrackClearedEvent) {
-        state = state.copyWith(
-          isRemoteVideoEnabled: false,
-          isLocalVideoEnabled: false,
-        );
-      }
-    });
-  }
+  }) : super(CallState.initial());
 
   // ================= OUTGOING =================
   Future<bool> startOutgoingCall({
@@ -164,7 +132,7 @@ class CallManager extends StateNotifier<CallState> {
   Future<void> rejectIncomingCall() async {
     try {
       appLogger.i(
-        "📵 rejectIncomingCall BEFORE mutation | Status: ${state.status.toString()}",
+        "📵 rejectIncomingCall BEFORE mutation | Status: ${state.status}",
       );
 
       final callId = state.activeCall?.id;
@@ -177,31 +145,17 @@ class CallManager extends StateNotifier<CallState> {
         hasIncomingCallUi: false,
       );
 
-      appLogger.i(
-        "📵 rejectIncomingCall Completed | Status: ${state.status.toString()}",
-      );
+      appLogger.i("📵 rejectIncomingCall Completed | Status: ${state.status}");
     } catch (e) {
       appLogger.e('rejectIncomingCall failed', error: e);
     }
   }
 
   Future<void> onCallNotAnswered({required String callId}) async {
-    try {
-      appLogger.i(
-        "📵 CallManager BEFORE mutation | Status: ${state.status.toString()}",
-      );
-
-      state = state.copyWith(
-        status: CallStatus.notAnswered,
-        hasIncomingCallUi: false,
-      );
-
-      appLogger.i(
-        "CallManager: CallNotAnswered Mutation | Status: ${state.status.toString()}",
-      );
-    } catch (e) {
-      appLogger.e('onCallNotAnswered failed', error: e);
-    }
+    state = state.copyWith(
+      status: CallStatus.notAnswered,
+      hasIncomingCallUi: false,
+    );
   }
 
   // ================= SOCKET EVENTS =================
@@ -224,6 +178,7 @@ class CallManager extends StateNotifier<CallState> {
   }
 
   Future<void> onCallRejectedEvent({required String callId}) async {
+    await _leaveRoomInternal();
     state = state.copyWith(status: CallStatus.rejected);
   }
 
@@ -232,10 +187,8 @@ class CallManager extends StateNotifier<CallState> {
 
     appLogger.i('📡 Remote ended call → leaving locally');
 
-    // ✅ ONLY leave room locally
     await _leaveRoomInternal();
 
-    // ✅ update state
     state = state.copyWith(
       status: CallStatus.ended,
       activeCall: null,
@@ -251,7 +204,7 @@ class CallManager extends StateNotifier<CallState> {
     _isJoining = true;
 
     try {
-      await liveKitService.connect(
+      await mediaService.joinCall(
         wsUrl: call.wsUrl,
         token: call.token,
         isVideo: call.callType == AOSCallType.video,
@@ -279,7 +232,7 @@ class CallManager extends StateNotifier<CallState> {
     _isLeaving = true;
 
     try {
-      await liveKitService.disconnect();
+      await mediaService.leaveCall();
       callTimer.stop();
 
       state = state.copyWith(
@@ -296,19 +249,11 @@ class CallManager extends StateNotifier<CallState> {
 
   // ================= END =================
   Future<void> endCurrentCall() async {
-    appLogger.i('🔚 Attempting to end call');
-
     try {
       final callId = state.activeCall?.id;
 
       if (callId != null) {
-        appLogger.i('📡 Ending call on backend → $callId');
-
         await repository.endCall(callId: callId);
-
-        appLogger.i('✅ Backend call ended → $callId');
-      } else {
-        appLogger.i('⚠️ No callId → cancelling locally (outgoing)');
       }
 
       await _leaveRoomInternal();
@@ -321,38 +266,33 @@ class CallManager extends StateNotifier<CallState> {
 
       appLogger.i('🏁 Call fully terminated');
     } catch (e, s) {
-      appLogger.e('❌ endCurrentCall failed', error: e, stackTrace: s);
+      appLogger.e('endCurrentCall failed', error: e, stackTrace: s);
     }
   }
 
   // ================= CONTROLS =================
   Future<void> toggleMute() async {
     final next = !state.isMuted;
-    await liveKitService.toggleMicrophone(!next);
-
+    await mediaService.toggleMute(!next);
     state = state.copyWith(isMuted: next);
   }
 
   Future<void> toggleSpeaker() async {
     final next = !state.isSpeakerOn;
-    await liveKitService.switchSpeaker(next);
-
+    await mediaService.switchSpeaker(next);
     state = state.copyWith(isSpeakerOn: next);
   }
 
   Future<void> toggleVideo() async {
     final next = !state.isVideoEnabled;
-    await liveKitService.toggleCamera(next);
-
+    await mediaService.toggleCamera(next);
     state = state.copyWith(isVideoEnabled: next);
   }
 
   // ================= CLEANUP =================
   @override
   void dispose() {
-    _trackSub?.cancel();
     callTimer.dispose();
-    liveKitService.dispose();
     super.dispose();
   }
 }

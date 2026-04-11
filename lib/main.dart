@@ -3,12 +3,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
-import 'package:africaonlinestores/core/providers.dart';
-import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
-import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 
+import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/core/routing/app_router.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
@@ -16,8 +15,10 @@ import 'package:africaonlinestores/core/theme/app_theme.dart';
 import 'package:africaonlinestores/core/theme/theme_controller.dart';
 import 'package:africaonlinestores/core/theme/theme_prefs.dart';
 import 'package:africaonlinestores/core/utils/local_resolver.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/features/calls/application/listeners/call_navigation_listener.dart';
+import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -73,7 +74,7 @@ class _AppRootState extends ConsumerState<AppRoot> {
       final apiClient = ref.read(apiClientProvider);
 
       await apiClient.setSid(
-        "9224fbb42d85f85d20322b7a9701f4bd638dcd7617ab8f3248a64593",
+        "6a5bdd587fdd35b182ecf7679e0237f20d002cf91d6a0186dba4566b",
       );
     });
   }
@@ -86,8 +87,8 @@ class _AppRootState extends ConsumerState<AppRoot> {
       realtime.connect(
         baseUrl: "https://aos-staging.duckdns.org",
         siteName: "aos-staging.duckdns.org",
-        sid: "9224fbb42d85f85d20322b7a9701f4bd638dcd7617ab8f3248a64593",
-        email: "buyer@gmail.com",
+        sid: "6a5bdd587fdd35b182ecf7679e0237f20d002cf91d6a0186dba4566b",
+        email: "georgesbobby21@gmail.com",
       );
 
       appLogger.i('[Realtime] Connection triggered');
@@ -140,7 +141,11 @@ class AOSApp extends ConsumerWidget {
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        return CallNavigationListener(child: child ?? const SizedBox.shrink());
+        return CallNavigationListener(
+          child: LiveNavigationListener(
+            child: child ?? const SizedBox.shrink(),
+          ),
+        );
       },
     );
   }

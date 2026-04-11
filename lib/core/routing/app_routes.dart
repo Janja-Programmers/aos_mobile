@@ -134,6 +134,17 @@ class AppRoutes {
   static const String callNotAnswered = '/calls/unanswered';
   static const String nCallNotAnswered = 'unansweredCall';
 
+  // LIVE routes
+  static const String liveRoom = '/live/room';
+  static const String nLiveRoom = 'liveRoom';
+
+  // static const String liveLoading = '/live/loading';
+  // static const String nLiveLoading = 'liveLoading';
+  // static const String liveEnded = '/live/ended';
+  // static const String nLiveEnded = 'liveEnded';
+  // static const String liveError = '/live/error';
+  // static const String nLiveError = 'liveError';
+
   // CONTACT routes
   static const String contact = '/contact';
   static const String nContact = 'contact';

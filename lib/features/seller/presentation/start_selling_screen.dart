@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/app_routes.dart';
@@ -8,11 +9,14 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/seller/presentation/widgets/seller_action_tiles.dart';
 import 'package:africaonlinestores/features/shorts/navigation/shorts_routes.dart';
 
-class StartSellingScreen extends StatelessWidget {
+// 👇 ADD THIS
+import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
+
+class StartSellingScreen extends ConsumerWidget {
   const StartSellingScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
 
     return Scaffold(
@@ -45,6 +49,7 @@ class StartSellingScreen extends StatelessWidget {
               onTap: () => context.pushNamed(AppRoutes.nCreateAd),
             ),
             const SizedBox(height: 12),
+
             ActionTile(
               leading: Icon(Icons.videocam, color: colors.primary),
               iconBackgroundColor: colors.primary.withOpacity(.15),
@@ -53,14 +58,37 @@ class StartSellingScreen extends StatelessWidget {
               onTap: () => ShortsNavigation.toCreateShort(context),
             ),
             const SizedBox(height: 12),
+
+            // 🔥 FINAL WIRING
+            ActionTile(
+              leading: Icon(Icons.wifi_tethering, color: colors.primary),
+              iconBackgroundColor: colors.primary.withOpacity(.15),
+              title: "Join Live",
+              subtitle: "Stream live to your followers",
+              onTap: () {
+                ref
+                    .read(liveManagerProvider.notifier)
+                    .joinLive(liveId: "LIVE-2026-00004");
+              },
+            ),
+
+            const SizedBox(height: 12),
+
+            // 🔥 FINAL WIRING
             ActionTile(
               leading: Icon(Icons.wifi_tethering, color: colors.primary),
               iconBackgroundColor: colors.primary.withOpacity(.15),
               title: "Go Live",
               subtitle: "Stream live to your followers",
-              onTap: () {},
+              onTap: () {
+                ref
+                    .read(liveManagerProvider.notifier)
+                    .startLive(title: "Live with you 🔴");
+              },
             ),
+
             const SizedBox(height: 12),
+
             ActionTile(
               leading: Icon(Icons.feed_outlined, color: colors.primary),
               iconBackgroundColor: colors.primary.withOpacity(.15),

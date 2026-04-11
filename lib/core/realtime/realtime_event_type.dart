@@ -13,6 +13,11 @@ enum RealtimeEventType {
   aosCallEnded,
   aosCallNotAnswered,
 
+  // LIVE Events
+  aosLiveStarted,
+  aosLiveEnded,
+  aosLiveViewerCount,
+
   // Unknown
   unknown,
 }
@@ -42,6 +47,16 @@ RealtimeEventType mapRealtimeEvent(String event) {
 
     case "aos_call_not_answered":
       return RealtimeEventType.aosCallNotAnswered;
+
+    // LIVE Mapping
+    case "aos_live_started":
+      return RealtimeEventType.aosLiveStarted;
+
+    case "aos_live_ended":
+      return RealtimeEventType.aosLiveEnded;
+
+    case "aos_live_viewer_count":
+      return RealtimeEventType.aosLiveViewerCount;
 
     default:
       return RealtimeEventType.unknown;

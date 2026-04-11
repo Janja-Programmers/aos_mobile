@@ -1,7 +1,7 @@
 import 'dart:async';
 
-// ignore: library_prefixes
 import 'package:africaonlinestores/core/utils/logger.dart';
+// ignore: library_prefixes
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import 'package:africaonlinestores/core/realtime/realtime_event.dart';

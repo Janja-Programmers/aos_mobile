@@ -77,7 +77,7 @@ class RepliesController extends StateNotifier<RepliesState> {
       comment: content,
     );
 
-    res.fold(
+    await res.fold(
       (e) {
         appLogger.e('❌ REPLY FAILED', error: e);
         _removeReply(tempId);

@@ -1,0 +1,256 @@
+import 'package:dio/dio.dart';
+
+import 'package:africaonlinestores/core/api/api_client.dart';
+import 'package:africaonlinestores/core/api/api_endpoints.dart';
+import 'package:africaonlinestores/core/api/api_response.dart';
+import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
+
+import 'package:africaonlinestores/features/calls/data/call_mapper.dart';
+import 'package:africaonlinestores/features/calls/domain/call.dart';
+import 'package:africaonlinestores/features/calls/domain/call_log.dart';
+
+class CallApi {
+  final ApiClient _client;
+
+  CallApi(this._client);
+
+  // -----------------------------
+  // Conversation
+  // -----------------------------
+  Future<Either<Failure, String>> openConversation(String user) async {
+    appLogger.i("openConversation (Call)");
+
+    final res = await _client.post(
+      ApiEndpoints.openConversationEndpoint,
+      data: {'user': user},
+    );
+
+    final result = unwrapFrappe(res);
+    if (result.isLeft) return Either.left(result.leftOrNull!);
+
+    final payload = result.rightOrNull!;
+    final id = payload['data']?['id'];
+
+    if (id == null) {
+      return Either.left(const Failure("Invalid conversation response"));
+    }
+
+    return Either.right(id.toString());
+  }
+
+  // -----------------------------
+  // Initiate Call
+  // -----------------------------
+  Future<Either<Failure, Call>> initiateCall({
+    required String conversationId,
+    required String callType,
+  }) async {
+    appLogger.i("initiateCall API");
+
+    try {
+      final res = await _client.post(
+        ApiEndpoints.initiateCallEndpoint,
+        data: {'conversation_id': conversationId, 'call_type': callType},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = result.rightOrNull?['data'];
+      if (data == null) {
+        return Either.left(const Failure("Invalid initiate call response"));
+      }
+
+      return Either.right(mapCall(data));
+    } catch (e) {
+      // 🔥 HANDLE DIO EXCEPTION WITH RESPONSE
+      if (e is DioException && e.response != null) {
+        final res = e.response!;
+
+        final result = unwrapFrappe(res);
+        if (result.isRight) {
+          final data = result.rightOrNull?['data'];
+          if (data != null) {
+            return Either.right(mapCall(data));
+          }
+        }
+
+        return Either.left(Failure(res.data.toString()));
+      }
+
+      return Either.left(Failure(e.toString()));
+    }
+  }
+
+  // -----------------------------
+  // Accept Call
+  // -----------------------------
+  Future<Either<Failure, Call>> acceptCall({required String callId}) async {
+    appLogger.i("acceptCall API");
+
+    try {
+      final res = await _client.post(
+        ApiEndpoints.acceptCallEndpoint,
+        data: {'call_id': callId},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = result.rightOrNull?['data'];
+      if (data == null) {
+        return Either.left(const Failure("Invalid accept call response"));
+      }
+
+      return Either.right(mapCall(data));
+    } catch (e) {
+      // 🔥 HANDLE DIO EXCEPTION WITH RESPONSE
+      if (e is DioException && e.response != null) {
+        final res = e.response!;
+
+        final result = unwrapFrappe(res);
+        if (result.isRight) {
+          final data = result.rightOrNull?['data'];
+          if (data != null) {
+            // ignore: void_checks
+            return Either.right(mapCall(data));
+          }
+        }
+
+        return Either.left(Failure(res.data.toString()));
+      }
+
+      return Either.left(Failure(e.toString()));
+    }
+  }
+
+  // -----------------------------
+  // Reject Call
+  // -----------------------------
+  Future<Either<Failure, void>> rejectCall({required String callId}) async {
+    appLogger.i("rejectCall API");
+
+    try {
+      final res = await _client.post(
+        ApiEndpoints.rejectCallEndpoint,
+        data: {'call_id': callId},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      return Either.right(null);
+    } catch (e) {
+      // 🔥 HANDLE DIO EXCEPTION WITH RESPONSE
+      if (e is DioException && e.response != null) {
+        final res = e.response!;
+
+        final result = unwrapFrappe(res);
+        if (result.isRight) {
+          final data = result.rightOrNull?['data'];
+          if (data != null) {
+            // ignore: void_checks
+            return Either.right(mapCall(data));
+          }
+        }
+
+        return Either.left(Failure(res.data.toString()));
+      }
+
+      return Either.left(Failure(e.toString()));
+    }
+  }
+
+  // -----------------------------
+  // End Call
+  // -----------------------------
+  Future<Either<Failure, void>> endCall({required String callId}) async {
+    appLogger.i("endCall API");
+
+    try {
+      final res = await _client.post(
+        ApiEndpoints.endCallEndpoint,
+        data: {'call_id': callId},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      return Either.right(null);
+    } catch (e) {
+      // 🔥 HANDLE DIO EXCEPTION WITH RESPONSE
+      if (e is DioException && e.response != null) {
+        final res = e.response!;
+
+        final result = unwrapFrappe(res);
+        if (result.isRight) {
+          final data = result.rightOrNull?['data'];
+          if (data != null) {
+            // ignore: void_checks
+            return Either.right(mapCall(data));
+          }
+        }
+
+        return Either.left(Failure(res.data.toString()));
+      }
+
+      return Either.left(Failure(e.toString()));
+    }
+  }
+
+  // -----------------------------
+  // List Calls
+  // -----------------------------
+  Future<Either<Failure, List<CallLog>>> listCalls({String? type}) async {
+    appLogger.i("listCalls API");
+
+    try {
+      final res = await _client.get(
+        ApiEndpoints.listCallsEndpoint,
+        queryParameters: type != null ? {'type': type} : null,
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final rawData = result.rightOrNull!;
+      final dataList = rawData['data'] is List ? rawData['data'] as List : [];
+
+      final calls = dataList
+          .whereType<Map<String, dynamic>>()
+          .map(mapCallLog)
+          .toList();
+
+      return Either.right(calls);
+    } catch (e) {
+      return Either.left(const Failure("Failed to load calls"));
+    }
+  }
+
+  // -----------------------------
+  // Get Call Token (partial data)
+  // -----------------------------
+  Future<Either<Failure, Map<String, dynamic>>> getCallToken({
+    required String callId,
+  }) async {
+    appLogger.i("getCallToken API");
+
+    final res = await _client.post(
+      ApiEndpoints.getCallTokenEndpoint,
+      data: {'call_id': callId},
+    );
+
+    final result = unwrapFrappe(res);
+    if (result.isLeft) return Either.left(result.leftOrNull!);
+
+    final data = result.rightOrNull?['data'];
+
+    if (data == null) {
+      return Either.left(const Failure("Invalid token response"));
+    }
+
+    return Either.right(data);
+  }
+}

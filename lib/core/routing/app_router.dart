@@ -10,6 +10,7 @@ import 'package:africaonlinestores/features/ads/ads_report/presentation/report_a
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
 import 'package:africaonlinestores/features/auth/shared/routing/auth_routes.dart';
+import 'package:africaonlinestores/features/calls/navigation/call_routes.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
 import 'package:africaonlinestores/features/chats/navigation/chat_routes.dart';
@@ -48,6 +49,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // SHORTS ROUTE
       ...ShortsRoutes.routes(),
+
+      // CALLS ROUTE
+      ...CallRoutes.routes(),
 
       // SEARCH ROUTE
       ...SearchRoutes.routes(),

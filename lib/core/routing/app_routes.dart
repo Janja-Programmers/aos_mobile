@@ -114,4 +114,27 @@ class AppRoutes {
   // CREATE SHORT
   static const String createShort = '/shorts/create';
   static const String nCreateShort = 'createShort';
+
+  // CALLS routes
+  static const String calls = '/calls';
+  static const String nCalls = 'calls';
+
+  static const String incomingCall = '/calls/incoming';
+  static const String nIncomingCall = 'incomingCall';
+
+  static const String outgoingCall = '/calls/outgoing';
+  static const String nOutgoingCall = 'outgoingCall';
+
+  static const String activeCall = '/calls/active';
+  static const String nActiveCall = 'activeCall';
+
+  static const String rejectedCall = '/calls/rejected';
+  static const String nRejectedCall = 'rejectedCall';
+
+  static const String callNotAnswered = '/calls/unanswered';
+  static const String nCallNotAnswered = 'unansweredCall';
+
+  // CONTACT routes
+  static const String contact = '/contact';
+  static const String nContact = 'contact';
 }

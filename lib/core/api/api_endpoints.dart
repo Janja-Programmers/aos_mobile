@@ -122,6 +122,19 @@ class ApiEndpoints {
   static final String markReadEndpoint = '/api/method/aos.api.chat.mark_read';
   static final String typingEndpoint = '/api/method/aos.api.chat.typing';
 
+  // CALL Endpoints
+  static final String initiateCallEndpoint =
+      '/api/method/aos.api.calls.initiate_call';
+  static final String rejectCallEndpoint =
+      '/api/method/aos.api.calls.reject_call';
+  static final String acceptCallEndpoint =
+      '/api/method/aos.api.calls.accept_call';
+  static final String getCallTokenEndpoint =
+      '/api/method/aos.api.calls.get_call_token';
+  static final String endCallEndpoint = '/api/method/aos.api.calls.end_call';
+  static final String listCallsEndpoint =
+      '/api/method/aos.api.calls.list_calls';
+
   // ───────────── SHORTS ─────────────
 
   // FEED

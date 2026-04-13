@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-import 'package:africaonlinestores/shared/utils/helpers.dart';
+
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
 
+import 'package:africaonlinestores/shared/utils/helpers.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class AdListItem extends ConsumerWidget {
@@ -25,7 +28,12 @@ class AdListItem extends ConsumerWidget {
     final isService = ad.priceUnit.isNotEmpty;
     final imageUrl = buildFileUrl(ad.primaryImage);
 
-    final wishlistState = ref.watch(wishlistControllerProvider).value;
+    final isAuth = ref.watch(isAuthenticatedProvider);
+
+    final wishlistState = isAuth
+        ? ref.watch(wishlistControllerProvider).value
+        : null;
+
     final wish = wishlistState?.ids.contains(ad.id) ?? false;
     final pending = wishlistState?.pending.contains(ad.id) ?? false;
 
@@ -85,6 +93,15 @@ class AdListItem extends ConsumerWidget {
                       onTap: pending
                           ? null
                           : () async {
+                              if (!isAuth) {
+                                await AppNavigation.requireAuth(
+                                  context,
+                                  ref,
+                                  onAuthenticated: () {},
+                                );
+                                return;
+                              }
+
                               final ok = await ref
                                   .read(wishlistControllerProvider.notifier)
                                   .toggle(ad.id);

@@ -2,19 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
+import 'package:africaonlinestores/app/splash/splash_screen.dart';
+
+import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/routing/app_shell.dart';
+import 'package:africaonlinestores/core/routing/helpers/route_guards.dart';
+import 'package:africaonlinestores/core/routing/helpers/route_observer.dart';
+
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+import 'package:africaonlinestores/features/auth/shared/routing/auth_routes.dart';
+
 import 'package:africaonlinestores/features/account/shared/routing/account_routes.dart';
+
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_category_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_location_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/screens/ad_form_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_report/presentation/report_ad_screen.dart';
-import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
-import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
-import 'package:africaonlinestores/features/auth/shared/routing/auth_routes.dart';
+
 import 'package:africaonlinestores/features/calls/navigation/call_routes.dart';
-import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
+import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/chats/navigation/chat_routes.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_details_screen.dart';
+
 import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 import 'package:africaonlinestores/features/onboarding/screens/onboarding_screen.dart';
 import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
@@ -23,48 +36,36 @@ import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart
 import 'package:africaonlinestores/features/seller/presentation/start_selling_screen.dart';
 import 'package:africaonlinestores/features/shorts/navigation/shorts_routes.dart';
 
-import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
-import 'package:africaonlinestores/core/routing/app_shell.dart';
-import 'package:africaonlinestores/core/routing/app_routes.dart';
-import 'package:africaonlinestores/core/routing/route_guards.dart';
-
 import 'package:africaonlinestores/shared/enums/ads.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final bootstrap = ref.watch(appBootstrapProvider);
   final auth = ref.watch(authControllerProvider);
 
-  final bootstrapState = ref.watch(appBootstrapProvider);
-
   return GoRouter(
-    initialLocation: AppRoutes.home,
+    initialLocation: AppRoutes.splash,
+
+    observers: [routeObserver],
 
     routes: [
-      /// AUTH routes
       ...AuthRoutes.routes(),
-
-      /// REVIEW routes
+      ...CallRoutes.routes(),
+      ...LiveRoutes.routes(),
       ...ReviewsRoutes.routes(),
-
-      // SELLER ROUTE
+      ...SearchRoutes.routes(),
       ...SellerRoutes.routes(),
-
-      // SHORTS ROUTE
       ...ShortsRoutes.routes(),
 
-      // CALLS ROUTE
-      ...CallRoutes.routes(),
-
-      // LIVE ROUTE
-      ...LiveRoutes.routes(),
-
-      // SEARCH ROUTE
-      ...SearchRoutes.routes(),
-
-      /// ONBOARDING routes
       GoRoute(
         name: AppRoutes.nOnboarding,
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingScreen(),
+      ),
+
+      GoRoute(
+        name: AppRoutes.nSplash,
+        path: AppRoutes.splash,
+        builder: (context, state) => const SplashScreen(),
       ),
 
       /// CREATE AD
@@ -147,7 +148,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       /// MAIN SHELL
       ShellRoute(
         builder: (context, state, child) {
-          return AppShell(child: child);
+          return AppShell(location: state.matchedLocation, child: child);
         },
         routes: [
           ...AdsRoutes.routes(),
@@ -165,31 +166,44 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
 
     redirect: (context, state) {
-      if (!bootstrapState.isReady) return null;
+      final location = state.matchedLocation;
 
-      final location = state.uri.toString();
-
-      final isOnboarding = RouteGuards.isOnboarding(location);
-      final isAuthRoute = RouteGuards.isAuthRoute(location);
-      final isProtected = RouteGuards.isProtectedRoute(location);
-
-      if (!bootstrapState.onboardingCompleted && !isOnboarding) {
-        return AppRoutes.onboarding;
+      if (!bootstrap.isReady) {
+        return AppRoutes.splash;
       }
 
-      if (bootstrapState.onboardingCompleted && isOnboarding) {
+      if (auth is AuthLoading) {
+        return AppRoutes.splash;
+      }
+
+      if (location == AppRoutes.splash) {
+        if (!bootstrap.onboardingCompleted) {
+          return AppRoutes.onboarding;
+        }
         return AppRoutes.home;
       }
 
-      if (!auth.isLoggedIn && isProtected) {
-        final isGoingToAuth = location.startsWith('/auth');
+      final isOnboarding = RouteGuards.isOnboarding(location);
 
-        if (isGoingToAuth) return null;
-
-        return '${AppRoutes.login}?redirect=${Uri.encodeComponent(location)}';
+      if (!bootstrap.onboardingCompleted && !isOnboarding) {
+        return AppRoutes.onboarding;
       }
 
-      if (auth.isLoggedIn && isAuthRoute) {
+      if (bootstrap.onboardingCompleted && isOnboarding) {
+        return AppRoutes.home;
+      }
+
+      final isAuthRoute = RouteGuards.isAuthRoute(location);
+      final isProtected = RouteGuards.isProtectedRoute(location);
+
+      if (auth is AuthGuest && isProtected) {
+        if (isAuthRoute) return null;
+
+        final encodedLocation = Uri.encodeComponent(location);
+        return '${AppRoutes.login}?redirect=$encodedLocation';
+      }
+
+      if (auth is AuthAuthenticated && isAuthRoute) {
         return AppRoutes.home;
       }
 

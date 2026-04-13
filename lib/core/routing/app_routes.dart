@@ -1,5 +1,6 @@
 class AppRoutes {
   // Core
+  static const String splash = '/splash';
   static const home = '/';
   static const categories = '/categories';
   static const notifications = '/notifications';
@@ -62,6 +63,7 @@ class AppRoutes {
   static const adDetails = '/ads/detail/:id';
 
   // NAMED Route names (use pushNamed/goNamed)
+  static const String nSplash = 'splash';
   static const nHome = 'home';
   static const nOnboarding = 'onboarding';
   static const nAdList = 'adList';

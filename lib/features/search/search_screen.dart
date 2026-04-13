@@ -8,7 +8,7 @@ import 'package:africaonlinestores/core/routing/app_routes.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
-import 'package:africaonlinestores/features/files/data/files_api_provider.dart';
+import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
 import 'package:africaonlinestores/features/search/storage/search_recent_storage.dart';
 import 'package:africaonlinestores/features/search/voice/voice_search_sheet.dart';
 import 'package:africaonlinestores/features/search/widgets/search_bar_section.dart';
@@ -16,7 +16,7 @@ import 'package:africaonlinestores/features/search/widgets/search_header.dart';
 import 'package:africaonlinestores/features/search/widgets/search_recent_section.dart';
 import 'package:africaonlinestores/features/search/widgets/search_results_section.dart';
 
-import 'package:africaonlinestores/shared/media/media_helper.dart';
+import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});

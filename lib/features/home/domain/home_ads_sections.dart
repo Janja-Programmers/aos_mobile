@@ -15,10 +15,7 @@ const homeAdsSections = <HomeAdsSection>[
     preferredCategoryNames: ['Home, Furniture & Appliances'],
   ),
   HomeAdsSection(key: 'electronics', preferredCategoryNames: ["Electronics"]),
-  HomeAdsSection(
-    key: 'fashion',
-    preferredCategoryNames: ['Women\'s Fashion', 'Men\'s Fashion'],
-  ),
+  HomeAdsSection(key: 'fashion', preferredCategoryNames: ['Men\'s Fashion']),
   HomeAdsSection(key: 'kids', preferredCategoryNames: ['Babies & Kids']),
   HomeAdsSection(
     key: 'beauty',

@@ -6,32 +6,17 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/session_storage.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
-import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 
-import 'package:africaonlinestores/features/auth/data/auth_api_provider.dart';
 import 'package:africaonlinestores/features/auth/data/auth_api.dart';
 import 'package:africaonlinestores/features/auth/data/google_auth_service.dart';
 import 'package:africaonlinestores/features/auth/data/apple_auth_service.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/preferences/data/preferences_api_provider.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
-
-final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
-  (ref) {
-    final api = ref.watch(authApiProvider);
-    final client = ref.watch(apiClientProvider);
-    final storage = ref.watch(sessionStorageProvider);
-    return AuthController(
-      ref: ref,
-      api: api,
-      apiClient: client,
-      storage: storage,
-    )..init();
-  },
-);
 
 class AuthController extends StateNotifier<AuthState> {
   AuthController({
@@ -43,7 +28,7 @@ class AuthController extends StateNotifier<AuthState> {
        _api = api,
        _apiClient = apiClient,
        _storage = storage,
-       super(AuthState.initial());
+       super(const AuthLoading());
 
   final Ref _ref;
   final AuthApi _api;
@@ -53,51 +38,62 @@ class AuthController extends StateNotifier<AuthState> {
   Future<bool>? _refreshingSession;
   StreamSubscription<void>? _sessionSub;
 
-  /// Update cached user (after profile update)
-  void setUserFromMap(Map<String, dynamic> userMap) {
-    if (!state.isAuthenticated) return;
-    state = state.copyWith(user: AuthUser.fromMap(userMap));
-  }
+  bool _isHydrating = false;
+  DateTime? _lastRefresh;
+  static const _refreshCooldown = Duration(seconds: 5);
 
-  /// SESSISON Refreshing
-  Future<bool> _refreshSession() async {
-    final sid = await _storage.getSid();
-
-    if (sid == null || sid.isEmpty) {
-      return false;
-    }
-
+  // ---------------------------------------------------------------------------
+  // INIT (FSM: Loading → Guest / Authenticated)
+  // ---------------------------------------------------------------------------
+  Future<void> init() async {
     try {
-      await _apiClient.setSid(sid);
+      // Listen for session expiry (401)
 
-      final res = await _api.me();
+      _sessionSub ??= _apiClient.sessionExpiredStream.listen((_) async {
+        if (state is! AuthAuthenticated) return;
 
-      if (res.isLeft) return false;
+        if (_isHydrating) {
+          appLogger.w('[Auth] Ignored session expiry during hydration');
+          return;
+        }
 
-      final payload = res.rightOrNull ?? {};
+        if (_refreshingSession != null) return;
 
-      if (payload['ok'] != true) return false;
+        _refreshingSession = _refreshSession();
 
-      final user = Map<String, dynamic>.from(payload['data']?['user'] ?? {});
+        final refreshed = await _refreshingSession!;
+        _refreshingSession = null;
 
-      if (!mounted) return false;
+        if (!refreshed) {
+          appLogger.w('[Auth] Session expired → guest');
+          _setGuest();
+        }
+      });
 
-      state = state.copyWith(
-        isLoggedIn: true,
-        sid: sid,
-        user: AuthUser.fromMap(user),
-        clearError: true,
-      );
+      final sid = await _storage.getSid();
 
-      await _syncUserPreferences();
+      if (sid == null || sid.isEmpty) {
+        state = const AuthGuest();
+        return;
+      }
 
-      return true;
+      final user = await _fetchValidSession(sid);
+
+      if (user == null) {
+        await _clearSession();
+        return;
+      }
+
+      await _completeLogin(sid: sid, user: user);
     } catch (e) {
-      appLogger.e('[Auth] Refresh session error: $e');
-      return false;
+      appLogger.e('[Auth] init error: $e');
+      await _clearSession();
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // SESSION VALIDATION
+  // ---------------------------------------------------------------------------
   Future<Map<String, dynamic>?> _fetchValidSession(String sid) async {
     try {
       await _apiClient.setSid(sid);
@@ -107,7 +103,6 @@ class AuthController extends StateNotifier<AuthState> {
       if (res.isLeft) return null;
 
       final payload = res.rightOrNull ?? {};
-
       if (payload['ok'] != true) return null;
 
       return Map<String, dynamic>.from(payload['data']?['user'] ?? {});
@@ -117,98 +112,48 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  /// Initialize session from SharedPreferences
-  Future<void> init() async {
-    try {
-      // 🔁 Listen for session expiry (401 from backend)
-      _sessionSub ??= _apiClient.sessionExpiredStream.listen((_) async {
-        if (!state.isAuthenticated) return;
+  // ---------------------------------------------------------------------------
+  // SESSION REFRESH
+  // ---------------------------------------------------------------------------
+  Future<bool> _refreshSession() async {
+    final now = DateTime.now();
 
-        if (_refreshingSession != null) {
-          final success = await _refreshingSession!;
-          if (!success) await logout();
-          return;
-        }
-
-        _refreshingSession = _refreshSession();
-
-        final refreshed = await _refreshingSession!;
-        _refreshingSession = null;
-
-        if (!refreshed) {
-          await logout();
-        }
-      });
-
-      // 🔐 Restore SID
-      final sid = await _storage.getSid();
-
-      if (sid == null || sid.isEmpty) {
-        state = state.copyWith(initializing: false, isLoggedIn: false);
-        return;
-      }
-
-      // ✅ Use shared validator
-      final user = await _fetchValidSession(sid);
-
-      if (user == null) {
-        await _clearSession();
-        return;
-      }
-
-      await _completeLogin(sid: sid, user: user);
-    } catch (_) {
-      await _clearSession();
+    /// ✅ debounce refresh
+    if (_lastRefresh != null &&
+        now.difference(_lastRefresh!) < _refreshCooldown) {
+      appLogger.w('[Auth] Refresh skipped (cooldown)');
+      return true;
     }
+
+    _lastRefresh = now;
+
+    final sid = await _storage.getSid();
+
+    if (sid == null || sid.isEmpty) {
+      appLogger.w('[Auth] No SID during refresh');
+      return false;
+    }
+
+    final user = await _fetchValidSession(sid);
+
+    if (user == null) {
+      appLogger.w('[Auth] Refresh failed (invalid session)');
+      return false;
+    }
+
+    state = AuthAuthenticated(user: AuthUser.fromMap(user), sid: sid);
+
+    /// ✅ DO NOT BLOCK AUTH
+    unawaited(_syncUserPreferences());
+
+    appLogger.i('[Auth] Session refreshed');
+
+    return true;
   }
 
-  Future<void> _clearSession() async {
-    await _storage.clearSid();
-    await _apiClient.clearSid();
-
-    // 🔥 reset refresh state
-    _refreshingSession = null;
-
-    state = state.copyWith(
-      initializing: false,
-      isLoggedIn: false,
-      clearSid: true,
-      clearUser: true,
-    );
-  }
-
-  Future<void> _syncUserPreferences() async {
-    try {
-      final prefApi = _ref.read(userPreferenceApiProvider);
-      final prefCtrl = _ref.read(userPreferenceControllerProvider.notifier);
-
-      final res = await prefApi.getMyPreferences();
-
-      if (res.isLeft) return;
-
-      final payload = res.rightOrNull ?? const {};
-
-      if (payload['ok'] != true) return;
-
-      final data = Map<String, dynamic>.from(payload['data'] ?? const {});
-
-      final country = Map<String, dynamic>.from(data['country'] ?? const {});
-      final language = Map<String, dynamic>.from(data['language'] ?? const {});
-      final currency = Map<String, dynamic>.from(data['currency'] ?? const {});
-
-      final countryCode = (country['code'] ?? '').toString();
-      final languageCode = (language['code'] ?? '').toString();
-      final currencyCode = (currency['name'] ?? '').toString();
-
-      await prefCtrl.syncFromServer(
-        countryCode: countryCode,
-        languageCode: languageCode,
-        currencyCode: currencyCode,
-      );
-    } catch (_) {}
-  }
-
-  // EMAIL LOGIN
+  // ---------------------------------------------------------------------------
+  // LOGIN (FSM: Guest → Authenticated)
+  // ---------------------------------------------------------------------------
   Future<Either<Failure, void>> login({
     required String email,
     required String password,
@@ -242,6 +187,9 @@ class AuthController extends StateNotifier<AuthState> {
     return Either.right(null);
   }
 
+  // ---------------------------------------------------------------------------
+  // LOGOUT (FSM: Authenticated → Guest)
+  // ---------------------------------------------------------------------------
   Future<void> logout() async {
     try {
       await _api.logout();
@@ -249,6 +197,199 @@ class AuthController extends StateNotifier<AuthState> {
 
     await _clearSession();
     _ref.invalidate(wishlistControllerProvider);
+  }
+
+  void _setGuest() {
+    state = const AuthGuest();
+  }
+
+  Future<void> _clearSession() async {
+    await _storage.clearSid();
+    await _apiClient.clearSid();
+
+    _refreshingSession = null;
+
+    state = const AuthGuest();
+  }
+
+  // ---------------------------------------------------------------------------
+  // COMPLETE LOGIN (single source of truth)
+  // ---------------------------------------------------------------------------
+  Future<void> _completeLogin({
+    required String sid,
+    required Map<String, dynamic> user,
+  }) async {
+    appLogger.i('[Auth] Completing login...');
+
+    _isHydrating = true;
+
+    await _apiClient.setSid(sid);
+    await _storage.setSid(sid);
+
+    state = AuthAuthenticated(user: AuthUser.fromMap(user), sid: sid);
+
+    appLogger.i('[Auth] Authenticated: ${user['email']}');
+
+    /// ✅ run in background
+    unawaited(_syncUserPreferences());
+
+    /// ✅ safe invalidate AFTER auth ready
+    _ref.invalidate(wishlistControllerProvider);
+
+    _isHydrating = false;
+  }
+
+  // ---------------------------------------------------------------------------
+  // PROFILE UPDATE (Authenticated → Authenticated)
+  // ---------------------------------------------------------------------------
+  void setUserFromMap(Map<String, dynamic> userMap) {
+    if (state is! AuthAuthenticated) return;
+
+    final current = state as AuthAuthenticated;
+
+    state = current.copyWith(user: AuthUser.fromMap(userMap));
+  }
+
+  // ---------------------------------------------------------------------------
+  // SOCIAL LOGINS
+  // ---------------------------------------------------------------------------
+  Future<Either<Failure, void>> signInWithGoogle({
+    String? country,
+    String? language,
+    String? currency,
+  }) async {
+    try {
+      final idToken = await GoogleAuthService.signInAndGetIdToken();
+
+      if (idToken == null || idToken.isEmpty) {
+        return Either.left(const Failure('Google sign-in cancelled.'));
+      }
+
+      final res = await _api.googleLogin(
+        idToken: idToken,
+        country: country ?? '',
+        language: language ?? '',
+        currency: currency ?? '',
+      );
+
+      if (res.isLeft) return Either.left(res.leftOrNull!);
+
+      final payload = res.rightOrNull ?? {};
+      if (payload['ok'] != true) {
+        return Either.left(
+          Failure((payload['message'] ?? 'Google login failed').toString()),
+        );
+      }
+
+      final data = Map<String, dynamic>.from(payload['data'] ?? {});
+      final sid = (data['sid'] ?? '').toString();
+
+      if (sid.isEmpty) {
+        return Either.left(const Failure('No session returned.'));
+      }
+
+      await _completeLogin(
+        sid: sid,
+        user: Map<String, dynamic>.from(data['user'] ?? {}),
+      );
+
+      return Either.right(null);
+    } catch (e) {
+      return Either.left(Failure('Google sign-in failed: $e'));
+    }
+  }
+
+  Future<Either<Failure, void>> signInWithApple({
+    String? country,
+    String? language,
+    String? currency,
+  }) async {
+    try {
+      final credential = await AppleAuthService().signIn();
+      final idToken = credential?.identityToken;
+
+      if (idToken == null || idToken.isEmpty) {
+        return Either.left(const Failure('Apple sign-in cancelled.'));
+      }
+
+      final res = await _api.appleLogin(
+        idToken: idToken,
+        country: country ?? '',
+        language: language ?? '',
+        currency: currency ?? '',
+      );
+
+      if (res.isLeft) return Either.left(res.leftOrNull!);
+
+      final payload = res.rightOrNull ?? {};
+      if (payload['ok'] != true) {
+        return Either.left(
+          Failure((payload['message'] ?? 'Apple login failed').toString()),
+        );
+      }
+
+      final data = Map<String, dynamic>.from(payload['data'] ?? {});
+      final sid = (data['sid'] ?? '').toString();
+
+      if (sid.isEmpty) {
+        return Either.left(const Failure('No session returned.'));
+      }
+
+      await _completeLogin(
+        sid: sid,
+        user: Map<String, dynamic>.from(data['user'] ?? {}),
+      );
+
+      return Either.right(null);
+    } catch (e) {
+      return Either.left(Failure('Apple sign-in failed: $e'));
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // USER PREFERENCES SYNC
+  // ---------------------------------------------------------------------------
+  Future<void> _syncUserPreferences() async {
+    final prefApi = _ref.read(userPreferenceApiProvider);
+    final prefCtrl = _ref.read(userPreferenceControllerProvider.notifier);
+
+    const maxAttempts = 2;
+
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        appLogger.i('[Auth] Sync prefs attempt $attempt');
+
+        final res = await prefApi.getMyPreferences();
+
+        if (res.isLeft) {
+          appLogger.w('[Auth] Prefs fetch failed (attempt $attempt)');
+          continue;
+        }
+
+        final payload = res.rightOrNull ?? {};
+        if (payload['ok'] != true) {
+          appLogger.w('[Auth] Prefs invalid payload');
+          return;
+        }
+
+        final data = Map<String, dynamic>.from(payload['data'] ?? {});
+
+        await prefCtrl.syncFromServer(
+          countryCode: (data['country']?['code'] ?? '').toString(),
+          languageCode: (data['language']?['code'] ?? '').toString(),
+          currencyCode: (data['currency']?['name'] ?? '').toString(),
+        );
+
+        appLogger.i('[Auth] Prefs synced successfully');
+        return;
+      } catch (e) {
+        appLogger.e('[Auth] Prefs sync error (attempt $attempt): $e');
+
+        if (attempt == maxAttempts) return;
+
+        await Future.delayed(const Duration(milliseconds: 400));
+      }
+    }
   }
 
   Future<Either<Failure, String>> register({
@@ -381,130 +522,19 @@ class AuthController extends StateNotifier<AuthState> {
     return ok ? Either.right(msg) : Either.left(Failure(msg));
   }
 
-  // GOOGLE LOGIN
-  Future<Either<Failure, void>> signInWithGoogle({
-    String? country,
-    String? language,
-    String? currency,
-  }) async {
-    try {
-      final idToken = await GoogleAuthService.signInAndGetIdToken();
-      if (idToken == null || idToken.isEmpty) {
-        return Either.left(const Failure('Google sign-in cancelled.'));
-      }
-
-      final res = await _api.googleLogin(
-        idToken: idToken,
-        country: country ?? '',
-        language: language ?? '',
-        currency: currency ?? '',
-      );
-      if (res.isLeft) return Either.left(res.leftOrNull!);
-
-      final payload = res.rightOrNull ?? {};
-      if (payload['ok'] != true) {
-        return Either.left(
-          Failure((payload['message'] ?? 'Google login failed').toString()),
-        );
-      }
-
-      final data = Map<String, dynamic>.from(payload['data'] ?? {});
-      final sid = (data['sid'] ?? '').toString();
-      if (sid.isEmpty) {
-        return Either.left(const Failure('No session returned.'));
-      }
-
-      await _completeLogin(
-        sid: sid,
-        user: Map<String, dynamic>.from(data['user'] ?? {}),
-      );
-
-      return Either.right(null);
-    } catch (e) {
-      return Either.left(Failure('Google sign-in failed: $e'));
-    }
-  }
-
-  // APPLE LOGIN
-  Future<Either<Failure, void>> signInWithApple({
-    String? country,
-    String? language,
-    String? currency,
-  }) async {
-    try {
-      final credential = await AppleAuthService().signIn();
-
-      final idToken = credential?.identityToken;
-
-      if (idToken == null || idToken.isEmpty) {
-        return Either.left(const Failure('Apple sign-in cancelled.'));
-      }
-
-      final res = await _api.appleLogin(
-        idToken: idToken,
-        country: country ?? '',
-        language: language ?? '',
-        currency: currency ?? '',
-      );
-
-      if (res.isLeft) return Either.left(res.leftOrNull!);
-
-      final payload = res.rightOrNull ?? {};
-      if (payload['ok'] != true) {
-        return Either.left(
-          Failure((payload['message'] ?? 'Apple login failed').toString()),
-        );
-      }
-
-      final data = Map<String, dynamic>.from(payload['data'] ?? {});
-      final sid = (data['sid'] ?? '').toString();
-
-      if (sid.isEmpty) {
-        return Either.left(const Failure('No session returned.'));
-      }
-
-      await _completeLogin(
-        sid: sid,
-        user: Map<String, dynamic>.from(data['user'] ?? {}),
-      );
-
-      return Either.right(null);
-    } catch (e) {
-      return Either.left(Failure('Apple sign-in failed: $e'));
-    }
-  }
-
   Future<(bool remember, String email)> getRememberedLogin() async {
     final remember = await _storage.getRememberMe();
     final email = await _storage.getRememberedEmail();
     return (remember, remember ? email : '');
   }
 
-  Future<void> _completeLogin({
-    required String sid,
-    required Map<String, dynamic> user,
-  }) async {
-    await _apiClient.setSid(sid);
-    await _storage.setSid(sid);
-
-    state = state.copyWith(
-      initializing: false,
-      isLoggedIn: true,
-      sid: sid,
-      user: AuthUser.fromMap(user),
-      clearError: true,
-    );
-
-    await _syncUserPreferences();
-
-    _ref.invalidate(wishlistControllerProvider);
-  }
-
+  // ---------------------------------------------------------------------------
+  // CLEANUP
+  // ---------------------------------------------------------------------------
   @override
   void dispose() {
     _sessionSub?.cancel();
     _refreshingSession = null;
-
     super.dispose();
   }
 }

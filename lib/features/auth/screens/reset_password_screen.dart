@@ -6,7 +6,7 @@ import 'package:africaonlinestores/l10n/l10n_extension.dart';
 
 import 'package:africaonlinestores/core/core.dart';
 
-import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 
 import 'package:africaonlinestores/shared/components/app_success_sheet.dart';
 import 'package:africaonlinestores/shared/components/app_text_fields.dart';

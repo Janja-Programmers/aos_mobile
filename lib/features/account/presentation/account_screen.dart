@@ -13,7 +13,7 @@ import 'package:africaonlinestores/features/account/presentation/widgets/account
 import 'package:africaonlinestores/features/account/presentation/widgets/account_sections.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
-import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart';
 import 'package:africaonlinestores/features/seller/seller_verification/controllers/seller_status_provider.dart';
 import 'package:africaonlinestores/features/seller/seller_verification/presentation/widgets/seller_verification_banner.dart';
@@ -25,10 +25,10 @@ import 'package:africaonlinestores/shared/components/app_switch_tile.dart';
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
 
-  Widget _buildAccountHeader(BuildContext context, AuthUser? user) {
+  Widget _buildAccountHeader(BuildContext context, AuthState auth) {
     final l10n = context.l10n;
 
-    if (user == null) {
+    if (auth is! AuthAuthenticated) {
       return AccountGuestHeaderCard(
         onLogin: () => context.pushNamed(AppRoutes.nLogin),
         onSignUp: () => context.pushNamed(AppRoutes.nRegister),
@@ -36,6 +36,8 @@ class AccountScreen extends ConsumerWidget {
         subtitle: l10n.account_guest_description,
       );
     }
+
+    final user = auth.user;
 
     return AccountHeaderCard(
       fullName: user.fullName.isNotEmpty ? user.fullName : l10n.nav_account,
@@ -52,11 +54,13 @@ class AccountScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final isDarkMode = themeMode == ThemeMode.dark;
 
-    final statusAsync = ref.watch(sellerStatusProvider);
-
     final auth = ref.watch(authControllerProvider);
-    final user = auth.user;
-    final isAuthenticated = auth.isAuthenticated;
+    final isAuthenticated = auth is AuthAuthenticated;
+
+    /// ✅ ONLY watch seller status if authenticated
+    final AsyncValue? statusAsync = isAuthenticated
+        ? ref.watch(sellerStatusProvider)
+        : null;
 
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
@@ -79,11 +83,11 @@ class AccountScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
         children: [
-          _buildAccountHeader(context, user),
+          _buildAccountHeader(context, auth),
           const SizedBox(height: 14),
 
-          /// Verified banner (only for logged in users)
-          if (isAuthenticated)
+          /// ✅ VERIFIED BANNER (SAFE)
+          if (statusAsync != null)
             statusAsync.when(
               data: (status) => AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
@@ -93,6 +97,7 @@ class AccountScreen extends ConsumerWidget {
               error: (_, _) => const SizedBox.shrink(),
             ),
 
+          /// AUTHENTICATED ACTIONS
           if (isAuthenticated)
             AccountCard(
               child: Column(
@@ -102,20 +107,23 @@ class AccountScreen extends ConsumerWidget {
                     title: "My Listings",
                     onTap: () => AdNavigation.toMyAds(context),
                   ),
-
                   AccountOptionTile(
                     icon: Icons.business_center_outlined,
                     title: "My Storefront",
-                    onTap: () =>
-                        SellerNavigation.toSellerStore(context, user!.email),
+                    onTap: () {
+                      final current = auth;
+                      SellerNavigation.toSellerStore(
+                        context,
+                        current.user.email,
+                      );
+                    },
                   ),
-
                   const SizedBox(height: 18),
                 ],
               ),
             ),
 
-          /// Account settings
+          /// SETTINGS
           AccountSectionTitle(l10n.account_settings),
           const SizedBox(height: 8),
 
@@ -128,19 +136,16 @@ class AccountScreen extends ConsumerWidget {
                     title: l10n.account_passwords_security,
                     onTap: () => context.pushNamed(AppRoutes.nPasswordSecurity),
                   ),
-
                 AccountOptionTile(
                   icon: Icons.notifications_none,
                   title: l10n.account_notifications_preferences,
                   onTap: () => context.pushNamed(AppRoutes.nNotifications),
                 ),
-
                 AccountOptionTile(
                   icon: Icons.tune,
                   title: l10n.app_preferences,
                   onTap: () => context.pushNamed(AppRoutes.nPreference),
                 ),
-
                 AppSwitchTile(
                   icon: Icons.dark_mode_outlined,
                   title: l10n.settings_dark_mode,
@@ -158,7 +163,7 @@ class AccountScreen extends ConsumerWidget {
 
           const SizedBox(height: 18),
 
-          /// Other
+          /// OTHER
           AccountSectionTitle(l10n.common_other),
           const SizedBox(height: 8),
 
@@ -182,7 +187,7 @@ class AccountScreen extends ConsumerWidget {
 
           const SizedBox(height: 18),
 
-          /// Logout
+          /// LOGOUT
           if (isAuthenticated) ...[
             SizedBox(
               height: 54,
@@ -200,7 +205,7 @@ class AccountScreen extends ConsumerWidget {
                         iconBg: scheme.primary,
                         title: 'Logout',
                         message:
-                            'Are you sure you want to log out? You will need to sign in again to access your account.',
+                            'Are you sure you want to log out? You will need to sign in again.',
                         primaryText: 'Logout',
                         secondaryText: 'Cancel',
                         onPrimary: () async {

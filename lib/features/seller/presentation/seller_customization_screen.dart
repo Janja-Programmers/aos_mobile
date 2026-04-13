@@ -9,7 +9,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/seller/providers/seller_state_controller_provider.dart';
 
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
-import 'package:africaonlinestores/shared/media/review_media_helper.dart';
+import 'package:africaonlinestores/core/files/helpers/review_media_helper.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class StoreCustomizationScreen extends ConsumerStatefulWidget {

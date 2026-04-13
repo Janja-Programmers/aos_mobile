@@ -1,19 +1,20 @@
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 
-import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_section.dart';
 import "package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart";
 
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/app_text_fields.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key, this.prefillEmail});
@@ -69,7 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _login() async {
     final l10n = context.l10n;
 
-    if (_loginLoading) return;
+    if (_busy) return;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _loginLoading = true);
@@ -85,24 +86,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (!mounted) return;
 
-      await result.fold(
-        (e) async {
-          ShowSnack(context, l10n.auth_unexpected_error(e.message)).error();
+      result.fold((failure) {
+        ShowSnack(context, l10n.auth_unexpected_error(failure.message)).error();
 
-          final msg = e.message.toLowerCase();
-          final email = _emailCtrl.text.trim().toLowerCase();
+        final msg = failure.message.toLowerCase();
+        final email = _emailCtrl.text.trim().toLowerCase();
 
-          if (msg.contains('verify your email')) {
-            await context.pushNamed(
-              AppRoutes.nVerifyOtp,
-              extra: {'email': email, 'purpose': OtpPurpose.emailVerification},
-            );
-          }
-        },
-        (_) async {
-          _handlePostLoginRedirect();
-        },
-      );
+        if (msg.contains('verify your email')) {
+          context.pushNamed(
+            AppRoutes.nVerifyOtp,
+            extra: {'email': email, 'purpose': OtpPurpose.emailVerification},
+          );
+        }
+      }, (_) {});
     } catch (_) {
       if (!mounted) return;
       ShowSnack(context, "Error").error();
@@ -128,10 +124,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (!mounted) return;
 
-      result.fold(
-        (f) => ShowSnack(context, f.message).error(),
-        (_) => _handlePostLoginRedirect(),
-      );
+      result.fold((f) => ShowSnack(context, f.message).error(), (_) {});
     } catch (_) {
       if (!mounted) return;
       ShowSnack(context, 'Unexpected error').error();
@@ -158,34 +151,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       if (!mounted) return;
 
-      result.fold(
-        (f) => ShowSnack(context, f.message).error(),
-        (_) => _handlePostLoginRedirect(),
-      );
+      result.fold((f) => ShowSnack(context, f.message).error(), (_) {});
     } catch (_) {
       if (!mounted) return;
       ShowSnack(context, 'Unexpected error').error();
     } finally {
       if (mounted) setState(() => _appleLoading = false);
-    }
-  }
-
-  void _handlePostLoginRedirect() {
-    final state = GoRouterState.of(context);
-    final redirect = state.uri.queryParameters['redirect'];
-
-    final target = (redirect != null && redirect.isNotEmpty)
-        ? Uri.decodeComponent(redirect)
-        : null;
-
-    // 🔥 Remove login from stack
-    context.pop();
-
-    // 🔥 Navigate properly
-    if (target != null && target.isNotEmpty && !target.startsWith('/auth')) {
-      context.push(target);
-    } else {
-      context.pushNamed(AppRoutes.nHome);
     }
   }
 

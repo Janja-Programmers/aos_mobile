@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/shared/components/app_bottom_nav.dart';
+
+/// ----------------------------------------------------------------------------
+/// APP SHELL
+/// ----------------------------------------------------------------------------
 
 class AppShell extends StatelessWidget {
   final Widget child;
 
-  const AppShell({super.key, required this.child});
+  final String location;
+
+  const AppShell({super.key, required this.child, required this.location});
 
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
-
     final currentIndex = _calculateIndex(location);
+
+    // final hideBottomNav = false;
 
     return Scaffold(
       body: child,
@@ -25,6 +30,7 @@ class AppShell extends StatelessWidget {
     if (location.startsWith('/seller')) return 2;
     if (location.startsWith('/chats')) return 3;
     if (location.startsWith('/account')) return 4;
+
     return 0;
   }
 }

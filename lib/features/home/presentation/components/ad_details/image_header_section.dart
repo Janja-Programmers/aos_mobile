@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:flutter/rendering.dart';
 
-import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/routing/helpers/route_observer.dart';
 
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 
@@ -28,9 +26,11 @@ class ImageHeaderSection extends StatefulWidget {
   State<ImageHeaderSection> createState() => _ImageHeaderSectionState();
 }
 
-class _ImageHeaderSectionState extends State<ImageHeaderSection> {
+class _ImageHeaderSectionState extends State<ImageHeaderSection>
+    with WidgetsBindingObserver, RouteAware {
   VideoPlayerController? _vc;
   ChewieController? _chewieController;
+  VoidCallback? _videoListener;
 
   Future<void>? _init;
   String? _currentVideoUrl;
@@ -45,38 +45,49 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     _pageController = PageController(initialPage: widget.selected);
     _maybeInitInlineVideo();
     _startAutoScrollIfNeeded();
   }
 
   @override
-  void didUpdateWidget(covariant ImageHeaderSection oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    final oldVideo = (oldWidget.videoUrl ?? '').trim();
-    final newVideo = (widget.videoUrl ?? '').trim();
-
-    final selectionChanged = oldWidget.selected != widget.selected;
-    final videoChanged = oldVideo != newVideo;
-    final imagesChanged = oldWidget.images != widget.images;
-
-    if (selectionChanged) {
-      _jumpToPageSafe(widget.selected);
-    }
-
-    if (selectionChanged || videoChanged || imagesChanged) {
-      _maybeInitInlineVideo();
-      _startAutoScrollIfNeeded();
-    }
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
   }
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
+    WidgetsBinding.instance.removeObserver(this);
+
     _stopAutoScroll();
     _disposeInline();
     _pageController.dispose();
     super.dispose();
+  }
+
+  /// ===============================
+  /// APP LIFECYCLE
+  /// ===============================
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _vc?.pause();
+      _chewieController?.pause();
+    }
+  }
+
+  /// ===============================
+  /// ROUTE AWARE
+  /// ===============================
+  @override
+  void didPushNext() {
+    _vc?.pause();
+    _chewieController?.pause();
   }
 
   void _stopAutoScroll() {
@@ -101,7 +112,6 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
       final current = widget.selected.clamp(0, media.length - 1);
       final next = (current + 1) % media.length;
 
-      // Keep parent state in sync
       widget.onSelect(next);
 
       _pageController.animateToPage(
@@ -114,6 +124,11 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
 
   void _disposeInline() {
     try {
+      if (_videoListener != null) {
+        _vc?.removeListener(_videoListener!);
+        _videoListener = null;
+      }
+
       _chewieController?.pause();
       _chewieController?.dispose();
     } catch (_) {}
@@ -152,7 +167,6 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
 
     final selectedItem = media.isEmpty ? null : media[safeSelected];
 
-    // Only keep controller when selected is video.
     if (selectedItem == null || !selectedItem.isVideo) {
       if (_vc != null) {
         _disposeInline();
@@ -177,53 +191,47 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
       return;
     }
 
-    if (_vc != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _disposeInline();
-      });
-    }
+    _disposeInline();
 
     final controller = VideoPlayerController.networkUrl(Uri.parse(resolved));
     _vc = controller;
     _currentVideoUrl = resolved;
 
     _init = controller.initialize().then((_) {
-      controller.initialize().then((_) {
-        controller.setLooping(false);
+      controller.setLooping(false);
 
-        _chewieController = ChewieController(
-          videoPlayerController: controller,
-          autoPlay: true,
-          looping: false,
-          allowFullScreen: true,
-          allowPlaybackSpeedChanging: false,
-          showControls: true,
-        );
+      _chewieController = ChewieController(
+        videoPlayerController: controller,
+        autoPlay: true,
+        looping: false,
+        allowFullScreen: true,
+        allowPlaybackSpeedChanging: false,
+        showControls: true,
+      );
 
-        controller.addListener(() {
-          if (!controller.value.isInitialized) return;
+      _videoListener = () {
+        if (!controller.value.isInitialized) return;
 
-          final position = controller.value.position;
-          final duration = controller.value.duration;
+        final position = controller.value.position;
+        final duration = controller.value.duration;
 
-          if (position >= duration) {
-            final media = _buildMedia();
-            final next = (widget.selected + 1) % media.length;
+        if (position >= duration) {
+          final media = _buildMedia();
+          final next = (widget.selected + 1) % media.length;
 
-            widget.onSelect(next);
+          widget.onSelect(next);
 
-            _pageController.animateToPage(
-              next,
-              duration: const Duration(milliseconds: 400),
-              curve: Curves.easeOut,
-            );
+          _pageController.animateToPage(
+            next,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOut,
+          );
 
-            _startAutoScrollIfNeeded();
-          }
-        });
+          _startAutoScrollIfNeeded();
+        }
+      };
 
-        if (mounted) setState(() {});
-      });
+      controller.addListener(_videoListener!);
 
       if (mounted) setState(() {});
     });
@@ -231,20 +239,8 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
     if (mounted) setState(() {});
   }
 
-  void _jumpToPageSafe(int index) {
-    if (!_pageController.hasClients) return;
-
-    final media = _buildMedia();
-    if (media.isEmpty) return;
-
-    final safe = index.clamp(0, media.length - 1);
-    _pageController.jumpToPage(safe);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final colors = context.appColors;
-
     final media = _buildMedia();
     final safeSelected = media.isEmpty
         ? 0
@@ -274,114 +270,33 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection> {
                     init: _init,
                     chewieController: _chewieController,
                   )
-                : Stack(
-                    children: [
-                      NotificationListener<UserScrollNotification>(
-                        onNotification: (n) {
-                          // Pause while user is actively scrolling the carousel
-                          if (n.direction != ScrollDirection.idle) {
-                            _stopAutoScroll();
-                          } else {
-                            _startAutoScrollIfNeeded();
-                          }
-                          return false;
-                        },
-                        child: PageView.builder(
-                          controller: _pageController,
-                          itemCount: media.length,
-                          onPageChanged: (i) {
-                            _stopAutoScroll();
-                            if (i != widget.selected) widget.onSelect(i);
-                            _maybeInitInlineVideo();
-                            _startAutoScrollIfNeeded();
-                          },
-                          itemBuilder: (_, i) {
-                            final item = media[i];
-                            final isActive = i == safeSelected;
+                : PageView.builder(
+                    controller: _pageController,
+                    itemCount: media.length,
+                    onPageChanged: (i) {
+                      _stopAutoScroll();
+                      if (i != widget.selected) widget.onSelect(i);
+                      _maybeInitInlineVideo();
+                      _startAutoScrollIfNeeded();
+                    },
+                    itemBuilder: (_, i) {
+                      final item = media[i];
+                      final isActive = i == safeSelected;
 
-                            // Only attach controller to active video page
-                            final vc = (isActive && item.isVideo) ? _vc : null;
-                            final init = (isActive && item.isVideo)
-                                ? _init
-                                : null;
+                      final vc = (isActive && item.isVideo) ? _vc : null;
+                      final init = (isActive && item.isVideo) ? _init : null;
 
-                            return _MainMediaOrInlineVideo(
-                              item: item,
-                              posterImage: posterImage,
-                              vc: vc,
-                              init: init,
-                              chewieController: _chewieController,
-                            );
-                          },
-                        ),
-                      ),
-
-                      Positioned(
-                        bottom: 10,
-                        left: 0,
-                        right: 0,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(media.length, (i) {
-                            final active = i == safeSelected;
-                            return AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              height: 6,
-                              width: active ? 18 : 6,
-                              decoration: BoxDecoration(
-                                color: active ? colors.primary : colors.surface,
-                                borderRadius: BorderRadius.circular(99),
-                              ),
-                            );
-                          }),
-                        ),
-                      ),
-                    ],
+                      return _MainMediaOrInlineVideo(
+                        item: item,
+                        posterImage: posterImage,
+                        vc: vc,
+                        init: init,
+                        chewieController: _chewieController,
+                      );
+                    },
                   ),
           ),
         ),
-        const SizedBox(height: 12),
-
-        if (media.length > 1)
-          LayoutBuilder(
-            builder: (context, c) {
-              final itemCount = media.length;
-              const gap = 10.0;
-              final totalGaps = gap * (itemCount - 1);
-              final rawW = (c.maxWidth - totalGaps) / itemCount;
-              final tileW = rawW.clamp(44.0, 72.0);
-
-              return Row(
-                children: [
-                  for (var i = 0; i < itemCount; i++) ...[
-                    SizedBox(
-                      width: tileW,
-                      height: 62,
-                      child: _Thumb(
-                        item: media[i],
-                        active: i == safeSelected,
-                        colors: colors,
-                        videoPoster: posterImage,
-                        onTap: () {
-                          _stopAutoScroll();
-                          widget.onSelect(i);
-                          _pageController.animateToPage(
-                            i,
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeOut,
-                          );
-                          _maybeInitInlineVideo();
-                          _startAutoScrollIfNeeded();
-                        },
-                      ),
-                    ),
-                    if (i != itemCount - 1) const SizedBox(width: gap),
-                  ],
-                ],
-              );
-            },
-          ),
       ],
     );
   }
@@ -472,85 +387,85 @@ class _MediaItem {
 
 enum _MediaKind { image, video }
 
-class _Thumb extends StatelessWidget {
-  const _Thumb({
-    required this.item,
-    required this.active,
-    required this.colors,
-    required this.onTap,
-    this.videoPoster,
-  });
+// class _Thumb extends StatelessWidget {
+//   const _Thumb({
+//     required this.item,
+//     required this.active,
+//     required this.colors,
+//     required this.onTap,
+//     this.videoPoster,
+//   });
 
-  final _MediaItem item;
-  final bool active;
-  final AppColorTokens colors;
-  final VoidCallback onTap;
-  final String? videoPoster;
+//   final _MediaItem item;
+//   final bool active;
+//   final AppColorTokens colors;
+//   final VoidCallback onTap;
+//   final String? videoPoster;
 
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final borderColor = active
-        ? colors.primary
-        : Theme.of(context).dividerColor.withOpacity(0.2);
+//   @override
+//   Widget build(BuildContext context) {
+//     final colors = context.appColors;
+//     final borderColor = active
+//         ? colors.primary
+//         : Theme.of(context).dividerColor.withOpacity(0.2);
 
-    final Widget content;
+//     final Widget content;
 
-    if (!item.isVideo) {
-      content = Image.network(
-        buildFileUrl(item.url) ?? '',
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) =>
-            const Center(child: Icon(Icons.broken_image_outlined, size: 18)),
-      );
-    } else {
-      final poster = (videoPoster ?? '').trim();
-      content = Stack(
-        fit: StackFit.expand,
-        children: [
-          if (poster.isNotEmpty)
-            Image.network(
-              buildFileUrl(poster) ?? '',
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => const Center(
-                child: Icon(Icons.broken_image_outlined, size: 18),
-              ),
-            )
-          else
-            const Center(child: Icon(Icons.videocam_outlined, size: 18)),
-          Container(color: colors.black.withOpacity(0.12)),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: colors.black.withOpacity(0.45),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.play_arrow_rounded,
-                size: 18,
-                color: colors.surface,
-              ),
-            ),
-          ),
-        ],
-      );
-    }
+//     if (!item.isVideo) {
+//       content = Image.network(
+//         buildFileUrl(item.url) ?? '',
+//         fit: BoxFit.cover,
+//         errorBuilder: (_, _, _) =>
+//             const Center(child: Icon(Icons.broken_image_outlined, size: 18)),
+//       );
+//     } else {
+//       final poster = (videoPoster ?? '').trim();
+//       content = Stack(
+//         fit: StackFit.expand,
+//         children: [
+//           if (poster.isNotEmpty)
+//             Image.network(
+//               buildFileUrl(poster) ?? '',
+//               fit: BoxFit.cover,
+//               errorBuilder: (_, _, _) => const Center(
+//                 child: Icon(Icons.broken_image_outlined, size: 18),
+//               ),
+//             )
+//           else
+//             const Center(child: Icon(Icons.videocam_outlined, size: 18)),
+//           Container(color: colors.black.withOpacity(0.12)),
+//           Center(
+//             child: Container(
+//               padding: const EdgeInsets.all(6),
+//               decoration: BoxDecoration(
+//                 color: colors.black.withOpacity(0.45),
+//                 shape: BoxShape.circle,
+//               ),
+//               child: Icon(
+//                 Icons.play_arrow_rounded,
+//                 size: 18,
+//                 color: colors.surface,
+//               ),
+//             ),
+//           ),
+//         ],
+//       );
+//     }
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        height: 62,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor, width: active ? 2 : 1),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: content,
-        ),
-      ),
-    );
-  }
-}
+//     return InkWell(
+//       onTap: onTap,
+//       borderRadius: BorderRadius.circular(12),
+//       child: Container(
+//         height: 62,
+//         decoration: BoxDecoration(
+//           borderRadius: BorderRadius.circular(12),
+//           border: Border.all(color: borderColor, width: active ? 2 : 1),
+//         ),
+//         child: ClipRRect(
+//           borderRadius: BorderRadius.circular(10),
+//           child: content,
+//         ),
+//       ),
+//     );
+//   }
+// }

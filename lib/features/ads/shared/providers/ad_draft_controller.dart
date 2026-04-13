@@ -9,7 +9,7 @@ import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
-import 'package:africaonlinestores/features/files/data/files_api_provider.dart';
+import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
 
 import 'package:africaonlinestores/shared/enums/ads.dart';
 

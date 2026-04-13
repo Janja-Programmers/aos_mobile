@@ -1,19 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 
-class AdCardImage extends StatelessWidget {
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
+
+class AdCardImage extends ConsumerWidget {
   const AdCardImage({super.key, required this.ad, required this.height});
 
   final AOSAdListItem ad;
   final double height;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
+
     final imageUrl = buildFileUrl(ad.primaryImage);
+
+    final isAuth = ref.watch(isAuthenticatedProvider);
+
+    Set<String> ids = const {};
+
+    if (isAuth) {
+      final wishlist = ref.watch(wishlistControllerProvider).value;
+      ids = wishlist?.ids ?? {};
+    }
+
+    final isWishlisted = ids.contains(ad.id);
 
     return Stack(
       children: [
@@ -66,17 +84,30 @@ class AdCardImage extends StatelessWidget {
               else
                 const SizedBox(),
 
-              Container(
-                height: 28,
-                width: 28,
-                decoration: BoxDecoration(
-                  color: colors.surface.withOpacity(0.9),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  ad.isWishlisted ? Icons.favorite : Icons.favorite_border,
-                  size: 16,
-                  color: ad.isWishlisted ? colors.primary : colors.textPrimary,
+              GestureDetector(
+                onTap: () {
+                  AppNavigation.requireAuth(
+                    context,
+                    ref,
+                    onAuthenticated: () {
+                      ref
+                          .read(wishlistControllerProvider.notifier)
+                          .toggle(ad.id);
+                    },
+                  );
+                },
+                child: Container(
+                  height: 28,
+                  width: 28,
+                  decoration: BoxDecoration(
+                    color: colors.surface.withOpacity(0.9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isWishlisted ? Icons.favorite : Icons.favorite_border,
+                    size: 16,
+                    color: isWishlisted ? colors.primary : colors.textPrimary,
+                  ),
                 ),
               ),
             ],

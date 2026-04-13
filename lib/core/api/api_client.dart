@@ -31,7 +31,6 @@ class ApiClient {
         ),
       ) {
     // 🔥 HARDcode SID here
-    _sid = "6a5bdd587fdd35b182ecf7679e0237f20d002cf91d6a0186dba4566b";
 
     dio.interceptors.add(CookieManager(cookieJar));
 

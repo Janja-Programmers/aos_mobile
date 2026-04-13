@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/routing/navigation.dart';
+import 'package:africaonlinestores/core/routing/helpers/navigation.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/catalog/presentation/widgets/for_you_ads_section_box.dart';

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:africaonlinestores/features/files/data/files_api_provider.dart';
+import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
 
 class ReviewMediaHelper {
   ReviewMediaHelper._();

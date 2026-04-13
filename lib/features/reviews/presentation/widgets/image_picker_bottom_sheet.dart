@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/shared/media/media_helper.dart';
+import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
 
 Future<File?> showImageSourcePicker(BuildContext context) {
   return showModalBottomSheet<File>(

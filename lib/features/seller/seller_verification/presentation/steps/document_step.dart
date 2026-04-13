@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
-import 'package:africaonlinestores/features/files/data/files_api_provider.dart';
+import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
 import 'package:africaonlinestores/features/seller/seller_verification/controllers/verification_controller_provider.dart';
 import 'package:africaonlinestores/features/seller/seller_verification/domain/verification_document.dart';
 
-import 'package:africaonlinestores/shared/media/media_helper.dart';
+import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class DocumentsStep extends ConsumerWidget {

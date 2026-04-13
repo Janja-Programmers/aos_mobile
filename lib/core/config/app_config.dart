@@ -3,7 +3,7 @@ class AppConfig {
     'AOS_BASE_URL',
     // IMPORTANT: Keep this WITHOUT a trailing slash to avoid `//api/...` URLs.
     // defaultValue: 'https://aos-staging.m.frappe.cloud',
-    defaultValue: ' https://aos-staging.duckdns.org',
+    defaultValue: 'https://aos-staging.duckdns.org',
   );
 
   static const String siteName = String.fromEnvironment(

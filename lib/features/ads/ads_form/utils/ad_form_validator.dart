@@ -11,10 +11,13 @@ class AdFormValidator {
   static ValidationResult basic(AdDraft d) {
     final errors = <String, String>{};
 
-    if (d.title.trim().isEmpty) {
-      errors['title'] = 'Title is required';
-    }
+    final title = d.title.trim();
 
+    if (title.isEmpty) {
+      errors['title'] = 'Title is required';
+    } else if (title.length < 5) {
+      errors['title'] = 'Title must be at least 5 characters';
+    }
     if ((d.locationId ?? '').trim().isEmpty) {
       errors['location'] = 'Location is required';
     }

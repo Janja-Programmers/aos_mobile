@@ -14,47 +14,32 @@ class AuthUser {
   }
 }
 
-class AuthState {
-  const AuthState({
-    required this.initializing,
-    required this.isLoggedIn,
-    this.sid,
-    this.user,
-    this.errorMessage,
-  });
+sealed class AuthState {
+  const AuthState();
 
-  final bool initializing;
-  final bool isLoggedIn;
-  final String? sid;
-  final AuthUser? user;
-  final String? errorMessage;
+  bool get isLoading => this is AuthLoading;
+  bool get isGuest => this is AuthGuest;
+  bool get isAuthenticated => this is AuthAuthenticated;
 
-  bool get isAuthenticated => user != null && sid != null;
-  bool get isGuest => !isAuthenticated;
+  AuthAuthenticated? get asAuthenticated =>
+      this is AuthAuthenticated ? this as AuthAuthenticated : null;
+}
 
-  factory AuthState.initial() =>
-      const AuthState(initializing: true, isLoggedIn: false);
+class AuthLoading extends AuthState {
+  const AuthLoading();
+}
 
-  AuthState loggedOut() {
-    return const AuthState(initializing: false, isLoggedIn: false);
-  }
+class AuthGuest extends AuthState {
+  const AuthGuest();
+}
 
-  AuthState copyWith({
-    bool? initializing,
-    bool? isLoggedIn,
-    String? sid,
-    bool clearSid = false,
-    AuthUser? user,
-    bool clearUser = false,
-    String? errorMessage,
-    bool clearError = false,
-  }) {
-    return AuthState(
-      initializing: initializing ?? this.initializing,
-      isLoggedIn: isLoggedIn ?? this.isLoggedIn,
-      sid: clearSid ? null : (sid ?? this.sid),
-      user: clearUser ? null : (user ?? this.user),
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-    );
+class AuthAuthenticated extends AuthState {
+  final AuthUser user;
+  final String sid;
+
+  const AuthAuthenticated({required this.user, required this.sid});
+
+  AuthAuthenticated copyWith({AuthUser? user}) {
+    return AuthAuthenticated(user: user ?? this.user, sid: sid);
   }
 }

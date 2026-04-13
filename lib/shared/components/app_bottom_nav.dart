@@ -44,8 +44,8 @@ class AppBottomNav extends ConsumerWidget {
 
             _NavItem(
               label: 'Connect',
-              icon: Icons.support_agent_outlined,
-              activeIcon: Icons.support_agent_rounded,
+              icon: Icons.forum_outlined,
+              activeIcon: Icons.forum_outlined,
               active: currentIndex == 3,
               onTap: () => AppNavigation.goTo(context, ref, 3),
             ),

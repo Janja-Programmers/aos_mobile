@@ -5,7 +5,9 @@ import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
-import 'package:africaonlinestores/features/auth/shared/providers/current_user_controlller_provider.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+
 import 'package:africaonlinestores/features/seller/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/seller/providers/seller_state_controller_provider.dart';
 import 'package:africaonlinestores/features/seller/presentation/widgets/seller_action_tabs.dart';
@@ -30,8 +32,13 @@ class SellerHeaderSection extends ConsumerWidget {
     final colors = context.appColors;
 
     final state = ref.watch(sellerStateProvider(sellerId));
-    final isFollowing = state.isFollowing ?? seller.isFollowing;
-    final isOwner = ref.watch(currentUserControllerProvider(sellerId));
+    final isFollowing = state.isFollowing ?? false;
+
+    final auth = ref.watch(authControllerProvider);
+
+    final isOwner = auth is AuthAuthenticated && auth.user.email == sellerId;
+
+    final isAuthenticated = auth is AuthAuthenticated;
 
     return SectionCard(
       child: Column(
@@ -102,7 +109,7 @@ class SellerHeaderSection extends ConsumerWidget {
           const SizedBox(height: 14),
 
           /// Follow Button (ONLY for visitors)
-          if (!isOwner)
+          if (isAuthenticated && !isOwner)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

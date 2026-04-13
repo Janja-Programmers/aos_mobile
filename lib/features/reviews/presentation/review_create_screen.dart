@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/files/data/files_api_provider.dart';
+import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
 import 'package:africaonlinestores/features/reviews/controllers/review_create_controller.dart';
 import 'package:africaonlinestores/features/reviews/presentation/widgets/image_picker_bottom_sheet.dart';
 
@@ -11,7 +11,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
-import 'package:africaonlinestores/shared/media/media_helper.dart';
+import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ReviewCreateScreen extends ConsumerStatefulWidget {

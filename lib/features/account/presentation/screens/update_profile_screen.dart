@@ -3,17 +3,21 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 
 import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
+import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/utils/normalize_image.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/account/presentation/widgets/editable_avator.dart';
 import 'package:africaonlinestores/features/account/data/accounts_api.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_provider.dart';
-import 'package:africaonlinestores/features/auth/shared/providers/auth_controller.dart';
+
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
@@ -43,13 +47,6 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
-  }
-
-  @override
-  void dispose() {
-    _nameCtrl.dispose();
-    _emailCtrl.dispose();
-    super.dispose();
   }
 
   Future<void> _load() async {
@@ -135,25 +132,22 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
     if (mounted) context.goNamed(AppRoutes.nAccount);
   }
 
+  void _resetUploadState() {
+    if (!mounted) return;
+    setState(() {
+      _uploadingPhoto = false;
+      _localPhoto = null;
+    });
+  }
+
   Future<void> _pickPhoto() async {
     if (_uploadingPhoto || _loading) return;
 
-    // NOTE: Do not store/capture BuildContext across async gaps.
-    final source = await _showPhotoSourceSheet(context);
-    if (source == null) return;
+    final file = await MediaHelper.pickImageWithChoice(context);
+    if (file == null) return;
 
-    final picker = ImagePicker();
-    final xfile = await picker.pickImage(
-      source: source,
-      imageQuality: 85,
-      maxWidth: 1200,
-    );
-    if (xfile == null) return;
-
-    final file = File(xfile.path);
     final fixedFile = await normalizeImageOrientation(file);
 
-    // Optimistic UI: show local file immediately.
     if (!mounted) return;
     setState(() {
       _uploadingPhoto = true;
@@ -161,52 +155,44 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
     });
 
     final auth = ref.read(authControllerProvider);
-    final docname = auth.user?.email ?? '';
-    if (docname.isEmpty) {
-      if (!mounted) return;
-      setState(() {
-        _uploadingPhoto = false;
-        _localPhoto = null;
-      });
-      showAppSnack(context, 'You must be logged in to upload a photo.');
+
+    if (auth is! AuthAuthenticated) {
+      _resetUploadState();
+      showAppSnack(context, 'You must be logged in.');
       return;
     }
 
-    // 1) Upload file
-    final up = await _api.uploadProfilePhoto(file: fixedFile, docname: docname);
+    final filesApi = ref.read(filesApiProvider);
+    final uploadRes = await filesApi.uploadMedia(file: fixedFile);
+
     if (!mounted) return;
 
-    if (up.isLeft) {
-      setState(() {
-        _uploadingPhoto = false;
-        _localPhoto = null;
-      });
+    if (uploadRes.isLeft) {
+      _resetUploadState();
       showAppSnack(
         context,
-        up.leftOrNull?.message ?? 'Failed to upload image.',
+        uploadRes.leftOrNull?.message ?? 'Failed to upload image.',
       );
       return;
+    } else {
+      showAppSnack(context, 'Profile photo updated.');
     }
 
-    final fileUrl = up.rightOrNull ?? '';
-    if (fileUrl.isEmpty) {
-      setState(() {
-        _uploadingPhoto = false;
-        _localPhoto = null;
-      });
+    final fileData = uploadRes.rightOrNull ?? {};
+    final url = fileData['url'] ?? '';
+
+    if (url.isEmpty) {
+      _resetUploadState();
       showAppSnack(context, 'Failed to upload image.');
       return;
     }
 
-    // 2) Update profile user_image
-    final res = await _api.updateProfile(userImage: fileUrl);
+    final res = await _api.updateProfile(userImage: url);
+
     if (!mounted) return;
 
     if (res.isLeft) {
-      setState(() {
-        _uploadingPhoto = false;
-        _localPhoto = null;
-      });
+      _resetUploadState();
       showAppSnack(
         context,
         res.leftOrNull?.message ?? 'Failed to update profile photo.',
@@ -214,66 +200,18 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
       return;
     }
 
-    final payload = res.rightOrNull ?? <String, dynamic>{};
-    final ok = payload['ok'] == true;
-    if (!ok) {
-      setState(() {
-        _uploadingPhoto = false;
-        _localPhoto = null;
-      });
-      showAppSnack(
-        context,
-        (payload['message'] ?? 'Failed to update profile photo.').toString(),
-      );
-      return;
-    }
-
-    final data = (payload['data'] is Map)
-        ? Map<String, dynamic>.from(payload['data'] as Map)
-        : <String, dynamic>{};
+    final payload = res.rightOrNull ?? {};
+    final data = Map<String, dynamic>.from(payload['data'] ?? {});
 
     setState(() {
-      _userImage = (data['user_image'] ?? fileUrl).toString();
+      _userImage = (data['user_image'] ?? url).toString();
       _uploadingPhoto = false;
       _localPhoto = null;
     });
 
     ref.read(authControllerProvider.notifier).setUserFromMap(data);
+
     showAppSnack(context, 'Profile photo updated.');
-  }
-
-  Future<ImageSource?> _showPhotoSourceSheet(BuildContext context) async {
-    final scheme = Theme.of(context).colorScheme;
-
-    return showModalBottomSheet<ImageSource>(
-      context: context,
-      backgroundColor: scheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.photo_library_outlined),
-                  title: const Text('Choose from gallery'),
-                  onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.photo_camera_outlined),
-                  title: const Text('Take a photo'),
-                  onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 
   InputDecoration _decor(
@@ -290,6 +228,8 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
+    final authenticated = auth is AuthAuthenticated ? auth : null;
+
     final baseUrl = AppConfig.normalizedBaseUrl;
 
     final colors = context.appColors;
@@ -315,8 +255,8 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
                   Center(
                     child: EditableAvatar(
                       baseUrl: baseUrl,
-                      authFullName: auth.user?.fullName ?? '',
-                      authUserImage: auth.user?.userImage ?? '',
+                      authFullName: authenticated?.user.fullName ?? '',
+                      authUserImage: authenticated?.user.userImage ?? '',
                       apiUserImage: _userImage,
                       localPhoto: _localPhoto,
                       uploading: _uploadingPhoto,
@@ -356,5 +296,12 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
               ),
             ),
     );
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    super.dispose();
   }
 }

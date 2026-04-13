@@ -30,7 +30,6 @@ class ChatConversationsController
   // -----------------------------
   Future<void> _init() async {
     _currentUser = ref.read(currentUserProvider) ?? "";
-    appLogger.w('[ChatController] Current user: $_currentUser');
 
     await load();
     await _subscribeToRealtime();
@@ -45,23 +44,14 @@ class ChatConversationsController
 
     if (res.isLeft) {
       state = AsyncError(res.leftOrNull!, StackTrace.current);
-      appLogger.w(
-        '[ChatController] Failed to load conversations: ${res.leftOrNull}',
-      );
     } else {
       state = AsyncData(res.rightOrNull!);
-      appLogger.w(
-        '[ChatController] Loaded ${res.rightOrNull?.length ?? 0} conversations',
-      );
     }
   }
 
   Future<void> refresh() async {
-    appLogger.w('[ChatController] Refreshing conversations...');
     state = const AsyncLoading();
     await load();
-    appLogger.w('[ChatController] Refreshing conversations...');
-    appLogger.w('[ChatController] Current user: $_currentUser');
   }
 
   //
@@ -70,8 +60,6 @@ class ChatConversationsController
 
   Future<void> deleteConversation(String conversationId) async {
     final repo = ref.read(chatRepositoryProvider);
-
-    appLogger.w('[ChatController] Deleting conversation: $conversationId');
 
     // 🔥 Optimistic update (remove immediately from UI)
     final previousState = state;
@@ -100,9 +88,6 @@ class ChatConversationsController
     state = state.whenData((conversations) {
       return conversations.map((c) {
         if (c.id == conversationId) {
-          appLogger.w(
-            '[ChatController] Marking conversation $conversationId as read locally',
-          );
           return c.copyWith(unreadCount: 0);
         }
         return c;
@@ -127,10 +112,6 @@ class ChatConversationsController
       final sender = messageData['sender'];
       final shouldIncrement = sender != _currentUser;
 
-      appLogger.w(
-        '[ChatController] Received message in conversation $convId from $sender: $message',
-      );
-
       _updateConversationPreview(
         conversationId: convId,
         lastMessage: message,
@@ -150,9 +131,6 @@ class ChatConversationsController
     final current = state.value ?? [];
 
     if (state is! AsyncData) {
-      appLogger.w(
-        '[ChatController] State is not ready, skipping update for $conversationId',
-      );
       return;
     }
 
@@ -174,9 +152,6 @@ class ChatConversationsController
         ..removeAt(index)
         ..insert(0, updatedConversation);
       state = AsyncData(updatedList);
-      appLogger.w(
-        '[ChatController] Updated existing conversation $conversationId',
-      );
     } else {
       // new conversation → insert at top
       updatedConversation = ChatConversation(
@@ -189,7 +164,6 @@ class ChatConversationsController
       );
 
       state = AsyncData([updatedConversation, ...current]);
-      appLogger.w('[ChatController] Added new conversation $conversationId');
     }
   }
 
@@ -198,7 +172,6 @@ class ChatConversationsController
   // -----------------------------
   @override
   void dispose() {
-    appLogger.w('[ChatController] Disposing, cancelling subscription');
     _messageSub?.cancel();
     super.dispose();
   }

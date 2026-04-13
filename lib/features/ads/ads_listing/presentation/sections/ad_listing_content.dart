@@ -18,6 +18,7 @@ class AdListingContentView extends StatelessWidget {
     required this.onEdit,
     required this.onMarkSold,
     required this.onDelete,
+    required this.onContactSupport,
   });
 
   final List<AOSAdListItem> items;
@@ -26,6 +27,7 @@ class AdListingContentView extends StatelessWidget {
   final void Function(AOSAdListItem ad) onEdit;
   final void Function(AOSAdListItem ad) onMarkSold;
   final void Function(AOSAdListItem ad) onDelete;
+  final void Function(AOSAdListItem ad) onContactSupport;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +41,7 @@ class AdListingContentView extends StatelessWidget {
         onEdit: onEdit,
         onMarkSold: onMarkSold,
         onDelete: onDelete,
+        onContactSupport: onContactSupport,
       ),
     );
   }
@@ -51,6 +54,7 @@ class _MyAdTile extends StatelessWidget {
     required this.onEdit,
     required this.onMarkSold,
     required this.onDelete,
+    required this.onContactSupport,
   });
 
   final AOSAdListItem ad;
@@ -59,6 +63,7 @@ class _MyAdTile extends StatelessWidget {
   final void Function(AOSAdListItem ad) onEdit;
   final void Function(AOSAdListItem ad) onMarkSold;
   final void Function(AOSAdListItem ad) onDelete;
+  final void Function(AOSAdListItem ad) onContactSupport;
 
   @override
   Widget build(BuildContext context) {
@@ -78,8 +83,8 @@ class _MyAdTile extends StatelessWidget {
       ad: ad,
       onEdit: onEdit,
       onMarkSold: onMarkSold,
-      onDelete: () => onDelete(ad), // wire later
-      onContactSupport: () {},
+      onDelete: () => onDelete(ad),
+      onContactSupport: onContactSupport,
     );
 
     return Container(

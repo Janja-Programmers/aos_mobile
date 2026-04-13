@@ -27,20 +27,20 @@ class AdListingActions {
     required void Function(AOSAdListItem ad) onEdit,
     required void Function(AOSAdListItem ad) onMarkSold,
     required VoidCallback onDelete,
-    required VoidCallback onContactSupport,
+    required void Function(AOSAdListItem ad) onContactSupport,
   }) {
     switch (tab) {
       case AdTab.active:
         return [
           AdAction(
-            label: 'Edit',
-            onPressed: () => onEdit(ad),
-            type: AdActionType.secondary,
-          ),
-          AdAction(
             label: 'Mark as sold',
             onPressed: () => onMarkSold(ad),
             type: AdActionType.primary,
+          ),
+          AdAction(
+            label: 'Delete',
+            onPressed: onDelete,
+            type: AdActionType.destructive,
           ),
         ];
 
@@ -96,7 +96,12 @@ class AdListingActions {
           AdAction(
             label: 'View',
             onPressed: () => onEdit(ad),
-            type: AdActionType.secondary,
+            type: AdActionType.primary,
+          ),
+          AdAction(
+            label: 'Delete',
+            onPressed: onDelete,
+            type: AdActionType.destructive,
           ),
         ];
 
@@ -118,7 +123,7 @@ class AdListingActions {
         return [
           AdAction(
             label: 'Contact Support',
-            onPressed: onContactSupport,
+            onPressed: () => onContactSupport(ad),
             type: AdActionType.primary,
           ),
         ];

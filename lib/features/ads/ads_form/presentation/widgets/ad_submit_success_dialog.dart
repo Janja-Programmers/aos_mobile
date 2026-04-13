@@ -52,7 +52,7 @@ class AdSubmitSuccessDialog extends StatelessWidget {
 
             PrimaryButton(
               text: 'Done',
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(context, true),
             ),
           ],
         ),

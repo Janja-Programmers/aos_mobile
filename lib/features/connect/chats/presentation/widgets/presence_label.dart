@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+
+import 'package:africaonlinestores/features/connect/utils/format_time.dart';
+
 class PresenceLabel extends StatelessWidget {
   final bool isOnline;
   final DateTime? lastSeen;
@@ -8,24 +13,22 @@ class PresenceLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     if (isOnline) {
-      return const Text(
+      return Text(
         "Online",
-        style: TextStyle(color: Colors.green, fontSize: 12),
+        style: context.p.copyWith(color: colors.success, fontSize: 12),
       );
     }
 
     if (lastSeen != null) {
       return Text(
-        "Last seen ${_format(lastSeen!)}",
-        style: const TextStyle(fontSize: 12),
+        "Last seen ${formatTime(lastSeen!)}",
+        style: context.p.copyWith(fontSize: 12),
       );
     }
 
     return const SizedBox.shrink();
-  }
-
-  String _format(DateTime dt) {
-    return "${dt.hour}:${dt.minute.toString().padLeft(2, '0')}";
   }
 }

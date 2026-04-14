@@ -12,7 +12,7 @@ class ChatMessage {
   final DateTime? readAt;
   final List<ChatAttachment> attachments;
 
-  ChatMessage({
+  const ChatMessage({
     required this.id,
     required this.sender,
     this.content,
@@ -26,14 +26,26 @@ class ChatMessage {
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    final attachments =
+        (json['attachments'] as List? ?? [])
+            .map((e) => ChatAttachment.fromJson(Map<String, dynamic>.from(e)))
+            .toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+    final type = json['message_type']?.toString() ?? 'text';
+
+    final normalizedType = (type == 'mixed' || type == 'attachment')
+        ? type
+        : 'text';
+
     return ChatMessage(
       id: json['id']?.toString() ?? '',
       sender: json['sender']?.toString() ?? '',
       content: json['content']?.toString(),
-      messageType: json['message_type']?.toString() ?? 'text',
+      messageType: normalizedType,
       ad: json['ad']?.toString(),
       hasAttachments:
-          (json['has_attachments'] == 1 || json['has_attachments'] == true),
+          json['has_attachments'] == 1 || json['has_attachments'] == true,
       createdAt:
           DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.now(),
@@ -43,9 +55,7 @@ class ChatMessage {
       readAt: json['read_at'] != null
           ? DateTime.tryParse(json['read_at'].toString())
           : null,
-      attachments: (json['attachments'] as List? ?? [])
-          .map((e) => ChatAttachment.fromJson(e))
-          .toList(),
+      attachments: attachments,
     );
   }
 
@@ -74,4 +84,9 @@ class ChatMessage {
       attachments: attachments ?? this.attachments,
     );
   }
+
+  bool get hasText => (content ?? '').trim().isNotEmpty;
+  bool get isTextOnly => messageType == 'text' && attachments.isEmpty;
+  bool get isMixed => messageType == 'mixed';
+  bool get hasOnlyAttachments => !hasText && attachments.isNotEmpty;
 }

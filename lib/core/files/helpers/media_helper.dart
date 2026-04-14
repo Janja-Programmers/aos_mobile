@@ -6,10 +6,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/files/domain/upload_file.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
-typedef UploadFn =
-    Future<Either<Failure, Map<String, dynamic>>> Function(File file);
+typedef UploadFn = Future<Either<Failure, UploadedFile>> Function(File file);
 
 class MediaHelper {
   MediaHelper._();
@@ -53,6 +53,43 @@ class MediaHelper {
     return x == null ? null : File(x.path);
   }
 
+  static Future<File?> pickVideoWithChoice(BuildContext context) async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.video_library_outlined),
+                  title: const Text('Choose from gallery'),
+                  onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.videocam_outlined),
+                  title: const Text('Record a video'),
+                  onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (source == null) return null;
+
+    final x = await _picker.pickVideo(
+      source: source,
+      maxDuration: const Duration(minutes: 2), // optional limit
+    );
+
+    return x == null ? null : File(x.path);
+  }
+
   static Future<File?> pickImageFromCamera() async {
     final x = await _picker.pickImage(
       source: ImageSource.camera,
@@ -79,34 +116,35 @@ class MediaHelper {
   // -------------------------
 
   /// Upload SINGLE file
-  static Future<String?> uploadSingle({
+  static Future<UploadedFile?> uploadSingle({
     required WidgetRef ref,
     required File file,
     required UploadFn uploadFn,
   }) async {
     final res = await uploadFn(file);
 
-    return res.fold((_) => null, (data) => _extractUrl(data));
+    return res.fold((_) => null, (data) => data);
   }
 
   /// Upload MULTIPLE files
-  static Future<List<String>> uploadMultiple({
+  static Future<List<UploadedFile>> uploadMultiple({
     required WidgetRef ref,
     required List<File> files,
     required UploadFn uploadFn,
   }) async {
-    final urls = <String>[];
+    final futures = files.map((file) => uploadFn(file)).toList();
 
-    for (final file in files) {
-      final res = await uploadFn(file);
+    final responses = await Future.wait(futures);
 
+    final results = <UploadedFile>[];
+
+    for (final res in responses) {
       res.fold((_) {}, (data) {
-        final url = _extractUrl(data);
-        if (url != null) urls.add(url);
+        results.add(data);
       });
     }
 
-    return urls;
+    return results;
   }
 
   // -------------------------
@@ -160,17 +198,5 @@ class MediaHelper {
     }
 
     return true;
-  }
-
-  // -------------------------
-  // INTERNAL
-  // -------------------------
-
-  static String? _extractUrl(Map<String, dynamic> data) {
-    final url = data['url'];
-    if (url == null) return null;
-
-    final val = url.toString().trim();
-    return val.isEmpty ? null : val;
   }
 }

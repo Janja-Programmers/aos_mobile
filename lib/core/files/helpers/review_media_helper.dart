@@ -1,8 +1,10 @@
 import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
+import 'package:africaonlinestores/core/files/domain/upload_file.dart';
 
 class ReviewMediaHelper {
   ReviewMediaHelper._();
@@ -35,10 +37,9 @@ class ReviewMediaHelper {
     for (final file in files) {
       final res = await ref.read(filesApiProvider).uploadMedia(file: file);
 
-      res.fold((_) {}, (data) {
-        final url = data['url'];
-        if (url != null && url.isNotEmpty) {
-          urls.add(url);
+      res.fold((_) {}, (UploadedFile data) {
+        if (data.url.isNotEmpty) {
+          urls.add(data.url);
         }
       });
     }

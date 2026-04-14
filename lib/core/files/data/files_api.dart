@@ -7,6 +7,7 @@ import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/files/domain/upload_file.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
 class FilesApi {
@@ -15,7 +16,7 @@ class FilesApi {
 
   Dio get _dio => _client.dio;
 
-  Future<Either<Failure, Map<String, String>>> uploadMedia({
+  Future<Either<Failure, UploadedFile>> uploadMedia({
     required File file,
   }) async {
     try {
@@ -37,7 +38,7 @@ class FilesApi {
         final fileId = (msg['name'] ?? '').toString();
 
         if (url.isNotEmpty && fileId.isNotEmpty) {
-          return Either.right({'url': url, 'fileId': fileId});
+          return Either.right(UploadedFile(fileId: fileId, url: url));
         }
       }
 
@@ -91,7 +92,7 @@ class FilesApi {
     }
   }
 
-  Future<Either<Failure, Map<String, dynamic>>> removeBackground({
+  Future<Either<Failure, UploadedFile>> removeBackground({
     required String fileId,
   }) async {
     try {
@@ -100,7 +101,18 @@ class FilesApi {
         queryParameters: {'file_id': fileId},
       );
 
-      return unwrapFrappe(res);
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = result.rightOrNull!;
+      final url = (data['file_url'] ?? '').toString();
+      final newFileId = (data['name'] ?? '').toString();
+
+      if (url.isEmpty || newFileId.isEmpty) {
+        return Either.left(const Failure('Invalid response'));
+      }
+
+      return Either.right(UploadedFile(fileId: newFileId, url: url));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {

@@ -5,10 +5,11 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
+import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
+
 import 'package:africaonlinestores/features/seller/seller_verification/controllers/verification_controller_provider.dart';
 import 'package:africaonlinestores/features/seller/seller_verification/domain/verification_document.dart';
 
-import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class DocumentsStep extends ConsumerWidget {
@@ -101,17 +102,21 @@ class DocumentsStep extends ConsumerWidget {
               controller.setUploading(type, true);
 
               try {
-                final url = await MediaHelper.uploadSingle(
+                final uploaded = await MediaHelper.uploadSingle(
                   ref: ref,
                   file: file,
                   uploadFn: (f) =>
                       ref.read(filesApiProvider).uploadMedia(file: f),
                 );
 
-                if (url == null && context.mounted) {
-                  ShowSnack(context, "Upload failed. Try again").error();
+                if (uploaded == null) {
+                  if (context.mounted) {
+                    ShowSnack(context, "Upload failed. Try again").error();
+                  }
                   return;
                 }
+
+                final url = uploaded.url;
 
                 final existing = getDoc(type);
 

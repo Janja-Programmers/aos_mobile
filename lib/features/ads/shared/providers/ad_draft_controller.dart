@@ -327,12 +327,9 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
       return Either.left(res.leftOrNull!);
     }
 
-    final data = res.rightOrNull!["data"];
+    final uploaded = res.rightOrNull!; // ✅ UploadedFile
 
-    final newFileId = data["file_id"];
-    final newUrl = data["file_url"];
-
-    final newImage = image.copyWith(fileId: newFileId, url: newUrl);
+    final newImage = image.copyWith(fileId: uploaded.fileId, url: uploaded.url);
 
     final images = List<AdMediaImage>.from(_draft.images);
 
@@ -343,19 +340,22 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     // delete previous image silently
     unawaited(deleteFileSilently(image.fileId));
 
-    return Either.right(newUrl);
+    return Either.right(uploaded.url);
   }
 
   // ----------------- EDIT IMAGE -----------------
   Future<void> replaceImageAt(int index, File file) async {
     final api = _ref.read(filesApiProvider);
 
+    if (index < 0 || index >= _draft.images.length) return;
+
     final old = _draft.images[index];
 
     final res = await api.uploadMedia(file: file);
     if (res.isLeft) return;
 
-    final uploaded = AdMediaImage.fromUpload(res.rightOrNull!);
+    final uploadedFile = res.rightOrNull!;
+    final uploaded = AdMediaImage.fromUpload(uploadedFile);
 
     final images = List<AdMediaImage>.from(_draft.images);
 
@@ -372,11 +372,12 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
   Future<Either<Failure, String>> uploadAndAddImage(File file) async {
     final api = _ref.read(filesApiProvider);
-    final res = await api.uploadMedia(file: file);
 
+    final res = await api.uploadMedia(file: file);
     if (res.isLeft) return Either.left(res.leftOrNull!);
 
-    final media = AdMediaImage.fromUpload(res.rightOrNull!);
+    final uploadedFile = res.rightOrNull!;
+    final media = AdMediaImage.fromUpload(uploadedFile);
 
     final next = List<AdMediaImage>.from(_draft.images);
 
@@ -395,8 +396,8 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
     final media = res.rightOrNull!;
 
-    final url = media['url']!;
-    final fileId = media['fileId']!;
+    final url = media.url;
+    final fileId = media.fileId;
 
     _setDraft(_draft.copyWith(videoUrl: url, videoFileId: fileId));
 

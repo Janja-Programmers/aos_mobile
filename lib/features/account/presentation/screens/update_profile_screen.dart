@@ -162,24 +162,29 @@ class _UpdateProfileScreenState extends ConsumerState<UpdateProfileScreen> {
       return;
     }
 
-    final filesApi = ref.read(filesApiProvider);
-    final uploadRes = await filesApi.uploadMedia(file: fixedFile);
+    final uploaded = await MediaHelper.uploadSingle(
+      ref: ref,
+      file: fixedFile,
+      uploadFn: (f) => ref.read(filesApiProvider).uploadMedia(file: f),
+    );
 
     if (!mounted) return;
 
-    if (uploadRes.isLeft) {
+    if (uploaded == null) {
       _resetUploadState();
-      showAppSnack(
-        context,
-        uploadRes.leftOrNull?.message ?? 'Failed to upload image.',
-      );
+      showAppSnack(context, 'Failed to upload image.');
       return;
-    } else {
-      showAppSnack(context, 'Profile photo updated.');
     }
 
-    final fileData = uploadRes.rightOrNull ?? {};
-    final url = fileData['url'] ?? '';
+    showAppSnack(context, 'Profile photo updated.');
+
+    final url = uploaded.url;
+
+    if (url.isEmpty) {
+      _resetUploadState();
+      showAppSnack(context, 'Failed to upload image.');
+      return;
+    }
 
     if (url.isEmpty) {
       _resetUploadState();

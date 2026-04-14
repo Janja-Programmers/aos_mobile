@@ -72,11 +72,13 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
     final ctrl = ref.read(reviewCreateControllerProvider(widget.adId).notifier);
 
     // ✅ Upload using new MediaHelper
-    final imageUrls = await MediaHelper.uploadMultiple(
+    final uploadedFiles = await MediaHelper.uploadMultiple(
       ref: ref,
       files: _images,
       uploadFn: (file) => ref.read(filesApiProvider).uploadMedia(file: file),
     );
+
+    final imageUrls = uploadedFiles.map((e) => e.url).toList();
 
     final success = await ctrl.submit(
       rating: _rating,

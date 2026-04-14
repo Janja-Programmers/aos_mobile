@@ -221,12 +221,6 @@ class AdListingsController extends StateNotifier<AdListingsState> {
   Future<void> abandonDraft(AOSAdListItem ad) async {
     final api = ref.read(adsApiProvider);
 
-    final isDraft = ad.id.startsWith('DRAFT');
-    if (!isDraft) {
-      state = state.copyWith(error: 'Invalid draft item.');
-      return;
-    }
-
     final res = await api.abandonAdDraft(draftId: ad.id);
 
     await res.fold(

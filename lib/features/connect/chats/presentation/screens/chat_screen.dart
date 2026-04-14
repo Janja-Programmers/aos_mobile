@@ -3,22 +3,27 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+
 import 'package:africaonlinestores/features/connect/chats/controllers/chat_conversations_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/controllers/chat_messages_controller.dart';
-import 'package:africaonlinestores/features/connect/chats/controllers/chat_presence_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/controllers/chat_typing_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_app_bar.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input_bar.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_quick_replies.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/typing_indicator.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/message_bubble.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_input_bar.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/typing_indicator.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/presence_label.dart';
+
+import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String conversationId;
   final String otherUser;
   final String displayName;
   final String? initialMessage;
+  final String? adId;
 
   const ChatScreen({
     super.key,
@@ -26,6 +31,7 @@ class ChatScreen extends ConsumerStatefulWidget {
     required this.otherUser,
     required this.displayName,
     this.initialMessage,
+    this.adId,
   });
 
   @override
@@ -34,8 +40,11 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
-  bool _sentInitial = false;
+  final TextEditingController _inputController = TextEditingController();
+
+  bool _loadedInitialIntoInput = false;
   Timer? _typingTimer;
+  Timer? _typingStopTimer;
 
   @override
   void initState() {
@@ -47,7 +56,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Future<void> _onChatOpened() async {
     await _markAsRead();
-    await _handleInitialMessage();
+    _loadInitialMessageIntoInput();
   }
 
   Future<void> _markAsRead() async {
@@ -70,30 +79,56 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  Future<void> _handleInitialMessage() async {
-    if (_sentInitial) return;
+  void _loadInitialMessageIntoInput() {
+    if (_loadedInitialIntoInput) return;
 
-    final text = widget.initialMessage;
-    if (text == null || text.trim().isEmpty) return;
+    final text = widget.initialMessage?.trim();
+    if (text == null || text.isEmpty) return;
 
-    final messagesState = ref.read(
-      chatMessagesControllerProvider(widget.conversationId),
+    _loadedInitialIntoInput = true;
+    _inputController.text = text;
+    _inputController.selection = TextSelection.fromPosition(
+      TextPosition(offset: _inputController.text.length),
     );
+  }
 
-    final alreadyHasMessage = messagesState.maybeWhen(
-      data: (messages) => messages.any((m) => m.content == text),
-      orElse: () => false,
+  void _appendQuickReply(String text) {
+    final current = _inputController.text.trim();
+
+    _inputController.text = current.isEmpty ? text : '$current $text';
+    _inputController.selection = TextSelection.fromPosition(
+      TextPosition(offset: _inputController.text.length),
     );
+  }
 
-    if (alreadyHasMessage) return;
+  void _handleTyping(bool hasText) {
+    _typingTimer?.cancel();
+    _typingStopTimer?.cancel();
 
-    _sentInitial = true;
+    final repo = ref.read(chatRepositoryProvider);
 
-    final controller = ref.read(
+    if (!hasText) {
+      repo.sendTyping(conversationId: widget.conversationId, isTyping: false);
+      return;
+    }
+
+    repo.sendTyping(conversationId: widget.conversationId, isTyping: true);
+
+    _typingTimer = Timer(const Duration(seconds: 3), () {
+      repo.sendTyping(conversationId: widget.conversationId, isTyping: false);
+    });
+  }
+
+  Future<void> _sendMessage({
+    String? text,
+    List<ChatInputAttachment> attachments = const [],
+  }) async {
+    final notifier = ref.read(
       chatMessagesControllerProvider(widget.conversationId).notifier,
     );
 
-    await controller.sendTempMessage(text);
+    await notifier.sendTempMessage(text: text, attachments: attachments);
+
     _scrollToBottom();
   }
 
@@ -104,95 +139,65 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
 
     final typingMap = ref.watch(chatTypingControllerProvider);
-    final presenceMap = ref.watch(chatPresenceControllerProvider);
     final currentUser = ref.watch(currentUserProvider);
 
     final isTyping = typingMap[widget.conversationId] ?? false;
-    final presence = presenceMap[widget.otherUser];
+
+    final colors = context.appColors;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: colors.border,
+
+      appBar: ChatAppBar(
+        displayName: widget.displayName,
+        otherUser: widget.otherUser,
+        imageUrl: null,
+        backgroundColor: colors.border,
+      ),
+
+      body: SafeArea(
+        child: Column(
           children: [
-            Text(widget.displayName),
-            if (presence != null)
-              PresenceLabel(
-                isOnline: presence.isOnline,
-                lastSeen: presence.lastSeen,
+            Expanded(
+              child: messagesState.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text(e.toString())),
+                data: (messages) {
+                  return ListView.builder(
+                    controller: _scrollController,
+                    reverse: true,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = messages[messages.length - 1 - index];
+                      final isMe = msg.sender == currentUser;
+                      return MessageBubble(message: msg, isMe: isMe);
+                    },
+                  );
+                },
               ),
+            ),
+
+            if (isTyping) const TypingIndicator(isTyping: true),
+
+            ChatQuickReplies(
+              replies: const [
+                'Is this still available?',
+                'What’s your best price?',
+                'Can you share your location?',
+                'Can I call you about this item?',
+              ],
+              onTap: _appendQuickReply,
+            ),
+
+            ChatInputBar(
+              controller: _inputController,
+              onSend: _sendMessage,
+              onTyping: _handleTyping,
+              adId: widget.adId,
+            ),
           ],
         ),
-      ),
-      body: Column(
-        children: [
-          // -------------------------
-          // Messages
-          // -------------------------
-          Expanded(
-            child: messagesState.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text(e.toString())),
-              data: (messages) {
-                return ListView.builder(
-                  controller: _scrollController,
-                  reverse: true,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = messages[messages.length - 1 - index];
-                    final isMe = msg.sender == currentUser;
-                    return MessageBubble(message: msg, isMe: isMe);
-                  },
-                );
-              },
-            ),
-          ),
-
-          // -------------------------
-          // Typing indicator
-          // -------------------------
-          if (isTyping) const TypingIndicator(isTyping: true),
-
-          // -------------------------
-          // Input
-          // -------------------------
-          ChatInputBar(
-            initialText: widget.initialMessage,
-            onSend: (text) async {
-              final notifier = ref.read(
-                chatMessagesControllerProvider(widget.conversationId).notifier,
-              );
-              await notifier.sendTempMessage(text);
-              _scrollToBottom();
-            },
-            onTyping: (_) {
-              // cancel previous timer
-              _typingTimer?.cancel();
-
-              // start a new debounce timer
-              _typingTimer = Timer(const Duration(seconds: 5), () {
-                // 🔥 ONLY fires if user stopped typing for 5 sec
-                ref
-                    .read(chatRepositoryProvider)
-                    .sendTyping(
-                      conversationId: widget.conversationId,
-                      isTyping: true,
-                    );
-
-                // optional: auto-stop typing after some time
-                Timer(const Duration(seconds: 3), () {
-                  ref
-                      .read(chatRepositoryProvider)
-                      .sendTyping(
-                        conversationId: widget.conversationId,
-                        isTyping: false,
-                      );
-                });
-              });
-            },
-          ),
-        ],
       ),
     );
   }
@@ -211,8 +216,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   void dispose() {
-    _scrollController.dispose();
     _typingTimer?.cancel();
+    _typingStopTimer?.cancel();
+    _inputController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 }

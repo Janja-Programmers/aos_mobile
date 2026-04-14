@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/features/connect/chats/domain/chat_attachment.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -81,49 +83,46 @@ class ChatMessagesController
   }
 
   // -----------------------------
-  // Send Message
-  // -----------------------------
-  Future<ChatMessage?> sendMessage(String text) async {
-    final repo = ref.read(chatRepositoryProvider);
-
-    final res = await repo.sendMessage(
-      conversationId: conversationId,
-      content: text,
-    );
-
-    if (res.isLeft) return null;
-
-    return ChatMessage(
-      id: 'server-${DateTime.now().millisecondsSinceEpoch}',
-      sender: currentUser,
-      content: text,
-      messageType: 'text',
-      ad: null,
-      hasAttachments: false,
-      createdAt: DateTime.now(),
-      deliveredAt: DateTime.now(),
-      readAt: null,
-      attachments: [],
-    );
-  }
-
-  // -----------------------------
   // Optimistic Send
   // -----------------------------
-  Future<void> sendTempMessage(String text) async {
+  Future<void> sendTempMessage({
+    String? text,
+    String? ad,
+    List<ChatInputAttachment> attachments = const [],
+  }) async {
+    final trimmedText = text?.trim();
+    final hasText = trimmedText != null && trimmedText.isNotEmpty;
+    final hasAttachments = attachments.isNotEmpty;
+
+    if (!hasText && !hasAttachments) return;
+
     final tempId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
+
+    // 🔥 Convert to API format
+    final apiAttachments = attachments.map((a) => a.toApi(ad: '')).toList();
 
     final tempMsg = ChatMessage(
       id: tempId,
       sender: currentUser,
-      content: text,
-      messageType: 'text',
-      ad: null,
-      hasAttachments: false,
+      content: hasText ? trimmedText : null,
+      messageType: hasText && hasAttachments
+          ? 'mixed'
+          : hasAttachments
+          ? 'attachment'
+          : 'text',
+      ad: ad,
+      hasAttachments: hasAttachments,
       createdAt: DateTime.now(),
       deliveredAt: null,
       readAt: null,
-      attachments: [],
+
+      // 🔥 FIXED: use previewUrl
+      attachments: attachments
+          .map(
+            (a) =>
+                ChatAttachment(url: a.previewUrl, type: a.type, sortOrder: 0),
+          )
+          .toList(),
     );
 
     // 1. Add temp
@@ -131,20 +130,60 @@ class ChatMessagesController
     state = AsyncData(List.of(_messages));
 
     // 2. Send
-    final realMsg = await sendMessage(text);
+    final realMsg = await sendMessage(
+      text: trimmedText,
+      ad: ad,
+      attachments: apiAttachments,
+    );
 
+    // ❌ Only remove temp if send failed
     if (realMsg == null) {
       _messages.removeWhere((m) => m.id == tempId);
       state = AsyncData(List.of(_messages));
-
       return;
     }
+  }
 
-    // 3. Replace temp safely
-    final index = _messages.indexWhere((m) => m.id == tempId);
-    if (index != -1) _messages[index] = realMsg;
+  // -----------------------------
+  // Send Message
+  // -----------------------------
+  Future<ChatMessage?> sendMessage({
+    String? text,
+    String? ad,
+    List<Map<String, dynamic>> attachments = const [],
+  }) async {
+    final repo = ref.read(chatRepositoryProvider);
 
-    state = AsyncData(List.of(_messages));
+    final trimmedText = text?.trim();
+    final hasText = trimmedText != null && trimmedText.isNotEmpty;
+    final hasAttachments = attachments.isNotEmpty;
+
+    if (!hasText && !hasAttachments) return null;
+
+    final res = await repo.sendMessage(
+      conversationId: conversationId,
+      content: hasText ? trimmedText : null,
+      attachments: attachments,
+    );
+
+    if (res.isLeft) return null;
+
+    return ChatMessage(
+      id: 'server-${DateTime.now().millisecondsSinceEpoch}',
+      sender: currentUser,
+      content: hasText ? trimmedText : null,
+      messageType: hasText && hasAttachments
+          ? 'mixed'
+          : hasAttachments
+          ? 'attachment'
+          : 'text',
+      ad: ad,
+      hasAttachments: hasAttachments,
+      createdAt: DateTime.now(),
+      deliveredAt: DateTime.now(),
+      readAt: null,
+      attachments: const [],
+    );
   }
 
   // -----------------------------
@@ -165,13 +204,7 @@ class ChatMessagesController
 
       final newMsg = ChatMessage.fromJson(msgData);
 
-      // Remove matching optimistic temp message before adding real one
-      _messages.removeWhere(
-        (m) =>
-            m.id.startsWith('temp-') &&
-            m.sender == newMsg.sender &&
-            m.content == newMsg.content,
-      );
+      _messages.removeWhere((m) => _isSameTemp(m, newMsg));
 
       if (_isDuplicate(newMsg)) return;
 
@@ -190,6 +223,19 @@ class ChatMessagesController
 
   bool _isDuplicate(ChatMessage newMsg) {
     return _messages.any((m) => m.id == newMsg.id);
+  }
+
+  bool _isSameTemp(ChatMessage temp, ChatMessage real) {
+    if (!temp.id.startsWith('temp-')) return false;
+    if (temp.sender != real.sender) return false;
+
+    // Text match
+    final sameText = temp.content == real.content;
+
+    // Attachment match (count-based, simple but effective)
+    final sameAttachments = temp.attachments.length == real.attachments.length;
+
+    return sameText && sameAttachments;
   }
 
   // -----------------------------

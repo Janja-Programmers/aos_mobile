@@ -16,6 +16,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     required this.elevated,
     required this.border,
     required this.btnText,
+    required this.chatCardColor,
 
     required this.success,
     required this.warning,
@@ -41,6 +42,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
   final Color elevated;
   final Color border;
   final Color btnText;
+  final Color chatCardColor;
 
   final Color success;
   final Color warning;
@@ -67,6 +69,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     elevated: Color(0xFFFFFFFF),
     border: Color(0xFFE8E8E8),
     btnText: Color(0xFFFFFFFF),
+    chatCardColor: Color.fromARGB(199, 40, 13, 93),
 
     success: Color(0xFF2ECC71),
     warning: Color(0xFFF5A623),
@@ -94,6 +97,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     elevated: Color(0xFF121212),
     border: Color(0xFF2A2A2A),
     btnText: Color(0xFFFFFFFF),
+    chatCardColor: Color.fromARGB(199, 40, 13, 93),
 
     success: Color(0xFF2ECC71),
     warning: Color(0xFFF5A623),
@@ -121,6 +125,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     Color? elevated,
     Color? border,
     Color? btnText,
+    Color? chatCardColor,
     Color? success,
     Color? warning,
     Color? error,
@@ -144,6 +149,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
       elevated: elevated ?? this.elevated,
       border: border ?? this.border,
       btnText: btnText ?? this.btnText,
+      chatCardColor: chatCardColor ?? this.chatCardColor,
       success: success ?? this.success,
       warning: warning ?? this.warning,
       error: error ?? this.error,
@@ -176,6 +182,8 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
       elevated: Color.lerp(elevated, other.elevated, t) ?? elevated,
       border: Color.lerp(border, other.border, t) ?? border,
       btnText: Color.lerp(btnText, other.btnText, t) ?? btnText,
+      chatCardColor:
+          Color.lerp(chatCardColor, other.chatCardColor, t) ?? chatCardColor,
 
       success: Color.lerp(success, other.success, t) ?? success,
       warning: Color.lerp(warning, other.warning, t) ?? warning,

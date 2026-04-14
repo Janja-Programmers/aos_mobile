@@ -1,5 +1,7 @@
 import 'package:africaonlinestores/shared/enums/ads.dart';
 
+import 'package:africaonlinestores/core/files/domain/upload_file.dart';
+
 class AdMediaImage {
   AdMediaImage({
     required this.url,
@@ -13,12 +15,8 @@ class AdMediaImage {
   final bool isPrimary;
   final int? sortOrder;
 
-  factory AdMediaImage.fromUpload(Map<String, String> media) {
-    return AdMediaImage(
-      url: media['url'] ?? '',
-      fileId: media['fileId'] ?? '',
-      isPrimary: false,
-    );
+  factory AdMediaImage.fromUpload(UploadedFile file) {
+    return AdMediaImage(url: file.url, fileId: file.fileId, isPrimary: false);
   }
 
   Map<String, dynamic> toPayload() {

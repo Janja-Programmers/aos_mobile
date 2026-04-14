@@ -72,7 +72,6 @@ class _CallNavigationListenerState
         return;
     }
 
-    // ✅ Prevent unnecessary navigation
     if (currentLocation == targetRoute) return;
 
     _isNavigating = true;

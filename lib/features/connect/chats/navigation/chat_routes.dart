@@ -74,7 +74,7 @@ class ChatNavigation {
     // 🚫 Already on same chat
     if (currentLocation == targetLocation) return;
 
-    router.goNamed(
+    router.pushNamed(
       AppRoutes.nMessages,
       pathParameters: {'conversationId': conversationId},
       extra: {

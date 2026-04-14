@@ -11,11 +11,15 @@ class AppCircularAvatar extends StatefulWidget {
     required this.name,
     this.imageUrl,
     this.radius = 40,
+    this.backgroundColor,
+    this.textColor,
   });
 
   final String name;
   final String? imageUrl;
   final double radius;
+  final Color? backgroundColor;
+  final Color? textColor;
 
   @override
   State<AppCircularAvatar> createState() => _AppCircularAvatarState();
@@ -33,9 +37,13 @@ class _AppCircularAvatarState extends State<AppCircularAvatar> {
 
     final imgUrl = buildFileUrl(widget.imageUrl);
 
+    final bgColor = widget.backgroundColor ?? colors.primary.withOpacity(0.7);
+
+    final textColor = widget.textColor ?? colors.white;
+
     return CircleAvatar(
       radius: widget.radius,
-      backgroundColor: colors.primary.withOpacity(0.7),
+      backgroundColor: bgColor,
 
       /// ✅ Only use image if valid
       backgroundImage: hasImage ? NetworkImage(imgUrl!) : null,
@@ -47,7 +55,13 @@ class _AppCircularAvatarState extends State<AppCircularAvatar> {
 
       /// ✅ Fallback to initials
       child: !hasImage
-          ? Text(_initial, style: context.h2.copyWith(color: colors.white))
+          ? FittedBox(
+              child: Text(
+                _initial,
+                textAlign: TextAlign.center,
+                style: context.h4.copyWith(color: textColor, height: 1),
+              ),
+            )
           : null,
     );
   }

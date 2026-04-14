@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 
 import 'package:africaonlinestores/features/ads/ads_listing/configs/ad_listing_empty_config.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/controllers/ad_listing_controller.dart';
@@ -29,10 +29,7 @@ class AdListingScreen extends ConsumerWidget {
     Future<void> openCreateOrEdit({String? draftId, String? adId}) async {
       await context.pushNamed(
         AppRoutes.nCreateAd,
-        queryParameters: {
-          if (draftId != null) 'draftId': draftId,
-          if (adId != null) 'adId': adId,
-        },
+        queryParameters: {'draftId': ?draftId, 'adId': ?adId},
       );
 
       await refreshAfterReturn();

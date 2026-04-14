@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/utils/validators.dart';
 
 import 'package:africaonlinestores/shared/widgets/legal_docs_widgets.dart';

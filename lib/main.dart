@@ -20,7 +20,7 @@ import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
-import 'package:africaonlinestores/features/calls/application/listeners/call_navigation_listener.dart';
+import 'package:africaonlinestores/features/connect/calls/application/listeners/call_navigation_listener.dart';
 import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 

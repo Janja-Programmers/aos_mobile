@@ -1,0 +1,116 @@
+import 'package:africaonlinestores/features/connect/calls/data/call_api.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
+
+abstract class CallRepository {
+  Future<String> openConversation({required String userId});
+
+  Future<Call> initiateCall({
+    required String conversationId,
+    required AOSCallType callType,
+  });
+
+  Future<Call> acceptCall({required String callId});
+
+  Future<void> rejectCall({required String callId});
+
+  Future<void> endCall({required String callId});
+
+  Future<List<CallLog>> listCalls({String? type});
+
+  Future<Call> getCallToken({required String callId});
+}
+
+class CallRepositoryImpl implements CallRepository {
+  final CallApi api;
+
+  const CallRepositoryImpl(this.api);
+
+  // -----------------------------
+  // Conversation
+  // -----------------------------
+  @override
+  Future<String> openConversation({required String userId}) async {
+    final res = await api.openConversation(userId);
+
+    return res.fold((e) => throw e, (data) => data);
+  }
+
+  // -----------------------------
+  // Initiate Call
+  // -----------------------------
+  @override
+  Future<Call> initiateCall({
+    required String conversationId,
+    required AOSCallType callType,
+  }) async {
+    final res = await api.initiateCall(
+      conversationId: conversationId,
+      callType: callType.name, // 🔥 enum → string
+    );
+
+    return res.fold((e) => throw e, (data) => data);
+  }
+
+  // -----------------------------
+  // Accept Call
+  // -----------------------------
+  @override
+  Future<Call> acceptCall({required String callId}) async {
+    final res = await api.acceptCall(callId: callId);
+
+    return res.fold((e) => throw e, (data) => data);
+  }
+
+  // -----------------------------
+  // Reject Call
+  // -----------------------------
+  @override
+  Future<void> rejectCall({required String callId}) async {
+    final res = await api.rejectCall(callId: callId);
+
+    return res.fold((e) => throw e, (_) => null);
+  }
+
+  // -----------------------------
+  // End Call
+  // -----------------------------
+  @override
+  Future<void> endCall({required String callId}) async {
+    final res = await api.endCall(callId: callId);
+
+    return res.fold((e) => throw e, (_) => null);
+  }
+
+  // -----------------------------
+  // List Calls (CallLog)
+  // -----------------------------
+  @override
+  Future<List<CallLog>> listCalls({String? type}) async {
+    final res = await api.listCalls(type: type);
+
+    return res.fold((e) => throw e, (data) => data);
+  }
+
+  // -----------------------------
+  // Get Token (IMPORTANT)
+  // -----------------------------
+  @override
+  Future<Call> getCallToken({required String callId}) async {
+    final res = await api.getCallToken(callId: callId);
+
+    return res.fold((e) => throw e, (data) {
+      // ⚠️ partial data → construct minimal Call
+      return Call(
+        id: callId,
+        conversationId: '',
+        callType: AOSCallType.audio, // placeholder
+        roomName: data['room_name'] ?? '',
+        token: data['token'] ?? '',
+        wsUrl: data['ws_url'] ?? '',
+        caller: null,
+        receiver: null,
+      );
+    });
+  }
+}

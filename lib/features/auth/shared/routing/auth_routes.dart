@@ -1,6 +1,6 @@
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/auth/screens/forgot_password_screen.dart';
 import 'package:africaonlinestores/features/auth/screens/login_screen.dart';
 import 'package:africaonlinestores/features/auth/screens/register_screen.dart';

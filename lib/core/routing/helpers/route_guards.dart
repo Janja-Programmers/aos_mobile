@@ -1,10 +1,10 @@
-import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 
 class RouteGuards {
   static const _protectedPrefixes = [
     AppRoutes.sellerStore,
     AppRoutes.myAds,
-    AppRoutes.chats,
+    AppRoutes.connect,
     AppRoutes.createAd,
     AppRoutes.updateProfile,
     AppRoutes.reportAdBase,

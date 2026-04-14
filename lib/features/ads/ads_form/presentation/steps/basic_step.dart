@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 
 import 'package:africaonlinestores/features/ads/ads_form/controllers/ad_form_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/basic/media_section.dart';

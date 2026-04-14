@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/app/splash/splash_screen.dart';
 
-import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/routing/app_shell.dart';
 import 'package:africaonlinestores/core/routing/helpers/route_guards.dart';
 import 'package:africaonlinestores/core/routing/helpers/route_observer.dart';
@@ -22,10 +22,11 @@ import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/se
 import 'package:africaonlinestores/features/ads/ads_form/presentation/screens/ad_form_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_report/presentation/report_ad_screen.dart';
 
-import 'package:africaonlinestores/features/calls/navigation/call_routes.dart';
 import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
-import 'package:africaonlinestores/features/chats/navigation/chat_routes.dart';
+import 'package:africaonlinestores/features/connect/calls/navigation/call_routes.dart';
+import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
+import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_details_screen.dart';
 
 import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
@@ -50,6 +51,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       ...AuthRoutes.routes(),
       ...CallRoutes.routes(),
+      ...ChatRoutes.routes(),
       ...LiveRoutes.routes(),
       ...ReviewsRoutes.routes(),
       ...SearchRoutes.routes(),
@@ -154,7 +156,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ...AdsRoutes.routes(),
           ...CatalogRoutes.routes(),
           ...AccountRoutes.routes(),
-          ...ChatRoutes.routes(),
+          ...ConnectScreenRoutes.routes(),
 
           GoRoute(
             name: AppRoutes.nStartSelling,

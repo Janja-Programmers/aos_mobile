@@ -1,0 +1,151 @@
+import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_list_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+
+import 'package:africaonlinestores/features/connect/calls/presentation/screens/call_list_screen.dart';
+
+import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+
+class ConnectScreen extends ConsumerStatefulWidget {
+  const ConnectScreen({super.key});
+
+  @override
+  ConsumerState<ConnectScreen> createState() => _ConnectScreenState();
+}
+
+class _ConnectScreenState extends ConsumerState<ConnectScreen> {
+  final _searchCtrl = TextEditingController();
+  int selectedTab = 1;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 🔥 Live search
+    _searchCtrl.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Scaffold(
+      backgroundColor: colors.surface,
+
+      appBar: AppBar(
+        backgroundColor: colors.surface,
+        elevation: 0,
+        centerTitle: true,
+        title: Text("Connect", style: context.h4),
+      ),
+
+      body: Column(
+        children: [
+          _buildToggleTabs(),
+
+          const SizedBox(height: 12),
+
+          _buildSearchBar(selectedTab == 1 ? "Messages" : "Calls"),
+
+          const SizedBox(height: 12),
+
+          Expanded(
+            child: selectedTab == 1
+                ? ChatListScreen(
+                    key: ValueKey(_searchCtrl.text),
+                    searchQuery: _searchCtrl.text,
+                  )
+                : CallListScreen(
+                    key: ValueKey(_searchCtrl.text),
+                    searchQuery: _searchCtrl.text,
+                  ),
+          ),
+        ],
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: colors.primary,
+        onPressed: () {},
+        child: Icon(Icons.message, color: colors.white),
+      ),
+    );
+  }
+
+  Widget _buildToggleTabs() {
+    final colors = context.appColors;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: colors.border,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          _tabButton("Calls", 0, Icons.call),
+          _tabButton("Messages", 1, Icons.message),
+        ],
+      ),
+    );
+  }
+
+  Widget _tabButton(String title, int index, IconData icon) {
+    final isSelected = selectedTab == index;
+    final colors = context.appColors;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            selectedTab = index;
+            _searchCtrl.clear(); // 🔥 reset search on tab switch
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? colors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: isSelected ? colors.white : colors.black),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: TextStyle(
+                  color: isSelected ? colors.white : colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: AppSearchBar(
+        hintText: "Search $title...",
+        controller: _searchCtrl,
+        readOnly: false,
+      ),
+    );
+  }
+}

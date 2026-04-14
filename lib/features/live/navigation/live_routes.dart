@@ -1,7 +1,7 @@
 import 'package:africaonlinestores/features/live/presentation/screens/live_screen.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 
 class LiveRoutes {
   const LiveRoutes._();

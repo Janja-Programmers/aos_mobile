@@ -8,9 +8,9 @@ import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
-import 'package:africaonlinestores/features/calls/application/providers/call_providers.dart';
-import 'package:africaonlinestores/features/calls/domain/call.dart';
-import 'package:africaonlinestores/features/chats/utils/chart_actions.dart';
+import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
+import 'package:africaonlinestores/features/connect/chats/utils/chart_actions.dart';
 
 import 'package:africaonlinestores/features/home/presentation/controller/ad_detail_controller.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_seller_store_section.dart';

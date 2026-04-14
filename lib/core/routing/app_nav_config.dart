@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/routing/app_nav_item.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 
@@ -32,7 +32,7 @@ class AppNavConfig {
         label: l10n.nav_contact,
         icon: Icons.chat_bubble_outline,
         activeIcon: Icons.chat_bubble,
-        routeName: AppRoutes.nChats,
+        routeName: AppRoutes.nConnect,
       ),
       AppNavItem(
         label: l10n.nav_account,

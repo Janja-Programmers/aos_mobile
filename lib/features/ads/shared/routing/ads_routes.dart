@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/core/routing/app_routes.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 
 import 'package:africaonlinestores/features/ads/ads_all/presentation/screens/all_ads_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/presentation/screens/ad_listing_screen.dart';

@@ -99,6 +99,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _inputController.selection = TextSelection.fromPosition(
       TextPosition(offset: _inputController.text.length),
     );
+
+    setState(() {});
   }
 
   void _handleTyping(bool hasText) {
@@ -150,7 +152,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       appBar: ChatAppBar(
         displayName: widget.displayName,
-        otherUser: widget.otherUser,
+        otherUserId: widget.otherUser,
         imageUrl: null,
         backgroundColor: colors.border,
       ),

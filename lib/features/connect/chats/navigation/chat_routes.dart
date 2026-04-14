@@ -2,31 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+
 import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_screen.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_list_screen.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/screens/new_message_screen.dart';
 
 class ChatRoutes {
   const ChatRoutes._();
 
   static List<GoRoute> routes() => [
-    // CHATLIST Screen
+    // ✅ NEW MESSAGE FIRST
+    GoRoute(
+      name: AppRoutes.nNewMessage,
+      path: AppRoutes.newMessage,
+      builder: (context, state) => const NewMessageScreen(),
+    ),
+
+    // CHATLIST
     GoRoute(
       name: AppRoutes.nChatsList,
       path: AppRoutes.chatsList,
       builder: (context, state) {
         final searchQuery = state.uri.queryParameters['search'];
-
         return ChatListScreen(searchQuery: searchQuery);
       },
     ),
 
-    // CHATMESSAGE Screen
+    // ❗ DYNAMIC LAST
     GoRoute(
       name: AppRoutes.nMessages,
       path: AppRoutes.messages,
       pageBuilder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
-
         final conversationId = state.pathParameters['conversationId'] ?? '';
 
         return MaterialPage(
@@ -83,5 +90,9 @@ class ChatNavigation {
         'initialMessage': initialMessage,
       },
     );
+  }
+
+  static void toNewMessage(BuildContext context) {
+    context.pushNamed(AppRoutes.nNewMessage);
   }
 }

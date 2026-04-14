@@ -78,50 +78,45 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                 return const _EmptyState();
               }
 
-              return RefreshIndicator(
-                onRefresh: () => ref
-                    .read(chatConversationsControllerProvider.notifier)
-                    .refresh(),
-                child: ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  itemCount: filtered.length,
-                  itemBuilder: (context, index) {
-                    final conv = filtered[index];
+              return ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: filtered.length,
+                itemBuilder: (context, index) {
+                  final conv = filtered[index];
 
-                    final presence = ref.watch(
-                      chatPresenceControllerProvider.select(
-                        (map) => map[conv.user],
-                      ),
-                    );
+                  final presence = ref.watch(
+                    chatPresenceControllerProvider.select(
+                      (map) => map[conv.user],
+                    ),
+                  );
 
-                    final isTyping = ref.watch(
-                      chatTypingControllerProvider.select(
-                        (map) => map[conv.id] == true,
-                      ),
-                    );
+                  final isTyping = ref.watch(
+                    chatTypingControllerProvider.select(
+                      (map) => map[conv.id] == true,
+                    ),
+                  );
 
-                    final subtitle = isTyping ? "Typing..." : conv.lastMessage;
+                  final subtitle = isTyping ? "Typing..." : conv.lastMessage;
 
-                    final isOnline = ref
-                        .read(chatPresenceControllerProvider.notifier)
-                        .isUserOnline(conv.user);
+                  final isOnline = ref
+                      .read(chatPresenceControllerProvider.notifier)
+                      .isUserOnline(conv.user);
 
-                    return ConversationTile(
-                      conversation: conv.copyWith(lastMessage: subtitle),
-                      isOnline: isOnline,
-                      isTyping: isTyping,
-                      lastSeen: presence?.lastSeen,
-                      onTap: () {
-                        ChatNavigation.toMessage(
-                          context: context,
-                          conversationId: conv.id,
-                          user: conv.user,
-                          displayName: conv.displayName,
-                        );
-                      },
-                    );
-                  },
-                ),
+                  return ConversationTile(
+                    conversation: conv.copyWith(lastMessage: subtitle),
+                    isOnline: isOnline,
+                    isTyping: isTyping,
+                    lastSeen: presence?.lastSeen,
+                    onTap: () {
+                      ChatNavigation.toMessage(
+                        context: context,
+                        conversationId: conv.id,
+                        user: conv.user,
+                        displayName: conv.displayName,
+                      );
+                    },
+                  );
+                },
               );
             },
           ),
@@ -149,7 +144,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center, // ✅ FIX
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _chip("All Chat", "all"),
           _chip("Read", "read"),

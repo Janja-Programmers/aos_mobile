@@ -10,7 +10,6 @@ class ConversationTile extends StatelessWidget {
   final ChatConversation conversation;
   final VoidCallback onTap;
 
-  // 🔥 NEW
   final bool isOnline;
   final bool isTyping;
   final DateTime? lastSeen;
@@ -26,6 +25,22 @@ class ConversationTile extends StatelessWidget {
     this.onLongPress,
   });
 
+  bool get _hasAvatar =>
+      conversation.avatar != null && conversation.avatar!.isNotEmpty;
+
+  Color _avatarColor(BuildContext context) {
+    final appColors = context.appColors;
+
+    final colors = [
+      appColors.red,
+      appColors.success,
+      appColors.orange,
+      appColors.chatCardColor,
+    ];
+
+    return colors[conversation.displayName.hashCode % colors.length];
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
@@ -36,46 +51,53 @@ class ConversationTile extends StatelessWidget {
 
     final subtitleStyle = isTyping
         ? TextStyle(color: colors.success, fontStyle: FontStyle.italic)
-        : null;
+        : TextStyle(color: colors.textMuted);
 
     return ListTile(
       onTap: onTap,
+      onLongPress: onLongPress,
+
+      // -------------------------
+      // AVATAR
+      // -------------------------
       leading: Stack(
         children: [
           CircleAvatar(
             radius: 24,
-            backgroundImage: conversation.avatar != null
+            backgroundColor: _hasAvatar ? colors.border : _avatarColor(context),
+            backgroundImage: _hasAvatar
                 ? NetworkImage(conversation.avatar!)
                 : null,
-            backgroundColor: colors.border,
-            child: conversation.avatar == null
+            child: !_hasAvatar
                 ? Text(
                     conversation.displayName.isNotEmpty
-                        ? conversation.displayName[0]
+                        ? conversation.displayName[0].toUpperCase()
                         : "?",
-                    style: context.bodyStrong,
+                    style: context.bodyStrong.copyWith(color: colors.white),
                   )
                 : null,
           ),
 
           // 🟢 Online indicator
-          if (isOnline)
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: colors.success,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: colors.surface, width: 2),
-                ),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: isOnline ? colors.success : colors.border,
+                shape: BoxShape.circle,
+                border: Border.all(color: colors.surface, width: 2),
               ),
             ),
+          ),
         ],
       ),
 
+      // -------------------------
+      // TITLE
+      // -------------------------
       title: Text(
         conversation.displayName,
         maxLines: 1,
@@ -83,6 +105,9 @@ class ConversationTile extends StatelessWidget {
         style: context.bodyStrong,
       ),
 
+      // -------------------------
+      // SUBTITLE
+      // -------------------------
       subtitle: Text(
         subtitleText,
         maxLines: 1,
@@ -90,6 +115,9 @@ class ConversationTile extends StatelessWidget {
         style: subtitleStyle,
       ),
 
+      // -------------------------
+      // TRAILING (time + unread)
+      // -------------------------
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -99,19 +127,24 @@ class ConversationTile extends StatelessWidget {
               formatTime(conversation.lastMessageAt!),
               style: context.p.copyWith(
                 fontSize: 12,
-                color: conversation.unreadCount > 0 ? colors.primary : null,
+                color: conversation.unreadCount > 0
+                    ? colors.primary
+                    : colors.textMuted,
               ),
             ),
 
           if (conversation.unreadCount > 0)
             Container(
               margin: const EdgeInsets.only(top: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8, // 🔥 improved spacing
+                vertical: 3,
+              ),
               decoration: BoxDecoration(
                 color: colors.primary,
                 borderRadius: BorderRadius.circular(12),
               ),
-              constraints: const BoxConstraints(minWidth: 20),
+              constraints: const BoxConstraints(minWidth: 24),
               child: Text(
                 _formatUnread(conversation.unreadCount),
                 textAlign: TextAlign.center,
@@ -124,14 +157,9 @@ class ConversationTile extends StatelessWidget {
             ),
         ],
       ),
-
-      onLongPress: onLongPress,
     );
   }
 
-  // -----------------------------
-  // Format unread count
-  // -----------------------------
   String _formatUnread(int count) {
     if (count > 99) return "99+";
     return count.toString();

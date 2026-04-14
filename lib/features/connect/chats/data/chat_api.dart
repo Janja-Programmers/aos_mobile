@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/api/api_client.dart';
@@ -25,7 +24,6 @@ class ChatApi {
   // Conversations
   // -----------------------------
   Future<Either<Failure, String>> openConversation(String user) async {
-    appLogger.i("openConversation API");
     final res = await _client.post(
       ApiEndpoints.openConversationEndpoint,
       data: {'user': user},
@@ -46,27 +44,21 @@ class ChatApi {
   }
 
   Future<Either<Failure, List<ChatConversation>>> listConversations() async {
-    appLogger.i("listConversations API");
-
     try {
       final res = await _client.get(ApiEndpoints.listConversationsEndpoint);
 
       final result = unwrapFrappe(res);
-      appLogger.w("Results: ${result.toString()}");
 
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
       final rawData = result.rightOrNull!;
-      appLogger.w("RawData: ${rawData.toString()}");
+
       final dataList = rawData['data'] is List ? rawData['data'] as List : [];
-      appLogger.w("Datalist: ${dataList.toString()}");
 
       final conversations = dataList
           .whereType<Map<String, dynamic>>()
           .map((e) => ChatConversation.fromJson(e))
           .toList();
-
-      appLogger.w("Conversations: ${conversations.toString()}");
 
       return Either.right(conversations);
     } catch (e) {
@@ -77,8 +69,6 @@ class ChatApi {
   Future<Either<Failure, void>> deleteConversation(
     String conversationId,
   ) async {
-    appLogger.i("deleteConversation API: $conversationId");
-
     try {
       final res = await _client.post(
         ApiEndpoints.deleteConversationEndpoint,
@@ -104,8 +94,6 @@ class ChatApi {
     required String conversationId,
     String? before,
   }) async {
-    appLogger.i("listMessages API");
-
     final queryParams = <String, dynamic>{'conversation_id': conversationId};
     if (before != null) queryParams['before'] = before;
 
@@ -135,8 +123,6 @@ class ChatApi {
     String? content,
     List<Map<String, dynamic>>? attachments,
   }) async {
-    appLogger.i("sendMessage API");
-
     final res = await _client.post(
       ApiEndpoints.sendMessageEndpoint,
       data: {
@@ -156,8 +142,6 @@ class ChatApi {
   // Status
   // -----------------------------
   Future<Either<Failure, void>> markDelivered(String conversationId) async {
-    appLogger.i("markDelivered API");
-
     final res = await _client.post(
       ApiEndpoints.markDeliveredEndpoint,
       data: {'conversation_id': conversationId},
@@ -170,8 +154,6 @@ class ChatApi {
   }
 
   Future<Either<Failure, void>> markRead(String conversationId) async {
-    appLogger.i("markRead API");
-
     final res = await _client.post(
       ApiEndpoints.markReadEndpoint,
       data: {'conversation_id': conversationId},
@@ -190,8 +172,6 @@ class ChatApi {
     required String conversationId,
     required bool isTyping,
   }) async {
-    appLogger.i("sendTyping API");
-
     final res = await _client.post(
       ApiEndpoints.typingEndpoint,
       data: {'conversation_id': conversationId, 'is_typing': isTyping ? 1 : 0},

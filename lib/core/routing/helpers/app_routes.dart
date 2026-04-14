@@ -111,8 +111,12 @@ class AppRoutes {
   static const nChatsList = 'chatsList';
 
   // CHAT routes
-  static const messages = '/chats/:conversationId';
+  static const messages = '/chats/view/:conversationId';
   static const nMessages = 'chatMessage';
+
+  // CHATMESSAGE routes
+  static const newMessage = '/chats/new';
+  static const nNewMessage = 'chatNewMessage';
 
   // SHORTS routes
   static const shorts = '/shorts';
@@ -144,13 +148,6 @@ class AppRoutes {
   // LIVE routes
   static const liveRoom = '/live/room';
   static const nLiveRoom = 'liveRoom';
-
-  // static const  liveLoading = '/live/loading';
-  // static const  nLiveLoading = 'liveLoading';
-  // static const  liveEnded = '/live/ended';
-  // static const  nLiveEnded = 'liveEnded';
-  // static const  liveError = '/live/error';
-  // static const  nLiveError = 'liveError';
 
   // CONTACT routes
   static const contact = '/contact';

@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -74,11 +75,7 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
         ],
       ),
 
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: colors.primary,
-        onPressed: () {},
-        child: Icon(Icons.message, color: colors.white),
-      ),
+      floatingActionButton: _buildFAB(),
     );
   }
 
@@ -145,6 +142,31 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
         hintText: "Search $title...",
         controller: _searchCtrl,
         readOnly: false,
+      ),
+    );
+  }
+
+  Widget _buildFAB() {
+    final colors = context.appColors;
+
+    final isMessages = selectedTab == 1;
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      transitionBuilder: (child, anim) =>
+          ScaleTransition(scale: anim, child: child),
+      child: FloatingActionButton(
+        key: ValueKey(selectedTab),
+        backgroundColor: colors.primary,
+        onPressed: () {
+          if (isMessages) {
+            ChatNavigation.toNewMessage(context);
+          } else {}
+        },
+        child: Icon(
+          isMessages ? Icons.message : Icons.add_call,
+          color: colors.white,
+        ),
       ),
     );
   }

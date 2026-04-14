@@ -55,6 +55,7 @@ dependencies:
   livekit_client: ^2.7.0
   url_launcher: ^6.3.2
   just_audio: ^0.10.5
+  record: ^6.2.0
 
 dev_dependencies:
   flutter_test:

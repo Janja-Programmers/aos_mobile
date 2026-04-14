@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -62,6 +64,27 @@ class ChatInputAttachmentHelper {
       return ChatInputAttachment(
         fileId: data.fileId,
         type: 'document',
+        previewUrl: data.url,
+      );
+    });
+  }
+
+  static Future<ChatInputAttachment?> uploadAudio(
+    WidgetRef ref,
+    String path,
+  ) async {
+    final file = File(path);
+
+    if (!await file.exists()) return null;
+
+    final res = await ref.read(filesApiProvider).uploadMedia(file: file);
+
+    return res.fold((_) => null, (UploadedFile data) {
+      if (data.fileId.isEmpty || data.url.isEmpty) return null;
+
+      return ChatInputAttachment(
+        fileId: data.fileId,
+        type: 'audio',
         previewUrl: data.url,
       );
     });

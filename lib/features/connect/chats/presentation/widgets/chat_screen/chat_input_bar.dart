@@ -10,8 +10,6 @@ import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_in
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_attachment_sheet.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input_attachment_helper.dart';
 
-import 'package:africaonlinestores/features/search/controller/voice_input_controller.dart';
-
 class ChatInputBar extends ConsumerStatefulWidget {
   final TextEditingController controller;
   final Future<void> Function({
@@ -49,13 +47,17 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
   Future<void> _submit() async {
     if (_isSending) return;
 
-    if (!_hasText && !_hasAttachments) return;
+    final text = widget.controller.text.trim();
+
+    if (text.isEmpty && _attachments.isEmpty) return;
+
+    debugPrint('SEND → $text');
 
     setState(() => _isSending = true);
 
     try {
       await widget.onSend(
-        text: _hasText ? widget.controller.text.trim() : null,
+        text: text.isNotEmpty ? text : null,
         attachments: List.of(_attachments),
       );
 
@@ -118,27 +120,10 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
     });
   }
 
-  // -------------------------
-  // VOICE INPUT (TEXT MODE)
-  // -------------------------
-  void _handleVoice() {
-    final controller = ref.read(voiceInputControllerProvider.notifier);
-
-    controller.toggleListening(
-      onWords: (words, {required isFinal}) {
-        widget.controller.text = words;
-        widget.controller.selection = TextSelection.fromPosition(
-          TextPosition(offset: words.length),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final inputDecorationTheme = Theme.of(context).inputDecorationTheme;
-    final voiceState = ref.watch(voiceInputControllerProvider);
 
     return Container(
       color: colors.surface,
@@ -240,25 +225,31 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                   ),
                 ),
 
-                // SEND or MIC
-                if (_hasText || _hasAttachments)
-                  IconButton(
-                    icon: _isSending
+                // SEND / UPLOADING / MIC
+                SizedBox(
+                  height: 40,
+                  width: 40,
+                  child: Center(
+                    child: _isSending
                         ? const SizedBox(
                             height: 18,
                             width: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.send),
-                    onPressed: _isSending ? null : _submit,
-                  )
-                else
-                  IconButton(
-                    icon: Icon(
-                      voiceState.isListening ? Icons.mic : Icons.mic_none,
-                    ),
-                    onPressed: _handleVoice,
+                        : IconButton(
+                            icon: Icon(
+                              Icons.send,
+                              color: (_hasText || _hasAttachments)
+                                  ? colors.chatCardColor
+                                  : colors.textSecondary.withOpacity(0.4),
+                            ),
+                            onPressed:
+                                (_isSending || (!_hasText && !_hasAttachments))
+                                ? null
+                                : _submit,
+                          ),
                   ),
+                ),
               ],
             ),
           ),

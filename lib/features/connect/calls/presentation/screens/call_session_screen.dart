@@ -8,15 +8,15 @@ import 'package:africaonlinestores/features/connect/calls/presentation/screens/a
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/ringing_screen.dart';
 
 class CallSessionScreen extends ConsumerStatefulWidget {
-  final String user;
-  final String displayName;
-  final bool isVideo;
+  final String? user;
+  final String? displayName;
+  final bool? isVideo;
 
   const CallSessionScreen({
     super.key,
-    required this.user,
-    required this.displayName,
-    required this.isVideo,
+    this.user,
+    this.displayName,
+    this.isVideo,
   });
 
   @override

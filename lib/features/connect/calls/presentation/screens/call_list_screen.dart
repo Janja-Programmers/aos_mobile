@@ -246,15 +246,25 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
           Icon(Icons.timer, size: 14, color: colors.textSecondary),
           const SizedBox(width: 2),
 
-          Text(call.duration.toString()),
+          Text(formatDuration(call.duration)),
         ],
       ),
 
       trailing: Icon(Icons.call, color: colors.success),
 
       onTap: () {
-        showCallDetailsSheet(context, call);
+        showCallDetailsSheet(context, ref, call);
       },
     );
   }
+}
+
+String formatDuration(int seconds) {
+  final minutes = seconds ~/ 60;
+  final remainingSeconds = seconds % 60;
+
+  final mm = minutes.toString().padLeft(2, '0');
+  final ss = remainingSeconds.toString().padLeft(2, '0');
+
+  return '$mm:$ss';
 }

@@ -169,7 +169,7 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
           if (isMessages) {
             ChatNavigation.toNewMessage(context);
           } else {
-            CallNavigation.toNewCall(context);
+            CallNavigation.toNewCall(ref);
           }
         },
         child: Icon(

@@ -7,20 +7,12 @@ import 'package:africaonlinestores/features/connect/calls/application/providers/
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/active/active_call_layout.dart';
-import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 
 class ActiveCallScreen extends ConsumerWidget {
   const ActiveCallScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(callManagerProvider, (previous, next) {
-      if (previous?.uiPhase != UiCallPhase.finished &&
-          next.uiPhase == UiCallPhase.finished) {
-        _handleCallEnded(context);
-      }
-    });
-
     final callState = ref.watch(callManagerProvider);
     final manager = ref.read(callManagerProvider.notifier);
     final colors = context.appColors;
@@ -86,12 +78,4 @@ class ActiveCallScreen extends ConsumerWidget {
     return (parts.first.characters.first + parts.last.characters.first)
         .toUpperCase();
   }
-}
-
-Future<void> _handleCallEnded(BuildContext context) async {
-  await Future.delayed(const Duration(seconds: 1));
-
-  if (!context.mounted) return;
-
-  ConnectScreenNavigation.toMessagesTab(context);
 }

@@ -19,6 +19,7 @@ class CallManager extends StateNotifier<CallState> {
 
   bool _isJoining = false;
   bool _isLeaving = false;
+  bool _callCancelled = false;
 
   StreamSubscription<Duration>? _durationSub;
   Timer? _resetTimer;
@@ -72,15 +73,7 @@ class CallManager extends StateNotifier<CallState> {
         return false;
       }
 
-      if (state.isCallInProgress) {
-        appLogger.i('❌ Call already in progress');
-        return false;
-      }
-
-      if (state.backendStatus == BackendCallStatus.ongoing) {
-        appLogger.i('❌ Already in active call');
-        return false;
-      }
+      _callCancelled = false;
 
       state = state.copyWith(
         isBusy: true,
@@ -95,6 +88,7 @@ class CallManager extends StateNotifier<CallState> {
         callType: callType,
       );
 
+      /// ✅ Correct order
       _applyBackendState(
         BackendCallStatus.initiated,
         activeCall: initiatedCall,
@@ -108,11 +102,18 @@ class CallManager extends StateNotifier<CallState> {
             ),
       );
 
+      if (_callCancelled) return false;
+
       await _joinRoomInternal(initiatedCall);
+
+      if (_callCancelled) {
+        appLogger.w('🚫 Call cancelled after join');
+        return false;
+      }
 
       state = state.copyWith(isBusy: false);
 
-      appLogger.i('📞 Outgoing call started');
+      appLogger.i('📞 Outgoing call initiated (waiting for answer)');
       return true;
     } catch (e, s) {
       appLogger.e('startOutgoingCall failed', error: e, stackTrace: s);
@@ -339,27 +340,37 @@ class CallManager extends StateNotifier<CallState> {
 
   // ================= END =================
   Future<void> endCurrentCall() async {
+    _callCancelled = true;
+
     try {
       final callId = state.activeCall?.id;
       if (callId == null) return;
 
-      switch (state.backendStatus) {
-        case BackendCallStatus.ringing:
-          await repository.cancelCall(callId: callId);
-          await _leaveRoomInternal();
-          _applyBackendState(BackendCallStatus.cancelled);
-          break;
+      final status = state.backendStatus;
 
-        case BackendCallStatus.ongoing:
-          await repository.endCall(callId: callId);
-          await _leaveRoomInternal();
-          _applyBackendState(BackendCallStatus.ended);
-          break;
+      /// 🔥 EARLY STATES → CANCEL
+      if (status == BackendCallStatus.initiated ||
+          status == BackendCallStatus.ringing) {
+        await repository.cancelCall(callId: callId);
 
-        default:
-          appLogger.w('⚠️ Unknown end state → forcing fail');
-          await _failCall(Exception('Invalid end state'));
+        await _leaveRoomInternal();
+
+        _applyBackendState(BackendCallStatus.cancelled);
+        return;
       }
+
+      /// 🔥 ACTIVE CALL → END
+      if (status == BackendCallStatus.ongoing) {
+        await repository.endCall(callId: callId);
+
+        await _leaveRoomInternal();
+
+        _applyBackendState(BackendCallStatus.ended);
+        return;
+      }
+
+      /// 🔥 SAFE FALLBACK (NO FAIL)
+      appLogger.w('⚠️ Ignoring endCurrentCall for state: $status');
     } catch (e, s) {
       appLogger.e('endCurrentCall failed', error: e, stackTrace: s);
       await _failCall(e);

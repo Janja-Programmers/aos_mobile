@@ -1,12 +1,15 @@
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
 import 'package:africaonlinestores/features/connect/calls/navigation/call_routes.dart';
 import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
 
-void showCallDetailsSheet(BuildContext context, CallLog call) {
+void showCallDetailsSheet(BuildContext context, WidgetRef ref, CallLog call) {
   final colors = context.appColors;
 
   showModalBottomSheet(
@@ -75,9 +78,7 @@ void showCallDetailsSheet(BuildContext context, CallLog call) {
                   child: ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
-
-                      /// 🔥 simple call navigation
-                      CallNavigation.toNewCall(context);
+                      CallNavigation.toNewCall(ref);
                     },
                     icon: const Icon(Icons.call),
                     label: const Text("Call"),
@@ -89,7 +90,6 @@ void showCallDetailsSheet(BuildContext context, CallLog call) {
                     onPressed: () {
                       Navigator.pop(context);
 
-                      /// 🔥 simple chat navigation
                       ChatNavigation.toNewMessage(context);
                     },
                     icon: const Icon(Icons.message),

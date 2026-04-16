@@ -10,6 +10,7 @@ import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/core/routing/app_router.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
 import 'package:africaonlinestores/core/theme/app_theme.dart';
@@ -21,8 +22,11 @@ import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/connect/calls/application/listeners/call_navigation_listener.dart';
+import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
+
+import 'package:africaonlinestores/shared/widgets/active_call_overlay.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -117,6 +121,8 @@ class AOSApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final prefs = ref.watch(userPreferenceControllerProvider);
 
+    ref.watch(socketCallListenerProvider);
+
     return MaterialApp.router(
       title: 'Africa Online Stores',
       theme: AppTheme.light(),
@@ -133,10 +139,21 @@ class AOSApp extends ConsumerWidget {
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
-        return CallNavigationListener(
-          child: LiveNavigationListener(
-            child: child ?? const SizedBox.shrink(),
-          ),
+        final location = router.routerDelegate.currentConfiguration.uri
+            .toString();
+
+        final isOnActiveCall = location.contains(AppRoutes.callSession);
+
+        return Stack(
+          children: [
+            CallNavigationListener(
+              child: LiveNavigationListener(
+                child: child ?? const SizedBox.shrink(),
+              ),
+            ),
+
+            if (!isOnActiveCall) const ActiveCallOverlay(),
+          ],
         );
       },
     );

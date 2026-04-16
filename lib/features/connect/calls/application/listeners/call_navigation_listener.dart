@@ -20,27 +20,34 @@ class CallNavigationListener extends ConsumerStatefulWidget {
 
 class _CallNavigationListenerState
     extends ConsumerState<CallNavigationListener> {
-  UiCallPhase? _lastHandledPhase;
   bool _isNavigating = false;
+
+  late final ProviderSubscription<CallState> _sub;
 
   @override
   void initState() {
     super.initState();
 
-    // ✅ LISTEN SAFELY HERE
-    ref.listenManual<CallState>(callManagerProvider, (previous, next) {
+    _sub = ref.listenManual<CallState>(callManagerProvider, (previous, next) {
       _onStateChanged(previous?.uiPhase, next.uiPhase);
     });
   }
 
   @override
+  void dispose() {
+    _sub.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    ref.watch(callManagerProvider);
+
     return widget.child;
   }
 
   void _onStateChanged(UiCallPhase? prev, UiCallPhase next) {
-    if (_lastHandledPhase == next) return;
-    _lastHandledPhase = next;
+    if (prev == next) return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -52,20 +59,35 @@ class _CallNavigationListenerState
     if (_isNavigating) return;
 
     final router = ref.read(appRouterProvider);
-    final currentLocation = router.routerDelegate.currentConfiguration.fullPath;
 
-    final isInCallSession = currentLocation == AppRoutes.callSession;
+    final location = router.routerDelegate.currentConfiguration.uri.toString();
 
-    final enteringCall = !_wasInCallSession(prev) && _isInCallSession(next);
+    final isInCallSession = location.contains(AppRoutes.callSession);
+
+    /// 🔥 ENTER CALL
+    final enteringCall =
+        prev != null && !_isInCallSession(prev) && _isInCallSession(next);
 
     if (enteringCall && !isInCallSession) {
       _isNavigating = true;
-      router.goNamed(AppRoutes.nCallSession);
+
+      router.pushNamed(AppRoutes.nCallSession);
+
       _releaseLock();
       return;
     }
 
-    // exit handled elsewhere
+    /// 🔥 EXIT CALL (FIXED FINAL)
+    final isExitTransition =
+        prev != null && _isInCallSession(prev) && !_isInCallSession(next);
+
+    if (isExitTransition) {
+      _isNavigating = true;
+
+      router.goNamed(AppRoutes.nConnect, queryParameters: {'tab': 'calls'});
+
+      _releaseLock();
+    }
   }
 
   bool _isInCallSession(UiCallPhase phase) {
@@ -84,13 +106,8 @@ class _CallNavigationListenerState
     }
   }
 
-  bool _wasInCallSession(UiCallPhase? phase) {
-    if (phase == null) return false;
-    return _isInCallSession(phase);
-  }
-
   void _releaseLock() {
-    Future.delayed(const Duration(milliseconds: 300), () {
+    Future.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       _isNavigating = false;
     });

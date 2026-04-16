@@ -28,11 +28,11 @@ class AppNavConfig {
         routeName: AppRoutes.nStartSelling,
         requiresAuth: true,
       ),
-      AppNavItem(
-        label: l10n.nav_contact,
-        icon: Icons.chat_bubble_outline,
-        activeIcon: Icons.chat_bubble,
-        routeName: AppRoutes.nConnect,
+      const AppNavItem(
+        label: "Feeds",
+        icon: Icons.play_circle_outlined,
+        activeIcon: Icons.play_circle_outlined,
+        routeName: AppRoutes.nFeeds,
       ),
       AppNavItem(
         label: l10n.nav_account,

@@ -43,7 +43,7 @@ class AppBottomNav extends ConsumerWidget {
             _SellButton(onTap: () => AppNavigation.goTo(context, ref, 2)),
 
             _NavItem(
-              label: 'Connect',
+              label: 'Feeds',
               icon: Icons.forum_outlined,
               activeIcon: Icons.forum_outlined,
               active: currentIndex == 3,

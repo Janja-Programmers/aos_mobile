@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_location_screen.dart';
+import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 import 'package:africaonlinestores/features/home/domain/location_picker.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_app_bar.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_controller.dart';
@@ -13,7 +14,6 @@ import 'package:africaonlinestores/features/search/shared/routing/search_routes.
 
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 
-import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
@@ -81,12 +81,12 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
     final header = HomeAppBar(
       locationLabel: locationLabel ?? l10n.location_all_locations,
       onTapLocation: _openLocationPicker,
-      onTapFavorites: () {
+      onTapConnect: () {
         AppNavigation.requireAuth(
           context,
           ref,
           onAuthenticated: () {
-            AdNavigation.toWishlist(context);
+            ConnectScreenNavigation.toMessagesTab(context);
           },
         );
       },

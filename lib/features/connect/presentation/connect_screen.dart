@@ -51,6 +51,7 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
         backgroundColor: colors.surface,
         elevation: 0,
         centerTitle: true,
+        leading: const BackButton(),
         title: Text("Connect", style: context.h4),
       ),
 

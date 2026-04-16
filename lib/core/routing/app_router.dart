@@ -35,6 +35,7 @@ import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.da
 import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
 import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart';
 import 'package:africaonlinestores/features/seller/presentation/start_selling_screen.dart';
+import 'package:africaonlinestores/features/shorts/navigation/feeds_routes.dart';
 import 'package:africaonlinestores/features/shorts/navigation/shorts_routes.dart';
 
 import 'package:africaonlinestores/shared/enums/ads.dart';
@@ -52,6 +53,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ...AuthRoutes.routes(),
       ...CallRoutes.routes(),
       ...ChatRoutes.routes(),
+      ...ConnectScreenRoutes.routes(),
       ...LiveRoutes.routes(),
       ...ReviewsRoutes.routes(),
       ...SearchRoutes.routes(),
@@ -156,7 +158,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ...AdsRoutes.routes(),
           ...CatalogRoutes.routes(),
           ...AccountRoutes.routes(),
-          ...ConnectScreenRoutes.routes(),
+          ...FeedsRoutes.routes(),
 
           GoRoute(
             name: AppRoutes.nStartSelling,

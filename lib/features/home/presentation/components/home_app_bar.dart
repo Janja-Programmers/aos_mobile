@@ -10,7 +10,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
     this.title = 'Africa Online Stores',
     required this.locationLabel,
     this.onTapLocation,
-    this.onTapFavorites,
+    this.onTapConnect,
     this.onTapNotifications,
     this.search,
     this.toolbarHeight = 72,
@@ -20,7 +20,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final String title;
   final String locationLabel;
   final VoidCallback? onTapLocation;
-  final VoidCallback? onTapFavorites;
+  final VoidCallback? onTapConnect;
   final VoidCallback? onTapNotifications;
   final Widget? search;
 
@@ -83,9 +83,9 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
 
                 _CircleIconButton(
                   icon: hasWishlistItems
-                      ? Icons.favorite
-                      : Icons.favorite_border,
-                  onTap: onTapFavorites,
+                      ? Icons.chat_bubble_outline
+                      : Icons.chat_bubble_outline,
+                  onTap: onTapConnect,
                 ),
                 const SizedBox(width: 10),
 

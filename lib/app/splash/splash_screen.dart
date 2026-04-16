@@ -1,14 +1,13 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 
-import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
-import 'package:africaonlinestores/app/splash/widgets/animated_brand_text.dart';
-import 'package:africaonlinestores/app/splash/widgets/splash_ring_painter.dart';
+import 'package:africaonlinestores/app/splash/widgets/orbit_system.dart';
+import 'package:africaonlinestores/app/splash/widgets/splash_bubbles.dart';
+import 'package:africaonlinestores/app/splash/widgets/splash_text.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -19,140 +18,81 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
-  static const Duration _minimumSplashTime = Duration(minutes: 1);
+  static const totalDuration = Duration(seconds: 8);
 
-  late final AnimationController _ringRotationController;
-  late final AnimationController _pulseController;
-  late final AnimationController _textController;
+  late final AnimationController _controller;
+  late final AnimationController _exitController;
 
-  Timer? _timer;
-  bool _minimumTimeElapsed = false;
   bool _navigated = false;
 
   @override
   void initState() {
     super.initState();
 
-    _ringRotationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat();
+    _controller = AnimationController(vsync: this, duration: totalDuration)
+      ..forward();
 
-    _pulseController = AnimationController(
+    _exitController = AnimationController(
       vsync: this,
-      duration: const Duration(minutes: 1),
-      lowerBound: 0.85,
-      upperBound: 1.05,
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 500),
+      value: 1,
+    );
 
-    _textController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2200),
-    )..forward();
-
-    _timer = Timer(_minimumSplashTime, () {
-      _minimumTimeElapsed = true;
-      _tryNavigate();
-    });
+    Future.delayed(totalDuration, _tryNavigate);
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _ringRotationController.dispose();
-    _pulseController.dispose();
-    _textController.dispose();
-    super.dispose();
-  }
-
-  void _tryNavigate() {
-    if (!mounted || _navigated) return;
+  Future<void> _tryNavigate() async {
+    if (_navigated || !mounted) return;
 
     final auth = ref.read(authControllerProvider);
     final bootstrap = ref.read(appBootstrapProvider);
 
-    final bootstrapReady = bootstrap.isReady == true;
-    final authResolved = auth is! AuthLoading;
-
-    if (!_minimumTimeElapsed || !bootstrapReady || !authResolved) {
-      return;
-    }
+    if (bootstrap.isReady != true || auth is AuthLoading) return;
 
     _navigated = true;
 
-    final route = _resolveRoute(auth);
-    Navigator.of(context).pushReplacementNamed(route);
+    await _exitController.reverse();
+
+    if (!mounted) return;
+    await Navigator.pushReplacementNamed(context, _resolveRoute(auth));
   }
 
   String _resolveRoute(AuthState auth) {
-    if (auth is AuthAuthenticated) {}
+    if (auth is AuthAuthenticated) return '/home';
+    return '/login';
+  }
 
-    if (auth is AuthGuest) {}
-
-    return '';
+  @override
+  void dispose() {
+    _controller.dispose();
+    _exitController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _tryNavigate();
-    });
-
     return Scaffold(
-      backgroundColor: Colors.black,
-
-      body: SafeArea(
-        child: Column(
+      body: FadeTransition(
+        opacity: _exitController,
+        child: Stack(
           children: [
-            /// ---------- TOP HALF ----------
-            Expanded(
-              child: Center(
-                child: Container(
-                  width: 220,
-                  height: 220,
-                  alignment: Alignment.center,
-                  child: AnimatedBuilder(
-                    animation: Listenable.merge([
-                      _ringRotationController,
-                      _pulseController,
-                    ]),
-                    child: _buildLogo(),
-                    builder: (context, child) {
-                      return Transform.scale(
-                        scale: _pulseController.value,
-                        child: CustomPaint(
-                          painter: SplashRingPainter(
-                            rotation: _ringRotationController.value,
-                          ),
-                          child: SizedBox(
-                            width: 200,
-                            height: 200,
-                            child: Center(child: child),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+            const SplashBubbles(),
+
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OrbitSystem(controller: _controller),
+
+                  const SizedBox(height: 40),
+
+                  SplashText(controller: _controller),
+                ],
               ),
             ),
-
-            /// ---------- BOTTOM HALF ----------
-            Expanded(child: AnimatedBrandText(controller: _textController)),
           ],
         ),
       ),
     );
   }
-}
-
-Widget _buildLogo() {
-  return Container(
-    width: 96,
-    height: 96,
-    decoration: const BoxDecoration(shape: BoxShape.circle),
-    child: ClipOval(
-      child: Image.asset('assets/images/logo.png', fit: BoxFit.cover),
-    ),
-  );
 }

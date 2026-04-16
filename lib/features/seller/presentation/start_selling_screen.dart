@@ -69,7 +69,7 @@ class StartSellingScreen extends ConsumerWidget {
               onTap: () {
                 ref
                     .read(liveManagerProvider.notifier)
-                    .joinLive(liveId: "LIVE-2026-00004");
+                    .joinLive(liveId: "LIVE-2026-00007");
               },
             ),
 

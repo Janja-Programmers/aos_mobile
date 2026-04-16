@@ -1,28 +1,76 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
-class LiveTopBar extends StatelessWidget {
+class LiveTopBar extends StatefulWidget {
   final int viewerCount;
   final Duration duration;
   final VoidCallback onEnd;
+  final bool isHost;
 
   const LiveTopBar({
     super.key,
     required this.viewerCount,
     required this.duration,
     required this.onEnd,
+    required this.isHost,
   });
+
+  @override
+  State<LiveTopBar> createState() => _LiveTopBarState();
+}
+
+class _LiveTopBarState extends State<LiveTopBar> {
+  late Duration _duration;
+  Timer? _timer;
+  late int _viewerCount;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _duration = widget.duration;
+    _viewerCount = widget.viewerCount;
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() {
+        _duration += const Duration(seconds: 1);
+      });
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant LiveTopBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.duration != widget.duration) {
+      _duration = widget.duration;
+    }
+
+    if (oldWidget.viewerCount != widget.viewerCount) {
+      setState(() {
+        _viewerCount = widget.viewerCount;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String format(Duration d) {
+    return "${d.inMinutes.toString().padLeft(2, '0')}:"
+        "${(d.inSeconds % 60).toString().padLeft(2, '0')}";
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
-    String format(Duration d) {
-      return "${d.inMinutes.toString().padLeft(2, '0')}:"
-          "${(d.inSeconds % 60).toString().padLeft(2, '0')}";
-    }
 
     return Positioned(
       top: 40,
@@ -42,11 +90,12 @@ class LiveTopBar extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.circle, size: 8, color: Colors.white),
+                    Icon(Icons.circle, size: 8, color: colors.white),
                     const SizedBox(width: 4),
+
                     Text(
                       "LIVE",
-                      style: context.p.copyWith(color: Colors.white),
+                      style: context.p.copyWith(color: colors.white),
                     ),
                   ],
                 ),
@@ -54,13 +103,13 @@ class LiveTopBar extends StatelessWidget {
 
               const SizedBox(width: 6),
 
-              /// TIMER
-              _blackBox(context, format(duration)),
+              /// TIMER (now reactive 🔥)
+              _blackBox(context, format(_duration)),
 
               const SizedBox(width: 6),
 
-              /// VIEWERS
-              _blackBox(context, "$viewerCount", icon: Icons.remove_red_eye),
+              /// VIEWERS (still reactive from state)
+              _blackBox(context, "$_viewerCount", icon: Icons.remove_red_eye),
             ],
           ),
 
@@ -68,16 +117,16 @@ class LiveTopBar extends StatelessWidget {
 
           /// END BUTTON
           GestureDetector(
-            onTap: onEnd,
+            onTap: widget.onEnd,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: colors.primary,
+                color: colors.surface,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                "End",
-                style: context.p.copyWith(color: Colors.white),
+                widget.isHost ? "End" : "Leave",
+                style: context.p.copyWith(color: colors.primary),
               ),
             ),
           ),

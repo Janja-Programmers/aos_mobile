@@ -107,6 +107,7 @@ class AccountScreen extends ConsumerWidget {
                     title: "My Listings",
                     onTap: () => AdNavigation.toMyAds(context),
                   ),
+
                   AccountOptionTile(
                     icon: Icons.business_center_outlined,
                     title: "My Storefront",
@@ -117,6 +118,12 @@ class AccountScreen extends ConsumerWidget {
                         current.user.email,
                       );
                     },
+                  ),
+
+                  AccountOptionTile(
+                    icon: Icons.favorite_border,
+                    title: "My Wishlist",
+                    onTap: () => AdNavigation.toWishlist(context),
                   ),
                   const SizedBox(height: 18),
                 ],

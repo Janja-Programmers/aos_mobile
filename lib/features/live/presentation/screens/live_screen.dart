@@ -144,6 +144,70 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
     );
   }
 
+  Future<void> _showLeaveLiveDialog(
+    BuildContext context,
+    VoidCallback onConfirm,
+  ) {
+    return showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Leave Live?", style: context.h5),
+                const SizedBox(height: 8),
+
+                Text(
+                  "You will exit this live stream.",
+                  style: context.p,
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 20),
+
+                /// 🔴 LEAVE BUTTON
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.appColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      onConfirm();
+                    },
+                    child: Text("Leave", style: AppTextStylesX(context).button),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                /// ⚪ CANCEL
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text("Stay", style: context.p),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _chatController.dispose();
@@ -158,7 +222,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
     final colors = context.appColors;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: colors.black,
       body: Stack(
         children: [
           /// ================= VIDEO LAYER =================
@@ -173,7 +237,14 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
             LiveTopBar(
               viewerCount: state.viewerCount,
               duration: state.duration,
-              onEnd: () => _showEndLiveDialog(context, manager.endLive),
+              isHost: state.isHost,
+              onEnd: () {
+                if (state.isHost) {
+                  _showEndLiveDialog(context, manager.endLive);
+                } else {
+                  _showLeaveLiveDialog(context, manager.leaveLive);
+                }
+              },
             ),
 
             /// RIGHT ACTIONS

@@ -6,7 +6,7 @@ import 'package:africaonlinestores/features/seller/seller_verification/domain/ve
 final sellerStatusProvider = FutureProvider<SellerVerificationStatus>((
   ref,
 ) async {
-  final api = ref.read(verificationApiProvider);
+  final api = ref.watch(verificationApiProvider);
 
   final res = await api.getMySellerStatus();
 

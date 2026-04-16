@@ -87,12 +87,9 @@ Widget buildVerificationBottomBar({
 
                               ref.invalidate(sellerStatusProvider);
 
-                              Future.delayed(
-                                const Duration(milliseconds: 400),
-                                () {
-                                  if (context.mounted) Navigator.pop(context);
-                                },
-                              );
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                              }
                             },
                           );
                         });

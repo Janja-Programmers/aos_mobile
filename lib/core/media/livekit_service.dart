@@ -15,8 +15,12 @@ class LiveKitService {
   bool _isDisconnecting = false;
 
   // ================= CONNECT =================
-  Future<void> connect({required String wsUrl, required String token}) async {
-    if (_isConnecting) return;
+  Future<lk.Room> connect({
+    required String wsUrl,
+    required String token,
+  }) async {
+    if (_isConnecting) return _room!;
+
     _isConnecting = true;
 
     try {
@@ -34,6 +38,8 @@ class LiveKitService {
       _controller.add(const RoomConnectedEvent());
 
       appLogger.i('✅ LiveKit connected');
+
+      return _room!;
     } catch (e, s) {
       appLogger.e('LiveKit connect failed', error: e, stackTrace: s);
       rethrow;

@@ -1,107 +1,97 @@
-import 'package:africaonlinestores/core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
-import 'package:go_router/go_router.dart';
+import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
+import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
+import 'package:africaonlinestores/features/connect/calls/presentation/widgets/active/active_call_layout.dart';
+import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 
 class ActiveCallScreen extends ConsumerWidget {
   const ActiveCallScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen(callManagerProvider, (previous, next) {
+      if (previous?.uiPhase != UiCallPhase.finished &&
+          next.uiPhase == UiCallPhase.finished) {
+        _handleCallEnded(context);
+      }
+    });
+
     final callState = ref.watch(callManagerProvider);
     final manager = ref.read(callManagerProvider.notifier);
-
     final colors = context.appColors;
+
+    final participant = _displayName(callState);
+    final subtitle = _subtitle(callState);
+    final initials = _initials(participant);
 
     return Scaffold(
       backgroundColor: colors.surface,
       body: SafeArea(
-        child: Center(
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-
-              // Duration
-              Text(
-                _formatDuration(callState.duration),
-                style: const TextStyle(color: Colors.white, fontSize: 18),
-              ),
-
-              const Spacer(),
-
-              // Placeholder for video/audio
-              Expanded(
-                child: Center(
-                  child: callState.isVideoEnabled
-                      ? const Icon(
-                          Icons.videocam,
-                          size: 80,
-                          color: Colors.white,
-                        )
-                      : const Icon(Icons.call, size: 80, color: Colors.white),
-                ),
-              ),
-
-              const Spacer(),
-
-              // Controls
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  IconButton(
-                    color: Colors.white,
-                    icon: Icon(callState.isMuted ? Icons.mic_off : Icons.mic),
-                    onPressed: manager.toggleMute,
-                  ),
-                  IconButton(
-                    color: Colors.white,
-                    icon: Icon(
-                      callState.isSpeakerOn
-                          ? Icons.volume_up
-                          : Icons.volume_down,
-                    ),
-                    onPressed: manager.toggleSpeaker,
-                  ),
-                  IconButton(
-                    color: Colors.white,
-                    icon: Icon(
-                      callState.isVideoEnabled
-                          ? Icons.videocam
-                          : Icons.videocam_off,
-                    ),
-                    onPressed: manager.toggleVideo,
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // End Call
-              FloatingActionButton(
-                backgroundColor: Colors.red,
-                onPressed: () async {
-                  await manager.endCurrentCall();
-
-                  if (context.mounted) {
-                    context.pop();
-                  }
-                },
-                child: const Icon(Icons.call_end),
-              ),
-
-              const SizedBox(height: 30),
-            ],
-          ),
+        child: ActiveCallLayout(
+          callState: callState,
+          manager: manager,
+          participant: participant,
+          subtitle: subtitle,
+          initials: initials,
         ),
       ),
     );
   }
 
-  String _formatDuration(Duration d) {
-    final minutes = d.inMinutes.toString().padLeft(2, '0');
-    final seconds = (d.inSeconds % 60).toString().padLeft(2, '0');
-    return '$minutes:$seconds';
+  static String _displayName(CallState callState) {
+    if (callState.direction == 'incoming') {
+      return callState.caller?.displayName ??
+          callState.caller?.userId ??
+          'Incoming call';
+    }
+
+    return callState.receiver?.displayName ??
+        callState.receiver?.userId ??
+        callState.activeCall?.receiver?.displayName ??
+        callState.activeCall?.receiver?.userId ??
+        callState.activeCall?.caller?.displayName ??
+        callState.activeCall?.caller?.userId ??
+        'Calling...';
   }
+
+  static String _subtitle(CallState callState) {
+    switch (callState.uiPhase) {
+      case UiCallPhase.joiningRoom:
+        return 'Connecting...';
+
+      case UiCallPhase.inCall:
+        return 'In call';
+
+      case UiCallPhase.finished:
+        return 'Call ended';
+
+      default:
+        return '';
+    }
+  }
+
+  static String _initials(String text) {
+    final parts = text
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) return parts.first.characters.first.toUpperCase();
+    return (parts.first.characters.first + parts.last.characters.first)
+        .toUpperCase();
+  }
+}
+
+Future<void> _handleCallEnded(BuildContext context) async {
+  await Future.delayed(const Duration(seconds: 1));
+
+  if (!context.mounted) return;
+
+  ConnectScreenNavigation.toMessagesTab(context);
 }

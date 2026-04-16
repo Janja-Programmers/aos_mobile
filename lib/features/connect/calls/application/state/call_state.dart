@@ -1,20 +1,23 @@
 import 'package:flutter/foundation.dart';
+import 'package:livekit_client/livekit_client.dart';
 
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
-
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 
 @immutable
 class CallState {
-  final CallStatus status;
+  final UiCallPhase uiPhase;
+  final BackendCallStatus? backendStatus;
+  final Room? room;
   final Call? activeCall;
   final CallParticipant? caller;
   final CallParticipant? receiver;
+  final CallMediaMode callMediaMode;
+  final bool isUpgradePending;
   final bool isMuted;
   final bool isSpeakerOn;
-  final bool isVideoEnabled;
   final bool isRemoteVideoEnabled;
   final bool isLocalVideoEnabled;
   final Duration duration;
@@ -26,20 +29,22 @@ class CallState {
   final String? roomName;
   final String? token;
   final String? wsUrl;
-
-  // HISTORY Logs
+  // HISTORY
   final List<CallLog> callLogs;
   final bool isLoadingHistory;
   final String? historyErrorMessage;
 
   const CallState({
-    required this.status,
+    required this.uiPhase,
+    required this.backendStatus,
+    this.room,
     this.activeCall,
     this.caller,
     this.receiver,
+    required this.callMediaMode,
+    required this.isUpgradePending,
     required this.isMuted,
     required this.isSpeakerOn,
-    required this.isVideoEnabled,
     required this.isRemoteVideoEnabled,
     required this.isLocalVideoEnabled,
     required this.duration,
@@ -51,7 +56,6 @@ class CallState {
     this.roomName,
     this.token,
     this.wsUrl,
-
     required this.callLogs,
     required this.isLoadingHistory,
     this.historyErrorMessage,
@@ -59,13 +63,16 @@ class CallState {
 
   factory CallState.initial() {
     return const CallState(
-      status: CallStatus.idle,
+      uiPhase: UiCallPhase.idle,
+      backendStatus: null,
+      room: null,
       activeCall: null,
       caller: null,
       receiver: null,
+      callMediaMode: CallMediaMode.audio,
+      isUpgradePending: false,
       isMuted: false,
       isSpeakerOn: false,
-      isVideoEnabled: true,
       isRemoteVideoEnabled: true,
       isLocalVideoEnabled: true,
       duration: Duration.zero,
@@ -77,31 +84,34 @@ class CallState {
       roomName: null,
       token: null,
       wsUrl: null,
-
       callLogs: [],
       isLoadingHistory: false,
       historyErrorMessage: null,
     );
   }
 
-  bool get hasActiveCall =>
-      status == CallStatus.dialing ||
-      status == CallStatus.incoming ||
-      status == CallStatus.ringing ||
-      status == CallStatus.connecting ||
-      status == CallStatus.connected;
+  bool get hasCallSession => uiPhase != UiCallPhase.idle;
+
+  bool get isCallInProgress {
+    return backendStatus == BackendCallStatus.initiated ||
+        backendStatus == BackendCallStatus.ringing ||
+        backendStatus == BackendCallStatus.ongoing;
+  }
 
   CallState copyWith({
-    CallStatus? status,
+    UiCallPhase? uiPhase,
+    BackendCallStatus? backendStatus,
+    Room? room,
     Call? activeCall,
     ValueGetter<Call?>? activeCallBuilder,
     CallParticipant? caller,
     ValueGetter<CallParticipant?>? callerBuilder,
     CallParticipant? receiver,
     ValueGetter<CallParticipant?>? receiverBuilder,
+    CallMediaMode? callMediaMode,
+    bool? isUpgradePending,
     bool? isMuted,
     bool? isSpeakerOn,
-    bool? isVideoEnabled,
     bool? isRemoteVideoEnabled,
     bool? isLocalVideoEnabled,
     Duration? duration,
@@ -118,14 +128,15 @@ class CallState {
     bool clearToken = false,
     String? wsUrl,
     bool clearWsUrl = false,
-
     List<CallLog>? callLogs,
     bool? isLoadingHistory,
     String? historyErrorMessage,
     bool clearHistoryErrorMessage = false,
   }) {
     return CallState(
-      status: status ?? this.status,
+      uiPhase: uiPhase ?? this.uiPhase,
+      backendStatus: backendStatus ?? this.backendStatus,
+      room: room ?? this.room,
       activeCall: activeCallBuilder != null
           ? activeCallBuilder()
           : activeCall ?? this.activeCall,
@@ -133,9 +144,10 @@ class CallState {
       receiver: receiverBuilder != null
           ? receiverBuilder()
           : receiver ?? this.receiver,
+      callMediaMode: callMediaMode ?? this.callMediaMode,
+      isUpgradePending: isUpgradePending ?? this.isUpgradePending,
       isMuted: isMuted ?? this.isMuted,
       isSpeakerOn: isSpeakerOn ?? this.isSpeakerOn,
-      isVideoEnabled: isVideoEnabled ?? this.isVideoEnabled,
       isRemoteVideoEnabled: isRemoteVideoEnabled ?? this.isRemoteVideoEnabled,
       isLocalVideoEnabled: isLocalVideoEnabled ?? this.isLocalVideoEnabled,
       duration: duration ?? this.duration,
@@ -161,18 +173,21 @@ class CallState {
   @override
   String toString() {
     return 'CallState('
-        'status: $status, '
+        'uiPhase: $uiPhase, '
+        'backendStatus: $backendStatus, '
+        'room: $room, '
         'activeCall: ${activeCall?.id}, '
         'caller: ${caller?.userId}, '
         'receiver: ${receiver?.userId}, '
+        'callMediaMode: $callMediaMode, '
+        'isUpgradePending: $isUpgradePending, '
         'isMuted: $isMuted, '
         'isSpeakerOn: $isSpeakerOn, '
-        'isVideoEnabled: $isVideoEnabled, '
         'duration: $duration, '
         'direction: $direction, '
         'hasIncomingCallUi: $hasIncomingCallUi, '
         'hasActiveRoom: $hasActiveRoom, '
-        'roomName: $roomName'
+        'roomName: $roomName, '
         'callLogsCount: ${callLogs.length}, '
         'isLoadingHistory: $isLoadingHistory'
         ')';

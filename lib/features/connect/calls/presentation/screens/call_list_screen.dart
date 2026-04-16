@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_filter_utils.dart';
+import 'package:africaonlinestores/features/connect/calls/presentation/utils/show_call_details_sheet.dart';
 
 class CallListScreen extends ConsumerStatefulWidget {
   final String? searchQuery;
@@ -18,10 +21,13 @@ class CallListScreen extends ConsumerStatefulWidget {
 
 class _CallListScreenState extends ConsumerState<CallListScreen> {
   String selectedFilter = "all";
+  String _query = '';
 
   @override
   void initState() {
     super.initState();
+
+    _query = widget.searchQuery ?? '';
 
     // 🔥 Load once
     Future.microtask(() {
@@ -30,9 +36,35 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant CallListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // 🔥 react to search changes (MATCHES CHAT LIST)
+    if (oldWidget.searchQuery != widget.searchQuery) {
+      setState(() {
+        _query = widget.searchQuery ?? '';
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = ref.watch(callManagerProvider);
 
+    return Scaffold(
+      body: Column(
+        children: [
+          _buildFilters(),
+          Expanded(child: _buildBody(state)),
+        ],
+      ),
+    );
+  }
+
+  // -------------------------
+  // BODY (handles loading/error/data)
+  // -------------------------
+  Widget _buildBody(CallState state) {
     // ⏳ LOADING
     if (state.isLoadingHistory) {
       return const Center(child: CircularProgressIndicator());
@@ -43,36 +75,36 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
       return Center(child: Text(state.historyErrorMessage!));
     }
 
-    // 📦 DATA
+    // 📦 DATA + FILTERING
     final filtered = CallFilterUtils.apply(
       calls: state.callLogs,
-      query: widget.searchQuery ?? '',
+      query: _query,
       filter: selectedFilter,
     );
 
+    // 📭 EMPTY STATE (MATCHES CHAT UX)
+    if (filtered.isEmpty) {
+      return Center(child: Text("No calls yet", style: context.p));
+    }
+
     final grouped = _groupCalls(filtered);
 
-    return Column(
-      children: [
-        _buildFilters(),
-
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: () async {
-              await ref.read(callManagerProvider.notifier).loadCallLogs();
-            },
-            child: ListView(
-              children: grouped.entries.map((entry) {
-                return _buildSection(entry.key, entry.value);
-              }).toList(),
-            ),
-          ),
-        ),
-      ],
+    return RefreshIndicator(
+      onRefresh: () async {
+        await ref.read(callManagerProvider.notifier).loadCallLogs();
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: grouped.entries.map((entry) {
+          return _buildSection(entry.key, entry.value);
+        }).toList(),
+      ),
     );
   }
 
-  // 📅 GROUPING
+  // -------------------------
+  // GROUPING (unchanged)
+  // -------------------------
   Map<String, List<CallLog>> _groupCalls(List<CallLog> calls) {
     final now = DateTime.now();
 
@@ -95,11 +127,14 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  // 🎯 FILTERS
+  // -------------------------
+  // FILTERS (CENTERED like chats)
+  // -------------------------
   Widget _buildFilters() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _chip("All", "all"),
           _chip("Missed", "missed"),
@@ -142,7 +177,9 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
     );
   }
 
-  // 📦 SECTION
+  // -------------------------
+  // SECTION (unchanged)
+  // -------------------------
   Widget _buildSection(String title, List<CallLog> calls) {
     if (calls.isEmpty) return const SizedBox();
 
@@ -164,7 +201,9 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
     );
   }
 
-  // 📞 TILE
+  // -------------------------
+  // TILE
+  // -------------------------
   Widget _callTile(CallLog call) {
     final colors = context.appColors;
     final isMissed = call.isMissed;
@@ -178,7 +217,7 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
       title: Text(
         call.displayName,
         style: TextStyle(
-          color: isMissed ? Colors.red : colors.textPrimary,
+          color: isMissed ? colors.red : colors.textPrimary,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -186,20 +225,36 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
       subtitle: Row(
         children: [
           Icon(
-            call.direction == "incoming"
+            isMissed
+                ? Icons.call_missed
+                : call.direction == "incoming"
                 ? Icons.call_received
                 : Icons.call_made,
             size: 16,
-            color: isMissed ? Colors.red : Colors.green,
+            color: isMissed
+                ? colors.red
+                : call.direction == "incoming"
+                ? colors.success
+                : colors.blue,
           ),
           const SizedBox(width: 4),
+
           Text(call.formattedTime),
+          const SizedBox(width: 8),
+
+          /// ⏱ duration
+          Icon(Icons.timer, size: 14, color: colors.textSecondary),
+          const SizedBox(width: 2),
+
+          Text(call.duration.toString()),
         ],
       ),
 
-      trailing: const Icon(Icons.call, color: Colors.green),
+      trailing: Icon(Icons.call, color: colors.success),
 
-      onTap: () {},
+      onTap: () {
+        showCallDetailsSheet(context, call);
+      },
     );
   }
 }

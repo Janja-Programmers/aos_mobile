@@ -23,21 +23,15 @@ class WishlistController extends AsyncNotifier<WishlistState> {
     _storage = ref.read(wishlistStorageProvider);
     _api = ref.read(adsApiProvider);
 
-    final auth = ref.read(authControllerProvider);
-
-    ref.listen<AuthState>(authControllerProvider, (prev, next) async {
-      if (next is AuthAuthenticated) {
-        ref.invalidateSelf();
-      }
-
-      if (next is AuthGuest) {
-        await _storage.clear();
-        state = AsyncData(WishlistState.initial());
-      }
-    });
+    final auth = ref.watch(authControllerProvider);
 
     if (auth is! AuthAuthenticated) {
-      await _storage.clear();
+      final localIds = await _storage.readIds();
+
+      if (localIds.isNotEmpty) {
+        await _storage.clear();
+      }
+
       return WishlistState.initial();
     }
 

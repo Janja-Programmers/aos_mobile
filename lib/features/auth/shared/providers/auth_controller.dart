@@ -16,7 +16,6 @@ import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/preferences/data/preferences_api_provider.dart';
-import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
 
 class AuthController extends StateNotifier<AuthState> {
   AuthController({
@@ -196,7 +195,6 @@ class AuthController extends StateNotifier<AuthState> {
     } catch (_) {}
 
     await _clearSession();
-    _ref.invalidate(wishlistControllerProvider);
   }
 
   void _setGuest() {
@@ -232,9 +230,6 @@ class AuthController extends StateNotifier<AuthState> {
 
     /// ✅ run in background
     unawaited(_syncUserPreferences());
-
-    /// ✅ safe invalidate AFTER auth ready
-    _ref.invalidate(wishlistControllerProvider);
 
     _isHydrating = false;
   }

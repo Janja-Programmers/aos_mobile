@@ -1,3 +1,4 @@
+import 'package:livekit_client/livekit_client.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:africaonlinestores/core/media/livekit_service.dart';
@@ -7,17 +8,19 @@ class CallMediaService {
 
   CallMediaService(this.liveKit);
 
-  Future<void> joinCall({
+  Future<Room> joinCall({
     required String wsUrl,
     required String token,
     required bool isVideo,
   }) async {
     await _requestPermissions(isVideo);
 
-    await liveKit.connect(wsUrl: wsUrl, token: token);
+    final room = await liveKit.connect(wsUrl: wsUrl, token: token);
 
     await liveKit.enableMicrophone(true);
     await liveKit.enableCamera(isVideo);
+
+    return room;
   }
 
   Future<void> leaveCall() async {

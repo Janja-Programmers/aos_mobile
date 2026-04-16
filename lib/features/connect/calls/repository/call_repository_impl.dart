@@ -10,6 +10,10 @@ abstract class CallRepository {
     required AOSCallType callType,
   });
 
+  Future<void> markCallRinging({required String callId});
+
+  Future<void> cancelCall({required String callId});
+
   Future<Call> acceptCall({required String callId});
 
   Future<void> rejectCall({required String callId});
@@ -50,6 +54,26 @@ class CallRepositoryImpl implements CallRepository {
     );
 
     return res.fold((e) => throw e, (data) => data);
+  }
+
+  // -----------------------------
+  // Mark Call Ringing
+  // -----------------------------
+  @override
+  Future<void> markCallRinging({required String callId}) async {
+    final res = await api.markCallRinging(callId: callId);
+
+    return res.fold((e) => throw e, (data) => data);
+  }
+
+  // -----------------------------
+  // Cancel Call
+  // -----------------------------
+  @override
+  Future<void> cancelCall({required String callId}) async {
+    final res = await api.cancelCall(callId: callId);
+
+    return res.fold((e) => throw e, (_) => null);
   }
 
   // -----------------------------

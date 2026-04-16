@@ -85,6 +85,64 @@ class CallApi {
   }
 
   // -----------------------------
+  // Mark Call as Ringing
+  // -----------------------------
+  Future<Either<Failure, void>> markCallRinging({
+    required String callId,
+  }) async {
+    appLogger.i("markCallRinging API");
+
+    try {
+      final res = await _client.post(
+        ApiEndpoints.markCallRingingEndpoint,
+        data: {'call_id': callId},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      return Either.right(null);
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        final res = e.response!;
+
+        final result = unwrapFrappe(res);
+        if (result.isLeft) return Either.left(result.leftOrNull!);
+      }
+
+      return Either.left(Failure(e.toString()));
+    }
+  }
+
+  // -----------------------------
+  // Cancel Call
+  // -----------------------------
+  Future<Either<Failure, void>> cancelCall({required String callId}) async {
+    appLogger.i("cancelCall API");
+
+    try {
+      final res = await _client.post(
+        ApiEndpoints.cancelCallEndpoint,
+        data: {'call_id': callId},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      return Either.right(null);
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        final res = e.response!;
+
+        final result = unwrapFrappe(res);
+        if (result.isLeft) return Either.left(result.leftOrNull!);
+      }
+
+      return Either.left(Failure(e.toString()));
+    }
+  }
+
+  // -----------------------------
   // Accept Call
   // -----------------------------
   Future<Either<Failure, Call>> acceptCall({required String callId}) async {

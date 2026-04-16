@@ -1,11 +1,12 @@
+import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/routing/app_router.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 
-import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 
 class CallNavigationListener extends ConsumerStatefulWidget {
   final Widget child;
@@ -19,92 +20,79 @@ class CallNavigationListener extends ConsumerStatefulWidget {
 
 class _CallNavigationListenerState
     extends ConsumerState<CallNavigationListener> {
+  UiCallPhase? _lastHandledPhase;
   bool _isNavigating = false;
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      ref.read(socketCallListenerProvider);
+
+    // ✅ LISTEN SAFELY HERE
+    ref.listenManual<CallState>(callManagerProvider, (previous, next) {
+      _onStateChanged(previous?.uiPhase, next.uiPhase);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(callManagerProvider);
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _handleNavigation(context, state.status);
-    });
-
     return widget.child;
   }
 
-  void _handleNavigation(BuildContext context, CallStatus status) {
+  void _onStateChanged(UiCallPhase? prev, UiCallPhase next) {
+    if (_lastHandledPhase == next) return;
+    _lastHandledPhase = next;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _handleNavigation(prev, next);
+    });
+  }
+
+  void _handleNavigation(UiCallPhase? prev, UiCallPhase next) {
     if (_isNavigating) return;
 
     final router = ref.read(appRouterProvider);
     final currentLocation = router.routerDelegate.currentConfiguration.fullPath;
 
-    String? targetRoute;
+    final isInCallSession = currentLocation == AppRoutes.callSession;
 
-    switch (status) {
-      case CallStatus.incoming:
-        targetRoute = AppRoutes.incomingCall;
-        break;
+    final enteringCall = !_wasInCallSession(prev) && _isInCallSession(next);
 
-      case CallStatus.dialing:
-      case CallStatus.ringing:
-        targetRoute = AppRoutes.outgoingCall;
-        break;
-
-      case CallStatus.connected:
-        targetRoute = AppRoutes.activeCall;
-        break;
-
-      case CallStatus.ended:
-      case CallStatus.rejected:
-      case CallStatus.failed:
-        targetRoute = AppRoutes.calls;
-        break;
-
-      default:
-        return;
+    if (enteringCall && !isInCallSession) {
+      _isNavigating = true;
+      router.goNamed(AppRoutes.nCallSession);
+      _releaseLock();
+      return;
     }
 
-    if (currentLocation == targetRoute) return;
-
-    _isNavigating = true;
-
-    router.goNamed(_mapRouteName(status));
-
-    Future.microtask(() {
-      _isNavigating = false;
-    });
+    // exit handled elsewhere
   }
 
-  String _mapRouteName(CallStatus status) {
-    switch (status) {
-      case CallStatus.incoming:
-        return AppRoutes.nIncomingCall;
+  bool _isInCallSession(UiCallPhase phase) {
+    switch (phase) {
+      case UiCallPhase.incomingRinging:
+      case UiCallPhase.outgoingStarting:
+      case UiCallPhase.outgoingRinging:
+      case UiCallPhase.joiningRoom:
+      case UiCallPhase.inCall:
+        return true;
 
-      case CallStatus.dialing:
-      case CallStatus.ringing:
-        return AppRoutes.nOutgoingCall;
-
-      case CallStatus.connected:
-        return AppRoutes.nActiveCall;
-
-      case CallStatus.notAnswered:
-      case CallStatus.rejected:
-        return AppRoutes.nCallNotAnswered;
-
-      case CallStatus.ended:
-      case CallStatus.failed:
-        return AppRoutes.nCalls;
-
-      default:
-        return AppRoutes.nCalls;
+      case UiCallPhase.idle:
+      case UiCallPhase.finished:
+      case UiCallPhase.error:
+        return false;
     }
+  }
+
+  bool _wasInCallSession(UiCallPhase? phase) {
+    if (phase == null) return false;
+    return _isInCallSession(phase);
+  }
+
+  void _releaseLock() {
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      _isNavigating = false;
+    });
   }
 }

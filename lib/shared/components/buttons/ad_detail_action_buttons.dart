@@ -24,7 +24,7 @@ class AdDetailActionBar extends StatelessWidget {
               icon: Icons.home_outlined,
               filled: false,
               label: null,
-              onTap: onCall ?? () => context.goNamed(AppRoutes.nHome),
+              onTap: () => context.goNamed(AppRoutes.nHome),
             ),
             const SizedBox(width: 10),
 

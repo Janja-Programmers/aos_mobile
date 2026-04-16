@@ -1,12 +1,15 @@
-import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
+import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_list_screen.dart';
+import 'package:africaonlinestores/features/connect/calls/navigation/call_routes.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/call_list_screen.dart';
+import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 
@@ -19,13 +22,11 @@ class ConnectScreen extends ConsumerStatefulWidget {
 
 class _ConnectScreenState extends ConsumerState<ConnectScreen> {
   final _searchCtrl = TextEditingController();
-  int selectedTab = 1;
 
   @override
   void initState() {
     super.initState();
 
-    // 🔥 Live search
     _searchCtrl.addListener(() {
       setState(() {});
     });
@@ -40,6 +41,8 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+
+    final selectedTab = _resolveIndex(context);
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -64,11 +67,11 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
           Expanded(
             child: selectedTab == 1
                 ? ChatListScreen(
-                    key: ValueKey(_searchCtrl.text),
+                    key: ValueKey('${selectedTab}_${_searchCtrl.text}'),
                     searchQuery: _searchCtrl.text,
                   )
                 : CallListScreen(
-                    key: ValueKey(_searchCtrl.text),
+                    key: ValueKey('${selectedTab}_${_searchCtrl.text}'),
                     searchQuery: _searchCtrl.text,
                   ),
           ),
@@ -99,16 +102,20 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
   }
 
   Widget _tabButton(String title, int index, IconData icon) {
+    final selectedTab = _resolveIndex(context);
     final isSelected = selectedTab == index;
     final colors = context.appColors;
 
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          setState(() {
-            selectedTab = index;
-            _searchCtrl.clear(); // 🔥 reset search on tab switch
-          });
+          _searchCtrl.clear();
+
+          if (index == 0) {
+            ConnectScreenNavigation.toCallsTab(context);
+          } else {
+            ConnectScreenNavigation.toMessagesTab(context);
+          }
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -148,7 +155,7 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
 
   Widget _buildFAB() {
     final colors = context.appColors;
-
+    final selectedTab = _resolveIndex(context);
     final isMessages = selectedTab == 1;
 
     return AnimatedSwitcher(
@@ -161,7 +168,9 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
         onPressed: () {
           if (isMessages) {
             ChatNavigation.toNewMessage(context);
-          } else {}
+          } else {
+            CallNavigation.toNewCall(context);
+          }
         },
         child: Icon(
           isMessages ? Icons.message : Icons.add_call,
@@ -169,5 +178,17 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
         ),
       ),
     );
+  }
+
+  int _resolveIndex(BuildContext context) {
+    final tab = GoRouterState.of(context).uri.queryParameters['tab'];
+
+    switch (tab) {
+      case 'calls':
+        return 0;
+      case 'messages':
+      default:
+        return 1;
+    }
   }
 }

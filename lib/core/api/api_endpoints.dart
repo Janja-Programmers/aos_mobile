@@ -134,6 +134,10 @@ class ApiEndpoints {
   static final String endCallEndpoint = '/api/method/aos.api.calls.end_call';
   static final String listCallsEndpoint =
       '/api/method/aos.api.calls.list_calls';
+  static final String markCallRingingEndpoint =
+      '/api/method/aos.api.calls.mark_call_ringing';
+  static final String cancelCallEndpoint =
+      '/api/method/aos.api.calls.cancel_call';
 
   // LIVE Endpoints
   static final String startLiveEndpoint = '/api/method/aos.api.live.start_live';

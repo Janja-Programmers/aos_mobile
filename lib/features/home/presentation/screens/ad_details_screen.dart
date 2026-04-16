@@ -7,9 +7,12 @@ import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
+import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
+
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 import 'package:africaonlinestores/features/connect/chats/utils/chart_actions.dart';
 
 import 'package:africaonlinestores/features/home/presentation/controller/ad_detail_controller.dart';
@@ -24,8 +27,9 @@ import 'package:africaonlinestores/features/reviews/controllers/review_controlle
 import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
 import 'package:africaonlinestores/features/reviews/presentation/sections/review_ad_section.dart';
 import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
-import 'package:africaonlinestores/features/seller/providers/seller_profile_provider.dart';
+import 'package:africaonlinestores/features/seller/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart';
+import 'package:africaonlinestores/features/seller/providers/seller_profile_provider.dart';
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';
@@ -124,6 +128,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
           final sellerAsync = ref.watch(sellerProfileProvider(ad.sellerId));
           final similarAsync = ref.watch(similarAdsProvider(ad.categoryName));
           final reviewState = ref.watch(reviewControllerProvider(ad.id));
+          bool isCalling = false;
 
           return Column(
             children: [
@@ -234,20 +239,49 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
               /// ACTION BAR
               AdDetailActionBar(
                 onCall: () async {
-                  final manager = ref.read(callManagerProvider.notifier);
-                  await manager.startOutgoingCall(
-                    userId: ad.sellerId,
-                    callType: AOSCallType.audio,
-                  );
+                  if (isCalling) return;
+
+                  isCalling = true;
+
+                  try {
+                    await AppNavigation.requireAuth(
+                      context,
+                      ref,
+                      onAuthenticated: () async {
+                        final manager = ref.read(callManagerProvider.notifier);
+
+                        if (ad.sellerId.isEmpty) {
+                          debugPrint('❌ sellerId is empty');
+                          return;
+                        }
+
+                        await manager.startOutgoingCall(
+                          userId: ad.sellerId,
+                          callType: AOSCallType.audio,
+                          receiver: _buildReceiver(ad, sellerAsync.value),
+                        );
+                      },
+                    );
+                  } finally {
+                    isCalling = false;
+                  }
                 },
 
                 onMessage: () {
-                  ChatActions.startChat(
-                    context: context,
-                    ref: ref,
-                    user: ad.sellerId,
-                    displayName: ad.sellerId,
-                    initialMessage: "Hi, I'm interested in ${ad.title}",
+                  AppNavigation.requireAuth(
+                    context,
+                    ref,
+                    onAuthenticated: () {
+                      final seller = sellerAsync.value;
+
+                      ChatActions.startChat(
+                        context: context,
+                        ref: ref,
+                        user: ad.sellerId,
+                        displayName: seller!.shopName,
+                        initialMessage: "Hi, I'm interested in ${ad.title}",
+                      );
+                    },
                   );
                 },
               ),
@@ -257,4 +291,12 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
       ),
     );
   }
+}
+
+CallParticipant _buildReceiver(AOSAdDetails ad, AOSSellerProfile? seller) {
+  return CallParticipant(
+    userId: ad.sellerId,
+    displayName: seller?.shopName ?? ad.sellerId,
+    avatarUrl: seller?.avatar,
+  );
 }

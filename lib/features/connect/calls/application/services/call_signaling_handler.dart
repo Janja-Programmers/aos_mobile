@@ -50,22 +50,16 @@ class CallSignalingHandler {
   Future<void> handleCallAccepted(Map<String, dynamic> data) async {
     try {
       appLogger.i("CallManager: handleCallAccepted | Data: ${data.toString()}");
-      final callId = data['call_id'] as String?;
-      final token = data['token'] as String?;
-      final wsUrl = data['ws_url'] as String?;
 
-      if (callId == null || token == null || wsUrl == null) {
+      final callId = data['call_id'] as String?;
+      if (callId == null) {
         appLogger.e('❌ Invalid call accepted payload: $data');
         return;
       }
 
       appLogger.i('✅ Call accepted parsed');
 
-      await callManager.onCallAcceptedEvent(
-        callId: callId,
-        token: token,
-        wsUrl: wsUrl,
-      );
+      await callManager.onCallAcceptedEvent(callId: callId);
     } catch (e, s) {
       appLogger.e('handleCallAccepted failed', error: e, stackTrace: s);
     }

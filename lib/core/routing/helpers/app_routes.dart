@@ -127,23 +127,14 @@ class AppRoutes {
   static const nCreateShort = 'createShort';
 
   // CALLS routes
-  static const calls = '/calls';
-  static const nCalls = 'calls';
+  static const callsList = '/calls/list';
+  static const nCallsList = 'callsList';
 
-  static const incomingCall = '/calls/incoming';
-  static const nIncomingCall = 'incomingCall';
+  static const newCall = '/calls/new';
+  static const nNewCall = 'newCall';
 
-  static const outgoingCall = '/calls/outgoing';
-  static const nOutgoingCall = 'outgoingCall';
-
-  static const activeCall = '/calls/active';
-  static const nActiveCall = 'activeCall';
-
-  static const rejectedCall = '/calls/rejected';
-  static const nRejectedCall = 'rejectedCall';
-
-  static const callNotAnswered = '/calls/unanswered';
-  static const nCallNotAnswered = 'unansweredCall';
+  static const callSession = '/calls/session';
+  static const nCallSession = 'callSession';
 
   // LIVE routes
   static const liveRoom = '/live/room';

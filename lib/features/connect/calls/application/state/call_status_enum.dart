@@ -1,26 +1,23 @@
-enum CallStatus {
-  idle,
-  dialing,
-  incoming,
+enum CallMediaMode { audio, video }
+
+enum BackendCallStatus {
+  initiated,
   ringing,
-  connecting,
-  connected,
+  ongoing,
+  ended,
   rejected,
   missed,
-  ended,
+  cancelled,
   failed,
-  notAnswered,
 }
 
-/**
- * 1. Initiated
- * 
- * EVENT INCOMING ==> MARK CALL AS RINGING API
- * 2. Ringing
- * 3. Ongoing
- * 4. Cancelled
- * 5. Rejected
- * 6. Missed
- * 7. Ended
- * 8. Failed
- */
+enum UiCallPhase {
+  idle,
+  outgoingStarting,
+  outgoingRinging,
+  incomingRinging,
+  joiningRoom,
+  inCall,
+  finished,
+  error,
+}

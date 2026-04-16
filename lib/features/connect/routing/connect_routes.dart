@@ -23,7 +23,11 @@ class ConnectScreenRoutes {
 class ConnectScreenNavigation {
   const ConnectScreenNavigation._();
 
-  static void toAllCategories(BuildContext context) {
-    context.pushNamed(AppRoutes.nConnect);
+  static void toCallsTab(BuildContext context) {
+    context.goNamed(AppRoutes.nConnect, queryParameters: {'tab': 'calls'});
+  }
+
+  static void toMessagesTab(BuildContext context) {
+    context.goNamed(AppRoutes.nConnect, queryParameters: {'tab': 'messages'});
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 import 'package:africaonlinestores/core/api/failure.dart';
@@ -125,8 +127,30 @@ String? _extractServerMessage(dynamic data) {
         return msg.toString();
       }
     }
-  } catch (_) {
-    // ignore
-  }
+
+    if (data['_server_messages'] != null) {
+      final raw = data['_server_messages'];
+
+      try {
+        // Frappe sends this as a STRINGIFIED LIST
+        final List decodedList = raw is String
+            ? jsonDecode(raw)
+            : List.from(raw);
+
+        if (decodedList.isNotEmpty) {
+          final first = decodedList.first;
+
+          if (first is String) {
+            final inner = jsonDecode(first);
+            if (inner is Map && inner['message'] != null) {
+              return inner['message'].toString();
+            }
+          }
+        }
+      } catch (_) {
+        // fallback silently
+      }
+    }
+  } catch (_) {}
   return null;
 }

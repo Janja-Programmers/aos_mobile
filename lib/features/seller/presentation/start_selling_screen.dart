@@ -6,6 +6,7 @@ import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
+import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 import 'package:africaonlinestores/features/seller/presentation/widgets/seller_action_tiles.dart';
 import 'package:africaonlinestores/features/shorts/navigation/shorts_routes.dart';
 
@@ -76,15 +77,11 @@ class StartSellingScreen extends ConsumerWidget {
 
             // 🔥 FINAL WIRING
             ActionTile(
-              leading: Icon(Icons.wifi_tethering, color: colors.primary),
+              leading: Icon(Icons.tv, color: colors.primary),
               iconBackgroundColor: colors.primary.withOpacity(.15),
               title: "Go Live",
               subtitle: "Stream live to your followers",
-              onTap: () {
-                ref
-                    .read(liveManagerProvider.notifier)
-                    .startLive(title: "Live with you 🔴");
-              },
+              onTap: () => LiveNavigation.toGoLiveScreen(context),
             ),
 
             const SizedBox(height: 12),

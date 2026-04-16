@@ -4,13 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
 
+import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/media/livekit_track_events.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
 import 'package:africaonlinestores/features/live/application/state/live_status_enum.dart';
 
 import 'package:africaonlinestores/features/live/presentation/views/host_live_view.dart';
 import 'package:africaonlinestores/features/live/presentation/views/viewer_live_view.dart';
+
+import 'package:africaonlinestores/features/live/presentation/widgets/live_chat_overlay.dart';
+import 'package:africaonlinestores/features/live/presentation/widgets/live_input_bar.dart';
+import 'package:africaonlinestores/features/live/presentation/widgets/live_right_actions.dart';
+import 'package:africaonlinestores/features/live/presentation/widgets/live_top_bar.dart';
 
 class LiveScreen extends ConsumerStatefulWidget {
   const LiveScreen({super.key});
@@ -24,6 +31,8 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
 
   lk.LocalVideoTrack? _localVideoTrack;
   lk.RemoteVideoTrack? _remoteVideoTrack;
+
+  final TextEditingController _chatController = TextEditingController();
 
   @override
   void initState() {
@@ -62,8 +71,82 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
     }
   }
 
+  Future<void> _showEndLiveDialog(
+    BuildContext context,
+    VoidCallback onConfirm,
+  ) {
+    return showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("End Live Stream?", style: context.h5),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  "Your live stream will end and viewers will be disconnected.",
+                  style: context.p,
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 20),
+
+                /// 🔴 END STREAM BUTTON
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.appColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      onConfirm();
+                    },
+                    child: Text(
+                      "End Stream",
+                      style: AppTextStylesX(context).button,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                /// ⚪ CONTINUE BUTTON
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text("Continue Streaming", style: context.p),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
+    _chatController.dispose();
     _mediaSub?.cancel();
     super.dispose();
   }
@@ -72,44 +155,73 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(liveManagerProvider);
     final manager = ref.read(liveManagerProvider.notifier);
+    final colors = context.appColors;
 
-    // ================= LOADING =================
-    if (state.status == LiveStatus.loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          /// ================= VIDEO LAYER =================
+          if (state.session != null)
+            state.isHost
+                ? HostLiveView(localVideoTrack: _localVideoTrack)
+                : ViewerLiveView(remoteVideoTrack: _remoteVideoTrack),
 
-    // ================= ERROR =================
-    if (state.status == LiveStatus.error) {
-      return Scaffold(
-        body: Center(child: Text(state.errorMessage ?? 'Something went wrong')),
-      );
-    }
+          /// ================= OVERLAYS (ONLY IF SESSION EXISTS) =================
+          if (state.session != null) ...[
+            /// TOP BAR
+            LiveTopBar(
+              viewerCount: state.viewerCount,
+              duration: state.duration,
+              onEnd: () => _showEndLiveDialog(context, manager.endLive),
+            ),
 
-    // ================= ENDED =================
-    if (state.status == LiveStatus.ended) {
-      return const Scaffold(body: Center(child: Text('Live ended')));
-    }
+            /// RIGHT ACTIONS
+            LiveRightActions(
+              onLike: () {},
+              onProducts: () {},
+              onFlip: state.isHost ? manager.flipCamera : () {},
+            ),
 
-    // ================= NO SESSION SAFETY =================
-    if (state.session == null) {
-      return const Scaffold(body: Center(child: Text('No active live')));
-    }
+            /// CHAT
+            const LiveChatOverlay(messages: []),
 
-    // ================= LIVE =================
-    if (state.isHost) {
-      return HostLiveView(
-        live: state.live,
-        viewerCount: state.viewerCount,
-        localVideoTrack: _localVideoTrack,
-        onEndLive: manager.endLive,
-      );
-    }
+            /// INPUT
+            LiveInputBar(
+              controller: _chatController,
+              onSend: () {
+                final text = _chatController.text.trim();
+                if (text.isEmpty) return;
 
-    return ViewerLiveView(
-      live: state.live,
-      viewerCount: state.viewerCount,
-      remoteVideoTrack: _remoteVideoTrack,
-      onLeaveLive: manager.leaveLive,
+                // manager.sendMessage(text); // assuming exists
+                _chatController.clear();
+              },
+            ),
+          ],
+
+          /// ================= LOADING =================
+          if (state.status == LiveStatus.loading)
+            const Center(child: CircularProgressIndicator()),
+
+          /// ================= ERROR (RARE FALLBACK) =================
+          if (state.status == LiveStatus.error)
+            Center(
+              child: Text(
+                state.errorMessage ?? 'Something went wrong',
+                style: context.p.copyWith(color: colors.white),
+              ),
+            ),
+
+          /// ================= ENDED =================
+          if (state.status == LiveStatus.ended)
+            Center(
+              child: Text(
+                'Live ended',
+                style: context.p.copyWith(color: colors.white),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

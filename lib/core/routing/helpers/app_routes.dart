@@ -143,6 +143,9 @@ class AppRoutes {
   static const liveRoom = '/live/room';
   static const nLiveRoom = 'liveRoom';
 
+  static const goLive = '/live/goLive';
+  static const nGoLive = 'goLive';
+
   // CONTACT routes
   static const contact = '/contact';
   static const nContact = 'contact';

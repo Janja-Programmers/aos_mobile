@@ -91,6 +91,13 @@ class LiveState {
     );
   }
 
+  Duration get duration {
+    final startedAt = live?.startedAt;
+    if (startedAt == null) return Duration.zero;
+
+    return DateTime.now().difference(startedAt);
+  }
+
   // ===== Derived =====
 
   bool get isHost => role == AOSLiveRole.host;

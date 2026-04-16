@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/legacy.dart';
 
+import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/features/live/application/services/live_media_service.dart';
@@ -24,31 +25,56 @@ class LiveManager extends StateNotifier<LiveState> {
     : super(LiveState.initial());
 
   // ================= START LIVE (HOST) =================
-  Future<void> startLive({required String title}) async {
+  Future<void> startLive({
+    required String title,
+    required String coverImage,
+  }) async {
     try {
       if (state.isLive || state.isLoading) {
         appLogger.i('❌ Already in live flow');
         return;
       }
 
-      state = state.copyWith(
-        status: LiveStatus.loading,
-        hasLiveUi: true,
-        errorMessage: null,
+      /// ❌ DO NOT set hasLiveUi yet
+      state = state.copyWith(status: LiveStatus.loading, errorMessage: null);
+
+      final session = await repository.startLive(
+        title: title,
+        coverImage: coverImage,
       );
 
-      final session = await repository.startLive(title: title);
-
-      state = state.copyWith(session: session, role: AOSLiveRole.host);
+      /// ✅ ONLY NOW allow navigation
+      state = state.copyWith(
+        session: session,
+        role: AOSLiveRole.host,
+        hasLiveUi: true,
+      );
 
       await _joinRoomInternal(session);
     } catch (e, s) {
       appLogger.e('startLive failed', error: e, stackTrace: s);
 
+      String message = "Something went wrong";
+
+      if (e is Failure) {
+        message = e.message;
+      }
+
       state = state.copyWith(
         status: LiveStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: message,
+        hasLiveUi: false,
       );
+    }
+  }
+
+  Future<void> flipCamera() async {
+    try {
+      if (!state.isHost) return;
+
+      await mediaService.flipCamera();
+    } catch (e, s) {
+      appLogger.e('flipCamera failed', error: e, stackTrace: s);
     }
   }
 

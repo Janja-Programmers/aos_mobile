@@ -133,6 +133,45 @@ class LiveKitService {
     await lk.Hardware.instance.setSpeakerphoneOn(enabled);
   }
 
+  Future<void> switchCamera() async {
+    try {
+      final participant = _room?.localParticipant;
+      if (participant == null) return;
+
+      final pubs = participant.videoTrackPublications;
+      if (pubs.isEmpty) return;
+
+      final track = pubs.first.track;
+      if (track == null) return;
+
+      final devices = await lk.Hardware.instance.enumerateDevices();
+      final cameras = devices.where((d) => d.kind == 'videoinput').toList();
+
+      if (cameras.length < 2) {
+        appLogger.i('Only one camera available');
+        return;
+      }
+
+      /// Get current deviceId
+      final currentDeviceId = track.currentOptions.deviceId;
+
+      /// Find next camera
+      final currentIndex = cameras.indexWhere(
+        (c) => c.deviceId == currentDeviceId,
+      );
+
+      final nextIndex = (currentIndex + 1) % cameras.length;
+      final nextCamera = cameras[nextIndex];
+
+      /// 🔁 Switch camera
+      await track.switchCamera(nextCamera.deviceId);
+
+      appLogger.i('Camera switched to ${nextCamera.label}');
+    } catch (e, s) {
+      appLogger.e('switchCamera failed', error: e, stackTrace: s);
+    }
+  }
+
   void _emitExistingLocalVideoTrack() {
     final local = _room?.localParticipant;
     if (local == null) return;

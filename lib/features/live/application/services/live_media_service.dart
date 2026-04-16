@@ -35,4 +35,13 @@ class LiveMediaService {
   Future<void> _requestHostPermissions() async {
     await [Permission.microphone, Permission.camera].request();
   }
+
+  Future<void> flipCamera() async {
+    try {
+      await liveKit.switchCamera();
+      // ignore: empty_catches
+    } catch (e) {
+      return;
+    }
+  }
 }

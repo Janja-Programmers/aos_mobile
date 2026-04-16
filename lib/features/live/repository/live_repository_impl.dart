@@ -4,7 +4,10 @@ import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
 
 // ================= ABSTRACT =================
 abstract class LiveRepository {
-  Future<LiveJoinSession> startLive({required String title});
+  Future<LiveJoinSession> startLive({
+    required String title,
+    required String coverImage,
+  });
 
   Future<LiveJoinSession> joinLive({required String liveId});
 
@@ -23,8 +26,11 @@ class LiveRepositoryImpl implements LiveRepository {
   // Start Live (Host)
   // -----------------------------
   @override
-  Future<LiveJoinSession> startLive({required String title}) async {
-    final res = await api.startLive(title: title);
+  Future<LiveJoinSession> startLive({
+    required String title,
+    required String coverImage,
+  }) async {
+    final res = await api.startLive(title: title, coverImage: coverImage);
 
     return res.fold((e) => throw e, (data) => data);
   }

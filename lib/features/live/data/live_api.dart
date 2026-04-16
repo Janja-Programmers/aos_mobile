@@ -1,6 +1,9 @@
+import 'package:dio/dio.dart';
+
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
+import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
@@ -18,13 +21,14 @@ class LiveApi {
   // ================= START LIVE =================
   Future<Either<Failure, LiveJoinSession>> startLive({
     required String title,
+    required String coverImage,
   }) async {
     appLogger.i("startLive API");
 
     try {
       final res = await _client.post(
         ApiEndpoints.startLiveEndpoint,
-        data: {'title': title},
+        data: {'title': title, 'cover_image': coverImage},
       );
 
       final result = unwrapFrappe(res);
@@ -36,8 +40,19 @@ class LiveApi {
       }
 
       return Either.right(mapJoinSession(data, role: AOSLiveRole.host));
-    } catch (e) {
-      return Either.left(Failure(e.toString()));
+    }
+    /// ✅ HANDLE DIO PROPERLY
+    on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    }
+    /// ✅ HANDLE EVERYTHING ELSE
+    catch (e) {
+      return Either.left(
+        const Failure(
+          'Something went wrong. Please try again.',
+          type: FailureType.unknown,
+        ),
+      );
     }
   }
 

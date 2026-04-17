@@ -14,7 +14,7 @@ class OrbitSystem extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: controller,
-      builder: (_, __) {
+      builder: (_, _) {
         final progress = controller.value;
 
         /// 🎯 PHASES

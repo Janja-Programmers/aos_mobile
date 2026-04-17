@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1059729176471",
+    "project_id": "aos-v2-ded2c",
+    "storage_bucket": "aos-v2-ded2c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1059729176471:android:b97fc54b058111a001f6d2",
+        "android_client_info": {
+          "package_name": "com.africaonlinestores.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxYo74AZnk72S1eU0d8pd_60mK-9NdjsM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

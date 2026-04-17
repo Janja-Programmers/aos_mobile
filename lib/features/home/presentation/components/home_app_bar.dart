@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+
+import 'package:africaonlinestores/features/notifications/application/providers/notification_badge_provider.dart';
+import 'package:africaonlinestores/features/notifications/presentation/widgets/notification_badge.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
 
 class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
@@ -48,6 +51,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
     final colors = context.appColors;
     final wishlistState = ref.watch(wishlistControllerProvider).value;
     final hasWishlistItems = (wishlistState?.ids.isNotEmpty ?? false);
+    final unreadCount = ref.watch(notificationUnreadCountProvider);
 
     return AppBar(
       toolbarHeight: toolbarHeight,
@@ -89,9 +93,12 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 ),
                 const SizedBox(width: 10),
 
-                _CircleIconButton(
-                  icon: Icons.notifications_none,
-                  onTap: onTapNotifications,
+                NotificationBadge(
+                  count: unreadCount,
+                  child: _CircleIconButton(
+                    icon: Icons.notifications_none,
+                    onTap: onTapNotifications,
+                  ),
                 ),
               ],
             ),

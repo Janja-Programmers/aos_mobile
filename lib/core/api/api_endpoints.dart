@@ -201,4 +201,17 @@ class ApiEndpoints {
       '/api/method/aos.api.shorts.track_impression';
 
   static final String trackShortView = '/api/method/aos.api.shorts.track_view';
+
+  // ───────────── NOTIFICATIONS ─────────────
+
+  static final String markAllNotificationsRead =
+      '/api/method/aos.api.notifications.mark_all_notifications_read';
+  static final String markNotificationRead =
+      '/api/method/aos.api.notifications.mark_notification_read';
+  static final String listNotifications =
+      '/api/method/aos.api.notifications.list_notifications';
+  static final String deactivatePushToken =
+      '/api/method/aos.api.notifications.deactivate_push_token';
+  static final String registerPushToken =
+      '/api/method/aos.api.notifications.register_push_token';
 }

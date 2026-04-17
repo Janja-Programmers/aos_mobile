@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,12 +25,15 @@ import 'package:africaonlinestores/features/auth/shared/providers/auth_controlle
 import 'package:africaonlinestores/features/connect/calls/application/listeners/call_navigation_listener.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
+import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 
 import 'package:africaonlinestores/shared/widgets/active_call_overlay.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final savedTheme = await ThemePrefs.readThemeMode();
   final initialTheme = savedTheme ?? ThemeMode.light;
@@ -77,13 +81,14 @@ class _AppRootState extends ConsumerState<AppRoot> {
     }
 
     /// ✅ SAFE place for ref.listen
-    ref.listen<AuthState>(authControllerProvider, (prev, next) {
+    ref.listen<AuthState>(authControllerProvider, (prev, next) async {
       final realtime = ref.read(realtimeServiceProvider);
 
       /// -----------------------------
-      /// AUTHENTICATED → CONNECT
+      /// AUTHENTICATED → CONNECT + NOTIFICATIONS
       /// -----------------------------
       if (next is AuthAuthenticated) {
+        // 🔌 Realtime
         if (!realtime.isConnected) {
           realtime.connect(
             baseUrl: AppConfig.baseUrl.trim(),
@@ -94,17 +99,47 @@ class _AppRootState extends ConsumerState<AppRoot> {
 
           appLogger.i('[Realtime] Connected: ${next.user.email}');
         }
+
+        // 🔔 Initialize Push Notifications
+        try {
+          final pushService = ref.read(pushNotificationServiceProvider);
+          await pushService.init();
+
+          appLogger.i('[Push] Initialized');
+        } catch (e, s) {
+          appLogger.e('[Push] Initialization failed', error: e, stackTrace: s);
+        }
+
+        // 📥 Load Notifications (initial fetch)
+        try {
+          await ref
+              .read(notificationControllerProvider.notifier)
+              .loadNotifications();
+
+          appLogger.i('[Notifications] Initial load complete');
+        } catch (e, s) {
+          appLogger.e(
+            '[Notifications] Initial load failed',
+            error: e,
+            stackTrace: s,
+          );
+        }
+
         return;
       }
 
       /// -----------------------------
-      /// GUEST → DISCONNECT
+      /// GUEST → CLEANUP
       /// -----------------------------
       if (next is AuthGuest) {
         if (realtime.isConnected) {
           realtime.disconnect();
           appLogger.i('[Realtime] Disconnected (guest)');
         }
+
+        ref.read(pushNotificationServiceProvider).reset();
+
+        appLogger.i('[Notifications] Cleared (guest)');
       }
     });
 

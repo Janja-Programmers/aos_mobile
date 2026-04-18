@@ -149,4 +149,8 @@ class AppRoutes {
   // CONTACT routes
   static const contact = '/contact';
   static const nContact = 'contact';
+
+  // NAVIGATION routes
+  static const navigation = '/navigation';
+  static const nNavigation = 'navigation';
 }

@@ -22,7 +22,11 @@ class NotificationApi {
     try {
       final res = await _apiClient.get(ApiEndpoints.listNotifications);
 
+      appLogger.i('Res: ${res.toString()}');
+
       final result = unwrapFrappe(res);
+
+      appLogger.i('Unwrapped: ${result.toString()}');
 
       if (result.isLeft) {
         return Either.left(result.leftOrNull!);
@@ -30,10 +34,11 @@ class NotificationApi {
 
       final data = result.rightOrNull;
 
-      final raw = data?['data'];
+      // 🔥 FIX HERE
+      final raw = data?['data']?['items'];
 
       if (raw is! List) {
-        appLogger.w('Invalid notifications format');
+        appLogger.w('Invalid notifications format: $data');
         return Either.left(
           const Failure(
             'Invalid notifications format',
@@ -42,11 +47,16 @@ class NotificationApi {
         );
       }
 
+      appLogger.i("Results List API raw count: ${raw.length}");
+
       final items = raw
           .map((e) => NotificationItem.fromJson(Map<String, dynamic>.from(e)))
           .toList();
 
-      appLogger.i('Notifications fetched: ${items.length}');
+      if (items.isNotEmpty) {
+        appLogger.i('1st Notification: ${items.first}');
+      }
+
       return Either.right(items);
     } on DioException catch (e, s) {
       appLogger.e('listNotifications Dio error', error: e, stackTrace: s);

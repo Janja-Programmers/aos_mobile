@@ -1,5 +1,7 @@
-import 'notification_payload.dart';
-import 'notification_type.dart';
+import 'dart:convert';
+
+import 'package:africaonlinestores/features/notifications/domain/notification_payload.dart';
+import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
 
 class NotificationItem {
   final String id;
@@ -50,9 +52,40 @@ class NotificationItem {
       actorId: json['actor']?.toString(),
       actorName: json['actor_name'],
       actorAvatar: json['actor_avatar'],
-      isRead: json['is_read'] ?? false,
+      isRead: _parseBool(json['is_read']),
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
-      payload: NotificationPayload.fromJson(json['payload']),
+      payload: NotificationPayload.fromJson(_parsePayload(json['payload'])),
     );
+  }
+}
+
+bool _parseBool(dynamic value) {
+  if (value is bool) return value;
+  if (value is int) return value == 1;
+  if (value is String) return value == '1' || value.toLowerCase() == 'true';
+  return false;
+}
+
+Map<String, dynamic>? _parsePayload(dynamic raw) {
+  try {
+    if (raw == null) return null;
+
+    // ✅ Already a map
+    if (raw is Map<String, dynamic>) {
+      return raw;
+    }
+
+    // ✅ String → decode JSON
+    if (raw is String && raw.isNotEmpty) {
+      final decoded = jsonDecode(raw);
+
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+    }
+
+    return null;
+  } catch (_) {
+    return null;
   }
 }

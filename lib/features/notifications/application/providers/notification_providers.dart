@@ -103,6 +103,13 @@ final notificationRealtimeListenerProvider =
 // =====================================================
 // PUSH SERVICE
 // =====================================================
+final inAppNotificationServiceProvider = Provider<InAppNotificationService>((
+  ref,
+) {
+  final service = InAppNotificationService();
+  ref.onDispose(service.dispose);
+  return service;
+});
 
 final pushNotificationServiceProvider = Provider<PushNotificationService>((
   ref,
@@ -111,26 +118,15 @@ final pushNotificationServiceProvider = Provider<PushNotificationService>((
   final controller = ref.read(notificationControllerProvider.notifier);
   final navigationHandler = ref.read(notificationNavigationHandlerProvider);
   final pushRepo = ref.read(pushTokenRepositoryProvider);
+  final bannerService = ref.read(inAppNotificationServiceProvider);
 
   final service = PushNotificationService(
     messaging: messaging,
     controller: controller,
     navigationHandler: navigationHandler,
     pushRepo: pushRepo,
+    bannerService: bannerService,
   );
-
-  // ⚠️ DO NOT auto-init here blindly
-  // Let app bootstrap control lifecycle
-
-  ref.onDispose(service.dispose);
-
-  return service;
-});
-
-final inAppNotificationServiceProvider = Provider<InAppNotificationService>((
-  ref,
-) {
-  final service = InAppNotificationService();
 
   ref.onDispose(service.dispose);
 

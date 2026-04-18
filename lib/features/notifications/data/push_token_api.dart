@@ -23,6 +23,7 @@ class PushTokenApi {
     required PushTokenDevice device,
   }) async {
     try {
+      appLogger.i('registerPushToken API LAYER JSON: ${device.toJson()}');
       final res = await _apiClient.post(
         ApiEndpoints.registerPushToken,
         data: device.toJson(),

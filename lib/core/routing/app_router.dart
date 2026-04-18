@@ -28,6 +28,7 @@ import 'package:africaonlinestores/features/connect/calls/navigation/call_routes
 import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
 import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_details_screen.dart';
+import 'package:africaonlinestores/features/notifications/navigation/notification_routes.dart';
 
 import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 import 'package:africaonlinestores/features/onboarding/screens/onboarding_screen.dart';
@@ -55,6 +56,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ...ChatRoutes.routes(),
       ...ConnectScreenRoutes.routes(),
       ...LiveRoutes.routes(),
+      ...NotificationsRoutes.routes(),
       ...ReviewsRoutes.routes(),
       ...SearchRoutes.routes(),
       ...SellerRoutes.routes(),

@@ -10,12 +10,12 @@ import 'package:africaonlinestores/features/home/presentation/components/home_ap
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_controller.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_list_scaffold.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/ads_content.dart';
+import 'package:africaonlinestores/features/notifications/navigation/notification_routes.dart';
 import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
 
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class AdListScreen extends ConsumerStatefulWidget {
   const AdListScreen({super.key});
@@ -90,7 +90,15 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
           },
         );
       },
-      onTapNotifications: () => ShowSnack(context, 'Coming Soon!').info(),
+      onTapNotifications: () {
+        AppNavigation.requireAuth(
+          context,
+          ref,
+          onAuthenticated: () {
+            NotificationsNavigation.toNavigations(context);
+          },
+        );
+      },
       search: searchBar,
     );
 

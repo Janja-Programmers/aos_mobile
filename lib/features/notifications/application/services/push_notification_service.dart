@@ -1,11 +1,12 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/device/device_id.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'package:africaonlinestores/core/utils/logger.dart';
 
-import 'package:africaonlinestores/features/notifications/application/services/in_app_notification_service.dart';
 import 'package:africaonlinestores/features/notifications/application/controllers/notification_controller.dart';
+import 'package:africaonlinestores/features/notifications/application/services/in_app_notification_service.dart';
 import 'package:africaonlinestores/features/notifications/application/services/notification_navigation_handler.dart';
 import 'package:africaonlinestores/features/notifications/data/notification_repository_impl.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
@@ -22,6 +23,9 @@ class PushNotificationService {
 
   StreamSubscription<RemoteMessage>? _foregroundSub;
   StreamSubscription<RemoteMessage>? _tapSub;
+  StreamSubscription<String>? _tokenRefreshSub;
+
+  bool _initialized = false;
 
   PushNotificationService({
     required FirebaseMessaging messaging,
@@ -38,8 +42,6 @@ class PushNotificationService {
   // =====================================================
   // INIT
   // =====================================================
-  bool _initialized = false;
-
   Future<void> init() async {
     if (_initialized) {
       appLogger.w('⚠️ PushNotificationService already initialized');
@@ -91,16 +93,26 @@ class PushNotificationService {
 
     appLogger.i('📱 FCM token acquired');
 
+    final deviceId = await DeviceId.get();
+
     await _pushRepo.registerPushToken(
-      PushTokenDevice(token: token, deviceType: PushDeviceType.android),
+      PushTokenDevice(
+        token: token,
+        deviceType: PushDeviceType.android,
+        deviceId: deviceId,
+      ),
     );
 
-    // 🔄 Handle refresh
-    _messaging.onTokenRefresh.listen((newToken) async {
+    await _tokenRefreshSub?.cancel();
+    _tokenRefreshSub = _messaging.onTokenRefresh.listen((newToken) async {
       appLogger.i('🔄 FCM token refreshed');
 
       await _pushRepo.registerPushToken(
-        PushTokenDevice(token: newToken, deviceType: PushDeviceType.android),
+        PushTokenDevice(
+          token: newToken,
+          deviceType: PushDeviceType.android,
+          deviceId: deviceId,
+        ),
       );
     });
   }
@@ -132,6 +144,23 @@ class PushNotificationService {
         appLogger.e('Foreground push handling failed', error: e, stackTrace: s);
       }
     });
+
+    // CUSTOMBANNER Already Handles this
+
+    // flutterLocalNotificationsPlugin.show(
+    //   notification.hashCode,
+    //   notification.title,
+    //   notification.body,
+    //   NotificationDetails(
+    //     android: AndroidNotificationDetails(
+    //       AndroidNotificationConfig.channel.id,
+    //       AndroidNotificationConfig.channel.name,
+    //       channelDescription: AndroidNotificationConfig.channel.description,
+    //       importance: Importance.high,
+    //       priority: Priority.high,
+    //     ),
+    //   ),
+    // );
   }
 
   // =====================================================
@@ -202,7 +231,7 @@ class PushNotificationService {
       final now = DateTime.now();
 
       return NotificationItem(
-        id: data['notification_id'] ?? 'push_$now',
+        id: data['notification_id']?.toString() ?? 'push_$now',
         type: type,
         title: message.notification?.title ?? 'Notification',
         body: message.notification?.body ?? '',
@@ -231,5 +260,6 @@ class PushNotificationService {
   void dispose() {
     _foregroundSub?.cancel();
     _tapSub?.cancel();
+    _tokenRefreshSub?.cancel();
   }
 }

@@ -1,5 +1,8 @@
+import 'package:africaonlinestores/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +12,7 @@ import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 
 import 'package:africaonlinestores/core/config/app_config.dart';
+import 'package:africaonlinestores/core/notifications/android_notification_channel.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/core/routing/app_router.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
@@ -30,10 +34,51 @@ import 'package:africaonlinestores/features/preferences/controllers/user_prefere
 
 import 'package:africaonlinestores/shared/widgets/active_call_overlay.dart';
 
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // 🔥 MUST initialize Firebase here again (separate isolate)
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // You CANNOT use:
+  // - ref
+  // - navigation
+  // - UI
+
+  // ✅ Only safe operations
+  appLogger.i('[FCM BG] Message received: ${message.data}');
+
+  // Optional (future):
+  // - Save to local storage (Hive/SharedPreferences)
+  // - Schedule local notification
+}
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+  const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const initSettings = InitializationSettings(android: androidInit);
+
+  await flutterLocalNotificationsPlugin.initialize(
+    settings: initSettings,
+    onDidReceiveNotificationResponse: (response) {
+      appLogger.i('Notification tapped: ${response.payload}');
+    },
+  );
+
+  // 🔥 CREATE CHANNEL
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.createNotificationChannel(AndroidNotificationConfig.channel);
 
   final savedTheme = await ThemePrefs.readThemeMode();
   final initialTheme = savedTheme ?? ThemeMode.light;

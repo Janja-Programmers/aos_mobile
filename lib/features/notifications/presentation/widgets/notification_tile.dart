@@ -62,7 +62,7 @@ class _NotificationTileState extends State<NotificationTile>
       key: ValueKey(widget.notification.id),
       direction: DismissDirection.endToStart,
 
-      // 👉 Swipe action
+      // 👉 Swipe background
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -70,15 +70,21 @@ class _NotificationTileState extends State<NotificationTile>
         child: Icon(Icons.mark_email_read, color: colors.primary),
       ),
 
-      onDismissed: (_) {
+      // 🔥 IMPORTANT: prevent removal
+      confirmDismiss: (_) async {
         widget.onMarkRead();
+        return false;
       },
 
       child: GestureDetector(
         onTap: widget.onTap,
-        child: Container(
+
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           padding: const EdgeInsets.all(12),
+
           decoration: BoxDecoration(
             color: isUnread ? colors.primary.withOpacity(.05) : colors.surface,
             borderRadius: BorderRadius.circular(12),
@@ -86,15 +92,18 @@ class _NotificationTileState extends State<NotificationTile>
               color: isUnread ? colors.primary.withOpacity(.2) : colors.border,
             ),
           ),
+
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
+                  // Avatar / Icon
                   _buildAvatarOrIcon(context),
 
                   const SizedBox(width: 12),
 
+                  // Content
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,6 +122,7 @@ class _NotificationTileState extends State<NotificationTile>
                     ),
                   ),
 
+                  // Right side (time + unread indicator)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -121,25 +131,35 @@ class _NotificationTileState extends State<NotificationTile>
                         style: const TextStyle(fontSize: 12),
                       ),
 
+                      const SizedBox(height: 6),
+
                       // 🔴 Animated unread dot
-                      if (isUnread)
-                        ScaleTransition(
-                          scale: _pulseController,
-                          child: Container(
-                            margin: const EdgeInsets.only(top: 6),
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: colors.primary,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        transitionBuilder: (child, animation) =>
+                            ScaleTransition(scale: animation, child: child),
+                        child: isUnread
+                            ? Container(
+                                key: const ValueKey('unread-dot'),
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: colors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              )
+                            : const SizedBox(
+                                key: ValueKey('no-dot'),
+                                width: 8,
+                                height: 8,
+                              ),
+                      ),
                     ],
                   ),
                 ],
               ),
 
+              // Optional action section
               if (action != null) ...[const SizedBox(height: 10), action],
             ],
           ),

@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
 import 'package:flutter/material.dart';

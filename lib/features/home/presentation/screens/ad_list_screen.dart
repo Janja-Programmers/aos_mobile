@@ -95,7 +95,7 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
           context,
           ref,
           onAuthenticated: () {
-            NotificationsNavigation.toNavigations(context);
+            NotificationsNavigation.toNotification(context);
           },
         );
       },

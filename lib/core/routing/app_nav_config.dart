@@ -15,8 +15,8 @@ class AppNavConfig {
         activeIcon: Icons.home,
         routeName: AppRoutes.nHome,
       ),
-      AppNavItem(
-        label: l10n.nav_categories,
+      const AppNavItem(
+        label: "Shop",
         icon: Icons.grid_view_outlined,
         activeIcon: Icons.grid_view_rounded,
         routeName: AppRoutes.nCategories,

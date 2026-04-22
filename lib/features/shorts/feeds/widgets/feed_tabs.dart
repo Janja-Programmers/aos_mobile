@@ -24,7 +24,7 @@ class FeedTabs extends ConsumerWidget {
               label,
               style: TextStyle(
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                color: isActive ? colors.black : colors.textPrimary,
+                color: colors.textPrimary,
               ),
             ),
             const SizedBox(height: 6),

@@ -18,6 +18,10 @@ import 'package:africaonlinestores/features/home/presentation/components/home_ho
 import 'package:africaonlinestores/features/home/presentation/components/home_ranking_tips_section.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_controller.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
+import 'package:africaonlinestores/features/home/presentation/components/short_horizontal_list.dart';
+import 'package:africaonlinestores/features/home/presentation/controller/shorts_home_controller.dart';
+
+import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
 
 import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 import 'package:africaonlinestores/shared/utils/helpers.dart';
@@ -35,153 +39,203 @@ class AdListContentView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pageAsync = ref.watch(homePageControllerProvider);
+
+    final shortsAsync = ref.watch(shortsHomeControllerProvider);
+
     final colors = context.appColors;
     final l10n = context.l10n;
 
     return pageAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
+
       error: (_, _) => const SizedBox.shrink(),
+
       data: (state) {
-        return NotificationListener<ScrollNotification>(
-          onNotification: (n) {
-            if (n.metrics.pixels >= n.metrics.maxScrollExtent - 240) {
-              ref.read(homePageControllerProvider.notifier).loadMore();
-            }
-            return false;
+        return shortsAsync.when(
+          loading: () => const SizedBox(height: 220),
+
+          error: (_, _) => const SizedBox.shrink(),
+
+          data: (shorts) {
+            return NotificationListener<ScrollNotification>(
+              onNotification: (n) {
+                if (n.metrics.pixels >= n.metrics.maxScrollExtent - 240) {
+                  ref.read(homePageControllerProvider.notifier).loadMore();
+                }
+                return false;
+              },
+
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  await onRefresh();
+
+                  await ref
+                      .read(shortsHomeControllerProvider.notifier)
+                      .refresh();
+                },
+
+                child: CustomScrollView(
+                  slivers: [
+                    const HomeHeroCarouselSection(),
+
+                    const HomeCategoriesPreviewSection(limit: 10),
+
+                    /// SHORTS SECTION
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                        child: Row(
+                          children: [
+                            Text("Live & Shorts", style: context.h5),
+
+                            const Spacer(),
+
+                            TextButton(
+                              onPressed: () {
+                                ShortsNavigation.toShorts(context);
+                              },
+                              child: const Text("See all"),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    /// SHORTS SECTION
+                    SliverToBoxAdapter(
+                      child: ShortsHorizontalList(shorts: shorts),
+                    ),
+
+                    /// FLASH SALES
+                    _sectionSliver(context, state, 'flash_sales'),
+
+                    /// SERVICES
+                    _sectionSliver(context, state, 'services'),
+
+                    /// NEW PRODUCTS
+                    _sectionSliver(context, state, 'new_products'),
+
+                    /// ELECTRONIC DEALS
+                    _sectionSliver(context, state, 'electronic_deal'),
+
+                    /// DEALS
+                    _sectionSliver(context, state, 'deal'),
+
+                    /// RANKING TIPS
+                    const HomeRankingTipsSection(),
+
+                    /// FURNITURE
+                    _sectionSliver(context, state, 'furniture'),
+
+                    /// ELECTRONICS
+                    _sectionSliver(context, state, 'electronics'),
+
+                    /// BRAND SECTION
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        child: HomeBrandSection(
+                          promos: [
+                            HomePromoItem(
+                              title: l10n.home_top_deals,
+                              subtitle: l10n.home_best_prices,
+                              ctaText: l10n.home_shop_now,
+                              color: colors.success,
+                              icon: Icons.apartment,
+                            ),
+                            HomePromoItem(
+                              title: 'New Arrivals',
+                              subtitle: 'Fresh Stock',
+                              ctaText: l10n.home_shop_now,
+                              color: colors.warning,
+                              icon: Icons.apartment,
+                            ),
+                            HomePromoItem(
+                              title: 'Summer Sale',
+                              subtitle: 'Upto 40%',
+                              ctaText: l10n.home_shop_now,
+                              color: colors.info,
+                              icon: Icons.apartment,
+                            ),
+                          ],
+                          categories: [
+                            HomeCategoryItem(
+                              title: l10n.home_electronics,
+                              icon: Icons.desktop_windows_outlined,
+                              onTap: () => openAllAds(
+                                context,
+                                categoryId: 'Electronics',
+                              ),
+                            ),
+                            HomeCategoryItem(
+                              title: l10n.home_fashion,
+                              icon: Icons.checkroom_outlined,
+                              onTap: () => openAllAds(
+                                context,
+                                categoryId: "Women's Fashion",
+                              ),
+                            ),
+                            HomeCategoryItem(
+                              title: 'Garden Supplies',
+                              icon: Icons.home_outlined,
+                              onTap: () => openAllAds(
+                                context,
+                                categoryId: 'Garden Supplies',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    /// FASHION
+                    _sectionSliver(context, state, 'fashion'),
+
+                    /// BABIES & KIDS
+                    _sectionSliver(context, state, 'kids'),
+
+                    /// HERO AGAIN
+                    const HomeHeroCarouselSection(),
+
+                    /// BEAUTY
+                    _sectionSliver(context, state, 'beauty'),
+
+                    /// DISCOVER
+                    SliverPadding(
+                      padding: const EdgeInsets.only(top: 6),
+                      sliver: GridAdsSection(
+                        items: state.discoverItems,
+                        title: l10n.common_discover_more,
+                        onSeeAll: () =>
+                            CatalogNavigation.toAllCategories(context),
+                      ),
+                    ),
+
+                    /// PAGINATION FOOTER
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: state.loadingMore
+                            ? const Center(child: CircularProgressIndicator())
+                            : (!state.hasMore && state.discoverItems.isNotEmpty)
+                            ? Text(
+                                l10n.ads_no_more_ads,
+                                style: context.p.copyWith(
+                                  color: colors.primary,
+                                ),
+                                textAlign: TextAlign.center,
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
           },
-          child: RefreshIndicator(
-            onRefresh: onRefresh,
-            child: CustomScrollView(
-              slivers: [
-                /// HERO
-                const HomeHeroCarouselSection(),
-
-                /// CATEGORY PREVIEW
-                const HomeCategoriesPreviewSection(limit: 10),
-
-                /// FLASH SALES
-                _sectionSliver(context, state, 'flash_sales'),
-
-                /// SERVICES
-                _sectionSliver(context, state, 'services'),
-
-                /// NEW PRODUCTS
-                _sectionSliver(context, state, 'new_products'),
-
-                /// ELECTRONIC DEALS
-                _sectionSliver(context, state, 'electronic_deal'),
-
-                /// DEALS
-                _sectionSliver(context, state, 'deal'),
-
-                /// RANKING TIPS
-                const HomeRankingTipsSection(),
-
-                /// FURNITURE
-                _sectionSliver(context, state, 'furniture'),
-
-                /// ELECTRONICS
-                _sectionSliver(context, state, 'electronics'),
-
-                /// BRAND SECTION
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    child: HomeBrandSection(
-                      promos: [
-                        HomePromoItem(
-                          title: l10n.home_top_deals,
-                          subtitle: l10n.home_best_prices,
-                          ctaText: l10n.home_shop_now,
-                          color: colors.success,
-                          icon: Icons.apartment,
-                        ),
-                        HomePromoItem(
-                          title: 'New Arrivals',
-                          subtitle: 'Fresh Stock',
-                          ctaText: l10n.home_shop_now,
-                          color: colors.warning,
-                          icon: Icons.apartment,
-                        ),
-                        HomePromoItem(
-                          title: 'Summer Sale',
-                          subtitle: 'Upto 40%',
-                          ctaText: l10n.home_shop_now,
-                          color: colors.info,
-                          icon: Icons.apartment,
-                        ),
-                      ],
-                      categories: [
-                        HomeCategoryItem(
-                          title: l10n.home_electronics,
-                          icon: Icons.desktop_windows_outlined,
-                          onTap: () =>
-                              openAllAds(context, categoryId: 'Electronics'),
-                        ),
-                        HomeCategoryItem(
-                          title: l10n.home_fashion,
-                          icon: Icons.checkroom_outlined,
-                          onTap: () => openAllAds(
-                            context,
-                            categoryId: "Women's Fashion",
-                          ),
-                        ),
-                        HomeCategoryItem(
-                          title: 'Garden Supplies',
-                          icon: Icons.home_outlined,
-                          onTap: () => openAllAds(
-                            context,
-                            categoryId: 'Garden Supplies',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                /// FASHION
-                _sectionSliver(context, state, 'fashion'),
-
-                /// BABIES & KIDS
-                _sectionSliver(context, state, 'kids'),
-
-                /// HERO AGAIN
-                const HomeHeroCarouselSection(),
-
-                /// BEAUTY
-                _sectionSliver(context, state, 'beauty'),
-
-                /// DISCOVER
-                SliverPadding(
-                  padding: const EdgeInsets.only(top: 6),
-                  sliver: GridAdsSection(
-                    items: state.discoverItems,
-                    title: l10n.common_discover_more,
-                    onSeeAll: () => CatalogNavigation.toAllCategories(context),
-                  ),
-                ),
-
-                /// PAGINATION FOOTER
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: state.loadingMore
-                        ? const Center(child: CircularProgressIndicator())
-                        : (!state.hasMore && state.discoverItems.isNotEmpty)
-                        ? Text(
-                            l10n.ads_no_more_ads,
-                            style: context.p.copyWith(color: colors.primary),
-                            textAlign: TextAlign.center,
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ),
-              ],
-            ),
-          ),
         );
       },
     );

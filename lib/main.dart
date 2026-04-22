@@ -31,6 +31,7 @@ import 'package:africaonlinestores/features/connect/calls/application/providers/
 import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
 import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/listeners/upload_short_listener.dart';
 
 import 'package:africaonlinestores/shared/widgets/active_call_overlay.dart';
 
@@ -141,34 +142,20 @@ class _AppRootState extends ConsumerState<AppRoot> {
             sid: next.sid,
             email: next.user.email,
           );
-
-          appLogger.i('[Realtime] Connected: ${next.user.email}');
         }
 
         // 🔔 Initialize Push Notifications
         try {
           final pushService = ref.read(pushNotificationServiceProvider);
           await pushService.init();
-
-          appLogger.i('[Push] Initialized');
-        } catch (e, s) {
-          appLogger.e('[Push] Initialization failed', error: e, stackTrace: s);
-        }
+        } catch (_) {}
 
         // 📥 Load Notifications (initial fetch)
         try {
           await ref
               .read(notificationControllerProvider.notifier)
               .loadNotifications();
-
-          appLogger.i('[Notifications] Initial load complete');
-        } catch (e, s) {
-          appLogger.e(
-            '[Notifications] Initial load failed',
-            error: e,
-            stackTrace: s,
-          );
-        }
+        } catch (_, _) {}
 
         return;
       }
@@ -179,12 +166,9 @@ class _AppRootState extends ConsumerState<AppRoot> {
       if (next is AuthGuest) {
         if (realtime.isConnected) {
           realtime.disconnect();
-          appLogger.i('[Realtime] Disconnected (guest)');
         }
 
         ref.read(pushNotificationServiceProvider).reset();
-
-        appLogger.i('[Notifications] Cleared (guest)');
       }
     });
 
@@ -197,6 +181,10 @@ class AOSApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final uploadSessionId = "global_upload_session";
+
+    ref.watch(uploadRouterListenerProvider(uploadSessionId));
+
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
     final prefs = ref.watch(userPreferenceControllerProvider);

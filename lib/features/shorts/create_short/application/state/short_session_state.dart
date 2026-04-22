@@ -1,0 +1,42 @@
+import 'package:equatable/equatable.dart';
+
+enum SessionStatus { inactive, active, transitioning, paused }
+
+class ShortsSessionState extends Equatable {
+  final int activeIndex;
+  final SessionStatus status;
+  final bool isUserInteracting;
+
+  const ShortsSessionState({
+    required this.activeIndex,
+    required this.status,
+    required this.isUserInteracting,
+  });
+
+  factory ShortsSessionState.initial() {
+    return const ShortsSessionState(
+      activeIndex: 0,
+      status: SessionStatus.inactive,
+      isUserInteracting: false,
+    );
+  }
+
+  ShortsSessionState copyWith({
+    int? activeIndex,
+    SessionStatus? status,
+    bool? isUserInteracting,
+  }) {
+    return ShortsSessionState(
+      activeIndex: activeIndex ?? this.activeIndex,
+      status: status ?? this.status,
+      isUserInteracting: isUserInteracting ?? this.isUserInteracting,
+    );
+  }
+
+  bool get isActive => status == SessionStatus.active;
+
+  bool get isTransitioning => status == SessionStatus.transitioning;
+
+  @override
+  List<Object?> get props => [activeIndex, status, isUserInteracting];
+}

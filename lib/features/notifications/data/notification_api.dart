@@ -6,7 +6,6 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
 
@@ -22,11 +21,7 @@ class NotificationApi {
     try {
       final res = await _apiClient.get(ApiEndpoints.listNotifications);
 
-      appLogger.i('Res: ${res.toString()}');
-
       final result = unwrapFrappe(res);
-
-      appLogger.i('Unwrapped: ${result.toString()}');
 
       if (result.isLeft) {
         return Either.left(result.leftOrNull!);
@@ -38,7 +33,6 @@ class NotificationApi {
       final raw = data?['data']?['items'];
 
       if (raw is! List) {
-        appLogger.w('Invalid notifications format: $data');
         return Either.left(
           const Failure(
             'Invalid notifications format',
@@ -47,22 +41,14 @@ class NotificationApi {
         );
       }
 
-      appLogger.i("Results List API raw count: ${raw.length}");
-
       final items = raw
           .map((e) => NotificationItem.fromJson(Map<String, dynamic>.from(e)))
           .toList();
 
-      if (items.isNotEmpty) {
-        appLogger.i('1st Notification: ${items.first}');
-      }
-
       return Either.right(items);
-    } on DioException catch (e, s) {
-      appLogger.e('listNotifications Dio error', error: e, stackTrace: s);
+    } on DioException catch (e) {
       return Either.left(mapDioException(e));
-    } catch (e, s) {
-      appLogger.e('listNotifications unknown error', error: e, stackTrace: s);
+    } catch (e) {
       return Either.left(const Failure('Failed to load notifications'));
     }
   }
@@ -85,13 +71,10 @@ class NotificationApi {
         return Either.left(result.leftOrNull!);
       }
 
-      appLogger.i('Notification marked read: $notificationId');
       return Either.right(true);
-    } on DioException catch (e, s) {
-      appLogger.e('markAsRead Dio error', error: e, stackTrace: s);
+    } on DioException catch (e) {
       return Either.left(mapDioException(e));
-    } catch (e, s) {
-      appLogger.e('markAsRead unknown error', error: e, stackTrace: s);
+    } catch (e) {
       return Either.left(const Failure('Failed to mark notification as read'));
     }
   }
@@ -109,13 +92,10 @@ class NotificationApi {
         return Either.left(result.leftOrNull!);
       }
 
-      appLogger.i('All notifications marked as read');
       return Either.right(true);
-    } on DioException catch (e, s) {
-      appLogger.e('markAllAsRead Dio error', error: e, stackTrace: s);
+    } on DioException catch (e) {
       return Either.left(mapDioException(e));
-    } catch (e, s) {
-      appLogger.e('markAllAsRead unknown error', error: e, stackTrace: s);
+    } catch (e) {
       return Either.left(
         const Failure('Failed to mark all notifications as read'),
       );

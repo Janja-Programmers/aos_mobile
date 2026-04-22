@@ -1,37 +1,34 @@
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/features/shorts/data/models/short_model.dart';
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
+
+import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
+import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
 
 class ShortGridCard extends StatelessWidget {
   final ShortModel short;
+  final int index;
 
-  const ShortGridCard({super.key, required this.short});
-
-  static const _dummyImages = [
-    'https://images.unsplash.com/photo-1492724441997-5dc865305da7',
-    'https://images.unsplash.com/photo-1504674900247-0877df9cc836',
-    'https://images.unsplash.com/photo-1512436991641-6745cdb1723f',
-    'https://images.unsplash.com/photo-1521335629791-ce4aec67dd47',
-    'https://images.unsplash.com/photo-1487412912498-0447578fcca8',
-    'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c',
-    'https://images.unsplash.com/photo-1524504388940-b1c1722653e1',
-    'https://images.unsplash.com/photo-1490481651871-ab68de25d43d',
-  ];
+  const ShortGridCard({super.key, required this.short, required this.index});
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     final caption = short.caption;
 
-    /// 🔥 Pick image based on id (stable randomness)
-    final imageUrl =
-        short.thumbnailUrl ??
-        _dummyImages[short.id.hashCode % _dummyImages.length];
+    final imageUrl = short.thumbnailUrl;
 
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        ShortsNavigation.toShorts(context, initialIndex: index);
+        appLogger.i("ShortGridCard | onTap Index: $index");
+      },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.border,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -45,7 +42,7 @@ class ShortGridCard extends StatelessWidget {
               child: Image.network(
                 imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _placeholder(),
+                errorBuilder: (_, _, _) => _placeholder(colors),
               ),
             ),
 
@@ -66,7 +63,7 @@ class ShortGridCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
               child: Row(
                 children: [
-                  const Icon(Icons.favorite_border, size: 14),
+                  Icon(Icons.favorite, size: 14, color: colors.primary),
                   const SizedBox(width: 4),
                   Text(
                     _formatCount(10000),
@@ -81,10 +78,10 @@ class ShortGridCard extends StatelessWidget {
     );
   }
 
-  Widget _placeholder() {
+  Widget _placeholder(AppColorTokens colors) {
     return Container(
       height: 150,
-      color: Colors.grey.shade300,
+      color: colors.border,
       child: const Center(child: Icon(Icons.play_arrow)),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/home/domain/home_ads_section.dart';
+import 'package:africaonlinestores/features/shorts/create_short/domain/entities/short.dart';
 
 class HomePageState {
   const HomePageState({
@@ -7,6 +8,7 @@ class HomePageState {
     required this.sections,
     required this.sectionItems,
     required this.discoverItems,
+    required this.shortsForYou,
     required this.initialLoading,
     required this.loadingMore,
     required this.hasMore,
@@ -16,6 +18,7 @@ class HomePageState {
   final List<HomeAdsSection> sections;
   final Map<String, List<AOSAdListItem>> sectionItems;
   final List<AOSAdListItem> discoverItems;
+  final List<Short> shortsForYou;
 
   final bool initialLoading;
   final bool loadingMore;
@@ -26,6 +29,7 @@ class HomePageState {
     List<HomeAdsSection>? sections,
     Map<String, List<AOSAdListItem>>? sectionItems,
     List<AOSAdListItem>? discoverItems,
+    List<Short>? shortsForYou,
     bool? initialLoading,
     bool? loadingMore,
     bool? hasMore,
@@ -35,6 +39,7 @@ class HomePageState {
       sections: sections ?? this.sections,
       sectionItems: sectionItems ?? this.sectionItems,
       discoverItems: discoverItems ?? this.discoverItems,
+      shortsForYou: shortsForYou ?? this.shortsForYou,
       initialLoading: initialLoading ?? this.initialLoading,
       loadingMore: loadingMore ?? this.loadingMore,
       hasMore: hasMore ?? this.hasMore,
@@ -50,6 +55,7 @@ class HomePageState {
       sections: sections,
       sectionItems: const {},
       discoverItems: const [],
+      shortsForYou: const [],
       initialLoading: true,
       loadingMore: false,
       hasMore: true,

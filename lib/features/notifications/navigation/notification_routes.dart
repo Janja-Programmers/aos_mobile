@@ -10,8 +10,8 @@ class NotificationsRoutes {
   static List<RouteBase> routes() {
     return [
       GoRoute(
-        name: AppRoutes.nNavigation,
-        path: AppRoutes.navigation,
+        name: AppRoutes.nNotification,
+        path: AppRoutes.notification,
         builder: (context, state) {
           return const NotificationsScreen();
         },
@@ -23,7 +23,7 @@ class NotificationsRoutes {
 class NotificationsNavigation {
   const NotificationsNavigation._();
 
-  static void toNavigations(BuildContext context) {
-    context.pushNamed(AppRoutes.nNavigation);
+  static void toNotification(BuildContext context) {
+    context.pushNamed(AppRoutes.nNotification);
   }
 }

@@ -1,23 +1,46 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
-import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
+import 'package:africaonlinestores/features/preferences/service/preference_api_sync.dart';
+
+/// Optional abstraction if you want external preference injection
+abstract class PreferenceReader {
+  String get countryCode;
+  String get currencyCode;
+  String get languageCode;
+}
 
 class ApiClient {
-  final Ref _ref;
+  // ----------------------------
+  // CORE
+  // ----------------------------
+  final Dio dio;
+  final CookieJar cookieJar;
+  final Uri baseUri;
 
+  final PreferenceReader? preferences;
+
+  // ----------------------------
+  // SESSION EVENTS
+  // ----------------------------
   final _sessionExpiredCtrl = StreamController<void>.broadcast();
   Stream<void> get sessionExpiredStream => _sessionExpiredCtrl.stream;
 
-  ApiClient({required String baseUrl, required Ref ref})
-    : _ref = ref,
-      baseUri = Uri.parse(_normalizeBaseUrl(baseUrl)),
+  // ----------------------------
+  // CONTEXT HEADERS
+  // ----------------------------
+  final Map<String, String> _contextHeaders = {};
+
+  // ----------------------------
+  // CONSTRUCTOR
+  // ----------------------------
+  ApiClient({required String baseUrl, required Ref ref, this.preferences})
+    : baseUri = Uri.parse(_normalizeBaseUrl(baseUrl)),
       cookieJar = CookieJar(),
       dio = Dio(
         BaseOptions(
@@ -30,21 +53,13 @@ class ApiClient {
           },
         ),
       ) {
-    // 🔥 HARDcode SID here
+    // preference sync (side-effect)
+    PreferenceApiSync(this, ref).init();
 
+    // cookies
     dio.interceptors.add(CookieManager(cookieJar));
 
-    dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) {
-          if (_sid != null) {
-            options.headers['Cookie'] = 'sid=$_sid';
-          }
-          handler.next(options);
-        },
-      ),
-    );
-
+    // headers injection
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
@@ -56,44 +71,23 @@ class ApiClient {
       ),
     );
 
+    // session handling
     dio.interceptors.add(
       InterceptorsWrapper(
         onError: (error, handler) {
-          final status = error.response?.statusCode;
-
-          if (status == 401) {
+          if (error.response?.statusCode == 401) {
             _sessionExpiredCtrl.add(null);
           }
-
           handler.next(error);
         },
       ),
     );
-
-    if (kDebugMode) {
-      dio.interceptors.add(
-        LogInterceptor(
-          requestBody: true,
-          responseBody: false,
-          requestHeader: false,
-          responseHeader: false,
-        ),
-      );
-    }
   }
 
-  final Dio dio;
-  final CookieJar cookieJar;
-  final Uri baseUri;
-
-  final Map<String, String> _contextHeaders = {};
-
-  String? _sid;
-  String? get sid => _sid;
-
+  // ----------------------------
+  // SID
+  // ----------------------------
   Future<void> setSid(String sid) async {
-    _sid = sid;
-
     final cookie = Cookie('sid', sid)
       ..path = '/'
       ..httpOnly = true;
@@ -102,10 +96,12 @@ class ApiClient {
   }
 
   Future<void> clearSid() async {
-    _sid = null;
-    await cookieJar.delete(baseUri);
+    await cookieJar.deleteAll();
   }
 
+  // ----------------------------
+  // CONTEXT
+  // ----------------------------
   void setContext({
     String? countryCode,
     String? languageCode,
@@ -124,41 +120,32 @@ class ApiClient {
     }
   }
 
-  /// Synchronous resolution (cheap)
+  // ----------------------------
+  // MARKET CONTEXT HELPERS
+  // ----------------------------
+  Map<String, dynamic>? _injectMarketContext(Map<String, dynamic>? input) {
+    if (preferences == null) return input;
 
-  String? _resolveCountryCode() {
-    final prefs = _ref.read(userPreferenceControllerProvider);
-    final code = prefs.countryCode;
-    return (code.isEmpty) ? null : code;
+    final country = preferences!.countryCode;
+    final currency = preferences!.currencyCode;
+
+    if (country.isEmpty || currency.isEmpty) return input;
+
+    return {...?input, 'country': country, 'currency': currency};
   }
 
-  String? _resolveCurrencyCode() {
-    final prefs = _ref.read(userPreferenceControllerProvider);
-    final code = prefs.currencyCode;
-    return (code.isEmpty) ? null : code;
+  Map<String, dynamic>? _injectCountryOnly(Map<String, dynamic>? input) {
+    if (preferences == null) return input;
+
+    final country = preferences!.countryCode;
+    if (country.isEmpty) return input;
+
+    return {...?input, 'country': country};
   }
 
-  Map<String, dynamic>? _injectmarketContextIntoQuery(
-    Map<String, dynamic>? queryParameters,
-    bool marketContext,
-  ) {
-    if (!marketContext) return queryParameters;
-    final country = _resolveCountryCode();
-    final currency = _resolveCurrencyCode();
-    if (country == null || currency == null) return queryParameters;
-    return {...?queryParameters, 'country': country, 'currency': currency};
-  }
-
-  Map<String, dynamic>? _injectCountryIntoBody(
-    Map<String, dynamic>? body,
-    bool marketContext,
-  ) {
-    if (!marketContext) return body;
-    final country = _resolveCountryCode();
-    if (country == null) return body;
-    return {...?body, 'country': country};
-  }
-
+  // ----------------------------
+  // GET
+  // ----------------------------
   Future<Response<T>> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,
@@ -167,14 +154,18 @@ class ApiClient {
     Options? options,
   }) {
     final qp =
-        (countryPlacement == CountryPlacement.query ||
-            countryPlacement == CountryPlacement.both)
-        ? _injectmarketContextIntoQuery(queryParameters, marketContext)
+        (marketContext &&
+            (countryPlacement == CountryPlacement.query ||
+                countryPlacement == CountryPlacement.both))
+        ? _injectMarketContext(queryParameters)
         : queryParameters;
 
     return dio.get<T>(path, queryParameters: qp, options: options);
   }
 
+  // ----------------------------
+  // POST
+  // ----------------------------
   Future<Response<T>> post<T>(
     String path, {
     Map<String, dynamic>? data,
@@ -184,21 +175,33 @@ class ApiClient {
     Options? options,
   }) {
     final qp =
-        (countryPlacement == CountryPlacement.query ||
-            countryPlacement == CountryPlacement.both)
-        ? _injectmarketContextIntoQuery(queryParameters, marketContext)
+        (marketContext &&
+            (countryPlacement == CountryPlacement.query ||
+                countryPlacement == CountryPlacement.both))
+        ? _injectMarketContext(queryParameters)
         : queryParameters;
 
     final body =
-        (countryPlacement == CountryPlacement.body ||
-            countryPlacement == CountryPlacement.both)
-        ? _injectCountryIntoBody(data, marketContext)
+        (marketContext &&
+            (countryPlacement == CountryPlacement.body ||
+                countryPlacement == CountryPlacement.both))
+        ? _injectCountryOnly(data)
         : data;
 
     return dio.post<T>(path, data: body, queryParameters: qp, options: options);
   }
+
+  // ----------------------------
+  // DISPOSE
+  // ----------------------------
+  void dispose() {
+    _sessionExpiredCtrl.close();
+  }
 }
 
+// ----------------------------
+// UTIL
+// ----------------------------
 String _normalizeBaseUrl(String baseUrl) {
   final v = baseUrl.trim();
   return v.endsWith('/') ? v.substring(0, v.length - 1) : v;

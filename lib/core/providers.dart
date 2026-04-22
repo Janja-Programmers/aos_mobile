@@ -9,7 +9,8 @@ final sessionStorageProvider = Provider<SessionStorage>((ref) {
 });
 
 final apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient(baseUrl: AppConfig.normalizedBaseUrl, ref: ref);
+  final client = ApiClient(baseUrl: AppConfig.normalizedBaseUrl, ref: ref);
+
+  ref.onDispose(client.dispose);
+  return client;
 });
-
-

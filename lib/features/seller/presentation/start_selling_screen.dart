@@ -8,10 +8,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 import 'package:africaonlinestores/features/seller/presentation/widgets/seller_action_tiles.dart';
-import 'package:africaonlinestores/features/shorts/navigation/shorts_routes.dart';
-
-// 👇 ADD THIS
-import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
+import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
 
 class StartSellingScreen extends ConsumerWidget {
   const StartSellingScreen({super.key});
@@ -52,27 +49,16 @@ class StartSellingScreen extends ConsumerWidget {
             const SizedBox(height: 12),
 
             ActionTile(
-              leading: Icon(Icons.videocam, color: colors.primary),
+              leading: Icon(
+                Icons.add_photo_alternate_outlined,
+                color: colors.primary,
+              ),
               iconBackgroundColor: colors.primary.withOpacity(.15),
-              title: "Post a Short Video",
-              subtitle: "Record a 60s video of your product.",
-              onTap: () => ShortsNavigation.toCreateShort(context),
+              title: "Create a Post",
+              subtitle:
+                  "Share photos, Videos, or short clips with your audeince",
+              onTap: () => ShortsNavigation.toPostShort(context),
             ),
-            const SizedBox(height: 12),
-
-            // 🔥 FINAL WIRING
-            ActionTile(
-              leading: Icon(Icons.wifi_tethering, color: colors.primary),
-              iconBackgroundColor: colors.primary.withOpacity(.15),
-              title: "Join Live",
-              subtitle: "Stream live to your followers",
-              onTap: () {
-                ref
-                    .read(liveManagerProvider.notifier)
-                    .joinLive(liveId: "LIVE-2026-00007");
-              },
-            ),
-
             const SizedBox(height: 12),
 
             // 🔥 FINAL WIRING
@@ -85,14 +71,6 @@ class StartSellingScreen extends ConsumerWidget {
             ),
 
             const SizedBox(height: 12),
-
-            ActionTile(
-              leading: Icon(Icons.feed_outlined, color: colors.primary),
-              iconBackgroundColor: colors.primary.withOpacity(.15),
-              title: "Feeds for You",
-              subtitle: "View some shorts",
-              onTap: () => ShortsNavigation.toShorts(context),
-            ),
           ],
         ),
       ),

@@ -126,8 +126,11 @@ class AppRoutes {
   static const nFeeds = 'feeds';
 
   // CREATE SHORT route
-  static const createShort = '/shorts/create';
-  static const nCreateShort = 'createShort';
+  static const postShort = '/shorts/post';
+  static const nPostShort = 'postShort';
+
+  static const postShortDetails = '/shorts/detail';
+  static const nPostShortDetails = 'postShortDetail';
 
   // CALLS routes
   static const callsList = '/calls/list';
@@ -151,6 +154,6 @@ class AppRoutes {
   static const nContact = 'contact';
 
   // NAVIGATION routes
-  static const navigation = '/navigation';
-  static const nNavigation = 'navigation';
+  static const notification = '/notification';
+  static const nNotification = 'notification';
 }

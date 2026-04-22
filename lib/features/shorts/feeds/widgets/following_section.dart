@@ -1,4 +1,7 @@
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+
 import 'package:flutter/material.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 class FollowingSection extends StatelessWidget {
   const FollowingSection({super.key});
@@ -13,16 +16,16 @@ class FollowingSection extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         /// Title
-        const Text(
+        Text(
           'Suggested for You',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: context.h3.copyWith(fontSize: 16, fontWeight: FontWeight.bold),
         ),
 
         const SizedBox(height: 12),
 
         /// Horizontal cards
         SizedBox(
-          height: 190,
+          height: 220,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: suggestions.length,
@@ -66,12 +69,15 @@ class _FollowingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       width: 150,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(14),
+        border: BoxBorder.all(color: colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -82,13 +88,20 @@ class _FollowingCard extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: () {},
-                child: const Icon(Icons.close, size: 16, color: Colors.grey),
+                child: Icon(
+                  Icons.close,
+                  size: 16,
+                  color: colors.black.withOpacity(.65),
+                ),
               ),
             ],
           ),
 
           /// Avatar
-          const CircleAvatar(radius: 30, backgroundColor: Colors.grey),
+          CircleAvatar(
+            radius: 30,
+            backgroundColor: colors.black.withOpacity(.50),
+          ),
 
           const SizedBox(height: 10),
 
@@ -97,16 +110,13 @@ class _FollowingCard extends StatelessWidget {
             name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontWeight: FontWeight.w500),
+            style: context.pStrong,
           ),
 
           const SizedBox(height: 4),
 
           /// Followers
-          Text(
-            followers,
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
+          Text(followers, style: context.pMuted),
 
           const Spacer(),
 
@@ -116,14 +126,13 @@ class _FollowingCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () {},
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                backgroundColor: colors.primary,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(99),
                 ),
                 elevation: 0,
               ),
-              child: const Text('Follow', style: TextStyle(fontSize: 13)),
+              child: Text('Follow', style: AppTextStylesX(context).button),
             ),
           ),
         ],

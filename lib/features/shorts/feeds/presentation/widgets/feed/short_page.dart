@@ -2,7 +2,7 @@ import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_feed_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_feed_controller.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/video/short_video_view.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/short_actions_panel.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/short_bottom_info.dart';

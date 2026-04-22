@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_feed_controller.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_session_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_feed_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_session_controller.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_feed_view.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_page.dart';
 

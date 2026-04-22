@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
-import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_interaction_controller.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_session_controller.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/selectors/short_selectors.dart';
-import 'package:africaonlinestores/features/shorts/create_short/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_interaction_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_session_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/selectors/short_selectors.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/comment_sheet.dart';
 
 /// ─────────────────────────────────────────────

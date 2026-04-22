@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 
-import 'package:africaonlinestores/features/shorts/create_short/domain/selected_media_type.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/selected_media_type.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/screens/shorts_screen.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/screens/post_short_details_screen.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/screens/post_short_media_picker_screen.dart';

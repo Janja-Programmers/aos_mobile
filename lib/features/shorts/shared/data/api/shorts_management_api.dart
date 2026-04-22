@@ -8,7 +8,7 @@ import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_feed_page.dart';
-import 'package:africaonlinestores/features/shorts/create_short/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_mapper.dart';

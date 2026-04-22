@@ -1,6 +1,6 @@
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/home/domain/home_ads_section.dart';
-import 'package:africaonlinestores/features/shorts/create_short/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
 class HomePageState {
   const HomePageState({

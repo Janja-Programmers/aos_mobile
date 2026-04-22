@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/features/shorts/create_short/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_feed_api.dart';
-import 'package:africaonlinestores/features/shorts/create_short/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
 final shortsHomeControllerProvider =
     AsyncNotifierProvider<ShortsHomeController, List<Short>>(

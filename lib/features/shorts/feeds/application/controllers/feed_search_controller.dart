@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/shorts/feeds/providers/feed_search_provider.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/providers/feed_search_provider.dart';
 
 class FeedSearchController {
   Timer? _debounce;

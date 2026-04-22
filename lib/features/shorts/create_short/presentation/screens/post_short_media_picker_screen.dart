@@ -1,4 +1,4 @@
-import 'package:africaonlinestores/features/shorts/create_short/domain/selected_media_type.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/selected_media_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

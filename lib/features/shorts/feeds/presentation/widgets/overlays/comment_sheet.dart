@@ -7,7 +7,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/comments/comments_input.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/comments/comments_list.dart';
 
-import 'package:africaonlinestores/features/shorts/create_short/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
 class CommentsSheet extends ConsumerWidget {
   final Short short;

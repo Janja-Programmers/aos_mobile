@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
-import 'package:africaonlinestores/features/shorts/create_short/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
 
 class ShortsHorizontalList extends StatelessWidget {

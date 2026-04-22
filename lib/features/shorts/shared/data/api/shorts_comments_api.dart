@@ -9,7 +9,7 @@ import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_comment_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/comment_mapper.dart';
-import 'package:africaonlinestores/features/shorts/create_short/domain/short_comment.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/short_comment.dart';
 
 class ShortsCommentsApi {
   final ApiClient _client;

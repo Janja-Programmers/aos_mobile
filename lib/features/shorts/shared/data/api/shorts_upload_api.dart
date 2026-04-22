@@ -8,7 +8,7 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
-import 'package:africaonlinestores/features/shorts/create_short/domain/value_objects/short_id.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/init_short_upload_result.dart';
 
 class ShortsUploadApi {

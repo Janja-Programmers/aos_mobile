@@ -1,4 +1,4 @@
-import 'package:africaonlinestores/features/shorts/create_short/domain/short_metrics.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/short_metrics.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_metrics_model.dart';
 
 class MetricsMapper {

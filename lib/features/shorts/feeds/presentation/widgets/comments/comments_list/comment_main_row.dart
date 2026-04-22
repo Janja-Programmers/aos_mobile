@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
-import 'package:africaonlinestores/features/shorts/create_short/domain/short_comment.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/short_comment.dart';
 
 class CommentMainRow extends StatelessWidget {
   final ShortComment comment;

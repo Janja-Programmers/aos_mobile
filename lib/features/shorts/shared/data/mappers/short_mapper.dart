@@ -1,9 +1,9 @@
-import 'package:africaonlinestores/features/shorts/create_short/domain/entities/short.dart';
-import 'package:africaonlinestores/features/shorts/create_short/domain/enums/short_status.dart';
-import 'package:africaonlinestores/features/shorts/create_short/domain/value_objects/short_id.dart';
-import 'package:africaonlinestores/features/shorts/create_short/domain/value_objects/caption.dart';
-import 'package:africaonlinestores/features/shorts/create_short/domain/entities/short_ad.dart';
-import 'package:africaonlinestores/features/shorts/create_short/domain/entities/short_viewer_state.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/enums/short_status.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/caption.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_ad.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_viewer_state.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/metrics_mapper.dart';

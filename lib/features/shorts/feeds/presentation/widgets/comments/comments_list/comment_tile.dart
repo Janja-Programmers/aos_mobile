@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/shorts/create_short/application/providers/shorts_providers.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/providers/feed_providers.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/comments/comments_list/comment_main_row.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/comments/comments_list/replies_list.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/comments/comments_list/reply_input.dart';
-import 'package:africaonlinestores/features/shorts/create_short/domain/short_comment.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/short_comment.dart';
 
 class CommentTile extends ConsumerStatefulWidget {
   final ShortComment comment;

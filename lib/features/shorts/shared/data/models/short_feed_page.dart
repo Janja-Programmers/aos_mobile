@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:africaonlinestores/features/shorts/create_short/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
 class ShortFeedPage extends Equatable {
   final List<Short> items;

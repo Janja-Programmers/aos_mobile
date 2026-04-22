@@ -1,6 +1,6 @@
-import 'package:africaonlinestores/features/shorts/create_short/domain/short_comment.dart';
-import 'package:africaonlinestores/features/shorts/create_short/domain/value_objects/comment_id.dart';
-import 'package:africaonlinestores/features/shorts/create_short/domain/value_objects/short_id.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/short_comment.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/comment_id.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_comment_model.dart';
 

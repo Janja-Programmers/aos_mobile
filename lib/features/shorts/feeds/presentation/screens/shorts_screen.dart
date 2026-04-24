@@ -1,24 +1,18 @@
 import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/helpers/short_video_cache_provider.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/playback/playback_authority.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_feed_controller.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_session_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_state.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/state/short_session_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_feed_view.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_page.dart';
-
-/// ─────────────────────────────────────────────
-/// SHORTS SCREEN
-/// ─────────────────────────────────────────────
-///
-/// BOOT FLOW:
-/// → Wait for feed
-/// → Build PageView
-/// → PageView drives session (single source of truth)
-///
 
 class ShortsScreen extends ConsumerStatefulWidget {
   const ShortsScreen({super.key});
@@ -30,126 +24,150 @@ class ShortsScreen extends ConsumerStatefulWidget {
 class _ShortsScreenState extends ConsumerState<ShortsScreen>
     with WidgetsBindingObserver {
   late final PageController _controller;
+  late final PlaybackAuthority _authority;
 
   bool _initialized = false;
+
+  ProviderSubscription<ShortsFeedState>? _feedSub;
+  ProviderSubscription<ShortsSessionState>? _sessionSub;
+
+  List<String> _urlsCache = [];
+  int _lastIndex = 0;
 
   @override
   void initState() {
     super.initState();
 
-    appLogger.i("🟡 ShortsScreen.initState");
-
     WidgetsBinding.instance.addObserver(this);
 
     _controller = PageController(initialPage: 0);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _bootstrap();
+    final cache = ref.read(shortVideoCacheProvider);
+    _authority = PlaybackAuthority(cache);
 
-      final feedState = ref.read(shortsFeedControllerProvider);
+    /// ─────────────────────────────────────────────
+    /// INITIAL LOAD
+    /// ─────────────────────────────────────────────
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (_initialized) return;
+      _initialized = true;
 
-      if (feedState.shorts.isNotEmpty) {
-        ref.read(shortSessionControllerProvider.notifier).activate(0);
-      }
+      await ref.read(shortsFeedControllerProvider.notifier).loadForYou();
     });
 
-    /// Safe listener (NOT inside build)
-    ref.listenManual(shortsFeedControllerProvider, (prev, next) {
-      if (prev?.isLoading == true && next.isLoading == false) {
-        if (next.shorts.isNotEmpty) {
-          /// Optional safety bootstrap ONLY if needed
-          ref.read(shortSessionControllerProvider.notifier).activate(0);
+    /// ─────────────────────────────────────────────
+    /// FEED → SESSION INIT
+    /// ─────────────────────────────────────────────
+    _feedSub = ref.listenManual<ShortsFeedState>(shortsFeedControllerProvider, (
+      prev,
+      next,
+    ) {
+      final becameReady =
+          prev?.status != ShortsFeedStatus.ready &&
+          next.status == ShortsFeedStatus.ready;
+
+      if (!becameReady || next.shorts.isEmpty) return;
+
+      _urlsCache = next.shorts.map((e) => e.playbackUrl).toList();
+
+      ref.read(shortSessionControllerProvider.notifier).activate(0);
+
+      appLogger.i("📦 Feed ready → Session initialized");
+    });
+
+    /// ─────────────────────────────────────────────
+    /// SESSION → AUTHORITY PIPELINE
+    /// ─────────────────────────────────────────────
+    _sessionSub = ref.listenManual<ShortsSessionState>(
+      shortSessionControllerProvider,
+      (prev, next) async {
+        if (prev == next) return;
+
+        await _authority.onSessionChanged(
+          prev: prev ?? next,
+          next: next,
+          urls: _urlsCache,
+        );
+
+        /// UI sync only
+        if (_controller.hasClients &&
+            _controller.page?.round() != next.activeIndex) {
+          _controller.jumpToPage(next.activeIndex);
         }
-      }
-    });
+      },
+    );
   }
 
-  void _bootstrap() {
-    appLogger.i("🟡 ShortsScreen._bootstrap called");
-    if (_initialized) return;
-    _initialized = true;
-
-    /// IMPORTANT:
-    /// Do NOT activate session here anymore if PageView is source of truth
-  }
-
-  /// ─────────────────────────────
-  /// APP LIFECYCLE HANDLING
-  /// ─────────────────────────────
-
+  /// ─────────────────────────────────────────────
+  /// LIFECYCLE (SESSION ONLY)
+  /// ─────────────────────────────────────────────
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final sessionController = ref.read(shortSessionControllerProvider.notifier);
+    final session = ref.read(shortSessionControllerProvider.notifier);
 
     if (state == AppLifecycleState.paused) {
-      sessionController.pause();
+      appLogger.i("⏸ APP PAUSED");
+      session.pause();
     }
 
     if (state == AppLifecycleState.resumed) {
-      sessionController.resume();
+      appLogger.i("▶️ APP RESUMED");
+      session.resume();
     }
   }
 
   @override
   void dispose() {
+    ref.read(shortSessionControllerProvider.notifier).deactivate();
+
+    _feedSub?.close();
+    _sessionSub?.close();
+
     _controller.dispose();
+
     WidgetsBinding.instance.removeObserver(this);
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
     final feedState = ref.watch(shortsFeedControllerProvider);
 
-    appLogger.i("🔥 RAW SHORTS LIST: ${feedState.shorts}");
-
-    appLogger.i(
-      "🟢 ShortsScreen.build | isLoading=${feedState.isLoading} | isEmpty=${feedState.isEmpty} | count=${feedState.shorts.length}",
-    );
-
-    /// Loading state
     if (feedState.isLoading) {
       return Scaffold(
         backgroundColor: colors.surface,
-        body: Center(
-          child: CircularProgressIndicator(
-            color: colors.primary,
-            strokeWidth: 2,
-          ),
-        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    /// Empty state
     if (feedState.isEmpty) {
       return Scaffold(
         backgroundColor: colors.surface,
-        body: Center(child: Text("No shorts available", style: context.p)),
+        body: const Center(child: Text("No shorts available")),
       );
     }
 
-    appLogger.i(
-      "📊 FEED STATE | loading=${feedState.isLoading} | empty=${feedState.isEmpty} | shorts=${feedState.shorts.length}",
-    );
-
-    /// Ready state
     return Scaffold(
-      appBar: AppBar(
-        leading: const BackButton(),
-        centerTitle: true,
-        title: Text("Shorts & Live", style: context.h4),
-      ),
-      backgroundColor: colors.surface,
+      backgroundColor: colors.black,
       body: SafeArea(
         child: ShortsFeedView(
           controller: _controller,
           itemCount: feedState.shorts.length,
 
-          /// SINGLE SOURCE OF TRUTH FOR SESSION
+          /// UI → SESSION INTENT ONLY (NO AUTHORITY HERE YET)
+          /// UI → SESSION INTENT ONLY (NO AUTHORITY HERE YET)
           onPageChanged: (index) {
-            ref.read(shortSessionControllerProvider.notifier).activate(index);
+            final direction = index > _lastIndex
+                ? ScrollDirection.forward
+                : ScrollDirection.reverse;
+
+            _lastIndex = index;
+
+            ref
+                .read(shortSessionControllerProvider.notifier)
+                .startTransition(index, direction);
           },
 
           itemBuilder: (context, index) {

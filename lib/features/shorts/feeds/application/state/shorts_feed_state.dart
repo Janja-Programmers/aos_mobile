@@ -39,7 +39,7 @@ class ShortsFeedState extends Equatable {
 
   bool get isLoading => status == ShortsFeedStatus.loading;
 
-  bool get isEmpty => status == ShortsFeedStatus.empty;
+  bool get isEmpty => shorts.isEmpty;
 
   bool get hasError => status == ShortsFeedStatus.error;
 

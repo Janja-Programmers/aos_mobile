@@ -1,10 +1,6 @@
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/features/shorts/feeds/application/state/short_session_state.dart';
-
-/// ─────────────────────────────────────────────
-/// PROVIDER
-/// ─────────────────────────────────────────────
+import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final shortSessionControllerProvider =
     StateNotifierProvider<ShortSessionController, ShortsSessionState>(
@@ -12,62 +8,51 @@ final shortSessionControllerProvider =
     );
 
 /// ─────────────────────────────────────────────
-/// SESSION CONTROLLER (PLAYBACK STATE MACHINE)
+/// SESSION CONTROLLER (INTENT ONLY LAYER)
 /// ─────────────────────────────────────────────
-
+///
+/// RULE:
+/// → This layer only describes "what changed"
+/// → It does NOT trigger playback
+/// → It does NOT interact with cache
+///
 class ShortSessionController extends StateNotifier<ShortsSessionState> {
   ShortSessionController() : super(ShortsSessionState.initial());
 
-  // ─────────────────────────────────────────────
-  // ACTIVATE SESSION
-  // ─────────────────────────────────────────────
-
-  void activate(int index) {
+  /// ─────────────────────────────────────────────
+  /// ACTIVATE INDEX (INTENT UPDATE)
+  /// ─────────────────────────────────────────────
+  void activate(
+    int index, {
+    ScrollDirection direction = ScrollDirection.forward,
+  }) {
     state = state.copyWith(
       activeIndex: index,
       status: SessionStatus.active,
       isUserInteracting: false,
+      scrollDirection: direction,
     );
   }
 
-  // ─────────────────────────────────────────────
-  // PAUSE SESSION (APP BACKGROUND / USER ACTION)
-  // ─────────────────────────────────────────────
-
-  void pause() {
+  /// ─────────────────────────────────────────────
+  /// TRANSITION START (USER IS SCROLLING)
+  /// ─────────────────────────────────────────────
+  void startTransition(
+    int newIndex,
+    ScrollDirection idle, {
+    ScrollDirection direction = ScrollDirection.forward,
+  }) {
     state = state.copyWith(
-      status: SessionStatus.paused,
-      isUserInteracting: false,
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // RESUME SESSION
-  // ─────────────────────────────────────────────
-
-  void resume() {
-    state = state.copyWith(
-      status: SessionStatus.active,
-      isUserInteracting: false,
-    );
-  }
-
-  // ─────────────────────────────────────────────
-  // TRANSITION (PAGE SWIPE START)
-  // ─────────────────────────────────────────────
-
-  void startTransition(int newIndex) {
-    state = state.copyWith(
-      status: SessionStatus.transitioning,
       activeIndex: newIndex,
+      status: SessionStatus.transitioning,
       isUserInteracting: true,
+      scrollDirection: direction,
     );
   }
 
-  // ─────────────────────────────────────────────
-  // COMPLETE TRANSITION (PAGE SETTLED)
-  // ─────────────────────────────────────────────
-
+  /// ─────────────────────────────────────────────
+  /// TRANSITION COMPLETE
+  /// ─────────────────────────────────────────────
   void completeTransition(int index) {
     state = state.copyWith(
       activeIndex: index,
@@ -76,11 +61,42 @@ class ShortSessionController extends StateNotifier<ShortsSessionState> {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // RESET SESSION (FEED RESET / EXIT)
-  // ─────────────────────────────────────────────
+  /// ─────────────────────────────────────────────
+  /// PAUSE SESSION (APP BACKGROUND)
+  /// ─────────────────────────────────────────────
+  void pause() {
+    state = state.copyWith(
+      status: SessionStatus.paused,
+      isUserInteracting: false,
+    );
+  }
 
+  /// ─────────────────────────────────────────────
+  /// RESUME SESSION (APP FOREGROUND)
+  /// ─────────────────────────────────────────────
+  void resume() {
+    state = state.copyWith(
+      status: SessionStatus.active,
+      isUserInteracting: false,
+    );
+  }
+
+  /// ─────────────────────────────────────────────
+  /// RESET SESSION STATE
+  /// ─────────────────────────────────────────────
   void reset() {
     state = ShortsSessionState.initial();
+  }
+
+  /// ─────────────────────────────────────────────
+  /// DEACTIVATE SESSION (EXIT FEED)
+  /// ─────────────────────────────────────────────
+  void deactivate() {
+    state = state.copyWith(
+      status: SessionStatus.inactive,
+      activeIndex: -1,
+      scrollDirection: ScrollDirection.idle,
+      isUserInteracting: false,
+    );
   }
 }

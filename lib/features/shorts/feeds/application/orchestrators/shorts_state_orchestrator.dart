@@ -1,7 +1,6 @@
 import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/short_session_state.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/enums/short_status.dart';
 
 /// ─────────────────────────────────────────────
 /// SHORTS ORCHESTRATOR (STATE MACHINE CORE)
@@ -21,13 +20,15 @@ class ShortsStateOrchestrator {
     required List<Short> items,
     required String? nextCursor,
   }) {
-    if (items.isEmpty) {
+    final safeItems = items.where((s) => s.playbackUrl.isNotEmpty).toList();
+
+    if (safeItems.isEmpty) {
       return ShortsFeedState.initial().copyWith(status: ShortsFeedStatus.empty);
     }
 
     return ShortsFeedState(
       status: ShortsFeedStatus.ready,
-      shorts: _filterPlayable(items),
+      shorts: safeItems,
       nextCursor: nextCursor,
       errorMessage: null,
       activeIndex: 0,
@@ -68,10 +69,8 @@ class ShortsStateOrchestrator {
     required List<Short> newItems,
     required String? nextCursor,
   }) {
-    final merged = [...state.shorts, ..._filterPlayable(newItems)];
-
     return state.copyWith(
-      shorts: merged,
+      shorts: [...state.shorts, ...newItems],
       nextCursor: nextCursor,
       status: ShortsFeedStatus.ready,
     );
@@ -89,18 +88,5 @@ class ShortsStateOrchestrator {
       status: ShortsFeedStatus.error,
       errorMessage: message,
     );
-  }
-
-  // ─────────────────────────────────────────────
-  // DOMAIN-AWARE FILTERING
-  // ─────────────────────────────────────────────
-
-  List<Short> _filterPlayable(List<Short> items) {
-    return items.where((s) {
-      final status = s.status;
-      return status == ShortStatus.ready ||
-          status == ShortStatus.processing ||
-          status == ShortStatus.uploaded;
-    }).toList();
   }
 }

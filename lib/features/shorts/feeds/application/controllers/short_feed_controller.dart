@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/orchestrators/shorts_state_orchestrator.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/short_session_state.dart';
+import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
 /// ─────────────────────────────────────────────
@@ -11,22 +12,46 @@ import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.
 /// ─────────────────────────────────────────────
 
 final shortsFeedControllerProvider =
-    StateNotifierProvider<ShortsFeedController, ShortsFeedState>(
-      (ref) => ShortsFeedController(const ShortsStateOrchestrator()),
-    );
+    StateNotifierProvider<ShortsFeedController, ShortsFeedState>((ref) {
+      return ShortsFeedController(
+        ref.read(shortsRepositoryProvider),
+        const ShortsStateOrchestrator(),
+      );
+    });
 
 /// ─────────────────────────────────────────────
 /// CONTROLLER (INTENT LAYER ONLY)
 /// ─────────────────────────────────────────────
 
 class ShortsFeedController extends StateNotifier<ShortsFeedState> {
+  final ShortsRepository _repo;
   final ShortsStateOrchestrator _orchestrator;
 
-  ShortsFeedController(this._orchestrator) : super(ShortsFeedState.initial());
+  ShortsFeedController(this._repo, this._orchestrator)
+    : super(ShortsFeedState.initial());
 
   // ─────────────────────────────────────────────
   // INITIAL LOAD
   // ─────────────────────────────────────────────
+
+  Future<void> loadForYou() async {
+    appLogger.i("📥 LOAD START");
+
+    state = state.copyWith(status: ShortsFeedStatus.loading);
+
+    try {
+      final page = await _repo.fetchForYou();
+
+      state = _orchestrator.initializeFeed(
+        items: page.items,
+        nextCursor: page.nextCursor,
+      );
+
+      appLogger.i("✅ LOADED | shorts=${state.shorts.length}");
+    } catch (e) {
+      state = _orchestrator.failFeed(state: state, message: e.toString());
+    }
+  }
 
   void initialize({required List<Short> items, required String? nextCursor}) {
     state = _orchestrator.initializeFeed(items: items, nextCursor: nextCursor);

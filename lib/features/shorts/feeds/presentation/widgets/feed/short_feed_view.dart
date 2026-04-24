@@ -1,11 +1,10 @@
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 class ShortsFeedView extends StatefulWidget {
   final PageController controller;
   final int itemCount;
-  // final int initialPage;
-
   final ValueChanged<int> onPageChanged;
   final IndexedWidgetBuilder itemBuilder;
 
@@ -15,7 +14,6 @@ class ShortsFeedView extends StatefulWidget {
     required this.itemCount,
     required this.onPageChanged,
     required this.itemBuilder,
-    // this.initialPage = 0,
   });
 
   @override
@@ -23,7 +21,8 @@ class ShortsFeedView extends StatefulWidget {
 }
 
 class _ShortsFeedViewState extends State<ShortsFeedView> {
-  // bool _isFirstBuild = true;
+  int _lastIndex = 0;
+  ScrollDirection _direction = ScrollDirection.idle;
 
   @override
   void initState() {
@@ -31,27 +30,35 @@ class _ShortsFeedViewState extends State<ShortsFeedView> {
     appLogger.i("🟣 ShortsFeedView.initState");
   }
 
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
+  void _handlePageChanged(int index) {
+    /// ─────────────────────────────────────────────
+    /// DIRECTION DETECTION (TYPE SAFE)
+    /// ─────────────────────────────────────────────
+    if (index > _lastIndex) {
+      _direction = ScrollDirection.forward;
+    } else if (index < _lastIndex) {
+      _direction = ScrollDirection.reverse;
+    } else {
+      _direction = ScrollDirection.idle;
+    }
 
-  //   /// Ensures first frame consistency (no duplicate triggers)
-  //   if (_isFirstBuild) {
-  //     _isFirstBuild = false;
-  //   }
-  // }
+    appLogger.i("📱 PAGE CHANGE | index=$index | direction=$_direction");
+
+    /// ─────────────────────────────────────────────
+    /// EMIT INTENT TO SESSION LAYER
+    /// ─────────────────────────────────────────────
+    widget.onPageChanged(index);
+
+    _lastIndex = index;
+  }
 
   @override
   Widget build(BuildContext context) {
-    appLogger.i("🟣 PageView.build | itemCount=${widget.itemCount}");
     return PageView.builder(
       controller: widget.controller,
       scrollDirection: Axis.vertical,
       physics: const PageScrollPhysics(),
-      onPageChanged: (index) {
-        widget.onPageChanged(index);
-        appLogger.i("📱 PAGE CHANGED → index=$index");
-      },
+      onPageChanged: _handlePageChanged,
       itemCount: widget.itemCount,
       itemBuilder: widget.itemBuilder,
     );

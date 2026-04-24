@@ -22,7 +22,7 @@ class ShortsFeedApi {
 
   Future<Either<Failure, ShortFeedPage>> fetchForYou({String? cursor}) async {
     try {
-      final query = <String, dynamic>{if (cursor != null) 'cursor': cursor};
+      final query = <String, dynamic>{'cursor': ?cursor};
 
       final res = await _client.get(
         ApiEndpoints.shortsFeedForYou,

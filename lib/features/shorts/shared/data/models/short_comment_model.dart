@@ -23,15 +23,15 @@ class ShortCommentModel {
 
   factory ShortCommentModel.fromJson(Map<String, dynamic> json) {
     return ShortCommentModel(
-      id: json['id'],
-      shortId: json['short_id'],
-      userId: json['user_id'],
-      comment: json['comment'],
-      parentId: json['parent_id'],
-      rootId: json['root_id'],
+      id: json['id'] as String,
+      shortId: json['short'] as String,
+      userId: (json['user'] ?? json['seller'] ?? '') as String,
+      comment: json['comment'] ?? '',
+      parentId: json['parent_comment'] as String?,
+      rootId: json['root_comment'] as String?,
       replyCount: json['reply_count'] ?? 0,
-      isDeleted: json['is_deleted'] ?? false,
-      createdAt: json['created_at'],
+      isDeleted: json['status'] == 'deleted',
+      createdAt: json['created_at'] ?? '',
     );
   }
 }

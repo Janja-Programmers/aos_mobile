@@ -73,24 +73,22 @@ class CommentsController extends StateNotifier<CommentsState> {
   Future<void> fetchComments(String shortId) async {
     if (state.isLoading) return;
 
-    appLogger.i('📥 FETCH COMMENTS');
-
     state = state.copyWith(isLoading: true);
 
-    final res = await api.listComments(shortId: shortId);
+    try {
+      final res = await api.listComments(shortId: shortId);
 
-    res.fold(
-      (e) {
-        appLogger.e('❌ FETCH COMMENTS FAILED', error: e);
-
-        state = state.copyWith(isLoading: false);
-      },
-      (items) {
-        appLogger.i('✅ COMMENTS LOADED | count=${items.length}');
-
-        state = state.copyWith(comments: items, isLoading: false);
-      },
-    );
+      res.fold(
+        (e) {
+          state = state.copyWith(comments: [], isLoading: false);
+        },
+        (items) {
+          state = state.copyWith(comments: items, isLoading: false);
+        },
+      );
+    } catch (e) {
+      state = state.copyWith(comments: [], isLoading: false);
+    }
   }
 
   // ───────────── HELPERS ─────────────

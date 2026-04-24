@@ -23,7 +23,7 @@ class ShortsCommentsApi {
     String? cursor,
   }) async {
     try {
-      final query = {'short_id': shortId, 'cursor': ?cursor};
+      final query = {'short_id': shortId, if (cursor != null) 'cursor': cursor};
 
       final res = await _client.get(
         ApiEndpoints.listShortComments,
@@ -32,18 +32,29 @@ class ShortsCommentsApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
-        final data = json['data'] as Map<String, dynamic>? ?? {};
+      return unwrapped.fold(
+        (failure) {
+          return Either.left(failure);
+        },
+        (json) {
+          final data = json['data'] as Map<String, dynamic>? ?? {};
 
-        final items = (data['items'] as List? ?? [])
-            .map((e) => CommentMapper.toDomain(ShortCommentModel.fromJson(e)))
-            .toList();
+          final rawItems = data['items'] as List? ?? [];
 
-        return Either.right(items);
-      });
+          final items = rawItems.map((e) {
+            try {
+              return CommentMapper.toDomain(ShortCommentModel.fromJson(e));
+            } catch (err) {
+              rethrow;
+            }
+          }).toList();
+
+          return Either.right(items);
+        },
+      );
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
-    } catch (_) {
+    } catch (e) {
       return Either.left(const Failure('Unexpected error fetching comments'));
     }
   }

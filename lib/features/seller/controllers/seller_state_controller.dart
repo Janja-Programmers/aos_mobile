@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -53,22 +54,33 @@ class SellerStateController extends StateNotifier<SellerState> {
 
   /// TOGGLE FOLLOW
   Future<String?> toggleFollow() async {
-    final current = state.isFollowing ?? state.seller?.isFollowing ?? false;
+    if (state.followingLoading) return null;
 
+    final current = state.isFollowing ?? state.seller?.isFollowing ?? false;
+    final next = !current;
+
+    final sellerBefore = state.seller;
     final controller = ref.read(sellerControllerProvider);
 
-    state = state.copyWith(followingLoading: true, isFollowing: !current);
+    state = state.copyWith(followingLoading: true, isFollowing: next);
 
     final res = await controller.toggleFollow(sellerId: sellerId);
 
     return res.fold(
       (f) {
-        /// rollback on error
-        state = state.copyWith(followingLoading: false, isFollowing: current);
+        state = state.copyWith(
+          followingLoading: false,
+          isFollowing: current,
+          seller: sellerBefore,
+        );
+
         return f.message;
       },
-      (_) {
-        state = state.copyWith(followingLoading: false);
+      (s) async {
+        state = state.copyWith(followingLoading: false, isFollowing: next);
+
+        await load();
+
         return null;
       },
     );

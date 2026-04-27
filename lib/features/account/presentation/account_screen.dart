@@ -123,7 +123,7 @@ class AccountScreen extends ConsumerWidget {
                     ),
 
                     AccountOptionTile(
-                      icon: Icons.business_center_outlined,
+                      icon: Icons.store_mall_directory_outlined,
                       title: "My Storefront",
                       onTap: () {
                         final current = auth;

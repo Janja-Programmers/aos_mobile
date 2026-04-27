@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/seller/presentation/seller_customization_screen.dart';
-import 'package:africaonlinestores/features/seller/presentation/seller_store_screen.dart';
+import 'package:africaonlinestores/features/seller/presentation/seller_storefront_screen.dart';
 import 'package:africaonlinestores/features/seller/seller_verification/presentation/verification_screen.dart';
 
 class SellerRoutes {

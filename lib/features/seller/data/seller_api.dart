@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,10 +42,15 @@ class SellerApi {
     required String sellerId,
   }) async {
     try {
+      appLogger.i('toggleFollow API sellerId: $sellerId ');
       final res = await _dio.post(
         ApiEndpoints.toggleSellerEndpoint,
         data: {'seller': sellerId},
       );
+      appLogger.i('toggleFollow API res: ${res.toString()} ');
+
+      appLogger.i('Returned: ${unwrapFrappe(res).toString()} ');
+
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));

@@ -20,33 +20,44 @@ class SellerProductsSection extends ConsumerWidget {
     final adsAsync = ref.watch(sellerAdsProvider(sellerId));
 
     return SectionCard(
-      title: "Products",
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
-            children: [
-              _FilterChip(label: 'All Items', selected: true),
-              SizedBox(width: 8),
-              _FilterChip(label: 'Sort by'),
-              SizedBox(width: 8),
-              _FilterChip(label: 'Categories'),
-            ],
+          Text("Products", style: context.h6),
+
+          const SizedBox(height: 16),
+
+          SizedBox(
+            height: 42,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                const _FilterChip(label: 'All Items', selected: true),
+                const SizedBox(width: 8),
+
+                _FilterChip(
+                  label: 'Sort by',
+                  showArrow: true,
+                  onTap: () => _showSortSheet(context),
+                ),
+                const SizedBox(width: 8),
+
+                _FilterChip(label: 'Categories', showArrow: true, onTap: () {}),
+              ],
+            ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
           adsAsync.when(
             loading: () => const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: Center(child: CircularProgressIndicator()),
             ),
-
             error: (e, _) => const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: Center(child: Text('Failed to load products')),
             ),
-
             data: (items) {
               if (items.isEmpty) {
                 return const Padding(
@@ -61,15 +72,19 @@ class SellerProductsSection extends ConsumerWidget {
                 itemCount: items.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.75,
+                  childAspectRatio: 0.78,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                 ),
                 itemBuilder: (_, i) {
                   final ad = items[i];
-                  return AdGridCard(
-                    ad: ad,
-                    onTap: () => AdNavigation.toDetail(context, ad.id),
+
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: AdGridCard(
+                      ad: ad,
+                      onTap: () => AdNavigation.toDetail(context, ad.id),
+                    ),
                   );
                 },
               );
@@ -82,27 +97,111 @@ class SellerProductsSection extends ConsumerWidget {
 }
 
 class _FilterChip extends StatelessWidget {
-  const _FilterChip({required this.label, this.selected = false});
+  const _FilterChip({
+    required this.label,
+    this.selected = false,
+    this.showArrow = false,
+    this.onTap,
+  });
 
   final String label;
   final bool selected;
+  final bool showArrow;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: selected ? colors.primary.withOpacity(.15) : colors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: selected ? colors.primary : colors.border),
-      ),
-      child: Text(
-        label,
-        style: context.p.copyWith(
-          color: selected ? colors.primary : colors.textPrimary,
+    return InkWell(
+      borderRadius: BorderRadius.circular(22),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? colors.primary : colors.surface,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: selected ? colors.primary : colors.border),
         ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: context.p.copyWith(
+                fontWeight: FontWeight.w600,
+                color: selected ? Colors.white : colors.textPrimary,
+              ),
+            ),
+            if (showArrow) ...[
+              const SizedBox(width: 4),
+              Icon(
+                Icons.keyboard_arrow_down,
+                size: 18,
+                color: colors.textMuted,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void _showSortSheet(BuildContext context) {
+  final colors = context.appColors;
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: colors.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+    ),
+    builder: (_) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colors.border,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 22),
+              Text('Sort By', style: context.h6),
+              const SizedBox(height: 22),
+              const _SortOption(label: 'Latest Saved'),
+              const _SortOption(label: 'Most Reviewed'),
+              const _SortOption(label: 'Highest Price'),
+              const _SortOption(label: 'Lowest Price'),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _SortOption extends StatelessWidget {
+  const _SortOption({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => Navigator.pop(context),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        child: Text(label, style: context.body),
       ),
     );
   }

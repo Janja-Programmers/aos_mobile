@@ -62,6 +62,9 @@ class ActiveCallScreen extends ConsumerWidget {
       case UiCallPhase.finished:
         return 'Call ended';
 
+      case UiCallPhase.cancelled:
+        return 'Call cancelled';
+
       default:
         return '';
     }

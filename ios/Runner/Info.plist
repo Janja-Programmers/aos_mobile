@@ -4,44 +4,79 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+
 	<key>CFBundleDisplayName</key>
 	<string>AOS</string>
+
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+
 	<key>CFBundleName</key>
 	<string>AOS</string>
+
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
+
 	<key>CFBundleSignature</key>
 	<string>????</string>
+
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
+
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 
-	<!-- Permissions -->
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>We use speech recognition to let you search faster.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>We use the microphone to capture your voice for search.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>This app needs camera access to take photos.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs photo library access to upload images.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>This app needs permission to save photos.</string>
+	<!-- ================= PERMISSIONS ================= -->
 
-	<!-- Orientation -->
+	<key>NSCameraUsageDescription</key>
+	<string>AOS needs camera access for video calls, live streams, taking photos, and uploading product media.</string>
+
+	<key>NSMicrophoneUsageDescription</key>
+	<string>AOS needs microphone access for voice calls, video calls, live streams, and voice features.</string>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>AOS needs photo library access so you can choose images and videos to upload.</string>
+
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>AOS needs permission to save images and videos to your photo library.</string>
+
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>AOS uses speech recognition to help you search faster using your voice.</string>
+
+	<!-- ================= BACKGROUND / CALLS / LIVEKIT ================= -->
+
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>voip</string>
+		<string>remote-notification</string>
+	</array>
+
+	<!-- ================= NETWORK ================= -->
+
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+
+	<!-- ================= ORIENTATION ================= -->
+
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -55,12 +90,16 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
 	<key>UIStatusBarHidden</key>
 	<true/>
+
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 </dict>

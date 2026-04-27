@@ -88,6 +88,12 @@ class CallManager extends StateNotifier<CallState> {
         callType: callType,
       );
 
+      state = state.copyWith(
+        callMediaMode: callType == AOSCallType.video
+            ? CallMediaMode.video
+            : CallMediaMode.audio,
+      );
+
       /// ✅ Correct order
       _applyBackendState(
         BackendCallStatus.initiated,
@@ -157,6 +163,9 @@ class CallManager extends StateNotifier<CallState> {
         caller: caller,
         hasIncomingCallUi: false,
         clearErrorMessage: true,
+        callMediaMode: callType == AOSCallType.video
+            ? CallMediaMode.video
+            : CallMediaMode.audio,
       );
 
       await repository.markCallRinging(callId: callId);
@@ -230,6 +239,20 @@ class CallManager extends StateNotifier<CallState> {
     }
   }
 
+  Future<void> callNotAnswered() async {
+    try {
+      final callId = state.activeCall?.id;
+      if (callId == null) return;
+
+      await _leaveRoomInternal();
+
+      _applyBackendState(BackendCallStatus.missed, hasIncomingCallUi: false);
+    } catch (e, s) {
+      appLogger.e('rejectIncomingCall failed', error: e, stackTrace: s);
+      await _failCall(e);
+    }
+  }
+
   // ================= SOCKET EVENTS =================
   Future<void> onCallAcceptedEvent({required String callId}) async {
     final call = state.activeCall;
@@ -263,10 +286,18 @@ class CallManager extends StateNotifier<CallState> {
   }
 
   Future<void> onCallCancelledEvent({required String callId}) async {
-    if (state.activeCall?.id != callId) return;
+    try {
+      if (state.activeCall?.id != callId) return;
 
-    await _leaveRoomInternal();
-    _applyBackendState(BackendCallStatus.cancelled);
+      appLogger.i('📴 Applying cancelled state');
+
+      await _leaveRoomInternal();
+
+      _applyBackendState(BackendCallStatus.cancelled, hasIncomingCallUi: false);
+    } catch (e, s) {
+      appLogger.e('onCallCancelledEvent failed', error: e, stackTrace: s);
+      await _failCall(e);
+    }
   }
 
   Future<void> onCallEndedEvent({required String callId}) async {
@@ -414,6 +445,37 @@ class CallManager extends StateNotifier<CallState> {
     state = state.copyWith(isLocalVideoEnabled: newValue);
 
     await mediaService.toggleCamera(newValue);
+  }
+
+  Future<void> startLocalVideoPreview() async {
+    if (state.callMediaMode != CallMediaMode.video) return;
+    if (state.isLocalVideoEnabled) return;
+
+    try {
+      await mediaService.toggleCamera(true);
+
+      state = state.copyWith(isLocalVideoEnabled: true);
+    } catch (e, s) {
+      appLogger.e('startLocalVideoPreview failed', error: e, stackTrace: s);
+    }
+  }
+
+  Future<void> stopLocalVideoPreviewIfNotInCall() async {
+    if (state.backendStatus == BackendCallStatus.ongoing) return;
+    if (state.hasActiveRoom) return;
+    if (!state.isLocalVideoEnabled) return;
+
+    try {
+      await mediaService.toggleCamera(false);
+
+      state = state.copyWith(isLocalVideoEnabled: false);
+    } catch (e, s) {
+      appLogger.e(
+        'stopLocalVideoPreviewIfNotInCall failed',
+        error: e,
+        stackTrace: s,
+      );
+    }
   }
 
   // ================= INTERNAL =================

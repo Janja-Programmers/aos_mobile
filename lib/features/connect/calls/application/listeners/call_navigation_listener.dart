@@ -102,6 +102,7 @@ class _CallNavigationListenerState
       case UiCallPhase.idle:
       case UiCallPhase.finished:
       case UiCallPhase.error:
+      case UiCallPhase.cancelled:
         return false;
     }
   }

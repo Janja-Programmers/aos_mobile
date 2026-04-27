@@ -12,6 +12,7 @@ enum RealtimeEventType {
   aosCallRejected,
   aosCallEnded,
   aosCallNotAnswered,
+  aosCallCancelled,
 
   // LIVE Events
   aosLiveStarted,
@@ -58,6 +59,9 @@ RealtimeEventType mapRealtimeEvent(String event) {
 
     case "aos_call_accepted":
       return RealtimeEventType.aosCallAccepted;
+
+    case "aos_call_cancelled":
+      return RealtimeEventType.aosCallCancelled;
 
     case "aos_call_rejected":
       return RealtimeEventType.aosCallRejected;

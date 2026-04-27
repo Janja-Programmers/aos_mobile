@@ -6,8 +6,9 @@ import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 
 import 'package:africaonlinestores/features/connect/calls/application/managers/call_manager.dart';
-import 'package:africaonlinestores/features/connect/calls/application/services/call_signaling_handler.dart';
+// import 'package:africaonlinestores/features/connect/calls/application/services/call_kit_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_media_service.dart';
+import 'package:africaonlinestores/features/connect/calls/application/services/call_signaling_handler.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 
 import 'package:africaonlinestores/features/connect/calls/data/call_api.dart';
@@ -69,10 +70,12 @@ final callSignalingHandlerProvider = Provider<CallSignalingHandler>((ref) {
 final socketCallListenerProvider = Provider<SocketCallListener>((ref) {
   final realtime = ref.watch(realtimeServiceProvider);
   final handler = ref.watch(callSignalingHandlerProvider);
+  // final callKit = ref.watch(callKitServiceProvider);
 
   final listener = SocketCallListener(
     eventStream: realtime.events,
     signalingHandler: handler,
+    // callKitService: callKit,
   );
 
   listener.attach();
@@ -81,3 +84,14 @@ final socketCallListenerProvider = Provider<SocketCallListener>((ref) {
 
   return listener;
 });
+
+// // ================= CALLKIT =================
+// final callKitServiceProvider = Provider<CallKitService>((ref) {
+//   final service = CallKitService(ref);
+
+//   service.init();
+
+//   ref.onDispose(service.dispose);
+
+//   return service;
+// });

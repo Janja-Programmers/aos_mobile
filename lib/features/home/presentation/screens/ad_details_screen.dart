@@ -298,9 +298,13 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
 }
 
 CallParticipant _buildReceiver(AOSAdDetails ad, AOSSellerProfile? seller) {
+  final sellerName = seller?.shopName.trim();
+
   return CallParticipant(
     userId: ad.sellerId,
-    displayName: seller?.shopName ?? ad.sellerId,
+    displayName: sellerName != null && sellerName.isNotEmpty
+        ? sellerName
+        : ad.sellerId,
     avatarUrl: seller?.avatar,
   );
 }

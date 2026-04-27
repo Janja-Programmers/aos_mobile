@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
+import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
+import 'package:africaonlinestores/features/connect/calls/presentation/screens/video_call_ringing_screen.dart';
+import 'package:africaonlinestores/features/connect/calls/presentation/screens/video_call_screen.dart';
 
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/active_call_screen.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/ringing_screen.dart';
@@ -25,38 +28,32 @@ class CallSessionScreen extends ConsumerStatefulWidget {
 
 class _CallSessionScreenState extends ConsumerState<CallSessionScreen> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final state = ref.watch(callManagerProvider);
 
-    return _buildByPhase(state.uiPhase);
+    return _buildByPhase(state);
   }
 
   // -------------------------
-  // UI SWITCHER (CORE LOGIC)
-  // -------------------------
-  Widget _buildByPhase(UiCallPhase phase) {
+  Widget _buildByPhase(CallState state) {
+    final phase = state.uiPhase;
+    final isVideo = state.callMediaMode == CallMediaMode.video;
+
     switch (phase) {
-      // 📞 RINGING STATES
+      // 📞 RINGING
       case UiCallPhase.incomingRinging:
       case UiCallPhase.outgoingStarting:
       case UiCallPhase.outgoingRinging:
-        return const RingingScreen();
+        return isVideo ? const VideoRingingScreen() : const RingingScreen();
 
-      // 🔄 CONNECTING || 🎥 ACTIVE CALL
+      // 🎥 / 🔊 ACTIVE
       case UiCallPhase.joiningRoom:
       case UiCallPhase.inCall:
-        return const ActiveCallScreen();
+      case UiCallPhase.cancelled:
+        return isVideo ? const VideoCallScreen() : const ActiveCallScreen();
 
-      // ❌ TRANSITION STATE ONLY (VERY SHORT)
+      // ❌ EXIT
       case UiCallPhase.finished:
-        return const SizedBox.shrink();
-
-      // ⚠️ SHOULD NEVER STAY HERE
       case UiCallPhase.idle:
       default:
         return const SizedBox.shrink();

@@ -57,6 +57,13 @@ class SocketCallListener {
           );
           break;
 
+        case RealtimeEventType.aosCallCancelled:
+          appLogger.i('🔚 call-ended');
+          await signalingHandler.handleCallCancelled(
+            Map<String, dynamic>.from(event.data),
+          );
+          break;
+
         default:
           // ignore other events
           break;

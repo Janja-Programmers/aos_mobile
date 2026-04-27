@@ -6,7 +6,7 @@ final realtimeServiceProvider = Provider<RealtimeService>((ref) {
 
   // Clean up when app is destroyed
   ref.onDispose(() {
-    service.disconnect();
+    service.dispose();
   });
 
   return service;

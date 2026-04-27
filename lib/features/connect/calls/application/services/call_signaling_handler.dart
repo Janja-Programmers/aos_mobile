@@ -118,4 +118,24 @@ class CallSignalingHandler {
       appLogger.e('handleCallNotAnswered failed', error: e, stackTrace: s);
     }
   }
+
+  // ================= CANCELLED =================
+  Future<void> handleCallCancelled(Map<String, dynamic> data) async {
+    appLogger.i('📴 handleCallCancelled | Data: ${data.toString()}');
+
+    try {
+      final callId = data['call_id'] as String?;
+
+      if (callId == null) {
+        appLogger.e('❌ Invalid call cancelled payload: $data');
+        return;
+      }
+
+      appLogger.i('📴 Call cancelled parsed');
+
+      await callManager.onCallCancelledEvent(callId: callId);
+    } catch (e, s) {
+      appLogger.e('handleCallCancelled failed', error: e, stackTrace: s);
+    }
+  }
 }

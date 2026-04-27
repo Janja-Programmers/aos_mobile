@@ -19,5 +19,6 @@ enum UiCallPhase {
   joiningRoom,
   inCall,
   finished,
+  cancelled,
   error,
 }

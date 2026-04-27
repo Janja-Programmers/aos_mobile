@@ -123,12 +123,14 @@ class ChatApi {
     String? content,
     List<Map<String, dynamic>>? attachments,
   }) async {
+    final cleanAttachments = attachments ?? [];
+
     final res = await _client.post(
       ApiEndpoints.sendMessageEndpoint,
       data: {
         'conversation_id': conversationId,
         'content': content ?? '',
-        'attachments': attachments ?? [],
+        'attachments': cleanAttachments,
       },
     );
 

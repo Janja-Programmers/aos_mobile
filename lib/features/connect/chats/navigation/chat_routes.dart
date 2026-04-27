@@ -43,6 +43,10 @@ class ChatRoutes {
             otherUser: extra?['otherUser'] ?? '',
             displayName: extra?['displayName'] ?? '',
             initialMessage: extra?['initialMessage'],
+            adId: extra?['adId'],
+            adTitle: extra?['adTitle'],
+            adPrice: extra?['adPrice'],
+            adImage: extra?['adImage'],
           ),
         );
       },
@@ -68,6 +72,10 @@ class ChatNavigation {
     required String user,
     required String displayName,
     String? initialMessage,
+    final String? adId,
+    final String? adTitle,
+    final String? adPrice,
+    final String? adImage,
   }) {
     final router = GoRouter.of(context);
 
@@ -88,6 +96,10 @@ class ChatNavigation {
         'otherUser': user,
         'displayName': displayName,
         'initialMessage': initialMessage,
+        'adId': adId,
+        'adTitle': adTitle,
+        'adPrice': adPrice,
+        'adImage': adImage,
       },
     );
   }

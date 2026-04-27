@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/routing/app_nav.dart';
+import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
@@ -53,6 +55,45 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
         centerTitle: true,
         leading: const BackButton(),
         title: Text("Connect", style: context.h4),
+        actions: [
+          PopupMenuButton<int>(
+            color: colors.surface,
+            icon: const Icon(Icons.menu),
+            onSelected: (index) => AppNavigation.goTo(context, ref, index),
+            itemBuilder: (context) {
+              final items = AppNavConfig.items(context);
+              final location = GoRouterState.of(context).matchedLocation;
+
+              return List.generate(items.length, (i) {
+                final item = items[i];
+                final isActive = location.contains(item.routeName);
+
+                return PopupMenuItem<int>(
+                  value: i,
+                  child: Row(
+                    children: [
+                      Icon(
+                        item.icon,
+                        color: isActive
+                            ? context.appColors.primary
+                            : context.appColors.textPrimary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        item.label,
+                        style: context.p.copyWith(
+                          color: isActive
+                              ? context.appColors.primary
+                              : context.appColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              });
+            },
+          ),
+        ],
       ),
 
       body: Column(

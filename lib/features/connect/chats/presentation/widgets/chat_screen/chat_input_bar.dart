@@ -40,6 +40,8 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
 
   bool get _hasText => widget.controller.text.trim().isNotEmpty;
   bool get _hasAttachments => _attachments.isNotEmpty;
+  bool get _hasAdContext =>
+      widget.adId != null && widget.adId!.trim().isNotEmpty;
 
   // -------------------------
   // SEND
@@ -49,15 +51,17 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
 
     final text = widget.controller.text.trim();
 
-    if (text.isEmpty && _attachments.isEmpty) return;
+    final hasText = text.isNotEmpty;
+    final hasAttachments = _attachments.isNotEmpty;
+    final hasAdContext = widget.adId != null && widget.adId!.trim().isNotEmpty;
 
-    debugPrint('SEND → $text');
+    if (!hasText && !hasAttachments && !hasAdContext) return;
 
     setState(() => _isSending = true);
 
     try {
       await widget.onSend(
-        text: text.isNotEmpty ? text : null,
+        text: hasText ? text : null,
         attachments: List.of(_attachments),
       );
 
@@ -239,12 +243,16 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                         : IconButton(
                             icon: Icon(
                               Icons.send,
-                              color: (_hasText || _hasAttachments)
+                              color:
+                                  (_hasText || _hasAttachments || _hasAdContext)
                                   ? colors.chatCardColor
                                   : colors.textSecondary.withOpacity(0.4),
                             ),
                             onPressed:
-                                (_isSending || (!_hasText && !_hasAttachments))
+                                (_isSending ||
+                                    (!_hasText &&
+                                        !_hasAttachments &&
+                                        !_hasAdContext))
                                 ? null
                                 : _submit,
                           ),

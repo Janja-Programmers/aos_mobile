@@ -9,6 +9,7 @@ import 'package:africaonlinestores/features/connect/chats/controllers/chat_conve
 import 'package:africaonlinestores/features/connect/chats/controllers/chat_messages_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/controllers/chat_typing_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_ad_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_app_bar.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input_bar.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_quick_replies.dart';
@@ -24,6 +25,9 @@ class ChatScreen extends ConsumerStatefulWidget {
   final String displayName;
   final String? initialMessage;
   final String? adId;
+  final String? adTitle;
+  final String? adPrice;
+  final String? adImage;
 
   const ChatScreen({
     super.key,
@@ -32,6 +36,9 @@ class ChatScreen extends ConsumerStatefulWidget {
     required this.displayName,
     this.initialMessage,
     this.adId,
+    this.adTitle,
+    this.adPrice,
+    this.adImage,
   });
 
   @override
@@ -43,12 +50,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _inputController = TextEditingController();
 
   bool _loadedInitialIntoInput = false;
+  bool _showAdPreview = false;
   Timer? _typingTimer;
   Timer? _typingStopTimer;
 
   @override
   void initState() {
     super.initState();
+
+    _showAdPreview = widget.adId != null && widget.adId!.trim().isNotEmpty;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onChatOpened();
     });
@@ -129,7 +140,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       chatMessagesControllerProvider(widget.conversationId).notifier,
     );
 
-    await notifier.sendTempMessage(text: text, attachments: attachments);
+    await notifier.sendTempMessage(
+      text: text,
+      attachments: attachments,
+      adId: _showAdPreview ? widget.adId : null,
+      adTitle: _showAdPreview ? widget.adTitle : null,
+      adPrice: _showAdPreview ? widget.adPrice : null,
+      adImage: _showAdPreview ? widget.adImage : null,
+    );
+
+    if (_showAdPreview && mounted) {
+      setState(() => _showAdPreview = false);
+    }
 
     _scrollToBottom();
   }
@@ -192,11 +214,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               onTap: _appendQuickReply,
             ),
 
+            if (_showAdPreview)
+              ChatAdPreview(
+                title: widget.adTitle ?? '',
+                price: widget.adPrice ?? '',
+                imageUrl: widget.adImage,
+                onClose: () {
+                  setState(() => _showAdPreview = false);
+                },
+              ),
+
             ChatInputBar(
               controller: _inputController,
               onSend: _sendMessage,
               onTyping: _handleTyping,
-              adId: widget.adId,
+              adId: _showAdPreview ? widget.adId : null,
             ),
           ],
         ),

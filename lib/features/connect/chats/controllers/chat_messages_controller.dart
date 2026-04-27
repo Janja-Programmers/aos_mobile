@@ -87,36 +87,49 @@ class ChatMessagesController
   // -----------------------------
   Future<void> sendTempMessage({
     String? text,
-    String? ad,
+    String? adId,
+    String? adTitle,
+    String? adPrice,
+    String? adImage,
     List<ChatInputAttachment> attachments = const [],
   }) async {
     final trimmedText = text?.trim();
+
     final hasText = trimmedText != null && trimmedText.isNotEmpty;
     final hasAttachments = attachments.isNotEmpty;
+    final hasAd = adId != null && adId.trim().isNotEmpty;
 
-    if (!hasText && !hasAttachments) return;
+    if (!hasText && !hasAttachments && !hasAd) return;
 
     final tempId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
 
-    // 🔥 Convert to API format
-    final apiAttachments = attachments.map((a) => a.toApi(ad: '')).toList();
+    final apiAttachments = attachments
+        .map((a) => a.toApi(ad: adId ?? ''))
+        .toList();
+
+    /// Add ad-only payload when there are no normal attachments.
+    if (hasAd && apiAttachments.isEmpty) {
+      apiAttachments.add({'ad': adId, 'file': '', 'file_type': 'ad'});
+    }
 
     final tempMsg = ChatMessage(
       id: tempId,
       sender: currentUser,
       content: hasText ? trimmedText : null,
-      messageType: hasText && hasAttachments
+      messageType: hasAd
+          ? hasText || hasAttachments
+                ? 'mixed'
+                : 'ad'
+          : hasText && hasAttachments
           ? 'mixed'
           : hasAttachments
           ? 'attachment'
           : 'text',
-      ad: ad,
-      hasAttachments: hasAttachments,
+      ad: hasAd ? adId : null,
+      hasAttachments: hasAttachments || hasAd,
       createdAt: DateTime.now(),
       deliveredAt: null,
       readAt: null,
-
-      // 🔥 FIXED: use previewUrl
       attachments: attachments
           .map(
             (a) =>
@@ -125,22 +138,18 @@ class ChatMessagesController
           .toList(),
     );
 
-    // 1. Add temp
     _messages.add(tempMsg);
     state = AsyncData(List.of(_messages));
 
-    // 2. Send
     final realMsg = await sendMessage(
       text: trimmedText,
-      ad: ad,
+      ad: hasAd ? adId : null,
       attachments: apiAttachments,
     );
 
-    // ❌ Only remove temp if send failed
     if (realMsg == null) {
       _messages.removeWhere((m) => m.id == tempId);
       state = AsyncData(List.of(_messages));
-      return;
     }
   }
 
@@ -155,15 +164,23 @@ class ChatMessagesController
     final repo = ref.read(chatRepositoryProvider);
 
     final trimmedText = text?.trim();
+
     final hasText = trimmedText != null && trimmedText.isNotEmpty;
     final hasAttachments = attachments.isNotEmpty;
+    final hasAd = ad != null && ad.trim().isNotEmpty;
 
-    if (!hasText && !hasAttachments) return null;
+    if (!hasText && !hasAttachments && !hasAd) return null;
+
+    final apiAttachments = List<Map<String, dynamic>>.from(attachments);
+
+    if (hasAd && apiAttachments.isEmpty) {
+      apiAttachments.add({'ad': ad, 'file': '', 'file_type': 'ad'});
+    }
 
     final res = await repo.sendMessage(
       conversationId: conversationId,
       content: hasText ? trimmedText : null,
-      attachments: attachments,
+      attachments: apiAttachments,
     );
 
     if (res.isLeft) return null;
@@ -172,13 +189,17 @@ class ChatMessagesController
       id: 'server-${DateTime.now().millisecondsSinceEpoch}',
       sender: currentUser,
       content: hasText ? trimmedText : null,
-      messageType: hasText && hasAttachments
+      messageType: hasAd
+          ? hasText || hasAttachments
+                ? 'mixed'
+                : 'ad'
+          : hasText && hasAttachments
           ? 'mixed'
           : hasAttachments
           ? 'attachment'
           : 'text',
-      ad: ad,
-      hasAttachments: hasAttachments,
+      ad: hasAd ? ad : null,
+      hasAttachments: hasAttachments || hasAd,
       createdAt: DateTime.now(),
       deliveredAt: DateTime.now(),
       readAt: null,

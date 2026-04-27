@@ -1,9 +1,12 @@
-import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/core/utils/logger.dart';
+
 import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
 import 'package:africaonlinestores/features/connect/chats/data/chat_api.dart';
+
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ChatActions {
   const ChatActions._();
@@ -16,6 +19,10 @@ class ChatActions {
     required String user,
     required String displayName,
     String? initialMessage,
+    final String? adId,
+    final String? adTitle,
+    final String? adPrice,
+    final String? adImage,
   }) async {
     // 🚫 Prevent duplicate calls
     if (_isOpening) return;
@@ -29,11 +36,10 @@ class ChatActions {
       if (!context.mounted) return;
 
       if (res.isLeft) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(res.leftOrNull?.message ?? 'Failed to start chat'),
-          ),
-        );
+        ShowSnack(
+          context,
+          (res.leftOrNull?.message ?? 'Failed to start chat'),
+        ).success();
         return;
       }
 
@@ -51,12 +57,14 @@ class ChatActions {
         user: user,
         displayName: displayName,
         initialMessage: initialMessage,
+        adId: adId,
+        adTitle: adTitle,
+        adPrice: adPrice,
+        adImage: adImage,
       );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ShowSnack(context, ('Error: $e')).error;
       }
     } finally {
       _isOpening = false;

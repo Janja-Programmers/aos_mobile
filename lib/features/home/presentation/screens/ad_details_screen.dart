@@ -280,6 +280,10 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                         user: ad.sellerId,
                         displayName: seller!.shopName,
                         initialMessage: "Hi, I'm interested in ${ad.title}",
+                        adId: ad.id,
+                        adTitle: ad.title,
+                        adPrice: ad.currentPrice,
+                        adImage: ad.primaryImage,
                       );
                     },
                   );

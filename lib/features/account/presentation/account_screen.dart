@@ -80,169 +80,185 @@ class AccountScreen extends ConsumerWidget {
           },
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-        children: [
-          _buildAccountHeader(context, auth),
-          const SizedBox(height: 14),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          if (isAuthenticated) {
+            ref.invalidate(sellerStatusProvider);
+            await ref.read(sellerStatusProvider.future);
+          }
+        },
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+          children: [
+            _buildAccountHeader(context, auth),
+            const SizedBox(height: 14),
 
-          /// ✅ VERIFIED BANNER (SAFE)
-          if (statusAsync != null)
-            statusAsync.when(
-              data: (status) => AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: SellerVerificationBanner(state: status),
+            /// ✅ VERIFIED BANNER (SAFE)
+            if (statusAsync != null)
+              statusAsync.when(
+                data: (status) {
+                  if (!status.isSeller) return const SizedBox.shrink();
+
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: SellerVerificationBanner(
+                      key: ValueKey(status.status),
+                      state: status,
+                    ),
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
               ),
-              loading: () => const SizedBox.shrink(),
-              error: (_, _) => const SizedBox.shrink(),
-            ),
 
-          /// AUTHENTICATED ACTIONS
-          if (isAuthenticated)
+            /// AUTHENTICATED ACTIONS
+            if (isAuthenticated)
+              AccountCard(
+                child: Column(
+                  children: [
+                    AccountOptionTile(
+                      icon: Icons.list_alt_sharp,
+                      title: "My Listings",
+                      onTap: () => AdNavigation.toMyAds(context),
+                    ),
+
+                    AccountOptionTile(
+                      icon: Icons.business_center_outlined,
+                      title: "My Storefront",
+                      onTap: () {
+                        final current = auth;
+                        SellerNavigation.toSellerStore(
+                          context,
+                          current.user.email,
+                        );
+                      },
+                    ),
+
+                    AccountOptionTile(
+                      icon: Icons.favorite_border,
+                      title: "My Wishlist",
+                      onTap: () => AdNavigation.toWishlist(context),
+                    ),
+                    const SizedBox(height: 18),
+                  ],
+                ),
+              ),
+
+            /// SETTINGS
+            AccountSectionTitle(l10n.account_settings),
+            const SizedBox(height: 8),
+
             AccountCard(
               child: Column(
                 children: [
+                  if (isAuthenticated)
+                    AccountOptionTile(
+                      icon: Icons.lock_outline,
+                      title: l10n.account_passwords_security,
+                      onTap: () =>
+                          context.pushNamed(AppRoutes.nPasswordSecurity),
+                    ),
                   AccountOptionTile(
-                    icon: Icons.list_alt_sharp,
-                    title: "My Listings",
-                    onTap: () => AdNavigation.toMyAds(context),
+                    icon: Icons.notifications_none,
+                    title: l10n.account_notifications_preferences,
+                    onTap: () => context.pushNamed(AppRoutes.nNotifications),
                   ),
-
                   AccountOptionTile(
-                    icon: Icons.business_center_outlined,
-                    title: "My Storefront",
-                    onTap: () {
-                      final current = auth;
-                      SellerNavigation.toSellerStore(
-                        context,
-                        current.user.email,
-                      );
+                    icon: Icons.tune,
+                    title: l10n.app_preferences,
+                    onTap: () => context.pushNamed(AppRoutes.nPreference),
+                  ),
+                  AppSwitchTile(
+                    icon: Icons.dark_mode_outlined,
+                    title: l10n.settings_dark_mode,
+                    value: isDarkMode,
+                    showDivider: false,
+                    onChanged: (val) {
+                      ref
+                          .read(themeModeProvider.notifier)
+                          .setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
                     },
                   ),
-
-                  AccountOptionTile(
-                    icon: Icons.favorite_border,
-                    title: "My Wishlist",
-                    onTap: () => AdNavigation.toWishlist(context),
-                  ),
-                  const SizedBox(height: 18),
                 ],
               ),
             ),
 
-          /// SETTINGS
-          AccountSectionTitle(l10n.account_settings),
-          const SizedBox(height: 8),
+            const SizedBox(height: 18),
 
-          AccountCard(
-            child: Column(
-              children: [
-                if (isAuthenticated)
+            /// OTHER
+            AccountSectionTitle(l10n.common_other),
+            const SizedBox(height: 8),
+
+            AccountCard(
+              child: Column(
+                children: [
                   AccountOptionTile(
-                    icon: Icons.lock_outline,
-                    title: l10n.account_passwords_security,
-                    onTap: () => context.pushNamed(AppRoutes.nPasswordSecurity),
+                    icon: Icons.privacy_tip_outlined,
+                    title: l10n.settings_privacy_policy,
+                    onTap: () => context.pushNamed(AppRoutes.nPrivacy),
                   ),
-                AccountOptionTile(
-                  icon: Icons.notifications_none,
-                  title: l10n.account_notifications_preferences,
-                  onTap: () => context.pushNamed(AppRoutes.nNotifications),
-                ),
-                AccountOptionTile(
-                  icon: Icons.tune,
-                  title: l10n.app_preferences,
-                  onTap: () => context.pushNamed(AppRoutes.nPreference),
-                ),
-                AppSwitchTile(
-                  icon: Icons.dark_mode_outlined,
-                  title: l10n.settings_dark_mode,
-                  value: isDarkMode,
-                  showDivider: false,
-                  onChanged: (val) {
-                    ref
-                        .read(themeModeProvider.notifier)
-                        .setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 18),
-
-          /// OTHER
-          AccountSectionTitle(l10n.common_other),
-          const SizedBox(height: 8),
-
-          AccountCard(
-            child: Column(
-              children: [
-                AccountOptionTile(
-                  icon: Icons.privacy_tip_outlined,
-                  title: l10n.settings_privacy_policy,
-                  onTap: () => context.pushNamed(AppRoutes.nPrivacy),
-                ),
-                AccountOptionTile(
-                  icon: Icons.description_outlined,
-                  title: l10n.settings_terms_conditions,
-                  showDivider: false,
-                  onTap: () => context.pushNamed(AppRoutes.nTerms),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 18),
-
-          /// LOGOUT
-          if (isAuthenticated) ...[
-            SizedBox(
-              height: 54,
-              child: OutlinedButton.icon(
-                onPressed: () async {
-                  final parentContext = context;
-
-                  await showModalBottomSheet<void>(
-                    context: parentContext,
-                    isScrollControlled: true,
-                    backgroundColor: context.appColors.surface,
-                    builder: (sheetContext) {
-                      return AppConfirmSheet(
-                        icon: Icons.warning_rounded,
-                        iconBg: scheme.primary,
-                        title: 'Logout',
-                        message:
-                            'Are you sure you want to log out? You will need to sign in again.',
-                        primaryText: 'Logout',
-                        secondaryText: 'Cancel',
-                        onPrimary: () async {
-                          Navigator.of(sheetContext).pop();
-                          await ref
-                              .read(authControllerProvider.notifier)
-                              .logout();
-                          if (!parentContext.mounted) return;
-                          parentContext.go(AppRoutes.home);
-                        },
-                        onSecondary: () => Navigator.of(sheetContext).pop(),
-                      );
-                    },
-                  );
-                },
-                style: OutlinedButton.styleFrom(
-                  shape: const StadiumBorder(),
-                  side: BorderSide(color: scheme.error),
-                  foregroundColor: scheme.error,
-                ),
-                icon: const Icon(Icons.logout, size: 18),
-                label: const Text(
-                  'Logout',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                ),
+                  AccountOptionTile(
+                    icon: Icons.description_outlined,
+                    title: l10n.settings_terms_conditions,
+                    showDivider: false,
+                    onTap: () => context.pushNamed(AppRoutes.nTerms),
+                  ),
+                ],
               ),
             ),
+
+            const SizedBox(height: 18),
+
+            /// LOGOUT
+            if (isAuthenticated) ...[
+              SizedBox(
+                height: 54,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final parentContext = context;
+
+                    await showModalBottomSheet<void>(
+                      context: parentContext,
+                      isScrollControlled: true,
+                      backgroundColor: context.appColors.surface,
+                      builder: (sheetContext) {
+                        return AppConfirmSheet(
+                          icon: Icons.warning_rounded,
+                          iconBg: scheme.primary,
+                          title: 'Logout',
+                          message:
+                              'Are you sure you want to log out? You will need to sign in again.',
+                          primaryText: 'Logout',
+                          secondaryText: 'Cancel',
+                          onPrimary: () async {
+                            Navigator.of(sheetContext).pop();
+                            await ref
+                                .read(authControllerProvider.notifier)
+                                .logout();
+                            if (!parentContext.mounted) return;
+                            parentContext.go(AppRoutes.home);
+                          },
+                          onSecondary: () => Navigator.of(sheetContext).pop(),
+                        );
+                      },
+                    );
+                  },
+                  style: OutlinedButton.styleFrom(
+                    shape: const StadiumBorder(),
+                    side: BorderSide(color: scheme.error),
+                    foregroundColor: scheme.error,
+                  ),
+                  icon: const Icon(Icons.logout, size: 18),
+                  label: const Text(
+                    'Logout',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 10),
           ],
-          const SizedBox(height: 10),
-        ],
+        ),
       ),
     );
   }

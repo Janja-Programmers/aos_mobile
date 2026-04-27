@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
-import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/seller/seller_verification/controllers/verification_controller_provider.dart';
-
-import 'package:africaonlinestores/shared/components/picker_field.dart';
 
 class BasicInfoStep extends ConsumerWidget {
   const BasicInfoStep({super.key});
@@ -78,6 +73,7 @@ class BasicInfoStep extends ConsumerWidget {
               "Sole Proprietorship",
               "Partnership",
               "Limited Company",
+              "Corporation",
             ],
             onChanged: (val) => controller.updateBasic(businessType: val),
           ),
@@ -85,38 +81,18 @@ class BasicInfoStep extends ConsumerWidget {
           const SizedBox(height: 12),
 
           // --- Category ---
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Business Category", style: context.p),
-              const SizedBox(height: 6),
-              PickerField(
-                value: data.businessCategory,
-                leading: const Icon(Icons.category_outlined),
-                placeholder: "Select a category",
-                onTap: () async {
-                  CategoryNode? parentNode;
-
-                  final res = await context.pushNamed<Map<String, dynamic>>(
-                    AppRoutes.nSelectCategory,
-                    extra: {"initialParent": parentNode},
-                  );
-
-                  if (res == null) return;
-
-                  final label = (res['label'] ?? '').toString();
-                  if (label.isEmpty) return;
-
-                  controller.updateBasic(businessCategory: label);
-                },
-              ),
-            ],
+          _InputField(
+            label: "What are you selling? *",
+            icon: Icons.local_offer_outlined,
+            hintText: "e.g. Electronics, Clothing, Food, Services...",
+            initialValue: data.businessCategory,
+            onChanged: (val) => controller.updateBasic(businessCategory: val),
           ),
 
           const SizedBox(height: 12),
 
           _InputField(
-            label: "Phone Number",
+            label: "Business Phone Number *",
             icon: Icons.phone_outlined,
             hintText: "+254 xxx xxx xxx",
             initialValue: data.businessPhoneNumber,
@@ -138,18 +114,7 @@ class BasicInfoStep extends ConsumerWidget {
           const SizedBox(height: 12),
 
           _InputField(
-            label: "Website (Optional)",
-            icon: Icons.link,
-            hintText: "https://sitename.com",
-            initialValue: data.businessWebsite,
-            keyboardType: TextInputType.url,
-            onChanged: (val) => controller.updateBasic(website: val),
-          ),
-
-          const SizedBox(height: 12),
-
-          _InputField(
-            label: "Physical Address",
+            label: "Physical Location *",
             icon: Icons.location_on_outlined,
             hintText: "City/Town and address of business operations",
             initialValue: data.physicalAddress,
@@ -158,29 +123,6 @@ class BasicInfoStep extends ConsumerWidget {
           ),
 
           const SizedBox(height: 20),
-
-          // --- Bottom Info Card (Aligned with design system) ---
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: colors.blue.withOpacity(.12),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: colors.blue),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.info_outline, size: 18, color: colors.blue),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    "Registration number, address, email, website, tax info, and operating hours can be added in your seller storefront after verification",
-                    style: context.body.copyWith(fontSize: 12.5),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -276,9 +218,39 @@ class _DropdownField extends StatelessWidget {
         DropdownButtonFormField<String>(
           value: value,
           hint: hintText != null ? Text(hintText!) : null,
-          items: items
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
+          menuMaxHeight: 300,
+          isExpanded: true,
+
+          selectedItemBuilder: (context) {
+            return items.map((e) {
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  e,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.p.copyWith(color: colors.textPrimary),
+                ),
+              );
+            }).toList();
+          },
+
+          items: items.map((e) {
+            return DropdownMenuItem<String>(
+              value: e,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 14,
+                ),
+                child: Text(
+                  e,
+                  style: context.p.copyWith(color: colors.textPrimary),
+                ),
+              ),
+            );
+          }).toList(),
+
           onChanged: onChanged,
         ),
       ],

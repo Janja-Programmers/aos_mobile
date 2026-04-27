@@ -56,7 +56,7 @@ class DocumentsStep extends ConsumerWidget {
               const SizedBox(height: 16),
 
               Text(
-                "Registration Documents",
+                "Verification Documents",
                 style: context.h5.copyWith(fontWeight: FontWeight.w700),
                 textAlign: TextAlign.start,
               ),
@@ -73,18 +73,80 @@ class DocumentsStep extends ConsumerWidget {
 
           const SizedBox(height: 24),
 
-          // --- TAX ID Label ---
+          // --- REGISTRATION CERTIFICATE Label ---
           Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              "TAX ID: (KRA)",
-              style: context.p.copyWith(color: colors.textMuted),
-            ),
+            child: Text("Certificate of Registration *", style: context.p),
           ),
 
           const SizedBox(height: 8),
 
-          // --- CR12 ---
+          // --- REGISTRATION CERTIFICATE ---
+          _uploadCard(
+            context: context,
+            title: "Upload registration certificate",
+            subtitle: "PDF, JPG, or PNG (max 5MB)",
+            file: getDoc("registration_certificate")?.attachment,
+            isUploading: state.uploadingDocs.contains(
+              "registration_certificate",
+            ),
+            onTap: () async {
+              final type = "registration_certificate";
+
+              if (state.uploadingDocs.contains(type)) return;
+
+              final file = await MediaHelper.pickDocument();
+              if (file == null) return;
+
+              controller.setUploading(type, true);
+
+              try {
+                final uploaded = await MediaHelper.uploadSingle(
+                  ref: ref,
+                  file: file,
+                  uploadFn: (f) =>
+                      ref.read(filesApiProvider).uploadMedia(file: f),
+                );
+
+                if (uploaded == null) {
+                  if (context.mounted) {
+                    ShowSnack(context, "Upload failed. Try again").error();
+                  }
+                  return;
+                }
+
+                final url = uploaded.url;
+
+                final existing = getDoc(type);
+
+                final doc = VerificationDocument(
+                  documentType: type,
+                  attachment: url,
+                );
+
+                if (existing == null) {
+                  controller.addDocument(doc);
+                } else {
+                  final index = documents.indexOf(existing);
+                  controller.updateDocument(index, doc);
+                }
+              } finally {
+                controller.setUploading(type, false);
+              }
+            },
+          ),
+
+          const SizedBox(height: 20),
+
+          // --- TAX ID Label ---
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text("TAX ID: (KRA)", style: context.p),
+          ),
+
+          const SizedBox(height: 8),
+
+          // --- REGISTRATION CERTIFICATE ---
           _uploadCard(
             context: context,
             title: "Upload KRA",
@@ -138,69 +200,6 @@ class DocumentsStep extends ConsumerWidget {
           ),
 
           const SizedBox(height: 20),
-
-          // --- Accepted Docs ---
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: colors.blue.withOpacity(.12),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: colors.blue),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.info_outline, size: 18, color: colors.blue),
-                    const SizedBox(width: 6),
-                    Text(
-                      "Accepted Documents",
-                      style: context.p.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: colors.blue,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                const _Bullet(text: "TAX ID (e.g. KRA)"),
-                const _Bullet(text: "Business Registration Certificate"),
-                const _Bullet(text: "Single Business Permit"),
-                const _Bullet(text: "Trade License"),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // --- Info ---
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: colors.amber.withOpacity(.12),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: colors.amber),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.lightbulb_outline, size: 18, color: colors.amber),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    "Tax documents (KRA PIN) and business address can be added later in your storefront settings.",
-                    style: context.p.copyWith(
-                      fontSize: 12,
-                      color: colors.amber,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -212,7 +211,7 @@ class DocumentsStep extends ConsumerWidget {
     required String title,
     required String subtitle,
     required String? file,
-    required bool isUploading, // ✅ pass from state later
+    required bool isUploading,
     required VoidCallback onTap,
   }) {
     final colors = context.appColors;
@@ -312,20 +311,20 @@ String _extractFileName(String? url) {
 }
 
 // --- Bullet ---
-class _Bullet extends StatelessWidget {
-  const _Bullet({required this.text});
-  final String text;
+// class _Bullet extends StatelessWidget {
+//   const _Bullet({required this.text});
+//   final String text;
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Row(
-        children: [
-          const Text("• "),
-          Expanded(child: Text(text)),
-        ],
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Padding(
+//       padding: const EdgeInsets.only(top: 4),
+//       child: Row(
+//         children: [
+//           const Text("• "),
+//           Expanded(child: Text(text)),
+//         ],
+//       ),
+//     );
+//   }
+// }

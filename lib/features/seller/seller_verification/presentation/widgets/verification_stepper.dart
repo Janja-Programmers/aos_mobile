@@ -27,7 +27,10 @@ class VerificationStepper extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(totalSteps, (i) {
           final isCurrent = i == currentIndex;
-          final isDone = completed.contains(i);
+
+          /// ✅ Only previous completed steps are visually done.
+          final isDone = completed.contains(i) && i < currentIndex;
+
           final accessible = isStepAccessible(i);
 
           return Row(
@@ -39,6 +42,7 @@ class VerificationStepper extends StatelessWidget {
                   child: _buildCircle(context, i, isCurrent, isDone),
                 ),
               ),
+
               if (i != totalSteps - 1) _buildConnector(context, isDone),
             ],
           );
@@ -55,25 +59,30 @@ class VerificationStepper extends StatelessWidget {
   ) {
     final colors = context.appColors;
 
+    final bgColor = isCurrent
+        ? colors.primary
+        : isDone
+        ? colors.success
+        : colors.border;
+
+    final contentColor = isCurrent || isDone
+        ? colors.white
+        : colors.textPrimary;
+
     return Container(
       width: 32,
       height: 32,
       alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isCurrent
-            ? colors.primary
-            : isDone
-            ? colors.primary.withOpacity(0.2)
-            : colors.border,
-      ),
-      child: Text(
-        "${index + 1}",
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: isCurrent ? colors.white : colors.textPrimary,
-        ),
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: bgColor),
+      child: isDone
+          ? Icon(Icons.check, size: 18, color: contentColor)
+          : Text(
+              "${index + 1}",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: contentColor,
+              ),
+            ),
     );
   }
 
@@ -84,7 +93,7 @@ class VerificationStepper extends StatelessWidget {
       width: 36,
       height: 2,
       margin: const EdgeInsets.symmetric(horizontal: 6),
-      color: isDone ? colors.primary : colors.border,
+      color: isDone ? colors.success : colors.border,
     );
   }
 }

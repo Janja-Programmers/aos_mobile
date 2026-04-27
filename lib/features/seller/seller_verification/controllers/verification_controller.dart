@@ -15,7 +15,6 @@ class SellerVerificationController
     String? businessCategory,
     String? phone,
     String? email,
-    String? website,
     String? address,
   }) {
     state = state.copyWith(
@@ -25,10 +24,65 @@ class SellerVerificationController
         businessCategory: businessCategory,
         businessPhoneNumber: phone,
         businessEmail: email,
-        businessWebsite: website,
         physicalAddress: address,
       ),
     );
+  }
+
+  bool get canContinueCurrentStep {
+    final data = state.data;
+
+    switch (state.currentStep) {
+      case 0:
+        return _missingBasicInfoFields(data).isEmpty;
+
+      default:
+        return true;
+    }
+  }
+
+  List<String> missingCurrentStepFields() {
+    final data = state.data;
+
+    switch (state.currentStep) {
+      case 0:
+        return _missingBasicInfoFields(data);
+
+      default:
+        return [];
+    }
+  }
+
+  List<String> _missingBasicInfoFields(Verification data) {
+    final missing = <String>[];
+
+    bool empty(String? value) => value == null || value.trim().isEmpty;
+
+    if (empty(data.businessName)) {
+      missing.add("Business Name");
+    }
+
+    if (empty(data.businessType)) {
+      missing.add("Business Type");
+    }
+
+    if (empty(data.businessCategory)) {
+      missing.add("What are you selling?");
+    }
+
+    if (empty(data.businessPhoneNumber)) {
+      missing.add("Business Phone Number");
+    }
+
+    if (empty(data.businessEmail)) {
+      missing.add("Email");
+    }
+
+    if (empty(data.physicalAddress)) {
+      missing.add("Physical Location");
+    }
+
+    return missing;
   }
 
   // --- Documents ---
@@ -75,6 +129,12 @@ class SellerVerificationController
 
   // --- Navigation ---
   void nextStep() {
+    final missing = missingCurrentStepFields();
+
+    if (missing.isNotEmpty) {
+      return;
+    }
+
     state = state.copyWith(
       currentStep: state.currentStep + 1,
       completedSteps: {...state.completedSteps, state.currentStep},

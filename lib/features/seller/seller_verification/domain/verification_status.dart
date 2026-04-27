@@ -1,4 +1,4 @@
-enum VerificationStatus { unverified, pending, approved, rejected }
+enum VerificationStatus { notSubmitted, pending, approved, rejected }
 
 class SellerVerificationStatus {
   final bool isSeller;
@@ -32,16 +32,15 @@ class SellerVerificationStatus {
 
   static VerificationStatus _mapStatus(String? status) {
     switch (status) {
-      case "Approved":
-        return VerificationStatus.approved;
       case "Pending":
-        return VerificationStatus.pending;
       case "Reviewing":
         return VerificationStatus.pending;
+      case "Approved":
+        return VerificationStatus.approved;
       case "Rejected":
         return VerificationStatus.rejected;
       default:
-        return VerificationStatus.unverified;
+        return VerificationStatus.notSubmitted;
     }
   }
 }

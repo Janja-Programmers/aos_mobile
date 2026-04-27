@@ -26,7 +26,7 @@ class ReviewStep extends ConsumerWidget {
       }
     }
 
-    final taxId = getDoc("tax_id");
+    final registrationCertificate = getDoc("registration_certificate");
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -72,7 +72,7 @@ class ReviewStep extends ConsumerWidget {
           const SizedBox(height: 20),
 
           /// ✅ CHECKLIST
-          _verificationChecklist(context, data, taxId),
+          _verificationChecklist(context, data, registrationCertificate),
 
           const SizedBox(height: 20),
 
@@ -110,7 +110,7 @@ class ReviewStep extends ConsumerWidget {
                   color: colors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.storefront, color: colors.primary),
+                child: Icon(Icons.store_mall_directory, color: colors.primary),
               ),
               const SizedBox(width: 12),
               Column(
@@ -130,11 +130,11 @@ class ReviewStep extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Divider(color: colors.border),
-          const SizedBox(height: 12),
 
-          _infoRow("Category", data.businessCategory),
-          _infoRow("Phone", data.businessPhoneNumber),
-          _infoRow("Physical Location", data.physicalAddress),
+          const SizedBox(height: 12),
+          _infoRow(context, "Category", data.businessCategory),
+          _infoRow(context, "Phone Number", data.businessPhoneNumber),
+          _infoRow(context, "Physical Location", data.physicalAddress),
         ],
       ),
     );
@@ -144,19 +144,26 @@ class ReviewStep extends ConsumerWidget {
   Widget _verificationChecklist(
     BuildContext context,
     Verification data,
-    String? taxId,
+    String? registrationCertificate,
   ) {
     final colors = context.appColors;
 
     final items = [
       (
-        "Business Name & Type",
+        "Business Name, Type & Category",
         (data.businessName?.isNotEmpty ?? false) &&
-            (data.businessType?.isNotEmpty ?? false),
+            (data.businessType?.isNotEmpty ?? false) &&
+            (data.businessCategory?.isNotEmpty ?? false),
       ),
-      ("Tax ID Document", taxId != null),
-      ("Contact Phone", (data.businessPhoneNumber?.isNotEmpty ?? false)),
-      ("Physical Location", (data.physicalAddress?.isNotEmpty ?? false)),
+      (
+        "Phone Number, Email & Physical Location",
+        (data.businessPhoneNumber?.isNotEmpty ?? false) &&
+            (data.businessEmail?.isNotEmpty ?? false) &&
+            (data.physicalAddress?.isNotEmpty ?? false),
+      ),
+
+      // Documents
+      ("Verification Documents", (registrationCertificate != null)),
     ];
 
     return Column(
@@ -199,8 +206,6 @@ class ReviewStep extends ConsumerWidget {
 
     final benefits = [
       "Verified business badge",
-      "Customizable seller storefront",
-      "Add address, hours & contacts later",
       "Higher visibility in search results",
       "Priority customer support",
     ];
@@ -209,16 +214,16 @@ class ReviewStep extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colors.primary.withOpacity(0.08),
+        color: colors.blue.withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.primary.withOpacity(0.2)),
+        border: Border.all(color: colors.blue.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.work, color: colors.primary),
+              Icon(Icons.work, color: colors.blue),
               const SizedBox(width: 8),
               Text(
                 "Business Verification Benefits",
@@ -251,30 +256,28 @@ class ReviewStep extends ConsumerWidget {
 
     return Text(
       "By submitting, you confirm that all information provided is accurate. "
-      "You can add tax details, address, and operating hours in your storefront after verification. "
       "Processing typically takes 2–5 business days.",
       style: context.p.copyWith(fontSize: 12, color: colors.textMuted),
     );
   }
 
   // --- ROW ---
-  Widget _infoRow(String label, String? value) {
+  Widget _infoRow(BuildContext context, String label, String? value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Expanded(
-            flex: 4,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-          ),
+          Expanded(flex: 4, child: Text(label, style: context.pMuted)),
+
+          const SizedBox(width: 12),
+
           Expanded(
             flex: 6,
             child: Text(
               value?.isNotEmpty == true ? value! : "-",
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
             ),
           ),
         ],

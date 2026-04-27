@@ -19,7 +19,7 @@ class SellerVerificationBanner extends StatelessWidget {
     final colors = context.appColors;
 
     switch (state.status) {
-      case VerificationStatus.unverified:
+      case VerificationStatus.notSubmitted:
         return BaseVerificationBanner(
           color: colors.red,
           icon: Icons.verified_outlined,

@@ -1,17 +1,15 @@
-import 'package:africaonlinestores/core/utils/logger.dart';
-import 'package:africaonlinestores/features/shorts/feeds/application/playback/playback_authority.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/video/short_video_view.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_feed_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/playback/playback_authority.dart';
 
 /// Overlays
-import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/short_gradient_overlay.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/video/short_video_view.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/short_actions_panel.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/short_bottom_info.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/shop_now_card.dart';
-
-import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_feed_controller.dart';
 
 class ShortPage extends ConsumerWidget {
   final int index;
@@ -46,11 +44,6 @@ class ShortPage extends ConsumerWidget {
               child: ShortVideoView(index: index),
             ),
           ),
-
-          /// ─────────────────────────────
-          /// LAYER 2 — GRADIENT OVERLAY
-          /// ─────────────────────────────
-          const ShortGradientOverlay(),
 
           /// ─────────────────────────────
           /// LAYER 3 — BOTTOM INFO (READ-ONLY UI)

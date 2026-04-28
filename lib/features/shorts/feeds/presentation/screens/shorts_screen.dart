@@ -1,16 +1,18 @@
-import 'package:africaonlinestores/core/utils/logger.dart';
-import 'package:africaonlinestores/features/shorts/feeds/presentation/helpers/short_video_cache_provider.dart';
-import 'package:africaonlinestores/features/shorts/feeds/application/playback/playback_authority.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_feed_controller.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_session_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/playback/playback_authority.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/short_session_state.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/helpers/short_video_cache_provider.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_feed_view.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_page.dart';
 
@@ -31,6 +33,9 @@ class _ShortsScreenState extends ConsumerState<ShortsScreen>
   ProviderSubscription<ShortsFeedState>? _feedSub;
   ProviderSubscription<ShortsSessionState>? _sessionSub;
 
+  late final ShortSessionController _sessionController;
+  late final ShortVideoCacheManager _videoCache;
+
   List<String> _urlsCache = [];
   int _lastIndex = 0;
 
@@ -42,8 +47,10 @@ class _ShortsScreenState extends ConsumerState<ShortsScreen>
 
     _controller = PageController(initialPage: 0);
 
-    final cache = ref.read(shortVideoCacheProvider);
-    _authority = PlaybackAuthority(cache);
+    _sessionController = ref.read(shortSessionControllerProvider.notifier);
+    _videoCache = ref.read(shortVideoCacheProvider.notifier);
+
+    _authority = PlaybackAuthority(_videoCache);
 
     /// ─────────────────────────────────────────────
     /// INITIAL LOAD
@@ -118,10 +125,11 @@ class _ShortsScreenState extends ConsumerState<ShortsScreen>
 
   @override
   void dispose() {
-    ref.read(shortSessionControllerProvider.notifier).deactivate();
-
     _feedSub?.close();
     _sessionSub?.close();
+
+    _sessionController.deactivate();
+    unawaited(_videoCache.clear());
 
     _controller.dispose();
 
@@ -167,7 +175,7 @@ class _ShortsScreenState extends ConsumerState<ShortsScreen>
 
             ref
                 .read(shortSessionControllerProvider.notifier)
-                .startTransition(index, direction);
+                .startTransition(index, direction: direction);
           },
 
           itemBuilder: (context, index) {

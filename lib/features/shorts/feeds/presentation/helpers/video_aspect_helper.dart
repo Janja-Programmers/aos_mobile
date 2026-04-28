@@ -6,7 +6,12 @@ import 'package:video_player/video_player.dart';
 /// ─────────────────────────────────────────────
 ///
 /// SINGLE RESPONSIBILITY:
-/// → Provide correct aspect-ratio layout
+/// ✔ Render video with correct aspect-ratio behavior
+///
+/// DOES NOT:
+/// ❌ control playback
+/// ❌ know active index
+/// ❌ mutate video state
 ///
 
 class VideoAspectHelper {
@@ -27,40 +32,30 @@ class VideoAspectHelper {
     );
   }
 
-  /// Full-screen portrait fit
+  /// ─────────────────────────────────────────────
+  /// FULL-SCREEN SHORTS VIDEO
+  /// ─────────────────────────────────────────────
+  ///
+  /// Rule:
+  /// - Preserve video aspect ratio
+  /// - Fill the screen edge-to-edge
+  /// - Never stretch the video
+  /// - Crop overflow like TikTok/Reels
+  ///
   Widget buildFullScreenVideo({required VideoPlayerController controller}) {
     if (!controller.value.isInitialized) {
-      return const SizedBox.expand(
-        child: CircularProgressIndicator(color: Colors.red),
-      );
+      return const SizedBox.expand();
     }
 
     final size = controller.value.size;
-    final videoAspect = size.width / size.height;
 
-    // ─────────────────────────────────────
-    // ADAPTIVE RULE ENGINE (PURE RENDER LOGIC)
-    // ─────────────────────────────────────
-
-    BoxFit fit;
-
-    if (videoAspect >= 0.55 && videoAspect <= 0.65) {
-      // classic portrait (TikTok ideal range ~9:16 = 0.5625)
-      fit = BoxFit.cover;
-    } else if (videoAspect < 0.55) {
-      // extremely tall (UI-safe crop mode)
-      fit = BoxFit.cover;
-    } else if (videoAspect > 1.2) {
-      // landscape or wide content
-      fit = BoxFit.contain;
-    } else {
-      // fallback balanced crop
-      fit = BoxFit.cover;
+    if (size.width <= 0 || size.height <= 0) {
+      return const SizedBox.expand();
     }
 
     return SizedBox.expand(
       child: FittedBox(
-        fit: fit,
+        fit: BoxFit.contain,
         alignment: Alignment.center,
         child: SizedBox(
           width: size.width,

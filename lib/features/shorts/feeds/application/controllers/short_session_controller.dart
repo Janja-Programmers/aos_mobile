@@ -12,9 +12,10 @@ final shortSessionControllerProvider =
 /// ─────────────────────────────────────────────
 ///
 /// RULE:
-/// → This layer only describes "what changed"
-/// → It does NOT trigger playback
-/// → It does NOT interact with cache
+/// ✔ This layer only describes "what changed"
+/// ✔ It does NOT trigger playback
+/// ✔ It does NOT interact with cache
+/// ✔ It does NOT know video controllers
 ///
 class ShortSessionController extends StateNotifier<ShortsSessionState> {
   ShortSessionController() : super(ShortsSessionState.initial());
@@ -38,8 +39,7 @@ class ShortSessionController extends StateNotifier<ShortsSessionState> {
   /// TRANSITION START (USER IS SCROLLING)
   /// ─────────────────────────────────────────────
   void startTransition(
-    int newIndex,
-    ScrollDirection idle, {
+    int newIndex, {
     ScrollDirection direction = ScrollDirection.forward,
   }) {
     state = state.copyWith(

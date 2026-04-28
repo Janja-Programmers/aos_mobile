@@ -1,25 +1,28 @@
-import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/features/shorts/feeds/application/state/short_session_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/helpers/short_video_cache_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// ─────────────────────────────────────────────
 /// PLAYBACK AUTHORITY (PURE DECISION ENGINE)
 /// ─────────────────────────────────────────────
 
 final playbackAuthorityProvider = Provider<PlaybackAuthority>((ref) {
-  final cache = ref.read(shortVideoCacheProvider);
+  final cache = ref.read(shortVideoCacheProvider.notifier);
   return PlaybackAuthority(cache);
 });
 
 /// RULES:
 /// ✔ Session = intent only
 /// ✔ Authority = decision only
-/// ✔ Cache = execution only
+/// ✔ Cache = execution + reactive lifecycle state
 ///
-/// NO DIRECT CONTROLLER ACCESS HERE
+/// IMPORTANT:
+/// - Authority commands the cache through methods.
+/// - UI watches cache state separately.
+/// - Authority does not create controllers directly.
+/// - Authority does not render or mutate widgets.
 ///
 
 class PlaybackAuthority {
@@ -36,18 +39,24 @@ class PlaybackAuthority {
     required ShortsSessionState next,
     required List<String> urls,
   }) async {
+    if (next.status == SessionStatus.inactive) {
+      debugPrint("🛑 Authority → inactive → clear cache");
+      await _cache.clear();
+      return;
+    }
+
+    if (next.status == SessionStatus.paused) {
+      await _issuePauseAllCommand();
+      return;
+    }
+
     final index = next.activeIndex;
 
     if (index < 0 || index >= urls.length) return;
 
-    appLogger.i("🧠 Authority → index=$index status=${next.status}");
+    debugPrint("🧠 Authority → index=$index status=${next.status}");
 
-    if (next.status == SessionStatus.paused) {
-      _issuePauseAllCommand();
-      return;
-    }
-
-    _issuePlaybackCommand(
+    await _issuePlaybackCommand(
       activeIndex: index,
       urls: urls,
       direction: next.scrollDirection,
@@ -58,43 +67,58 @@ class PlaybackAuthority {
   /// DECISION → COMMAND TRANSLATION
   /// ─────────────────────────────────────────────
 
-  void _issuePlaybackCommand({
+  Future<void> _issuePlaybackCommand({
     required int activeIndex,
     required List<String> urls,
     required ScrollDirection direction,
-  }) {
+  }) async {
     final validIndexes = <int>{};
 
-    // simple deterministic window rule (no “logic ownership”)
+    /// Window rule:
+    /// keep active video + immediate previous + immediate next.
+    ///
+    /// This keeps memory controlled while making vertical swipes feel instant.
     validIndexes.add(activeIndex);
 
     if (activeIndex - 1 >= 0) validIndexes.add(activeIndex - 1);
     if (activeIndex + 1 < urls.length) validIndexes.add(activeIndex + 1);
 
-    /// EXECUTION LAYER ONLY
+    debugPrint(
+      "🪟 Authority window → active=$activeIndex valid=$validIndexes direction=$direction",
+    );
+
+    /// Cleanup first so removed controllers cannot keep playing.
     _cache.disposeOutsideWindow(validIndexes);
 
-    for (final i in validIndexes) {
-      _cache.ensureController(i, urls[i]);
-    }
+    /// Prepare all controllers inside the active preload window.
+    ///
+    /// Cache emits:
+    /// initializing → ready/error
+    ///
+    /// ShortVideoView reacts to that state by rebuilding itself.
+    await Future.wait(
+      validIndexes.map((i) => _cache.ensureController(i, urls[i])),
+    );
 
-    _cache.play(activeIndex);
+    /// Playback command remains centralized here.
+    /// UI never calls controller.play() directly.
+    await _cache.play(activeIndex);
   }
 
   /// ─────────────────────────────────────────────
   /// PAUSE COMMAND
   /// ─────────────────────────────────────────────
 
-  void _issuePauseAllCommand() {
-    _cache.pauseAll();
+  Future<void> _issuePauseAllCommand() async {
+    await _cache.pauseAll();
   }
 
   /// ─────────────────────────────────────────────
-  /// TAP INTENT (NO STATE, NO CONTROLLER ACCESS)
+  /// TAP INTENT (NO UI MUTATION, NO CONTROLLER CREATION)
   /// ─────────────────────────────────────────────
 
   Future<void> togglePlayPause(int activeIndex) async {
-    appLogger.i("👆 Authority toggle → index=$activeIndex");
+    debugPrint("👆 Authority toggle → index=$activeIndex");
 
     final controller = _cache.controllerFor(activeIndex);
 
@@ -115,7 +139,7 @@ class PlaybackAuthority {
   /// ─────────────────────────────────────────────
 
   Future<void> onPause() async {
-    appLogger.i("⏸ Authority → pauseAll");
+    debugPrint("⏸ Authority → pauseAll");
     await _cache.pauseAll();
   }
 
@@ -123,9 +147,9 @@ class PlaybackAuthority {
     required int activeIndex,
     required List<String> urls,
   }) async {
-    appLogger.i("▶️ Authority → resume index=$activeIndex");
+    debugPrint("▶️ Authority → resume index=$activeIndex");
 
-    _issuePlaybackCommand(
+    await _issuePlaybackCommand(
       activeIndex: activeIndex,
       urls: urls,
       direction: ScrollDirection.idle,

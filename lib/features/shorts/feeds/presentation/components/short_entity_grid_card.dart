@@ -1,25 +1,23 @@
-import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
-
-import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
 
-class ShortGridCard extends StatelessWidget {
-  final ShortModel short;
+class ShortEntityGridCard extends StatelessWidget {
+  final Short short;
   final int index;
 
-  const ShortGridCard({super.key, required this.short, required this.index});
+  const ShortEntityGridCard({
+    super.key,
+    required this.short,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
-    final caption = short.caption;
-    final imageUrl = short.thumbnailUrl;
-    final avatarUrl = buildFileUrl(short.sellerAvator);
 
     return GestureDetector(
       onTap: () => ShortsNavigation.toShorts(context, initialIndex: index),
@@ -35,34 +33,26 @@ class ShortGridCard extends StatelessWidget {
             AspectRatio(
               aspectRatio: 0.78,
               child: Image.network(
-                imageUrl,
+                short.thumbnailUrl,
                 width: double.infinity,
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => _placeholder(colors),
               ),
             ),
-
-            if (caption.isNotEmpty)
+            if (short.caption.value.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(8, 7, 8, 2),
                 child: Text(
-                  caption,
+                  short.caption.value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 12),
                 ),
               ),
-
             Padding(
               padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
               child: Row(
                 children: [
-                  _SellerAvatar(
-                    avatarUrl: avatarUrl,
-                    name: short.sellerShopName ?? 'Shop',
-                  ),
-                  const SizedBox(width: 5),
-
                   Expanded(
                     child: Text(
                       short.sellerShopName ?? 'Shop',
@@ -71,11 +61,9 @@ class ShortGridCard extends StatelessWidget {
                       style: const TextStyle(fontSize: 11),
                     ),
                   ),
-
                   const SizedBox(width: 4),
-
                   Text(
-                    short.metrics.likes.toString(),
+                    short.metrics.likeCount.toString(),
                     style: const TextStyle(fontSize: 11),
                   ),
                   const SizedBox(width: 3),
@@ -95,43 +83,5 @@ class ShortGridCard extends StatelessWidget {
       color: colors.border,
       child: const Center(child: Icon(Icons.play_arrow)),
     );
-  }
-}
-
-class _SellerAvatar extends StatelessWidget {
-  final String? avatarUrl;
-  final String name;
-
-  const _SellerAvatar({required this.avatarUrl, required this.name});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context);
-
-    final initials = _getInitials(name);
-
-    return CircleAvatar(
-      radius: 12,
-      backgroundColor: colors.colorScheme.primary.withOpacity(.2),
-      backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-      child: avatarUrl == null
-          ? Text(
-              initials,
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-            )
-          : null,
-    );
-  }
-
-  String _getInitials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
-
-    if (parts.isEmpty) return '?';
-
-    if (parts.length == 1) {
-      return parts.first.substring(0, 1).toUpperCase();
-    }
-
-    return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 }

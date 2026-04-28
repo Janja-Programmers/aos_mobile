@@ -14,8 +14,6 @@ class FeedFilterMenu extends ConsumerWidget {
         return 'All';
       case FeedFilter.live:
         return 'Live';
-      case FeedFilter.photos:
-        return 'Photos';
       case FeedFilter.shorts:
         return 'Shorts';
     }

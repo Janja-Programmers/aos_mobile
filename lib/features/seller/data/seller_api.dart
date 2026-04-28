@@ -78,4 +78,35 @@ class SellerApi {
 
     return Right(res.data['message']);
   }
+
+  /// LIST SELLERS
+  Future<Either<Failure, Map<String, dynamic>>> listSellers({
+    String? search,
+    String? category,
+    int? isVerified,
+    String? sellerType,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      final data = <String, dynamic>{
+        'limit': limit,
+        'offset': offset,
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+        if (category != null && category.trim().isNotEmpty)
+          'category': category.trim(),
+        'is_verified': ?isVerified,
+        if (sellerType != null && sellerType.trim().isNotEmpty)
+          'seller_type': sellerType.trim(),
+      };
+
+      final res = await _dio.post(ApiEndpoints.listSellersEndpoint, data: data);
+
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (e) {
+      return Either.left(const Failure('Failed to fetch sellers.'));
+    }
+  }
 }

@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
-import 'package:africaonlinestores/features/shorts/create_short/application/providers/shorts_providers.dart';
-import 'package:africaonlinestores/features/shorts/feeds/application/providers/feed_search_provider.dart';
-import 'package:africaonlinestores/features/shorts/feeds/presentation/components/short_grid_card.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/components/short_entity_grid_card.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/providers/feed_providers.dart';
 
 class InspirationGrid extends ConsumerStatefulWidget {
   const InspirationGrid({super.key});
@@ -14,95 +13,75 @@ class InspirationGrid extends ConsumerStatefulWidget {
 }
 
 class _InspirationGridState extends ConsumerState<InspirationGrid> {
-  final _scrollController = ScrollController();
-
-  late final ProviderSubscription<String> _searchSub;
-
-  String _currentQuery = "";
-
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(shortGridControllerProvider.notifier).loadInitial();
-    });
-
-    _scrollController.addListener(_onScroll);
-
-    /// ✅ SAFE manual listener
-    _searchSub = ref.listenManual<String>(debouncedSearchProvider, (
-      prev,
-      next,
-    ) {
-      if (_currentQuery == next) return;
-
-      _currentQuery = next;
-
-      ref.read(shortGridControllerProvider.notifier).loadInitial(query: next);
+      ref.read(inspirationGridControllerProvider.notifier).loadInitial();
     });
   }
 
-  void _onScroll() {
-    if (!_scrollController.hasClients) return;
+  bool _onScrollNotification(ScrollNotification notification) {
+    if (notification.metrics.axis != Axis.vertical) return false;
 
-    final position = _scrollController.position;
+    final state = ref.read(inspirationGridControllerProvider);
 
-    if (position.pixels >= position.maxScrollExtent - 600) {
-      ref
-          .read(shortGridControllerProvider.notifier)
-          .loadMore(query: _currentQuery);
+    if (state.isLoading || state.isLoadingMore || !state.hasMore) {
+      return false;
     }
-  }
 
-  @override
-  void dispose() {
-    _searchSub.close();
-    _scrollController.dispose();
-    super.dispose();
+    final nearBottom =
+        notification.metrics.pixels >=
+        notification.metrics.maxScrollExtent - 240;
+
+    if (!nearBottom) return false;
+
+    ref.read(inspirationGridControllerProvider.notifier).loadMore();
+
+    return false;
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(shortGridControllerProvider);
+    final state = ref.watch(inspirationGridControllerProvider);
 
     if (state.isLoading && state.shorts.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final validShorts = state.shorts.toList();
-
-    if (validShorts.isEmpty) {
+    if (state.shorts.isEmpty) {
       return const Center(child: Text('No content found'));
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: MasonryGridView.count(
-        controller: _scrollController,
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScrollNotification,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: MasonryGridView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          gridDelegate: const SliverSimpleGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+          ),
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          itemCount: state.shorts.length + (state.isLoadingMore ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index >= state.shorts.length) {
+              return const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-        crossAxisCount: 2,
+            final short = state.shorts[index];
 
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-
-        itemCount: validShorts.length + (state.hasMore ? 1 : 0),
-
-        itemBuilder: (context, index) {
-          if (index >= validShorts.length) {
-            return const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: ShortEntityGridCard(short: short, index: index),
             );
-          }
-
-          final short = validShorts[index];
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: ShortGridCard(short: short, index: index),
-          );
-        },
+          },
+        ),
       ),
     );
   }

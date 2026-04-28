@@ -17,7 +17,9 @@ class Short extends Equatable {
   final Caption caption;
   final List<String> hashtags;
 
-  final String ownerId;
+  final String sellerId;
+  final String? sellerShopName;
+  final String? sellerAvator;
 
   final ShortStatus status;
   final ShortMetrics metrics;
@@ -34,7 +36,9 @@ class Short extends Equatable {
     required this.durationSeconds,
     required this.caption,
     required this.hashtags,
-    required this.ownerId,
+    required this.sellerId,
+    this.sellerShopName,
+    this.sellerAvator,
     required this.status,
     required this.metrics,
     required this.viewerState,
@@ -56,7 +60,9 @@ class Short extends Equatable {
     int? durationSeconds,
     Caption? caption,
     List<String>? hashtags,
-    String? ownerId,
+    String? sellerId,
+    String? sellerShopName,
+    String? sellerAvator,
     ShortStatus? status,
     ShortMetrics? metrics,
     ShortAd? ad,
@@ -70,7 +76,9 @@ class Short extends Equatable {
       durationSeconds: durationSeconds ?? this.durationSeconds,
       caption: caption ?? this.caption,
       hashtags: hashtags ?? this.hashtags,
-      ownerId: ownerId ?? this.ownerId,
+      sellerId: sellerId ?? this.sellerId,
+      sellerShopName: sellerShopName ?? this.sellerShopName,
+      sellerAvator: sellerAvator ?? this.sellerAvator,
       status: status ?? this.status,
       metrics: metrics ?? this.metrics,
       ad: ad ?? this.ad,
@@ -87,7 +95,9 @@ class Short extends Equatable {
     durationSeconds,
     caption,
     hashtags,
-    ownerId,
+    sellerId,
+    sellerShopName,
+    sellerAvator,
     status,
     metrics,
     ad,

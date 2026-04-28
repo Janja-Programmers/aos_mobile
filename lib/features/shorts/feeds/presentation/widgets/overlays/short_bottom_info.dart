@@ -65,13 +65,13 @@ class ShortBottomInfo extends StatelessWidget {
   // ─────────────────────────────────────────────
 
   String _resolveUsername() {
-    final ownerId = short.ownerId;
+    final sellerId = short.sellerId;
 
-    if (ownerId.isEmpty) {
+    if (sellerId.isEmpty) {
       return "user";
     }
 
-    return ownerId;
+    return sellerId;
   }
 
   String _composeCaption() {

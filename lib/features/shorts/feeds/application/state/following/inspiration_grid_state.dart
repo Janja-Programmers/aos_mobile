@@ -1,14 +1,13 @@
-import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
-class ShortGridState {
-  final List<ShortModel> shorts;
-
+class InspirationGridState {
+  final List<Short> shorts;
   final bool isLoading;
   final bool isLoadingMore;
   final bool hasMore;
   final String? cursor;
 
-  const ShortGridState({
+  const InspirationGridState({
     required this.shorts,
     this.isLoading = false,
     this.isLoadingMore = false,
@@ -16,15 +15,15 @@ class ShortGridState {
     this.cursor,
   });
 
-  ShortGridState copyWith({
-    List<ShortModel>? shorts,
+  InspirationGridState copyWith({
+    List<Short>? shorts,
     bool? isLoading,
     bool? isLoadingMore,
     bool? hasMore,
     String? cursor,
     bool clearCursor = false,
   }) {
-    return ShortGridState(
+    return InspirationGridState(
       shorts: shorts ?? this.shorts,
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,

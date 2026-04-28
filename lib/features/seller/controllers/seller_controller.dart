@@ -32,4 +32,22 @@ class SellerController {
       banner: banner,
     );
   }
+
+  Future<Either<Failure, Map<String, dynamic>>> listSellers({
+    String? search,
+    String? category,
+    int? isVerified,
+    String? sellerType,
+    int limit = 20,
+    int offset = 0,
+  }) {
+    return _api.listSellers(
+      search: search,
+      category: category,
+      isVerified: isVerified,
+      sellerType: sellerType,
+      limit: limit,
+      offset: offset,
+    );
+  }
 }

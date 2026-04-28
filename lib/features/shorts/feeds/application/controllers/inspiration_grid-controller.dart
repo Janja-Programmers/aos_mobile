@@ -1,13 +1,14 @@
-import 'package:africaonlinestores/features/shorts/feeds/application/state/short_grid_state.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_feed_api.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/state/following/inspiration_grid_state.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-class ShortGridController extends StateNotifier<ShortGridState> {
+class InspirationGridController extends StateNotifier<InspirationGridState> {
   final ShortsFeedApi feedApi;
 
-  ShortGridController(this.feedApi) : super(const ShortGridState(shorts: []));
+  InspirationGridController(this.feedApi)
+    : super(const InspirationGridState(shorts: []));
 
-  Future<void> loadInitial({String? query}) async {
+  Future<void> loadInitial() async {
     if (state.isLoading) return;
 
     state = state.copyWith(
@@ -18,7 +19,7 @@ class ShortGridController extends StateNotifier<ShortGridState> {
       clearCursor: true,
     );
 
-    final res = await feedApi.fetchFollowingGrid(query: query);
+    final res = await feedApi.fetchForYou();
 
     res.fold(
       (_) {
@@ -36,15 +37,12 @@ class ShortGridController extends StateNotifier<ShortGridState> {
     );
   }
 
-  Future<void> loadMore({String? query}) async {
+  Future<void> loadMore() async {
     if (state.isLoading || state.isLoadingMore || !state.hasMore) return;
 
     state = state.copyWith(isLoadingMore: true);
 
-    final res = await feedApi.fetchFollowingGrid(
-      query: query,
-      cursor: state.cursor,
-    );
+    final res = await feedApi.fetchForYou(cursor: state.cursor);
 
     res.fold(
       (_) {
@@ -55,33 +53,6 @@ class ShortGridController extends StateNotifier<ShortGridState> {
           shorts: [...state.shorts, ...page.items],
           cursor: page.nextCursor,
           hasMore: page.hasMore,
-          isLoadingMore: false,
-        );
-      },
-    );
-  }
-
-  Future<void> refresh({String? query}) async {
-    state = state.copyWith(
-      isLoading: true,
-      isLoadingMore: false,
-      shorts: [],
-      hasMore: true,
-      clearCursor: true,
-    );
-
-    final res = await feedApi.fetchFollowingGrid(query: query);
-
-    res.fold(
-      (_) {
-        state = state.copyWith(isLoading: false, isLoadingMore: false);
-      },
-      (page) {
-        state = state.copyWith(
-          shorts: page.items,
-          cursor: page.nextCursor,
-          hasMore: page.hasMore,
-          isLoading: false,
           isLoadingMore: false,
         );
       },

@@ -12,7 +12,9 @@ class ShortModel {
   final String caption;
   final List<String> hashtags;
 
-  final String ownerId;
+  final String sellerId;
+  final String? sellerShopName;
+  final String? sellerAvator;
 
   final String? status;
 
@@ -31,7 +33,9 @@ class ShortModel {
     required this.durationSeconds,
     required this.caption,
     required this.hashtags,
-    required this.ownerId,
+    required this.sellerId,
+    this.sellerShopName,
+    this.sellerAvator,
     this.status,
     required this.metrics,
     required this.viewerState,
@@ -52,7 +56,9 @@ class ShortModel {
 
       hashtags: List<String>.from(json['hashtags'] ?? []),
 
-      ownerId: json['seller']?['id'] ?? '',
+      sellerId: json['seller']['id'],
+      sellerShopName: json['seller']['shop_name'],
+      sellerAvator: json['seller']['avatar'],
 
       status: json['status'] as String?,
 

@@ -87,8 +87,8 @@ class ApiEndpoints {
   // Seller Endpoints
   static final String getSellerEndpoint =
       '/api/method/aos.api.sellers.get_seller';
-  static final String getSellerListEndpoint =
-      '/api/method/aos.api.sellers.get_seller_list';
+  static final String listSellersEndpoint =
+      '/api/method/aos.api.sellers.list_sellers';
   static final String getMySellerStatusEndpoint =
       '/api/method/aos.api.sellers.get_my_seller_status';
   static final String toggleSellerEndpoint =

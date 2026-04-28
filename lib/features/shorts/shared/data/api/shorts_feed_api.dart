@@ -55,11 +55,13 @@ class ShortsFeedApi {
                 .whereType<Short>()
                 .toList();
 
+            final nextCursor = data['next_cursor'] as String?;
+
             return Either.right(
               ShortFeedPage(
                 items: items,
                 nextCursor: data['next_cursor'] as String?,
-                hasMore: data['has_more'] ?? false,
+                hasMore: nextCursor != null && nextCursor.isNotEmpty,
               ),
             );
           } catch (e, _) {
@@ -81,9 +83,9 @@ class ShortsFeedApi {
     String? cursor,
   }) async {
     try {
-      final params = {
-        'cursor': ?cursor,
-        if (query != null && query.isNotEmpty) 'search': query,
+      final params = <String, dynamic>{
+        if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+        if (query != null && query.trim().isNotEmpty) 'search': query.trim(),
       };
 
       final res = await _client.get(
@@ -94,25 +96,28 @@ class ShortsFeedApi {
       final unwrapped = unwrapFrappe(res);
 
       return unwrapped.fold((failure) => Either.left(failure), (json) {
-        final items = (json['data']?['items'] as List? ?? [])
-            .map((e) => ShortModel.fromJson(e))
+        final data = json['data'] as Map<String, dynamic>? ?? {};
+
+        final items = (data['items'] as List? ?? [])
+            .whereType<Map<String, dynamic>>()
+            .map(ShortModel.fromJson)
             .toList();
+
+        final nextCursor = data['next_cursor'] as String?;
 
         return Either.right(
           ShortGridPage(
             items: items,
-
-            nextCursor: json['data']?['next_cursor'],
-
-            hasMore: json['data']?['has_more'] ?? false,
+            nextCursor: nextCursor,
+            hasMore: nextCursor != null && nextCursor.isNotEmpty,
           ),
         );
       });
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
-    } catch (_) {
+    } catch (e) {
       return Either.left(
-        const Failure('Unexpected error fetching following grid'),
+        Failure('Unexpected error fetching following grid: $e'),
       );
     }
   }

@@ -17,7 +17,9 @@ class ShortMapper {
       durationSeconds: model.durationSeconds,
       caption: Caption(model.caption),
       hashtags: model.hashtags,
-      ownerId: model.ownerId,
+      sellerId: model.sellerId,
+      sellerShopName: model.sellerShopName,
+      sellerAvator: model.sellerAvator,
       status: ShortStatus.fromString(model.status),
       metrics: MetricsMapper.toDomain(model.metrics),
       ad: model.ad == null

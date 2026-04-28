@@ -23,7 +23,7 @@ class ShortsCommentsApi {
     String? cursor,
   }) async {
     try {
-      final query = {'short_id': shortId, if (cursor != null) 'cursor': cursor};
+      final query = {'short_id': shortId, 'cursor': ?cursor};
 
       final res = await _client.get(
         ApiEndpoints.listShortComments,

@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,6 +17,7 @@ import 'package:africaonlinestores/features/search/shared/routing/search_routes.
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+import 'package:go_router/go_router.dart';
 
 class AdListScreen extends ConsumerStatefulWidget {
   const AdListScreen({super.key});
@@ -73,9 +75,14 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
     final searchBar = AppSearchBar(
       controller: _searchCtrl,
       readOnly: true,
-      onTap: () => SearchNavigation.toSearchscreen(context),
-      onMicTap: () => SearchNavigation.toSearchscreen(context),
-      onCameraTap: () => SearchNavigation.toSearchscreen(context),
+      onTap: () => SearchNavigation.toTextSearch(context),
+      onMicTap: () => SearchNavigation.toVoiceSearch(context),
+      onCameraTap: () {
+        context.pushNamed(
+          AppRoutes.nSearch,
+          queryParameters: {'mode': 'image'},
+        );
+      },
     );
 
     final header = HomeAppBar(

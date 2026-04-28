@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
 import 'package:africaonlinestores/features/search/search_screen.dart';
 
 class SearchRoutes {
@@ -13,7 +12,11 @@ class SearchRoutes {
       GoRoute(
         name: AppRoutes.nSearch,
         path: AppRoutes.search,
-        builder: (context, state) => const SearchScreen(),
+        builder: (context, state) {
+          final mode = state.uri.queryParameters['mode'] ?? 'text';
+
+          return SearchScreen(initialMode: mode);
+        },
       ),
     ];
   }
@@ -22,7 +25,19 @@ class SearchRoutes {
 class SearchNavigation {
   const SearchNavigation._();
 
-  static void toSearchscreen(BuildContext context) {
-    context.pushNamed(AppRoutes.nSearch);
+  static void toSearchscreen(BuildContext context, {String mode = 'text'}) {
+    context.pushNamed(AppRoutes.nSearch, queryParameters: {'mode': mode});
+  }
+
+  static void toTextSearch(BuildContext context) {
+    toSearchscreen(context, mode: 'text');
+  }
+
+  static void toVoiceSearch(BuildContext context) {
+    toSearchscreen(context, mode: 'voice');
+  }
+
+  static void toImageSearch(BuildContext context) {
+    toSearchscreen(context, mode: 'image');
   }
 }

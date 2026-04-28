@@ -12,6 +12,7 @@ class PostShortMediaHelpers {
       video: file.path,
       imageFormat: ImageFormat.JPEG,
       quality: 75,
+      maxWidth: 300,
     );
   }
 }

@@ -23,14 +23,12 @@ class PostShortMediaPickerScreen extends ConsumerStatefulWidget {
 
 class _PostShortMediaPickerScreenState
     extends ConsumerState<PostShortMediaPickerScreen> {
-  MediaTab currentTab = MediaTab.album;
+  MediaTab currentTab = MediaTab.video;
 
   List<SelectedMedia> selectedMedia = [];
   final sessionId = UniqueKey().toString();
 
   bool get hasSelection => selectedMedia.isNotEmpty;
-
-  static const maxImages = 5;
 
   @override
   Widget build(BuildContext context) {
@@ -106,6 +104,7 @@ class _PostShortMediaPickerScreenState
 
   Widget _emptyPicker(AppColorTokens colors) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: _pickMedia,
       child: Center(
         child: Column(
@@ -127,68 +126,51 @@ class _PostShortMediaPickerScreenState
     );
   }
 
-  Widget _mediaPreview(AppColorTokens colors) {
-    final item = selectedMedia.first;
-    final isVideo = item.type == MediaType.video;
-    final file = item.file;
+  Future<void> _pickMedia() async {
+    final file = await MediaHelper.pickVideoWithChoice(context);
 
-    return GestureDetector(
-      onTap: _pickMedia,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          /// IMAGE
-          if (!isVideo) Image.file(file, fit: BoxFit.cover),
+    if (file == null) return;
 
-          /// VIDEO
-          if (isVideo)
-            FutureBuilder(
-              future: PostShortMediaHelpers.generateVideoThumbnail(file),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Container(
-                    color: colors.black,
-                    child: const Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                return Image.memory(snapshot.data!, fit: BoxFit.cover);
-              },
-            ),
-
-          /// VIDEO ICON
-          if (isVideo)
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: colors.black.withOpacity(.6),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.videocam, color: colors.white, size: 28),
-              ),
-            ),
-
-          /// MULTI IMAGE COUNT
-          if (!isVideo && selectedMedia.length > 1)
-            Positioned(
-              top: 12,
-              right: 12,
-              child: PostShortMediaWidgets.countBadge(
-                colors,
-                selectedMedia.length,
-                context.p.copyWith(color: colors.white),
-              ),
-            ),
-
-          /// GRADIENT
-          PostShortMediaWidgets.bottomGradient(colors),
-        ],
-      ),
-    );
+    setState(() {
+      selectedMedia = [SelectedMedia(file, MediaType.video)];
+    });
   }
 
-  // ───────────────────────── TABS
+  Widget _mediaPreview(AppColorTokens colors) {
+    final file = selectedMedia.first.file;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        FutureBuilder(
+          future: PostShortMediaHelpers.generateVideoThumbnail(file),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Container(
+                color: colors.black,
+                child: const Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            return Image.memory(snapshot.data!, fit: BoxFit.cover);
+          },
+        ),
+
+        Center(
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: colors.black.withOpacity(.6),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.videocam, color: colors.white, size: 28),
+          ),
+        ),
+
+        PostShortMediaWidgets.bottomGradient(colors),
+      ],
+    );
+  } // ───────────────────────── TABS
 
   Widget _bottomTabs(AppColorTokens colors) {
     return Container(
@@ -198,11 +180,7 @@ class _PostShortMediaPickerScreenState
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _tabItem("Album", MediaTab.album, colors),
-          _tabItem("Photo", MediaTab.photo, colors),
-          _tabItem("Video", MediaTab.video, colors),
-        ],
+        children: [_tabItem("Video", MediaTab.video, colors)],
       ),
     );
   }
@@ -242,9 +220,6 @@ class _PostShortMediaPickerScreenState
   }
 
   Widget _previewStrip(AppColorTokens colors) {
-    final item = selectedMedia.first;
-    final isVideo = item.type == MediaType.video;
-
     return Positioned(
       bottom: 0,
       left: 0,
@@ -264,9 +239,7 @@ class _PostShortMediaPickerScreenState
               child: Row(
                 children: [
                   Text(
-                    isVideo
-                        ? "1 video selected"
-                        : "${selectedMedia.length} selected",
+                    "Video selected",
                     style: context.p.copyWith(
                       color: colors.white.withOpacity(.7),
                     ),
@@ -282,7 +255,7 @@ class _PostShortMediaPickerScreenState
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
-                itemCount: isVideo ? 1 : selectedMedia.length,
+                itemCount: 1,
                 itemBuilder: (_, index) {
                   return _previewItem(index, colors);
                 },
@@ -296,57 +269,46 @@ class _PostShortMediaPickerScreenState
 
   Widget _previewItem(int index, AppColorTokens colors) {
     final item = selectedMedia[index];
-    final isVideo = item.type == MediaType.video;
     final file = item.file;
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Stack(
         children: [
-          /// IMAGE THUMB
-          if (!isVideo)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.file(file, width: 70, height: 70, fit: BoxFit.cover),
-            ),
-
-          /// VIDEO THUMB
-          if (isVideo)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: FutureBuilder(
-                future: PostShortMediaHelpers.generateVideoThumbnail(file),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return Container(
-                      width: 70,
-                      height: 70,
-                      color: colors.black,
-                      child: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    );
-                  }
-
-                  return Image.memory(
-                    snapshot.data!,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: FutureBuilder(
+              future: PostShortMediaHelpers.generateVideoThumbnail(file),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Container(
                     width: 70,
                     height: 70,
-                    fit: BoxFit.cover,
+                    color: colors.black,
+                    child: const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   );
-                },
-              ),
+                }
+
+                return Image.memory(
+                  snapshot.data!,
+                  width: 70,
+                  height: 70,
+                  fit: BoxFit.cover,
+                );
+              },
             ),
+          ),
 
           /// VIDEO ICON
-          if (isVideo)
-            Positioned.fill(
-              child: Container(
-                alignment: Alignment.center,
-                color: colors.black.withOpacity(.4),
-                child: Icon(Icons.videocam, color: colors.white, size: 22),
-              ),
+          Positioned.fill(
+            child: Container(
+              alignment: Alignment.center,
+              color: colors.black.withOpacity(.4),
+              child: Icon(Icons.videocam, color: colors.white, size: 22),
             ),
+          ),
 
           /// REMOVE BUTTON
           Positioned(
@@ -375,12 +337,6 @@ class _PostShortMediaPickerScreenState
 
   String _tabMessage() {
     switch (currentTab) {
-      case MediaTab.album:
-        return "Tap to select from album";
-
-      case MediaTab.photo:
-        return "Tap to pick/upload multiple photos";
-
       case MediaTab.video:
         return "Tap to pick/upload video";
     }
@@ -388,54 +344,30 @@ class _PostShortMediaPickerScreenState
 
   IconData _tabIcon() {
     switch (currentTab) {
-      case MediaTab.album:
-        return Icons.collections_outlined;
-
-      case MediaTab.photo:
-        return Icons.photo_library_outlined;
-
       case MediaTab.video:
         return Icons.videocam_outlined;
     }
   }
 
   // ───────────────────────── PICK LOGIC
-  Future<void> _pickMedia() async {
-    if (currentTab == MediaTab.video) {
-      final file = await MediaHelper.pickVideoWithChoice(context);
 
-      if (file == null) return;
-
-      setState(() {
-        selectedMedia
-          ..clear()
-          ..add(SelectedMedia(file, MediaType.video));
-      });
-
-      return;
-    }
-
-    /// enforce image limit
-    if (selectedMedia.length >= maxImages) return;
-
-    final file = await MediaHelper.pickImageFromGallery();
-
-    if (file == null) return;
-
+  void setPickedVideo(SelectedMedia video) {
     setState(() {
-      selectedMedia.add(SelectedMedia(file, MediaType.image));
+      selectedMedia = [video];
     });
   }
 
   void _goNext() {
     if (!hasSelection) return;
 
+    final pickedVideo = selectedMedia.first;
+
     final sessionId = const Uuid().v4();
 
     ShortsNavigation.toPostShortDetails(
       context,
-      media: selectedMedia,
       sessionId: sessionId,
+      media: [pickedVideo],
     );
   }
 }

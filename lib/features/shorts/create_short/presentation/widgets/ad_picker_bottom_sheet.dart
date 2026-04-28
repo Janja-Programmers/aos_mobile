@@ -33,55 +33,60 @@ class _AdPickerBottomSheetState extends ConsumerState<AdPickerBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final adsAsync = ref.watch(myAdsProvider);
+    final colors = context.appColors;
 
     return SafeArea(
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.7,
-        child: Column(
-          children: [
-            _header(),
-            _searchBar(),
-            const SizedBox(height: 10),
+      child: Container(
+        color: colors.surface,
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: Column(
+            children: [
+              _header(),
+              _searchBar(),
+              const SizedBox(height: 10),
 
-            Expanded(
-              child: adsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
+              Expanded(
+                child: adsAsync.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
 
-                error: (e, _) =>
-                    Center(child: Text(e.toString(), style: context.p)),
+                  error: (e, _) =>
+                      Center(child: Text(e.toString(), style: context.p)),
 
-                data: (ads) {
-                  final filtered = _filterAds(ads);
+                  data: (ads) {
+                    final filtered = _filterAds(ads);
 
-                  if (filtered.isEmpty) return _emptyState();
+                    if (filtered.isEmpty) return _emptyState();
 
-                  return GridView.builder(
-                    padding: const EdgeInsets.all(12),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 0.78,
-                        ),
-                    itemCount: filtered.length,
-                    itemBuilder: (_, index) {
-                      final ad = filtered[index];
+                    return GridView.builder(
+                      padding: const EdgeInsets.all(12),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 0.78,
+                          ),
+                      itemCount: filtered.length,
+                      itemBuilder: (_, index) {
+                        final ad = filtered[index];
 
-                      return AdCard(
-                        ad: ad,
-                        imageHeight: 110,
-                        onTap: () {
-                          widget.onSelected(ad.id.toString());
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
-                  );
-                },
+                        return AdCard(
+                          ad: ad,
+                          imageHeight: 110,
+                          onTap: () {
+                            widget.onSelected(ad.id.toString());
+                            Navigator.pop(context);
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -104,7 +109,7 @@ class _AdPickerBottomSheetState extends ConsumerState<AdPickerBottomSheet> {
   Widget _header() {
     return Padding(
       padding: const EdgeInsets.all(12),
-      child: Text("Select an item to search or tag", style: context.pStrong),
+      child: Text("Select or search an ad to tag", style: context.pStrong),
     );
   }
 

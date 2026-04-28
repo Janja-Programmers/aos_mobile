@@ -15,11 +15,15 @@ class ShortAdModel {
 
   factory ShortAdModel.fromJson(Map<String, dynamic> json) {
     return ShortAdModel(
-      id: json['id'],
-      title: json['title'],
-      price: (json['price'] as num).toDouble(),
-      currency: json['currency'],
-      thumbnail: json['thumbnail'],
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      currency: json['currency'] as String? ?? '',
+      thumbnail: json['thumbnail'] as String?,
     );
   }
+
+  bool get isEmpty => id.trim().isEmpty;
+
+  bool get isNotEmpty => !isEmpty;
 }

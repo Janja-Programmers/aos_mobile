@@ -110,21 +110,25 @@ class _ShortsScreenState extends ConsumerState<ShortsScreen>
   /// ─────────────────────────────────────────────
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final session = ref.read(shortSessionControllerProvider.notifier);
+    if (!mounted) return;
+
+    // final session = ref.read(shortSessionControllerProvider.notifier);
 
     if (state == AppLifecycleState.paused) {
       appLogger.i("⏸ APP PAUSED");
-      session.pause();
+      _sessionController.pause();
     }
 
     if (state == AppLifecycleState.resumed) {
       appLogger.i("▶️ APP RESUMED");
-      session.resume();
+      _sessionController.resume();
     }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+
     _feedSub?.close();
     _sessionSub?.close();
 
@@ -132,8 +136,6 @@ class _ShortsScreenState extends ConsumerState<ShortsScreen>
     unawaited(_videoCache.clear());
 
     _controller.dispose();
-
-    WidgetsBinding.instance.removeObserver(this);
 
     super.dispose();
   }

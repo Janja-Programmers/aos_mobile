@@ -58,7 +58,7 @@ class ShortModel {
 
       metrics: ShortMetricsModel.fromJson(json),
 
-      ad: json['ad'] != null ? ShortAdModel.fromJson(json['ad']) : null,
+      ad: _parseAd(json['ad']),
 
       postedAt: json['posted_on'] as String?,
 
@@ -66,5 +66,13 @@ class ShortModel {
         json['viewer_state'] as Map<String, dynamic>? ?? {},
       ),
     );
+  }
+
+  static ShortAdModel? _parseAd(dynamic value) {
+    if (value is! Map<String, dynamic>) return null;
+
+    final ad = ShortAdModel.fromJson(value);
+
+    return ad.isEmpty ? null : ad;
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
@@ -20,8 +21,9 @@ class ShortBottomInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final username = _resolveUsername();
+    final colors = context.appColors;
 
+    final username = _resolveUsername();
     final captionText = _composeCaption();
 
     return ConstrainedBox(
@@ -35,6 +37,7 @@ class ShortBottomInfo extends StatelessWidget {
           Text(
             "@$username",
             style: context.p.copyWith(
+              color: colors.white,
               fontWeight: FontWeight.w600,
               fontSize: 14,
             ),
@@ -48,7 +51,7 @@ class ShortBottomInfo extends StatelessWidget {
           if (captionText.isNotEmpty)
             Text(
               captionText,
-              style: context.p.copyWith(height: 1.3),
+              style: context.p.copyWith(color: colors.white, height: 1.3),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),

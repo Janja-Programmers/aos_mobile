@@ -1,3 +1,1 @@
-enum MediaTab { album, photo, video }
-
-
+enum MediaTab { video }

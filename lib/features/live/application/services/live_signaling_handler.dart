@@ -18,8 +18,6 @@ class LiveSignalingHandler {
         return;
       }
 
-      appLogger.i('🔴 Live started parsed → $liveId');
-
       await liveManager.onLiveStartedEvent(liveId: liveId);
     } catch (e, s) {
       appLogger.e('handleLiveStarted failed', error: e, stackTrace: s);

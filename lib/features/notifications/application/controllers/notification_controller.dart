@@ -17,8 +17,6 @@ class NotificationController extends StateNotifier<NotificationState> {
   Future<void> loadNotifications() async {
     if (state.isLoading) return;
 
-    appLogger.i('NotificationController -> loadNotifications');
-
     state = state.loading();
 
     final result = await _repository.getNotifications();
@@ -34,10 +32,6 @@ class NotificationController extends StateNotifier<NotificationState> {
 
     final items = _sortNotifications(result.rightOrNull!);
 
-    appLogger.i(
-      'NotificationController -> loadNotifications success: ${items.length}',
-    );
-
     state = state.success(items);
   }
 
@@ -46,8 +40,6 @@ class NotificationController extends StateNotifier<NotificationState> {
   // =====================================================
   Future<void> refreshNotifications() async {
     if (state.isRefreshing) return;
-
-    appLogger.i('NotificationController -> refreshNotifications');
 
     state = state.refreshing();
 
@@ -63,10 +55,6 @@ class NotificationController extends StateNotifier<NotificationState> {
     }
 
     final items = _sortNotifications(result.rightOrNull!);
-
-    appLogger.i(
-      'NotificationController -> refreshNotifications success: ${items.length}',
-    );
 
     state = state.success(items);
   }

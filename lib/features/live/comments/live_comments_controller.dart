@@ -56,18 +56,16 @@ class LiveCommentsController extends StateNotifier<LiveCommentsState> {
 
     final res = await api.addComment(liveId: liveId, comment: text);
 
-    await res.fold(
-      (e) async {
+    res.fold(
+      (e) {
         appLogger.e('❌ ADD LIVE COMMENT FAILED', error: e);
 
         _removeComment(tempId);
 
         state = state.copyWith(errorMessage: e.message);
       },
-      (_) async {
+      (_) {
         appLogger.i('✅ LIVE COMMENT CONFIRMED');
-
-        await fetchComments(liveId);
       },
     );
   }
@@ -136,8 +134,10 @@ class LiveCommentsController extends StateNotifier<LiveCommentsState> {
   // ───────────── HELPERS ─────────────
 
   void _insertComment(LiveComment comment) {
+    final updated = [comment, ...state.comments];
+
     state = state.copyWith(
-      comments: [comment, ...state.comments],
+      comments: updated.take(10).toList(),
       clearError: true,
     );
   }

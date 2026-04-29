@@ -40,18 +40,19 @@ class LiveRealtimeListener {
   // EVENT ROUTER
   // -----------------------------
   void _handleEvent(RealtimeEvent event) {
-    appLogger.i('_handleEvent');
-
     switch (event.type) {
       case RealtimeEventType.aosLiveEnded:
+        appLogger.i('_handleEvent | aosLiveEnded');
         _handleLiveEnded(event.data);
         break;
 
       case RealtimeEventType.aosLiveViewerCount:
+        appLogger.i('_handleEvent | aosLiveViewerCount');
         _handleViewerCount(event.data);
         break;
 
       case RealtimeEventType.aosLiveStarted:
+        appLogger.i('_handleEvent | aosLiveStarted');
         _handleLiveStarted(event.data);
         break;
 
@@ -71,8 +72,6 @@ class LiveRealtimeListener {
       appLogger.e('[LiveRealtime] ❌ Invalid live ended payload → $payload');
       return;
     }
-
-    appLogger.i('[LiveRealtime] 📡 Live ended → $liveId');
 
     _manager.onLiveEndedEvent(liveId: liveId);
   }
@@ -97,8 +96,6 @@ class LiveRealtimeListener {
 
     final count = int.tryParse(countRaw.toString()) ?? 0;
 
-    appLogger.i('[LiveRealtime] 👥 Viewer count → $count');
-
     _manager.onViewerCountUpdatedEvent(liveId: liveId, viewerCount: count);
   }
 
@@ -113,8 +110,6 @@ class LiveRealtimeListener {
       appLogger.e('[LiveRealtime] ❌ Invalid live started payload → $payload');
       return;
     }
-
-    appLogger.i('[LiveRealtime] 📡 Live started → $liveId');
 
     _manager.onLiveStartedEvent(liveId: liveId);
   }

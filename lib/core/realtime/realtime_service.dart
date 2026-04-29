@@ -33,7 +33,6 @@ class RealtimeService {
   }) {
     // 🔥 Prevent duplicate connections
     if (_socket != null && _isConnected) {
-      appLogger.w('[Realtime] Already connected → skipping connect');
       return;
     }
 
@@ -61,38 +60,30 @@ class RealtimeService {
       _isConnected = true;
 
       appLogger.i('[Realtime] ✅ Connected');
-
-      // Subscribe to user room
-      final room = "user:$email";
-      appLogger.i('[Realtime] Subscribing → $room');
-
-      _socket!.emit("subscribe", room);
     });
 
     _socket!.onDisconnect((reason) {
       _isConnected = false;
-      appLogger.w('[Realtime] ❌ Disconnected → $reason');
     });
 
     _socket!.onReconnect((_) {
       _isConnected = true;
-
-      appLogger.i('[Realtime] 🔁 Reconnected');
-
-      final room = "user:$email";
-      appLogger.i('[Realtime] Re-subscribing → $room');
-
-      _socket!.emit("subscribe", room);
     });
 
     _socket!.onConnectError((err) {
       _isConnected = false;
-      appLogger.e('[Realtime] ⚠️ Connect error → $err');
     });
 
     _socket!.onError((err) {
       _isConnected = false;
-      appLogger.e('[Realtime] ⚠️ Socket error → $err');
+    });
+
+    _socket!.on("aos_live_started", (data) {
+      appLogger.i("AOS LIVE STARTED: $data");
+    });
+
+    _socket!.on("aos_live_ended", (data) {
+      appLogger.i("AOS LIVE ENDED: $data");
     });
 
     // -----------------------------
@@ -101,13 +92,11 @@ class RealtimeService {
     _socket!.onAny((event, data) {
       final mapped = mapRealtimeEvent(event);
 
-      appLogger.i('[Realtime] 📡 Event → $event');
-      appLogger.i('[Realtime] Data → $data');
+      appLogger.i("Event: $event | Data: $data");
 
       _controller.add(RealtimeEvent(type: mapped, data: data));
     });
 
-    appLogger.i('[Realtime] Initiating socket connection...');
     _socket!.connect();
   }
 
@@ -119,30 +108,26 @@ class RealtimeService {
     _socket?.emit(event, data);
   }
 
-  Future<void> joinRoom(String room) async {
+  Future<void> joinSocketRoom(String liveId) async {
     if (!_isConnected || _socket == null) {
       throw Exception('Socket not connected');
     }
 
-    appLogger.i('[Realtime] ➕ Joining room → $room');
-
-    _socket!.emit('join_room', room);
+    _socket!.emit('join_live_room', {'live_id': liveId});
+    appLogger.i('[Realtime] ✅ Joined room emitted: $liveId');
   }
 
-  Future<void> leaveRoom(String room) async {
+  Future<void> leaveSocketRoom(String liveId) async {
     if (!_isConnected || _socket == null) return;
 
-    appLogger.i('[Realtime] ➖ Leaving room → $room');
-
-    _socket!.emit('leave_room', room);
+    _socket!.emit('leave_live_room', {'live_id': liveId});
+    appLogger.i('[Realtime] ✅ Leave room emitted: $liveId');
   }
 
   // -----------------------------
   // Disconnect
   // -----------------------------
   void disconnect() {
-    appLogger.w('[Realtime] 🔌 Disconnecting socket');
-
     _socket?.dispose();
     _socket = null;
     _isConnected = false;

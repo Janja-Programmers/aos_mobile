@@ -106,10 +106,6 @@ class LiveManager extends StateNotifier<LiveState> {
         clearError: true,
       );
 
-      appLogger.i(
-        '[LiveManager] 👥 Join Live Viewer state as he waits to _joinRoomInternal→ ${state.toString()}',
-      );
-
       await _joinRoomInternal(session);
     } catch (e, s) {
       appLogger.e('joinLive failed', error: e, stackTrace: s);
@@ -127,12 +123,6 @@ class LiveManager extends StateNotifier<LiveState> {
   Future<void> onLiveStartedEvent({required String liveId}) async {
     final isCurrentLive = _isCurrentLive(liveId);
 
-    appLogger.i(
-      '📡 Live started event → '
-      'eventLiveId=$liveId, '
-      'isCurrentLive=$isCurrentLive',
-    );
-
     if (!isCurrentLive) return;
 
     state = state.copyWith(status: LiveStatus.live, clearError: true);
@@ -142,18 +132,8 @@ class LiveManager extends StateNotifier<LiveState> {
     final isCurrentLive = _isCurrentLive(liveId);
 
     if (!isCurrentLive) {
-      appLogger.w(
-        '⚠️ Ignoring live-ended event → '
-        'eventLiveId=$liveId, '
-        'stateLiveId=${state.live?.id}, '
-        'sessionLiveId=${state.session?.liveId}, '
-        'hasLiveUi=${state.hasLiveUi}, '
-        'hasActiveRoom=${state.hasActiveRoom}',
-      );
       return;
     }
-
-    appLogger.i('📡 Host ended live → force closing room: $liveId');
 
     await _leaveRoomInternal();
 
@@ -165,12 +145,6 @@ class LiveManager extends StateNotifier<LiveState> {
     required int viewerCount,
   }) async {
     if (!_isCurrentLive(liveId)) {
-      appLogger.w(
-        '⚠️ Ignoring viewer count → '
-        'eventLiveId=$liveId, '
-        'stateLiveId=${state.live?.id}, '
-        'sessionLiveId=${state.session?.liveId}',
-      );
       return;
     }
 
@@ -196,8 +170,7 @@ class LiveManager extends StateNotifier<LiveState> {
       // 1. Join Frappe realtime room (NON-CRITICAL)
       // -----------------------------
       try {
-        await realtimeService.joinRoom('live:${session.liveId}');
-        appLogger.i('[Realtime] ✅ Joined room → live:${session.liveId}');
+        await realtimeService.joinSocketRoom(session.liveId);
       } catch (e, s) {
         appLogger.e(
           '[Realtime] ❌ Failed to join room → continuing anyway',
@@ -224,16 +197,12 @@ class LiveManager extends StateNotifier<LiveState> {
         clearError: true,
       );
 
-      appLogger.i('[LiveManager] 👥 Joined room → ${session.liveId}');
-
       // -----------------------------
       // 3. Track viewer join (NON-BLOCKING)
       // -----------------------------
       if (session.role == AOSLiveRole.viewer) {
         try {
-          final viewId = await repository.trackJoin(liveId: session.liveId);
-
-          appLogger.i('👀 Viewer tracked → viewId=$viewId');
+          await repository.trackJoin(liveId: session.liveId);
         } catch (e, s) {
           appLogger.e(
             'trackJoin failed → continuing session',
@@ -242,8 +211,6 @@ class LiveManager extends StateNotifier<LiveState> {
           );
         }
       }
-
-      appLogger.i('🎥 Joined live room successfully');
     } catch (e, s) {
       // ❌ ONLY critical failures reach here (LiveKit failure)
       appLogger.e('joinRoom failed', error: e, stackTrace: s);
@@ -284,7 +251,7 @@ class LiveManager extends StateNotifier<LiveState> {
 
       if (liveId != null) {
         try {
-          await realtimeService.leaveRoom('live:$liveId');
+          await realtimeService.leaveSocketRoom(liveId);
           appLogger.i('[Realtime] ✅ Left room → live:$liveId');
         } catch (e, s) {
           appLogger.e(
@@ -325,8 +292,6 @@ class LiveManager extends StateNotifier<LiveState> {
       await _leaveRoomInternal();
 
       state = state.ended();
-
-      appLogger.i('🔚 Live ended by host');
     } catch (e, s) {
       appLogger.e('endLive failed', error: e, stackTrace: s);
     }

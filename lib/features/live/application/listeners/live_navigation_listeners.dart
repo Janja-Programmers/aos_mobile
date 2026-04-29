@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,6 +24,8 @@ class _LiveNavigationListenerState
   @override
   void initState() {
     super.initState();
+
+    appLogger.i("init socketLiveListenerProvider");
 
     Future.microtask(() {
       ref.read(socketLiveListenerProvider);

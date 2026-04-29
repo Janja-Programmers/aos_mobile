@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/features/live/domain/live_chat_message.dart';
+import 'package:africaonlinestores/features/live/presentation/widgets/floating_hearts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
@@ -35,6 +37,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
   lk.RemoteVideoTrack? _remoteVideoTrack;
 
   final TextEditingController _chatController = TextEditingController();
+  int _heartTrigger = 0;
 
   @override
   void initState() {
@@ -259,16 +262,30 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
               },
             ),
 
+            /// FLOATING Hearts
+            FloatingHearts(trigger: _heartTrigger),
+
             /// RIGHT ACTIONS
             LiveRightActions(
-              onLike: () => manager.sendReaction(reactionType: 'like'),
+              onLike: () {
+                setState(() {
+                  _heartTrigger++;
+                });
+
+                manager.sendReaction(reactionType: 'like');
+              },
               onProducts: () {},
               onFlip: state.isHost ? manager.flipCamera : () {},
             ),
 
             /// CHAT
             LiveChatOverlay(
-              messages: commentsState.comments.map((c) => c.comment).toList(),
+              messages: commentsState.comments
+                  .map(
+                    (c) =>
+                        LiveChatMessage(username: c.userId, message: c.comment),
+                  )
+                  .toList(),
             ),
 
             /// INPUT

@@ -13,7 +13,7 @@ class ViewerLiveView extends StatelessWidget {
     return Positioned.fill(
       child: LiveVideoStage(
         track: remoteVideoTrack,
-        emptyLabel: 'Live ended! Leave room',
+        emptyLabel: 'waiting for host...',
       ),
     );
   }

@@ -15,6 +15,7 @@ class LiveKitService {
   bool _isDisconnecting = false;
 
   // ================= CONNECT =================
+
   Future<lk.Room> connect({
     required String wsUrl,
     required String token,
@@ -24,8 +25,6 @@ class LiveKitService {
     _isConnecting = true;
 
     try {
-      appLogger.i('🔌 LiveKit connect');
-
       if (_room != null) {
         await disconnect(silent: true);
       }
@@ -37,8 +36,6 @@ class LiveKitService {
 
       _controller.add(const RoomConnectedEvent());
 
-      appLogger.i('✅ LiveKit connected');
-
       return _room!;
     } catch (e, s) {
       appLogger.e('LiveKit connect failed', error: e, stackTrace: s);
@@ -49,6 +46,7 @@ class LiveKitService {
   }
 
   // ================= DISCONNECT =================
+
   Future<void> disconnect({bool silent = false}) async {
     if (_isDisconnecting) return;
     _isDisconnecting = true;
@@ -74,6 +72,7 @@ class LiveKitService {
   }
 
   // ================= EVENTS =================
+
   void _listen() {
     _roomEventsCancel?.call();
 
@@ -120,6 +119,7 @@ class LiveKitService {
   }
 
   // ================= CONTROLS =================
+
   Future<void> enableMicrophone(bool enabled) async {
     await _room?.localParticipant?.setMicrophoneEnabled(enabled);
   }
@@ -185,6 +185,7 @@ class LiveKitService {
   }
 
   // ================= CLEANUP =================
+
   Future<void> dispose() async {
     await disconnect(silent: true);
     await _controller.close();

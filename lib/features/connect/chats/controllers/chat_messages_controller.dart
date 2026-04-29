@@ -232,12 +232,6 @@ class ChatMessagesController
       _messages.add(newMsg);
       state = AsyncData(List.of(_messages));
 
-      // Optional ACK to server
-      realtime.sendMessageAck({
-        'conversation_id': conversationId,
-        'message_id': newMsg.id,
-      });
-
       await repo.markDelivered(conversationId);
     });
   }

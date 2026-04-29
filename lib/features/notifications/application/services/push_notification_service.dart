@@ -44,7 +44,6 @@ class PushNotificationService {
   // =====================================================
   Future<void> init() async {
     if (_initialized) {
-      appLogger.w('⚠️ PushNotificationService already initialized');
       return;
     }
 
@@ -60,8 +59,6 @@ class PushNotificationService {
       _listenNotificationTap();
 
       await _handleTerminatedLaunch();
-
-      appLogger.i('✅ PushNotificationService initialized successfully');
     } catch (e, s) {
       appLogger.e(
         'PushNotificationService init failed',
@@ -75,9 +72,7 @@ class PushNotificationService {
   // PERMISSION
   // =====================================================
   Future<void> _requestPermission() async {
-    final settings = await _messaging.requestPermission();
-
-    appLogger.i('🔐 Notification permission: ${settings.authorizationStatus}');
+    await _messaging.requestPermission();
   }
 
   // =====================================================
@@ -91,8 +86,6 @@ class PushNotificationService {
       return;
     }
 
-    appLogger.i('📱 FCM token acquired');
-
     final deviceId = await DeviceId.get();
 
     await _pushRepo.registerPushToken(
@@ -105,8 +98,6 @@ class PushNotificationService {
 
     await _tokenRefreshSub?.cancel();
     _tokenRefreshSub = _messaging.onTokenRefresh.listen((newToken) async {
-      appLogger.i('🔄 FCM token refreshed');
-
       await _pushRepo.registerPushToken(
         PushTokenDevice(
           token: newToken,
@@ -250,8 +241,6 @@ class PushNotificationService {
 
     _foregroundSub?.cancel();
     _tapSub?.cancel();
-
-    appLogger.i('🔄 PushNotificationService reset');
   }
 
   // =====================================================

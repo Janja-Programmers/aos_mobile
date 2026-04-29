@@ -115,7 +115,7 @@ class LiveCommentsApi {
     try {
       final res = await _client.post(
         ApiEndpoints.addLiveComment,
-        data: {'live_id': liveId, 'comment': comment},
+        data: {'live_id': liveId, 'content': comment},
       );
 
       final unwrapped = unwrapFrappe(res);
@@ -165,7 +165,7 @@ class LiveCommentsApi {
     try {
       final res = await _client.post(
         ApiEndpoints.replyLiveComment,
-        data: {'parent_comment_id': parentCommentId, 'comment': comment},
+        data: {'parent_comment_id': parentCommentId, 'content': comment},
       );
 
       final unwrapped = unwrapFrappe(res);

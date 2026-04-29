@@ -19,12 +19,11 @@ class LiveApi {
   LiveApi(this._client);
 
   // ================= START LIVE =================
+
   Future<Either<Failure, LiveJoinSession>> startLive({
     required String title,
     required String coverImage,
   }) async {
-    appLogger.i("startLive API");
-
     try {
       final res = await _client.post(
         ApiEndpoints.startLiveEndpoint,
@@ -57,11 +56,10 @@ class LiveApi {
   }
 
   // ================= JOIN LIVE =================
+
   Future<Either<Failure, LiveJoinSession>> joinLive({
     required String liveId,
   }) async {
-    appLogger.i("joinLive API");
-
     try {
       final res = await _client.post(
         ApiEndpoints.joinLiveEndpoint,
@@ -87,6 +85,7 @@ class LiveApi {
   }
 
   // ================= END LIVE =================
+
   Future<Either<Failure, void>> endLive({required String liveId}) async {
     appLogger.i("endLive API");
 
@@ -106,6 +105,7 @@ class LiveApi {
   }
 
   // ================= GET LIVE =================
+
   Future<Either<Failure, LiveStream>> getLive({required String liveId}) async {
     appLogger.i("getLive API");
 
@@ -128,9 +128,8 @@ class LiveApi {
   /* METRICS  */
 
   // ================= TRACK JOIN =================
-  Future<Either<Failure, String?>> trackJoin({required String liveId}) async {
-    appLogger.i("trackJoin API");
 
+  Future<Either<Failure, String?>> trackJoin({required String liveId}) async {
     try {
       final res = await _client.post(
         ApiEndpoints.trackLiveJoinEndpoint,
@@ -157,9 +156,8 @@ class LiveApi {
   }
 
   // ================= TRACK LEAVE =================
-  Future<Either<Failure, void>> trackLeave({required String liveId}) async {
-    appLogger.i("trackLeave API");
 
+  Future<Either<Failure, void>> trackLeave({required String liveId}) async {
     try {
       final res = await _client.post(
         ApiEndpoints.trackLiveLeaveEndpoint,
@@ -182,12 +180,11 @@ class LiveApi {
 
   /* REACTIONS */
   // ================= SEND REACTION =================
+
   Future<Either<Failure, void>> sendReaction({
     required String liveId,
     required String reactionType,
   }) async {
-    appLogger.i("sendReaction API");
-
     try {
       final res = await _client.post(
         ApiEndpoints.sendLiveReaction,

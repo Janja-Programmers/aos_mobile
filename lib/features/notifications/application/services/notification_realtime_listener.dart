@@ -25,8 +25,6 @@ class NotificationRealtimeListener {
   // ATTACH
   // =====================================================
   void attach() {
-    appLogger.i('🔔 NotificationRealtimeListener attached');
-
     _sub = _eventStream.listen(
       _onEvent,
       onError: (e, s) {
@@ -43,7 +41,6 @@ class NotificationRealtimeListener {
   // DISPOSE
   // =====================================================
   void dispose() {
-    appLogger.i('🔔 NotificationRealtimeListener disposed');
     _sub?.cancel();
   }
 
@@ -53,10 +50,6 @@ class NotificationRealtimeListener {
   void _onEvent(RealtimeEvent event) {
     try {
       if (!_isNotificationEvent(event.type)) return;
-
-      appLogger.i(
-        '🔔 Notification event received → ${event.type} | data: ${event.data}',
-      );
 
       _handleNotificationEvent(event.type, event.data);
     } catch (e, s) {
@@ -105,8 +98,6 @@ class NotificationRealtimeListener {
         appLogger.w('⚠️ Failed to map notification: $data');
         return;
       }
-
-      appLogger.i('✅ Notification mapped: ${notification.id}');
 
       _controller.upsertNotification(notification);
     } catch (e, s) {

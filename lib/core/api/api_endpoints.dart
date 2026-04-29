@@ -157,6 +157,9 @@ class ApiEndpoints {
   static const listLiveReplies = '/api/method/aos.api.live.list_replies';
   static const deleteLiveComment = '/api/method/aos.api.live.delete_comment';
 
+  static const String sendLiveReaction =
+      '/api/method/aos.api.live.send_reaction';
+
   // ───────────── SHORTS ─────────────
 
   // FEED

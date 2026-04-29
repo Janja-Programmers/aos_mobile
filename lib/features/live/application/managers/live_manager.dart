@@ -299,6 +299,22 @@ class LiveManager extends StateNotifier<LiveState> {
     }
   }
 
+  // ================= SEND LIVE REACTIONS =================
+
+  Future<void> sendReaction({String reactionType = 'like'}) async {
+    try {
+      final liveId = state.session?.liveId ?? state.live?.id;
+
+      if (liveId == null) return;
+
+      await repository.sendReaction(liveId: liveId, reactionType: reactionType);
+
+      appLogger.i('❤️ Live reaction sent → $reactionType');
+    } catch (e, s) {
+      appLogger.e('sendReaction failed', error: e, stackTrace: s);
+    }
+  }
+
   // ================= HELPERS =================
 
   bool _isCurrentLive(String liveId) {

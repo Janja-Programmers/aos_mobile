@@ -18,6 +18,11 @@ abstract class LiveRepository {
   Future<String?> trackJoin({required String liveId});
 
   Future<void> trackLeave({required String liveId});
+
+  Future<void> sendReaction({
+    required String liveId,
+    required String reactionType,
+  });
 }
 
 // ================= IMPL =================
@@ -85,6 +90,22 @@ class LiveRepositoryImpl implements LiveRepository {
   @override
   Future<void> trackLeave({required String liveId}) async {
     final res = await api.trackLeave(liveId: liveId);
+
+    return res.fold((e) => throw e, (_) => null);
+  }
+
+  // =============================
+  // 🔥 SEND REACTION
+  // =============================
+  @override
+  Future<void> sendReaction({
+    required String liveId,
+    required String reactionType,
+  }) async {
+    final res = await api.sendReaction(
+      liveId: liveId,
+      reactionType: reactionType,
+    );
 
     return res.fold((e) => throw e, (_) => null);
   }

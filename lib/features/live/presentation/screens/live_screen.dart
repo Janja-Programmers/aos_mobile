@@ -261,7 +261,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
 
             /// RIGHT ACTIONS
             LiveRightActions(
-              onLike: () {},
+              onLike: () => manager.sendReaction(reactionType: 'like'),
               onProducts: () {},
               onFlip: state.isHost ? manager.flipCamera : () {},
             ),

@@ -179,4 +179,33 @@ class LiveApi {
       );
     }
   }
+
+  /* REACTIONS */
+  // ================= SEND REACTION =================
+  Future<Either<Failure, void>> sendReaction({
+    required String liveId,
+    required String reactionType,
+  }) async {
+    appLogger.i("sendReaction API");
+
+    try {
+      final res = await _client.post(
+        ApiEndpoints.sendLiveReaction,
+        data: {'live_id': liveId, 'reaction_type': reactionType},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      return Either.right(null);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (e, s) {
+      appLogger.e("sendReaction failed", error: e, stackTrace: s);
+
+      return Either.left(
+        const Failure('Failed to send reaction.', type: FailureType.unknown),
+      );
+    }
+  }
 }

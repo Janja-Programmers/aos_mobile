@@ -11,6 +11,8 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
 import 'package:africaonlinestores/features/live/application/state/live_status_enum.dart';
 
+import 'package:africaonlinestores/features/live/comments/live_comments_controller.dart';
+
 import 'package:africaonlinestores/features/live/presentation/views/host_live_view.dart';
 import 'package:africaonlinestores/features/live/presentation/views/viewer_live_view.dart';
 
@@ -41,6 +43,11 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
     Future.microtask(() {
       final liveKit = ref.read(liveKitCoreProvider);
       _mediaSub = liveKit.events.listen(_onMediaEvent);
+
+      final liveId = ref.read(liveManagerProvider).session?.liveId;
+      if (liveId != null) {
+        ref.read(liveCommentsControllerProvider.notifier).init(liveId);
+      }
     });
   }
 
@@ -221,6 +228,11 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
     final manager = ref.read(liveManagerProvider.notifier);
     final colors = context.appColors;
 
+    final commentsState = ref.watch(liveCommentsControllerProvider);
+    final commentsController = ref.read(
+      liveCommentsControllerProvider.notifier,
+    );
+
     return Scaffold(
       backgroundColor: colors.black,
       body: Stack(
@@ -255,17 +267,26 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
             ),
 
             /// CHAT
-            const LiveChatOverlay(messages: []),
+            LiveChatOverlay(
+              messages: commentsState.comments.map((c) => c.comment).toList(),
+            ),
 
             /// INPUT
             LiveInputBar(
               controller: _chatController,
-              onSend: () {
+              onSend: () async {
                 final text = _chatController.text.trim();
                 if (text.isEmpty) return;
 
-                // manager.sendMessage(text); // assuming exists
+                final liveId = state.session?.liveId;
+                if (liveId == null) return;
+
                 _chatController.clear();
+
+                await commentsController.addComment(
+                  liveId: liveId,
+                  comment: text,
+                );
               },
             ),
           ],

@@ -151,6 +151,12 @@ class ApiEndpoints {
   static const String trackLiveLeaveEndpoint =
       '/api/method/aos.api.live.track_leave';
 
+  static const addLiveComment = '/api/method/aos.api.live.add_comment';
+  static const replyLiveComment = '/api/method/aos.api.live.reply_comment';
+  static const listLiveComments = '/api/method/aos.api.live.list_comments';
+  static const listLiveReplies = '/api/method/aos.api.live.list_replies';
+  static const deleteLiveComment = '/api/method/aos.api.live.delete_comment';
+
   // ───────────── SHORTS ─────────────
 
   // FEED

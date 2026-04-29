@@ -82,6 +82,8 @@ flutter:
   assets:
     - assets/images/logo.png
     - assets/images/welcome.png
+    - assets/images/aos_logo.png
+    - assets/images/logo_redone.png
     - assets/icons/app_icon.png
     - assets/icons/google.svg
 

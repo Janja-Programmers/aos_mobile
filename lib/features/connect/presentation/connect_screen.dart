@@ -53,7 +53,15 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
         backgroundColor: colors.surface,
         elevation: 0,
         centerTitle: true,
-        leading: const BackButton(),
+        leading: BackButton(
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              context.goNamed(AppRoutes.nHome);
+            }
+          },
+        ),
         title: Text("Connect", style: context.h4),
         actions: [
           PopupMenuButton<int>(

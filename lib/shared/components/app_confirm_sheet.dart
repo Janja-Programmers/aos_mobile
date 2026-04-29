@@ -36,12 +36,15 @@ class AppConfirmSheet extends StatelessWidget {
     final viewInsets = mediaQuery.viewInsets;
     final viewPadding = mediaQuery.viewPadding;
 
-    final scheme = Theme.of(context).colorScheme;
+    final sheetColor = context.appColors.surface.withAlpha(255);
 
     return SafeArea(
       top: false,
       child: Material(
-        color: scheme.surface,
+        color: sheetColor,
+        surfaceTintColor: Colors.transparent,
+        borderRadius: _sheetRadius,
+        clipBehavior: Clip.antiAlias,
         child: Container(
           padding: EdgeInsets.fromLTRB(
             18,
@@ -49,10 +52,7 @@ class AppConfirmSheet extends StatelessWidget {
             18,
             18 + viewPadding.bottom + viewInsets.bottom,
           ),
-          decoration: BoxDecoration(
-            color: scheme.surface,
-            borderRadius: _sheetRadius,
-          ),
+          color: context.appColors.surface,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -116,7 +116,7 @@ class AppConfirmSheet extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: onSecondary,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: scheme.primary,
+                          backgroundColor: context.appColors.primary,
                           foregroundColor: context.appColors.border,
                           shape: const RoundedRectangleBorder(
                             borderRadius: _pill,
@@ -125,7 +125,7 @@ class AppConfirmSheet extends StatelessWidget {
                         ),
                         child: Text(
                           secondaryText,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                          style: AppTextStylesX(context).button,
                         ),
                       ),
                     ),

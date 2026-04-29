@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/core/realtime/realtime_service.dart';
 
 import 'package:africaonlinestores/features/live/application/services/live_media_service.dart';
 import 'package:africaonlinestores/features/live/application/state/live_state.dart';
@@ -17,12 +18,16 @@ import 'package:africaonlinestores/features/live/domain/live_role.dart';
 class LiveManager extends StateNotifier<LiveState> {
   final LiveRepository repository;
   final LiveMediaService mediaService;
+  final RealtimeService realtimeService;
 
   bool _isJoining = false;
   bool _isLeaving = false;
 
-  LiveManager({required this.repository, required this.mediaService})
-    : super(LiveState.initial());
+  LiveManager({
+    required this.repository,
+    required this.mediaService,
+    required this.realtimeService,
+  }) : super(LiveState.initial());
 
   // ================= START LIVE (HOST) =================
 
@@ -99,6 +104,10 @@ class LiveManager extends StateNotifier<LiveState> {
         session: session,
         role: session.role,
         clearError: true,
+      );
+
+      appLogger.i(
+        '[LiveManager] 👥 Join Live Viewer state as he waits to _joinRoomInternal→ ${state.toString()}',
       );
 
       await _joinRoomInternal(session);
@@ -183,6 +192,23 @@ class LiveManager extends StateNotifier<LiveState> {
         clearError: true,
       );
 
+      // -----------------------------
+      // 1. Join Frappe realtime room (NON-CRITICAL)
+      // -----------------------------
+      try {
+        await realtimeService.joinRoom('live:${session.liveId}');
+        appLogger.i('[Realtime] ✅ Joined room → live:${session.liveId}');
+      } catch (e, s) {
+        appLogger.e(
+          '[Realtime] ❌ Failed to join room → continuing anyway',
+          error: e,
+          stackTrace: s,
+        );
+      }
+
+      // -----------------------------
+      // 2. Join LiveKit room (CRITICAL)
+      // -----------------------------
       await mediaService.joinLive(
         wsUrl: session.wsUrl,
         token: session.token,
@@ -198,21 +224,28 @@ class LiveManager extends StateNotifier<LiveState> {
         clearError: true,
       );
 
+      appLogger.i('[LiveManager] 👥 Joined room → ${session.liveId}');
+
+      // -----------------------------
+      // 3. Track viewer join (NON-BLOCKING)
+      // -----------------------------
       if (session.role == AOSLiveRole.viewer) {
         try {
           final viewId = await repository.trackJoin(liveId: session.liveId);
-          appLogger.i('👀 Live viewer tracked joined → viewId=$viewId');
+
+          appLogger.i('👀 Viewer tracked → viewId=$viewId');
         } catch (e, s) {
           appLogger.e(
-            'trackJoin failed, continuing live session',
+            'trackJoin failed → continuing session',
             error: e,
             stackTrace: s,
           );
         }
       }
 
-      appLogger.i('🎥 Joined live room');
+      appLogger.i('🎥 Joined live room successfully');
     } catch (e, s) {
+      // ❌ ONLY critical failures reach here (LiveKit failure)
       appLogger.e('joinRoom failed', error: e, stackTrace: s);
 
       state = state.copyWith(
@@ -249,6 +282,19 @@ class LiveManager extends StateNotifier<LiveState> {
         }
       }
 
+      if (liveId != null) {
+        try {
+          await realtimeService.leaveRoom('live:$liveId');
+          appLogger.i('[Realtime] ✅ Left room → live:$liveId');
+        } catch (e, s) {
+          appLogger.e(
+            '[Realtime] ❌ Failed to leave room → continuing anyway',
+            error: e,
+            stackTrace: s,
+          );
+        }
+      }
+
       await mediaService.leaveLive();
 
       state = state.copyWith(
@@ -265,6 +311,7 @@ class LiveManager extends StateNotifier<LiveState> {
       _isLeaving = false;
     }
   }
+
   // ================= END LIVE =================
 
   Future<void> endLive() async {

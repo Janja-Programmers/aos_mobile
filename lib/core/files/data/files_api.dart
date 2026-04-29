@@ -102,11 +102,16 @@ class FilesApi {
       );
 
       final result = unwrapFrappe(res);
-      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      if (result.isLeft) {
+        return Either.left(result.leftOrNull!);
+      }
 
       final data = result.rightOrNull!;
-      final url = (data['file_url'] ?? '').toString();
-      final newFileId = (data['name'] ?? '').toString();
+      final inner = data['data'] ?? {};
+
+      final url = (inner['file_url'] ?? '').toString();
+      final newFileId = (inner['file_id'] ?? '').toString();
 
       if (url.isEmpty || newFileId.isEmpty) {
         return Either.left(const Failure('Invalid response'));

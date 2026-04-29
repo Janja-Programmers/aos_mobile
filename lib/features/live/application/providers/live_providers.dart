@@ -51,10 +51,11 @@ final liveMediaServiceProvider = Provider<LiveMediaService>((ref) {
 final liveManagerProvider = StateNotifierProvider<LiveManager, LiveState>((
   ref,
 ) {
-  final repository = ref.watch(liveRepositoryProvider);
-  final mediaService = ref.watch(liveMediaServiceProvider);
-
-  return LiveManager(repository: repository, mediaService: mediaService);
+  return LiveManager(
+    repository: ref.read(liveRepositoryProvider),
+    mediaService: ref.read(liveMediaServiceProvider),
+    realtimeService: ref.read(realtimeServiceProvider),
+  );
 });
 
 // ================= SIGNALING =================

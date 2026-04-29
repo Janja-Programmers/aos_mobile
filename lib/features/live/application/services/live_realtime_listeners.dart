@@ -40,6 +40,8 @@ class LiveRealtimeListener {
   // EVENT ROUTER
   // -----------------------------
   void _handleEvent(RealtimeEvent event) {
+    appLogger.i('_handleEvent');
+
     switch (event.type) {
       case RealtimeEventType.aosLiveEnded:
         _handleLiveEnded(event.data);
@@ -79,6 +81,10 @@ class LiveRealtimeListener {
   // VIEWER COUNT
   // -----------------------------
   void _handleViewerCount(dynamic payload) {
+    appLogger.i(
+      '[LiveRealtime] 👥 Viewer count payload: → ${payload.toString()}',
+    );
+
     final data = _extract(payload);
 
     final liveId = data['live_id']?.toString();

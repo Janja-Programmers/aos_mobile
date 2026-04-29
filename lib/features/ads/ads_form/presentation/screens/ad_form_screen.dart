@@ -143,7 +143,7 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
       final action = await showModalBottomSheet<CancelAction>(
         context: context,
         isScrollControlled: true,
-        backgroundColor: context.appColors.surface,
+        backgroundColor: Colors.transparent,
         builder: (_) => SaveDraftConfirmSheet(draft: draft, schema: schema),
       );
 

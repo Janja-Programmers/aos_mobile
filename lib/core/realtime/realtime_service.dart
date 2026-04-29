@@ -119,6 +119,24 @@ class RealtimeService {
     _socket?.emit(event, data);
   }
 
+  Future<void> joinRoom(String room) async {
+    if (!_isConnected || _socket == null) {
+      throw Exception('Socket not connected');
+    }
+
+    appLogger.i('[Realtime] ➕ Joining room → $room');
+
+    _socket!.emit('join_room', room);
+  }
+
+  Future<void> leaveRoom(String room) async {
+    if (!_isConnected || _socket == null) return;
+
+    appLogger.i('[Realtime] ➖ Leaving room → $room');
+
+    _socket!.emit('leave_room', room);
+  }
+
   // -----------------------------
   // Disconnect
   // -----------------------------

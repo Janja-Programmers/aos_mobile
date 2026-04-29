@@ -79,7 +79,7 @@ RealtimeEventType mapRealtimeEvent(String event) {
     case "aos_live_ended":
       return RealtimeEventType.aosLiveEnded;
 
-    case "aos_live_viewer_count":
+    case "aos_live_viewers":
       return RealtimeEventType.aosLiveViewerCount;
 
     // =========================

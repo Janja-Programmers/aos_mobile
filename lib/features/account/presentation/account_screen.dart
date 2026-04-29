@@ -220,7 +220,7 @@ class AccountScreen extends ConsumerWidget {
                     await showModalBottomSheet<void>(
                       context: parentContext,
                       isScrollControlled: true,
-                      backgroundColor: context.appColors.surface,
+                      backgroundColor: Colors.transparent,
                       builder: (sheetContext) {
                         return AppConfirmSheet(
                           icon: Icons.warning_rounded,
@@ -232,10 +232,13 @@ class AccountScreen extends ConsumerWidget {
                           secondaryText: 'Cancel',
                           onPrimary: () async {
                             Navigator.of(sheetContext).pop();
+
                             await ref
                                 .read(authControllerProvider.notifier)
                                 .logout();
+
                             if (!parentContext.mounted) return;
+
                             parentContext.go(AppRoutes.home);
                           },
                           onSecondary: () => Navigator.of(sheetContext).pop(),

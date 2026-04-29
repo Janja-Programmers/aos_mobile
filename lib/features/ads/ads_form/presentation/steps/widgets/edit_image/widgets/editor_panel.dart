@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
@@ -20,7 +22,7 @@ class EditorPanel extends StatelessWidget {
 
   final VoidCallback onCrop;
   final VoidCallback onRotate;
-  final VoidCallback onRemoveBg;
+  final Future<void> Function() onRemoveBg;
 
   final Function(Color?) onBackgroundColor;
   final Function(List<Color>) onGradient;
@@ -37,26 +39,22 @@ class EditorPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: [const BoxShadow(blurRadius: 10, color: Colors.black12)],
+        boxShadow: const [BoxShadow(blurRadius: 10, color: Colors.black12)],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildTools(),
-
+          _buildTools(context),
           const SizedBox(height: 16),
-
           if (bgRemoved) BackgroundPicker(onSelect: onBackgroundColor),
-
           if (bgRemoved) const SizedBox(height: 16),
-
           if (bgRemoved) GradientPicker(onSelect: onGradient),
         ],
       ),
     );
   }
 
-  Widget _buildTools() {
+  Widget _buildTools(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
@@ -65,18 +63,16 @@ class EditorPanel extends StatelessWidget {
           label: "Crop",
           onTap: busy ? () {} : onCrop,
         ),
-
         ToolButton(
           icon: Icons.rotate_right,
           label: "Rotate",
           onTap: busy ? () {} : onRotate,
         ),
-
         ToolButton(
           icon: Icons.auto_fix_high,
           label: "Remove BG",
           active: bgRemoved,
-          onTap: busy ? () {} : onRemoveBg,
+          onTap: busy ? () {} : () => onRemoveBg(),
         ),
       ],
     );

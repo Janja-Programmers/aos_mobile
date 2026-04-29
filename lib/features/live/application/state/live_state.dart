@@ -21,13 +21,13 @@ class LiveState {
   final bool hasActiveRoom;
 
   // Host / Viewer flags
-  final bool isPublishing; // host
-  final bool isSubscribed; // viewer
+  final bool isPublishing;
+  final bool isSubscribed;
 
   // Metrics
   final int viewerCount;
 
-  // UI helpers (same philosophy as calls)
+  // UI
   final bool hasLiveUi;
 
   // Error
@@ -47,6 +47,7 @@ class LiveState {
     required this.errorMessage,
   });
 
+  // ================= INITIAL =================
   factory LiveState.initial() {
     return const LiveState(
       status: LiveStatus.idle,
@@ -63,11 +64,14 @@ class LiveState {
     );
   }
 
+  // ================= SAFE COPY =================
   LiveState copyWith({
     LiveStatus? status,
     LiveStream? live,
     LiveJoinSession? session,
+    bool clearSession = false,
     AOSLiveRole? role,
+    bool clearRole = false,
     RoomState? roomState,
     bool? hasActiveRoom,
     bool? isPublishing,
@@ -75,21 +79,57 @@ class LiveState {
     int? viewerCount,
     bool? hasLiveUi,
     String? errorMessage,
+    bool clearError = false,
   }) {
     return LiveState(
       status: status ?? this.status,
       live: live ?? this.live,
-      session: session ?? this.session,
-      role: role ?? this.role,
+      session: clearSession ? null : (session ?? this.session),
+      role: clearRole ? null : (role ?? this.role),
       roomState: roomState ?? this.roomState,
       hasActiveRoom: hasActiveRoom ?? this.hasActiveRoom,
       isPublishing: isPublishing ?? this.isPublishing,
       isSubscribed: isSubscribed ?? this.isSubscribed,
       viewerCount: viewerCount ?? this.viewerCount,
       hasLiveUi: hasLiveUi ?? this.hasLiveUi,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
+
+  // ================= HARD RESET =================
+  LiveState ended() {
+    return LiveState(
+      status: LiveStatus.ended,
+      live: live, // keep reference if needed for UI
+      session: null,
+      role: null,
+      roomState: RoomState.disconnected,
+      hasActiveRoom: false,
+      isPublishing: false,
+      isSubscribed: false,
+      viewerCount: 0,
+      hasLiveUi: false,
+      errorMessage: null,
+    );
+  }
+
+  LiveState left() {
+    return LiveState(
+      status: LiveStatus.ended,
+      live: live,
+      session: null,
+      role: null,
+      roomState: RoomState.disconnected,
+      hasActiveRoom: false,
+      isPublishing: false,
+      isSubscribed: false,
+      viewerCount: 0,
+      hasLiveUi: false,
+      errorMessage: null,
+    );
+  }
+
+  // ================= DERIVED =================
 
   Duration get duration {
     final startedAt = live?.startedAt;
@@ -97,8 +137,6 @@ class LiveState {
 
     return DateTime.now().difference(startedAt);
   }
-
-  // ===== Derived =====
 
   bool get isHost => role == AOSLiveRole.host;
   bool get isViewer => role == AOSLiveRole.viewer;

@@ -124,4 +124,59 @@ class LiveApi {
 
     return Either.right(mapLiveStream(data));
   }
+
+  /* METRICS  */
+
+  // ================= TRACK JOIN =================
+  Future<Either<Failure, String?>> trackJoin({required String liveId}) async {
+    appLogger.i("trackJoin API");
+
+    try {
+      final res = await _client.post(
+        ApiEndpoints.trackLiveJoinEndpoint,
+        data: {'live_id': liveId},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = result.rightOrNull?['data'];
+      final viewId = data is Map<String, dynamic>
+          ? data['view_id']?.toString()
+          : null;
+
+      return Either.right(viewId);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (e, s) {
+      appLogger.e("trackJoin failed", error: e, stackTrace: s);
+      return Either.left(
+        const Failure('Failed to track live join.', type: FailureType.unknown),
+      );
+    }
+  }
+
+  // ================= TRACK LEAVE =================
+  Future<Either<Failure, void>> trackLeave({required String liveId}) async {
+    appLogger.i("trackLeave API");
+
+    try {
+      final res = await _client.post(
+        ApiEndpoints.trackLiveLeaveEndpoint,
+        data: {'live_id': liveId},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      return Either.right(null);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (e, s) {
+      appLogger.e("trackLeave failed", error: e, stackTrace: s);
+      return Either.left(
+        const Failure('Failed to track live leave.', type: FailureType.unknown),
+      );
+    }
+  }
 }

@@ -8,16 +8,17 @@ class LiveSignalingHandler {
   const LiveSignalingHandler({required this.liveManager});
 
   // ================= LIVE STARTED =================
+
   Future<void> handleLiveStarted(Map<String, dynamic> data) async {
     try {
-      final liveId = data['live_id'] as String?;
+      final liveId = data['live_id']?.toString();
 
-      if (liveId == null) {
+      if (liveId == null || liveId.isEmpty) {
         appLogger.e('❌ Invalid live-started payload: $data');
         return;
       }
 
-      appLogger.i('🔴 Live started parsed');
+      appLogger.i('🔴 Live started parsed → $liveId');
 
       await liveManager.onLiveStartedEvent(liveId: liveId);
     } catch (e, s) {
@@ -26,16 +27,17 @@ class LiveSignalingHandler {
   }
 
   // ================= LIVE ENDED =================
+
   Future<void> handleLiveEnded(Map<String, dynamic> data) async {
     try {
-      final liveId = data['live_id'] as String?;
+      final liveId = data['live_id']?.toString();
 
-      if (liveId == null) {
+      if (liveId == null || liveId.isEmpty) {
         appLogger.e('❌ Invalid live-ended payload: $data');
         return;
       }
 
-      appLogger.i('🔚 Live ended parsed');
+      appLogger.i('🔚 Live ended parsed → $liveId');
 
       await liveManager.onLiveEndedEvent(liveId: liveId);
     } catch (e, s) {
@@ -44,12 +46,17 @@ class LiveSignalingHandler {
   }
 
   // ================= VIEWER COUNT =================
+
   Future<void> handleViewerCountUpdated(Map<String, dynamic> data) async {
     try {
-      final liveId = data['live_id'] as String?;
-      final viewerCount = data['viewer_count'] as int?;
+      final liveId = data['live_id']?.toString();
 
-      if (liveId == null || viewerCount == null) {
+      final rawViewerCount = data['viewer_count'];
+      final viewerCount = rawViewerCount is int
+          ? rawViewerCount
+          : int.tryParse(rawViewerCount?.toString() ?? '');
+
+      if (liveId == null || liveId.isEmpty || viewerCount == null) {
         appLogger.e('❌ Invalid viewer-count payload: $data');
         return;
       }

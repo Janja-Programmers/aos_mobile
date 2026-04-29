@@ -25,40 +25,40 @@ class LiveManager extends StateNotifier<LiveState> {
     : super(LiveState.initial());
 
   // ================= START LIVE (HOST) =================
+
   Future<void> startLive({
     required String title,
     required String coverImage,
   }) async {
     try {
-      if (state.isLive || state.isLoading) {
+      if (state.isLive || state.isLoading || state.hasActiveRoom) {
         appLogger.i('❌ Already in live flow');
         return;
       }
 
-      /// ❌ DO NOT set hasLiveUi yet
-      state = state.copyWith(status: LiveStatus.loading, errorMessage: null);
+      state = state.copyWith(
+        status: LiveStatus.loading,
+        hasLiveUi: false,
+        clearError: true,
+      );
 
       final session = await repository.startLive(
         title: title,
         coverImage: coverImage,
       );
 
-      /// ✅ ONLY NOW allow navigation
       state = state.copyWith(
         session: session,
         role: AOSLiveRole.host,
         hasLiveUi: true,
+        clearError: true,
       );
 
       await _joinRoomInternal(session);
     } catch (e, s) {
       appLogger.e('startLive failed', error: e, stackTrace: s);
 
-      String message = "Something went wrong";
-
-      if (e is Failure) {
-        message = e.message;
-      }
+      final message = e is Failure ? e.message : 'Something went wrong';
 
       state = state.copyWith(
         status: LiveStatus.error,
@@ -70,8 +70,7 @@ class LiveManager extends StateNotifier<LiveState> {
 
   Future<void> flipCamera() async {
     try {
-      if (!state.isHost) return;
-
+      if (!state.isHost || !state.hasActiveRoom) return;
       await mediaService.flipCamera();
     } catch (e, s) {
       appLogger.e('flipCamera failed', error: e, stackTrace: s);
@@ -79,17 +78,28 @@ class LiveManager extends StateNotifier<LiveState> {
   }
 
   // ================= JOIN LIVE (VIEWER) =================
+
   Future<void> joinLive({required String liveId}) async {
     try {
+      if (state.isLive || state.isLoading || state.hasActiveRoom) {
+        appLogger.i('❌ Already in live flow');
+        return;
+      }
+
       state = state.copyWith(
         status: LiveStatus.loading,
         hasLiveUi: true,
-        errorMessage: null,
+        viewerCount: 0,
+        clearError: true,
       );
 
       final session = await repository.joinLive(liveId: liveId);
 
-      state = state.copyWith(session: session, role: session.role);
+      state = state.copyWith(
+        session: session,
+        role: session.role,
+        clearError: true,
+      );
 
       await _joinRoomInternal(session);
     } catch (e, s) {
@@ -97,7 +107,8 @@ class LiveManager extends StateNotifier<LiveState> {
 
       state = state.copyWith(
         status: LiveStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: e is Failure ? e.message : e.toString(),
+        hasLiveUi: false,
       );
     }
   }
@@ -105,33 +116,56 @@ class LiveManager extends StateNotifier<LiveState> {
   // ================= SOCKET EVENTS =================
 
   Future<void> onLiveStartedEvent({required String liveId}) async {
-    appLogger.i('📡 Live started event → $liveId');
+    final isCurrentLive = _isCurrentLive(liveId);
 
-    state = state.copyWith(status: LiveStatus.live);
+    appLogger.i(
+      '📡 Live started event → '
+      'eventLiveId=$liveId, '
+      'isCurrentLive=$isCurrentLive',
+    );
+
+    if (!isCurrentLive) return;
+
+    state = state.copyWith(status: LiveStatus.live, clearError: true);
   }
 
   Future<void> onLiveEndedEvent({required String liveId}) async {
-    if (state.session?.liveId != liveId) return;
+    final isCurrentLive = _isCurrentLive(liveId);
 
-    appLogger.i('📡 Live ended → leaving room');
+    if (!isCurrentLive) {
+      appLogger.w(
+        '⚠️ Ignoring live-ended event → '
+        'eventLiveId=$liveId, '
+        'stateLiveId=${state.live?.id}, '
+        'sessionLiveId=${state.session?.liveId}, '
+        'hasLiveUi=${state.hasLiveUi}, '
+        'hasActiveRoom=${state.hasActiveRoom}',
+      );
+      return;
+    }
+
+    appLogger.i('📡 Host ended live → force closing room: $liveId');
 
     await _leaveRoomInternal();
 
-    state = state.copyWith(
-      status: LiveStatus.ended,
-      hasLiveUi: false,
-      session: null,
-      hasActiveRoom: false,
-    );
+    state = state.ended();
   }
 
   Future<void> onViewerCountUpdatedEvent({
     required String liveId,
     required int viewerCount,
   }) async {
-    if (state.session?.liveId != liveId) return;
+    if (!_isCurrentLive(liveId)) {
+      appLogger.w(
+        '⚠️ Ignoring viewer count → '
+        'eventLiveId=$liveId, '
+        'stateLiveId=${state.live?.id}, '
+        'sessionLiveId=${state.session?.liveId}',
+      );
+      return;
+    }
 
-    state = state.copyWith(viewerCount: viewerCount);
+    state = state.copyWith(viewerCount: viewerCount, clearError: true);
   }
 
   // ================= ROOM =================
@@ -141,7 +175,13 @@ class LiveManager extends StateNotifier<LiveState> {
     _isJoining = true;
 
     try {
-      state = state.copyWith(roomState: RoomState.connecting);
+      state = state.copyWith(
+        roomState: RoomState.connecting,
+        hasActiveRoom: false,
+        isPublishing: false,
+        isSubscribed: false,
+        clearError: true,
+      );
 
       await mediaService.joinLive(
         wsUrl: session.wsUrl,
@@ -155,7 +195,21 @@ class LiveManager extends StateNotifier<LiveState> {
         hasActiveRoom: true,
         isPublishing: session.role == AOSLiveRole.host,
         isSubscribed: session.role == AOSLiveRole.viewer,
+        clearError: true,
       );
+
+      if (session.role == AOSLiveRole.viewer) {
+        try {
+          final viewId = await repository.trackJoin(liveId: session.liveId);
+          appLogger.i('👀 Live viewer tracked joined → viewId=$viewId');
+        } catch (e, s) {
+          appLogger.e(
+            'trackJoin failed, continuing live session',
+            error: e,
+            stackTrace: s,
+          );
+        }
+      }
 
       appLogger.i('🎥 Joined live room');
     } catch (e, s) {
@@ -163,6 +217,10 @@ class LiveManager extends StateNotifier<LiveState> {
 
       state = state.copyWith(
         status: LiveStatus.error,
+        roomState: RoomState.disconnected,
+        hasActiveRoom: false,
+        isPublishing: false,
+        isSubscribed: false,
         errorMessage: e.toString(),
       );
     } finally {
@@ -174,7 +232,23 @@ class LiveManager extends StateNotifier<LiveState> {
     if (_isLeaving) return;
     _isLeaving = true;
 
+    final liveId = state.session?.liveId ?? state.live?.id;
+    final wasViewer = state.isViewer;
+
     try {
+      if (wasViewer && liveId != null) {
+        try {
+          await repository.trackLeave(liveId: liveId);
+          appLogger.i('👀 Live viewer tracked leave → liveId=$liveId');
+        } catch (e, s) {
+          appLogger.e(
+            'trackLeave failed, still leaving live room',
+            error: e,
+            stackTrace: s,
+          );
+        }
+      }
+
       await mediaService.leaveLive();
 
       state = state.copyWith(
@@ -185,15 +259,17 @@ class LiveManager extends StateNotifier<LiveState> {
       );
 
       appLogger.i('👋 Left live room');
+    } catch (e, s) {
+      appLogger.e('leaveRoom failed', error: e, stackTrace: s);
     } finally {
       _isLeaving = false;
     }
   }
-
   // ================= END LIVE =================
+
   Future<void> endLive() async {
     try {
-      final liveId = state.session?.liveId;
+      final liveId = state.session?.liveId ?? state.live?.id;
 
       if (liveId != null && state.isHost) {
         await repository.endLive(liveId: liveId);
@@ -201,13 +277,9 @@ class LiveManager extends StateNotifier<LiveState> {
 
       await _leaveRoomInternal();
 
-      state = state.copyWith(
-        status: LiveStatus.ended,
-        hasLiveUi: false,
-        session: null,
-      );
+      state = state.ended();
 
-      appLogger.i('🔚 Live ended');
+      appLogger.i('🔚 Live ended by host');
     } catch (e, s) {
       appLogger.e('endLive failed', error: e, stackTrace: s);
     }
@@ -219,11 +291,7 @@ class LiveManager extends StateNotifier<LiveState> {
     try {
       await _leaveRoomInternal();
 
-      state = state.copyWith(
-        status: LiveStatus.ended,
-        hasLiveUi: false,
-        session: null,
-      );
+      state = state.left();
 
       appLogger.i('👋 Viewer left live');
     } catch (e, s) {
@@ -231,7 +299,17 @@ class LiveManager extends StateNotifier<LiveState> {
     }
   }
 
+  // ================= HELPERS =================
+
+  bool _isCurrentLive(String liveId) {
+    return state.live?.id == liveId ||
+        state.session?.liveId == liveId ||
+        state.hasLiveUi ||
+        state.hasActiveRoom;
+  }
+
   // ================= CLEANUP =================
+
   @override
   void dispose() {
     // ❌ DO NOT dispose core media here

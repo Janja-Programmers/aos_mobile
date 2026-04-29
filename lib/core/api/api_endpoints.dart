@@ -146,6 +146,10 @@ class ApiEndpoints {
   static final String joinLiveEndpoint = '/api/method/aos.api.live.join_live';
   static final String endLiveEndpoint = '/api/method/aos.api.live.end_live';
   static final String getLiveEndpoint = '/api/method/aos.api.live.get_live';
+  static const String trackLiveJoinEndpoint =
+      '/api/method/aos.api.live.track_join';
+  static const String trackLiveLeaveEndpoint =
+      '/api/method/aos.api.live.track_leave';
 
   // ───────────── SHORTS ─────────────
 

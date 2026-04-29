@@ -31,16 +31,22 @@ class _LiveNavigationListenerState
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(liveManagerProvider);
+    ref.listen(liveManagerProvider.select((s) => s.hasLiveUi), (
+      previous,
+      next,
+    ) {
+      if (previous == next) return;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _handleNavigation(state.hasLiveUi);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _handleNavigation(shouldShowLive: next);
+      });
     });
 
     return widget.child;
   }
 
-  void _handleNavigation(bool shouldShowLive) {
+  void _handleNavigation({required bool shouldShowLive}) {
     if (_isNavigating) return;
 
     final router = ref.read(appRouterProvider);
@@ -54,7 +60,10 @@ class _LiveNavigationListenerState
 
       router.goNamed(AppRoutes.nLiveRoom);
 
-      Future.microtask(() => _isNavigating = false);
+      Future.microtask(() {
+        _isNavigating = false;
+      });
+
       return;
     }
 
@@ -64,7 +73,9 @@ class _LiveNavigationListenerState
 
       router.goNamed(AppRoutes.nHome);
 
-      Future.microtask(() => _isNavigating = false);
+      Future.microtask(() {
+        _isNavigating = false;
+      });
     }
   }
 }

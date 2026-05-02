@@ -1,20 +1,20 @@
 import 'dart:async';
 
 import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:video_player/video_player.dart';
 
 import 'package:africaonlinestores/features/shorts/create_short/application/state/short_state.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_engagement_api.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_feed_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_tracking_api.dart';
 
 class ShortsController extends StateNotifier<ShortsState> {
-  final ShortsFeedApi feedApi;
   final ShortsTrackingApi trackingApi;
   final ShortsEngagementApi engagementApi;
+  final ShortsRepository repository;
 
-  ShortsController(this.feedApi, this.trackingApi, this.engagementApi)
+  ShortsController(this.repository, this.trackingApi, this.engagementApi)
     : super(const ShortsState(shorts: []));
 
   // ───────────── INTERNAL STATE ─────────────
@@ -50,29 +50,27 @@ class ShortsController extends StateNotifier<ShortsState> {
 
     state = state.copyWith(isLoading: true);
 
-    final res = await feedApi.fetchForYou();
+    try {
+      final page = await repository.fetchForYou();
 
-    res.fold(
-      (err) {
-        appLogger.i("❌ API ERROR: $err");
+      state = state.copyWith(
+        shorts: page.items,
+        cursor: page.nextCursor,
+        hasMore: page.hasMore,
+        isLoading: false,
+        currentIndex: 0,
+      );
 
-        state = state.copyWith(isLoading: false);
-      },
-      (page) {
-        state = state.copyWith(
-          shorts: page.items,
-          cursor: page.nextCursor,
-          hasMore: page.hasMore,
-          isLoading: false,
-          currentIndex: 0,
-        );
+      _initFirstPlayer();
+    } catch (e) {
+      appLogger.i("❌ API ERROR: $e");
 
-        _initFirstPlayer();
-      },
-    );
-
-    _isInitializing = false;
+      state = state.copyWith(isLoading: false);
+    } finally {
+      _isInitializing = false;
+    }
   }
+
   // ───────────── PAGINATION ─────────────
 
   Future<void> loadMore() async {
@@ -80,17 +78,19 @@ class ShortsController extends StateNotifier<ShortsState> {
 
     _isLoadingMore = true;
 
-    final res = await feedApi.fetchForYou(cursor: state.cursor);
+    try {
+      final page = await repository.fetchForYou(cursor: state.cursor);
 
-    res.fold((_) {}, (page) {
       state = state.copyWith(
         shorts: [...state.shorts, ...page.items],
         cursor: page.nextCursor,
         hasMore: page.hasMore,
       );
-    });
-
-    _isLoadingMore = false;
+    } catch (e) {
+      appLogger.i("❌ LOAD MORE ERROR: $e");
+    } finally {
+      _isLoadingMore = false;
+    }
   }
 
   // ───────────── PLAYER ─────────────

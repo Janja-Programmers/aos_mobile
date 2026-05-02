@@ -1,14 +1,9 @@
 import 'package:equatable/equatable.dart';
-
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
 
 class ShortFeedPage extends Equatable {
-  final List<Short> items;
-
-  /// Cursor for next page
+  final List<ShortModel> items;
   final String? nextCursor;
-
-  /// Whether more data exists
   final bool hasMore;
 
   const ShortFeedPage({

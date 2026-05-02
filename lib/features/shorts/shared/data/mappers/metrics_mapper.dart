@@ -7,10 +7,13 @@ class MetricsMapper {
     bool likedByMe = false,
   }) {
     return ShortMetrics(
-      likeCount: model.likes,
-      commentCount: model.comments,
-      viewCount: model.views,
+      likeCount: model.likeCount,
+      commentCount: model.commentCount,
+      viewCount: model.viewCount,
       likedByMe: likedByMe,
+      shareCount: model.shareCount,
+      impressionCount: model.impressionCount,
+      rankingScore: model.rankingScore,
     );
   }
 }

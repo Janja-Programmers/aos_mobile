@@ -122,6 +122,9 @@ class AppRoutes {
   static const shorts = '/shorts';
   static const nShorts = 'shorts';
 
+  static const nShortDetail = 'short-detail';
+  static const shortDetail = '/shorts/detail';
+
   static const feeds = '/feeds';
   static const nFeeds = 'feeds';
 

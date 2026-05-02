@@ -20,7 +20,7 @@ class ShortEntityGridCard extends StatelessWidget {
     final colors = context.appColors;
 
     return GestureDetector(
-      onTap: () => ShortsNavigation.toShorts(context, initialIndex: index),
+      onTap: () => ShortsNavigation.toShorts(context),
       child: Container(
         decoration: BoxDecoration(
           color: colors.border,
@@ -33,7 +33,7 @@ class ShortEntityGridCard extends StatelessWidget {
             AspectRatio(
               aspectRatio: 0.78,
               child: Image.network(
-                short.thumbnailUrl,
+                short.thumbnailUrl ?? '',
                 width: double.infinity,
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => _placeholder(colors),

@@ -20,13 +20,8 @@ import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/ov
 
 class ShortActionsPanel extends ConsumerWidget {
   final Short short;
-  final int index;
 
-  const ShortActionsPanel({
-    super.key,
-    required this.short,
-    required this.index,
-  });
+  const ShortActionsPanel({super.key, required this.short});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

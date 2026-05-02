@@ -1,5 +1,3 @@
-import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_grid_controller.dart';
-import 'package:africaonlinestores/features/shorts/feeds/application/state/short_grid_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -22,6 +20,10 @@ import 'package:africaonlinestores/features/shorts/create_short/application/cont
 import 'package:africaonlinestores/features/shorts/feeds/application/state/comment_state.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/state/short_state.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
+
+import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_grid_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/state/short_grid_state.dart';
+import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
 
 // ─────────────────────────────────────────────
 // API LAYER
@@ -64,12 +66,12 @@ final activeShortIndexProvider = StateProvider<int>((ref) => 0);
 final shortsControllerProvider =
     StateNotifierProvider<ShortsController, ShortsState>((ref) {
       return ShortsController(
-        ref.read(shortsFeedApiProvider),
+        ShortsRepository(ref.read(shortsFeedApiProvider)),
         ref.read(shortsTrackingApiProvider),
         ref.read(shortsEngagementApiProvider),
       );
     });
-
+    
 final shortGridControllerProvider =
     StateNotifierProvider<ShortGridController, ShortGridState>((ref) {
       return ShortGridController(ref.read(shortsFeedApiProvider));

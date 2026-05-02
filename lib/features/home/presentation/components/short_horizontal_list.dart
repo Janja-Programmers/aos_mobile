@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
@@ -31,7 +32,7 @@ class ShortsHorizontalList extends StatelessWidget {
         itemBuilder: (context, index) {
           final short = shorts[index];
 
-          return _ShortPreviewCard(short: short);
+          return _ShortPreviewCard(short: short, shorts: shorts, index: index);
         },
       ),
     );
@@ -39,43 +40,48 @@ class ShortsHorizontalList extends StatelessWidget {
 }
 
 class _ShortPreviewCard extends StatelessWidget {
-  const _ShortPreviewCard({required this.short});
+  const _ShortPreviewCard({
+    required this.short,
+    required this.shorts,
+    required this.index,
+  });
 
   final Short short;
+  final List<Short> shorts;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final thumbnailUrl = buildFileUrl(short.thumbnailUrl);
 
     return GestureDetector(
       onTap: () {
-        ShortsNavigation.toShorts(context);
+        ShortsNavigation.toShortDetail(
+          context,
+          initialShorts: List<Short>.from(shorts),
+          initialIndex: index,
+          initialNextCursor: null,
+          initialHasMore: false,
+        );
       },
-
       child: SizedBox(
         width: 140,
         height: 260,
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-
           children: [
-            /// VIDEO (flexible height — FIXES overflow)
             Expanded(
               child: AspectRatio(
                 aspectRatio: 9 / 16,
-
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-
                   child: Stack(
                     fit: StackFit.expand,
-
                     children: [
                       Image.network(
-                        short.thumbnailUrl,
+                        thumbnailUrl ?? '',
                         fit: BoxFit.cover,
-
                         errorBuilder: (_, _, _) {
                           return Container(
                             color: colors.black,
@@ -83,7 +89,6 @@ class _ShortPreviewCard extends StatelessWidget {
                           );
                         },
                       ),
-
                       Center(
                         child: Icon(
                           Icons.play_circle_fill,
@@ -96,7 +101,6 @@ class _ShortPreviewCard extends StatelessWidget {
                 ),
               ),
             ),
-
             const SizedBox(height: 6),
           ],
         ),

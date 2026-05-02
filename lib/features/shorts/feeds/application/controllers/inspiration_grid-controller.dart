@@ -1,11 +1,12 @@
-import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_feed_api.dart';
-import 'package:africaonlinestores/features/shorts/feeds/application/state/following/inspiration_grid_state.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-class InspirationGridController extends StateNotifier<InspirationGridState> {
-  final ShortsFeedApi feedApi;
+import 'package:africaonlinestores/features/shorts/feeds/application/state/following/inspiration_grid_state.dart';
+import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
 
-  InspirationGridController(this.feedApi)
+class InspirationGridController extends StateNotifier<InspirationGridState> {
+  final ShortsRepository repository;
+
+  InspirationGridController(this.repository)
     : super(const InspirationGridState(shorts: []));
 
   Future<void> loadInitial() async {
@@ -19,22 +20,19 @@ class InspirationGridController extends StateNotifier<InspirationGridState> {
       clearCursor: true,
     );
 
-    final res = await feedApi.fetchForYou();
+    try {
+      final page = await repository.fetchForYou();
 
-    res.fold(
-      (_) {
-        state = state.copyWith(isLoading: false, isLoadingMore: false);
-      },
-      (page) {
-        state = state.copyWith(
-          shorts: page.items,
-          cursor: page.nextCursor,
-          hasMore: page.hasMore,
-          isLoading: false,
-          isLoadingMore: false,
-        );
-      },
-    );
+      state = state.copyWith(
+        shorts: page.items,
+        cursor: page.nextCursor,
+        hasMore: page.hasMore,
+        isLoading: false,
+        isLoadingMore: false,
+      );
+    } catch (_) {
+      state = state.copyWith(isLoading: false, isLoadingMore: false);
+    }
   }
 
   Future<void> loadMore() async {
@@ -42,20 +40,17 @@ class InspirationGridController extends StateNotifier<InspirationGridState> {
 
     state = state.copyWith(isLoadingMore: true);
 
-    final res = await feedApi.fetchForYou(cursor: state.cursor);
+    try {
+      final page = await repository.fetchForYou(cursor: state.cursor);
 
-    res.fold(
-      (_) {
-        state = state.copyWith(isLoadingMore: false);
-      },
-      (page) {
-        state = state.copyWith(
-          shorts: [...state.shorts, ...page.items],
-          cursor: page.nextCursor,
-          hasMore: page.hasMore,
-          isLoadingMore: false,
-        );
-      },
-    );
+      state = state.copyWith(
+        shorts: [...state.shorts, ...page.items],
+        cursor: page.nextCursor,
+        hasMore: page.hasMore,
+        isLoadingMore: false,
+      );
+    } catch (_) {
+      state = state.copyWith(isLoadingMore: false);
+    }
   }
 }

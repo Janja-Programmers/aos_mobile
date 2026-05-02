@@ -1,35 +1,59 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:africaonlinestores/core/api/failure.dart';
-
-import 'package:africaonlinestores/features/shorts/create_short/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_feed_api.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/models/short_feed_page.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_mapper.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
-final shortsRepositoryProvider = Provider<ShortsRepository>((ref) {
-  return ShortsRepositoryImpl(ref.read(shortsFeedApiProvider));
-});
+import 'package:equatable/equatable.dart';
 
-abstract class ShortsRepository {
-  Future<ShortFeedPage> fetchForYou({String? cursor});
-}
+class ShortsFeedPage extends Equatable {
+  final List<Short> items;
+  final String? nextCursor;
+  final bool hasMore;
 
-class ShortsRepositoryImpl implements ShortsRepository {
-  final ShortsFeedApi api;
+  const ShortsFeedPage({
+    required this.items,
+    required this.nextCursor,
+    required this.hasMore,
+  });
 
-  ShortsRepositoryImpl(this.api);
+  bool get isEmpty => items.isEmpty;
 
   @override
-  Future<ShortFeedPage> fetchForYou({String? cursor}) async {
-    final result = await api.fetchForYou(cursor: cursor);
+  List<Object?> get props => [items, nextCursor, hasMore];
+}
+
+class ShortsRepository {
+  final ShortsFeedApi _api;
+
+  ShortsRepository(this._api);
+
+  /// FOR YOU FEED
+  Future<ShortsFeedPage> fetchForYou({int limit = 10, String? cursor}) async {
+    final result = await _api.fetchForYou(limit: limit, cursor: cursor);
 
     return result.fold(
-      (failure) {
-        throw Failure(failure.message);
-      },
-      (page) {
-        return page;
-      },
+      (failure) => throw Exception(failure.message),
+      (page) => ShortsFeedPage(
+        items: page.items.map((model) => ShortMapper.toDomain(model)).toList(),
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
+      ),
+    );
+  }
+
+  /// FOLLOWING FEED
+  Future<ShortsFeedPage> fetchFollowing({
+    int limit = 10,
+    String? cursor,
+  }) async {
+    final result = await _api.fetchFollowingGrid(limit: limit, cursor: cursor);
+
+    return result.fold(
+      (failure) => throw Exception(failure.message),
+      (page) => ShortsFeedPage(
+        items: page.items.map((model) => ShortMapper.toDomain(model)).toList(),
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
+      ),
     );
   }
 }

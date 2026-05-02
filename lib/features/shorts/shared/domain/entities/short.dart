@@ -9,13 +9,11 @@ import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/c
 
 class Short extends Equatable {
   final ShortId id;
-
-  final String playbackUrl;
-  final String thumbnailUrl;
-  final int durationSeconds;
-
   final Caption caption;
   final List<String> hashtags;
+  final String playbackUrl;
+  final String? thumbnailUrl;
+  final double durationSeconds;
 
   final String sellerId;
   final String? sellerShopName;
@@ -32,7 +30,7 @@ class Short extends Equatable {
   const Short({
     required this.id,
     required this.playbackUrl,
-    required this.thumbnailUrl,
+    this.thumbnailUrl,
     required this.durationSeconds,
     required this.caption,
     required this.hashtags,
@@ -57,7 +55,7 @@ class Short extends Equatable {
   Short copyWith({
     String? playbackUrl,
     String? thumbnailUrl,
-    int? durationSeconds,
+    double? durationSeconds,
     Caption? caption,
     List<String>? hashtags,
     String? sellerId,

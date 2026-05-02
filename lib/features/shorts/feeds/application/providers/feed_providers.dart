@@ -6,6 +6,7 @@ import 'package:africaonlinestores/features/shorts/feeds/application/controllers
 import 'package:africaonlinestores/features/shorts/feeds/application/state/following/inspiration_grid_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/replies_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/replies_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
 
 enum FeedTab { inspiration, following, saved }
 
@@ -32,5 +33,7 @@ final inspirationGridControllerProvider =
     StateNotifierProvider<InspirationGridController, InspirationGridState>((
       ref,
     ) {
-      return InspirationGridController(ref.read(shortsFeedApiProvider));
+      return InspirationGridController(
+        ShortsRepository(ref.read(shortsFeedApiProvider)),
+      );
     });

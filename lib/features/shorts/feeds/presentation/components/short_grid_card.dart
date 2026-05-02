@@ -22,7 +22,7 @@ class ShortGridCard extends StatelessWidget {
     final avatarUrl = buildFileUrl(short.sellerAvator);
 
     return GestureDetector(
-      onTap: () => ShortsNavigation.toShorts(context, initialIndex: index),
+      onTap: () => ShortsNavigation.toShorts(context),
       child: Container(
         decoration: BoxDecoration(
           color: colors.border,
@@ -76,7 +76,7 @@ class ShortGridCard extends StatelessWidget {
                   const SizedBox(width: 4),
 
                   Text(
-                    short.metrics.likes.toString(),
+                    short.metrics.likeCount.toString(),
                     style: const TextStyle(fontSize: 11),
                   ),
                   const SizedBox(width: 3),

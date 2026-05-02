@@ -34,6 +34,9 @@ class ShortsEngagementApi {
             commentCount: json['comment_count'] ?? 0,
             viewCount: json['view_count'] ?? 0,
             likedByMe: json['liked_by_me'] ?? true,
+            shareCount: json['share_count'] ?? 0,
+            impressionCount: json['impression_count'] ?? 0,
+            rankingScore: json['ranking_score'] ?? 0,
           ),
         );
       });

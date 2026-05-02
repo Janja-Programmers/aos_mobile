@@ -1,17 +1,17 @@
+import 'package:africaonlinestores/features/shorts/feeds/presentation/screens/short_list_screen.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/screens/short_detail_screen.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
 import 'package:africaonlinestores/features/shorts/shared/domain/selected_media_type.dart';
-import 'package:africaonlinestores/features/shorts/feeds/presentation/screens/shorts_screen.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/screens/post_short_details_screen.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/screens/post_short_media_picker_screen.dart';
 
 /// ─────────────────────────────────────────
 /// ARGUMENT MODEL
 /// ─────────────────────────────────────────
-
 class PostShortDetailsArgs {
   final String sessionId;
   final List<SelectedMedia> media;
@@ -23,22 +23,56 @@ class PostShortDetailsArgs {
 /// ROUTES
 /// ─────────────────────────────────────────
 
+class ShortDetailArgs {
+  final List<Short> initialShorts;
+  final int initialIndex;
+  final String? initialNextCursor;
+  final bool initialHasMore;
+
+  ShortDetailArgs({
+    required this.initialShorts,
+    required this.initialIndex,
+    required this.initialNextCursor,
+    required this.initialHasMore,
+  });
+}
+
 class ShortsRoutes {
   const ShortsRoutes._();
 
   static List<GoRoute> routes() => [..._publicRoutes];
 
   static final List<GoRoute> _publicRoutes = [
-    // ───────── SHORTS FEED ─────────
     GoRoute(
       name: AppRoutes.nShorts,
       path: AppRoutes.shorts,
       builder: (context, state) {
-        return const ShortsScreen();
+        return const ShortListScreen();
       },
     ),
 
-    // ───────── MEDIA PICKER ─────────
+    GoRoute(
+      name: AppRoutes.nShortDetail,
+      path: AppRoutes.shortDetail,
+      builder: (context, state) {
+        final args = state.extra as ShortDetailArgs?;
+
+        if (args == null) {
+          return Scaffold(
+            appBar: AppBar(leading: const BackButton()),
+            body: const Center(child: Text('Missing short detail data')),
+          );
+        }
+
+        return ShortDetailScreen(
+          initialShorts: args.initialShorts,
+          initialIndex: args.initialIndex,
+          initialNextCursor: args.initialNextCursor,
+          initialHasMore: args.initialHasMore,
+        );
+      },
+    ),
+
     GoRoute(
       name: AppRoutes.nPostShort,
       path: AppRoutes.postShort,
@@ -71,17 +105,34 @@ class ShortsRoutes {
 /// ─────────────────────────────────────────
 /// NAVIGATION HELPERS
 /// ─────────────────────────────────────────
-
 class ShortsNavigation {
   const ShortsNavigation._();
 
   // ───────── OPEN FEED ─────────
 
-  static void toShorts(BuildContext context, {int initialIndex = 0}) {
-    context.pushNamed(AppRoutes.nShorts, extra: initialIndex);
+  static void toShorts(BuildContext context) {
+    context.pushNamed(AppRoutes.nShorts);
   }
 
   // ───────── OPEN MEDIA PICKER ─────────
+
+  static void toShortDetail(
+    BuildContext context, {
+    required List<Short> initialShorts,
+    required int initialIndex,
+    required String? initialNextCursor,
+    required bool initialHasMore,
+  }) {
+    context.pushNamed(
+      AppRoutes.nShortDetail,
+      extra: ShortDetailArgs(
+        initialShorts: initialShorts,
+        initialIndex: initialIndex,
+        initialNextCursor: initialNextCursor,
+        initialHasMore: initialHasMore,
+      ),
+    );
+  }
 
   static Future<void> toPostShort(BuildContext context) {
     return context.pushNamed(AppRoutes.nPostShort);

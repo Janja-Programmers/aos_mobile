@@ -53,7 +53,9 @@ class ShortsManagementApi {
 
   Future<Either<Failure, ShortFeedPage>> myShorts({String? cursor}) async {
     try {
-      final query = {'cursor': ?cursor};
+      final query = <String, dynamic>{
+        if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+      };
 
       final res = await _client.get(
         ApiEndpoints.myShorts,
@@ -63,22 +65,27 @@ class ShortsManagementApi {
       final unwrapped = unwrapFrappe(res);
 
       return unwrapped.fold((failure) => Either.left(failure), (json) {
-        final items = (json['items'] as List? ?? [])
-            .map((e) => ShortMapper.toDomain(ShortModel.fromJson(e)))
+        final data = json['data'] is Map<String, dynamic>
+            ? json['data'] as Map<String, dynamic>
+            : json['message']?['data'] as Map<String, dynamic>? ?? json;
+
+        final items = (data['items'] as List? ?? [])
+            .whereType<Map<String, dynamic>>()
+            .map(ShortModel.fromJson)
             .toList();
 
         return Either.right(
           ShortFeedPage(
             items: items,
-            nextCursor: json['next_cursor'],
-            hasMore: json['has_more'] ?? false,
+            nextCursor: data['next_cursor'] as String?,
+            hasMore: data['has_more'] as bool? ?? false,
           ),
         );
       });
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Unexpected error fetching my shorts'));
+    } catch (e) {
+      return Either.left(Failure('Unexpected error fetching my shorts: $e'));
     }
   }
 

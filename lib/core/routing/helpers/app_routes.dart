@@ -132,7 +132,7 @@ class AppRoutes {
   static const postShort = '/shorts/post';
   static const nPostShort = 'postShort';
 
-  static const postShortDetails = '/shorts/detail';
+  static const postShortDetails = '/shorts/post/details';
   static const nPostShortDetails = 'postShortDetail';
 
   // CALLS routes

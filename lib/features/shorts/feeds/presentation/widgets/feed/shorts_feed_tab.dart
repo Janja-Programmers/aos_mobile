@@ -1,8 +1,10 @@
+import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import 'package:africaonlinestores/features/shorts/create_short/application/providers/shorts_providers.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/components/following/suggested_sellers_section.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_type.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/screens/short_detail_screen.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card.dart';
@@ -124,6 +126,19 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     );
   }
 
+  Widget _buildShortItem(BuildContext context, int index) {
+    if (index >= _items.length) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final short = _items[index];
+
+    return ShortCard(short: short, onTap: () => _openDetail(index));
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading && _items.isEmpty) {
@@ -148,6 +163,35 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
       );
     }
 
+    if (widget.feedType == ShortsFeedType.following) {
+      return RefreshIndicator(
+        onRefresh: _loadInitial,
+        child: ListView(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(16),
+          children: [
+            const SuggestedSellersSection(),
+
+            const SizedBox(height: 22),
+
+            SectionCard(
+              title: 'Following Shorts',
+              child: MasonryGridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                crossAxisCount: 2,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                itemCount: _items.length + (_isLoadingMore ? 1 : 0),
+                itemBuilder: _buildShortItem,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return RefreshIndicator(
       onRefresh: _loadInitial,
       child: MasonryGridView.count(
@@ -157,18 +201,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
         itemCount: _items.length + (_isLoadingMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index >= _items.length) {
-            return const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-
-          final short = _items[index];
-
-          return ShortCard(short: short, onTap: () => _openDetail(index));
-        },
+        itemBuilder: _buildShortItem,
       ),
     );
   }

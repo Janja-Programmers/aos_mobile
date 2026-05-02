@@ -1,8 +1,9 @@
-import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_type.dart';
-import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/shorts_feed_tab.dart';
 import 'package:flutter/material.dart';
+
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_type.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/components/feed_header.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/shorts_feed_tab.dart';
 
 class ShortListScreen extends StatelessWidget {
   const ShortListScreen({super.key});
@@ -16,21 +17,12 @@ class ShortListScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: colors.surface,
         appBar: AppBar(
-          title: Text('Shorts', style: context.h5),
-          bottom: TabBar(
+          titleSpacing: 0,
+          title: const FeedHeader(),
+          bottom: const TabBar(
             tabs: [
-              Tab(
-                child: Text(
-                  'For You',
-                  style: context.h6.copyWith(color: colors.primary),
-                ),
-              ),
-              Tab(
-                child: Text(
-                  'Following',
-                  style: context.h6.copyWith(color: colors.primary),
-                ),
-              ),
+              Tab(text: 'For You'),
+              Tab(text: 'Following'),
             ],
           ),
         ),

@@ -2,21 +2,21 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
-import 'package:africaonlinestores/features/shorts/create_short/presentation/helpers/post_short_media_helpers.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/controllers/post_short_controller.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/providers/shorts_providers.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
+import 'package:africaonlinestores/features/shorts/create_short/presentation/helpers/post_short_media_helpers.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/widgets/ad_picker_bottom_sheet.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/selected_media_type.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
-import 'package:go_router/go_router.dart';
 
 class PostShortDetailsScreen extends ConsumerStatefulWidget {
   final List<SelectedMedia> media;
@@ -39,16 +39,41 @@ class _PostShortDetailsScreenState
   final hashtagController = TextEditingController();
 
   late final PostShortController controller;
-  late final List<SelectedMedia> selectedMedia;
+  late final ProviderSubscription<UploadState> _uploadSubscription;
+
   Uint8List? _thumbnail;
 
   @override
   void initState() {
     super.initState();
 
-    controller = ref.read(
-      postShortControllerProvider(widget.sessionId).notifier,
-    );
+    final provider = postShortControllerProvider(widget.sessionId);
+
+    controller = ref.read(provider.notifier);
+
+    _uploadSubscription = ref.listenManual<UploadState>(provider, (
+      previous,
+      next,
+    ) {
+      if (next.status == UploadStatus.processing &&
+          previous?.status != UploadStatus.processing) {
+        if (mounted) {
+          context.goNamed(AppRoutes.nShorts, extra: 0);
+        }
+      }
+
+      if (next.status == UploadStatus.ready &&
+          previous?.status != UploadStatus.ready) {
+        ref.read(shortsControllerProvider.notifier).loadInitial();
+      }
+
+      if (next.status == UploadStatus.failed &&
+          previous?.status != UploadStatus.failed) {
+        if (mounted) {
+          ShowSnack(context, "Upload failed").error();
+        }
+      }
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.setMedia(widget.media);
@@ -62,43 +87,15 @@ class _PostShortDetailsScreenState
 
   @override
   void dispose() {
+    _uploadSubscription.close();
     captionController.dispose();
     hashtagController.dispose();
     super.dispose();
   }
 
-  // ───────────────────────── BUILD
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(postShortControllerProvider(widget.sessionId));
-
-    ref.listen<UploadState>(postShortControllerProvider(widget.sessionId), (
-      previous,
-      next,
-    ) {
-      /// 🚀 Move to Shorts immediately when processing starts
-      if (next.status == UploadStatus.processing &&
-          previous?.status != UploadStatus.processing) {
-        if (mounted) {
-          context.goNamed(AppRoutes.nShorts, extra: 0);
-        }
-      }
-
-      /// 🎯 Upload fully completed
-      if (next.status == UploadStatus.ready &&
-          previous?.status != UploadStatus.ready) {
-        ref.read(shortsControllerProvider.notifier).loadInitial();
-      }
-
-      /// ❌ Failed
-      if (next.status == UploadStatus.failed &&
-          previous?.status != UploadStatus.failed) {
-        if (mounted) {
-          ShowSnack(context, "Upload failed").error();
-        }
-      }
-    });
 
     final isBusy = switch (state.status) {
       UploadStatus.initializing ||
@@ -107,6 +104,7 @@ class _PostShortDetailsScreenState
       UploadStatus.processing => true,
       _ => false,
     };
+
     final colors = context.appColors;
 
     final media = state.primaryMedia;
@@ -130,7 +128,6 @@ class _PostShortDetailsScreenState
       backgroundColor: colors.surface,
       body: Stack(
         children: [
-          // 🧠 MAIN UI (ALWAYS ACTIVE)
           SafeArea(
             child: Column(
               children: [
@@ -140,14 +137,12 @@ class _PostShortDetailsScreenState
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       children: [
-                        // inside Column children
                         _mediaPreview(state, colors),
                         const SizedBox(height: 14),
                         _caption(colors),
                         const SizedBox(height: 14),
                         _hashtags(colors),
                         const SizedBox(height: 14),
-
                         if (!hasSelectedAd) ...[
                           _addItems(colors),
                           const SizedBox(height: 14),
@@ -159,13 +154,11 @@ class _PostShortDetailsScreenState
                     ),
                   ),
                 ),
-
                 _postButton(colors, canPost),
               ],
             ),
           ),
 
-          // 🚫 INTERACTION BLOCKER + LOADER
           if (isBusy)
             Positioned.fill(
               child: AbsorbPointer(
@@ -195,7 +188,6 @@ class _PostShortDetailsScreenState
     );
   }
 
-  // ───────────────────────── MEDIA PREVIEW
   Widget _mediaPreview(UploadState state, AppColorTokens colors) {
     final media = state.primaryMedia;
     if (media == null) return const SizedBox();
@@ -226,7 +218,6 @@ class _PostShortDetailsScreenState
                           height: 120,
                           fit: BoxFit.cover,
                         ),
-
                         Positioned.fill(
                           child: Container(
                             alignment: Alignment.center,
@@ -249,7 +240,6 @@ class _PostShortDetailsScreenState
 
   Future<void> _generateThumbnail() async {
     final file = widget.media.first.file;
-
     final thumb = await PostShortMediaHelpers.generateVideoThumbnail(file);
 
     if (!mounted) return;
@@ -258,8 +248,6 @@ class _PostShortDetailsScreenState
       _thumbnail = thumb;
     });
   }
-
-  // ───────────────────────── CAPTION
 
   Widget _caption(AppColorTokens colors) {
     return TextField(
@@ -277,7 +265,25 @@ class _PostShortDetailsScreenState
     );
   }
 
-  // ───────────────────────── ADS
+  Widget _hashtags(AppColorTokens colors) {
+    return TextField(
+      controller: hashtagController,
+      onChanged: (v) {
+        final tags = v
+            .split(RegExp(r'\s+'))
+            .where((e) => e.startsWith('#'))
+            .toList();
+
+        controller.setHashtags(tags);
+      },
+      decoration: InputDecoration(
+        hintText: "#hashtags",
+        filled: true,
+        fillColor: colors.surface,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
+  }
 
   Widget _addItems(AppColorTokens colors) {
     return GestureDetector(
@@ -320,29 +326,6 @@ class _PostShortDetailsScreenState
       },
     );
   }
-  // ───────────────────────── HASHTAGS
-
-  Widget _hashtags(AppColorTokens colors) {
-    return TextField(
-      controller: hashtagController,
-      onChanged: (v) {
-        final tags = v
-            .split(RegExp(r'\s+'))
-            .where((e) => e.startsWith('#'))
-            .toList();
-
-        controller.setHashtags(tags);
-      },
-      decoration: InputDecoration(
-        hintText: "#hashtags",
-        filled: true,
-        fillColor: colors.surface,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-      ),
-    );
-  }
-
-  // ───────────────────────── SELECTED AD
 
   Widget _selectedAd(UploadState state, AppColorTokens colors) {
     final selectedAdId = state.selectedAdId;
@@ -363,7 +346,6 @@ class _PostShortDetailsScreenState
         children: [
           Icon(Icons.campaign_outlined, color: colors.primary),
           const SizedBox(width: 10),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,7 +361,6 @@ class _PostShortDetailsScreenState
               ],
             ),
           ),
-
           IconButton(
             onPressed: controller.clearAd,
             icon: Icon(Icons.close, color: colors.textMuted),
@@ -388,8 +369,6 @@ class _PostShortDetailsScreenState
       ),
     );
   }
-
-  // ───────────────────────── POST BUTTON
 
   Widget _postButton(AppColorTokens colors, bool canPost) {
     return Padding(

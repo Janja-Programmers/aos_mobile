@@ -66,7 +66,7 @@ class _FollowingShortsSectionState
               crossAxisCount: 2,
               mainAxisSpacing: 14,
               crossAxisSpacing: 12,
-              childAspectRatio: 0.60,
+              childAspectRatio: 0.54,
             ),
             itemBuilder: (context, index) {
               final short = state.shorts[index];

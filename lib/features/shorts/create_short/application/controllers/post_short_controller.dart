@@ -44,8 +44,12 @@ class PostShortController extends StateNotifier<UploadState> {
 
   // ───────────── SETTERS ─────────────
 
-  void setAd(String adId) {
+  void setAd(String? adId) {
     state = state.copyWith(selectedAdId: adId);
+  }
+
+  void clearAd() {
+    state = state.copyWith(clearSelectedAd: true);
   }
 
   void setCaption(String caption) {

@@ -12,6 +12,8 @@ abstract class NotificationRepository {
   Future<Either<Failure, bool>> markNotificationRead(String notificationId);
 
   Future<Either<Failure, bool>> markAllAsRead();
+
+  Future<Either<Failure, bool>> deleteNotification(String notificationId);
 }
 
 abstract class PushTokenRepository {
@@ -38,6 +40,11 @@ class NotificationRepositoryImpl implements NotificationRepository {
   @override
   Future<Either<Failure, bool>> markAllAsRead() {
     return api.markAllAsRead();
+  }
+
+  @override
+  Future<Either<Failure, bool>> deleteNotification(String notificationId) {
+    return api.deleteNotification(notificationId: notificationId);
   }
 }
 

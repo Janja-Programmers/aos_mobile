@@ -95,6 +95,7 @@ class UploadState extends Equatable {
     String? errorMessage,
     bool clearError = false,
     bool clearShort = false,
+    bool clearSelectedAd = false,
   }) {
     return UploadState(
       status: status ?? this.status,
@@ -103,7 +104,8 @@ class UploadState extends Equatable {
 
       media: media ?? this.media,
 
-      selectedAdId: selectedAdId ?? this.selectedAdId,
+      selectedAdId: clearSelectedAd ? null : selectedAdId ?? this.selectedAdId,
+
       caption: caption ?? this.caption,
 
       hashtags: hashtags != null ? List.unmodifiable(hashtags) : this.hashtags,

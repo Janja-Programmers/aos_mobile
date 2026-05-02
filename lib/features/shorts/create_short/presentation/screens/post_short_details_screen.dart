@@ -112,9 +112,12 @@ class _PostShortDetailsScreenState
     final media = state.primaryMedia;
     final hasMedia = media != null;
 
+    final hasSelectedAd =
+        state.selectedAdId != null && state.selectedAdId!.trim().isNotEmpty;
+
     final canPost =
         hasMedia &&
-        state.selectedAdId != null &&
+        hasSelectedAd &&
         state.caption.trim().isNotEmpty &&
         !state.isBusy;
 
@@ -145,7 +148,7 @@ class _PostShortDetailsScreenState
                         _hashtags(colors),
                         const SizedBox(height: 14),
 
-                        if (state.selectedAdId == null) ...[
+                        if (!hasSelectedAd) ...[
                           _addItems(colors),
                           const SizedBox(height: 14),
                         ] else ...[
@@ -344,7 +347,9 @@ class _PostShortDetailsScreenState
   Widget _selectedAd(UploadState state, AppColorTokens colors) {
     final selectedAdId = state.selectedAdId;
 
-    if (selectedAdId == null) return const SizedBox();
+    if (selectedAdId == null || selectedAdId.trim().isEmpty) {
+      return const SizedBox();
+    }
 
     return Container(
       width: double.infinity,
@@ -376,15 +381,14 @@ class _PostShortDetailsScreenState
           ),
 
           IconButton(
-            onPressed: () {
-              controller.setAd('');
-            },
+            onPressed: controller.clearAd,
             icon: Icon(Icons.close, color: colors.textMuted),
           ),
         ],
       ),
     );
   }
+
   // ───────────────────────── POST BUTTON
 
   Widget _postButton(AppColorTokens colors, bool canPost) {

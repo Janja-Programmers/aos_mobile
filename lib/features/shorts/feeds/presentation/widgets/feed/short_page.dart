@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -83,10 +84,7 @@ class ShortPage extends ConsumerWidget {
               bottom: 24,
               child: ShopNowCard(
                 short: short,
-                onTap: () {
-                  /// pure UI action (navigation / repo call)
-                  /// no playback coupling
-                },
+                onTap: () => AdNavigation.toDetail(context, short.ad!.id),
               ),
             ),
         ],

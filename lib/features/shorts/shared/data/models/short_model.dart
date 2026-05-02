@@ -44,21 +44,25 @@ class ShortModel {
   });
 
   factory ShortModel.fromJson(Map<String, dynamic> json) {
-    return ShortModel(
-      id: json['id'] ?? '',
+    final seller = json['seller'] as Map<String, dynamic>? ?? {};
 
-      playbackUrl: json['playback_url'] ?? '',
-      thumbnailUrl: json['thumbnail_url'] ?? '',
+    return ShortModel(
+      id: json['id'] as String? ?? '',
+
+      playbackUrl: json['playback_url'] as String? ?? '',
+      thumbnailUrl: json['thumbnail_url'] as String? ?? '',
 
       durationSeconds: (json['duration_seconds'] as num?)?.toInt() ?? 0,
 
-      caption: json['caption'] ?? '',
+      caption: json['caption'] as String? ?? '',
 
-      hashtags: List<String>.from(json['hashtags'] ?? []),
+      hashtags: (json['hashtags'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
 
-      sellerId: json['seller']['id'],
-      sellerShopName: json['seller']['shop_name'],
-      sellerAvator: json['seller']['avatar'],
+      sellerId: seller['id'] as String? ?? '',
+      sellerShopName: seller['shop_name'] as String?,
+      sellerAvator: seller['avatar'] as String?,
 
       status: json['status'] as String?,
 

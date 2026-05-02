@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/connect/utils/format_time.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
-import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
 import 'package:africaonlinestores/features/notifications/presentation/utils/helpers.dart';
-import 'package:africaonlinestores/features/notifications/presentation/widgets/primary_action_button.dart';
-import 'package:africaonlinestores/features/notifications/presentation/widgets/secondary_action_button.dart';
 
 class NotificationTile extends StatefulWidget {
   final NotificationItem notification;
   final VoidCallback onTap;
-  final VoidCallback onMarkRead;
+  final VoidCallback onDelete;
 
   const NotificationTile({
     super.key,
     required this.notification,
     required this.onTap,
-    required this.onMarkRead,
+    required this.onDelete,
   });
 
   @override
@@ -29,6 +27,7 @@ class NotificationTile extends StatefulWidget {
 class _NotificationTileState extends State<NotificationTile>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
+  bool _hasTriggeredHaptic = false;
 
   @override
   void initState() {
@@ -47,6 +46,17 @@ class _NotificationTileState extends State<NotificationTile>
   }
 
   @override
+  void didUpdateWidget(covariant NotificationTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.notification.isRead) {
+      _pulseController.stop();
+    } else if (!_pulseController.isAnimating) {
+      _pulseController.repeat(reverse: true);
+    }
+  }
+
+  @override
   void dispose() {
     _pulseController.dispose();
     super.dispose();
@@ -56,35 +66,54 @@ class _NotificationTileState extends State<NotificationTile>
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final isUnread = !widget.notification.isRead;
-    final action = _buildAction(context);
 
     return Dismissible(
       key: ValueKey(widget.notification.id),
       direction: DismissDirection.endToStart,
 
-      // 👉 Swipe background
+      dismissThresholds: const {DismissDirection.endToStart: 0.35},
+
+      resizeDuration: const Duration(milliseconds: 220),
+      movementDuration: const Duration(milliseconds: 220),
+
       background: Container(
-        alignment: Alignment.centerRight,
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        color: colors.primary.withOpacity(.1),
-        child: Icon(Icons.mark_email_read, color: colors.primary),
+        alignment: Alignment.centerRight,
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.delete_outline, color: Colors.white),
       ),
 
-      // 🔥 IMPORTANT: prevent removal
+      onUpdate: (details) {
+        if (details.progress >= 0.35 && !_hasTriggeredHaptic) {
+          _hasTriggeredHaptic = true;
+          HapticFeedback.mediumImpact();
+        }
+
+        if (details.progress < 0.35 && _hasTriggeredHaptic) {
+          _hasTriggeredHaptic = false;
+        }
+      },
+
       confirmDismiss: (_) async {
-        widget.onMarkRead();
-        return false;
+        await HapticFeedback.selectionClick();
+        return true;
+      },
+
+      onDismissed: (_) {
+        widget.onDelete();
       },
 
       child: GestureDetector(
         onTap: widget.onTap,
-
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           padding: const EdgeInsets.all(12),
-
           decoration: BoxDecoration(
             color: isUnread ? colors.primary.withOpacity(.05) : colors.surface,
             borderRadius: BorderRadius.circular(12),
@@ -92,75 +121,70 @@ class _NotificationTileState extends State<NotificationTile>
               color: isUnread ? colors.primary.withOpacity(.2) : colors.border,
             ),
           ),
-
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  // Avatar / Icon
-                  _buildAvatarOrIcon(context),
+              _buildAvatarOrIcon(context),
 
-                  const SizedBox(width: 12),
+              const SizedBox(width: 12),
 
-                  // Content
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.notification.title,
-                          style: TextStyle(
-                            fontWeight: isUnread
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(widget.notification.body, style: context.p),
-                      ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.notification.title,
+                      style: TextStyle(
+                        fontWeight: isUnread
+                            ? FontWeight.bold
+                            : FontWeight.w500,
+                      ),
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.notification.body,
+                      style: context.p,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    formatTime(widget.notification.createdAt),
+                    style: const TextStyle(fontSize: 12),
                   ),
 
-                  // Right side (time + unread indicator)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        formatTime(widget.notification.createdAt),
-                        style: const TextStyle(fontSize: 12),
-                      ),
+                  const SizedBox(height: 6),
 
-                      const SizedBox(height: 6),
-
-                      // 🔴 Animated unread dot
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
-                        transitionBuilder: (child, animation) =>
-                            ScaleTransition(scale: animation, child: child),
-                        child: isUnread
-                            ? Container(
-                                key: const ValueKey('unread-dot'),
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: colors.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                              )
-                            : const SizedBox(
-                                key: ValueKey('no-dot'),
-                                width: 8,
-                                height: 8,
-                              ),
-                      ),
-                    ],
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    transitionBuilder: (child, animation) {
+                      return ScaleTransition(scale: animation, child: child);
+                    },
+                    child: isUnread
+                        ? Container(
+                            key: const ValueKey('unread-dot'),
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: colors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          )
+                        : const SizedBox(
+                            key: ValueKey('no-dot'),
+                            width: 8,
+                            height: 8,
+                          ),
                   ),
                 ],
               ),
-
-              // Optional action section
-              if (action != null) ...[const SizedBox(height: 10), action],
             ],
           ),
         ),
@@ -168,12 +192,8 @@ class _NotificationTileState extends State<NotificationTile>
     );
   }
 
-  // =====================================================
-  // ICON / AVATAR
-  // =====================================================
   Widget _buildAvatarOrIcon(BuildContext context) {
     final colors = context.appColors;
-
     final avatar = widget.notification.actorAvatar;
 
     if (avatar != null) {
@@ -192,28 +212,5 @@ class _NotificationTileState extends State<NotificationTile>
       ),
       child: Icon(iconData, color: bgColor),
     );
-  }
-
-  Widget? _buildAction(BuildContext context) {
-    final colors = context.appColors;
-
-    switch (widget.notification.type) {
-      case NotificationType.liveStarted:
-        return PrimaryActionButton(
-          label: 'Join Live',
-          color: colors.primary,
-          onTap: widget.onTap,
-        );
-
-      case NotificationType.adApproved:
-      case NotificationType.adRejected:
-        return SecondaryActionButton(
-          label: 'View Details',
-          onTap: widget.onTap,
-        );
-
-      default:
-        return null;
-    }
   }
 }

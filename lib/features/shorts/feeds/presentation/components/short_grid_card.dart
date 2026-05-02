@@ -32,13 +32,14 @@ class ShortGridCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 0.78,
-              child: Image.network(
-                imageUrl,
+            Expanded(
+              child: SizedBox(
                 width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => _placeholder(colors),
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => _placeholder(colors),
+                ),
               ),
             ),
 
@@ -92,6 +93,7 @@ class ShortGridCard extends StatelessWidget {
   Widget _placeholder(AppColorTokens colors) {
     return Container(
       width: double.infinity,
+      height: double.infinity,
       color: colors.border,
       child: const Center(child: Icon(Icons.play_arrow)),
     );

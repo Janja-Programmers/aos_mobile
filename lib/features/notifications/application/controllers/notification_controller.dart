@@ -60,6 +60,53 @@ class NotificationController extends StateNotifier<NotificationState> {
   }
 
   // =====================================================
+  // DELETE ONE NOTIFICATION
+  // =====================================================
+  Future<void> deleteNotification(String notificationId) async {
+    final index = state.items.indexWhere((n) => n.id == notificationId);
+
+    if (index == -1) {
+      appLogger.w(
+        'NotificationController -> deleteNotification skipped: not found ($notificationId)',
+      );
+      return;
+    }
+
+    appLogger.i(
+      'NotificationController -> deleteNotification optimistic: $notificationId',
+    );
+
+    final previousItems = state.items;
+
+    final updatedItems = [...state.items]
+      ..removeWhere((n) => n.id == notificationId);
+
+    state = state.copyWith(items: updatedItems, clearError: true);
+
+    final result = await _repository.deleteNotification(notificationId);
+
+    if (result.isLeft) {
+      final failure = result.leftOrNull!;
+
+      appLogger.e(
+        'NotificationController -> deleteNotification failed',
+        error: failure.message,
+      );
+
+      state = state.copyWith(
+        items: previousItems,
+        errorMessage: failure.message,
+      );
+
+      return;
+    }
+
+    appLogger.i(
+      'NotificationController -> deleteNotification success: $notificationId',
+    );
+  }
+
+  // =====================================================
   // MARK ONE AS READ
   // =====================================================
   Future<void> markNotificationRead(String notificationId) async {
@@ -154,6 +201,16 @@ class NotificationController extends StateNotifier<NotificationState> {
     }
 
     appLogger.i('NotificationController -> markAllAsRead success');
+  }
+
+  void restoreNotification(NotificationItem notification, int index) {
+    final items = [...state.items];
+
+    final safeIndex = index.clamp(0, items.length);
+
+    items.insert(safeIndex, notification);
+
+    state = state.copyWith(items: items);
   }
 
   // =====================================================

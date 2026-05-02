@@ -101,4 +101,30 @@ class NotificationApi {
       );
     }
   }
+
+  // =====================================================
+  // DELETE NOTIFICATION
+  // =====================================================
+  Future<Either<Failure, bool>> deleteNotification({
+    required String notificationId,
+  }) async {
+    try {
+      final res = await _apiClient.post(
+        ApiEndpoints.deleteNotification,
+        data: {'notification_id': notificationId},
+      );
+
+      final result = unwrapFrappe(res);
+
+      if (result.isLeft) {
+        return Either.left(result.leftOrNull!);
+      }
+
+      return Either.right(true);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (e) {
+      return Either.left(const Failure('Failed to delete notification'));
+    }
+  }
 }

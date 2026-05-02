@@ -255,7 +255,7 @@ class _PostShortMediaPickerScreenState
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
-                itemCount: 1,
+                itemCount: selectedMedia.length,
                 itemBuilder: (_, index) {
                   return _previewItem(index, colors);
                 },
@@ -268,69 +268,96 @@ class _PostShortMediaPickerScreenState
   }
 
   Widget _previewItem(int index, AppColorTokens colors) {
+    if (index >= selectedMedia.length) {
+      return const SizedBox.shrink();
+    }
+
     final item = selectedMedia[index];
     final file = item.file;
 
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Stack(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: FutureBuilder(
-              future: PostShortMediaHelpers.generateVideoThumbnail(file),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Container(
-                    width: 70,
-                    height: 70,
-                    color: colors.black,
-                    child: const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  );
-                }
+      padding: const EdgeInsets.only(right: 12, top: 8),
+      child: SizedBox(
+        width: 78,
+        height: 78,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: 0,
+              bottom: 0,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: FutureBuilder(
+                  key: ValueKey(file.path),
+                  future: PostShortMediaHelpers.generateVideoThumbnail(file),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return Container(
+                        width: 70,
+                        height: 70,
+                        color: colors.black,
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    }
 
-                return Image.memory(
-                  snapshot.data!,
-                  width: 70,
-                  height: 70,
-                  fit: BoxFit.cover,
-                );
-              },
-            ),
-          ),
-
-          /// VIDEO ICON
-          Positioned.fill(
-            child: Container(
-              alignment: Alignment.center,
-              color: colors.black.withOpacity(.4),
-              child: Icon(Icons.videocam, color: colors.white, size: 22),
-            ),
-          ),
-
-          /// REMOVE BUTTON
-          Positioned(
-            top: -6,
-            right: -6,
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedMedia.removeAt(index);
-                });
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colors.black,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: colors.white),
+                    return Image.memory(
+                      snapshot.data!,
+                      width: 70,
+                      height: 70,
+                      fit: BoxFit.cover,
+                    );
+                  },
                 ),
-                child: Icon(Icons.close, size: 16, color: colors.white),
               ),
             ),
-          ),
-        ],
+
+            /// VIDEO ICON OVERLAY
+            Positioned(
+              left: 0,
+              bottom: 0,
+              child: Container(
+                width: 70,
+                height: 70,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: colors.black.withOpacity(.4),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.videocam, color: colors.white, size: 22),
+              ),
+            ),
+
+            /// REMOVE BUTTON
+            Positioned(
+              top: 0,
+              right: 0,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  setState(() {
+                    if (index < selectedMedia.length) {
+                      selectedMedia.removeAt(index);
+                    }
+                  });
+                },
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: colors.black,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: colors.white),
+                  ),
+                  child: Icon(Icons.close, size: 16, color: colors.white),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

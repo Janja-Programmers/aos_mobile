@@ -46,6 +46,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
   // -------------------------
   // SEND
   // -------------------------
+
   Future<void> _submit() async {
     if (_isSending) return;
 
@@ -57,19 +58,30 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
 
     if (!hasText && !hasAttachments && !hasAdContext) return;
 
-    setState(() => _isSending = true);
+    final attachmentsToSend = List<ChatInputAttachment>.of(_attachments);
+
+    setState(() {
+      _isSending = true;
+      _attachments.clear();
+    });
+
+    widget.onTyping(false);
 
     try {
       await widget.onSend(
         text: hasText ? text : null,
-        attachments: List.of(_attachments),
+        attachments: attachmentsToSend,
       );
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _attachments
+            ..clear()
+            ..addAll(attachmentsToSend);
+        });
+      }
 
-      widget.controller.clear();
-      _attachments.clear();
-      widget.onTyping(false);
-
-      setState(() {});
+      rethrow;
     } finally {
       if (mounted) {
         setState(() => _isSending = false);

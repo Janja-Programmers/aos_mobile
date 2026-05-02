@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -154,6 +155,10 @@ class _ShortsScreenState extends ConsumerState<ShortsScreen>
 
     if (feedState.isEmpty) {
       return Scaffold(
+        appBar: AppBar(
+          leading: const BackButton(),
+          title: Text("Shorts Unavailable", style: context.h5),
+        ),
         backgroundColor: colors.surface,
         body: const Center(child: Text("No shorts available")),
       );
@@ -166,7 +171,6 @@ class _ShortsScreenState extends ConsumerState<ShortsScreen>
           controller: _controller,
           itemCount: feedState.shorts.length,
 
-          /// UI → SESSION INTENT ONLY (NO AUTHORITY HERE YET)
           /// UI → SESSION INTENT ONLY (NO AUTHORITY HERE YET)
           onPageChanged: (index) {
             final direction = index > _lastIndex

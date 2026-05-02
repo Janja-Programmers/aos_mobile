@@ -225,6 +225,8 @@ class ApiEndpoints {
       '/api/method/aos.api.notifications.mark_notification_read';
   static final String listNotifications =
       '/api/method/aos.api.notifications.list_notifications';
+  static const String deleteNotification =
+      '/api/method/africaonlinestores.api.notifications.delete_notification';
   static final String deactivatePushToken =
       '/api/method/aos.api.notifications.deactivate_push_token';
   static final String registerPushToken =

@@ -53,6 +53,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _showAdPreview = false;
   Timer? _typingTimer;
   Timer? _typingStopTimer;
+  bool _isSending = false;
 
   @override
   void initState() {
@@ -136,24 +137,56 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     String? text,
     List<ChatInputAttachment> attachments = const [],
   }) async {
-    final notifier = ref.read(
-      chatMessagesControllerProvider(widget.conversationId).notifier,
-    );
+    if (_isSending) return;
 
-    await notifier.sendTempMessage(
-      text: text,
-      attachments: attachments,
-      adId: _showAdPreview ? widget.adId : null,
-      adTitle: _showAdPreview ? widget.adTitle : null,
-      adPrice: _showAdPreview ? widget.adPrice : null,
-      adImage: _showAdPreview ? widget.adImage : null,
-    );
+    final messageText = text?.trim();
 
-    if (_showAdPreview && mounted) {
-      setState(() => _showAdPreview = false);
+    final hasText = messageText != null && messageText.isNotEmpty;
+    final hasAttachments = attachments.isNotEmpty;
+    final hasAdContext =
+        _showAdPreview && widget.adId != null && widget.adId!.trim().isNotEmpty;
+
+    if (!hasText && !hasAttachments && !hasAdContext) return;
+
+    final attachedAdId = hasAdContext ? widget.adId : null;
+    final attachedAdTitle = hasAdContext ? widget.adTitle : null;
+    final attachedAdPrice = hasAdContext ? widget.adPrice : null;
+    final attachedAdImage = hasAdContext ? widget.adImage : null;
+
+    _isSending = true;
+
+    _inputController.clear();
+    _handleTyping(false);
+
+    if (mounted) {
+      setState(() {
+        _showAdPreview = false;
+      });
     }
 
-    _scrollToBottom();
+    try {
+      final notifier = ref.read(
+        chatMessagesControllerProvider(widget.conversationId).notifier,
+      );
+
+      await notifier.sendTempMessage(
+        text: hasText ? messageText : null,
+        attachments: attachments,
+        adId: attachedAdId,
+        adTitle: attachedAdTitle,
+        adPrice: attachedAdPrice,
+        adImage: attachedAdImage,
+      );
+
+      _scrollToBottom();
+    } catch (e) {
+      debugPrint('Send message failed: $e');
+
+      // Do NOT restore the controller/ad here.
+      // The message may already have been optimistically inserted/sent.
+    } finally {
+      _isSending = false;
+    }
   }
 
   @override
@@ -163,7 +196,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
 
     final typingMap = ref.watch(chatTypingControllerProvider);
-    final currentUser = ref.watch(currentUserProvider);
+
+    final currentUserId = ref.watch(currentUserProvider);
 
     final isTyping = typingMap[widget.conversationId] ?? false;
 
@@ -194,7 +228,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final msg = messages[messages.length - 1 - index];
-                      final isMe = msg.sender == currentUser;
+                      final isMe =
+                          currentUserId != null && msg.sender == currentUserId;
+                      debugPrint(
+                        'msg.sender=${msg.sender}, currentUserId=$currentUserId, isMe=$isMe',
+                      );
+
                       return MessageBubble(message: msg, isMe: isMe);
                     },
                   );
@@ -225,6 +264,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
 
             ChatInputBar(
+              key: ValueKey(_showAdPreview ? widget.adId : 'no-ad'),
               controller: _inputController,
               onSend: _sendMessage,
               onTyping: _handleTyping,

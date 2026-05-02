@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/notifications/presentation/widgets/notification_action_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,6 +32,28 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       appLogger.i('🔔 NotificationsScreen → loadNotifications');
       ref.read(notificationControllerProvider.notifier).loadNotifications();
     });
+  }
+
+  void _showNotificationBottomSheet({
+    required BuildContext context,
+    required NotificationItem notification,
+    required dynamic controller,
+    required dynamic handler,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return NotificationActionSheet(
+          notification: notification,
+          onAction: () {
+            Navigator.pop(context);
+            handler.handleNotificationTap(notification);
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -138,18 +161,40 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               ),
 
               // Items
-              ...entry.value.map(
-                (n) => NotificationTile(
+              ...entry.value.asMap().entries.map((itemEntry) {
+                final index = itemEntry.key;
+                final n = itemEntry.value;
+
+                return NotificationTile(
                   notification: n,
                   onTap: () {
                     controller.markNotificationRead(n.id);
-                    handler.handleNotificationTap(n);
+
+                    _showNotificationBottomSheet(
+                      context: context,
+                      notification: n,
+                      controller: controller,
+                      handler: handler,
+                    );
                   },
-                  onMarkRead: () {
-                    controller.markNotificationRead(n.id);
+                  onDelete: () {
+                    controller.deleteNotification(n.id);
+
+                    ScaffoldMessenger.of(context).clearSnackBars();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Notification deleted'),
+                        action: SnackBarAction(
+                          label: 'Undo',
+                          onPressed: () {
+                            controller.restoreNotification(n, index);
+                          },
+                        ),
+                      ),
+                    );
                   },
-                ),
-              ),
+                );
+              }),
             ],
           );
         }).toList(),

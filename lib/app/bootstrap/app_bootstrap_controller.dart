@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_state.dart';
 
@@ -24,13 +25,41 @@ class AppBootstrapController extends StateNotifier<AppBootstrapState> {
 
   final OnboardingStorage _storage;
 
+  bool _hasInitialized = false;
+  Future<void>? _initializeFuture;
+
   // -----------------------------
   // Initialize app bootstrap
   // -----------------------------
-  Future<void> initialize() async {
-    final completed = _storage.isOnboardingComplete();
+  Future<void> initialize() {
+    if (_hasInitialized) {
+      appLogger.i('[App] Bootstrap ignored: already initialized');
+      return Future.value();
+    }
 
-    state = state.copyWith(isReady: true, onboardingCompleted: completed);
+    final existing = _initializeFuture;
+    if (existing != null) {
+      appLogger.i('[App] Bootstrap ignored: already initializing');
+      return existing;
+    }
+
+    _initializeFuture = _initialize();
+
+    return _initializeFuture!;
+  }
+
+  Future<void> _initialize() async {
+    appLogger.i('[App] Bootstrapping...');
+
+    try {
+      final completed = _storage.isOnboardingComplete();
+
+      state = state.copyWith(isReady: true, onboardingCompleted: completed);
+
+      _hasInitialized = true;
+    } finally {
+      _initializeFuture = null;
+    }
   }
 
   // -----------------------------
@@ -48,6 +77,9 @@ class AppBootstrapController extends StateNotifier<AppBootstrapState> {
   Future<void> resetOnboarding() async {
     await _storage.clearAll();
 
-    state = state.copyWith(onboardingCompleted: false);
+    _hasInitialized = false;
+    _initializeFuture = null;
+
+    state = state.copyWith(isReady: true, onboardingCompleted: false);
   }
 }

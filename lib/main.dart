@@ -107,27 +107,16 @@ class AppRoot extends ConsumerStatefulWidget {
 
 class _AppRootState extends ConsumerState<AppRoot> {
   bool _bootstrapStarted = false;
+  ProviderSubscription<AuthState>? _authSub;
 
   @override
   void initState() {
     super.initState();
 
-    appLogger.i('[App] Bootstrapping...');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    /// ✅ Ensure bootstrap runs ONCE (safe)
-    if (!_bootstrapStarted) {
-      _bootstrapStarted = true;
-
-      Future.microtask(() {
-        ref.read(appBootstrapControllerProvider.notifier).initialize();
-      });
-    }
-
-    /// ✅ SAFE place for ref.listen
-    ref.listen<AuthState>(authControllerProvider, (prev, next) async {
+    _authSub = ref.listenManual<AuthState>(authControllerProvider, (
+      prev,
+      next,
+    ) async {
       final realtime = ref.read(realtimeServiceProvider);
 
       /// -----------------------------
@@ -171,6 +160,23 @@ class _AppRootState extends ConsumerState<AppRoot> {
         ref.read(pushNotificationServiceProvider).reset();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _authSub?.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_bootstrapStarted) {
+      _bootstrapStarted = true;
+
+      Future.microtask(() {
+        ref.read(appBootstrapControllerProvider.notifier).initialize();
+      });
+    }
 
     return const AOSApp();
   }

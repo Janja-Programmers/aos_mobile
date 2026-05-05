@@ -9,7 +9,7 @@ class CallSignalingHandler {
   const CallSignalingHandler({required this.callManager});
 
   // ================= INCOMING =================
-  Future<void> handleIncomingCall(Map<String, dynamic> data) async {
+  Future<bool> handleIncomingCall(Map<String, dynamic> data) async {
     try {
       final callId = data['call_id'] as String?;
       final callerRaw = data['caller'] as String?;
@@ -18,7 +18,7 @@ class CallSignalingHandler {
 
       if (callId == null || roomName == null || callTypeRaw == null) {
         appLogger.e('❌ Invalid incoming call payload: $data');
-        return;
+        return false;
       }
 
       final callType = callTypeRaw == 'video'
@@ -35,7 +35,7 @@ class CallSignalingHandler {
 
       appLogger.i('📞 Incoming call parsed');
 
-      await callManager.onIncomingCallEvent(
+      return callManager.onIncomingCallEvent(
         callId: callId,
         roomName: roomName,
         callType: callType,
@@ -43,6 +43,7 @@ class CallSignalingHandler {
       );
     } catch (e, s) {
       appLogger.e('handleIncomingCall failed', error: e, stackTrace: s);
+      return false;
     }
   }
 

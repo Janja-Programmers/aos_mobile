@@ -8,6 +8,12 @@ import 'package:africaonlinestores/core/realtime/realtime_event.dart';
 import 'package:africaonlinestores/core/realtime/realtime_event_type.dart';
 
 class RealtimeService {
+  RealtimeService(/* deps */) {
+    appLogger.w(
+      '🧬 RealtimeService CREATED instance=${identityHashCode(this)}',
+    );
+  }
+
   IO.Socket? _socket;
 
   // -----------------------------
@@ -31,6 +37,12 @@ class RealtimeService {
     required String sid,
     required String email,
   }) {
+    appLogger.i(
+      '🔌 Realtime connect() called '
+      'service=${identityHashCode(this)} '
+      'socket=${_socket == null ? "null" : identityHashCode(_socket)}',
+    );
+
     // 🔥 Prevent duplicate connections
     if (_socket != null && _isConnected) {
       return;
@@ -78,13 +90,13 @@ class RealtimeService {
       _isConnected = false;
     });
 
-    _socket!.on("aos_live_started", (data) {
-      appLogger.i("AOS LIVE STARTED: $data");
-    });
+    // _socket!.on("aos_live_started", (data) {
+    //   appLogger.i("AOS LIVE STARTED: $data");
+    // });
 
-    _socket!.on("aos_live_ended", (data) {
-      appLogger.i("AOS LIVE ENDED: $data");
-    });
+    // _socket!.on("aos_live_ended", (data) {
+    //   appLogger.i("AOS LIVE ENDED: $data");
+    // });
 
     // -----------------------------
     // All Events

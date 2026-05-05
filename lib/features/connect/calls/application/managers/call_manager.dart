@@ -24,6 +24,8 @@ class CallManager extends StateNotifier<CallState> {
   StreamSubscription<Duration>? _durationSub;
   Timer? _resetTimer;
 
+  CallState get currentState => state;
+
   CallManager({
     required this.repository,
     required this.mediaService,
@@ -129,7 +131,7 @@ class CallManager extends StateNotifier<CallState> {
   }
 
   // ================= INCOMING =================
-  Future<void> onIncomingCallEvent({
+  Future<bool> onIncomingCallEvent({
     required String callId,
     required String roomName,
     required AOSCallType callType,
@@ -137,12 +139,27 @@ class CallManager extends StateNotifier<CallState> {
     String? wsUrl,
     CallParticipant? caller,
   }) async {
+    final activeCall = state.activeCall;
+
+    if (activeCall?.id == callId) {
+      appLogger.w('📞 Duplicate incoming call ignored: $callId');
+      return false;
+    }
+
     if (state.isCallInProgress) {
-      appLogger.i('⚠️ Busy during incoming call → rejecting');
+      appLogger.w('⚠️ Busy during incoming call → rejecting');
+
       try {
         await repository.rejectCall(callId: callId);
-      } catch (_) {}
-      return;
+      } catch (e, s) {
+        appLogger.e(
+          '⚠️ Failed to auto-reject incoming call while busy',
+          error: e,
+          stackTrace: s,
+        );
+      }
+
+      return false;
     }
 
     final incomingCall = Call(
@@ -168,7 +185,15 @@ class CallManager extends StateNotifier<CallState> {
             : CallMediaMode.audio,
       );
 
-      await repository.markCallRinging(callId: callId);
+      try {
+        await repository.markCallRinging(callId: callId);
+      } catch (e, s) {
+        appLogger.w(
+          '⚠️ markCallRinging failed; continuing with local incoming UI',
+          error: e,
+          stackTrace: s,
+        );
+      }
 
       _applyBackendState(
         BackendCallStatus.ringing,
@@ -179,6 +204,8 @@ class CallManager extends StateNotifier<CallState> {
       );
 
       state = state.copyWith(isBusy: false);
+
+      return true;
     } catch (e, s) {
       appLogger.e('onIncomingCallEvent failed', error: e, stackTrace: s);
 
@@ -190,6 +217,8 @@ class CallManager extends StateNotifier<CallState> {
         hasIncomingCallUi: false,
         errorMessage: e.toString(),
       );
+
+      return false;
     }
   }
 

@@ -222,7 +222,35 @@ class CallManager extends StateNotifier<CallState> {
     }
   }
 
-  Future<void> acceptIncomingCall() async {
+  Future<void> acceptIncomingCall({String? expectedCallId}) async {
+    if (!_matchesActiveCall(expectedCallId)) {
+      appLogger.w(
+        '⚠️ Ignoring acceptIncomingCall: expectedCallId=$expectedCallId '
+        'activeCallId=${state.activeCall?.id}',
+      );
+      return;
+    }
+
+    final call = state.activeCall;
+    if (call == null) {
+      appLogger.w('⚠️ Ignoring acceptIncomingCall: no active call');
+      return;
+    }
+
+    if (state.uiPhase != UiCallPhase.incomingRinging) {
+      appLogger.w(
+        '⚠️ Ignoring acceptIncomingCall: invalid phase=${state.uiPhase}',
+      );
+      return;
+    }
+
+    if (_isTerminalStatus(state.backendStatus)) {
+      appLogger.w(
+        '⚠️ Ignoring acceptIncomingCall: terminal status=${state.backendStatus}',
+      );
+      return;
+    }
+
     try {
       final callId = state.activeCall?.id;
 
@@ -253,7 +281,35 @@ class CallManager extends StateNotifier<CallState> {
     }
   }
 
-  Future<void> rejectIncomingCall() async {
+  Future<void> rejectIncomingCall({String? expectedCallId}) async {
+    if (!_matchesActiveCall(expectedCallId)) {
+      appLogger.w(
+        '⚠️ Ignoring rejectIncomingCall: expectedCallId=$expectedCallId '
+        'activeCallId=${state.activeCall?.id}',
+      );
+      return;
+    }
+
+    final call = state.activeCall;
+    if (call == null) {
+      appLogger.w('⚠️ Ignoring rejectIncomingCall: no active call');
+      return;
+    }
+
+    if (state.uiPhase != UiCallPhase.incomingRinging) {
+      appLogger.w(
+        '⚠️ Ignoring rejectIncomingCall: invalid phase=${state.uiPhase}',
+      );
+      return;
+    }
+
+    if (_isTerminalStatus(state.backendStatus)) {
+      appLogger.w(
+        '⚠️ Ignoring rejectIncomingCall: terminal status=${state.backendStatus}',
+      );
+      return;
+    }
+
     try {
       final callId = state.activeCall?.id;
       if (callId == null) return;
@@ -268,16 +324,39 @@ class CallManager extends StateNotifier<CallState> {
     }
   }
 
-  Future<void> callNotAnswered() async {
-    try {
-      final callId = state.activeCall?.id;
-      if (callId == null) return;
+  Future<void> callNotAnswered({String? expectedCallId}) async {
+    final callId = expectedCallId ?? state.activeCall?.id;
 
+    if (callId == null || callId.isEmpty) {
+      appLogger.w('⚠️ Ignoring callNotAnswered: no callId');
+      return;
+    }
+
+    if (!_matchesActiveCall(callId)) {
+      appLogger.w(
+        '⚠️ Ignoring callNotAnswered: expectedCallId=$callId '
+        'activeCallId=${state.activeCall?.id}',
+      );
+      return;
+    }
+
+    if (_shouldIgnoreRemoteTerminalEvent(callId)) {
+      return;
+    }
+
+    if (_isTerminalStatus(state.backendStatus)) {
+      appLogger.w(
+        '⚠️ Ignoring callNotAnswered: already terminal status=${state.backendStatus}',
+      );
+      return;
+    }
+
+    try {
       await _leaveRoomInternal();
 
       _applyBackendState(BackendCallStatus.missed, hasIncomingCallUi: false);
     } catch (e, s) {
-      appLogger.e('rejectIncomingCall failed', error: e, stackTrace: s);
+      appLogger.e('callNotAnswered failed', error: e, stackTrace: s);
       await _failCall(e);
     }
   }
@@ -298,6 +377,8 @@ class CallManager extends StateNotifier<CallState> {
   }
 
   Future<void> onCallRejectedEvent({required String callId}) async {
+    if (_shouldIgnoreRemoteTerminalEvent(callId)) return;
+
     if (state.activeCall?.id != callId) return;
 
     await _leaveRoomInternal();
@@ -315,6 +396,8 @@ class CallManager extends StateNotifier<CallState> {
   }
 
   Future<void> onCallCancelledEvent({required String callId}) async {
+    if (_shouldIgnoreRemoteTerminalEvent(callId)) return;
+
     try {
       if (state.activeCall?.id != callId) return;
 
@@ -330,6 +413,8 @@ class CallManager extends StateNotifier<CallState> {
   }
 
   Future<void> onCallEndedEvent({required String callId}) async {
+    if (_shouldIgnoreRemoteTerminalEvent(callId)) return;
+
     if (state.activeCall?.id != callId) return;
 
     appLogger.i('📡 Remote ended call → leaving locally');
@@ -399,7 +484,28 @@ class CallManager extends StateNotifier<CallState> {
   }
 
   // ================= END =================
-  Future<void> endCurrentCall() async {
+  Future<void> endCurrentCall({String? expectedCallId}) async {
+    if (!_matchesActiveCall(expectedCallId)) {
+      appLogger.w(
+        '⚠️ Ignoring endCurrentCall: expectedCallId=$expectedCallId '
+        'activeCallId=${state.activeCall?.id}',
+      );
+      return;
+    }
+
+    final call = state.activeCall;
+    if (call == null) {
+      appLogger.w('⚠️ Ignoring endCurrentCall: no active call');
+      return;
+    }
+
+    if (_isTerminalStatus(state.backendStatus)) {
+      appLogger.w(
+        '⚠️ Ignoring endCurrentCall: terminal status=${state.backendStatus}',
+      );
+      return;
+    }
+
     _callCancelled = true;
 
     try {
@@ -435,6 +541,59 @@ class CallManager extends StateNotifier<CallState> {
       appLogger.e('endCurrentCall failed', error: e, stackTrace: s);
       await _failCall(e);
     }
+  }
+
+  bool _matchesActiveCall(String? expectedCallId) {
+    if (expectedCallId == null || expectedCallId.isEmpty) {
+      return true;
+    }
+
+    final activeCallId = state.activeCall?.id;
+    if (activeCallId == null || activeCallId.isEmpty) {
+      return false;
+    }
+
+    return activeCallId == expectedCallId;
+  }
+
+  bool _shouldIgnoreRemoteTerminalEvent(String callId) {
+    final activeCallId = state.activeCall?.id;
+
+    if (activeCallId == null || activeCallId.isEmpty) {
+      appLogger.i(
+        '📞 Ignoring remote terminal event: no active call eventCallId=$callId',
+      );
+      return true;
+    }
+
+    if (activeCallId != callId) {
+      appLogger.i(
+        '📞 Ignoring remote terminal event: eventCallId=$callId '
+        'activeCallId=$activeCallId',
+      );
+      return true;
+    }
+
+    if (_isTerminalStatus(state.backendStatus) ||
+        state.uiPhase == UiCallPhase.finished ||
+        state.uiPhase == UiCallPhase.cancelled ||
+        state.uiPhase == UiCallPhase.error) {
+      appLogger.i(
+        '📞 Ignoring remote terminal event: already terminal '
+        'callId=$callId phase=${state.uiPhase} status=${state.backendStatus}',
+      );
+      return true;
+    }
+
+    return false;
+  }
+
+  bool _isTerminalStatus(BackendCallStatus? status) {
+    return status == BackendCallStatus.ended ||
+        status == BackendCallStatus.rejected ||
+        status == BackendCallStatus.missed ||
+        status == BackendCallStatus.cancelled ||
+        status == BackendCallStatus.failed;
   }
 
   // ================= CONTROLS =================

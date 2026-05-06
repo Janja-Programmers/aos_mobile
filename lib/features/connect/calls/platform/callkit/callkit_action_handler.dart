@@ -16,7 +16,7 @@ class CallKitActionHandler {
       return;
     }
 
-    await callManager.acceptIncomingCall();
+    await callManager.acceptIncomingCall(expectedCallId: callId);
   }
 
   Future<void> onDecline({required String? callId}) async {
@@ -29,7 +29,7 @@ class CallKitActionHandler {
       return;
     }
 
-    await callManager.rejectIncomingCall();
+    await callManager.rejectIncomingCall(expectedCallId: callId);
   }
 
   Future<void> onEnded({required String? callId}) async {
@@ -42,7 +42,7 @@ class CallKitActionHandler {
       return;
     }
 
-    await callManager.endCurrentCall();
+    await callManager.endCurrentCall(expectedCallId: callId);
   }
 
   Future<void> onTimeout({required String? callId}) async {

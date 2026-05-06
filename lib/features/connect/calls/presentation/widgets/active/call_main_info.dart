@@ -23,6 +23,9 @@ class CallMainInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isActuallyInCall =
+        callState.uiPhase == UiCallPhase.inCall && callState.hasActiveRoom;
+
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -59,12 +62,12 @@ class CallMainInfo extends StatelessWidget {
           ],
 
           TimerBadge(
-            text: callState.backendStatus == BackendCallStatus.ongoing
+            text: isActuallyInCall
                 ? _formatDuration(callState.duration)
                 : (callState.uiPhase == UiCallPhase.joiningRoom
                       ? 'Connecting...'
                       : 'Calling...'),
-            isLive: callState.backendStatus == BackendCallStatus.ongoing,
+            isLive: isActuallyInCall,
           ),
         ],
       ),

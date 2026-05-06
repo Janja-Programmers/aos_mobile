@@ -1,11 +1,10 @@
-import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/routing/app_router.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 
 class CallNavigationListener extends ConsumerStatefulWidget {
@@ -29,7 +28,10 @@ class _CallNavigationListenerState
     super.initState();
 
     _sub = ref.listenManual<CallState>(callManagerProvider, (previous, next) {
-      _onStateChanged(previous?.uiPhase, next.uiPhase);
+      _onStateChanged(
+        previousPhase: previous?.uiPhase,
+        nextPhase: next.uiPhase,
+      );
     });
   }
 
@@ -41,58 +43,68 @@ class _CallNavigationListenerState
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(callManagerProvider);
-
     return widget.child;
   }
 
-  void _onStateChanged(UiCallPhase? prev, UiCallPhase next) {
-    if (prev == next) return;
+  void _onStateChanged({
+    required UiCallPhase? previousPhase,
+    required UiCallPhase nextPhase,
+  }) {
+    if (previousPhase == nextPhase) return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _handleNavigation(prev, next);
+
+      _handleNavigation(previousPhase: previousPhase, nextPhase: nextPhase);
     });
   }
 
-  void _handleNavigation(UiCallPhase? prev, UiCallPhase next) {
-    if (_isNavigating) return;
-
+  void _handleNavigation({
+    required UiCallPhase? previousPhase,
+    required UiCallPhase nextPhase,
+  }) {
     final router = ref.read(appRouterProvider);
 
-    final location = router.routerDelegate.currentConfiguration.uri.toString();
+    final wasAosCallSessionPhase =
+        previousPhase != null && _shouldBeOnAosCallSession(previousPhase);
 
-    final isInCallSession = location.contains(AppRoutes.callSession);
+    final shouldBeOnAosCallSession = _shouldBeOnAosCallSession(nextPhase);
 
-    /// 🔥 ENTER CALL
-    final enteringCall =
-        prev != null && !_isInCallSession(prev) && _isInCallSession(next);
+    final shouldExitCallSession =
+        wasAosCallSessionPhase && !shouldBeOnAosCallSession;
 
-    if (enteringCall && !isInCallSession) {
-      _isNavigating = true;
+    /// EXIT MUST ALWAYS WIN.
 
-      router.pushNamed(AppRoutes.nCallSession);
-
-      _releaseLock();
-      return;
-    }
-
-    /// 🔥 EXIT CALL (FIXED FINAL)
-    final isExitTransition =
-        prev != null && _isInCallSession(prev) && !_isInCallSession(next);
-
-    if (isExitTransition) {
+    if (shouldExitCallSession) {
       _isNavigating = true;
 
       router.goNamed(AppRoutes.nConnect, queryParameters: {'tab': 'calls'});
 
       _releaseLock();
+      return;
+    }
+
+    if (_isNavigating) return;
+
+    final shouldEnterCallSession =
+        !wasAosCallSessionPhase && shouldBeOnAosCallSession;
+
+    if (shouldEnterCallSession) {
+      _isNavigating = true;
+
+      router.pushNamed(AppRoutes.nCallSession);
+
+      _releaseLock();
     }
   }
 
-  bool _isInCallSession(UiCallPhase phase) {
+  bool _shouldBeOnAosCallSession(UiCallPhase phase) {
     switch (phase) {
+      /// Incoming ringing is owned by native CallKit.
       case UiCallPhase.incomingRinging:
+        return false;
+
+      /// Outgoing calls still use AOS UI.
       case UiCallPhase.outgoingStarting:
       case UiCallPhase.outgoingRinging:
       case UiCallPhase.joiningRoom:
@@ -101,8 +113,8 @@ class _CallNavigationListenerState
 
       case UiCallPhase.idle:
       case UiCallPhase.finished:
-      case UiCallPhase.error:
       case UiCallPhase.cancelled:
+      case UiCallPhase.error:
         return false;
     }
   }

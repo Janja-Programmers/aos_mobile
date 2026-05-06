@@ -8,6 +8,7 @@ import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/features/connect/calls/application/managers/call_manager.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_media_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_signaling_handler.dart';
+import 'package:africaonlinestores/features/connect/calls/application/services/call_audio_feedback_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_action_handler.dart';
@@ -92,6 +93,18 @@ final callKitServiceProvider = Provider<CallKitService>((ref) {
   service.init();
 
   ref.onDispose(service.dispose);
+
+  return service;
+});
+
+final callAudioFeedbackServiceProvider = Provider<CallAudioFeedbackService>((
+  ref,
+) {
+  final service = CallAudioFeedbackService();
+
+  ref.onDispose(() {
+    service.dispose();
+  });
 
   return service;
 });

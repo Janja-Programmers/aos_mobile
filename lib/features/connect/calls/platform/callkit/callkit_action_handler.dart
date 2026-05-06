@@ -55,7 +55,7 @@ class CallKitActionHandler {
       return;
     }
 
-    await callManager.callNotAnswered();
+    await callManager.callNotAnswered(expectedCallId: callId);
   }
 
   bool _matchesActiveCall(String? eventCallId, String? activeCallId) {

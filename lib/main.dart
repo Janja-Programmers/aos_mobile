@@ -26,6 +26,7 @@ import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+import 'package:africaonlinestores/features/connect/calls/application/listeners/call_audio_feedback_listener.dart';
 import 'package:africaonlinestores/features/connect/calls/application/listeners/call_navigation_listener.dart';
 import 'package:africaonlinestores/features/connect/calls/application/listeners/callkit_state_listener.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
@@ -221,10 +222,12 @@ class AOSApp extends ConsumerWidget {
 
         return Stack(
           children: [
-            CallKitStateListener(
-              child: CallNavigationListener(
-                child: LiveNavigationListener(
-                  child: child ?? const SizedBox.shrink(),
+            CallAudioFeedbackListener(
+              child: CallKitStateListener(
+                child: CallNavigationListener(
+                  child: LiveNavigationListener(
+                    child: child ?? const SizedBox.shrink(),
+                  ),
                 ),
               ),
             ),

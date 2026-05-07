@@ -104,12 +104,6 @@ class CallManager extends StateNotifier<CallState> {
 
       if (_callCancelled) return false;
 
-      await _joinRoomInternal(initiatedCall);
-
-      if (_callCancelled) {
-        return false;
-      }
-
       state = state.copyWith(isBusy: false);
 
       return true;

@@ -19,12 +19,11 @@ class ChatActions {
     required String user,
     required String displayName,
     String? initialMessage,
-    final String? adId,
-    final String? adTitle,
-    final String? adPrice,
-    final String? adImage,
+    String? adId,
+    String? adTitle,
+    String? adPrice,
+    String? adImage,
   }) async {
-    // 🚫 Prevent duplicate calls
     if (_isOpening) return;
     _isOpening = true;
 
@@ -38,18 +37,19 @@ class ChatActions {
       if (res.isLeft) {
         ShowSnack(
           context,
-          (res.leftOrNull?.message ?? 'Failed to start chat'),
-        ).success();
+          res.leftOrNull?.message ?? 'Failed to start chat',
+        ).error();
         return;
       }
 
-      appLogger.w(
-        '🔥 openConversation response: ${res.rightOrNull.toString()}',
-      );
-
       final conversationId = res.rightOrNull;
 
-      if (conversationId == null || conversationId.isEmpty) return;
+      appLogger.i('Opened conversation: $conversationId');
+
+      if (conversationId == null || conversationId.trim().isEmpty) {
+        ShowSnack(context, 'Invalid conversation response').error();
+        return;
+      }
 
       ChatNavigation.toMessage(
         context: context,
@@ -64,8 +64,10 @@ class ChatActions {
       );
     } catch (e) {
       if (context.mounted) {
-        ShowSnack(context, ('Error: $e')).error;
+        ShowSnack(context, 'Failed to start chat').error();
       }
+
+      appLogger.e('Failed to start chat: $e');
     } finally {
       _isOpening = false;
     }

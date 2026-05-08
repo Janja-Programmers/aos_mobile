@@ -34,8 +34,8 @@ import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 import 'package:africaonlinestores/features/onboarding/screens/onboarding_screen.dart';
 import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
 import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
-import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart';
-import 'package:africaonlinestores/features/seller/presentation/start_selling_screen.dart';
+import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
+import 'package:africaonlinestores/features/sellers/presentation/start_selling_screen.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/feeds_routes.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
 

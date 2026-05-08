@@ -10,7 +10,7 @@ import 'package:africaonlinestores/features/home/presentation/screens/ad_list_sc
 import 'package:africaonlinestores/features/home/presentation/sections/tips/marketing_tips_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/photography_tips_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/ranking_tips_screen.dart';
-import 'package:africaonlinestores/features/seller/presentation/selling_tips_screen.dart';
+import 'package:africaonlinestores/features/sellers/presentation/selling_tips_screen.dart';
 
 import 'package:africaonlinestores/shared/enums/ads_mode.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';

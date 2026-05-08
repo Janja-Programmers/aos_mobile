@@ -1,134 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_seller_tile.dart';
+import 'package:africaonlinestores/features/connect/chats/utils/chart_actions.dart';
+import 'package:africaonlinestores/features/connect/presentation/widgets/seller_picker_body.dart';
 
-class Seller {
-  final String shopName;
-  final String? avatar;
-  final String category;
-  final double rating;
-  final int totalReviews;
-  final String location;
-  final bool isVerified;
-  final bool isOnline;
-
-  Seller({
-    required this.shopName,
-    this.avatar,
-    required this.category,
-    required this.rating,
-    required this.totalReviews,
-    required this.location,
-    required this.isVerified,
-    this.isOnline = false,
-  });
-}
-
-class NewMessageScreen extends StatelessWidget {
+class NewMessageScreen extends ConsumerWidget {
   const NewMessageScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final sellers = [
-      Seller(
-        shopName: "TechHub Kenya",
-        avatar: null,
-        category: "Electronics & Gadgets",
-        rating: 4.8,
-        totalReviews: 1200,
-        location: "Nairobi, Kenya",
-        isVerified: true,
-        isOnline: true,
-      ),
-      Seller(
-        shopName: "Jane Mwangi",
-        avatar: null,
-        category: "Laptops & Computers",
-        rating: 4.5,
-        totalReviews: 856,
-        location: "Westlands, Nairobi",
-        isVerified: false,
-        isOnline: true,
-      ),
-      Seller(
-        shopName: "KE Gadgets Store",
-        avatar: null,
-        category: "Mobile Phones & Accessories",
-        rating: 4.9,
-        totalReviews: 2300,
-        location: "Mombasa, Kenya",
-        isVerified: true,
-      ),
-      Seller(
-        shopName: "David Kimani",
-        avatar: null,
-        category: "Used Electronics",
-        rating: 4.2,
-        totalReviews: 432,
-        location: "Kisumu, Kenya",
-        isVerified: false,
-      ),
-    ];
-
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("New Message", style: context.h5),
+        title: Text('New Message', style: context.h5),
         leading: const BackButton(),
         elevation: 0,
       ),
-
-      body: Column(
-        children: [
-          // 🔍 SEARCH
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "Search sellers...",
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-
-          // 🔥 TITLE
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "All Sellers",
-                style: context.h5.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // 📋 LIST
-          Expanded(
-            child: ListView.builder(
-              itemCount: sellers.length,
-              itemBuilder: (context, index) {
-                final seller = sellers[index];
-
-                return SellerTile(
-                  seller: seller,
-                  onTap: () {
-                    // TODO: navigate to chat
-                  },
+      body: Padding(
+        padding: const EdgeInsets.all(8),
+        child: SellerPickerBody(
+          title: 'Verified Sellers',
+          onSellerTap: (seller) {
+            AppNavigation.requireAuth(
+              context,
+              ref,
+              onAuthenticated: () {
+                ChatActions.startChat(
+                  context: context,
+                  ref: ref,
+                  user: seller.user,
+                  displayName: seller.shopName,
                 );
               },
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }

@@ -2,7 +2,7 @@ import 'package:africaonlinestores/features/shorts/create_short/application/prov
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:africaonlinestores/features/seller/controllers/seller_state_controller.dart';
+import 'package:africaonlinestores/features/sellers/application/controllers/seller_state_controller.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/following/folllowing_section_state.dart';
 
 final followingSectionControllerProvider =

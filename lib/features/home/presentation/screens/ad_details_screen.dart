@@ -27,9 +27,9 @@ import 'package:africaonlinestores/features/reviews/controllers/review_controlle
 import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
 import 'package:africaonlinestores/features/reviews/presentation/sections/review_ad_section.dart';
 import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
-import 'package:africaonlinestores/features/seller/domain/aos_seller.dart';
-import 'package:africaonlinestores/features/seller/navigation/seller_routes.dart';
-import 'package:africaonlinestores/features/seller/providers/seller_profile_provider.dart';
+import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
+import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
+import 'package:africaonlinestores/features/sellers/application/providers/seller_profile_provider.dart';
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';

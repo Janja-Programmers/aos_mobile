@@ -15,6 +15,7 @@ class ShortMapper {
       playbackUrl: model.playbackUrl,
       thumbnailUrl: model.thumbnailUrl,
       durationSeconds: model.durationSeconds.toDouble(),
+      contentMode: model.contentMode,
       caption: Caption(model.caption),
       hashtags: model.hashtags,
       sellerId: model.sellerId,

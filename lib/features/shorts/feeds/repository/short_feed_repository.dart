@@ -27,8 +27,16 @@ class ShortsRepository {
   ShortsRepository(this._api);
 
   /// FOR YOU FEED
-  Future<ShortsFeedPage> fetchForYou({int limit = 10, String? cursor}) async {
-    final result = await _api.fetchForYou(limit: limit, cursor: cursor);
+  Future<ShortsFeedPage> fetchForYou({
+    int limit = 10,
+    String? cursor,
+    String? contentMode,
+  }) async {
+    final result = await _api.fetchForYou(
+      limit: limit,
+      cursor: cursor,
+      contentMode: contentMode,
+    );
 
     return result.fold(
       (failure) => throw Exception(failure.message),
@@ -44,8 +52,13 @@ class ShortsRepository {
   Future<ShortsFeedPage> fetchFollowing({
     int limit = 10,
     String? cursor,
+    String? contentMode,
   }) async {
-    final result = await _api.fetchFollowingGrid(limit: limit, cursor: cursor);
+    final result = await _api.fetchFollowingGrid(
+      limit: limit,
+      cursor: cursor,
+      contentMode: contentMode,
+    );
 
     return result.fold(
       (failure) => throw Exception(failure.message),

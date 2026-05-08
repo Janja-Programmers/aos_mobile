@@ -15,6 +15,8 @@ class Short extends Equatable {
   final String? thumbnailUrl;
   final double durationSeconds;
 
+  final String contentMode;
+
   final String sellerId;
   final String? sellerShopName;
   final String? sellerAvator;
@@ -32,6 +34,7 @@ class Short extends Equatable {
     required this.playbackUrl,
     this.thumbnailUrl,
     required this.durationSeconds,
+    required this.contentMode,
     required this.caption,
     required this.hashtags,
     required this.sellerId,
@@ -56,6 +59,7 @@ class Short extends Equatable {
     String? playbackUrl,
     String? thumbnailUrl,
     double? durationSeconds,
+    String? contentMode,
     Caption? caption,
     List<String>? hashtags,
     String? sellerId,
@@ -72,6 +76,7 @@ class Short extends Equatable {
       playbackUrl: playbackUrl ?? this.playbackUrl,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       durationSeconds: durationSeconds ?? this.durationSeconds,
+      contentMode: contentMode ?? this.contentMode,
       caption: caption ?? this.caption,
       hashtags: hashtags ?? this.hashtags,
       sellerId: sellerId ?? this.sellerId,
@@ -91,6 +96,7 @@ class Short extends Equatable {
     playbackUrl,
     thumbnailUrl,
     durationSeconds,
+    contentMode,
     caption,
     hashtags,
     sellerId,

@@ -67,6 +67,7 @@ dependencies:
   cached_network_image: ^3.4.1
   audioplayers: ^6.6.0
   keyboard_actions: ^4.2.1
+  font_awesome_flutter: ^11.0.0
 
 dev_dependencies:
   flutter_test:

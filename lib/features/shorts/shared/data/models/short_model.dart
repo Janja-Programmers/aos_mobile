@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_ad_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_metrics_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_viewer_state_model.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
 
 class ShortModel {
   final String id;
@@ -8,6 +9,8 @@ class ShortModel {
   final String playbackUrl;
   final String thumbnailUrl;
   final int durationSeconds;
+
+  final String contentMode;
 
   final String caption;
   final List<String> hashtags;
@@ -31,6 +34,7 @@ class ShortModel {
     required this.playbackUrl,
     required this.thumbnailUrl,
     required this.durationSeconds,
+    required this.contentMode,
     required this.caption,
     required this.hashtags,
     required this.sellerId,
@@ -54,6 +58,8 @@ class ShortModel {
 
       durationSeconds: (json['duration_seconds'] as num?)?.toInt() ?? 0,
 
+      contentMode: _parseContentMode(json['content_mode']),
+
       caption: json['caption'] as String? ?? '',
 
       hashtags: (json['hashtags'] as List<dynamic>? ?? [])
@@ -76,6 +82,20 @@ class ShortModel {
         json['viewer_state'] as Map<String, dynamic>? ?? {},
       ),
     );
+  }
+
+  static String _parseContentMode(dynamic value) {
+    final mode = value?.toString().trim().toLowerCase();
+
+    if (mode == null || mode.isEmpty) {
+      return ShortContentModes.shop;
+    }
+
+    if (!ShortContentModes.isValid(mode)) {
+      return ShortContentModes.shop;
+    }
+
+    return mode;
   }
 
   static ShortAdModel? _parseAd(dynamic value) {

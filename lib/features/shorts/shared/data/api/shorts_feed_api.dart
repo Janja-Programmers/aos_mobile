@@ -19,11 +19,14 @@ class ShortsFeedApi {
   Future<Either<Failure, ShortFeedPage>> fetchForYou({
     int? limit,
     String? cursor,
+    String? contentMode,
   }) async {
     try {
       final query = <String, dynamic>{
         if (limit != null) 'limit': limit,
-        if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+        if (cursor?.isNotEmpty == true) 'cursor': cursor,
+        if (contentMode?.trim().isNotEmpty == true)
+          'content_mode': contentMode!.trim(),
       };
 
       final res = await _client.get(
@@ -51,8 +54,7 @@ class ShortsFeedApi {
               items: items,
               nextCursor: nextCursor,
               hasMore:
-                  data['has_more'] as bool? ??
-                  (nextCursor != null && nextCursor.isNotEmpty),
+                  data['has_more'] as bool? ?? (nextCursor?.isNotEmpty == true),
             ),
           );
         } catch (e) {
@@ -70,12 +72,15 @@ class ShortsFeedApi {
     String? query,
     int? limit,
     String? cursor,
+    String? contentMode,
   }) async {
     try {
       final params = <String, dynamic>{
         if (limit != null) 'limit': limit,
-        if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
-        if (query != null && query.trim().isNotEmpty) 'search': query.trim(),
+        if (cursor?.isNotEmpty == true) 'cursor': cursor,
+        if (query?.trim().isNotEmpty == true) 'search': query!.trim(),
+        if (contentMode?.trim().isNotEmpty == true)
+          'content_mode': contentMode!.trim(),
       };
 
       final res = await _client.get(
@@ -102,8 +107,7 @@ class ShortsFeedApi {
             items: items,
             nextCursor: nextCursor,
             hasMore:
-                data['has_more'] as bool? ??
-                (nextCursor != null && nextCursor.isNotEmpty),
+                data['has_more'] as bool? ?? (nextCursor?.isNotEmpty == true),
           ),
         );
       });
@@ -123,7 +127,7 @@ class ShortsFeedApi {
     try {
       final query = <String, dynamic>{
         'ad_id': adId,
-        if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+        if (cursor?.isNotEmpty == true) 'cursor': cursor,
       };
 
       final res = await _client.get(
@@ -150,8 +154,7 @@ class ShortsFeedApi {
             items: items,
             nextCursor: nextCursor,
             hasMore:
-                data['has_more'] as bool? ??
-                (nextCursor != null && nextCursor.isNotEmpty),
+                data['has_more'] as bool? ?? (nextCursor?.isNotEmpty == true),
           ),
         );
       });

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+
+import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/bottom_caption_overlay.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/right_metrics_overlay.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/short_badge.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/short_thumbnail.dart';
 
 class ShortCard extends StatelessWidget {
   final Short short;
@@ -14,78 +19,75 @@ class ShortCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final caption = short.caption.toString();
+
+    final caption = short.caption.toString().trim();
     final imageUrl = short.thumbnailUrl ?? '';
-    final avatarUrl = buildFileUrl(short.sellerAvator);
+
+    final sellerName = short.sellerShopName?.trim().isNotEmpty == true
+        ? short.sellerShopName!.trim()
+        : 'Shop';
+
+    final avatarUrl = _safeFileUrl(short.sellerAvator);
 
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         child: Container(
           decoration: BoxDecoration(
-            color: colors.border,
-            borderRadius: BorderRadius.circular(12),
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.border.withOpacity(.55)),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
             children: [
-              CachedNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.contain,
-                width: double.infinity,
-                placeholder: (context, url) => Container(
-                  height: 180,
-                  color: colors.border,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  height: 180,
-                  color: colors.error,
-                  child: const Icon(Icons.broken_image),
+              ShortThumbnail(imageUrl: imageUrl),
+
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          colors.black.withOpacity(.04),
+                          colors.black.withOpacity(.08),
+                          colors.black.withOpacity(.68),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
 
-              if (caption.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 7, 8, 2),
-                  child: Text(
-                    caption,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12),
-                  ),
+              Positioned(
+                top: 8,
+                left: 8,
+                child: ShortBadge(contentMode: short.contentMode),
+              ),
+
+              Positioned(
+                right: 7,
+                bottom: 12,
+                child: RightMetricsOverlay(
+                  avatarUrl: avatarUrl,
+                  sellerName: sellerName,
+                  likeCount: short.metrics.likeCount,
+                  commentCount: short.metrics.commentCount,
+                  isLiked: short.isLiked,
                 ),
+              ),
 
-              Padding(
-                padding: const EdgeInsets.fromLTRB(6, 4, 6, 6),
-                child: Row(
-                  children: [
-                    _SellerAvatar(
-                      avatarUrl: avatarUrl,
-                      name: short.sellerShopName ?? 'Shop',
-                    ),
-                    const SizedBox(width: 5),
-
-                    Expanded(
-                      child: Text(
-                        short.sellerShopName ?? 'Shop',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                    ),
-
-                    const SizedBox(width: 4),
-
-                    Text(
-                      short.metrics.likeCount.toString(),
-                      style: const TextStyle(fontSize: 11),
-                    ),
-                    const SizedBox(width: 3),
-                    const Icon(Icons.thumb_up_alt_outlined, size: 13),
-                  ],
+              Positioned(
+                left: 9,
+                right: 48,
+                bottom: 10,
+                child: BottomCaptionOverlay(
+                  caption: caption,
+                  sellerName: sellerName,
                 ),
               ),
             ],
@@ -94,42 +96,14 @@ class ShortCard extends StatelessWidget {
       ),
     );
   }
-}
 
-class _SellerAvatar extends StatelessWidget {
-  final String? avatarUrl;
-  final String name;
+  String? _safeFileUrl(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
 
-  const _SellerAvatar({required this.avatarUrl, required this.name});
+    final url = buildFileUrl(value);
 
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context);
+    if (url!.trim().isEmpty) return null;
 
-    final initials = _getInitials(name);
-
-    return CircleAvatar(
-      radius: 12,
-      backgroundColor: colors.colorScheme.primary.withOpacity(.2),
-      backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-      child: avatarUrl == null
-          ? Text(
-              initials,
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-            )
-          : null,
-    );
-  }
-
-  String _getInitials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
-
-    if (parts.isEmpty) return '?';
-
-    if (parts.length == 1) {
-      return parts.first.substring(0, 1).toUpperCase();
-    }
-
-    return (parts[0][0] + parts[1][0]).toUpperCase();
+    return url;
   }
 }

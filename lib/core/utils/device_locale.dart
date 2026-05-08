@@ -1,10 +1,10 @@
 import 'package:flutter/widgets.dart';
 
 class DeviceLocale {
-  static String languageCode() {
+  static String? languageCode() {
     final locale = WidgetsBinding.instance.platformDispatcher.locale;
     final code = locale.languageCode.trim().toLowerCase();
-    return code;
+    return (code.isEmpty) ? null : code;
   }
 
   static String? countryCode() {

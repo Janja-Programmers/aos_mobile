@@ -98,6 +98,32 @@ class OnboardingController extends StateNotifier<OnboardingState> {
     );
   }
 
+  void initializeOfflineDefaultsIfNeeded() {
+    if (state.didInitDefaults) return;
+
+    final prefs = ref.read(userPreferenceControllerProvider);
+
+    final savedLang = prefs.languageCode.trim().toLowerCase();
+    final savedCountry = prefs.countryCode.trim().toUpperCase();
+    final savedCurrency = prefs.currencyCode.trim().toUpperCase();
+
+    final deviceLang = DeviceLocale.languageCode();
+    final deviceCountry = DeviceLocale.countryCode()?.toUpperCase();
+
+    state = state.copyWith(
+      languageCode:
+          state.languageCode ??
+          (savedLang.isNotEmpty ? savedLang : deviceLang ?? 'en'),
+      countryCode:
+          state.countryCode ??
+          (savedCountry.isNotEmpty ? savedCountry : deviceCountry ?? 'KE'),
+      currencyCode:
+          state.currencyCode ??
+          (savedCurrency.isNotEmpty ? savedCurrency : 'KSH'),
+      didInitDefaults: true,
+    );
+  }
+
   void nextStep() {
     state = state.copyWith(step: state.step + 1);
   }

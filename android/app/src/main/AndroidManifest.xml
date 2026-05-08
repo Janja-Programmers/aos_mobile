@@ -3,6 +3,9 @@
     <!-- ================= BASIC ================= -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- ================= NOTIFICATIONS ================= -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <!-- ================= MEDIA / LIVEKIT ================= -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.CAMERA"/>
@@ -23,6 +26,11 @@
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true">
+
+        <!-- DEFAULT FCM NOTIFICATION CHANNEL -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="aos_notifications" />
 
         <!-- REQUIRED FOR FULL SCREEN CALLKIT BEHAVIOR -->
         <uses-library
@@ -74,10 +82,10 @@
 
     </application>
     <!-- Required to query activities that can process text, see:
-         https://developer.android.com/training/package-visibility and
-         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+    https://developer.android.com/training/package-visibility and
+    https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
 
-         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+        In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>

@@ -1,21 +1,30 @@
 {
   "project_info": {
-    "project_number": "1059729176471",
-    "project_id": "aos-v2-ded2c",
-    "storage_bucket": "aos-v2-ded2c.firebasestorage.app"
+    "project_number": "92816366774",
+    "project_id": "africa-online-stores-v2",
+    "storage_bucket": "africa-online-stores-v2.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1059729176471:android:b97fc54b058111a001f6d2",
+        "mobilesdk_app_id": "1:92816366774:android:58141cfe7799663642da17",
         "android_client_info": {
           "package_name": "com.africaonlinestores.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "92816366774-3jdl0doj5josvp47ermok9qno32o9lct.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.africaonlinestores.app",
+            "certificate_hash": "cef8155bd8008b1adfdf0cc9f8b6f7dcd7a83f90"
+          }
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyBxYo74AZnk72S1eU0d8pd_60mK-9NdjsM"
+          "current_key": "AIzaSyALfSX6oLdzLXviy1-v0ScIlQrsfz8a5Vg"
         }
       ],
       "services": {

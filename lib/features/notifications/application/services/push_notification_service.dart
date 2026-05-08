@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:africaonlinestores/core/device/device_id.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -76,6 +77,14 @@ class PushNotificationService {
   }
 
   // =====================================================
+  // Get device type
+  // =====================================================
+  PushDeviceType get _deviceType {
+    if (Platform.isIOS) return PushDeviceType.ios;
+    return PushDeviceType.android;
+  }
+
+  // =====================================================
   // TOKEN
   // =====================================================
   Future<void> _setupToken() async {
@@ -91,20 +100,28 @@ class PushNotificationService {
     await _pushRepo.registerPushToken(
       PushTokenDevice(
         token: token,
-        deviceType: PushDeviceType.android,
+        deviceType: _deviceType,
         deviceId: deviceId,
       ),
     );
 
     await _tokenRefreshSub?.cancel();
     _tokenRefreshSub = _messaging.onTokenRefresh.listen((newToken) async {
-      await _pushRepo.registerPushToken(
-        PushTokenDevice(
-          token: newToken,
-          deviceType: PushDeviceType.android,
-          deviceId: deviceId,
-        ),
-      );
+      try {
+        await _pushRepo.registerPushToken(
+          PushTokenDevice(
+            token: newToken,
+            deviceType: _deviceType,
+            deviceId: deviceId,
+          ),
+        );
+      } catch (e, s) {
+        appLogger.e(
+          'FCM token refresh registration failed',
+          error: e,
+          stackTrace: s,
+        );
+      }
     });
   }
 
@@ -221,13 +238,23 @@ class PushNotificationService {
 
       final now = DateTime.now();
 
+      final notificationId =
+          data['notification_id']?.toString().trim().isNotEmpty == true
+          ? data['notification_id'].toString()
+          : message.messageId?.trim().isNotEmpty == true
+          ? message.messageId!
+          : 'push_${now.microsecondsSinceEpoch}';
+
       return NotificationItem(
-        id: data['notification_id']?.toString() ?? 'push_$now',
+        id: notificationId,
         type: type,
-        title: message.notification?.title ?? 'Notification',
-        body: message.notification?.body ?? '',
+        title:
+            message.notification?.title ??
+            data['title']?.toString() ??
+            'Notification',
+        body: message.notification?.body ?? data['body']?.toString() ?? '',
         isRead: false,
-        createdAt: now,
+        createdAt: message.sentTime ?? now,
         payload: NotificationPayload.fromJson(data),
       );
     } catch (e, s) {
@@ -241,6 +268,11 @@ class PushNotificationService {
 
     _foregroundSub?.cancel();
     _tapSub?.cancel();
+    _tokenRefreshSub?.cancel();
+
+    _foregroundSub = null;
+    _tapSub = null;
+    _tokenRefreshSub = null;
   }
 
   // =====================================================

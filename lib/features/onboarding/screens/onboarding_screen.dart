@@ -24,9 +24,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     /// Initialize defaults after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(onboardingControllerProvider.notifier)
-          .initializeDefaultsIfNeeded();
+      final controller = ref.read(onboardingControllerProvider.notifier);
+
+      controller.initializeDefaultsIfNeeded();
+      controller.initializeOfflineDefaultsIfNeeded();
     });
   }
 

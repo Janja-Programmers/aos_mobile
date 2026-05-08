@@ -50,19 +50,20 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBxYo74AZnk72S1eU0d8pd_60mK-9NdjsM',
-    appId: '1:1059729176471:android:b97fc54b058111a001f6d2',
-    messagingSenderId: '1059729176471',
-    projectId: 'aos-v2-ded2c',
-    storageBucket: 'aos-v2-ded2c.firebasestorage.app',
+    apiKey: 'AIzaSyALfSX6oLdzLXviy1-v0ScIlQrsfz8a5Vg',
+    appId: '1:92816366774:android:58141cfe7799663642da17',
+    messagingSenderId: '92816366774',
+    projectId: 'africa-online-stores-v2',
+    storageBucket: 'africa-online-stores-v2.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDJUpUWXGv2b8cTA6R23fJqfNNBcOMKRNI',
-    appId: '1:1059729176471:ios:07d710f9cd087e8a01f6d2',
-    messagingSenderId: '1059729176471',
-    projectId: 'aos-v2-ded2c',
-    storageBucket: 'aos-v2-ded2c.firebasestorage.app',
+    apiKey: 'AIzaSyDiiFeDJx-4xqNSo-oYt2XlBG9WPgUuMzM',
+    appId: '1:92816366774:ios:ec6a4ac3a6b5f17842da17',
+    messagingSenderId: '92816366774',
+    projectId: 'africa-online-stores-v2',
+    storageBucket: 'africa-online-stores-v2.firebasestorage.app',
+    androidClientId: '92816366774-2e11s7m5i8im9lfntrh9k39v6u5l7hm8.apps.googleusercontent.com',
     iosBundleId: 'com.africaonlinestores.app',
   );
 }

@@ -5,6 +5,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/shared/components/locale_picker_page.dart';
 import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
+import 'package:africaonlinestores/features/onboarding/widgets/onboarding_network_state.dart';
 import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
 
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
@@ -36,11 +37,33 @@ class CurrencyStep extends ConsumerWidget {
     final controller = ref.read(onboardingControllerProvider.notifier);
 
     if (localization.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return OnboardingNetworkState(
+        icon: Icons.cloud_sync,
+        title: "Loading options",
+        message:
+            "We’re loading your setup options. You can retry or skip for now.",
+        primaryText: "Try again",
+        onPrimary: () {
+          ref.read(localizationControllerProvider.notifier).load();
+        },
+        secondaryText: "Skip for now",
+        onSecondary: onSkip,
+      );
     }
 
     if (localization.error != null) {
-      return Center(child: Text("Failed to load currencies", style: context.p));
+      return OnboardingNetworkState(
+        icon: Icons.wifi_off,
+        title: "No internet connection",
+        message:
+            "We couldn’t load these options. You can retry or continue with default settings.",
+        primaryText: "Try again",
+        onPrimary: () {
+          ref.read(localizationControllerProvider.notifier).load();
+        },
+        secondaryText: "Skip for now",
+        onSecondary: onSkip,
+      );
     }
 
     final currencies = localization.currencies;
@@ -149,16 +172,10 @@ class CurrencyStep extends ConsumerWidget {
 
                     PrimaryButton(
                       text: l10n.common_get_started,
-                      onPressed: currencies.isEmpty
-                          ? null
-                          : () {
-                              if (currencyCode != null) {
-                                controller.setCurrencyCode(currencyCode);
-                              }
-
-                              controller.nextStep();
-                              onContinue?.call();
-                            },
+                      onPressed: () {
+                        controller.setCurrencyCode(currencyCode ?? 'KSH');
+                        onContinue?.call();
+                      },
                     ),
 
                     TextButton(

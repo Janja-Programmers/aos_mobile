@@ -32,6 +32,7 @@ import 'package:africaonlinestores/features/connect/calls/application/listeners/
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
 import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
+import 'package:africaonlinestores/features/notifications/application/services/in_app_banner_listener.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/listeners/upload_short_listener.dart';
 
@@ -242,6 +243,8 @@ class AOSApp extends ConsumerWidget {
             ),
 
             if (!isOnActiveCall) const ActiveCallOverlay(),
+
+            const InAppBannerListener(),
           ],
         );
       },

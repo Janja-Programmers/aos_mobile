@@ -6,6 +6,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/shared/components/locale_picker_page.dart';
 import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
+import 'package:africaonlinestores/features/onboarding/widgets/onboarding_network_state.dart';
 import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
 
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
@@ -57,6 +58,36 @@ class CountryStep extends ConsumerWidget {
     final selected = selectedItem();
     final selectedName = selected?["name"] as String?;
     final selectedCode = (selected?["code"] as String?)?.toUpperCase();
+
+    if (localization.isLoading) {
+      return OnboardingNetworkState(
+        icon: Icons.cloud_sync,
+        title: "Loading options",
+        message:
+            "We’re loading your setup options. You can retry or skip for now.",
+        primaryText: "Try again",
+        onPrimary: () {
+          ref.read(localizationControllerProvider.notifier).load();
+        },
+        secondaryText: "Skip for now",
+        onSecondary: onSkip,
+      );
+    }
+
+    if (localization.error != null) {
+      return OnboardingNetworkState(
+        icon: Icons.wifi_off,
+        title: "No internet connection",
+        message:
+            "We couldn’t load these options. You can retry or continue with default settings.",
+        primaryText: "Try again",
+        onPrimary: () {
+          ref.read(localizationControllerProvider.notifier).load();
+        },
+        secondaryText: "Skip for now",
+        onSecondary: onSkip,
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -144,12 +175,10 @@ class CountryStep extends ConsumerWidget {
 
                     PrimaryButton(
                       text: l10n.common_continue,
-                      onPressed: selectedCountryCode == null
-                          ? null
-                          : () {
-                              controller.nextStep();
-                              onContinue();
-                            },
+                      onPressed: () {
+                        controller.setCountryCode(selectedCountryCode ?? 'KE');
+                        onContinue();
+                      },
                     ),
 
                     TextButton(

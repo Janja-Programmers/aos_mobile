@@ -15,16 +15,17 @@ class LocalizationController extends StateNotifier<LocalizationState> {
   final ApiClient _api;
 
   LocalizationController(this._api) : super(LocalizationState.initial()) {
-    _load();
+    load();
   }
 
-  Future<void> _load() async {
+  Future<void> load() async {
+    state = state.copyWith(isLoading: true, error: null);
+
     try {
       final response = await _api.dio.get(ApiEndpoints.getLocaleBundleEndpoint);
 
       final data = response.data["message"]["data"];
 
-      /// Countries
       final countries = List<Map<String, dynamic>>.from(data["countries"] ?? [])
           .map((c) {
             return {
@@ -34,7 +35,6 @@ class LocalizationController extends StateNotifier<LocalizationState> {
           })
           .toList();
 
-      /// Languages
       final languages = List<Map<String, dynamic>>.from(data["languages"] ?? [])
           .map((l) {
             return {
@@ -44,7 +44,6 @@ class LocalizationController extends StateNotifier<LocalizationState> {
           })
           .toList();
 
-      /// Currencies
       final rawCurrencies = List<Map<String, dynamic>>.from(
         data["currencies"] ?? [],
       );
@@ -52,7 +51,6 @@ class LocalizationController extends StateNotifier<LocalizationState> {
       final currencies = rawCurrencies.map((c) {
         final code = (c["name"] ?? "").toString().toUpperCase();
         final symbol = (c["symbol"] ?? "").toString().trim();
-
         final display = symbol.isEmpty ? code : "$code ($symbol)";
 
         return <String, dynamic>{
@@ -72,23 +70,5 @@ class LocalizationController extends StateNotifier<LocalizationState> {
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
-  }
-
-  bool isValidCountry(String code) {
-    return state.countries.any(
-      (c) => (c["code"] ?? "").toString().toUpperCase() == code.toUpperCase(),
-    );
-  }
-
-  bool isValidLanguage(String code) {
-    return state.languages.any(
-      (l) => (l["code"] ?? "").toString().toLowerCase() == code.toLowerCase(),
-    );
-  }
-
-  bool isValidCurrency(String code) {
-    return state.currencies.any(
-      (c) => (c["code"] ?? "").toString().toUpperCase() == code.toUpperCase(),
-    );
   }
 }

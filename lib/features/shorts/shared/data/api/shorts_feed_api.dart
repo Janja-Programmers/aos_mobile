@@ -23,7 +23,7 @@ class ShortsFeedApi {
   }) async {
     try {
       final query = <String, dynamic>{
-        if (limit != null) 'limit': limit,
+        'limit': ?limit,
         if (cursor?.isNotEmpty == true) 'cursor': cursor,
         if (contentMode?.trim().isNotEmpty == true)
           'content_mode': contentMode!.trim(),
@@ -76,7 +76,7 @@ class ShortsFeedApi {
   }) async {
     try {
       final params = <String, dynamic>{
-        if (limit != null) 'limit': limit,
+        'limit': ?limit,
         if (cursor?.isNotEmpty == true) 'cursor': cursor,
         if (query?.trim().isNotEmpty == true) 'search': query!.trim(),
         if (contentMode?.trim().isNotEmpty == true)

@@ -15,7 +15,7 @@ class ShortViewerState extends Equatable {
     return const ShortViewerState(
       liked: false,
       watched: false,
-      watchProgress: 0.0,
+      watchProgress: 0,
     );
   }
 

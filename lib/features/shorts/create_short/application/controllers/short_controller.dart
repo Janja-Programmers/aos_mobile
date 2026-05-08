@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:video_player/video_player.dart';
 
@@ -221,43 +222,86 @@ class ShortsController extends StateNotifier<ShortsState> {
     _pendingViews.clear();
   }
 
-  // ───────────── METRICS ─────────────
+  // ───────────── METRICS / ENGAGEMENT ─────────────
+
   Future<void> toggleLike(String shortId) async {
-    // 🔒 Find the short safely by ID
-    final short = state.shorts.firstWhere(
-      (s) => s.id.value == shortId,
-      orElse: () => throw Exception("Short not found"),
+    final index = state.shorts.indexWhere((s) => s.id.value == shortId);
+    if (index == -1) return;
+
+    final originalShort = state.shorts[index];
+    final wasLiked = originalShort.isLiked;
+
+    final optimisticShort = originalShort.copyWith(
+      metrics: originalShort.metrics.copyWith(
+        likedByMe: !wasLiked,
+        likeCount: wasLiked
+            ? (originalShort.metrics.likeCount - 1).clamp(0, 1 << 31)
+            : originalShort.metrics.likeCount + 1,
+      ),
+      viewerState: originalShort.viewerState.copyWith(liked: !wasLiked),
     );
 
-    final current = short.metrics;
+    _replaceShortAt(index, optimisticShort);
 
-    // 🔥 OPTIMISTIC UPDATE
-    final optimisticMetrics = current.copyWith(
-      likedByMe: !current.likedByMe,
-      likeCount: current.likedByMe
-          ? (current.likeCount - 1).clamp(0, 1 << 31)
-          : current.likeCount + 1,
-    );
+    final result = await engagementApi.toggleLike(shortId: shortId);
 
-    _updateShortById(shortId, optimisticMetrics);
+    result.fold(
+      (failure) {
+        appLogger.e('❌ TOGGLE LIKE FAILED', error: failure);
 
-    // 🔥 API CALL
-    final res = await engagementApi.toggleLike(shortId: shortId);
+        // Roll back to the exact previous short.
+        final rollbackIndex = state.shorts.indexWhere(
+          (s) => s.id.value == shortId,
+        );
 
-    res.fold(
-      (e) {
-        appLogger.e('❌ TOGGLE LIKE FAILED', error: e);
+        if (rollbackIndex == -1) return;
 
-        // 🔥 ROLLBACK
-        _updateShortById(shortId, current);
+        _replaceShortAt(rollbackIndex, originalShort);
       },
-      (serverMetrics) {
+      (toggleResult) {
         appLogger.i('✅ LIKE SYNCED');
 
-        // 🔥 FINAL SYNC (source of truth)
-        _updateShortById(shortId, serverMetrics);
+        final syncIndex = state.shorts.indexWhere(
+          (s) => s.id.value == toggleResult.shortId,
+        );
+
+        if (syncIndex == -1) return;
+
+        final currentShort = state.shorts[syncIndex];
+        final currentlyLiked = currentShort.isLiked;
+
+        var correctedLikeCount = currentShort.metrics.likeCount;
+
+        // Usually this will not run because optimistic state already matches backend.
+        // It protects us if backend returns the opposite final state.
+        if (toggleResult.liked != currentlyLiked) {
+          correctedLikeCount = toggleResult.liked
+              ? currentShort.metrics.likeCount + 1
+              : (currentShort.metrics.likeCount - 1).clamp(0, 1 << 31);
+        }
+
+        final syncedShort = currentShort.copyWith(
+          metrics: currentShort.metrics.copyWith(
+            likedByMe: toggleResult.liked,
+            likeCount: correctedLikeCount,
+          ),
+          viewerState: currentShort.viewerState.copyWith(
+            liked: toggleResult.liked,
+          ),
+        );
+
+        _replaceShortAt(syncIndex, syncedShort);
       },
     );
+  }
+
+  void _replaceShortAt(int index, Short updatedShort) {
+    if (index < 0 || index >= state.shorts.length) return;
+
+    final updatedList = [...state.shorts];
+    updatedList[index] = updatedShort;
+
+    state = state.copyWith(shorts: updatedList);
   }
 
   void incrementCommentCount(int index) {
@@ -275,17 +319,6 @@ class ShortsController extends StateNotifier<ShortsState> {
     newList[index] = updated;
 
     state = state.copyWith(shorts: newList);
-  }
-
-  void _updateShortById(String shortId, dynamic newMetrics) {
-    final updatedList = state.shorts.map((s) {
-      if (s.id.value == shortId) {
-        return s.copyWith(metrics: newMetrics);
-      }
-      return s;
-    }).toList();
-
-    state = state.copyWith(shorts: updatedList);
   }
 
   // ───────────── ACCESS ─────────────

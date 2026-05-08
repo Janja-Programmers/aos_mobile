@@ -38,7 +38,7 @@ class ShortMetrics extends Equatable {
     bool? likedByMe,
     int? shareCount,
     int? impressionCount,
-    double? rankingCount,
+    double? rankingScore,
   }) {
     return ShortMetrics(
       likeCount: likeCount ?? this.likeCount,
@@ -47,7 +47,7 @@ class ShortMetrics extends Equatable {
       likedByMe: likedByMe ?? this.likedByMe,
       shareCount: shareCount ?? this.shareCount,
       impressionCount: impressionCount ?? this.impressionCount,
-      rankingScore: rankingScore,
+      rankingScore: rankingScore ?? this.rankingScore,
     );
   }
 

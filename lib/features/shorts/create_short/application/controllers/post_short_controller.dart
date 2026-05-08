@@ -12,6 +12,7 @@ import 'package:africaonlinestores/features/shorts/create_short/application/stat
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_management_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_upload_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
 
 class PostShortController extends StateNotifier<UploadState> {
   final ShortsUploadApi uploadApi;
@@ -24,11 +25,11 @@ class PostShortController extends StateNotifier<UploadState> {
     required this.sessionId,
   }) : super(UploadState.initial());
 
+  final ImagePicker _picker = ImagePicker();
+
   void setMedia(List<SelectedMedia> media) {
     state = state.copyWith(media: media);
   }
-
-  final ImagePicker _picker = ImagePicker();
 
   // ───────────── PICK VIDEO ─────────────
 
@@ -43,6 +44,15 @@ class PostShortController extends StateNotifier<UploadState> {
   }
 
   // ───────────── SETTERS ─────────────
+
+  void setContentMode(String contentMode) {
+    final requiresAd = ShortContentModes.requiresAd(contentMode);
+
+    state = state.copyWith(
+      contentMode: contentMode,
+      clearSelectedAd: !requiresAd,
+    );
+  }
 
   void setAd(String? adId) {
     state = state.copyWith(selectedAdId: adId);
@@ -63,7 +73,7 @@ class PostShortController extends StateNotifier<UploadState> {
   // ───────────── UPLOAD FLOW ─────────────
 
   Future<void> upload() async {
-    if (state.selectedAdId == null) return;
+    if (!state.canUpload) return;
 
     final media = state.primaryMedia;
     if (media == null || media.type != MediaType.video) return;
@@ -71,12 +81,15 @@ class PostShortController extends StateNotifier<UploadState> {
     final file = media.file;
     final filename = file.path.split('/').last;
 
-    appLogger.i('🚀 UPLOAD START | file=$filename');
+    appLogger.i(
+      '🚀 UPLOAD START | file=$filename | contentMode=${state.contentMode}',
+    );
 
     state = state.copyWith(
       status: UploadStatus.initializing,
       short: null,
       progress: 0,
+      clearError: true,
     );
 
     // 1. INIT
@@ -98,7 +111,6 @@ class PostShortController extends StateNotifier<UploadState> {
     final finalShort = await _updateMetadataAndFetch(shortId);
     if (finalShort == null) return;
 
-    // FINAL STATE
     state = state.copyWith(status: UploadStatus.ready, short: finalShort);
 
     appLogger.i('🎉 FINAL SHORT READY');
@@ -110,7 +122,10 @@ class PostShortController extends StateNotifier<UploadState> {
     final res = await uploadApi.initUpload(filename: filename);
 
     return res.fold((e) {
-      state = state.copyWith(status: UploadStatus.failed);
+      state = state.copyWith(
+        status: UploadStatus.failed,
+        errorMessage: e.message,
+      );
       return null;
     }, (r) => r);
   }
@@ -137,7 +152,10 @@ class PostShortController extends StateNotifier<UploadState> {
 
       return true;
     } catch (_) {
-      state = state.copyWith(status: UploadStatus.failed);
+      state = state.copyWith(
+        status: UploadStatus.failed,
+        errorMessage: 'Failed to upload video.',
+      );
       return false;
     }
   }
@@ -151,7 +169,10 @@ class PostShortController extends StateNotifier<UploadState> {
 
     return res.fold(
       (e) {
-        state = state.copyWith(status: UploadStatus.failed);
+        state = state.copyWith(
+          status: UploadStatus.failed,
+          errorMessage: e.message,
+        );
         return false;
       },
       (_) {
@@ -171,10 +192,15 @@ class PostShortController extends StateNotifier<UploadState> {
 
       final done = res.fold((_) => false, (short) {
         if (short.isPlayable) return true;
+
         if (short.canRetry) {
-          state = state.copyWith(status: UploadStatus.failed);
+          state = state.copyWith(
+            status: UploadStatus.failed,
+            errorMessage: 'Video processing failed.',
+          );
           return true;
         }
+
         return false;
       });
 
@@ -183,28 +209,44 @@ class PostShortController extends StateNotifier<UploadState> {
       await Future.delayed(const Duration(seconds: 3));
     }
 
-    state = state.copyWith(status: UploadStatus.failed);
+    state = state.copyWith(
+      status: UploadStatus.failed,
+      errorMessage: 'Video processing timed out.',
+    );
+
     return false;
   }
 
   // ───────────── FINAL FETCH ─────────────
 
   Future<Short?> _updateMetadataAndFetch(String shortId) async {
-    try {
-      await uploadApi.updateMetadata(
-        adId: state.selectedAdId!,
-        shortId: shortId,
-        caption: state.caption,
-        hashtags: state.hashtags,
+    final res = await uploadApi.updateMetadata(
+      shortId: shortId,
+      contentMode: state.contentMode,
+      adId: state.requiresAd ? state.selectedAdId : null,
+      caption: state.caption,
+      hashtags: state.hashtags,
+    );
+
+    final metadataUpdated = res.fold((e) {
+      state = state.copyWith(
+        status: UploadStatus.failed,
+        errorMessage: e.message,
       );
+      return false;
+    }, (_) => true);
 
-      final res = await managementApi.getShort(shortId: shortId);
+    if (!metadataUpdated) return null;
 
-      return res.fold((_) => null, (short) => short);
-    } catch (_) {
-      state = state.copyWith(status: UploadStatus.failed);
+    final shortRes = await managementApi.getShort(shortId: shortId);
+
+    return shortRes.fold((e) {
+      state = state.copyWith(
+        status: UploadStatus.failed,
+        errorMessage: e.message,
+      );
       return null;
-    }
+    }, (short) => short);
   }
 
   // ───────────── RESET ─────────────

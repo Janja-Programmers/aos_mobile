@@ -4,6 +4,8 @@ import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/selected_media_type.dart';
 
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
+
 enum UploadStatus {
   idle,
   picked,
@@ -25,6 +27,7 @@ class UploadState extends Equatable {
   final List<SelectedMedia> media;
 
   // ───────────── METADATA ─────────────
+  final String contentMode;
   final String? selectedAdId;
   final String caption;
   final List<String> hashtags;
@@ -38,6 +41,7 @@ class UploadState extends Equatable {
     required this.shortId,
     required this.short,
     required this.media,
+    required this.contentMode,
     required this.selectedAdId,
     required this.caption,
     required this.hashtags,
@@ -45,14 +49,13 @@ class UploadState extends Equatable {
     required this.errorMessage,
   });
 
-  // ───────────── INITIAL ─────────────
-
   factory UploadState.initial() {
     return const UploadState(
       status: UploadStatus.idle,
       shortId: null,
       short: null,
       media: [],
+      contentMode: ShortContentModes.shop,
       selectedAdId: null,
       caption: '',
       hashtags: [],
@@ -60,8 +63,6 @@ class UploadState extends Equatable {
       errorMessage: null,
     );
   }
-
-  // ───────────── DERIVED HELPERS ─────────────
 
   bool get isBusy =>
       status == UploadStatus.initializing ||
@@ -77,17 +78,25 @@ class UploadState extends Equatable {
 
   SelectedMedia? get primaryMedia => media.isNotEmpty ? media.first : null;
 
-  bool get canUpload => selectedAdId != null && hasMedia && !isBusy;
+  bool get requiresAd => ShortContentModes.requiresAd(contentMode);
+
+  bool get hasSelectedAd =>
+      selectedAdId != null && selectedAdId!.trim().isNotEmpty;
+
+  bool get canUpload {
+    if (!hasMedia || isBusy) return false;
+    if (requiresAd && !hasSelectedAd) return false;
+    return true;
+  }
 
   bool get isVideo => primaryMedia?.type == MediaType.video;
-
-  // ───────────── COPY ─────────────
 
   UploadState copyWith({
     UploadStatus? status,
     ShortId? shortId,
     Short? short,
     List<SelectedMedia>? media,
+    String? contentMode,
     String? selectedAdId,
     String? caption,
     List<String>? hashtags,
@@ -103,7 +112,7 @@ class UploadState extends Equatable {
       short: clearShort ? null : (short ?? this.short),
 
       media: media ?? this.media,
-
+      contentMode: contentMode ?? this.contentMode,
       selectedAdId: clearSelectedAd ? null : selectedAdId ?? this.selectedAdId,
 
       caption: caption ?? this.caption,
@@ -121,6 +130,7 @@ class UploadState extends Equatable {
     shortId,
     short,
     media,
+    contentMode,
     selectedAdId,
     caption,
     hashtags,

@@ -60,7 +60,7 @@ class ShortsUploadApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold((failure) => Either.left(failure), (_) {
         return Either.right(null);
       });
     } on DioException catch (e) {
@@ -73,15 +73,17 @@ class ShortsUploadApi {
   // ───────────── UPDATE METADATA ─────────────
 
   Future<Either<Failure, void>> updateMetadata({
-    required String adId,
     required String shortId,
+    required String contentMode,
+    String? adId,
     String? caption,
     List<String>? hashtags,
   }) async {
     try {
       final data = <String, dynamic>{
-        'ad_id': adId,
         'short_id': shortId,
+        'content_mode': contentMode,
+        if (adId != null && adId.trim().isNotEmpty) 'ad_id': adId,
         if (caption != null && caption.trim().isNotEmpty) 'caption': caption,
         if (hashtags != null && hashtags.isNotEmpty) 'hashtags': hashtags,
       };

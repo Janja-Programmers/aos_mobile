@@ -11,10 +11,13 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/shorts/create_short/application/controllers/post_short_controller.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/providers/shorts_providers.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/state/post_category_options.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/helpers/post_short_media_helpers.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/widgets/ad_picker_bottom_sheet.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/selected_media_type.dart';
+
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
@@ -42,6 +45,8 @@ class _PostShortDetailsScreenState
   late final ProviderSubscription<UploadState> _uploadSubscription;
 
   Uint8List? _thumbnail;
+
+  PostCategoryOption _selectedCategory = postCategoriesData.first;
 
   @override
   void initState() {
@@ -113,10 +118,12 @@ class _PostShortDetailsScreenState
     final hasSelectedAd =
         state.selectedAdId != null && state.selectedAdId!.trim().isNotEmpty;
 
+    final requiresAd = _selectedCategory.requiresAd;
+
     final canPost =
         hasMedia &&
-        hasSelectedAd &&
         state.caption.trim().isNotEmpty &&
+        (!requiresAd || hasSelectedAd) &&
         !state.isBusy;
 
     return Scaffold(
@@ -136,25 +143,32 @@ class _PostShortDetailsScreenState
                     padding: const EdgeInsets.all(16),
                     physics: const BouncingScrollPhysics(),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _mediaPreview(state, colors),
                         const SizedBox(height: 14),
+
+                        _categorySelector(colors),
+                        const SizedBox(height: 10),
+
+                        _categoryDescriptionCard(colors),
+                        const SizedBox(height: 14),
+
                         _caption(colors),
                         const SizedBox(height: 14),
+
                         _hashtags(colors),
                         const SizedBox(height: 14),
-                        if (!hasSelectedAd) ...[
-                          _addItems(colors),
-                          const SizedBox(height: 14),
-                        ] else ...[
-                          _selectedAd(state, colors),
+
+                        if (requiresAd) ...[
+                          _businessProductSection(state, colors),
                           const SizedBox(height: 14),
                         ],
                       ],
                     ),
                   ),
                 ),
-                _postButton(colors, canPost),
+                _postFooter(colors, canPost),
               ],
             ),
           ),
@@ -192,48 +206,54 @@ class _PostShortDetailsScreenState
     final media = state.primaryMedia;
     if (media == null) return const SizedBox();
 
-    return Align(
-      alignment: Alignment.topLeft,
-      child: Container(
-        height: 90,
-        margin: const EdgeInsets.only(bottom: 12),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: _thumbnail == null
-                  ? Container(
-                      width: 100,
-                      height: 120,
-                      color: colors.black,
-                      child: const Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
+    return SizedBox(
+      height: 96,
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: _thumbnail == null
+                ? Container(
+                    width: 84,
+                    height: 96,
+                    color: colors.black,
+                    child: const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : Stack(
+                    children: [
+                      Image.memory(
+                        _thumbnail!,
+                        width: 84,
+                        height: 96,
+                        fit: BoxFit.cover,
                       ),
-                    )
-                  : Stack(
-                      children: [
-                        Image.memory(
-                          _thumbnail!,
-                          width: 100,
-                          height: 120,
-                          fit: BoxFit.cover,
-                        ),
-                        Positioned.fill(
-                          child: Container(
-                            alignment: Alignment.center,
-                            color: colors.black.withOpacity(.4),
-                            child: Icon(
-                              Icons.videocam,
-                              color: colors.white,
-                              size: 20,
-                            ),
+                      Positioned.fill(
+                        child: Container(
+                          alignment: Alignment.center,
+                          color: colors.black.withOpacity(.35),
+                          child: Icon(
+                            Icons.play_circle_outline_rounded,
+                            color: colors.white,
+                            size: 28,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            width: 84,
+            height: 96,
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(10),
             ),
-          ],
-        ),
+            child: Icon(Icons.add_rounded, color: colors.textMuted, size: 30),
+          ),
+        ],
       ),
     );
   }
@@ -249,6 +269,110 @@ class _PostShortDetailsScreenState
     });
   }
 
+  Widget _categorySelector(AppColorTokens colors) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text.rich(
+          TextSpan(
+            text: 'Category ',
+            style: context.pStrong,
+            children: [
+              TextSpan(
+                text: '*',
+                style: context.pStrong.copyWith(color: colors.primary),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 38,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: postCategoriesData.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (_, index) {
+              final category = postCategoriesData[index];
+              final isSelected = category.id == _selectedCategory.id;
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedCategory = category;
+                  });
+
+                  if (!category.requiresAd) {
+                    controller.clearAd();
+                  }
+
+                  controller.setContentMode(category.contentMode);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(horizontal: 13),
+                  decoration: BoxDecoration(
+                    color: isSelected ? colors.primary : colors.surface,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: isSelected ? colors.primary : colors.border,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        category.icon,
+                        size: 14,
+                        color: isSelected ? colors.white : colors.textMuted,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        category.label,
+                        style: context.small.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: isSelected ? colors.white : colors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _categoryDescriptionCard(AppColorTokens colors) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.primary.withOpacity(.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.primary.withOpacity(.24)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              _selectedCategory.description,
+              style: context.small.copyWith(
+                color: colors.textMuted,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _caption(AppColorTokens colors) {
     return TextField(
       controller: captionController,
@@ -261,6 +385,14 @@ class _PostShortDetailsScreenState
         filled: true,
         fillColor: colors.surface,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: colors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: colors.primary),
+        ),
       ),
     );
   }
@@ -277,32 +409,163 @@ class _PostShortDetailsScreenState
         controller.setHashtags(tags);
       },
       decoration: InputDecoration(
-        hintText: "#hashtags",
+        hintText: "#hashtags (e.g. #fashion #deals #trending)",
+        hintStyle: context.pMuted,
         filled: true,
         fillColor: colors.surface,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: colors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: colors.primary),
+        ),
       ),
     );
   }
 
-  Widget _addItems(AppColorTokens colors) {
+  Widget _businessProductSection(UploadState state, AppColorTokens colors) {
+    final hasSelectedAd =
+        state.selectedAdId != null && state.selectedAdId!.trim().isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          hasSelectedAd ? '1/1 product tagged' : '0/1 product tagged',
+          style: context.small.copyWith(
+            color: hasSelectedAd ? colors.textMuted : colors.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (hasSelectedAd)
+          _selectedAdCard(state, colors)
+        else
+          _addProductCard(colors),
+      ],
+    );
+  }
+
+  Widget _addProductCard(AppColorTokens colors) {
     return GestureDetector(
       onTap: _openAdPicker,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.border),
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.primary),
         ),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.add),
-            SizedBox(width: 8),
-            Text("Select Ad"),
-            Spacer(),
-            Icon(Icons.chevron_right),
+            Icon(Icons.sell_outlined, color: colors.primary, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                "Tag a product (required)",
+                style: context.pStrong.copyWith(color: colors.primary),
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: colors.textMuted),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _selectedAdCard(UploadState state, AppColorTokens colors) {
+    final selectedAdThumbnail = state.short?.ad?.thumbnail;
+    final selectedAdId = state.selectedAdId;
+
+    if (selectedAdId == null || selectedAdId.trim().isEmpty) {
+      return const SizedBox();
+    }
+
+    final imageUrl =
+        selectedAdThumbnail == null || selectedAdThumbnail.trim().isEmpty
+        ? null
+        : buildFileUrl(selectedAdThumbnail);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.border),
+        boxShadow: [
+          BoxShadow(
+            color: colors.black.withOpacity(.04),
+            blurRadius: 14,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              width: 54,
+              height: 54,
+              color: colors.surface,
+              child: imageUrl == null
+                  ? Icon(Icons.image_outlined, color: colors.primary, size: 24)
+                  : Image.network(
+                      imageUrl,
+                      width: 54,
+                      height: 54,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Icon(
+                        Icons.broken_image_outlined,
+                        color: colors.primary,
+                        size: 24,
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: GestureDetector(
+              onTap: _openAdPicker,
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Product tagged ✓",
+                    style: context.pStrong,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    selectedAdId,
+                    style: context.small.copyWith(color: colors.textMuted),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    "Tap to change product",
+                    style: context.small.copyWith(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: controller.clearAd,
+            icon: Icon(Icons.close_rounded, color: colors.textMuted),
+          ),
+        ],
       ),
     );
   }
@@ -327,65 +590,34 @@ class _PostShortDetailsScreenState
     );
   }
 
-  Widget _selectedAd(UploadState state, AppColorTokens colors) {
-    final selectedAdId = state.selectedAdId;
-
-    if (selectedAdId == null || selectedAdId.trim().isEmpty) {
-      return const SizedBox();
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.border),
-        color: colors.surface,
-      ),
-      child: Row(
+  Widget _postFooter(AppColorTokens colors, bool canPost) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.campaign_outlined, color: colors.primary),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Selected Ad", style: context.pStrong),
-                const SizedBox(height: 4),
-                Text(
-                  selectedAdId,
-                  style: context.pMuted,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: canPost
+                  ? () async {
+                      await controller.upload();
+                    }
+                  : null,
+              child: Text(
+                "Post",
+                style: canPost ? AppTextStylesX(context).button : context.p,
+              ),
             ),
           ),
-          IconButton(
-            onPressed: controller.clearAd,
-            icon: Icon(Icons.close, color: colors.textMuted),
+          const SizedBox(height: 8),
+          Text(
+            "I confirm that there are no private messages in my content",
+            textAlign: TextAlign.center,
+            style: context.small.copyWith(color: colors.textMuted),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _postButton(AppColorTokens colors, bool canPost) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: canPost
-              ? () async {
-                  await controller.upload();
-                }
-              : null,
-          child: Text(
-            "Post",
-            style: canPost ? AppTextStylesX(context).button : context.p,
-          ),
-        ),
       ),
     );
   }

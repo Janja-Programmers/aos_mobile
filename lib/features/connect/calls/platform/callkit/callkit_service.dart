@@ -35,12 +35,13 @@ class CallKitService {
   // -----------------------------
   Future<void> init() async {
     if (_initialized) return;
-    _initialized = true;
 
     await ensurePermissions();
 
-    _sub?.cancel();
+    await _sub?.cancel();
     _sub = FlutterCallkitIncoming.onEvent.listen(_handleEvent);
+
+    _initialized = true;
 
     appLogger.i('📞 CallKitService initialized');
   }

@@ -37,34 +37,38 @@ class ScaffoldShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: posting ? null : onBackPressed,
-        ),
-        title: Text(title, style: context.h5),
-        actions: [
-          IconButton(
-            onPressed: posting ? null : onCancelPressed,
-            icon: const Icon(Icons.close),
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: posting ? null : onBackPressed,
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          if (steps.length > 1)
-            AdStepper(
-              steps: steps,
-              currentIndex: currentIndex,
-              completed: completed,
-              onStepTapped: onStepTapped,
-              isStepAccessible: isStepAccessible,
+          title: Text(title, style: context.h5),
+          actions: [
+            IconButton(
+              onPressed: posting ? null : onCancelPressed,
+              icon: const Icon(Icons.close),
             ),
-          Expanded(child: child),
-        ],
+          ],
+        ),
+        body: Column(
+          children: [
+            if (steps.length > 1)
+              AdStepper(
+                steps: steps,
+                currentIndex: currentIndex,
+                completed: completed,
+                onStepTapped: onStepTapped,
+                isStepAccessible: isStepAccessible,
+              ),
+            Expanded(child: child),
+          ],
+        ),
+        bottomNavigationBar: bottom,
       ),
-      bottomNavigationBar: bottom,
     );
   }
 }

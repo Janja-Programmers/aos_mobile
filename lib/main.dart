@@ -26,7 +26,9 @@ import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+import 'package:africaonlinestores/features/connect/calls/application/listeners/call_audio_feedback_listener.dart';
 import 'package:africaonlinestores/features/connect/calls/application/listeners/call_navigation_listener.dart';
+import 'package:africaonlinestores/features/connect/calls/application/listeners/callkit_state_listener.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
 import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
@@ -116,27 +118,16 @@ class AppRoot extends ConsumerStatefulWidget {
 
 class _AppRootState extends ConsumerState<AppRoot> {
   bool _bootstrapStarted = false;
+  ProviderSubscription<AuthState>? _authSub;
 
   @override
   void initState() {
     super.initState();
 
-    appLogger.i('[App] Bootstrapping...');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    /// ✅ Ensure bootstrap runs ONCE (safe)
-    if (!_bootstrapStarted) {
-      _bootstrapStarted = true;
-
-      Future.microtask(() {
-        ref.read(appBootstrapControllerProvider.notifier).initialize();
-      });
-    }
-
-    /// ✅ SAFE place for ref.listen
-    ref.listen<AuthState>(authControllerProvider, (prev, next) async {
+    _authSub = ref.listenManual<AuthState>(authControllerProvider, (
+      prev,
+      next,
+    ) async {
       final realtime = ref.read(realtimeServiceProvider);
 
       /// -----------------------------
@@ -180,6 +171,23 @@ class _AppRootState extends ConsumerState<AppRoot> {
         ref.read(pushNotificationServiceProvider).reset();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _authSub?.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_bootstrapStarted) {
+      _bootstrapStarted = true;
+
+      Future.microtask(() {
+        ref.read(appBootstrapControllerProvider.notifier).initialize();
+      });
+    }
 
     return const AOSApp();
   }
@@ -223,9 +231,13 @@ class AOSApp extends ConsumerWidget {
 
         return Stack(
           children: [
-            CallNavigationListener(
-              child: LiveNavigationListener(
-                child: child ?? const SizedBox.shrink(),
+            CallAudioFeedbackListener(
+              child: CallKitStateListener(
+                child: CallNavigationListener(
+                  child: LiveNavigationListener(
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                ),
               ),
             ),
 

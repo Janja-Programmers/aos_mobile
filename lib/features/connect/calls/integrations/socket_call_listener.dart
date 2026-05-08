@@ -5,16 +5,19 @@ import 'package:africaonlinestores/core/realtime/realtime_event_type.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/features/connect/calls/application/services/call_signaling_handler.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_service.dart';
 
 class SocketCallListener {
   final Stream<RealtimeEvent> eventStream;
   final CallSignalingHandler signalingHandler;
+  final CallKitService callKitService;
 
   StreamSubscription<RealtimeEvent>? _sub;
 
   SocketCallListener({
     required this.eventStream,
     required this.signalingHandler,
+    required this.callKitService,
   });
 
   void attach() {
@@ -24,9 +27,11 @@ class SocketCallListener {
       switch (event.type) {
         case RealtimeEventType.aosIncomingCall:
           appLogger.i('📞 incoming-call');
-          await signalingHandler.handleIncomingCall(
-            Map<String, dynamic>.from(event.data),
-          );
+
+          final data = Map<String, dynamic>.from(event.data);
+
+          await signalingHandler.handleIncomingCall(data);
+
           break;
 
         case RealtimeEventType.aosCallAccepted:
@@ -41,6 +46,8 @@ class SocketCallListener {
           await signalingHandler.handleCallNotAnswered(
             Map<String, dynamic>.from(event.data),
           );
+
+          await _endNativeCallFromPayload(event.data);
           break;
 
         case RealtimeEventType.aosCallRejected:
@@ -48,6 +55,8 @@ class SocketCallListener {
           await signalingHandler.handleCallRejected(
             Map<String, dynamic>.from(event.data),
           );
+
+          await _endNativeCallFromPayload(event.data);
           break;
 
         case RealtimeEventType.aosCallEnded:
@@ -55,20 +64,28 @@ class SocketCallListener {
           await signalingHandler.handleCallEnded(
             Map<String, dynamic>.from(event.data),
           );
+
+          await _endNativeCallFromPayload(event.data);
           break;
 
         case RealtimeEventType.aosCallCancelled:
-          appLogger.i('🔚 call-ended');
+          appLogger.i('📴 call-cancelled');
           await signalingHandler.handleCallCancelled(
             Map<String, dynamic>.from(event.data),
           );
+
+          await _endNativeCallFromPayload(event.data);
           break;
 
         default:
-          // ignore other events
           break;
       }
     });
+  }
+
+  Future<void> _endNativeCallFromPayload(Map<String, dynamic> data) async {
+    final callId = data['call_id']?.toString();
+    await callKitService.endCall(callId: callId);
   }
 
   void detach() {

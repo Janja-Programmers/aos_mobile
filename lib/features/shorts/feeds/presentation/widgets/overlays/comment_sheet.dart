@@ -1,64 +1,92 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/comments/comments_input.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/comments/comments_list.dart';
-
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
-class CommentsSheet extends ConsumerWidget {
+class CommentsSheet extends ConsumerStatefulWidget {
   final Short short;
+  final VoidCallback onCommentAdded;
 
-  const CommentsSheet({super.key, required this.short});
+  const CommentsSheet({
+    super.key,
+    required this.short,
+    required this.onCommentAdded,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CommentsSheet> createState() => _CommentsSheetState();
+}
+
+class _CommentsSheetState extends ConsumerState<CommentsSheet> {
+  late int _commentCount;
+
+  @override
+  void initState() {
+    super.initState();
+    _commentCount = widget.short.metrics.commentCount;
+  }
+
+  void _handleCommentAdded() {
+    setState(() {
+      _commentCount++;
+    });
+
+    widget.onCommentAdded();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.appColors;
-    final String shortId = short.id.value;
+    final shortId = widget.short.id.value;
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Column(
-        children: [
-          const SizedBox(height: 10),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
 
-          // 🔘 HANDLE
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: colors.border,
-              borderRadius: BorderRadius.circular(10),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: colors.border,
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-          ),
 
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-          // 🧾 TITLE
-          Text(
-            "${short.metrics.commentCount} Comments",
-            style: context.p.copyWith(fontWeight: FontWeight.bold),
-          ),
+            Text(
+              '$_commentCount ${_commentCount == 1 ? "Comment" : "Comments"}',
+              style: context.pStrong,
+            ),
 
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-          const Divider(height: 1),
+            const Divider(height: 1),
 
-          // 📜 LIST
-          Expanded(child: CommentsList(shortId: shortId)),
+            Expanded(child: CommentsList(shortId: shortId)),
 
-          const Divider(height: 1),
+            const Divider(height: 1),
 
-          // ✍️ INPUT
-          CommentInput(shortId: shortId),
-        ],
+            CommentInput(shortId: shortId, onCommentAdded: _handleCommentAdded),
+          ],
+        ),
       ),
     );
   }

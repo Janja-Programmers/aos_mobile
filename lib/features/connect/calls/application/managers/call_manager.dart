@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:africaonlinestores/core/utils/logger.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/services/call_media_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
@@ -24,6 +22,9 @@ class CallManager extends StateNotifier<CallState> {
   StreamSubscription<Duration>? _durationSub;
   Timer? _resetTimer;
 
+  CallState get currentState => state;
+  final Set<String> _localTerminalCallIds = <String>{};
+
   CallManager({
     required this.repository,
     required this.mediaService,
@@ -39,8 +40,6 @@ class CallManager extends StateNotifier<CallState> {
   // ================= HISTORY =================
   Future<void> loadCallLogs({String? type}) async {
     try {
-      appLogger.i("📞 Loading call logs...");
-
       state = state.copyWith(
         isLoadingHistory: true,
         clearHistoryErrorMessage: true,
@@ -49,11 +48,7 @@ class CallManager extends StateNotifier<CallState> {
       final calls = await repository.listCalls(type: type);
 
       state = state.copyWith(callLogs: calls, isLoadingHistory: false);
-
-      appLogger.i("✅ Loaded ${calls.length} call logs");
-    } catch (e, s) {
-      appLogger.e("loadCallLogs failed", error: e, stackTrace: s);
-
+    } catch (e) {
       state = state.copyWith(
         isLoadingHistory: false,
         historyErrorMessage: e.toString(),
@@ -69,7 +64,6 @@ class CallManager extends StateNotifier<CallState> {
   }) async {
     try {
       if (userId.trim().isEmpty) {
-        appLogger.e('❌ Cannot start call: userId is empty');
         return false;
       }
 
@@ -110,26 +104,17 @@ class CallManager extends StateNotifier<CallState> {
 
       if (_callCancelled) return false;
 
-      await _joinRoomInternal(initiatedCall);
-
-      if (_callCancelled) {
-        appLogger.w('🚫 Call cancelled after join');
-        return false;
-      }
-
       state = state.copyWith(isBusy: false);
 
-      appLogger.i('📞 Outgoing call initiated (waiting for answer)');
       return true;
-    } catch (e, s) {
-      appLogger.e('startOutgoingCall failed', error: e, stackTrace: s);
+    } catch (e) {
       await _failCall(e);
       return false;
     }
   }
 
   // ================= INCOMING =================
-  Future<void> onIncomingCallEvent({
+  Future<bool> onIncomingCallEvent({
     required String callId,
     required String roomName,
     required AOSCallType callType,
@@ -137,12 +122,20 @@ class CallManager extends StateNotifier<CallState> {
     String? wsUrl,
     CallParticipant? caller,
   }) async {
+    final activeCall = state.activeCall;
+
+    if (activeCall?.id == callId) {
+      return false;
+    }
+
     if (state.isCallInProgress) {
-      appLogger.i('⚠️ Busy during incoming call → rejecting');
       try {
         await repository.rejectCall(callId: callId);
-      } catch (_) {}
-      return;
+      } catch (_) {
+        // Best effort only.
+      }
+
+      return false;
     }
 
     final incomingCall = Call(
@@ -168,7 +161,11 @@ class CallManager extends StateNotifier<CallState> {
             : CallMediaMode.audio,
       );
 
-      await repository.markCallRinging(callId: callId);
+      try {
+        await repository.markCallRinging(callId: callId);
+      } catch (_) {
+        // Best effort only.
+      }
 
       _applyBackendState(
         BackendCallStatus.ringing,
@@ -179,9 +176,9 @@ class CallManager extends StateNotifier<CallState> {
       );
 
       state = state.copyWith(isBusy: false);
-    } catch (e, s) {
-      appLogger.e('onIncomingCallEvent failed', error: e, stackTrace: s);
 
+      return true;
+    } catch (e) {
       state = state.copyWith(
         isBusy: false,
         activeCallBuilder: () => null,
@@ -190,10 +187,29 @@ class CallManager extends StateNotifier<CallState> {
         hasIncomingCallUi: false,
         errorMessage: e.toString(),
       );
+
+      return false;
     }
   }
 
-  Future<void> acceptIncomingCall() async {
+  Future<void> acceptIncomingCall({String? expectedCallId}) async {
+    if (!_matchesActiveCall(expectedCallId)) {
+      return;
+    }
+
+    final call = state.activeCall;
+    if (call == null) {
+      return;
+    }
+
+    if (state.uiPhase != UiCallPhase.incomingRinging) {
+      return;
+    }
+
+    if (_isTerminalStatus(state.backendStatus)) {
+      return;
+    }
+
     try {
       final callId = state.activeCall?.id;
 
@@ -215,16 +231,31 @@ class CallManager extends StateNotifier<CallState> {
       await _joinRoomInternal(ongoingCall);
 
       state = state.copyWith(isBusy: false);
-    } catch (e, s) {
-      appLogger.e('acceptIncomingCall failed', error: e, stackTrace: s);
-
+    } catch (e) {
       state = state.copyWith(isBusy: false);
 
       _applyBackendState(BackendCallStatus.missed, hasIncomingCallUi: false);
     }
   }
 
-  Future<void> rejectIncomingCall() async {
+  Future<void> rejectIncomingCall({String? expectedCallId}) async {
+    if (!_matchesActiveCall(expectedCallId)) {
+      return;
+    }
+
+    final call = state.activeCall;
+    if (call == null) {
+      return;
+    }
+
+    if (state.uiPhase != UiCallPhase.incomingRinging) {
+      return;
+    }
+
+    if (_isTerminalStatus(state.backendStatus)) {
+      return;
+    }
+
     try {
       final callId = state.activeCall?.id;
       if (callId == null) return;
@@ -233,22 +264,35 @@ class CallManager extends StateNotifier<CallState> {
       await _leaveRoomInternal();
 
       _applyBackendState(BackendCallStatus.rejected, hasIncomingCallUi: false);
-    } catch (e, s) {
-      appLogger.e('rejectIncomingCall failed', error: e, stackTrace: s);
+    } catch (e) {
       await _failCall(e);
     }
   }
 
-  Future<void> callNotAnswered() async {
-    try {
-      final callId = state.activeCall?.id;
-      if (callId == null) return;
+  Future<void> callNotAnswered({String? expectedCallId}) async {
+    final callId = expectedCallId ?? state.activeCall?.id;
 
+    if (callId == null || callId.isEmpty) {
+      return;
+    }
+
+    if (!_matchesActiveCall(callId)) {
+      return;
+    }
+
+    if (_shouldIgnoreRemoteTerminalEvent(callId)) {
+      return;
+    }
+
+    if (_isTerminalStatus(state.backendStatus)) {
+      return;
+    }
+
+    try {
       await _leaveRoomInternal();
 
       _applyBackendState(BackendCallStatus.missed, hasIncomingCallUi: false);
-    } catch (e, s) {
-      appLogger.e('rejectIncomingCall failed', error: e, stackTrace: s);
+    } catch (e) {
       await _failCall(e);
     }
   }
@@ -262,13 +306,14 @@ class CallManager extends StateNotifier<CallState> {
       _applyBackendState(BackendCallStatus.ongoing, activeCall: call);
 
       await _joinRoomInternal(call);
-    } catch (e, s) {
-      appLogger.e('onCallAcceptedEvent failed', error: e, stackTrace: s);
+    } catch (e) {
       await _failCall(e);
     }
   }
 
   Future<void> onCallRejectedEvent({required String callId}) async {
+    if (_shouldIgnoreRemoteTerminalEvent(callId)) return;
+
     if (state.activeCall?.id != callId) return;
 
     await _leaveRoomInternal();
@@ -278,38 +323,33 @@ class CallManager extends StateNotifier<CallState> {
   Future<void> onCallNotAnswered({required String callId}) async {
     if (state.activeCall?.id != callId) return;
 
-    appLogger.i('📴 Call not answered → missed');
-
     await _leaveRoomInternal();
 
     _applyBackendState(BackendCallStatus.missed, hasIncomingCallUi: false);
   }
 
   Future<void> onCallCancelledEvent({required String callId}) async {
+    if (_shouldIgnoreRemoteTerminalEvent(callId)) return;
+
     try {
       if (state.activeCall?.id != callId) return;
-
-      appLogger.i('📴 Applying cancelled state');
 
       await _leaveRoomInternal();
 
       _applyBackendState(BackendCallStatus.cancelled, hasIncomingCallUi: false);
-    } catch (e, s) {
-      appLogger.e('onCallCancelledEvent failed', error: e, stackTrace: s);
+    } catch (e) {
       await _failCall(e);
     }
   }
 
   Future<void> onCallEndedEvent({required String callId}) async {
-    if (state.activeCall?.id != callId) return;
+    if (_shouldIgnoreRemoteTerminalEvent(callId)) return;
 
-    appLogger.i('📡 Remote ended call → leaving locally');
+    if (state.activeCall?.id != callId) return;
 
     await _leaveRoomInternal();
 
     _applyBackendState(BackendCallStatus.ended);
-
-    appLogger.i('🏁 Call ended via remote event');
   }
 
   // ================= ROOM =================
@@ -317,11 +357,16 @@ class CallManager extends StateNotifier<CallState> {
     if (_isJoining || state.hasActiveRoom) return;
 
     if (call.wsUrl.isEmpty || call.token.isEmpty) {
-      appLogger.i('⏭️ Skipping room join: missing token/wsUrl');
       return;
     }
 
+    final joiningCallId = call.id;
+
     _isJoining = true;
+
+    callTimer.stop();
+
+    state = state.copyWith(hasActiveRoom: false, duration: Duration.zero);
 
     try {
       final room = await mediaService.joinCall(
@@ -330,13 +375,44 @@ class CallManager extends StateNotifier<CallState> {
         isVideo: call.callType == AOSCallType.video,
       );
 
-      state = state.copyWith(hasActiveRoom: true, room: room);
+      final activeCallId = state.activeCall?.id;
+      final callStillActive =
+          activeCallId == joiningCallId &&
+          !_callCancelled &&
+          !_isTerminalStatus(state.backendStatus);
+
+      if (!callStillActive) {
+        try {
+          await mediaService.leaveCall();
+        } catch (_) {
+          // best effort
+        }
+
+        return;
+      }
+
+      callTimer.stop();
+
+      state = state.copyWith(
+        hasActiveRoom: true,
+        room: room,
+        duration: Duration.zero,
+      );
 
       _refreshUiPhase(hasActiveRoom: true);
 
-      appLogger.i('🎥 Joined room');
-    } catch (e, s) {
-      appLogger.e('joinRoom failed', error: e, stackTrace: s);
+      callTimer.start();
+    } catch (e) {
+      final activeCallId = state.activeCall?.id;
+      final callStillActive =
+          activeCallId == joiningCallId &&
+          !_callCancelled &&
+          !_isTerminalStatus(state.backendStatus);
+
+      if (!callStillActive) {
+        return;
+      }
+
       await _failCall(e);
     } finally {
       _isJoining = false;
@@ -365,47 +441,116 @@ class CallManager extends StateNotifier<CallState> {
       _refreshUiPhase(hasActiveRoom: false);
 
       _isLeaving = false;
-      appLogger.i('👋 Left room');
     }
   }
 
   // ================= END =================
-  Future<void> endCurrentCall() async {
+  Future<void> endCurrentCall({String? expectedCallId}) async {
+    if (!_matchesActiveCall(expectedCallId)) {
+      return;
+    }
+
+    final call = state.activeCall;
+    if (call == null) {
+      return;
+    }
+
+    if (_isTerminalStatus(state.backendStatus)) {
+      return;
+    }
+
+    final callId = call.id;
+    if (callId.isEmpty) {
+      return;
+    }
+
+    final status = state.backendStatus;
+
+    // Mark this call as locally terminal before calling the backend.
+    // If the backend later echoes aos_call_ended / aos_call_cancelled back to us,
+    // _shouldIgnoreRemoteTerminalEvent will ignore it.
+    _localTerminalCallIds.add(callId);
     _callCancelled = true;
 
     try {
-      final callId = state.activeCall?.id;
-      if (callId == null) return;
-
-      final status = state.backendStatus;
-
-      /// 🔥 EARLY STATES → CANCEL
+      /// EARLY STATES → CANCEL
       if (status == BackendCallStatus.initiated ||
           status == BackendCallStatus.ringing) {
         await repository.cancelCall(callId: callId);
 
         await _leaveRoomInternal();
 
-        _applyBackendState(BackendCallStatus.cancelled);
+        _applyBackendState(
+          BackendCallStatus.cancelled,
+          hasIncomingCallUi: false,
+        );
+
         return;
       }
 
-      /// 🔥 ACTIVE CALL → END
+      /// ACTIVE / CONNECTING CALL → END
+      ///
+      /// Note: ongoing can mean accepted but still joining LiveKit.
+      /// So ending during "Connecting..." should still call endCall,
+      /// then stale LiveKit join completion/failure will be ignored by _joinRoomInternal.
       if (status == BackendCallStatus.ongoing) {
         await repository.endCall(callId: callId);
 
         await _leaveRoomInternal();
 
-        _applyBackendState(BackendCallStatus.ended);
+        _applyBackendState(BackendCallStatus.ended, hasIncomingCallUi: false);
+
         return;
       }
-
-      /// 🔥 SAFE FALLBACK (NO FAIL)
-      appLogger.w('⚠️ Ignoring endCurrentCall for state: $status');
-    } catch (e, s) {
-      appLogger.e('endCurrentCall failed', error: e, stackTrace: s);
+    } catch (e) {
       await _failCall(e);
     }
+  }
+
+  bool _matchesActiveCall(String? expectedCallId) {
+    if (expectedCallId == null || expectedCallId.isEmpty) {
+      return true;
+    }
+
+    final activeCallId = state.activeCall?.id;
+    if (activeCallId == null || activeCallId.isEmpty) {
+      return false;
+    }
+
+    return activeCallId == expectedCallId;
+  }
+
+  bool _shouldIgnoreRemoteTerminalEvent(String callId) {
+    if (_localTerminalCallIds.contains(callId)) {
+      return true;
+    }
+
+    final activeCallId = state.activeCall?.id;
+
+    if (activeCallId == null || activeCallId.isEmpty) {
+      return true;
+    }
+
+    if (activeCallId != callId) {
+      return true;
+    }
+
+    if (_isTerminalStatus(state.backendStatus) ||
+        state.uiPhase == UiCallPhase.finished ||
+        state.uiPhase == UiCallPhase.cancelled ||
+        state.uiPhase == UiCallPhase.error) {
+      return true;
+    }
+
+    return false;
+  }
+
+  bool _isTerminalStatus(BackendCallStatus? status) {
+    return status == BackendCallStatus.ended ||
+        status == BackendCallStatus.rejected ||
+        status == BackendCallStatus.missed ||
+        status == BackendCallStatus.cancelled ||
+        status == BackendCallStatus.failed;
   }
 
   // ================= CONTROLS =================
@@ -455,8 +600,8 @@ class CallManager extends StateNotifier<CallState> {
       await mediaService.toggleCamera(true);
 
       state = state.copyWith(isLocalVideoEnabled: true);
-    } catch (e, s) {
-      appLogger.e('startLocalVideoPreview failed', error: e, stackTrace: s);
+    } catch (_) {
+      // Best effort only.
     }
   }
 
@@ -469,12 +614,8 @@ class CallManager extends StateNotifier<CallState> {
       await mediaService.toggleCamera(false);
 
       state = state.copyWith(isLocalVideoEnabled: false);
-    } catch (e, s) {
-      appLogger.e(
-        'stopLocalVideoPreviewIfNotInCall failed',
-        error: e,
-        stackTrace: s,
-      );
+    } catch (_) {
+      // Best effort only.
     }
   }
 
@@ -511,11 +652,8 @@ class CallManager extends StateNotifier<CallState> {
       isBusy: false,
     );
 
-    if (nextStatus == BackendCallStatus.ongoing) {
-      callTimer.start();
-    }
-
     if (_isTerminal(nextStatus)) {
+      callTimer.stop();
       _scheduleReset();
     }
   }
@@ -606,6 +744,9 @@ class CallManager extends StateNotifier<CallState> {
 
   void _resetToIdle() {
     callTimer.stop();
+
+    _localTerminalCallIds.clear();
+    _callCancelled = false;
 
     state = state.copyWith(
       uiPhase: UiCallPhase.idle,

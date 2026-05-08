@@ -7,7 +7,7 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
-import 'package:africaonlinestores/features/shorts/shared/domain/short_metrics.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_like_result.dart';
 
 class ShortsEngagementApi {
   final ApiClient _client;
@@ -16,7 +16,7 @@ class ShortsEngagementApi {
 
   // ───────────── TOGGLE LIKE ─────────────
 
-  Future<Either<Failure, ShortMetrics>> toggleLike({
+  Future<Either<Failure, ToggleLikeResult>> toggleLike({
     required String shortId,
   }) async {
     try {
@@ -28,16 +28,22 @@ class ShortsEngagementApi {
       final unwrapped = unwrapFrappe(res);
 
       return unwrapped.fold((failure) => Either.left(failure), (json) {
+        final data = json['data'] is Map<String, dynamic>
+            ? json['data'] as Map<String, dynamic>
+            : json['message'] is Map<String, dynamic> &&
+                  json['message']['data'] is Map<String, dynamic>
+            ? json['message']['data'] as Map<String, dynamic>
+            : json;
+
+        final resultShortId = data['short_id'] as String? ?? shortId;
+        final liked = data['liked'] as bool?;
+
+        if (liked == null) {
+          return Either.left(const Failure('Invalid toggle like response'));
+        }
+
         return Either.right(
-          ShortMetrics(
-            likeCount: json['like_count'] ?? 0,
-            commentCount: json['comment_count'] ?? 0,
-            viewCount: json['view_count'] ?? 0,
-            likedByMe: json['liked_by_me'] ?? true,
-            shareCount: json['share_count'] ?? 0,
-            impressionCount: json['impression_count'] ?? 0,
-            rankingScore: json['ranking_score'] ?? 0,
-          ),
+          ToggleLikeResult(shortId: resultShortId, liked: liked),
         );
       });
     } on DioException catch (e) {

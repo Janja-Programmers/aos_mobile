@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/connect/calls/application/managers/call_manager.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
@@ -9,16 +8,17 @@ class CallSignalingHandler {
   const CallSignalingHandler({required this.callManager});
 
   // ================= INCOMING =================
-  Future<void> handleIncomingCall(Map<String, dynamic> data) async {
+  Future<bool> handleIncomingCall(Map<String, dynamic> data) async {
     try {
       final callId = data['call_id'] as String?;
       final callerRaw = data['caller'] as String?;
+      final callerNameRaw = data['caller_name'] as String?;
+      final callerAvatarRaw = data['caller_avatar'] as String?;
       final roomName = data['room_name'] as String?;
       final callTypeRaw = data['call_type'] as String?;
 
       if (callId == null || roomName == null || callTypeRaw == null) {
-        appLogger.e('❌ Invalid incoming call payload: $data');
-        return;
+        return false;
       }
 
       final callType = callTypeRaw == 'video'
@@ -28,61 +28,48 @@ class CallSignalingHandler {
       final caller = callerRaw != null
           ? CallParticipant(
               userId: callerRaw,
-              displayName: callerRaw,
-              avatarUrl: null,
+              displayName: _safeDisplayName(
+                callerNameRaw: callerNameRaw,
+                fallback: callerRaw,
+              ),
+              avatarUrl: _safeNullableString(callerAvatarRaw),
             )
           : null;
 
-      appLogger.i('📞 Incoming call parsed');
-
-      await callManager.onIncomingCallEvent(
+      return callManager.onIncomingCallEvent(
         callId: callId,
         roomName: roomName,
         callType: callType,
         caller: caller,
       );
-    } catch (e, s) {
-      appLogger.e('handleIncomingCall failed', error: e, stackTrace: s);
+    } catch (_) {
+      return false;
     }
   }
 
   // ================= ACCEPTED =================
   Future<void> handleCallAccepted(Map<String, dynamic> data) async {
     try {
-      appLogger.i("CallManager: handleCallAccepted | Data: ${data.toString()}");
-
       final callId = data['call_id'] as String?;
       if (callId == null) {
-        appLogger.e('❌ Invalid call accepted payload: $data');
         return;
       }
 
-      appLogger.i('✅ Call accepted parsed');
-
       await callManager.onCallAcceptedEvent(callId: callId);
-    } catch (e, s) {
-      appLogger.e('handleCallAccepted failed', error: e, stackTrace: s);
-    }
+    } catch (_) {}
   }
 
   // ================= REJECTED =================
   Future<void> handleCallRejected(Map<String, dynamic> data) async {
-    appLogger.i(' handleCallRejectSignal | Data: ${data.toString()}');
-
     try {
       final callId = data['call_id'] as String?;
 
       if (callId == null) {
-        appLogger.e('❌ Invalid call rejected payload: $data');
         return;
       }
 
-      appLogger.i('❌ Call rejected parsed');
-
       await callManager.onCallRejectedEvent(callId: callId);
-    } catch (e, s) {
-      appLogger.e('handleCallRejected failed', error: e, stackTrace: s);
-    }
+    } catch (_) {}
   }
 
   // ================= ENDED =================
@@ -91,16 +78,11 @@ class CallSignalingHandler {
       final callId = data['call_id'] as String?;
 
       if (callId == null) {
-        appLogger.e('❌ Invalid call ended payload: $data');
         return;
       }
 
-      appLogger.i('🔚 Call ended parsed');
-
       await callManager.onCallEndedEvent(callId: callId);
-    } catch (e, s) {
-      appLogger.e('handleCallEnded failed', error: e, stackTrace: s);
-    }
+    } catch (_) {}
   }
 
   // ================= HANDLECALLNOTANSWERED =================
@@ -109,33 +91,61 @@ class CallSignalingHandler {
       final callId = data['call_id'] as String?;
 
       if (callId == null) {
-        appLogger.e('❌ Invalid not-answered payload: $data');
         return;
       }
 
       await callManager.onCallNotAnswered(callId: callId);
-    } catch (e, s) {
-      appLogger.e('handleCallNotAnswered failed', error: e, stackTrace: s);
-    }
+    } catch (_) {}
   }
 
   // ================= CANCELLED =================
   Future<void> handleCallCancelled(Map<String, dynamic> data) async {
-    appLogger.i('📴 handleCallCancelled | Data: ${data.toString()}');
-
     try {
       final callId = data['call_id'] as String?;
 
       if (callId == null) {
-        appLogger.e('❌ Invalid call cancelled payload: $data');
         return;
       }
 
-      appLogger.i('📴 Call cancelled parsed');
-
       await callManager.onCallCancelledEvent(callId: callId);
-    } catch (e, s) {
-      appLogger.e('handleCallCancelled failed', error: e, stackTrace: s);
+    } catch (_) {}
+  }
+
+  // ================= HELPERS =================
+
+  String _safeDisplayName({
+    required String? callerNameRaw,
+    required String fallback,
+  }) {
+    final name = callerNameRaw?.trim();
+
+    if (name != null && name.isNotEmpty) {
+      return name;
     }
+
+    return _emailToReadableName(fallback);
+  }
+
+  String _emailToReadableName(String value) {
+    if (!value.contains('@')) return value;
+
+    final localPart = value.split('@').first.trim();
+
+    if (localPart.isEmpty) return value;
+
+    return localPart
+        .replaceAll('.', ' ')
+        .replaceAll('_', ' ')
+        .replaceAll('-', ' ');
+  }
+
+  String? _safeNullableString(String? value) {
+    final trimmed = value?.trim();
+
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+
+    return trimmed;
   }
 }

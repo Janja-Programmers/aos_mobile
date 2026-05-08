@@ -12,12 +12,18 @@ class ShortVideoPage extends StatefulWidget {
   final Short short;
   final bool isActive;
   final bool shouldPrepare;
+  final bool isLikePending;
+  final Future<void> Function(String shortId) onToggleLike;
+  final void Function(String shortId) onCommentAdded;
 
   const ShortVideoPage({
     super.key,
     required this.short,
     required this.isActive,
     required this.shouldPrepare,
+    required this.onToggleLike,
+    required this.onCommentAdded,
+    this.isLikePending = false,
   });
 
   @override
@@ -268,7 +274,12 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
           Positioned(
             right: 12,
             bottom: 120,
-            child: ShortActionsPanel(short: widget.short),
+            child: ShortActionsPanel(
+              short: widget.short,
+              isLikePending: widget.isLikePending,
+              onToggleLike: widget.onToggleLike,
+              onCommentAdded: widget.onCommentAdded,
+            ),
           ),
 
           Positioned(

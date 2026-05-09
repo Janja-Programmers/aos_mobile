@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+
+import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/sellers/presentation/seller_customization_screen.dart';
 import 'package:africaonlinestores/features/sellers/presentation/seller_storefront_screen.dart';
 import 'package:africaonlinestores/features/sellers/seller_verification/presentation/verification_screen.dart';
@@ -23,8 +25,14 @@ class SellerRoutes {
     GoRoute(
       name: AppRoutes.nSellerStore,
       path: AppRoutes.sellerStore,
-      builder: (context, state) =>
-          SellerStorefrontScreen(sellerId: _param(state, 'sellerId')),
+      builder: (context, state) {
+        final extra = state.extra;
+
+        return SellerStorefrontScreen(
+          sellerId: _param(state, 'sellerId'),
+          initialSeller: extra is AOSSellerProfile ? extra : null,
+        );
+      },
     ),
   ];
 
@@ -45,10 +53,15 @@ class SellerRoutes {
 class SellerNavigation {
   const SellerNavigation._();
 
-  static void toSellerStore(BuildContext context, String sellerId) {
+  static void toSellerStore(
+    BuildContext context,
+    String sellerId, {
+    AOSSellerProfile? seller,
+  }) {
     context.pushNamed(
       AppRoutes.nSellerStore,
       pathParameters: {'sellerId': sellerId},
+      extra: seller,
     );
   }
 

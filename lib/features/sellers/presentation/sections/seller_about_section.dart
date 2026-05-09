@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 
 class SellerAboutSection extends StatefulWidget {
@@ -27,103 +28,54 @@ class _SellerAboutSectionState extends State<SellerAboutSection> {
         children: [
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: hasAbout ? () => setState(() => expanded = !expanded) : null,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.storefront, size: 19, color: colors.primary),
-                    const SizedBox(width: 10),
-                    Text('About', style: context.h6),
-                  ],
-                ),
-                Icon(
-                  expanded
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_down,
-                  color: colors.textMuted,
-                ),
-              ],
+            onTap: hasAbout
+                ? () {
+                    setState(() => expanded = !expanded);
+                  }
+                : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.storefront_outlined,
+                    size: 20,
+                    color: colors.primary,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'About',
+                      style: context.h6.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  Icon(
+                    expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: colors.textMuted,
+                    size: 24,
+                  ),
+                ],
+              ),
             ),
           ),
 
           if (hasAbout && expanded) ...[
             const SizedBox(height: 16),
-
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colors.surface,
-                borderRadius: BorderRadius.circular(12),
-              ),
+            Align(
+              alignment: Alignment.centerLeft,
               child: Text(
-                widget.about!,
-                style: context.body.copyWith(height: 1.45),
+                widget.about!.trim(),
+                style: context.body.copyWith(
+                  height: 1.45,
+                  color: colors.textPrimary,
+                ),
               ),
-            ),
-
-            const SizedBox(height: 16),
-
-            const _InfoRow(
-              icon: Icons.location_on_outlined,
-              title: 'Nairobi, Kenya',
-              subtitle: 'Operating Location',
-            ),
-
-            const SizedBox(height: 12),
-
-            const _InfoRow(
-              icon: Icons.access_time,
-              title: 'Mon–Fri: 8AM – 6PM',
-              subtitle: 'Business Hours',
             ),
           ],
         ],
       ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-
-    return Row(
-      children: [
-        Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: colors.textMuted, size: 21),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: context.pStrong),
-              const SizedBox(height: 2),
-              Text(subtitle, style: context.pMuted),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

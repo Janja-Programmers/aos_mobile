@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
-import 'package:africaonlinestores/features/connect/chats/utils/chart_actions.dart';
+import 'package:africaonlinestores/features/connect/chats/utils/chat_actions.dart';
 import 'package:africaonlinestores/features/connect/presentation/widgets/seller_picker_body.dart';
 
 class NewMessageScreen extends ConsumerWidget {

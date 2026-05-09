@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/shop_now_card.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/short_actions_panel.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/short_bottom_info.dart';
@@ -291,7 +292,13 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
               children: [
                 ShortBottomInfo(short: widget.short),
                 const SizedBox(height: 12),
-                if (widget.short.ad != null) ShopNowCard(short: widget.short),
+                if (widget.short.ad != null)
+                  ShopNowCard(
+                    short: widget.short,
+                    onTap: () {
+                      AdNavigation.toDetail(context, widget.short.ad!.id);
+                    },
+                  ),
               ],
             ),
           ),

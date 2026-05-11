@@ -6,7 +6,11 @@ class NotofcationErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
 
-  const NotofcationErrorView({super.key, required this.message, required this.onRetry});
+  const NotofcationErrorView({
+    super.key,
+    required this.message,
+    required this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {

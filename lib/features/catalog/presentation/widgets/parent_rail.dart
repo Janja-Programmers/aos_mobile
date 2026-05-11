@@ -52,7 +52,9 @@ class ParentsRail extends StatelessWidget {
                 border: Border(
                   left: BorderSide(
                     width: 3,
-                    color: selected ? scheme.primary : context.appColors.surface,
+                    color: selected
+                        ? scheme.primary
+                        : context.appColors.surface,
                   ),
                 ),
               ),

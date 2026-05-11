@@ -26,5 +26,4 @@ class ChatRealtimeService {
       .map((e) {
         return e.data;
       });
-
 }

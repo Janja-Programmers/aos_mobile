@@ -58,7 +58,6 @@ List<NotificationItem> filterNotifications(
   }
 }
 
-
 IconData iconForType(NotificationType type) {
   switch (type) {
     case NotificationType.message:

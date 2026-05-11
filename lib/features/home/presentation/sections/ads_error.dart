@@ -36,9 +36,7 @@ class AdListErrorView extends StatelessWidget {
             const SizedBox(height: 16),
             OutlinedButton(
               onPressed: onRetry,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: scheme.primary,
-              ),
+              style: OutlinedButton.styleFrom(foregroundColor: scheme.primary),
               child: const Text('Try again'),
             ),
           ],

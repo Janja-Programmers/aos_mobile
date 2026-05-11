@@ -76,7 +76,7 @@ class _LeadingIcon extends StatelessWidget {
       width: 38,
       height: 38,
       decoration: BoxDecoration(
-        color:colors.border,
+        color: colors.border,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(icon, size: 20, color: colors.black),

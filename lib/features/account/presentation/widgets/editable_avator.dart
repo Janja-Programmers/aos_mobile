@@ -57,7 +57,12 @@ class EditableAvatar extends StatelessWidget {
           backgroundColor: scheme.onPrimary,
           backgroundImage: img,
           onBackgroundImageError: hasImage ? (_, _) {} : null,
-          child: hasImage ? null : Text(_initial(), style: context.h3.copyWith(color: colors.border)),
+          child: hasImage
+              ? null
+              : Text(
+                  _initial(),
+                  style: context.h3.copyWith(color: colors.border),
+                ),
         ),
         Positioned(
           bottom: 0,

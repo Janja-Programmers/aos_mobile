@@ -60,7 +60,7 @@ class PlatformSocialSection extends StatelessWidget {
             width: 22,
             height: 22,
           ),
-          label: isIOS ? "Sign in with Google" :l10n.auth_continue_google,
+          label: isIOS ? "Sign in with Google" : l10n.auth_continue_google,
           loading: googleLoading,
           onPressed: loading ? null : onGoogle,
         ),
@@ -85,9 +85,7 @@ class PlatformSocialSection extends StatelessWidget {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                   )
-                : SignInWithAppleButton(
-                    onPressed: loading ? null : onApple,
-                  ),
+                : SignInWithAppleButton(onPressed: loading ? null : onApple),
           ),
       ],
     );

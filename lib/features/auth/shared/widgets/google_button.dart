@@ -30,7 +30,9 @@ class GoogleButton extends StatelessWidget {
           backgroundColor: context.appColors.surface,
           foregroundColor: context.appColors.primary,
           side: BorderSide(color: colors.border),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14),),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

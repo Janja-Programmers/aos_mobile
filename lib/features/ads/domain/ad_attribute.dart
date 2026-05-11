@@ -1,4 +1,3 @@
-
 import 'package:africaonlinestores/shared/enums/ads.dart';
 
 class AdAttribute {

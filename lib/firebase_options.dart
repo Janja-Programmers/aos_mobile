@@ -63,7 +63,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '92816366774',
     projectId: 'africa-online-stores-v2',
     storageBucket: 'africa-online-stores-v2.firebasestorage.app',
-    androidClientId: '92816366774-2e11s7m5i8im9lfntrh9k39v6u5l7hm8.apps.googleusercontent.com',
+    androidClientId:
+        '92816366774-2e11s7m5i8im9lfntrh9k39v6u5l7hm8.apps.googleusercontent.com',
     iosBundleId: 'com.africaonlinestores.app',
   );
 }

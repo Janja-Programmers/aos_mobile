@@ -87,10 +87,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           children: [
             Text(l10n.auth_forgot_password, style: context.h3),
             const SizedBox(height: 8),
-            Text(
-              l10n.auth_mail_reset_password,
-              style: context.p,
-            ),
+            Text(l10n.auth_mail_reset_password, style: context.p),
             const SizedBox(height: 22),
             Form(
               key: _formKey,

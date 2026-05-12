@@ -11,29 +11,51 @@ AOSCallType _parseCallType(String? type) {
   }
 }
 
-// 🔥 FIXED: accept dynamic instead of Map
 CallParticipant? _parseParticipant(dynamic json) {
   if (json == null) return null;
 
-  // ✅ Case 1: backend sends object
-  if (json is Map<String, dynamic>) {
+  if (json is String) {
+    final value = json.trim();
+
+    if (value.isEmpty) return null;
+
     return CallParticipant(
-      userId: json['user_id']?.toString() ?? '',
-      displayName:
-          json['display_name']?.toString() ??
-          json['full_name']?.toString() ??
-          json['email']?.toString() ??
-          '',
-      avatarUrl: json['avatar_url']?.toString(),
+      userId: value,
+      displayName: value.contains('@') ? value.split('@').first : 'Guest',
+      avatarUrl: null,
     );
   }
 
-  // ✅ Case 2: backend sends string (your current case)
-  if (json is String) {
-    return CallParticipant(userId: json, displayName: json, avatarUrl: null);
+  if (json is Map<String, dynamic>) {
+    final userId =
+        json['user_id']?.toString() ??
+        json['id']?.toString() ??
+        json['uuid']?.toString() ??
+        '';
+
+    final displayName = json['display_name']?.toString().trim();
+    final fullName = json['full_name']?.toString().trim();
+    final name = json['name']?.toString().trim();
+    final email = json['email']?.toString().trim();
+
+    return CallParticipant(
+      userId: userId,
+      displayName: displayName?.isNotEmpty == true
+          ? displayName!
+          : fullName?.isNotEmpty == true
+          ? fullName!
+          : name?.isNotEmpty == true
+          ? name!
+          : email?.isNotEmpty == true
+          ? email!
+          : 'Guest',
+      avatarUrl:
+          json['avatar_url']?.toString() ??
+          json['avatar']?.toString() ??
+          json['profile_image']?.toString(),
+    );
   }
 
-  // ❌ unknown type
   return null;
 }
 
@@ -64,7 +86,7 @@ CallLog mapCallLog(Map<String, dynamic> json) {
     conversationId: json['conversation_id']?.toString() ?? '',
     user: json['user']?.toString() ?? '',
 
-    displayName: json['display_name']?.toString() ?? 'Unknown',
+    displayName: json['display_name']?.toString() ?? 'Guest',
     avatar: json['avatar']?.toString(),
 
     direction: json['direction']?.toString() ?? 'incoming',

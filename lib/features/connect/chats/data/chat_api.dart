@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/api/api_client.dart';
@@ -23,24 +24,33 @@ class ChatApi {
   // -----------------------------
   // Conversations
   // -----------------------------
+
   Future<Either<Failure, String>> openConversation(String user) async {
-    final res = await _client.post(
-      ApiEndpoints.openConversationEndpoint,
-      data: {'user': user},
-    );
+    try {
+      final res = await _client.post(
+        ApiEndpoints.openConversationEndpoint,
+        data: {'user': user},
+      );
 
-    final result = unwrapFrappe(res);
-    if (result.isLeft) return Either.left(result.leftOrNull!);
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    final payload = result.rightOrNull!;
+      final payload = result.rightOrNull!;
 
-    final conversationId = payload['data']?['id'];
+      final conversationId = payload['data']?['id'];
 
-    if (conversationId == null) {
-      return Either.left(const Failure('Invalid conversation response'));
+      if (conversationId == null) {
+        return Either.left(const Failure('Invalid conversation response'));
+      }
+
+      return Either.right(conversationId.toString());
+    } on DioException catch (e) {
+      return Either.left(Failure(_friendlyOpenConversationError(e)));
+    } catch (_) {
+      return Either.left(
+        const Failure('Failed to start chat. Please try again.'),
+      );
     }
-
-    return Either.right(conversationId.toString());
   }
 
   Future<Either<Failure, List<ChatConversation>>> listConversations() async {
@@ -125,19 +135,30 @@ class ChatApi {
   }) async {
     final cleanAttachments = attachments ?? [];
 
-    final res = await _client.post(
-      ApiEndpoints.sendMessageEndpoint,
-      data: {
-        'conversation_id': conversationId,
-        'content': content ?? '',
-        'attachments': cleanAttachments,
-      },
-    );
+    final payload = {
+      'conversation_id': conversationId,
+      'content': content ?? '',
+      'attachments': cleanAttachments,
+    };
 
-    final result = unwrapFrappe(res);
-    if (result.isLeft) return Either.left(result.leftOrNull!);
+    try {
+      final res = await _client.post(
+        ApiEndpoints.sendMessageEndpoint,
+        data: payload,
+      );
 
-    return Either.right(null);
+      final result = unwrapFrappe(res);
+
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      return Either.right(null);
+    } on DioException catch (e) {
+      return Either.left(Failure(_friendlySendMessageError(e)));
+    } catch (e) {
+      return Either.left(
+        const Failure('Failed to send message. Please try again.'),
+      );
+    }
   }
 
   // -----------------------------
@@ -184,4 +205,114 @@ class ChatApi {
 
     return Either.right(null);
   }
+}
+
+String _friendlyOpenConversationError(DioException e) {
+  final statusCode = e.response?.statusCode;
+  final data = e.response?.data;
+
+  final serverMessage = _extractServerMessage(data);
+
+  if (serverMessage != null && serverMessage.trim().isNotEmpty) {
+    return serverMessage;
+  }
+
+  switch (statusCode) {
+    case 400:
+      return 'Unable to start this chat.';
+    case 401:
+      return 'Please log in to start a chat.';
+    case 403:
+      return 'You are not allowed to start this chat.';
+    case 404:
+      return 'User not found.';
+    case 409:
+      return 'This conversation already exists.';
+    case 429:
+      return 'Too many chat attempts. Please try again shortly.';
+    case 500:
+    case 502:
+    case 503:
+      return 'Chat service is temporarily unavailable. Please try again.';
+    default:
+      return 'Failed to start chat. Please try again.';
+  }
+}
+
+String _friendlySendMessageError(DioException e) {
+  final statusCode = e.response?.statusCode;
+  final data = e.response?.data;
+
+  final serverMessage = _extractServerMessage(data);
+
+  if (serverMessage != null && serverMessage.trim().isNotEmpty) {
+    return serverMessage;
+  }
+
+  switch (statusCode) {
+    case 400:
+      return 'Message could not be sent. Please check the message or attachment.';
+    case 401:
+      return 'Please log in to send messages.';
+    case 403:
+      return 'You are not allowed to send messages in this conversation.';
+    case 404:
+      return 'Conversation not found.';
+    case 413:
+      return 'Attachment is too large.';
+    case 429:
+      return 'You are sending messages too quickly. Please try again shortly.';
+    case 500:
+    case 502:
+    case 503:
+      return 'Chat service is temporarily unavailable. Please try again.';
+    default:
+      return 'Failed to send message. Please try again.';
+  }
+}
+
+String? _extractServerMessage(dynamic data) {
+  if (data is! Map) return null;
+
+  final directMessage = data['message'];
+  if (directMessage is String && directMessage.trim().isNotEmpty) {
+    return directMessage;
+  }
+
+  final exception = data['exception'];
+  if (exception is String && exception.trim().isNotEmpty) {
+    return _cleanFrappeException(exception);
+  }
+
+  final exc = data['exc'];
+  if (exc is String && exc.trim().isNotEmpty) {
+    return _cleanFrappeException(exc);
+  }
+
+  final serverMessages = data['_server_messages'];
+  if (serverMessages is String && serverMessages.trim().isNotEmpty) {
+    return _cleanFrappeException(serverMessages);
+  }
+
+  return null;
+}
+
+String _cleanFrappeException(String raw) {
+  var message = raw;
+
+  // Remove common Python/Frappe exception prefixes.
+  if (message.contains(':')) {
+    message = message.split(':').last;
+  }
+
+  return message
+      .replaceAll(r'\"', '"')
+      .replaceAll('\\n', ' ')
+      .replaceAll('[', '')
+      .replaceAll(']', '')
+      .replaceAll('{', '')
+      .replaceAll('}', '')
+      .replaceAll('"message":', '')
+      .replaceAll('"', '')
+      .trim();
 }

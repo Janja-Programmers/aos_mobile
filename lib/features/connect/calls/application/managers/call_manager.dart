@@ -57,13 +57,16 @@ class CallManager extends StateNotifier<CallState> {
   }
 
   // ================= OUTGOING =================
+
   Future<bool> startOutgoingCall({
     required String userId,
     required AOSCallType callType,
     CallParticipant? receiver,
   }) async {
     try {
-      if (userId.trim().isEmpty) {
+      final trimmedUserId = userId.trim();
+
+      if (trimmedUserId.isEmpty) {
         return false;
       }
 
@@ -75,7 +78,9 @@ class CallManager extends StateNotifier<CallState> {
         clearErrorMessage: true,
       );
 
-      final conversationId = await repository.openConversation(userId: userId);
+      final conversationId = await repository.openConversation(
+        userId: trimmedUserId,
+      );
 
       final initiatedCall = await repository.initiateCall(
         conversationId: conversationId,
@@ -88,18 +93,20 @@ class CallManager extends StateNotifier<CallState> {
             : CallMediaMode.audio,
       );
 
-      /// ✅ Correct order
+      final safeReceiver =
+          initiatedCall.receiver ??
+          receiver ??
+          CallParticipant(
+            userId: trimmedUserId,
+            displayName: 'Guest',
+            avatarUrl: null,
+          );
+
       _applyBackendState(
         BackendCallStatus.initiated,
         activeCall: initiatedCall,
         direction: 'outgoing',
-        receiver:
-            receiver ??
-            CallParticipant(
-              userId: userId,
-              displayName: userId,
-              avatarUrl: null,
-            ),
+        receiver: safeReceiver,
       );
 
       if (_callCancelled) return false;

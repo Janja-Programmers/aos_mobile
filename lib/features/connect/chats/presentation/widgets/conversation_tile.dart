@@ -6,6 +6,8 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/utils/format_time.dart';
 
+import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
+
 class ConversationTile extends StatelessWidget {
   final ChatConversation conversation;
   final VoidCallback onTap;
@@ -24,9 +26,6 @@ class ConversationTile extends StatelessWidget {
     this.lastSeen,
     this.onLongPress,
   });
-
-  bool get _hasAvatar =>
-      conversation.avatar != null && conversation.avatar!.isNotEmpty;
 
   Color _avatarColor(BuildContext context) {
     final appColors = context.appColors;
@@ -62,36 +61,28 @@ class ConversationTile extends StatelessWidget {
       // -------------------------
       leading: Stack(
         children: [
-          CircleAvatar(
+          AppCircularAvatar(
+            name: conversation.displayName,
+            imageUrl: conversation.avatar,
             radius: 24,
-            backgroundColor: _hasAvatar ? colors.border : _avatarColor(context),
-            backgroundImage: _hasAvatar
-                ? NetworkImage(conversation.avatar!)
-                : null,
-            child: !_hasAvatar
-                ? Text(
-                    conversation.displayName.isNotEmpty
-                        ? conversation.displayName[0].toUpperCase()
-                        : "?",
-                    style: context.bodyStrong.copyWith(color: colors.white),
-                  )
-                : null,
+            backgroundColor: _avatarColor(context),
+            textColor: colors.white,
           ),
 
-          // 🟢 Online indicator
-          Positioned(
-            right: 0,
-            bottom: 0,
-            child: Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                color: isOnline ? colors.success : colors.border,
-                shape: BoxShape.circle,
-                border: Border.all(color: colors.surface, width: 2),
+          if (isOnline)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: colors.success,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: colors.surface, width: 2),
+                ),
               ),
             ),
-          ),
         ],
       ),
 

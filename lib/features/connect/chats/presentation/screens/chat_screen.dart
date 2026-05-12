@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,22 +24,28 @@ class ChatScreen extends ConsumerStatefulWidget {
   final String conversationId;
   final String otherUser;
   final String displayName;
+  final String? otherUserAvatar;
+  final DateTime? lastSeen;
   final String? initialMessage;
   final String? adId;
   final String? adTitle;
   final String? adPrice;
   final String? adImage;
+  final String? adImageFileId;
 
   const ChatScreen({
     super.key,
     required this.conversationId,
     required this.otherUser,
     required this.displayName,
+    this.otherUserAvatar,
+    this.lastSeen,
     this.initialMessage,
     this.adId,
     this.adTitle,
     this.adPrice,
     this.adImage,
+    this.adImageFileId,
   });
 
   @override
@@ -152,6 +159,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final attachedAdTitle = hasAdContext ? widget.adTitle : null;
     final attachedAdPrice = hasAdContext ? widget.adPrice : null;
     final attachedAdImage = hasAdContext ? widget.adImage : null;
+    final attachedAdImageFileId = hasAdContext ? widget.adImageFileId : null;
+
+    final effectiveAttachments = List<ChatInputAttachment>.from(attachments);
+
+    if (hasAdContext &&
+        effectiveAttachments.isEmpty &&
+        attachedAdImageFileId != null &&
+        attachedAdImageFileId.trim().isNotEmpty) {
+      effectiveAttachments.add(
+        ChatInputAttachment(
+          fileId: attachedAdImageFileId.trim(),
+          type: 'image',
+          previewUrl: attachedAdImage ?? '',
+        ),
+      );
+    }
 
     _isSending = true;
 
@@ -169,21 +192,58 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         chatMessagesControllerProvider(widget.conversationId).notifier,
       );
 
-      await notifier.sendTempMessage(
+      final currentUserId = ref.read(currentUserProvider);
+
+      final sent = await notifier.sendTempMessage(
         text: hasText ? messageText : null,
-        attachments: attachments,
+        attachments: effectiveAttachments,
         adId: attachedAdId,
         adTitle: attachedAdTitle,
         adPrice: attachedAdPrice,
         adImage: attachedAdImage,
+        senderId: currentUserId,
       );
+
+      if (!sent) {
+        if (!mounted) return;
+
+        _inputController.text = messageText ?? '';
+        _inputController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _inputController.text.length),
+        );
+
+        setState(() {
+          _showAdPreview =
+              attachedAdId != null && attachedAdId.trim().isNotEmpty;
+        });
+
+        ShowSnack(
+          context,
+          attachedAdId != null
+              ? 'Failed to send ad message. Please try again.'
+              : 'Failed to send message. Please try again.',
+        ).error();
+
+        return;
+      }
 
       _scrollToBottom();
     } catch (e) {
       debugPrint('Send message failed: $e');
 
-      // Do NOT restore the controller/ad here.
-      // The message may already have been optimistically inserted/sent.
+      if (mounted) {
+        _inputController.text = messageText ?? '';
+        _inputController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _inputController.text.length),
+        );
+
+        setState(() {
+          _showAdPreview =
+              attachedAdId != null && attachedAdId.trim().isNotEmpty;
+        });
+
+        ShowSnack(context, 'Failed to send message. Please try again.').error();
+      }
     } finally {
       _isSending = false;
     }
@@ -207,9 +267,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       backgroundColor: colors.border,
 
       appBar: ChatAppBar(
+        conversationId: widget.conversationId,
         displayName: widget.displayName,
         otherUserId: widget.otherUser,
-        imageUrl: null,
+        imageUrl: widget.otherUserAvatar,
+        lastSeen: widget.lastSeen,
         backgroundColor: colors.border,
       ),
 
@@ -228,13 +290,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final msg = messages[messages.length - 1 - index];
-                      final isMe =
-                          currentUserId != null && msg.sender == currentUserId;
-                      debugPrint(
-                        'msg.sender=${msg.sender}, currentUserId=$currentUserId, isMe=$isMe',
-                      );
+                      final isSystem = msg.isSystemMessage;
 
-                      return MessageBubble(message: msg, isMe: isMe);
+                      final isMe =
+                          !isSystem &&
+                          currentUserId != null &&
+                          msg.sender.trim().toLowerCase() ==
+                              currentUserId.trim().toLowerCase();
+
+                      return MessageBubble(
+                        message: msg,
+                        isMe: isMe,
+                        isSystem: isSystem,
+                      );
                     },
                   );
                 },

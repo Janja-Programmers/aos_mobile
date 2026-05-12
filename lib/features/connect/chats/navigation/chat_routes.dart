@@ -42,11 +42,13 @@ class ChatRoutes {
             conversationId: conversationId,
             otherUser: extra?['otherUser'] ?? '',
             displayName: extra?['displayName'] ?? '',
+            otherUserAvatar: extra?['otherUserAvatar'],
             initialMessage: extra?['initialMessage'],
             adId: extra?['adId'],
             adTitle: extra?['adTitle'],
             adPrice: extra?['adPrice'],
             adImage: extra?['adImage'],
+            adImageFileId: extra?['adImageFileId'],
           ),
         );
       },
@@ -71,11 +73,13 @@ class ChatNavigation {
     required String conversationId,
     required String user,
     required String displayName,
+    final String? otherUserAvatar,
     String? initialMessage,
     final String? adId,
     final String? adTitle,
     final String? adPrice,
     final String? adImage,
+    final String? adImageFileId,
   }) {
     final router = GoRouter.of(context);
 
@@ -95,11 +99,13 @@ class ChatNavigation {
       extra: {
         'otherUser': user,
         'displayName': displayName,
+        'otherUserAvatar': otherUserAvatar,
         'initialMessage': initialMessage,
         'adId': adId,
         'adTitle': adTitle,
         'adPrice': adPrice,
         'adImage': adImage,
+        'adImageFileId': adImageFileId,
       },
     );
   }

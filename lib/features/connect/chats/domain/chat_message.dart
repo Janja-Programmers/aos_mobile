@@ -85,8 +85,39 @@ class ChatMessage {
     );
   }
 
+  factory ChatMessage.temp({
+    required String id,
+    required String sender,
+    String? content,
+    List<ChatAttachment> attachments = const [],
+    String? ad,
+  }) {
+    final hasText = content?.trim().isNotEmpty == true;
+    final hasFiles = attachments.isNotEmpty;
+
+    return ChatMessage(
+      id: id,
+      sender: sender,
+      content: hasText ? content!.trim() : null,
+      messageType: hasText && hasFiles
+          ? 'mixed'
+          : hasFiles
+          ? 'attachment'
+          : 'text',
+      ad: ad,
+      hasAttachments: hasFiles,
+      createdAt: DateTime.now(),
+      deliveredAt: null,
+      readAt: null,
+      attachments: attachments,
+    );
+  }
+
   bool get hasText => (content ?? '').trim().isNotEmpty;
   bool get isTextOnly => messageType == 'text' && attachments.isEmpty;
   bool get isMixed => messageType == 'mixed';
   bool get hasOnlyAttachments => !hasText && attachments.isNotEmpty;
+  bool get isSystemMessage {
+    return sender.trim().toLowerCase() == 'administrator';
+  }
 }

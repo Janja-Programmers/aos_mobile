@@ -65,8 +65,15 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
         title: Text("Connect", style: context.h4),
         actions: [
           PopupMenuButton<int>(
-            color: colors.surface,
-            icon: const Icon(Icons.menu),
+            color: colors.elevated,
+            surfaceTintColor: Colors.transparent,
+            shadowColor: colors.black.withOpacity(0.12),
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: colors.border, width: 1),
+            ),
+            icon: Icon(Icons.menu, color: colors.textPrimary),
             onSelected: (index) => AppNavigation.goTo(context, ref, index),
             itemBuilder: (context) {
               final items = AppNavConfig.items(context);
@@ -76,26 +83,27 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
                 final item = items[i];
                 final isActive = location.contains(item.routeName);
 
+                final itemColor = isActive
+                    ? colors.primary
+                    : colors.textPrimary;
+
                 return PopupMenuItem<int>(
                   value: i,
-                  child: Row(
-                    children: [
-                      Icon(
-                        item.icon,
-                        color: isActive
-                            ? context.appColors.primary
-                            : context.appColors.textPrimary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        item.label,
-                        style: context.p.copyWith(
-                          color: isActive
-                              ? context.appColors.primary
-                              : context.appColors.textPrimary,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(item.icon, color: itemColor),
+                        const SizedBox(width: 8),
+                        Text(
+                          item.label,
+                          style: context.p.copyWith(color: itemColor),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               });
@@ -156,6 +164,9 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
     final isSelected = selectedTab == index;
     final colors = context.appColors;
 
+    final selectedColor = colors.white;
+    final unselectedColor = colors.textPrimary.withOpacity(.75);
+
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -176,12 +187,12 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: isSelected ? colors.white : colors.black),
+              Icon(icon, color: isSelected ? selectedColor : unselectedColor),
               const SizedBox(width: 6),
               Text(
                 title,
                 style: TextStyle(
-                  color: isSelected ? colors.white : colors.black,
+                  color: isSelected ? selectedColor : unselectedColor,
                   fontWeight: FontWeight.w600,
                 ),
               ),

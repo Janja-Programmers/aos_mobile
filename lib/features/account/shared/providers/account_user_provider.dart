@@ -8,6 +8,9 @@ final currentUserProvider = Provider<String?>((ref) {
 
   if (profile.isEmpty) return null;
 
-  // 🔥 Adjust this key based on your backend
-  return profile['email']?.toString();
+  final email = profile['email']?.toString().trim();
+
+  if (email == null || email.isEmpty) return null;
+
+  return email.toLowerCase();
 });

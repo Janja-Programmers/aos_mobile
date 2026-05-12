@@ -63,6 +63,17 @@ class AppTheme {
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
+
+      popupMenuTheme: PopupMenuThemeData(
+        color: tokens.elevated,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: tokens.black.withOpacity(0.12),
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: tokens.border, width: 1),
+        ),
+      ),
     );
   }
 
@@ -93,6 +104,7 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
       ),
+
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: tokens.surface,
@@ -127,6 +139,17 @@ class AppTheme {
           elevation: 0,
           minimumSize: const Size.fromHeight(56),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
+
+      popupMenuTheme: PopupMenuThemeData(
+        color: tokens.elevated,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: tokens.black.withOpacity(0.12),
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: tokens.border, width: 1),
         ),
       ),
     );

@@ -1,12 +1,13 @@
 import 'dart:async';
 
-import 'package:africaonlinestores/features/connect/chats/domain/chat_attachment.dart';
-import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
+
 import 'package:africaonlinestores/features/connect/chats/controllers/chat_service_providers.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/chat_attachment.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
 
@@ -85,60 +86,62 @@ class ChatMessagesController
   // -----------------------------
   // Optimistic Send
   // -----------------------------
-  Future<void> sendTempMessage({
+  Future<bool> sendTempMessage({
     String? text,
     String? adId,
     String? adTitle,
     String? adPrice,
     String? adImage,
+    String? adImageFileId,
+    String? senderId,
     List<ChatInputAttachment> attachments = const [],
   }) async {
+    final safeSenderId = senderId?.trim().toLowerCase();
+
+    if (safeSenderId == null || safeSenderId.isEmpty) {
+      return false;
+    }
+
     final trimmedText = text?.trim();
 
     final hasText = trimmedText != null && trimmedText.isNotEmpty;
     final hasAttachments = attachments.isNotEmpty;
     final hasAd = adId != null && adId.trim().isNotEmpty;
 
-    if (!hasText && !hasAttachments && !hasAd) return;
+    if (!hasText && !hasAttachments && !hasAd) return false;
 
-    final tempId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
+    final tempId = 'temp-${DateTime.now().microsecondsSinceEpoch}';
 
-    final apiAttachments = attachments
-        .map((a) => a.toApi(ad: adId ?? ''))
+    final validAttachments = attachments
+        .where((a) => a.fileId.trim().isNotEmpty && a.type.trim().isNotEmpty)
         .toList();
 
-    /// Add ad-only payload when there are no normal attachments.
-    if (hasAd && apiAttachments.isEmpty) {
-      apiAttachments.add({'ad': adId, 'file': '', 'file_type': 'ad'});
-    }
+    final apiAttachments = validAttachments
+        .map((a) => a.toApi(ad: hasAd ? adId : null))
+        .toList();
 
-    final tempMsg = ChatMessage(
+    final tempAttachments = validAttachments.asMap().entries.map((entry) {
+      final index = entry.key;
+      final attachment = entry.value;
+
+      return ChatAttachment(
+        url: attachment.previewUrl.trim().isNotEmpty
+            ? attachment.previewUrl.trim()
+            : attachment.fileId.trim(),
+        type: attachment.type.trim(),
+        sortOrder: index,
+      );
+    }).toList();
+
+    final tempMessage = ChatMessage.temp(
       id: tempId,
-      sender: currentUser,
-      content: hasText ? trimmedText : null,
-      messageType: hasAd
-          ? hasText || hasAttachments
-                ? 'mixed'
-                : 'ad'
-          : hasText && hasAttachments
-          ? 'mixed'
-          : hasAttachments
-          ? 'attachment'
-          : 'text',
+      sender: safeSenderId,
+      content: trimmedText,
+      attachments: tempAttachments,
       ad: hasAd ? adId : null,
-      hasAttachments: hasAttachments || hasAd,
-      createdAt: DateTime.now(),
-      deliveredAt: null,
-      readAt: null,
-      attachments: attachments
-          .map(
-            (a) =>
-                ChatAttachment(url: a.previewUrl, type: a.type, sortOrder: 0),
-          )
-          .toList(),
     );
 
-    _messages.add(tempMsg);
+    _messages.add(tempMessage);
     state = AsyncData(List.of(_messages));
 
     final realMsg = await sendMessage(
@@ -150,7 +153,20 @@ class ChatMessagesController
     if (realMsg == null) {
       _messages.removeWhere((m) => m.id == tempId);
       state = AsyncData(List.of(_messages));
+      return false;
     }
+
+    final index = _messages.indexWhere((m) => m.id == tempId);
+
+    if (index != -1) {
+      _messages[index] = realMsg;
+    } else {
+      _messages.add(realMsg);
+    }
+
+    state = AsyncData(List.of(_messages));
+
+    return true;
   }
 
   // -----------------------------
@@ -172,10 +188,6 @@ class ChatMessagesController
     if (!hasText && !hasAttachments && !hasAd) return null;
 
     final apiAttachments = List<Map<String, dynamic>>.from(attachments);
-
-    if (hasAd && apiAttachments.isEmpty) {
-      apiAttachments.add({'ad': ad, 'file': '', 'file_type': 'ad'});
-    }
 
     final res = await repo.sendMessage(
       conversationId: conversationId,

@@ -23,6 +23,7 @@ class ChatActions {
     String? adTitle,
     String? adPrice,
     String? adImage,
+    String? adImageFileId,
   }) async {
     if (_isOpening) return;
     _isOpening = true;
@@ -37,7 +38,7 @@ class ChatActions {
       if (res.isLeft) {
         ShowSnack(
           context,
-          res.leftOrNull?.message ?? 'Failed to start chat',
+          res.leftOrNull?.message ?? 'Failed to start chat. Please try again.',
         ).error();
         return;
       }
@@ -61,10 +62,11 @@ class ChatActions {
         adTitle: adTitle,
         adPrice: adPrice,
         adImage: adImage,
+        adImageFileId: adImageFileId,
       );
     } catch (e) {
       if (context.mounted) {
-        ShowSnack(context, 'Failed to start chat').error();
+        ShowSnack(context, 'Failed to start chat. Please try again.').error();
       }
 
       appLogger.e('Failed to start chat: $e');

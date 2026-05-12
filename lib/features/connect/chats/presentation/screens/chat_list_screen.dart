@@ -113,6 +113,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                         conversationId: conv.id,
                         user: conv.user,
                         displayName: conv.displayName,
+                        otherUserAvatar: conv.avatar,
                       );
                     },
                   );
@@ -146,7 +147,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _chip("All Chat", "all"),
+          _chip("All Chats", "all"),
           _chip("Read", "read"),
           _chip("Unread", "unread"),
         ],

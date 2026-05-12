@@ -10,7 +10,9 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 import 'package:africaonlinestores/features/connect/chats/controllers/chat_presence_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/controllers/chat_typing_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/presence_label.dart';
 
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
@@ -19,16 +21,20 @@ import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
   const ChatAppBar({
     super.key,
+    required this.conversationId,
     required this.displayName,
     required this.otherUserId,
     this.imageUrl,
+    this.lastSeen,
     this.backgroundColor,
     this.textColor,
   });
 
+  final String conversationId;
   final String displayName;
   final String otherUserId;
   final String? imageUrl;
+  final DateTime? lastSeen;
   final Color? backgroundColor;
   final Color? textColor;
 
@@ -58,10 +64,19 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
     try {
       await HapticFeedback.mediumImpact();
 
-      await manager.startOutgoingCall(
+      final success = await manager.startOutgoingCall(
         userId: widget.otherUserId,
         callType: type,
+        receiver: CallParticipant(
+          userId: widget.otherUserId,
+          displayName: widget.displayName,
+          avatarUrl: widget.imageUrl,
+        ),
       );
+
+      if (!success && mounted) {
+        ShowSnack(context, 'Failed to start call').error();
+      }
     } catch (_) {
       if (mounted) {
         ShowSnack(context, 'Failed to start call').error();
@@ -77,8 +92,21 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    final presenceMap = ref.watch(chatPresenceControllerProvider);
-    final presence = presenceMap[widget.otherUserId];
+    final presence = ref.watch(
+      chatPresenceControllerProvider.select((map) => map[widget.otherUserId]),
+    );
+
+    final isTyping = ref.watch(
+      chatTypingControllerProvider.select(
+        (map) => map[widget.conversationId] == true,
+      ),
+    );
+
+    final isOnline = ref
+        .read(chatPresenceControllerProvider.notifier)
+        .isUserOnline(widget.otherUserId);
+
+    final lastSeen = presence?.lastSeen ?? widget.lastSeen;
 
     final fg = widget.textColor ?? colors.textPrimary;
     final bg = widget.backgroundColor ?? colors.surface;
@@ -118,11 +146,11 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
                   overflow: TextOverflow.ellipsis,
                 ),
 
-                if (presence != null)
-                  PresenceLabel(
-                    isOnline: presence.isOnline,
-                    lastSeen: presence.lastSeen,
-                  ),
+                PresenceLabel(
+                  isTyping: isTyping,
+                  isOnline: isOnline,
+                  lastSeen: lastSeen,
+                ),
               ],
             ),
           ),
@@ -162,6 +190,13 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
         /// ⋮ MENU
         PopupMenuButton<int>(
           color: colors.surface,
+          surfaceTintColor: colors.surface,
+          shadowColor: colors.black.withOpacity(0.12),
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: colors.border, width: 1),
+          ),
           icon: Icon(Icons.more_vert, color: fg),
           onSelected: (index) => AppNavigation.goTo(context, ref, index),
           itemBuilder: (context) {

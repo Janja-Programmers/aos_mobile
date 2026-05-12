@@ -285,6 +285,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                         adTitle: ad.title,
                         adPrice: ad.currentPrice,
                         adImage: ad.primaryImage,
+                        adImageFileId: ad.primaryImageFileId,
                       );
                     },
                   );

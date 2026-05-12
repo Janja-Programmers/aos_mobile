@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/features/ads/domain/aos_ad_image.dart';
+
 class AOSAdListItem {
   const AOSAdListItem({
     required this.id,
@@ -136,6 +138,7 @@ class AOSAdDetails {
     required this.averageRating,
     required this.totalReviews,
     required this.images,
+    required this.imageItems,
     required this.video,
     required this.specs,
     required this.sellerId,
@@ -162,19 +165,48 @@ class AOSAdDetails {
   final String description;
   final String sellerId;
   final List<String> images;
+
+  /// Rich image items with File DocType id.
+  final List<AOSAdImage> imageItems;
+
   final String? video;
   final List<Map<String, String>> specs;
 
+  AOSAdImage? get primaryImageItem {
+    if (imageItems.isEmpty) return null;
+
+    final primary = imageItems.where((e) => e.isPrimary).toList();
+
+    if (primary.isNotEmpty) {
+      return primary.first;
+    }
+
+    if (primaryImage.trim().isNotEmpty) {
+      return imageItems.firstWhere(
+        (e) => e.image == primaryImage,
+        orElse: () => imageItems.first,
+      );
+    }
+
+    return imageItems.first;
+  }
+
+  String? get primaryImageFileId {
+    final value = primaryImageItem?.fileId.trim();
+    return value == null || value.isEmpty ? null : value;
+  }
+
   factory AOSAdDetails.fromJson(Map<String, dynamic> json) {
+    final imageItems = <AOSAdImage>[];
     final images = <String>[];
+
     if (json['images'] is List) {
       for (final e in (json['images'] as List)) {
-        if (e is Map) {
-          final u = (e['image'] ?? '').toString();
-          if (u.isNotEmpty) images.add(u);
-        } else {
-          final u = e.toString();
-          if (u.isNotEmpty) images.add(u);
+        final item = AOSAdImage.fromJson(e);
+
+        if (item.image.isNotEmpty) {
+          imageItems.add(item);
+          images.add(item.image);
         }
       }
     }
@@ -195,8 +227,10 @@ class AOSAdDetails {
           final boolVal = e['value_bool'];
 
           String v = text.trim();
+
           if (v.isEmpty && num != null) v = num.toString();
           if (v.isEmpty && date != null) v = date.toString();
+
           if (v.isEmpty && boolVal != null) {
             final b = boolVal.toString().trim();
             if (b == '1') v = 'Yes';
@@ -211,17 +245,13 @@ class AOSAdDetails {
       }
     }
 
-    final allImages = (json['images'] is List)
-        ? (json['images'] as List)
-        : const [];
-
     String primary = (json['primary_image'] ?? json['image'] ?? '').toString();
 
-    if (primary.isEmpty && allImages.isNotEmpty) {
-      final first = allImages.first;
-      if (first is Map) {
-        primary = (first['image'] ?? '').toString();
-      }
+    if (primary.isEmpty && imageItems.isNotEmpty) {
+      final primaryItem = imageItems.where((e) => e.isPrimary).toList();
+      primary = primaryItem.isNotEmpty
+          ? primaryItem.first.image
+          : imageItems.first.image;
     }
 
     return AOSAdDetails(
@@ -253,6 +283,7 @@ class AOSAdDetails {
       description: (json['description'] ?? '').toString(),
       sellerId: (json['seller'] ?? '').toString(),
       images: images,
+      imageItems: imageItems,
       video: (json['video'] ?? '').toString().trim().isEmpty
           ? null
           : (json['video'] ?? '').toString(),

@@ -10,7 +10,7 @@ class AppCircularAvatar extends StatefulWidget {
     super.key,
     required this.name,
     this.imageUrl,
-    this.radius = 40,
+    this.radius = 32,
     this.backgroundColor,
     this.textColor,
   });
@@ -29,45 +29,55 @@ class _AppCircularAvatarState extends State<AppCircularAvatar> {
   bool _imageFailed = false;
 
   @override
+  void didUpdateWidget(covariant AppCircularAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.imageUrl != widget.imageUrl) {
+      _imageFailed = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    final hasImage =
-        widget.imageUrl != null && widget.imageUrl!.isNotEmpty && !_imageFailed;
+    final rawImageUrl = widget.imageUrl?.trim();
+    final avatarUrl = buildFileUrl(rawImageUrl)?.trim();
 
-    final imgUrl = buildFileUrl(widget.imageUrl);
+    final hasAvatar =
+        avatarUrl != null && avatarUrl.isNotEmpty && !_imageFailed;
 
     final bgColor = widget.backgroundColor ?? colors.primary.withOpacity(0.7);
-
     final textColor = widget.textColor ?? colors.white;
 
     return CircleAvatar(
       radius: widget.radius,
       backgroundColor: bgColor,
-
-      /// ✅ Only use image if valid
-      backgroundImage: hasImage ? NetworkImage(imgUrl!) : null,
-
-      /// 🔥 Handle failure
-      onBackgroundImageError: hasImage
-          ? (_, _) => setState(() => _imageFailed = true)
+      backgroundImage: hasAvatar ? NetworkImage(avatarUrl) : null,
+      onBackgroundImageError: hasAvatar
+          ? (_, _) {
+              if (mounted) {
+                setState(() => _imageFailed = true);
+              }
+            }
           : null,
-
-      /// ✅ Fallback to initials
-      child: !hasImage
-          ? FittedBox(
+      child: hasAvatar
+          ? null
+          : FittedBox(
               child: Text(
                 _initial,
                 textAlign: TextAlign.center,
                 style: context.h4.copyWith(color: textColor, height: 1),
               ),
-            )
-          : null,
+            ),
     );
   }
 
   String get _initial {
-    if (widget.name.isEmpty) return '?';
-    return widget.name.characters.first.toUpperCase();
+    final name = widget.name.trim();
+
+    if (name.isEmpty) return '?';
+
+    return name.characters.first.toUpperCase();
   }
 }

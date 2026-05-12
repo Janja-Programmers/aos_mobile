@@ -119,7 +119,7 @@ class OnboardingController extends StateNotifier<OnboardingState> {
           (savedCountry.isNotEmpty ? savedCountry : deviceCountry ?? 'KE'),
       currencyCode:
           state.currencyCode ??
-          (savedCurrency.isNotEmpty ? savedCurrency : 'KSH'),
+          (savedCurrency.isNotEmpty ? savedCurrency : 'KES'),
       didInitDefaults: true,
     );
   }

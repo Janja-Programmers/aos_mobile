@@ -190,7 +190,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                       error: (_, _) => const SizedBox.shrink(),
                       data: (seller) {
                         return AdSellerInfoSection(
-                          shopName: seller.shopName,
+                          displayName: seller.displayName,
                           avatar: seller.avatar,
                           rating: seller.rating,
                           totalReviews: seller.totalReviews,
@@ -198,6 +198,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                           totalAds: seller.totalAds,
                           joined: seller.joined,
                           isFollowing: seller.isFollowing,
+                          isVerified: seller.isVerified,
                           onVisitStore: () => SellerNavigation.toSellerStore(
                             context,
                             ad.sellerId,
@@ -279,7 +280,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                         context: context,
                         ref: ref,
                         user: ad.sellerId,
-                        displayName: seller!.shopName,
+                        displayName: seller!.displayName,
                         initialMessage: "Hi, I'm interested in ${ad.title}",
                         adId: ad.id,
                         adTitle: ad.title,
@@ -300,7 +301,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
 }
 
 CallParticipant _buildReceiver(AOSAdDetails ad, AOSSellerProfile? seller) {
-  final sellerName = seller?.shopName.trim();
+  final sellerName = seller?.displayName.trim();
 
   return CallParticipant(
     userId: ad.sellerId,

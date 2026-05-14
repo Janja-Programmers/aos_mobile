@@ -38,7 +38,7 @@ class _StoreCustomizationScreenState
     final seller = ref.read(sellerStateProvider(widget.sellerId)).seller;
 
     if (seller != null) {
-      _descCtrl.text = seller.aboutShop ?? '';
+      _descCtrl.text = seller.aboutBusiness ?? '';
     }
 
     _descCtrl.addListener(() {
@@ -122,8 +122,8 @@ class _StoreCustomizationScreenState
       final error = await ref
           .read(sellerStateProvider(widget.sellerId).notifier)
           .updateSellerProfile(
-            aboutShop: _descCtrl.text,
-            avatar: _uploadedAvatar,
+            aboutBusiness: _descCtrl.text,
+            shopBanner: _uploadedAvatar,
           );
 
       if (!mounted) return;
@@ -201,7 +201,7 @@ class _StoreCustomizationScreenState
                           child: CircularProgressIndicator(),
                         )
                       : AppCircularAvatar(
-                          name: seller.shopName,
+                          name: seller.displayName,
                           imageUrl: avatar,
                           radius: 40,
                         ),

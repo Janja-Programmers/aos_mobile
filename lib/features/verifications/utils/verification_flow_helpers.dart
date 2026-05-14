@@ -1,5 +1,5 @@
-import 'package:africaonlinestores/features/sellers/seller_verification/controllers/verification_form_state.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/utils/verification_steps_builder.dart';
+import 'package:africaonlinestores/features/verifications/controllers/verification_form_state.dart';
+import 'package:africaonlinestores/features/verifications/utils/verification_steps_builder.dart';
 
 Set<int> completedSteps(SellerVerificationState state) {
   final steps = buildVerificationSteps();

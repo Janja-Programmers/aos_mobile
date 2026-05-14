@@ -23,7 +23,6 @@ class PushTokenApi {
     required PushTokenDevice device,
   }) async {
     try {
-      appLogger.i('registerPushToken API LAYER JSON: ${device.toJson()}');
       final res = await _apiClient.post(
         ApiEndpoints.registerPushToken,
         data: device.toJson(),
@@ -35,14 +34,10 @@ class PushTokenApi {
         return Either.left(result.leftOrNull!);
       }
 
-      appLogger.i('Push token registered');
-
       return Either.right(true);
-    } on DioException catch (e, s) {
-      appLogger.e('registerPushToken Dio error', error: e, stackTrace: s);
+    } on DioException catch (e) {
       return Either.left(mapDioException(e));
-    } catch (e, s) {
-      appLogger.e('registerPushToken unknown error', error: e, stackTrace: s);
+    } catch (e) {
       return Either.left(const Failure('Failed to register push token'));
     }
   }
@@ -68,11 +63,9 @@ class PushTokenApi {
       appLogger.i('Push token deactivated');
 
       return Either.right(true);
-    } on DioException catch (e, s) {
-      appLogger.e('deactivatePushToken Dio error', error: e, stackTrace: s);
+    } on DioException catch (e) {
       return Either.left(mapDioException(e));
-    } catch (e, s) {
-      appLogger.e('deactivatePushToken unknown error', error: e, stackTrace: s);
+    } catch (e) {
       return Either.left(const Failure('Failed to deactivate push token'));
     }
   }

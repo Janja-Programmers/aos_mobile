@@ -35,7 +35,7 @@ class SellerHeaderSection extends ConsumerWidget {
         children: [
           const SizedBox(height: 10),
 
-          AppCircularAvatar(name: seller.shopName, imageUrl: seller.avatar),
+          AppCircularAvatar(name: seller.displayName, imageUrl: seller.avatar),
 
           const SizedBox(height: 16),
 
@@ -44,7 +44,7 @@ class SellerHeaderSection extends ConsumerWidget {
             children: [
               Flexible(
                 child: Text(
-                  seller.shopName,
+                  seller.displayName,
                   style: context.h5,
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,

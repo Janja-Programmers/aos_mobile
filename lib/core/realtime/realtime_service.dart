@@ -8,11 +8,7 @@ import 'package:africaonlinestores/core/realtime/realtime_event.dart';
 import 'package:africaonlinestores/core/realtime/realtime_event_type.dart';
 
 class RealtimeService {
-  RealtimeService(/* deps */) {
-    appLogger.w(
-      '🧬 RealtimeService CREATED instance=${identityHashCode(this)}',
-    );
-  }
+  RealtimeService(/* deps */);
 
   IO.Socket? _socket;
 
@@ -37,21 +33,12 @@ class RealtimeService {
     required String sid,
     required String email,
   }) {
-    appLogger.i(
-      '🔌 Realtime connect() called '
-      'service=${identityHashCode(this)} '
-      'socket=${_socket == null ? "null" : identityHashCode(_socket)}',
-    );
-
     // 🔥 Prevent duplicate connections
     if (_socket != null && _isConnected) {
       return;
     }
 
     final url = "$baseUrl/$siteName";
-
-    appLogger.i('[Realtime] Connecting to $url');
-    appLogger.i('[Realtime] User: $email');
 
     _socket = IO.io(
       url,
@@ -126,14 +113,12 @@ class RealtimeService {
     }
 
     _socket!.emit('join_live_room', {'live_id': liveId});
-    appLogger.i('[Realtime] ✅ Joined room emitted: $liveId');
   }
 
   Future<void> leaveSocketRoom(String liveId) async {
     if (!_isConnected || _socket == null) return;
 
     _socket!.emit('leave_live_room', {'live_id': liveId});
-    appLogger.i('[Realtime] ✅ Leave room emitted: $liveId');
   }
 
   // -----------------------------

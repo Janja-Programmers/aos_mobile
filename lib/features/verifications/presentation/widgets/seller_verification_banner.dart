@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/controllers/get_my_verification_provider.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/controllers/verification_controller_provider.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/domain/verification_status.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/presentation/widgets/base_verification_banner.dart';
+import 'package:africaonlinestores/features/verifications/controllers/get_my_verification_provider.dart';
+import 'package:africaonlinestores/features/verifications/controllers/verification_controller_provider.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification_status.dart';
+import 'package:africaonlinestores/features/verifications/presentation/widgets/base_verification_banner.dart';
 
 class SellerVerificationBanner extends StatelessWidget {
   const SellerVerificationBanner({super.key, required this.state});
@@ -42,7 +42,7 @@ class SellerVerificationBanner extends StatelessWidget {
           icon: Icons.check_circle,
           title: "Verified seller",
           subtitle: state.verifiedOn != null
-              ? "Verified on ${state.verifiedOn}"
+              ? "Verified on ${_formatVerifiedDate(state.verifiedOn)}"
               : "Your account is verified",
         );
 
@@ -57,7 +57,7 @@ class SellerVerificationBanner extends StatelessWidget {
               final container = ProviderScope.containerOf(context);
 
               final verification = await container.read(
-                myVerificationProvider.future,
+                myBusinessVerificationProvider.future,
               );
 
               container
@@ -91,5 +91,59 @@ class SellerVerificationBanner extends StatelessWidget {
     if (cleaned.length <= maxLength) return cleaned;
 
     return "${cleaned.substring(0, maxLength)}...";
+  }
+
+  String _formatVerifiedDate(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return "";
+    }
+
+    final normalized = value.trim().replaceFirst(" ", "T");
+    final date = DateTime.tryParse(normalized);
+
+    if (date == null) {
+      return value;
+    }
+
+    final day = date.day;
+    final month = _monthName(date.month);
+    final suffix = _daySuffix(day);
+
+    return "$day$suffix $month ${date.year}";
+  }
+
+  String _monthName(int month) {
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    if (month < 1 || month > 12) return "";
+    return months[month - 1];
+  }
+
+  String _daySuffix(int day) {
+    if (day >= 11 && day <= 13) return "th";
+
+    switch (day % 10) {
+      case 1:
+        return "st";
+      case 2:
+        return "nd";
+      case 3:
+        return "rd";
+      default:
+        return "th";
+    }
   }
 }

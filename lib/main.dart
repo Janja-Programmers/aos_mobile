@@ -1,6 +1,8 @@
-import 'package:africaonlinestores/firebase_options.dart';
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -36,77 +38,89 @@ import 'package:africaonlinestores/features/notifications/application/services/i
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/listeners/upload_short_listener.dart';
 
+import 'package:africaonlinestores/firebase_options.dart';
+
 import 'package:africaonlinestores/shared/widgets/active_call_overlay.dart';
+import 'package:africaonlinestores/shared/widgets/app_error_fallback.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // 🔥 MUST initialize Firebase here again (separate isolate)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // You CANNOT use:
-  // - ref
-  // - navigation
-  // - UI
-
-  // ✅ Only safe operations
-  appLogger.i('[FCM BG] Message received: ${message.data}');
-
-  // Optional (future):
-  // - Save to local storage (Hive/SharedPreferences)
-  // - Schedule local notification
 }
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+void main() {
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      FlutterError.onError = (FlutterErrorDetails details) {
+        FlutterError.presentError(details);
+      };
 
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      PlatformDispatcher.instance.onError = (error, stack) {
+        return true;
+      };
 
-  const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+      ErrorWidget.builder = (FlutterErrorDetails details) {
+        return const AppErrorFallback();
+      };
 
-  const iosInit = DarwinInitializationSettings(
-    requestAlertPermission: true,
-    requestBadgePermission: true,
-    requestSoundPermission: true,
-  );
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
 
-  const initSettings = InitializationSettings(
-    android: androidInit,
-    iOS: iosInit,
-  );
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-  await flutterLocalNotificationsPlugin.initialize(
-    settings: initSettings,
-    onDidReceiveNotificationResponse: (response) {
-      appLogger.i('Notification tapped: ${response.payload}');
-    },
-  );
+      const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
 
-  // 🔥 CREATE CHANNEL
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin
-      >()
-      ?.createNotificationChannel(AndroidNotificationConfig.channel);
+      const iosInit = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
 
-  final savedTheme = await ThemePrefs.readThemeMode();
-  final initialTheme = savedTheme ?? ThemeMode.light;
-  final prefs = await SharedPreferences.getInstance();
+      const initSettings = InitializationSettings(
+        android: androidInit,
+        iOS: iosInit,
+      );
 
-  runApp(
-    ProviderScope(
-      overrides: [
-        themeModeProvider.overrideWith((ref) => ThemeController(initialTheme)),
-        onboardingStorageProvider.overrideWith(
-          (ref) => OnboardingStorage(prefs),
+      await flutterLocalNotificationsPlugin.initialize(
+        settings: initSettings,
+        onDidReceiveNotificationResponse: (response) {
+          appLogger.i('Notification tapped: ${response.payload}');
+        },
+      );
+
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(AndroidNotificationConfig.channel);
+
+      final savedTheme = await ThemePrefs.readThemeMode();
+      final initialTheme = savedTheme ?? ThemeMode.light;
+      final prefs = await SharedPreferences.getInstance();
+
+      runApp(
+        ProviderScope(
+          overrides: [
+            themeModeProvider.overrideWith(
+              (ref) => ThemeController(initialTheme),
+            ),
+            onboardingStorageProvider.overrideWith(
+              (ref) => OnboardingStorage(prefs),
+            ),
+          ],
+          child: const AppRoot(),
         ),
-      ],
-      child: const AppRoot(),
-    ),
+      );
+    },
+    (error, stack) {
+      appLogger.e('Uncaught zone error', error: error, stackTrace: stack);
+    },
   );
 }
 

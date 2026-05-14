@@ -1,16 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/features/sellers/application/controllers/seller_controller.dart';
 import 'package:africaonlinestores/features/sellers/application/controllers/seller_state.dart';
 import 'package:africaonlinestores/features/sellers/data/seller_api.dart';
 import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
-
-/// API provider
-final sellerApiProvider = Provider<SellerApi>((ref) {
-  return SellerApi(ref.read(apiClientProvider));
-});
 
 /// Controller provider (API wrapper)
 final sellerControllerProvider = Provider<SellerController>((ref) {
@@ -85,38 +79,56 @@ class SellerStateController extends StateNotifier<SellerState> {
     );
   }
 
-  /// UPDATE SELLERPROFILE
+  /// UPDATE SELLER PROFILE
   Future<String?> updateSellerProfile({
-    String? shopName,
-    String? aboutShop,
-    String? avatar,
-    String? banner,
+    String? businessCategory,
+    String? aboutBusiness,
+    String? businessAddress,
+    String? shopBanner,
+    List<Map<String, dynamic>>? operatingHours,
   }) async {
     final controller = ref.read(sellerControllerProvider);
 
-    state = state.copyWith(loading: true);
+    state = state.copyWith(loading: true, error: null);
 
     final res = await controller.updateSellerProfile(
-      shopName: shopName,
-      aboutShop: aboutShop,
-      avatar: avatar,
-      banner: banner,
+      businessCategory: businessCategory,
+      aboutBusiness: aboutBusiness,
+      businessAddress: businessAddress,
+      shopBanner: shopBanner,
+      operatingHours: operatingHours,
     );
 
     return res.fold(
       (failure) {
-        state = state.copyWith(loading: false);
+        state = state.copyWith(loading: false, error: failure.message);
+
         return failure.message;
       },
-      (data) {
-        final updatedSeller = state.seller?.copyWith(
-          shopName: data['shop_name'],
-          aboutShop: data['about_shop'],
-          avatar: data['avatar'],
-          shopBanner: data['shop_banner'],
+      (data) async {
+        final responseData = data['data'] is Map
+            ? Map<String, dynamic>.from(data['data'] as Map)
+            : Map<String, dynamic>.from(data);
+
+        final currentSeller = state.seller;
+
+        final updatedSeller = currentSeller?.copyWith(
+          businessCategory: responseData['business_category']?.toString(),
+          aboutBusiness: responseData['about_business']?.toString(),
+          businessAddress: responseData['business_address']?.toString(),
+          shopBanner: responseData['shop_banner']?.toString(),
+          operatingHours: responseData['operating_hours'] is List
+              ? List<dynamic>.from(responseData['operating_hours'] as List)
+              : null,
         );
 
-        state = state.copyWith(loading: false, seller: updatedSeller);
+        state = state.copyWith(
+          loading: false,
+          error: null,
+          seller: updatedSeller,
+        );
+
+        await load();
 
         return null;
       },

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/features/sellers/seller_verification/domain/verification.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/presentation/steps/basic_info_step.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/presentation/steps/document_step.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/presentation/steps/review_step.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification.dart';
+import 'package:africaonlinestores/features/verifications/presentation/steps/basic_info_step.dart';
+import 'package:africaonlinestores/features/verifications/presentation/steps/document_step.dart';
+import 'package:africaonlinestores/features/verifications/presentation/steps/review_step.dart';
 
 typedef StepBuilder = Widget Function(BuildContext context);
-typedef StepValidator = bool Function(Verification data);
+typedef StepValidator = bool Function(BusinessVerification data);
 
 class VerificationStepDef {
   const VerificationStepDef({

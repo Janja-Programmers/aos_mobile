@@ -1,31 +1,58 @@
 class AOSSellerProfile {
   const AOSSellerProfile({
-    required this.shopName,
+    required this.seller,
+    required this.user,
+    required this.displayName,
     required this.avatar,
+    required this.businessCategory,
+    required this.sellerType,
     required this.shopBanner,
-    required this.aboutShop,
+    required this.aboutBusiness,
+    required this.businessAddress,
+    required this.isVerified,
     required this.rating,
     required this.totalReviews,
     required this.totalFollowers,
+    required this.totalFollowing,
     required this.totalAds,
     required this.joined,
+    required this.canEdit,
+    required this.targetUser,
+    required this.isSelf,
     required this.isFollowing,
-    required this.isVerified,
+    required this.isFollowedBy,
+    required this.isFriend,
+    required this.relationshipStatus,
+    required this.actionLabel,
+    required this.operatingHours,
   });
 
-  final String shopName;
-  final String avatar;
+  final String seller;
+  final String user;
+  final String displayName;
+  final String? avatar;
+  final String? businessCategory;
+  final String? sellerType;
   final String? shopBanner;
-  final String? aboutShop;
+  final String? aboutBusiness;
+  final String? businessAddress;
+  final bool isVerified;
   final double rating;
   final int totalReviews;
   final int totalFollowers;
+  final int totalFollowing;
   final int totalAds;
   final String joined;
+  final bool canEdit;
+  final String targetUser;
+  final bool isSelf;
   final bool isFollowing;
-  final bool isVerified;
+  final bool isFollowedBy;
+  final bool isFriend;
+  final String relationshipStatus;
+  final String actionLabel;
+  final List<dynamic> operatingHours;
 
-  /// ✅ SAFE PARSING
   factory AOSSellerProfile.fromJson(Map<String, dynamic> json) {
     double parseDouble(dynamic v) {
       if (v == null) return 0;
@@ -37,64 +64,120 @@ class AOSSellerProfile {
       return int.tryParse(v.toString()) ?? 0;
     }
 
-    String? normalizeNullable(dynamic v) {
-      final str = (v ?? '').toString().trim();
-      return str.isEmpty ? null : str;
+    String parseString(dynamic v) {
+      return (v ?? '').toString().trim();
     }
 
+    String? parseNullableString(dynamic v) {
+      final value = parseString(v);
+      return value.isEmpty ? null : value;
+    }
+
+    final displayName = parseString(json['display_name']);
+
     return AOSSellerProfile(
-      shopName: (json['shop_name'] ?? '').toString(),
-      avatar: (json['avatar'] ?? '').toString(),
-      shopBanner: normalizeNullable(json['shop_banner']),
-      aboutShop: normalizeNullable(json['about_shop']),
+      seller: parseString(json['seller']),
+      user: parseString(json['user']),
+      displayName: displayName.isNotEmpty ? displayName : 'Seller',
+      avatar: parseNullableString(json['avatar']),
+      businessCategory: parseNullableString(json['business_category']),
+      sellerType: parseNullableString(json['seller_type']),
+      shopBanner: parseNullableString(json['shop_banner']),
+      aboutBusiness: parseNullableString(json['about_business']),
+      businessAddress: parseNullableString(json['business_address']),
+      isVerified: parseBool(json['is_verified']),
       rating: parseDouble(json['rating']),
       totalReviews: parseInt(json['total_reviews']),
       totalFollowers: parseInt(json['total_followers']),
+      totalFollowing: parseInt(json['total_following']),
       totalAds: parseInt(json['total_ads']),
-      joined: (json['joined'] ?? '').toString(),
+      joined: parseString(json['joined']),
+      canEdit: parseBool(json['can_edit']),
+      targetUser: parseString(json['target_user']),
+      isSelf: parseBool(json['is_self']),
       isFollowing: parseBool(json['is_following']),
-      isVerified: parseBool(json['is_verified']),
+      isFollowedBy: parseBool(json['is_followed_by']),
+      isFriend: parseBool(json['is_friend']),
+      relationshipStatus: parseString(json['relationship_status']),
+      actionLabel: parseString(json['action_label']),
+      operatingHours: json['operating_hours'] is List
+          ? List<dynamic>.from(json['operating_hours'] as List)
+          : const [],
     );
   }
 
-  /// ✅ FULLY FLEXIBLE COPY
   AOSSellerProfile copyWith({
-    String? shopName,
-    String? aboutShop,
+    String? seller,
+    String? user,
+    String? displayName,
     String? avatar,
+    String? businessCategory,
+    String? sellerType,
     String? shopBanner,
+    String? aboutBusiness,
+    String? businessAddress,
+    bool? isVerified,
     double? rating,
     int? totalReviews,
     int? totalFollowers,
+    int? totalFollowing,
     int? totalAds,
     String? joined,
+    bool? canEdit,
+    String? targetUser,
+    bool? isSelf,
     bool? isFollowing,
-    bool? isVerified,
+    bool? isFollowedBy,
+    bool? isFriend,
+    String? relationshipStatus,
+    String? actionLabel,
+    List<dynamic>? operatingHours,
   }) {
     return AOSSellerProfile(
-      shopName: shopName ?? this.shopName,
+      seller: seller ?? this.seller,
+      user: user ?? this.user,
+      displayName: displayName ?? this.displayName,
       avatar: avatar ?? this.avatar,
+      businessCategory: businessCategory ?? this.businessCategory,
+      sellerType: sellerType ?? this.sellerType,
       shopBanner: shopBanner ?? this.shopBanner,
-      aboutShop: aboutShop ?? this.aboutShop,
+      aboutBusiness: aboutBusiness ?? this.aboutBusiness,
+      businessAddress: businessAddress ?? this.businessAddress,
+      isVerified: isVerified ?? this.isVerified,
       rating: rating ?? this.rating,
       totalReviews: totalReviews ?? this.totalReviews,
       totalFollowers: totalFollowers ?? this.totalFollowers,
+      totalFollowing: totalFollowing ?? this.totalFollowing,
       totalAds: totalAds ?? this.totalAds,
       joined: joined ?? this.joined,
+      canEdit: canEdit ?? this.canEdit,
+      targetUser: targetUser ?? this.targetUser,
+      isSelf: isSelf ?? this.isSelf,
       isFollowing: isFollowing ?? this.isFollowing,
-      isVerified: isVerified ?? this.isVerified,
+      isFollowedBy: isFollowedBy ?? this.isFollowedBy,
+      isFriend: isFriend ?? this.isFriend,
+      relationshipStatus: relationshipStatus ?? this.relationshipStatus,
+      actionLabel: actionLabel ?? this.actionLabel,
+      operatingHours: operatingHours ?? this.operatingHours,
     );
   }
 
-  /// HELPER Functions
+  bool get hasAvatar => avatar != null;
   bool get hasBanner => shopBanner != null;
-  bool get hasDescription => aboutShop != null;
+  bool get hasDescription => aboutBusiness != null;
+  bool get hasBusinessAddress => businessAddress != null;
+  bool get hasBusinessCategory => businessCategory != null;
+  bool get hasOperatingHours => operatingHours.isNotEmpty;
 }
 
-/// ✅ KEEP THIS (GOOD)
 bool parseBool(dynamic v) {
   if (v is bool) return v;
   if (v is int) return v == 1;
-  if (v is String) return v == '1' || v.toLowerCase() == 'true';
+
+  if (v is String) {
+    final value = v.trim().toLowerCase();
+    return value == '1' || value == 'true' || value == 'yes';
+  }
+
   return false;
 }

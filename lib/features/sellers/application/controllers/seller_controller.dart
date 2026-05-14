@@ -19,17 +19,19 @@ class SellerController {
     return _api.toggleFollow(sellerId: sellerId);
   }
 
-  Future<Either<Failure, Map<String?, dynamic>>> updateSellerProfile({
-    String? shopName,
-    String? aboutShop,
-    String? avatar,
-    String? banner,
+  Future<Either<Failure, Map<String, dynamic>>> updateSellerProfile({
+    String? businessCategory,
+    String? aboutBusiness,
+    String? businessAddress,
+    String? shopBanner,
+    List<Map<String, dynamic>>? operatingHours,
   }) async {
     return _api.updateSeller(
-      shopName: shopName,
-      aboutShop: aboutShop,
-      avatar: avatar,
-      banner: banner,
+      businessCategory: businessCategory,
+      aboutBusiness: aboutBusiness,
+      businessAddress: businessAddress,
+      shopBanner: shopBanner,
+      operatingHours: operatingHours,
     );
   }
 

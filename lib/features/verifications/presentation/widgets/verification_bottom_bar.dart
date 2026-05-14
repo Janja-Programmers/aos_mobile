@@ -1,4 +1,4 @@
-import 'package:africaonlinestores/features/sellers/seller_verification/presentation/widgets/verification_submit_success_dialog.dart';
+import 'package:africaonlinestores/features/verifications/presentation/widgets/verification_submit_success_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,9 +7,9 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
-import 'package:africaonlinestores/features/sellers/seller_verification/controllers/seller_status_provider.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/controllers/verification_form_state.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/utils/verification_steps_builder.dart';
+import 'package:africaonlinestores/features/verifications/controllers/seller_status_provider.dart';
+import 'package:africaonlinestores/features/verifications/controllers/verification_form_state.dart';
+import 'package:africaonlinestores/features/verifications/utils/verification_steps_builder.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 

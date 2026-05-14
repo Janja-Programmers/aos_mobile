@@ -78,15 +78,15 @@ class _SellerStorefrontScreenState
           context: context,
           ref: ref,
           user: widget.sellerId,
-          displayName: seller.shopName,
-          initialMessage: 'Hello ${seller.shopName}',
+          displayName: seller.displayName,
+          initialMessage: 'Hello ${seller.displayName}',
         );
       },
     );
   }
 
   CallParticipant _buildReceiver(AOSSellerProfile seller) {
-    final sellerName = seller.shopName.trim();
+    final sellerName = seller.displayName.trim();
 
     return CallParticipant(
       userId: widget.sellerId,
@@ -204,7 +204,7 @@ class _SellerStorefrontScreenState
               children: [
                 SellerHeaderSection(seller: seller, sellerId: widget.sellerId),
                 const SizedBox(height: 14),
-                SellerAboutSection(about: seller.aboutShop),
+                SellerAboutSection(about: seller.aboutBusiness),
                 const SizedBox(height: 14),
                 SellerProductsSection(sellerId: widget.sellerId),
               ],

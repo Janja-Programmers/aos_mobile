@@ -217,16 +217,12 @@ class AuthController extends StateNotifier<AuthState> {
     required String sid,
     required Map<String, dynamic> user,
   }) async {
-    appLogger.i('[Auth] Completing login...');
-
     _isHydrating = true;
 
     await _apiClient.setSid(sid);
     await _storage.setSid(sid);
 
     state = AuthAuthenticated(user: AuthUser.fromMap(user), sid: sid);
-
-    appLogger.i('[Auth] Authenticated: ${user['email']}');
 
     /// ✅ run in background
     unawaited(_syncUserPreferences());
@@ -375,7 +371,6 @@ class AuthController extends StateNotifier<AuthState> {
           currencyCode: (data['currency']?['name'] ?? '').toString(),
         );
 
-        appLogger.i('[Auth] Prefs synced successfully');
         return;
       } catch (e) {
         appLogger.e('[Auth] Prefs sync error (attempt $attempt): $e');

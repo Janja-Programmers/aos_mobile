@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/features/sellers/seller_verification/presentation/widgets/verification_stepper.dart';
+import 'package:africaonlinestores/features/verifications/presentation/widgets/verification_stepper.dart';
 
 class SellerVerificationShell extends StatelessWidget {
   const SellerVerificationShell({

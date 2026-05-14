@@ -9,7 +9,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 class AdSellerInfoSection extends StatelessWidget {
   const AdSellerInfoSection({
     super.key,
-    required this.shopName,
+    required this.displayName,
     required this.avatar,
     required this.rating,
     required this.totalReviews,
@@ -24,7 +24,7 @@ class AdSellerInfoSection extends StatelessWidget {
     required this.onPostSimilar,
   });
 
-  final String shopName;
+  final String displayName;
   final String? avatar;
   final double rating;
   final int totalReviews;
@@ -42,11 +42,17 @@ class AdSellerInfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+
+    final safeDisplayName = displayName.trim().isNotEmpty
+        ? displayName.trim()
+        : 'Seller';
+
     final ImageProvider? img = resolveAvatarImage(
       avatar,
       AppConfig.normalizedBaseUrl,
     );
-    final initial = shopName.characters.first;
+
+    final initial = safeDisplayName.characters.first.toUpperCase();
 
     return SectionCard(
       title: 'Seller Information',
@@ -71,7 +77,13 @@ class AdSellerInfoSection extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(shopName, style: context.pStrong),
+                        Flexible(
+                          child: Text(
+                            safeDisplayName,
+                            style: context.pStrong,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         const SizedBox(width: 8),
                         if (isVerified)
                           Container(
@@ -98,13 +110,10 @@ class AdSellerInfoSection extends StatelessWidget {
                       children: [
                         Icon(Icons.star, size: 16, color: colors.warning),
                         const SizedBox(width: 4),
-
                         Text(rating.toStringAsFixed(1), style: context.pStrong),
                         const SizedBox(width: 6),
-
                         Text('·', style: context.pStrong),
                         const SizedBox(width: 6),
-
                         Text(
                           '$totalFollowers followers',
                           style: context.pMuted,
@@ -119,7 +128,6 @@ class AdSellerInfoSection extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          /// Stats Row
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
@@ -134,13 +142,9 @@ class AdSellerInfoSection extends StatelessWidget {
                   'Reviews',
                   totalReviews.toString(),
                 ),
-
                 _divider(colors.black.withOpacity(0.5)),
-
                 _info(context, Icons.calendar_month, 'Joined', joined),
-
                 _divider(colors.black.withOpacity(0.5)),
-
                 _info(
                   context,
                   Icons.inventory_2_outlined,
@@ -153,25 +157,23 @@ class AdSellerInfoSection extends StatelessWidget {
 
           const SizedBox(height: 18),
 
-          /// Visit Store Button
           SizedBox(
             width: double.infinity,
-            child: FilledButton(
+            child: OutlinedButton(
               onPressed: onVisitStore,
-              style: FilledButton.styleFrom(
-                backgroundColor: colors.primary.withOpacity(0.12),
-                foregroundColor: colors.primary,
+              style: OutlinedButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(6),
                 ),
               ),
-              child: const Text('Visit Seller Store'),
+              child: Text(
+                'Visit Seller Store',
+                style: context.p.copyWith(color: colors.primary, fontSize: 13),
+              ),
             ),
           ),
-
           const SizedBox(height: 12),
 
-          /// Action Buttons
           Row(
             children: [
               Expanded(
@@ -211,6 +213,7 @@ class AdSellerInfoSection extends StatelessWidget {
               ),
             ],
           ),
+
           const SizedBox(height: 12),
 
           SizedBox(
@@ -236,13 +239,9 @@ class AdSellerInfoSection extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: 22, color: Theme.of(context).hintColor),
-
           const SizedBox(height: 6),
-
           Text(label, style: context.pMuted),
-
           const SizedBox(height: 4),
-
           Text(value, style: context.pStrong),
         ],
       ),

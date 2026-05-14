@@ -44,12 +44,12 @@ class SellerApi {
     try {
       appLogger.i('toggleFollow API sellerId: $sellerId ');
       final res = await _dio.post(
-        ApiEndpoints.toggleSellerEndpoint,
+        ApiEndpoints.toggleFollowEndpoint,
         data: {'seller': sellerId},
       );
       appLogger.i('toggleFollow API res: ${res.toString()} ');
 
-      appLogger.i('Returned: ${unwrapFrappe(res).toString()} ');
+      appLogger.i('toggleFollow Returned: ${unwrapFrappe(res).toString()} ');
 
       return unwrapFrappe(res);
     } on DioException catch (e) {
@@ -61,22 +61,40 @@ class SellerApi {
 
   /// UPDATE SELLER PROFILE
   Future<Either<Failure, Map<String, dynamic>>> updateSeller({
-    String? shopName,
-    String? aboutShop,
-    String? avatar,
-    String? banner,
+    String? businessCategory,
+    String? aboutBusiness,
+    String? businessAddress,
+    String? shopBanner,
+    List<Map<String, dynamic>>? operatingHours,
   }) async {
-    final res = await _dio.post(
-      ApiEndpoints.updateMySellerEndpoint,
-      data: {
-        'shop_name': ?shopName,
-        'about_shop': ?aboutShop,
-        'avatar': ?avatar,
-        'shop_banner': ?banner,
-      },
-    );
+    try {
+      final data = <String, dynamic>{
+        if (businessCategory != null && businessCategory.trim().isNotEmpty)
+          'business_category': businessCategory.trim(),
 
-    return Right(res.data['message']);
+        if (aboutBusiness != null && aboutBusiness.trim().isNotEmpty)
+          'about_business': aboutBusiness.trim(),
+
+        if (businessAddress != null && businessAddress.trim().isNotEmpty)
+          'business_address': businessAddress.trim(),
+
+        if (shopBanner != null && shopBanner.trim().isNotEmpty)
+          'shop_banner': shopBanner.trim(),
+
+        'operating_hours': ?operatingHours,
+      };
+
+      final res = await _dio.post(
+        ApiEndpoints.updateMySellerEndpoint,
+        data: data,
+      );
+
+      return unwrapFrappe(res);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to update seller profile.'));
+    }
   }
 
   /// LIST SELLERS

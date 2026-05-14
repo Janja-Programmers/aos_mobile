@@ -1,6 +1,7 @@
-import 'package:africaonlinestores/features/sellers/seller_verification/domain/verification_document.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification_document.dart';
 
-class Verification {
+class BusinessVerification {
+  final String verificationType;
   final String? businessName;
   final String? businessType;
   final String? businessCategory;
@@ -10,7 +11,8 @@ class Verification {
   final String? physicalAddress;
   final List<VerificationDocument> documents;
 
-  Verification({
+  BusinessVerification({
+    this.verificationType = "Business",
     this.businessName,
     this.businessType,
     this.businessCategory,
@@ -21,7 +23,8 @@ class Verification {
     this.documents = const [],
   });
 
-  Verification copyWith({
+  BusinessVerification copyWith({
+    String? verificationType,
     String? businessName,
     String? businessType,
     String? businessCategory,
@@ -31,7 +34,8 @@ class Verification {
     String? physicalAddress,
     List<VerificationDocument>? documents,
   }) {
-    return Verification(
+    return BusinessVerification(
+      verificationType: verificationType ?? this.verificationType,
       businessName: businessName ?? this.businessName,
       businessType: businessType ?? this.businessType,
       businessCategory: businessCategory ?? this.businessCategory,
@@ -45,19 +49,21 @@ class Verification {
 
   Map<String, dynamic> toPayload() {
     return {
+      "verification_type": verificationType,
       "business_name": businessName,
       "business_type": businessType,
       "business_category": businessCategory,
       "business_phone_number": businessPhoneNumber,
       "business_email": businessEmail,
       "business_website": businessWebsite,
-      "physical_address": physicalAddress,
+      "business_address": physicalAddress,
       "verification_documents": documents.map((e) => e.toPayload()).toList(),
     };
   }
 
-  factory Verification.fromJson(Map<String, dynamic> json) {
-    return Verification(
+  factory BusinessVerification.fromJson(Map<String, dynamic> json) {
+    return BusinessVerification(
+      verificationType: json["verification_type"],
       businessName: json["business_name"],
       businessType: json["business_type"],
       businessCategory: json["business_category"],

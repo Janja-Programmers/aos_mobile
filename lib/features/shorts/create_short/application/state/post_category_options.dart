@@ -31,24 +31,24 @@ const List<PostCategoryOption> postCategoriesData = [
         'Share business updates, promotions, services, and insights. Connect with customers and grow your brand through engaging content.',
   ),
   PostCategoryOption(
-    id: 'geography',
-    label: 'Geography',
+    id: 'geo',
+    label: 'Geo',
     icon: Icons.landscape_outlined,
-    contentMode: ShortContentModes.places,
+    contentMode: ShortContentModes.geo,
     description:
         'Explore and share stunnning landscapes, mountains, nature trails, waterfalls, and geographical wonders from anywhere in the world.',
   ),
   PostCategoryOption(
     id: 'talents',
-    label: 'Talents',
+    label: 'Talent',
     icon: Icons.star_border_rounded,
-    contentMode: ShortContentModes.vibes,
+    contentMode: ShortContentModes.talents,
     description:
         'Showcase your skills - music, art, fashion, sports and more. Let your creativity reach an audience that appreciates it.',
   ),
   PostCategoryOption(
-    id: 'health_tech',
-    label: 'Health & Tech',
+    id: 'learn',
+    label: 'Learn',
     icon: Icons.health_and_safety_outlined,
     contentMode: ShortContentModes.learn,
     description:

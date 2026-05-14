@@ -15,8 +15,8 @@ import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/controllers/seller_status_provider.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/presentation/widgets/seller_verification_banner.dart';
+import 'package:africaonlinestores/features/verifications/controllers/seller_status_provider.dart';
+import 'package:africaonlinestores/features/verifications/presentation/widgets/seller_verification_banner.dart';
 
 import 'package:africaonlinestores/shared/components/account_option_tile.dart';
 import 'package:africaonlinestores/shared/components/app_confirm_sheet.dart';

@@ -6,7 +6,7 @@ import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/sellers/presentation/seller_customization_screen.dart';
 import 'package:africaonlinestores/features/sellers/presentation/seller_storefront_screen.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/presentation/verification_screen.dart';
+import 'package:africaonlinestores/features/verifications/presentation/verification_screen.dart';
 
 class SellerRoutes {
   const SellerRoutes._();

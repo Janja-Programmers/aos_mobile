@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
-import 'package:africaonlinestores/features/sellers/seller_verification/controllers/verification_controller_provider.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/domain/verification.dart';
+import 'package:africaonlinestores/features/verifications/controllers/verification_controller_provider.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification.dart';
 
 class ReviewStep extends ConsumerWidget {
   const ReviewStep({super.key});
@@ -89,7 +89,7 @@ class ReviewStep extends ConsumerWidget {
   }
 
   // --- BUSINESS CARD ---
-  Widget _businessSummaryCard(BuildContext context, Verification data) {
+  Widget _businessSummaryCard(BuildContext context, BusinessVerification data) {
     final colors = context.appColors;
 
     return Container(
@@ -143,7 +143,7 @@ class ReviewStep extends ConsumerWidget {
   // --- CHECKLIST ---
   Widget _verificationChecklist(
     BuildContext context,
-    Verification data,
+    BusinessVerification data,
     String? registrationCertificate,
   ) {
     final colors = context.appColors;

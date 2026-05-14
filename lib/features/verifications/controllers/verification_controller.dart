@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:africaonlinestores/features/sellers/seller_verification/controllers/verification_form_state.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/domain/verification.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/domain/verification_document.dart';
+import 'package:africaonlinestores/features/verifications/controllers/verification_form_state.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification_document.dart';
 
 class SellerVerificationController
     extends StateNotifier<SellerVerificationState> {
@@ -10,6 +10,7 @@ class SellerVerificationController
 
   // --- Update Business Info ---
   void updateBasic({
+    String? verificationType,
     String? businessName,
     String? businessType,
     String? businessCategory,
@@ -19,6 +20,7 @@ class SellerVerificationController
   }) {
     state = state.copyWith(
       data: state.data.copyWith(
+        verificationType: verificationType,
         businessName: businessName,
         businessType: businessType,
         businessCategory: businessCategory,
@@ -53,7 +55,7 @@ class SellerVerificationController
     }
   }
 
-  List<String> _missingBasicInfoFields(Verification data) {
+  List<String> _missingBasicInfoFields(BusinessVerification data) {
     final missing = <String>[];
 
     bool empty(String? value) => value == null || value.trim().isEmpty;
@@ -117,8 +119,8 @@ class SellerVerificationController
     state = state.copyWith(data: state.data.copyWith(documents: docs));
   }
 
-  // UPDATE Verification Data
-  void hydrateFromVerification(Verification verification) {
+  // UPDATE BusinessVerification Data
+  void hydrateFromVerification(BusinessVerification verification) {
     state = state.copyWith(
       data: verification,
       currentStep: 0,

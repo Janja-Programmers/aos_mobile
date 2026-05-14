@@ -1,11 +1,12 @@
-import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
-import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
+import 'package:africaonlinestores/features/shorts/shared/navigation/feeds_routes.dart';
 
 class ShortGridCard extends StatelessWidget {
   final ShortModel short;
@@ -22,7 +23,7 @@ class ShortGridCard extends StatelessWidget {
     final avatarUrl = buildFileUrl(short.sellerAvator);
 
     return GestureDetector(
-      onTap: () => ShortsNavigation.toShorts(context),
+      onTap: () => FeedsNavigation.toFeeds(context),
       child: Container(
         decoration: BoxDecoration(
           color: colors.border,

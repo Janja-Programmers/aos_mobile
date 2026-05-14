@@ -45,7 +45,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final bootstrap = ref.watch(appBootstrapProvider);
   final auth = ref.watch(authControllerProvider);
 
+  final rootNavigatorKey = GlobalKey<NavigatorState>();
+  final shellNavigatorKey = GlobalKey<NavigatorState>();
+
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
+
     initialLocation: AppRoutes.splash,
 
     observers: [routeObserver],
@@ -60,7 +65,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ...ReviewsRoutes.routes(),
       ...SearchRoutes.routes(),
       ...SellerRoutes.routes(),
-      ...ShortsRoutes.routes(),
+      ...ShortsRoutes.routes(rootNavigatorKey: rootNavigatorKey),
 
       GoRoute(
         name: AppRoutes.nOnboarding,
@@ -153,6 +158,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       /// MAIN SHELL
       ShellRoute(
+        navigatorKey: shellNavigatorKey,
         builder: (context, state, child) {
           return AppShell(location: state.matchedLocation, child: child);
         },

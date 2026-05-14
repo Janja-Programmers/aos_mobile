@@ -1,4 +1,6 @@
-import 'package:africaonlinestores/features/shorts/shared/domain/selected_media_type.dart';
+import 'dart:io';
+import 'package:uuid/uuid.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,11 +9,11 @@ import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
-import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/helpers/enums.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/helpers/post_short_media_helpers.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/widgets/post_short_media_widgets.dart';
-import 'package:uuid/uuid.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/selected_media_type.dart';
+import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
 
 class PostShortMediaPickerScreen extends ConsumerStatefulWidget {
   const PostShortMediaPickerScreen({super.key});
@@ -110,12 +112,16 @@ class _PostShortMediaPickerScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(_tabIcon(), size: 54, color: colors.white.withOpacity(.4)),
+            Icon(
+              Icons.add_photo_alternate_outlined,
+              size: 54,
+              color: colors.white.withOpacity(.4),
+            ),
 
             const SizedBox(height: 12),
 
             Text(
-              _tabMessage(),
+              "Tap to pick/upload video",
               style: context.pStrong.copyWith(
                 color: colors.white.withOpacity(.6),
               ),
@@ -134,6 +140,24 @@ class _PostShortMediaPickerScreenState
     setState(() {
       selectedMedia = [SelectedMedia(file, MediaType.video)];
     });
+  }
+
+  Future<void> _setPickedVideo(File? file) async {
+    if (file == null) return;
+
+    setState(() {
+      selectedMedia = [SelectedMedia(file, MediaType.video)];
+    });
+  }
+
+  Future<void> _pickVideoFromGallery() async {
+    final file = await MediaHelper.pickVideoFromGallery();
+    await _setPickedVideo(file);
+  }
+
+  Future<void> _recordVideoFromCamera() async {
+    final file = await MediaHelper.recordVideoFromCamera();
+    await _setPickedVideo(file);
   }
 
   Widget _mediaPreview(AppColorTokens colors) {
@@ -180,40 +204,19 @@ class _PostShortMediaPickerScreenState
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [_tabItem("Video", MediaTab.video, colors)],
-      ),
-    );
-  }
-
-  Widget _tabItem(String label, MediaTab tab, colors) {
-    final active = currentTab == tab;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          currentTab = tab;
-        });
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: active ? colors.white : colors.white.withOpacity(.5),
-              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-            ),
+          _actionTabItem(
+            label: hasSelection ? "Change Video" : "Pick Video",
+            icon: Icons.video_library_outlined,
+            colors: colors,
+            onTap: _pickVideoFromGallery,
           ),
-          const SizedBox(height: 4),
-          if (active)
-            Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: colors.white,
-                shape: BoxShape.circle,
-              ),
-            ),
+          _actionTabItem(
+            label: "Take Video",
+            icon: Icons.videocam_outlined,
+            colors: colors,
+            onTap: _recordVideoFromCamera,
+          ),
         ],
       ),
     );
@@ -362,18 +365,30 @@ class _PostShortMediaPickerScreenState
     );
   }
 
-  String _tabMessage() {
-    switch (currentTab) {
-      case MediaTab.video:
-        return "Tap to pick/upload video";
-    }
-  }
-
-  IconData _tabIcon() {
-    switch (currentTab) {
-      case MediaTab.video:
-        return Icons.videocam_outlined;
-    }
+  Widget _actionTabItem({
+    required String label,
+    required IconData icon,
+    required AppColorTokens colors,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: colors.white.withOpacity(.85), size: 22),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: colors.white.withOpacity(.9),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // ───────────────────────── PICK LOGIC

@@ -141,7 +141,9 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                       images: ad.images,
                       videoUrl: ad.video,
                       selected: _selectedImage,
+                      isFavorite: false,
                       onSelect: (i) => setState(() => _selectedImage = i),
+                      onFavoriteTap: () {},
                     ),
 
                     const SizedBox(height: 12),

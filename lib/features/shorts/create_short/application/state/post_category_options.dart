@@ -22,8 +22,8 @@ class PostCategoryOption {
 
 const List<PostCategoryOption> postCategoriesData = [
   PostCategoryOption(
-    id: 'business',
-    label: 'Business',
+    id: 'shop',
+    label: 'Shop',
     icon: Icons.store_outlined,
     requiresAd: true,
     contentMode: ShortContentModes.shop,
@@ -33,23 +33,23 @@ const List<PostCategoryOption> postCategoriesData = [
   PostCategoryOption(
     id: 'geo',
     label: 'Geo',
-    icon: Icons.landscape_outlined,
+    icon: Icons.public,
     contentMode: ShortContentModes.geo,
     description:
         'Explore and share stunnning landscapes, mountains, nature trails, waterfalls, and geographical wonders from anywhere in the world.',
   ),
   PostCategoryOption(
-    id: 'talents',
+    id: 'talent',
     label: 'Talent',
-    icon: Icons.star_border_rounded,
-    contentMode: ShortContentModes.talents,
+    icon: Icons.emoji_events_outlined,
+    contentMode: ShortContentModes.talent,
     description:
         'Showcase your skills - music, art, fashion, sports and more. Let your creativity reach an audience that appreciates it.',
   ),
   PostCategoryOption(
     id: 'learn',
     label: 'Learn',
-    icon: Icons.health_and_safety_outlined,
+    icon: Icons.school_outlined,
     contentMode: ShortContentModes.learn,
     description:
         'Share health tips. wellness insights, tech reviews, and innovations that are shaping everyday life around the world.',

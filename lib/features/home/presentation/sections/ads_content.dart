@@ -21,7 +21,7 @@ import 'package:africaonlinestores/features/home/presentation/controller/home_pa
 import 'package:africaonlinestores/features/home/presentation/components/short_horizontal_list.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/shorts_home_controller.dart';
 
-import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
+import 'package:africaonlinestores/features/shorts/shared/navigation/feeds_routes.dart';
 
 import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 import 'package:africaonlinestores/shared/utils/helpers.dart';
@@ -92,7 +92,7 @@ class AdListContentView extends ConsumerWidget {
 
                             TextButton(
                               onPressed: () {
-                                ShortsNavigation.toShorts(context);
+                                FeedsNavigation.toFeeds(context);
                               },
                               child: const Text("See all"),
                             ),

@@ -90,6 +90,24 @@ class MediaHelper {
     return x == null ? null : File(x.path);
   }
 
+  static Future<File?> pickVideoFromGallery() async {
+    final x = await _picker.pickVideo(
+      source: ImageSource.gallery,
+      maxDuration: const Duration(minutes: 2),
+    );
+
+    return x == null ? null : File(x.path);
+  }
+
+  static Future<File?> recordVideoFromCamera() async {
+    final x = await _picker.pickVideo(
+      source: ImageSource.camera,
+      maxDuration: const Duration(minutes: 2),
+    );
+
+    return x == null ? null : File(x.path);
+  }
+
   static Future<File?> pickImageFromCamera() async {
     final x = await _picker.pickImage(
       source: ImageSource.camera,

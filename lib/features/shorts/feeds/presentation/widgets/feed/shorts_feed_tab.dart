@@ -4,12 +4,13 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import 'package:africaonlinestores/features/shorts/create_short/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_type.dart';
-import 'package:africaonlinestores/features/shorts/feeds/presentation/screens/short_detail_screen.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/components/following/suggested_sellers_section.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/empty_shorts_view.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card.dart';
 import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
+
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
 
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 
@@ -176,16 +177,12 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
   }
 
   void _openDetail(int index) {
-    Navigator.push(
+    ShortsNavigation.toShortDetail(
       context,
-      MaterialPageRoute(
-        builder: (_) => ShortDetailScreen(
-          initialShorts: List.from(_items),
-          initialIndex: index,
-          initialNextCursor: _nextCursor,
-          initialHasMore: _hasMore,
-        ),
-      ),
+      initialShorts: List.from(_items),
+      initialIndex: index,
+      initialNextCursor: _nextCursor,
+      initialHasMore: _hasMore,
     );
   }
 

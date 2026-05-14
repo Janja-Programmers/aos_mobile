@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
@@ -10,6 +12,7 @@ class MediaImageTile extends StatelessWidget {
   final AdMediaImage image;
   final bool isPrimary;
   final bool showPrimaryOption;
+  final File? localPreviewFile;
   final VoidCallback? onDelete;
   final VoidCallback? onMarkPrimary;
   final VoidCallback? onEdit;
@@ -19,6 +22,7 @@ class MediaImageTile extends StatelessWidget {
     required this.image,
     required this.isPrimary,
     required this.showPrimaryOption,
+    this.localPreviewFile,
     this.onDelete,
     this.onMarkPrimary,
     this.onEdit,
@@ -37,16 +41,26 @@ class MediaImageTile extends StatelessWidget {
           // -------- IMAGE --------
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: url == null
+            child: localPreviewFile != null
+                ? Image.file(
+                    localPreviewFile!,
+                    key: ValueKey(localPreviewFile!.path),
+                    fit: BoxFit.cover,
+                    width: 110,
+                    height: 110,
+                  )
+                : url == null
                 ? Container(
                     color: colors.border,
                     child: const Icon(Icons.image_not_supported),
                   )
                 : Image.network(
                     url,
+                    key: ValueKey(url),
                     fit: BoxFit.cover,
                     width: 110,
                     height: 110,
+                    gaplessPlayback: true,
                     errorBuilder: (_, _, _) => Container(
                       color: colors.border,
                       child: const Icon(Icons.broken_image),

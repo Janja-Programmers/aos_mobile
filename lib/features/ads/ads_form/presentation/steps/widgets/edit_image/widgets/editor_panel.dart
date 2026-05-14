@@ -1,5 +1,3 @@
-// ignore: unused_import
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
@@ -7,6 +5,8 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/tool_button.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/background_picker.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/gradient_picker.dart';
+
+enum EditorToolAction { crop, rotate, removeBg }
 
 class EditorPanel extends StatelessWidget {
   const EditorPanel({
@@ -18,61 +18,112 @@ class EditorPanel extends StatelessWidget {
     required this.onGradient,
     required this.bgRemoved,
     required this.busy,
+    required this.selectedBackgroundColor,
+    required this.selectedGradient,
+    required this.applyingBackground,
+    required this.activeTool,
   });
 
   final VoidCallback onCrop;
   final VoidCallback onRotate;
   final Future<void> Function() onRemoveBg;
 
-  final Function(Color?) onBackgroundColor;
-  final Function(List<Color>) onGradient;
+  final ValueChanged<Color?> onBackgroundColor;
+  final ValueChanged<List<Color>> onGradient;
 
   final bool bgRemoved;
   final bool busy;
+  final bool applyingBackground;
+
+  final Color? selectedBackgroundColor;
+  final List<Color>? selectedGradient;
+
+  final EditorToolAction? activeTool;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
       decoration: BoxDecoration(
-        color: colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: const [BoxShadow(blurRadius: 10, color: Colors.black12)],
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 18,
+            offset: const Offset(0, -4),
+            color: colors.border,
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Container(
+            width: 42,
+            height: 5,
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(99),
+            ),
+          ),
+
+          const SizedBox(height: 18),
+
           _buildTools(context),
-          const SizedBox(height: 16),
-          if (bgRemoved) BackgroundPicker(onSelect: onBackgroundColor),
-          if (bgRemoved) const SizedBox(height: 16),
-          if (bgRemoved) GradientPicker(onSelect: onGradient),
+
+          if (bgRemoved) ...[
+            const SizedBox(height: 18),
+            const Divider(height: 1),
+            const SizedBox(height: 18),
+
+            BackgroundPicker(
+              selectedColor: selectedBackgroundColor,
+              isApplying: applyingBackground,
+              onSelect: onBackgroundColor,
+            ),
+
+            const SizedBox(height: 18),
+
+            GradientPicker(
+              selectedGradient: selectedGradient,
+              isApplying: applyingBackground,
+              onSelect: onGradient,
+            ),
+          ],
         ],
       ),
     );
   }
 
   Widget _buildTools(BuildContext context) {
+    final toolBusy = activeTool != null;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         ToolButton(
-          icon: Icons.crop,
+          icon: Icons.crop_rounded,
           label: "Crop",
-          onTap: busy ? () {} : onCrop,
+          loading: activeTool == EditorToolAction.crop,
+          disabled: toolBusy && activeTool != EditorToolAction.crop,
+          onTap: busy ? null : onCrop,
         ),
         ToolButton(
-          icon: Icons.rotate_right,
+          icon: Icons.rotate_right_rounded,
           label: "Rotate",
-          onTap: busy ? () {} : onRotate,
+          loading: activeTool == EditorToolAction.rotate,
+          disabled: toolBusy && activeTool != EditorToolAction.rotate,
+          onTap: busy ? null : onRotate,
         ),
         ToolButton(
-          icon: Icons.auto_fix_high,
-          label: "Remove BG",
+          icon: Icons.auto_fix_high_rounded,
+          label: bgRemoved ? "BG Removed" : "Remove BG",
           active: bgRemoved,
-          onTap: busy ? () {} : () => onRemoveBg(),
+          loading: activeTool == EditorToolAction.removeBg,
+          disabled: toolBusy && activeTool != EditorToolAction.removeBg,
+          onTap: busy ? null : () => onRemoveBg(),
         ),
       ],
     );

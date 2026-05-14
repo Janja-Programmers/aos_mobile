@@ -29,6 +29,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     required this.orange,
     required this.amber,
     required this.red,
+    required this.purple,
   });
 
   final Color primary;
@@ -55,6 +56,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
   final Color orange;
   final Color amber;
   final Color red;
+  final Color purple;
 
   static const light = AppColorTokens(
     primary: Color(0xFFC1121F),
@@ -82,6 +84,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     orange: Colors.orange,
     amber: Colors.amber,
     red: Colors.red,
+    purple: Colors.purple,
   );
 
   static const dark = AppColorTokens(
@@ -110,6 +113,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     orange: Colors.orange,
     amber: Colors.amber,
     red: Colors.red,
+    purple: Colors.purple,
   );
 
   @override
@@ -136,6 +140,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
     Color? orange,
     Color? amber,
     Color? red,
+    Color? purple,
   }) {
     return AppColorTokens(
       primary: primary ?? this.primary,
@@ -160,6 +165,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
       orange: orange ?? this.orange,
       amber: amber ?? this.amber,
       red: red ?? this.red,
+      purple: purple ?? this.purple,
     );
   }
 
@@ -196,6 +202,7 @@ class AppColorTokens extends ThemeExtension<AppColorTokens> {
       orange: Color.lerp(orange, other.orange, t) ?? orange,
       amber: Color.lerp(amber, other.amber, t) ?? amber,
       red: Color.lerp(red, other.red, t) ?? red,
+      purple: Color.lerp(purple, other.purple, t) ?? purple,
     );
   }
 }

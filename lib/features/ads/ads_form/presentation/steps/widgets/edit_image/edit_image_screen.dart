@@ -38,11 +38,15 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
   late File _file;
 
   bool _busy = false;
-
   bool _bgRemoved = false;
-  Color? _selectedBgColor;
-  File? _transparentFile;
   bool _applyingBackground = false;
+
+  EditorToolAction? _activeTool;
+
+  Color? _selectedBgColor;
+  List<Color>? _selectedGradient;
+
+  File? _transparentFile;
 
   final List<File> _tempFiles = [];
 
@@ -55,61 +59,83 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
   // ================= CROP =================
 
   Future<void> _crop() async {
-    final cropped = await ImageCropper().cropImage(
-      sourcePath: _file.path,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: "Crop",
-          toolbarColor: context.appColors.black,
-          toolbarWidgetColor: context.appColors.white,
+    if (_activeTool != null) return;
 
-          initAspectRatio: CropAspectRatioPreset.original,
-          lockAspectRatio: false,
+    setState(() => _activeTool = EditorToolAction.crop);
 
-          hideBottomControls: false,
+    try {
+      final cropped = await ImageCropper().cropImage(
+        sourcePath: _file.path,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: "Crop",
+            toolbarColor: context.appColors.black,
+            toolbarWidgetColor: context.appColors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+            hideBottomControls: false,
+            showCropGrid: true,
+            cropGridStrokeWidth: 2,
+            activeControlsWidgetColor: context.appColors.red,
+          ),
+          IOSUiSettings(
+            title: "Crop",
+            aspectRatioLockEnabled: false,
+            rotateButtonsHidden: false,
+          ),
+        ],
+      );
 
-          showCropGrid: true,
-          cropGridStrokeWidth: 2,
+      if (cropped == null) return;
 
-          activeControlsWidgetColor: context.appColors.red,
-        ),
+      final file = File(cropped.path);
 
-        IOSUiSettings(
-          title: "Crop",
-          aspectRatioLockEnabled: false,
-          rotateButtonsHidden: false,
-        ),
-      ],
-    );
+      _tempFiles.add(file);
 
-    if (cropped == null) return;
+      if (!mounted) return;
 
-    final file = File(cropped.path);
-
-    _tempFiles.add(file);
-
-    setState(() => _file = file);
+      setState(() => _file = file);
+    } finally {
+      if (mounted) {
+        setState(() => _activeTool = null);
+      }
+    }
   }
+
   // ================= ROTATE =================
 
   Future<void> _rotate() async {
-    final bytes = await _file.readAsBytes();
+    if (_activeTool != null) return;
 
-    final image = img.decodeImage(bytes);
-    if (image == null) return;
+    setState(() => _activeTool = EditorToolAction.rotate);
 
-    final rotated = img.copyRotate(image, angle: 90);
+    try {
+      await Future<void>.delayed(Duration.zero);
 
-    final dir = await getTemporaryDirectory();
+      final bytes = await _file.readAsBytes();
 
-    final path =
-        "${dir.path}/rotated_${DateTime.now().millisecondsSinceEpoch}.png";
+      final image = img.decodeImage(bytes);
+      if (image == null) return;
 
-    final file = File(path)..writeAsBytesSync(img.encodePng(rotated));
+      final rotated = img.copyRotate(image, angle: 90);
 
-    _tempFiles.add(file);
+      final dir = await getTemporaryDirectory();
 
-    setState(() => _file = file);
+      final path =
+          "${dir.path}/rotated_${DateTime.now().millisecondsSinceEpoch}.png";
+
+      final file = File(path)..writeAsBytesSync(img.encodePng(rotated));
+
+      _tempFiles.add(file);
+
+      if (!mounted) return;
+
+      setState(() => _file = file);
+    } finally {
+      if (mounted) {
+        setState(() => _activeTool = null);
+      }
+    }
   }
 
   // ================= COMPRESS =================
@@ -142,7 +168,10 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
   Future<void> _removeBg() async {
     final originalFile = _file;
 
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _activeTool = EditorToolAction.removeBg;
+    });
 
     final File? removedFile = await showDialog<File?>(
       context: context,
@@ -169,7 +198,10 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
 
     if (!mounted) return;
 
-    setState(() => _busy = false);
+    setState(() {
+      _busy = false;
+      _activeTool = null;
+    });
 
     if (removedFile == null) {
       setState(() {
@@ -195,6 +227,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
         _transparentFile = removedFile;
         _bgRemoved = true;
         _selectedBgColor = null;
+        _selectedGradient = null;
       });
     } else {
       setState(() {
@@ -202,6 +235,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
         _transparentFile = null;
         _bgRemoved = false;
         _selectedBgColor = null;
+        _selectedGradient = null;
       });
     }
   }
@@ -209,7 +243,14 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
   // ================= APPLY BACKGROUND =================
 
   Future<void> _applyBackground(Color? color) async {
-    if (_transparentFile == null || _applyingBackground) return;
+    if (_transparentFile == null) return;
+
+    setState(() {
+      _selectedBgColor = color;
+      _selectedGradient = null;
+    });
+
+    if (_applyingBackground) return;
 
     setState(() => _applyingBackground = true);
 
@@ -233,7 +274,6 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
 
       setState(() {
         _file = file;
-        _selectedBgColor = color;
       });
     } finally {
       if (mounted) {
@@ -241,11 +281,17 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
       }
     }
   }
-
   // ================= APPLY GRADIENT =================
 
   Future<void> _applyGradient(List<Color> colors) async {
-    if (_transparentFile == null || _applyingBackground) return;
+    if (_transparentFile == null) return;
+
+    setState(() {
+      _selectedGradient = colors;
+      _selectedBgColor = colors.first;
+    });
+
+    if (_applyingBackground) return;
 
     setState(() => _applyingBackground = true);
 
@@ -270,7 +316,6 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
 
       setState(() {
         _file = file;
-        _selectedBgColor = colors.first;
       });
     } finally {
       if (mounted) {
@@ -296,13 +341,9 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
     try {
       await _compress();
 
-      final controller = ref.read(adDraftControllerProvider.notifier);
-
-      await controller.replaceImageAt(widget.index, _file);
-
       if (!mounted) return;
 
-      Navigator.pop(context);
+      Navigator.pop<File>(context, _file);
     } finally {
       if (mounted) {
         setState(() => _busy = false);
@@ -377,6 +418,10 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
               onGradient: _applyGradient,
               bgRemoved: _bgRemoved,
               busy: _busy,
+              applyingBackground: _applyingBackground,
+              selectedBackgroundColor: _selectedBgColor,
+              selectedGradient: _selectedGradient,
+              activeTool: _activeTool,
             ),
           ],
         ),

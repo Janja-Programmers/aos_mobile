@@ -34,10 +34,10 @@ const List<FeedCategoryOption> feedCategoryOptions = [
     contentMode: ShortContentModes.geo,
   ),
   FeedCategoryOption(
-    id: 'talents',
+    id: 'talent',
     label: 'Talent',
     icon: Icons.emoji_events_outlined,
-    contentMode: ShortContentModes.talents,
+    contentMode: ShortContentModes.talent,
   ),
   FeedCategoryOption(
     id: 'learn',
@@ -65,7 +65,7 @@ class FeedCategoryChips extends StatelessWidget {
     switch (option.id) {
       case 'geo':
         return Colors.green;
-      case 'talents':
+      case 'talent':
         return Colors.purple;
       case 'learn':
         return Colors.blue;

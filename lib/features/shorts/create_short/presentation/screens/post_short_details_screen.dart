@@ -63,7 +63,7 @@ class _PostShortDetailsScreenState
       if (next.status == UploadStatus.processing &&
           previous?.status != UploadStatus.processing) {
         if (mounted) {
-          context.goNamed(AppRoutes.nShorts, extra: 0);
+          context.goNamed(AppRoutes.nFeeds, extra: 0);
         }
       }
 

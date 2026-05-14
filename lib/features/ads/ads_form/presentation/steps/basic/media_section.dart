@@ -24,6 +24,8 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
   bool _uploadingImage = false;
   bool _uploadingVideo = false;
 
+  final Map<String, File> _localEditedPreviews = {};
+
   final picker = ImagePicker();
 
   // ---------------- UPLOAD IMAGE CORE ----------------
@@ -185,6 +187,7 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
 
                 return MediaImageTile(
                   image: img,
+                  localPreviewFile: _localEditedPreviews[img.fileId],
                   isPrimary: imageIndex == 0,
                   showPrimaryOption: imageIndex != 0,
                   onDelete: _uploadingImage
@@ -212,6 +215,10 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
                     );
 
                     if (edited == null) return;
+
+                    setState(() {
+                      _localEditedPreviews[img.fileId] = edited;
+                    });
 
                     await ref
                         .read(adDraftControllerProvider.notifier)

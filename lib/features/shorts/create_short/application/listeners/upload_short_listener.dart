@@ -15,7 +15,7 @@ final uploadRouterListenerProvider = Provider.family<void, String>((
 
     if (next.status == UploadStatus.processing &&
         prev?.status != UploadStatus.processing) {
-      router.pushNamed(AppRoutes.nShorts);
+      router.pushNamed(AppRoutes.nShortDetail);
     }
 
     if (next.status == UploadStatus.ready &&

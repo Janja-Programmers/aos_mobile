@@ -1,9 +1,9 @@
-import 'package:africaonlinestores/features/sellers/seller_verification/domain/verification.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification.dart';
 
 enum VerificationMode { create, update }
 
 class SellerVerificationState {
-  final Verification data;
+  final BusinessVerification data;
   final int currentStep;
   final bool isSubmitting;
   final Set<int> completedSteps;
@@ -21,7 +21,7 @@ class SellerVerificationState {
 
   factory SellerVerificationState.initial() {
     return SellerVerificationState(
-      data: Verification(),
+      data: BusinessVerification(),
       currentStep: 0,
       isSubmitting: false,
       completedSteps: const {},
@@ -31,7 +31,7 @@ class SellerVerificationState {
   }
 
   SellerVerificationState copyWith({
-    Verification? data,
+    BusinessVerification? data,
     int? currentStep,
     bool? isSubmitting,
     Set<int>? completedSteps,

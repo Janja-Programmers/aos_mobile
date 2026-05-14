@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/controllers/get_my_verification_provider.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/controllers/verification_controller_provider.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/domain/verification_status.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/presentation/widgets/base_verification_banner.dart';
+import 'package:africaonlinestores/features/verifications/controllers/get_my_verification_provider.dart';
+import 'package:africaonlinestores/features/verifications/controllers/verification_controller_provider.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification_status.dart';
+import 'package:africaonlinestores/features/verifications/presentation/widgets/base_verification_banner.dart';
 
 class SellerVerificationBanner extends StatelessWidget {
   const SellerVerificationBanner({super.key, required this.state});
@@ -57,7 +57,7 @@ class SellerVerificationBanner extends StatelessWidget {
               final container = ProviderScope.containerOf(context);
 
               final verification = await container.read(
-                myVerificationProvider.future,
+                myBusinessVerificationProvider.future,
               );
 
               container

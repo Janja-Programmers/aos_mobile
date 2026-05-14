@@ -28,20 +28,20 @@ const List<FeedCategoryOption> feedCategoryOptions = [
     contentMode: ShortContentModes.shop,
   ),
   FeedCategoryOption(
-    id: 'places',
-    label: 'Geography',
+    id: 'geo',
+    label: 'Geo',
     icon: Icons.public_outlined,
-    contentMode: ShortContentModes.places,
+    contentMode: ShortContentModes.geo,
   ),
   FeedCategoryOption(
-    id: 'vibes',
-    label: 'Talents',
+    id: 'talents',
+    label: 'Talent',
     icon: Icons.emoji_events_outlined,
-    contentMode: ShortContentModes.vibes,
+    contentMode: ShortContentModes.talents,
   ),
   FeedCategoryOption(
     id: 'learn',
-    label: 'Health & Tech',
+    label: 'Learn',
     icon: Icons.biotech_outlined,
     contentMode: ShortContentModes.learn,
   ),
@@ -59,6 +59,23 @@ class FeedCategoryChips extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 12),
   });
 
+  Color _selectedColor(BuildContext context, FeedCategoryOption option) {
+    final colors = context.appColors;
+
+    switch (option.id) {
+      case 'geo':
+        return Colors.green;
+      case 'talents':
+        return Colors.purple;
+      case 'learn':
+        return Colors.blue;
+      case 'shop':
+      case 'all':
+      default:
+        return colors.primary;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
@@ -74,6 +91,7 @@ class FeedCategoryChips extends StatelessWidget {
         itemBuilder: (context, index) {
           final option = feedCategoryOptions[index];
           final isSelected = option.id == selectedId;
+          final selectedColor = _selectedColor(context, option);
 
           return GestureDetector(
             onTap: () => onSelected(option),
@@ -83,10 +101,10 @@ class FeedCategoryChips extends StatelessWidget {
               curve: Curves.easeOut,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
-                color: isSelected ? colors.primary : colors.surface,
+                color: isSelected ? selectedColor : colors.surface,
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
-                  color: isSelected ? colors.primary : colors.border,
+                  color: isSelected ? selectedColor : colors.border,
                 ),
               ),
               child: Row(

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/sellers/seller_verification/data/verification_api.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/domain/verification_status.dart';
+import 'package:africaonlinestores/features/verifications/data/verification_api.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification_status.dart';
 
 final sellerStatusProvider = FutureProvider<SellerVerificationStatus>((
   ref,

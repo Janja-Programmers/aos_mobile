@@ -57,13 +57,13 @@ class _ShortBadgeConfig {
           icon: Icons.shopping_bag_outlined,
         );
 
-      case ShortContentModes.places:
+      case ShortContentModes.geo:
         return const _ShortBadgeConfig(
           label: 'Geo',
           icon: Icons.public_outlined,
         );
 
-      case ShortContentModes.vibes:
+      case ShortContentModes.talents:
         return const _ShortBadgeConfig(
           label: 'Talent',
           icon: Icons.emoji_events_outlined,

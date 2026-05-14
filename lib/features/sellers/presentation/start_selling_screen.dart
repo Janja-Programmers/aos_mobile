@@ -1,6 +1,6 @@
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/controllers/seller_status_provider.dart';
+import 'package:africaonlinestores/features/verifications/controllers/seller_status_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

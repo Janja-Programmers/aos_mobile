@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/sellers/seller_verification/presentation/widgets/verification_bottom_bar.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/utils/verification_flow_helpers.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/utils/verification_steps_builder.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/controllers/verification_controller_provider.dart';
-import 'package:africaonlinestores/features/sellers/seller_verification/data/verification_api.dart';
+import 'package:africaonlinestores/features/verifications/presentation/widgets/verification_bottom_bar.dart';
+import 'package:africaonlinestores/features/verifications/utils/verification_flow_helpers.dart';
+import 'package:africaonlinestores/features/verifications/utils/verification_steps_builder.dart';
+import 'package:africaonlinestores/features/verifications/controllers/verification_controller_provider.dart';
+import 'package:africaonlinestores/features/verifications/data/verification_api.dart';
 
-import 'package:africaonlinestores/features/sellers/seller_verification/presentation/widgets/seller_verification_shell.dart';
+import 'package:africaonlinestores/features/verifications/presentation/widgets/seller_verification_shell.dart';
 
 class VerificationScreen extends ConsumerStatefulWidget {
   const VerificationScreen({super.key});

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
-import 'package:africaonlinestores/features/sellers/seller_verification/controllers/verification_controller_provider.dart';
+import 'package:africaonlinestores/features/verifications/controllers/verification_controller_provider.dart';
 
 class BasicInfoStep extends ConsumerWidget {
   const BasicInfoStep({super.key});

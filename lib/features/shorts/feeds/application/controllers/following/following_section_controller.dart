@@ -1,4 +1,4 @@
-import 'package:africaonlinestores/features/shorts/create_short/application/providers/shorts_providers.dart';
+import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 

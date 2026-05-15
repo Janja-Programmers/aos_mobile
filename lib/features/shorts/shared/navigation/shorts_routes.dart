@@ -9,7 +9,7 @@ import 'package:africaonlinestores/features/shorts/create_short/presentation/scr
 import 'package:africaonlinestores/features/shorts/feeds/presentation/screens/short_detail_screen.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/selected_media_type.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 
 /// ─────────────────────────────────────────
 /// ARGUMENT MODEL

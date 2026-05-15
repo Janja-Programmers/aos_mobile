@@ -67,7 +67,6 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
 
     final optimisticShort = originalShort.copyWith(
       metrics: originalShort.metrics.copyWith(
-        likedByMe: !wasLiked,
         likeCount: wasLiked
             ? (originalShort.metrics.likeCount - 1).clamp(0, 1 << 31)
             : originalShort.metrics.likeCount + 1,
@@ -128,16 +127,103 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
         }
 
         final syncedShort = currentShort.copyWith(
-          metrics: currentShort.metrics.copyWith(
-            likedByMe: toggleResult.liked,
-            likeCount: correctedLikeCount,
-          ),
+          metrics: currentShort.metrics.copyWith(likeCount: correctedLikeCount),
           viewerState: currentShort.viewerState.copyWith(
             liked: toggleResult.liked,
           ),
         );
 
         _replaceShortAt(syncIndex, syncedShort, pendingLikeIds: updatedPending);
+      },
+    );
+  }
+
+  Future<void> toggleFollow(String targetUser) async {
+    final normalizedTargetUser = targetUser.trim();
+
+    if (normalizedTargetUser.isEmpty) return;
+
+    if (state.pendingFollowUserIds.contains(normalizedTargetUser)) {
+      return;
+    }
+
+    final affectedIndexes = _indexesForCreator(normalizedTargetUser);
+    if (affectedIndexes.isEmpty) return;
+
+    final originalItems = state.items;
+    final firstShort = originalItems[affectedIndexes.first];
+
+    if (firstShort.viewerState.isSelf) {
+      return;
+    }
+
+    final wasFollowing = firstShort.viewerState.isFollowing;
+    final isFollowedBy = firstShort.viewerState.isFollowedBy;
+    final nextIsFollowing = !wasFollowing;
+    final nextIsFriend = nextIsFollowing && isFollowedBy;
+
+    final optimisticItems = _copyItemsWithCreatorRelationship(
+      items: originalItems,
+      targetUser: normalizedTargetUser,
+      isFollowing: nextIsFollowing,
+      isFollowedBy: isFollowedBy,
+      isFriend: nextIsFriend,
+      relationshipStatus: _relationshipStatusFor(
+        isFollowing: nextIsFollowing,
+        isFollowedBy: isFollowedBy,
+      ),
+      actionLabel: nextIsFollowing ? 'Following' : 'Follow',
+    );
+
+    state = state.copyWith(
+      items: optimisticItems,
+      pendingFollowUserIds: {
+        ...state.pendingFollowUserIds,
+        normalizedTargetUser,
+      },
+      errorMessage: null,
+    );
+
+    final result = await _engagementApi.toggleFollow(
+      targetUser: normalizedTargetUser,
+    );
+
+    result.fold(
+      (failure) {
+        debugPrint('Toggle follow failed: ${failure.message}');
+
+        final updatedPending = {...state.pendingFollowUserIds}
+          ..remove(normalizedTargetUser);
+
+        state = state.copyWith(
+          items: originalItems,
+          pendingFollowUserIds: updatedPending,
+          errorMessage: failure.message,
+        );
+      },
+      (toggleResult) {
+        final updatedPending = {...state.pendingFollowUserIds}
+          ..remove(normalizedTargetUser);
+
+        final syncedTargetUser = toggleResult.targetUser.trim().isEmpty
+            ? normalizedTargetUser
+            : toggleResult.targetUser.trim();
+
+        final syncedItems = _copyItemsWithCreatorRelationship(
+          items: state.items,
+          targetUser: syncedTargetUser,
+          isFollowing: toggleResult.isFollowing,
+          isFollowedBy: toggleResult.isFollowedBy,
+          isFriend: toggleResult.isFriend,
+          relationshipStatus: toggleResult.relationshipStatus,
+          actionLabel: toggleResult.actionLabel,
+        );
+
+        state = state.copyWith(
+          items: syncedItems,
+          pendingFollowUserIds: updatedPending,
+          errorMessage: null,
+        );
       },
     );
   }
@@ -169,6 +255,81 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     );
 
     _replaceShortAt(index, updatedShort);
+  }
+
+  List<int> _indexesForCreator(String targetUser) {
+    final normalizedTargetUser = targetUser.trim();
+    if (normalizedTargetUser.isEmpty) return const [];
+
+    final indexes = <int>[];
+
+    for (var i = 0; i < state.items.length; i++) {
+      final short = state.items[i];
+
+      if (_matchesCreator(short, normalizedTargetUser)) {
+        indexes.add(i);
+      }
+    }
+
+    return indexes;
+  }
+
+  bool _matchesCreator(Short short, String targetUser) {
+    final normalizedTargetUser = targetUser.trim();
+    if (normalizedTargetUser.isEmpty) return false;
+
+    final creatorUser = short.creator.user.trim();
+    final viewerTargetUser = short.viewerState.targetUser?.trim() ?? '';
+    final sellerId = short.sellerId.trim();
+
+    return creatorUser == normalizedTargetUser ||
+        viewerTargetUser == normalizedTargetUser ||
+        sellerId == normalizedTargetUser;
+  }
+
+  List<Short> _copyItemsWithCreatorRelationship({
+    required List<Short> items,
+    required String targetUser,
+    required bool isFollowing,
+    required bool isFollowedBy,
+    required bool isFriend,
+    required String relationshipStatus,
+    required String actionLabel,
+  }) {
+    final updatedItems = items
+        .map((short) {
+          if (!_matchesCreator(short, targetUser)) {
+            return short;
+          }
+
+          if (short.viewerState.isSelf) {
+            return short;
+          }
+
+          return short.copyWith(
+            viewerState: short.viewerState.copyWith(
+              isFollowing: isFollowing,
+              isFollowedBy: isFollowedBy,
+              isFriend: isFriend,
+              relationshipStatus: relationshipStatus,
+              actionLabel: actionLabel,
+            ),
+          );
+        })
+        .toList(growable: false);
+
+    return List.unmodifiable(updatedItems);
+  }
+
+  String _relationshipStatusFor({
+    required bool isFollowing,
+    required bool isFollowedBy,
+  }) {
+    if (isFollowing && isFollowedBy) return 'friends';
+    if (isFollowing) return 'following';
+    if (isFollowedBy) return 'followed_by';
+
+    return 'none';
   }
 
   void _replaceShortAt(

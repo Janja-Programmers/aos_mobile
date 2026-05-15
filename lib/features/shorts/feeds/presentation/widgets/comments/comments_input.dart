@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/providers/shorts_providers.dart';
+import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 

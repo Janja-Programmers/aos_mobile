@@ -8,6 +8,7 @@ import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_like_result.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_follow_result.dart';
 
 class ShortsEngagementApi {
   final ApiClient _client;
@@ -51,5 +52,86 @@ class ShortsEngagementApi {
     } catch (_) {
       return Either.left(const Failure('Unexpected error toggling like'));
     }
+  }
+
+  // ───────────── TOGGLE FOLLOW ─────────────
+
+  Future<Either<Failure, ToggleFollowResult>> toggleFollow({
+    required String targetUser,
+  }) async {
+    try {
+      final res = await _client.post(
+        ApiEndpoints.toggleFollowEndpoint,
+        data: {'target_user': targetUser},
+      );
+
+      final unwrapped = unwrapFrappe(res);
+
+      return unwrapped.fold((failure) => Either.left(failure), (json) {
+        final data = json['data'] is Map<String, dynamic>
+            ? json['data'] as Map<String, dynamic>
+            : json['message'] is Map<String, dynamic> &&
+                  json['message']['data'] is Map<String, dynamic>
+            ? json['message']['data'] as Map<String, dynamic>
+            : json;
+
+        final resultTargetUser =
+            data['target_user']?.toString() ??
+            data['following_user']?.toString() ??
+            targetUser;
+
+        final isFollowing = _toBool(data['is_following']);
+        final isFollowedBy = _toBool(data['is_followed_by']);
+        final isFriend = _toBool(data['is_friend']);
+
+        final relationshipStatus =
+            data['relationship_status']?.toString() ??
+            _relationshipStatusFor(
+              isFollowing: isFollowing,
+              isFollowedBy: isFollowedBy,
+            );
+
+        final actionLabel =
+            data['action_label']?.toString() ??
+            (isFollowing ? 'Following' : 'Follow');
+
+        return Either.right(
+          ToggleFollowResult(
+            targetUser: resultTargetUser,
+            isFollowing: isFollowing,
+            isFollowedBy: isFollowedBy,
+            isFriend: isFriend,
+            relationshipStatus: relationshipStatus,
+            actionLabel: actionLabel,
+          ),
+        );
+      });
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Unexpected error toggling follow'));
+    }
+  }
+
+  // ───────────── HELPERS  ─────────────
+
+  static bool _toBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+
+    final raw = value?.toString().trim().toLowerCase();
+
+    return raw == 'true' || raw == '1' || raw == 'yes';
+  }
+
+  static String _relationshipStatusFor({
+    required bool isFollowing,
+    required bool isFollowedBy,
+  }) {
+    if (isFollowing && isFollowedBy) return 'friends';
+    if (isFollowing) return 'following';
+    if (isFollowedBy) return 'followed_by';
+
+    return 'none';
   }
 }

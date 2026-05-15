@@ -14,13 +14,15 @@ import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_tracki
 // Controllers
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/comment_controller.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/controllers/post_short_controller.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_controller.dart';
+import 'package:africaonlinestores/features/shorts/shared/application/controllers/short_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/controllers/replies_controller.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_detail_controller.dart';
 
 // State
 import 'package:africaonlinestores/features/shorts/feeds/application/state/comment_state.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/state/short_state.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/state/replies_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/short_detail_state.dart';
 
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_grid_controller.dart';
@@ -106,5 +108,16 @@ final shortDetailControllerProvider =
         args: args,
         repository: ShortsRepository(ref.read(shortsFeedApiProvider)),
         engagementApi: ref.read(shortsEngagementApiProvider),
+      );
+    });
+
+final repliesControllerProvider =
+    StateNotifierProvider.family<RepliesController, RepliesState, String>((
+      ref,
+      rootCommentId,
+    ) {
+      return RepliesController(
+        ref.read(shortsCommentsApiProvider),
+        rootCommentId,
       );
     });

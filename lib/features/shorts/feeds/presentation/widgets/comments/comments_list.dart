@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/comments/comments_list/comment_tile.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/providers/shorts_providers.dart';
+import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 
 class CommentsList extends ConsumerStatefulWidget {
   final String shortId;
@@ -39,7 +39,9 @@ class _CommentsListState extends ConsumerState<CommentsList> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       itemCount: state.comments.length,
       itemBuilder: (_, index) {
-        return CommentTile(comment: state.comments[index]);
+        final comment = state.comments[index];
+
+        return CommentTile(key: ValueKey(comment.id.value), comment: comment);
       },
     );
   }

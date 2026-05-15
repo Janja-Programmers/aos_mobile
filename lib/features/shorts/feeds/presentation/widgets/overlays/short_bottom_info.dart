@@ -7,12 +7,6 @@ import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.
 /// ─────────────────────────────────────────────
 /// SHORT BOTTOM INFO
 /// ─────────────────────────────────────────────
-///
-/// SINGLE RESPONSIBILITY:
-/// → Render creator + caption metadata
-/// → No logic
-/// → No state mutation
-///
 
 class ShortBottomInfo extends StatelessWidget {
   final Short short;
@@ -23,7 +17,7 @@ class ShortBottomInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    final username = _resolveUsername();
+    final displayName = _resolveDisplayName();
     final captionText = _composeCaption();
 
     return ConstrainedBox(
@@ -32,10 +26,10 @@ class ShortBottomInfo extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           /// ─────────────────────────────
-          /// USERNAME
+          /// CREATOR DISPLAY NAME
           /// ─────────────────────────────
           Text(
-            "@$username",
+            displayName,
             style: context.p.copyWith(
               color: colors.white,
               fontWeight: FontWeight.w600,
@@ -64,25 +58,38 @@ class ShortBottomInfo extends StatelessWidget {
   // HELPERS
   // ─────────────────────────────────────────────
 
-  String _resolveUsername() {
-    final sellerId = short.sellerId;
+  String _resolveDisplayName() {
+    final displayName = short.creator.displayName.trim();
 
-    if (sellerId.isEmpty) {
-      return "user";
+    if (displayName.isNotEmpty) {
+      return displayName;
     }
 
-    return sellerId;
+    final fallbackUser = short.creator.user.trim();
+
+    if (fallbackUser.isNotEmpty) {
+      return fallbackUser;
+    }
+
+    return 'User';
   }
 
   String _composeCaption() {
-    final caption = short.caption.value;
+    final caption = short.caption.value.trim();
 
-    final hashtags = short.hashtags.isEmpty ? "" : short.hashtags.join(" ");
+    final hashtags = short.hashtags
+        .map((tag) {
+          final normalized = tag.trim();
+          if (normalized.isEmpty) return '';
+          return normalized.startsWith('#') ? normalized : '#$normalized';
+        })
+        .where((tag) => tag.isNotEmpty)
+        .join(' ');
 
     if (caption.isEmpty) return hashtags;
 
     if (hashtags.isEmpty) return caption;
 
-    return "$caption $hashtags";
+    return '$caption $hashtags';
   }
 }

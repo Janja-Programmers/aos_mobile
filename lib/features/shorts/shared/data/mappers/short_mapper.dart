@@ -2,11 +2,12 @@ import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/short_status.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/caption.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_ad.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_viewer_state.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/metrics_mapper.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_ad_mapper.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_creator_mapper.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_view_state_mapper.dart';
 
 class ShortMapper {
   static Short toDomain(ShortModel model) {
@@ -14,32 +15,18 @@ class ShortMapper {
       id: ShortId(model.id),
       playbackUrl: model.playbackUrl,
       thumbnailUrl: model.thumbnailUrl,
-      durationSeconds: model.durationSeconds.toDouble(),
+      durationSeconds: model.durationSeconds,
       contentMode: model.contentMode,
       caption: Caption(model.caption),
       hashtags: model.hashtags,
-      sellerId: model.sellerId,
-      sellerShopName: model.sellerShopName,
-      sellerAvator: model.sellerAvator,
       status: ShortStatus.fromString(model.status),
+      creator: ShortCreatorMapper.toDomain(model.creator),
       metrics: MetricsMapper.toDomain(model.metrics),
-      ad: model.ad == null
-          ? null
-          : ShortAd(
-              id: model.ad!.id,
-              title: model.ad!.title,
-              price: model.ad!.price,
-              currency: model.ad!.currency,
-              thumbnail: model.ad!.thumbnail,
-            ),
-      postedAt: model.postedAt == null
+      ad: model.ad == null ? null : ShortAdMapper.toDomain(model.ad!),
+      postedAt: model.postedAt == null || model.postedAt!.trim().isEmpty
           ? null
           : DateTime.tryParse(model.postedAt!),
-      viewerState: ShortViewerState(
-        liked: model.viewerState.liked,
-        watched: model.viewerState.watched,
-        watchProgress: model.viewerState.watchProgress,
-      ),
+      viewerState: ShortViewerStateMapper.toDomain(model.viewerState),
     );
   }
 }

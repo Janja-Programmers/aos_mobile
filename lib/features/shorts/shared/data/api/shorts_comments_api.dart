@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/togggle_comment_like_result.dart';
 import 'package:dio/dio.dart';
 
 import 'package:africaonlinestores/core/api/api_client.dart';
@@ -9,7 +10,7 @@ import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_comment_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/comment_mapper.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/short_comment.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_comment.dart';
 
 class ShortsCommentsApi {
   final ApiClient _client;
@@ -123,11 +124,17 @@ class ShortsCommentsApi {
         final model = ShortCommentModel(
           id: commentId,
           shortId: shortId,
-          userId: '', // optional for now
+          userId: '',
+          displayName: 'You',
+          avatar: null,
           comment: comment,
           parentId: null,
           rootId: null,
           replyCount: 0,
+          likeCount: 0,
+          isLiked: false,
+          isOwner: true,
+          canDelete: true,
           isDeleted: false,
           createdAt: DateTime.now().toIso8601String(),
         );
@@ -175,6 +182,59 @@ class ShortsCommentsApi {
     }
   }
 
+  // ───────────── LIKE COMMENT ─────────────
+
+  Future<Either<Failure, ToggleCommentLikeResult>> toggleCommentLike({
+    required String commentId,
+  }) async {
+    try {
+      final res = await _client.post(
+        ApiEndpoints.toggleShortCommentLike,
+        data: {'comment_id': commentId},
+      );
+
+      final unwrapped = unwrapFrappe(res);
+
+      return unwrapped.fold((failure) => Either.left(failure), (json) {
+        final data = json['data'] is Map<String, dynamic>
+            ? json['data'] as Map<String, dynamic>
+            : json['message'] is Map<String, dynamic> &&
+                  json['message']['data'] is Map<String, dynamic>
+            ? json['message']['data'] as Map<String, dynamic>
+            : json;
+
+        final resultCommentId =
+            data['comment_id']?.toString() ??
+            data['id']?.toString() ??
+            commentId;
+
+        final likedRaw = data['liked'] ?? data['is_liked'];
+
+        if (likedRaw == null) {
+          return Either.left(
+            const Failure('Invalid toggle comment like response'),
+          );
+        }
+
+        return Either.right(
+          ToggleCommentLikeResult(
+            commentId: resultCommentId,
+            liked: _toBool(likedRaw),
+            likeCount: data.containsKey('like_count')
+                ? _toInt(data['like_count'])
+                : null,
+          ),
+        );
+      });
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(
+        const Failure('Unexpected error toggling comment like'),
+      );
+    }
+  }
+
   // ───────────── DELETE COMMENT ─────────────
 
   Future<Either<Failure, void>> deleteComment({
@@ -197,5 +257,23 @@ class ShortsCommentsApi {
     } catch (_) {
       return Either.left(const Failure('Unexpected error deleting comment'));
     }
+  }
+
+  // ───────────── HELPERS ─────────────
+
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static bool _toBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+
+    final raw = value?.toString().trim().toLowerCase();
+
+    return raw == 'true' || raw == '1' || raw == 'yes';
   }
 }

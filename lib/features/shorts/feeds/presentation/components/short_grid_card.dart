@@ -20,7 +20,7 @@ class ShortGridCard extends StatelessWidget {
 
     final caption = short.caption;
     final imageUrl = short.thumbnailUrl;
-    final avatarUrl = buildFileUrl(short.sellerAvator);
+    final avatarUrl = buildFileUrl(short.creator.avatar);
 
     return GestureDetector(
       onTap: () => FeedsNavigation.toFeeds(context),
@@ -37,7 +37,7 @@ class ShortGridCard extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 child: Image.network(
-                  imageUrl,
+                  imageUrl!,
                   fit: BoxFit.cover,
                   errorBuilder: (_, _, _) => _placeholder(colors),
                 ),
@@ -61,13 +61,13 @@ class ShortGridCard extends StatelessWidget {
                 children: [
                   _SellerAvatar(
                     avatarUrl: avatarUrl,
-                    name: short.sellerShopName ?? 'Shop',
+                    name: short.creator.displayName,
                   ),
                   const SizedBox(width: 5),
 
                   Expanded(
                     child: Text(
-                      short.sellerShopName ?? 'Shop',
+                      short.creator.displayName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 11),

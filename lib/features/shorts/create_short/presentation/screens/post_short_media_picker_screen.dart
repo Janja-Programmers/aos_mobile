@@ -12,7 +12,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/helpers/enums.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/helpers/post_short_media_helpers.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/widgets/post_short_media_widgets.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/selected_media_type.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
 
 class PostShortMediaPickerScreen extends ConsumerStatefulWidget {

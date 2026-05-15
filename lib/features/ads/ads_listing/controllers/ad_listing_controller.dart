@@ -21,6 +21,9 @@ class AdListingsController extends StateNotifier<AdListingsState> {
   /// prevents older tab responses from overwriting newer ones
   int _requestId = 0;
 
+  /// prevents older count responses from overwriting newer ones
+  int _countsRequestId = 0;
+
   /// -------------------------
   /// INIT
   /// -------------------------
@@ -124,6 +127,7 @@ class AdListingsController extends StateNotifier<AdListingsState> {
   /// LOAD COUNTS
   /// -------------------------
   Future<void> _loadCounts() async {
+    final currentCountsRequest = ++_countsRequestId;
     final api = ref.read(adsApiProvider);
 
     final Map<AdTab, int> newCounts = {};
@@ -147,6 +151,9 @@ class AdListingsController extends StateNotifier<AdListingsState> {
 
       final res = await api.myAds(status: status);
 
+      // A newer counts request has started. Ignore this old one.
+      if (currentCountsRequest != _countsRequestId) return;
+
       res.fold((_) => newCounts[tab] = 0, (data) {
         final dataMap = (data['data'] ?? {}) as Map;
         final pagination = (dataMap['pagination'] ?? {}) as Map;
@@ -162,11 +169,17 @@ class AdListingsController extends StateNotifier<AdListingsState> {
 
     final draftsRes = await api.listAdDrafts();
 
+    // A newer counts request has started. Ignore this old one.
+    if (currentCountsRequest != _countsRequestId) return;
+
     draftsRes.fold((_) => newCounts[AdTab.drafts] = 0, (data) {
       final dataMap = (data['data'] ?? {}) as Map;
       final items = dataMap['items'];
       newCounts[AdTab.drafts] = items is List ? items.length : 0;
     });
+
+    // Final guard before committing counts.
+    if (currentCountsRequest != _countsRequestId) return;
 
     state = state.copyWith(counts: newCounts);
   }
@@ -182,10 +195,10 @@ class AdListingsController extends StateNotifier<AdListingsState> {
   /// REFRESH CURRENT TAB + COUNTS
   /// -------------------------
   Future<void> refreshAll() async {
-    await Future.wait([
-      load(state.selectedTab, showLoader: false),
-      _loadCounts(),
-    ]);
+    final tab = state.selectedTab;
+
+    await load(tab, showLoader: false);
+    await _loadCounts();
   }
 
   /// -------------------------

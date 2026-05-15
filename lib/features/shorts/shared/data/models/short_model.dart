@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_ad_model.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/models/short_creator_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_metrics_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_viewer_state_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
@@ -7,40 +8,34 @@ class ShortModel {
   final String id;
 
   final String playbackUrl;
-  final String thumbnailUrl;
-  final int durationSeconds;
+  final String? thumbnailUrl;
+  final double durationSeconds;
 
   final String contentMode;
 
   final String caption;
   final List<String> hashtags;
 
-  final String sellerId;
-  final String? sellerShopName;
-  final String? sellerAvator;
-
   final String? status;
 
+  final ShortCreatorModel creator;
   final ShortMetricsModel metrics;
+  final ShortViewerStateModel viewerState;
 
   final ShortAdModel? ad;
 
   final String? postedAt;
 
-  final ShortViewerStateModel viewerState;
-
   const ShortModel({
     required this.id,
     required this.playbackUrl,
-    required this.thumbnailUrl,
+    this.thumbnailUrl,
     required this.durationSeconds,
     required this.contentMode,
     required this.caption,
     required this.hashtags,
-    required this.sellerId,
-    this.sellerShopName,
-    this.sellerAvator,
     this.status,
+    required this.creator,
     required this.metrics,
     required this.viewerState,
     this.ad,
@@ -48,40 +43,60 @@ class ShortModel {
   });
 
   factory ShortModel.fromJson(Map<String, dynamic> json) {
-    final seller = json['seller'] as Map<String, dynamic>? ?? {};
-
     return ShortModel(
-      id: json['id'] as String? ?? '',
+      id: json['id']?.toString() ?? '',
 
-      playbackUrl: json['playback_url'] as String? ?? '',
-      thumbnailUrl: json['thumbnail_url'] as String? ?? '',
+      playbackUrl: json['playback_url']?.toString() ?? '',
+      thumbnailUrl: json['thumbnail_url']?.toString(),
 
-      durationSeconds: (json['duration_seconds'] as num?)?.toInt() ?? 0,
+      durationSeconds: _toDouble(json['duration_seconds']),
 
       contentMode: _parseContentMode(json['content_mode']),
 
-      caption: json['caption'] as String? ?? '',
+      caption: json['caption']?.toString() ?? '',
 
-      hashtags: (json['hashtags'] as List<dynamic>? ?? [])
-          .map((e) => e.toString())
-          .toList(),
+      hashtags: _parseStringList(json['hashtags']),
 
-      sellerId: seller['id'] as String? ?? '',
-      sellerShopName: seller['shop_name'] as String?,
-      sellerAvator: seller['avatar'] as String?,
+      status: json['status']?.toString(),
 
-      status: json['status'] as String?,
+      creator: _parseCreator(json['creator']),
 
       metrics: ShortMetricsModel.fromJson(json),
 
       ad: _parseAd(json['ad']),
 
-      postedAt: json['posted_on'] as String?,
+      postedAt: json['posted_on']?.toString(),
 
       viewerState: ShortViewerStateModel.fromJson(
-        json['viewer_state'] as Map<String, dynamic>? ?? {},
+        json['viewer_state'] is Map<String, dynamic>
+            ? json['viewer_state'] as Map<String, dynamic>
+            : const {},
       ),
     );
+  }
+
+  /// Useful when the API response is wrapped as:
+  /// message -> data -> item
+  factory ShortModel.fromApiResponse(Map<String, dynamic> json) {
+    final message = json['message'];
+
+    if (message is! Map<String, dynamic>) {
+      return ShortModel.fromJson(json);
+    }
+
+    final data = message['data'];
+
+    if (data is! Map<String, dynamic>) {
+      return ShortModel.fromJson(message);
+    }
+
+    final item = data['item'];
+
+    if (item is! Map<String, dynamic>) {
+      return ShortModel.fromJson(data);
+    }
+
+    return ShortModel.fromJson(item);
   }
 
   static String _parseContentMode(dynamic value) {
@@ -98,11 +113,36 @@ class ShortModel {
     return mode;
   }
 
+  static ShortCreatorModel _parseCreator(dynamic value) {
+    if (value is! Map<String, dynamic>) {
+      return ShortCreatorModel.empty();
+    }
+
+    return ShortCreatorModel.fromJson(value);
+  }
+
   static ShortAdModel? _parseAd(dynamic value) {
     if (value is! Map<String, dynamic>) return null;
 
     final ad = ShortAdModel.fromJson(value);
 
     return ad.isEmpty ? null : ad;
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value is! List) return const [];
+
+    return value
+        .map((item) => item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is num) return value.toDouble();
+
+    return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

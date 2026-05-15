@@ -44,21 +44,41 @@ class AdListingScreen extends ConsumerWidget {
 
     Widget buildBody() {
       if (state.error != null) {
-        return AdListingErrorView(
-          message: state.error!,
-          onRetry: controller.reload,
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.55,
+              child: AdListingErrorView(
+                message: state.error!,
+                onRetry: controller.reload,
+              ),
+            ),
+          ],
         );
       }
 
       if (state.items.isEmpty) {
-        return AdListingEmptyView(
-          title: AdListingEmptyConfig.title(state.selectedTab),
-          description: AdListingEmptyConfig.description(state.selectedTab),
-          primaryLabel: AdListingEmptyConfig.primaryLabel(state.selectedTab),
-          onPrimaryAction: () async {
-            await openCreateOrEdit();
-          },
-          onLearnMore: () => context.pushNamed(AppRoutes.nSellerTips),
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.55,
+              child: AdListingEmptyView(
+                title: AdListingEmptyConfig.title(state.selectedTab),
+                description: AdListingEmptyConfig.description(
+                  state.selectedTab,
+                ),
+                primaryLabel: AdListingEmptyConfig.primaryLabel(
+                  state.selectedTab,
+                ),
+                onPrimaryAction: () async {
+                  await openCreateOrEdit();
+                },
+                onLearnMore: () => context.pushNamed(AppRoutes.nSellerTips),
+              ),
+            ),
+          ],
         );
       }
 
@@ -74,6 +94,7 @@ class AdListingScreen extends ConsumerWidget {
             adId: isDraft ? null : ad.id,
           );
         },
+        onMarkAvailable: onContactSupport,
         onContactSupport: onContactSupport,
         onMarkSold: controller.markSold,
       );
@@ -81,6 +102,7 @@ class AdListingScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('My Listings')),
+
       body: Column(
         children: [
           AdListingTabs(
@@ -90,7 +112,12 @@ class AdListingScreen extends ConsumerWidget {
             onChanged: controller.changeTab,
           ),
 
-          Expanded(child: buildBody()),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: controller.refreshAll,
+              child: buildBody(),
+            ),
+          ),
         ],
       ),
 

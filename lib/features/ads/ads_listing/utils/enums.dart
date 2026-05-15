@@ -8,17 +8,17 @@ enum AdBackendStatus {
   suspended,
 }
 
-enum AdTab { drafts, reviewing, active, declined, sold, expired, suspended }
+enum AdTab { active, drafts, reviewing, declined, sold, expired, suspended }
 
 extension AdTabX on AdTab {
   String get label {
     switch (this) {
+      case AdTab.active:
+        return 'Active';
       case AdTab.drafts:
         return 'Drafts';
       case AdTab.reviewing:
         return 'Reviewing';
-      case AdTab.active:
-        return 'Active';
       case AdTab.declined:
         return 'Declined';
       case AdTab.sold:
@@ -33,12 +33,12 @@ extension AdTabX on AdTab {
   /// ONLY mapping needed
   AdBackendStatus? get backendStatus {
     switch (this) {
+      case AdTab.active:
+        return AdBackendStatus.active;
       case AdTab.drafts:
         return null; // handled separately
       case AdTab.reviewing:
         return AdBackendStatus.reviewing;
-      case AdTab.active:
-        return AdBackendStatus.active;
       case AdTab.declined:
         return AdBackendStatus.declined;
       case AdTab.sold:

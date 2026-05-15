@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/shorts/create_short/application/providers/shorts_providers.dart';
+import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/short_detail_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/video/short_video_page.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+
+import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
 
 class ShortDetailScreen extends ConsumerStatefulWidget {
   final List<Short> initialShorts;
@@ -71,6 +73,12 @@ class _ShortDetailScreenState extends ConsumerState<ShortDetailScreen> {
             isLikePending: state.pendingLikeIds.contains(short.id.value),
             onToggleLike: controller.toggleLike,
             onCommentAdded: controller.incrementCommentCount,
+            onCreatorTap: () =>
+                SellerNavigation.toSellerStore(context, short.sellerId),
+            isFollowPending: state.pendingFollowUserIds.contains(
+              short.viewerState.targetUser ?? short.creator.user,
+            ),
+            onToggleFollow: controller.toggleFollow,
           );
         },
       ),

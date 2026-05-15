@@ -19,9 +19,9 @@ class AdListingsState {
 
   /// All tabs (single source of truth)
   List<AdTab> get tabs => const [
+    AdTab.active,
     AdTab.drafts,
     AdTab.reviewing,
-    AdTab.active,
     AdTab.declined,
     AdTab.sold,
     AdTab.expired,

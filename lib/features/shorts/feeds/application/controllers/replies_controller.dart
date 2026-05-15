@@ -1,10 +1,10 @@
-import 'package:africaonlinestores/features/shorts/shared/domain/short_comment.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/features/shorts/feeds/application/state/replies_state.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_comments_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_comment.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/comment_id.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
 
@@ -35,12 +35,16 @@ class RepliesController extends StateNotifier<RepliesState> {
     res.fold(
       (e) {
         appLogger.e('❌ FETCH REPLIES FAILED', error: e);
+
         state = state.copyWith(isLoading: false);
       },
       (items) {
         appLogger.i('✅ REPLIES LOADED | count=${items.length}');
 
-        state = state.copyWith(replies: items, isLoading: false);
+        state = state.copyWith(
+          replies: List.unmodifiable(items),
+          isLoading: false,
+        );
       },
     );
   }
@@ -53,40 +57,178 @@ class RepliesController extends StateNotifier<RepliesState> {
     required String shortId,
     required String content,
   }) async {
-    if (content.trim().isEmpty) return;
+    final trimmed = content.trim();
+
+    if (trimmed.isEmpty) return;
 
     final tempId = DateTime.now().millisecondsSinceEpoch.toString();
 
     final optimistic = ShortComment(
       id: CommentId(tempId),
       shortId: ShortId(shortId),
-      userId: "me",
-      comment: content,
-      parentId: CommentId(parentCommentId),
-      rootId: CommentId(rootCommentId),
+      userId: 'me',
+      displayName: 'You',
+      avatar: null,
+      comment: trimmed,
+      parentId: parentCommentId,
+      rootId: rootCommentId,
       replyCount: 0,
+      likeCount: 0,
+      isLiked: false,
+      isOwner: true,
+      canDelete: true,
       isDeleted: false,
       createdAt: DateTime.now().toIso8601String(),
     );
 
-    // 🔥 optimistic insert
     _insertReply(optimistic);
 
     final res = await api.replyComment(
       parentCommentId: parentCommentId,
-      comment: content,
+      comment: trimmed,
     );
 
     await res.fold(
       (e) {
         appLogger.e('❌ REPLY FAILED', error: e);
+
         _removeReply(tempId);
       },
       (_) async {
         appLogger.i('✅ REPLY CONFIRMED');
 
-        // 🔥 refetch (backend only returns id)
         await fetchReplies(rootCommentId);
+      },
+    );
+  }
+
+  // ───────────── TOGGLE REPLY LIKE ─────────────
+
+  Future<void> toggleCommentLike(String commentId) async {
+    if (state.pendingLikeIds.contains(commentId)) return;
+
+    final index = state.replies.indexWhere((reply) {
+      return reply.id.value == commentId;
+    });
+
+    if (index == -1) return;
+
+    final originalReply = state.replies[index];
+    final wasLiked = originalReply.isLiked;
+
+    final optimisticReply = originalReply.copyWith(
+      isLiked: !wasLiked,
+      likeCount: wasLiked
+          ? (originalReply.likeCount - 1).clamp(0, 1 << 31)
+          : originalReply.likeCount + 1,
+    );
+
+    _replaceReplyAt(
+      index,
+      optimisticReply,
+      pendingLikeIds: {...state.pendingLikeIds, commentId},
+    );
+
+    final res = await api.toggleCommentLike(commentId: commentId);
+
+    res.fold(
+      (failure) {
+        appLogger.e('❌ TOGGLE REPLY LIKE FAILED', error: failure);
+
+        final rollbackIndex = state.replies.indexWhere((reply) {
+          return reply.id.value == commentId;
+        });
+
+        final updatedPending = {...state.pendingLikeIds}..remove(commentId);
+
+        if (rollbackIndex == -1) {
+          state = state.copyWith(pendingLikeIds: updatedPending);
+          return;
+        }
+
+        _replaceReplyAt(
+          rollbackIndex,
+          originalReply,
+          pendingLikeIds: updatedPending,
+        );
+      },
+      (result) {
+        final syncIndex = state.replies.indexWhere((reply) {
+          return reply.id.value == result.commentId;
+        });
+
+        final updatedPending = {...state.pendingLikeIds}..remove(commentId);
+
+        if (syncIndex == -1) {
+          state = state.copyWith(pendingLikeIds: updatedPending);
+          return;
+        }
+
+        final currentReply = state.replies[syncIndex];
+
+        final syncedReply = currentReply.copyWith(
+          isLiked: result.liked,
+          likeCount:
+              result.likeCount ??
+              _correctLikeCount(
+                currentCount: currentReply.likeCount,
+                currentlyLiked: currentReply.isLiked,
+                serverLiked: result.liked,
+              ),
+        );
+
+        _replaceReplyAt(syncIndex, syncedReply, pendingLikeIds: updatedPending);
+      },
+    );
+  }
+
+  // ───────────── DELETE REPLY ─────────────
+
+  Future<void> deleteComment(String commentId) async {
+    if (state.pendingDeleteIds.contains(commentId)) return;
+
+    final index = state.replies.indexWhere((reply) {
+      return reply.id.value == commentId;
+    });
+
+    if (index == -1) return;
+
+    final targetReply = state.replies[index];
+
+    if (!targetReply.canDelete && !targetReply.isOwner) {
+      return;
+    }
+
+    final originalReplies = state.replies;
+
+    final updatedReplies = state.replies
+        .where((reply) {
+          return reply.id.value != commentId;
+        })
+        .toList(growable: false);
+
+    state = state.copyWith(
+      replies: List.unmodifiable(updatedReplies),
+      pendingDeleteIds: {...state.pendingDeleteIds, commentId},
+    );
+
+    final res = await api.deleteComment(commentId: commentId);
+
+    res.fold(
+      (failure) {
+        appLogger.e('❌ DELETE REPLY FAILED', error: failure);
+
+        final updatedPending = {...state.pendingDeleteIds}..remove(commentId);
+
+        state = state.copyWith(
+          replies: originalReplies,
+          pendingDeleteIds: updatedPending,
+        );
+      },
+      (_) {
+        final updatedPending = {...state.pendingDeleteIds}..remove(commentId);
+
+        state = state.copyWith(pendingDeleteIds: updatedPending);
       },
     );
   }
@@ -94,12 +236,44 @@ class RepliesController extends StateNotifier<RepliesState> {
   // ───────────── HELPERS ─────────────
 
   void _insertReply(ShortComment reply) {
-    state = state.copyWith(replies: [...state.replies, reply]);
+    state = state.copyWith(
+      replies: List.unmodifiable([...state.replies, reply]),
+    );
   }
 
   void _removeReply(String tempId) {
     state = state.copyWith(
-      replies: state.replies.where((r) => r.id.value != tempId).toList(),
+      replies: List.unmodifiable(
+        state.replies.where((reply) => reply.id.value != tempId).toList(),
+      ),
     );
+  }
+
+  void _replaceReplyAt(
+    int index,
+    ShortComment updatedReply, {
+    Set<String>? pendingLikeIds,
+  }) {
+    if (index < 0 || index >= state.replies.length) return;
+
+    final updatedReplies = [...state.replies];
+    updatedReplies[index] = updatedReply;
+
+    state = state.copyWith(
+      replies: List.unmodifiable(updatedReplies),
+      pendingLikeIds: pendingLikeIds,
+    );
+  }
+
+  int _correctLikeCount({
+    required int currentCount,
+    required bool currentlyLiked,
+    required bool serverLiked,
+  }) {
+    if (currentlyLiked == serverLiked) return currentCount;
+
+    return serverLiked
+        ? currentCount + 1
+        : (currentCount - 1).clamp(0, 1 << 31);
   }
 }

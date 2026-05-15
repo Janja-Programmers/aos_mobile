@@ -233,7 +233,6 @@ class ShortsController extends StateNotifier<ShortsState> {
 
     final optimisticShort = originalShort.copyWith(
       metrics: originalShort.metrics.copyWith(
-        likedByMe: !wasLiked,
         likeCount: wasLiked
             ? (originalShort.metrics.likeCount - 1).clamp(0, 1 << 31)
             : originalShort.metrics.likeCount + 1,
@@ -281,10 +280,7 @@ class ShortsController extends StateNotifier<ShortsState> {
         }
 
         final syncedShort = currentShort.copyWith(
-          metrics: currentShort.metrics.copyWith(
-            likedByMe: toggleResult.liked,
-            likeCount: correctedLikeCount,
-          ),
+          metrics: currentShort.metrics.copyWith(likeCount: correctedLikeCount),
           viewerState: currentShort.viewerState.copyWith(
             liked: toggleResult.liked,
           ),

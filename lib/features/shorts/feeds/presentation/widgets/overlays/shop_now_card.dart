@@ -1,8 +1,11 @@
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 
 class ShopNowCard extends StatelessWidget {
   final Short short;
@@ -13,6 +16,11 @@ class ShopNowCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final ad = short.ad;
+
+    if (ad == null) {
+      return const SizedBox.shrink();
+    }
 
     return Material(
       color: Colors.transparent,
@@ -22,33 +30,21 @@ class ShopNowCard extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            // 🎯 Slight opacity for video overlay feel
             color: colors.surface.withOpacity(0.95),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
             children: [
-              // ICON / IMAGE PLACEHOLDER
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: colors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.shopping_bag, color: colors.primary),
-              ),
+              _AdThumbnail(imageUrl: ad.thumbnail),
 
               const SizedBox(width: 12),
 
-              // TEXT
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // PRODUCT NAME
                     Text(
-                      short.ad!.title,
+                      ad.title,
                       style: context.p.copyWith(fontWeight: FontWeight.w600),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -56,9 +52,8 @@ class ShopNowCard extends StatelessWidget {
 
                     const SizedBox(height: 2),
 
-                    // PRICE / SUBTITLE
                     Text(
-                      short.ad!.price.toString(),
+                      _formatPrice(ad.price, ad.currency),
                       style: context.p.copyWith(fontSize: 12),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -75,5 +70,62 @@ class ShopNowCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatPrice(double? price, String? currency) {
+    if (price == null || price <= 0) {
+      return 'View product';
+    }
+
+    final formattedPrice = price % 1 == 0
+        ? price.toInt().toString()
+        : price.toStringAsFixed(2);
+
+    final normalizedCurrency = currency?.trim();
+
+    if (normalizedCurrency == null || normalizedCurrency.isEmpty) {
+      return formattedPrice;
+    }
+
+    return '$normalizedCurrency $formattedPrice';
+  }
+}
+
+class _AdThumbnail extends StatelessWidget {
+  final String? imageUrl;
+
+  const _AdThumbnail({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final imageUri = imageUrl?.trim();
+    final url = buildFileUrl(imageUri);
+
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: colors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: url == null || url.isEmpty
+          ? _FallbackIcon()
+          : Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _FallbackIcon(),
+            ),
+    );
+  }
+}
+
+class _FallbackIcon extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Icon(Icons.shopping_bag, color: colors.primary);
   }
 }

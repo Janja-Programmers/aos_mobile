@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/init_short_upload_result.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/selected_media_type.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_management_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_upload_api.dart';

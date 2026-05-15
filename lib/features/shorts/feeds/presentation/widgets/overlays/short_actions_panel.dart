@@ -4,13 +4,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_session_controller.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/comment_sheet.dart';
+
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
 class ShortActionsPanel extends ConsumerWidget {
   final Short short;
   final bool isLikePending;
+  final bool isFollowPending;
+
   final Future<void> Function(String shortId) onToggleLike;
+  final Future<void> Function(String targetUser)? onToggleFollow;
+  final VoidCallback? onCreatorTap;
   final void Function(String shortId) onCommentAdded;
 
   const ShortActionsPanel({
@@ -18,7 +23,10 @@ class ShortActionsPanel extends ConsumerWidget {
     required this.short,
     required this.onToggleLike,
     required this.onCommentAdded,
+    this.onToggleFollow,
+    this.onCreatorTap,
     this.isLikePending = false,
+    this.isFollowPending = false,
   });
 
   @override
@@ -29,17 +37,26 @@ class ShortActionsPanel extends ConsumerWidget {
     final metrics = short.metrics;
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        _circleButton(icon: Icons.add, onTap: () {}),
+        _CreatorAvatarAction(
+          short: short,
+          isFollowPending: isFollowPending,
+          onCreatorTap: onCreatorTap,
+          onToggleFollow: onToggleFollow,
+        ),
 
         const SizedBox(height: 18),
 
         _iconWithLabel(
           context,
-          icon: Icons.favorite,
+          icon: isLiked
+              ? Icons.favorite_rounded
+              : Icons.favorite_border_rounded,
           color: isLiked ? colors.primary : colors.white,
           label: _formatCount(metrics.likeCount),
           isDisabled: isLikePending,
+          semanticLabel: isLiked ? 'Unlike' : 'Like',
           onTap: isLikePending
               ? null
               : () {
@@ -51,9 +68,10 @@ class ShortActionsPanel extends ConsumerWidget {
 
         _iconWithLabel(
           context,
-          icon: Icons.comment,
+          icon: Icons.mode_comment_outlined,
           color: colors.white,
           label: _formatCount(metrics.commentCount),
+          semanticLabel: 'Comments',
           onTap: () {
             ref.read(shortSessionControllerProvider.notifier).pause();
 
@@ -73,29 +91,7 @@ class ShortActionsPanel extends ConsumerWidget {
             });
           },
         ),
-
-        const SizedBox(height: 18),
-
-        _iconWithLabel(
-          context,
-          icon: Icons.share,
-          label: 'Share',
-          onTap: () {},
-        ),
       ],
-    );
-  }
-
-  Widget _circleButton({required IconData icon, VoidCallback? onTap}) {
-    return Container(
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.black54,
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: Colors.white),
-        onPressed: onTap,
-      ),
     );
   }
 
@@ -103,6 +99,7 @@ class ShortActionsPanel extends ConsumerWidget {
     BuildContext context, {
     required IconData icon,
     required String label,
+    required String semanticLabel,
     Color? color,
     VoidCallback? onTap,
     bool isDisabled = false,
@@ -111,26 +108,31 @@ class ShortActionsPanel extends ConsumerWidget {
 
     return Opacity(
       opacity: isDisabled ? 0.55 : 1,
-      child: Column(
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(4),
-              child: Icon(icon, color: color ?? colors.white, size: 32),
+      child: Semantics(
+        button: true,
+        label: semanticLabel,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Icon(icon, color: color ?? colors.white, size: 34),
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -145,5 +147,164 @@ class ShortActionsPanel extends ConsumerWidget {
     }
 
     return value.toString();
+  }
+}
+
+class _CreatorAvatarAction extends StatelessWidget {
+  final Short short;
+  final bool isFollowPending;
+  final VoidCallback? onCreatorTap;
+  final Future<void> Function(String targetUser)? onToggleFollow;
+
+  const _CreatorAvatarAction({
+    required this.short,
+    required this.isFollowPending,
+    required this.onCreatorTap,
+    required this.onToggleFollow,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    final avatar = short.creator.avatar;
+    final targetUser = short.viewerState.targetUser ?? short.creator.user;
+
+    final isSelf = short.viewerState.isSelf;
+    final isFollowing = short.viewerState.isFollowing;
+
+    return SizedBox(
+      width: 52,
+      height: 62,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onCreatorTap,
+            child: Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: colors.white, width: 2),
+                color: Colors.black54,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: _AvatarImage(
+                avatar: avatar,
+                fallbackText: short.creator.displayName,
+              ),
+            ),
+          ),
+
+          if (!isSelf)
+            Positioned(
+              bottom: 2,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: isFollowPending || onToggleFollow == null
+                    ? null
+                    : () {
+                        onToggleFollow!(targetUser);
+                      },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isFollowing ? colors.primary : colors.white,
+                    border: Border.all(color: Colors.black, width: 2),
+                  ),
+                  child: isFollowPending
+                      ? Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: isFollowing ? colors.white : colors.primary,
+                          ),
+                        )
+                      : Icon(
+                          isFollowing ? Icons.check_rounded : Icons.add_rounded,
+                          size: 17,
+                          color: isFollowing ? colors.white : colors.black,
+                        ),
+                ),
+              ),
+            ),
+
+          if (isSelf)
+            Positioned(
+              bottom: 2,
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colors.primary,
+                  border: Border.all(color: Colors.black, width: 2),
+                ),
+                child: Icon(
+                  Icons.person_rounded,
+                  size: 15,
+                  color: colors.white,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AvatarImage extends StatelessWidget {
+  final String? avatar;
+  final String fallbackText;
+
+  const _AvatarImage({required this.avatar, required this.fallbackText});
+
+  @override
+  Widget build(BuildContext context) {
+    final url = avatar?.trim();
+
+    if (url != null && url.isNotEmpty) {
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) {
+          return _FallbackAvatar(text: fallbackText);
+        },
+      );
+    }
+
+    return _FallbackAvatar(text: fallbackText);
+  }
+}
+
+class _FallbackAvatar extends StatelessWidget {
+  final String text;
+
+  const _FallbackAvatar({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    final initial = text.trim().isEmpty ? '?' : text.trim()[0].toUpperCase();
+
+    return Container(
+      color: Colors.white12,
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: TextStyle(
+          color: colors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: 20,
+        ),
+      ),
+    );
   }
 }

@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
@@ -21,6 +23,8 @@ class AdListingTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return SizedBox(
       height: 42,
       child: ListView.separated(
@@ -32,24 +36,30 @@ class AdListingTabs extends StatelessWidget {
           final c = counts?[s] ?? 0;
 
           return ChoiceChip(
+            selectedColor: colors.primary.withOpacity(.75),
             selected: active,
             onSelected: (_) => onChanged(s),
             label: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(s.label),
+                Text(
+                  s.label,
+                  style: context.body.copyWith(
+                    color: active
+                        ? colors.textPrimary
+                        : colors.textPrimary.withOpacity(.75),
+                  ),
+                ),
+
                 const SizedBox(width: 8),
+
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: active
-                        ? Theme.of(
-                            context,
-                          ).colorScheme.onPrimary.withOpacity(0.20)
-                        : Theme.of(context).dividerColor.withOpacity(0.18),
+                    color: colors.border.withOpacity(.5),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -57,7 +67,7 @@ class AdListingTabs extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: active
-                          ? Theme.of(context).colorScheme.onPrimary
+                          ? colors.textPrimary
                           : Theme.of(context).hintColor,
                     ),
                   ),

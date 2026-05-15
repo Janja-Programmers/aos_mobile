@@ -1,28 +1,55 @@
 class ShortMetricsModel {
   final int likeCount;
-  final int viewCount;
   final int commentCount;
+  final int viewCount;
   final int shareCount;
   final int impressionCount;
   final double rankingScore;
 
   const ShortMetricsModel({
     required this.likeCount,
-    required this.viewCount,
     required this.commentCount,
+    required this.viewCount,
     required this.shareCount,
     required this.impressionCount,
     required this.rankingScore,
   });
 
+  factory ShortMetricsModel.initial() {
+    return const ShortMetricsModel(
+      likeCount: 0,
+      commentCount: 0,
+      viewCount: 0,
+      shareCount: 0,
+      impressionCount: 0,
+      rankingScore: 0,
+    );
+  }
+
   factory ShortMetricsModel.fromJson(Map<String, dynamic> json) {
     return ShortMetricsModel(
-      likeCount: (json['like_count'] ?? 0).toInt(),
-      viewCount: (json['view_count'] ?? 0).toInt(),
-      commentCount: (json['comment_count'] ?? 0).toInt(),
-      shareCount: (json['share_count'] as num?)?.toInt() ?? 0,
-      impressionCount: (json['impression_count'] as num?)?.toInt() ?? 0,
-      rankingScore: (json['ranking_score'] as num?)?.toDouble() ?? 0,
+      likeCount: _toInt(json['like_count']),
+      commentCount: _toInt(json['comment_count']),
+      viewCount: _toInt(json['view_count']),
+      shareCount: _toInt(json['share_count']),
+      impressionCount: _toInt(json['impression_count']),
+      rankingScore: _toDouble(json['ranking_score']),
     );
+  }
+
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is num) return value.toInt();
+
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is num) return value.toDouble();
+
+    return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

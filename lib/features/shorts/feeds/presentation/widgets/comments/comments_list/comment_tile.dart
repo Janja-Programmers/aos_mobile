@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/shorts/feeds/application/providers/feed_providers.dart';
+import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/comments/comments_list/comment_main_row.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/comments/comments_list/replies_list.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/comments/comments_list/reply_input.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/short_comment.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_comment.dart';
 
 class CommentTile extends ConsumerStatefulWidget {
   final ShortComment comment;
@@ -28,58 +28,80 @@ class _CommentTileState extends ConsumerState<CommentTile> {
     super.dispose();
   }
 
+  Future<void> _sendReply() async {
+    final comment = widget.comment;
+    final text = _replyController.text.trim();
+
+    if (text.isEmpty) return;
+
+    await ref
+        .read(repliesControllerProvider(comment.id.value).notifier)
+        .reply(
+          rootCommentId: comment.id.value,
+          parentCommentId: comment.id.value,
+          shortId: comment.shortId.value,
+          content: text,
+        );
+
+    _replyController.clear();
+
+    if (!mounted) return;
+
+    setState(() {
+      _isReplying = false;
+      _showReplies = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final comment = widget.comment;
+
+    final commentsState = ref.watch(commentsControllerProvider);
+    final commentsController = ref.read(commentsControllerProvider.notifier);
+
+    final isLikePending = commentsState.pendingLikeIds.contains(
+      comment.id.value,
+    );
+
+    final isDeletePending = commentsState.pendingDeleteIds.contains(
+      comment.id.value,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🔥 MAIN COMMENT
           CommentMainRow(
             comment: comment,
+            isLikePending: isLikePending,
+            isDeletePending: isDeletePending,
             onReplyTap: () {
               setState(() => _isReplying = !_isReplying);
             },
+            onToggleLike: () {
+              commentsController.toggleCommentLike(comment.id.value);
+            },
+            onDelete: comment.canDelete || comment.isOwner
+                ? () {
+                    commentsController.deleteComment(comment.id.value);
+                  }
+                : null,
           ),
 
-          const SizedBox(height: 6),
-
-          // 🔥 INLINE REPLY INPUT
           if (_isReplying)
             Padding(
-              padding: const EdgeInsets.only(left: 48, top: 6),
+              padding: const EdgeInsets.only(left: 48, top: 10),
               child: ReplyInput(
                 controller: _replyController,
-                onSend: () async {
-                  final text = _replyController.text.trim();
-                  if (text.isEmpty) return;
-
-                  await ref
-                      .read(
-                        repliesControllerProvider(comment.id.value).notifier,
-                      )
-                      .reply(
-                        rootCommentId: comment.id.value,
-                        parentCommentId: comment.id.value,
-                        shortId: comment.shortId.value,
-                        content: text,
-                      );
-
-                  _replyController.clear();
-                  setState(() {
-                    _isReplying = false;
-                    _showReplies = true;
-                  });
-                },
+                onSend: _sendReply,
               ),
             ),
 
-          // 🔥 VIEW REPLIES BUTTON
           if (comment.replyCount > 0)
             GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () {
                 setState(() => _showReplies = !_showReplies);
 
@@ -92,19 +114,19 @@ class _CommentTileState extends ConsumerState<CommentTile> {
                 }
               },
               child: Padding(
-                padding: const EdgeInsets.only(left: 48),
+                padding: const EdgeInsets.only(left: 48, top: 8),
                 child: Text(
                   _showReplies
-                      ? "Hide replies"
-                      : "View replies (${comment.replyCount})",
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                      ? 'Hide replies'
+                      : 'View replies (${comment.replyCount})',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
 
-          // 🔥 REPLIES
           if (_showReplies)
             Padding(
               padding: const EdgeInsets.only(left: 48, top: 8),

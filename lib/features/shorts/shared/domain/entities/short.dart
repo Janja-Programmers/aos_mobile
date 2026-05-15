@@ -1,8 +1,9 @@
 import 'package:equatable/equatable.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/short_status.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/short_metrics.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_metrics.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_ad.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_creator.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_viewer_state.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/caption.dart';
@@ -11,23 +12,20 @@ class Short extends Equatable {
   final ShortId id;
   final Caption caption;
   final List<String> hashtags;
+
   final String playbackUrl;
   final String? thumbnailUrl;
   final double durationSeconds;
 
   final String contentMode;
-
-  final String sellerId;
-  final String? sellerShopName;
-  final String? sellerAvator;
-
   final ShortStatus status;
+
+  final ShortCreator creator;
   final ShortMetrics metrics;
+  final ShortViewerState viewerState;
 
   final ShortAd? ad;
   final DateTime? postedAt;
-
-  final ShortViewerState viewerState;
 
   const Short({
     required this.id,
@@ -37,10 +35,8 @@ class Short extends Equatable {
     required this.contentMode,
     required this.caption,
     required this.hashtags,
-    required this.sellerId,
-    this.sellerShopName,
-    this.sellerAvator,
     required this.status,
+    required this.creator,
     required this.metrics,
     required this.viewerState,
     this.ad,
@@ -55,6 +51,18 @@ class Short extends Equatable {
   bool get isLiked => viewerState.liked;
   bool get isWatched => viewerState.watched;
 
+  bool get isOwner => viewerState.isOwner;
+  bool get canEdit => viewerState.canEdit;
+  bool get canDelete => viewerState.canDelete;
+  bool get canReport => viewerState.canReport;
+
+  bool get isFollowingCreator => viewerState.isFollowing;
+  bool get isCreatorVerified => creator.isVerified;
+
+  String get sellerId => creator.sellerId;
+  String get sellerShopName => creator.displayName;
+  String? get sellerAvatar => creator.avatar;
+
   Short copyWith({
     String? playbackUrl,
     String? thumbnailUrl,
@@ -62,10 +70,8 @@ class Short extends Equatable {
     String? contentMode,
     Caption? caption,
     List<String>? hashtags,
-    String? sellerId,
-    String? sellerShopName,
-    String? sellerAvator,
     ShortStatus? status,
+    ShortCreator? creator,
     ShortMetrics? metrics,
     ShortAd? ad,
     DateTime? postedAt,
@@ -79,10 +85,8 @@ class Short extends Equatable {
       contentMode: contentMode ?? this.contentMode,
       caption: caption ?? this.caption,
       hashtags: hashtags ?? this.hashtags,
-      sellerId: sellerId ?? this.sellerId,
-      sellerShopName: sellerShopName ?? this.sellerShopName,
-      sellerAvator: sellerAvator ?? this.sellerAvator,
       status: status ?? this.status,
+      creator: creator ?? this.creator,
       metrics: metrics ?? this.metrics,
       ad: ad ?? this.ad,
       postedAt: postedAt ?? this.postedAt,
@@ -99,10 +103,8 @@ class Short extends Equatable {
     contentMode,
     caption,
     hashtags,
-    sellerId,
-    sellerShopName,
-    sellerAvator,
     status,
+    creator,
     metrics,
     ad,
     postedAt,

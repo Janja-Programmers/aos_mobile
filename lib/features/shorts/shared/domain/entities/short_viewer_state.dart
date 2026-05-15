@@ -5,10 +5,36 @@ class ShortViewerState extends Equatable {
   final bool watched;
   final double watchProgress;
 
+  final bool isOwner;
+  final bool canEdit;
+  final bool canDelete;
+  final bool canReport;
+
+  final String? targetUser;
+  final bool isSelf;
+
+  final bool isFollowing;
+  final bool isFollowedBy;
+  final bool isFriend;
+
+  final String relationshipStatus;
+  final String actionLabel;
+
   const ShortViewerState({
     required this.liked,
     required this.watched,
     required this.watchProgress,
+    required this.isOwner,
+    required this.canEdit,
+    required this.canDelete,
+    required this.canReport,
+    required this.targetUser,
+    required this.isSelf,
+    required this.isFollowing,
+    required this.isFollowedBy,
+    required this.isFriend,
+    required this.relationshipStatus,
+    required this.actionLabel,
   });
 
   factory ShortViewerState.initial() {
@@ -16,6 +42,17 @@ class ShortViewerState extends Equatable {
       liked: false,
       watched: false,
       watchProgress: 0,
+      isOwner: false,
+      canEdit: false,
+      canDelete: false,
+      canReport: true,
+      targetUser: null,
+      isSelf: false,
+      isFollowing: false,
+      isFollowedBy: false,
+      isFriend: false,
+      relationshipStatus: 'none',
+      actionLabel: 'Follow',
     );
   }
 
@@ -23,14 +60,51 @@ class ShortViewerState extends Equatable {
     bool? liked,
     bool? watched,
     double? watchProgress,
+    bool? isOwner,
+    bool? canEdit,
+    bool? canDelete,
+    bool? canReport,
+    String? targetUser,
+    bool? isSelf,
+    bool? isFollowing,
+    bool? isFollowedBy,
+    bool? isFriend,
+    String? relationshipStatus,
+    String? actionLabel,
   }) {
     return ShortViewerState(
       liked: liked ?? this.liked,
       watched: watched ?? this.watched,
       watchProgress: watchProgress ?? this.watchProgress,
+      isOwner: isOwner ?? this.isOwner,
+      canEdit: canEdit ?? this.canEdit,
+      canDelete: canDelete ?? this.canDelete,
+      canReport: canReport ?? this.canReport,
+      targetUser: targetUser ?? this.targetUser,
+      isSelf: isSelf ?? this.isSelf,
+      isFollowing: isFollowing ?? this.isFollowing,
+      isFollowedBy: isFollowedBy ?? this.isFollowedBy,
+      isFriend: isFriend ?? this.isFriend,
+      relationshipStatus: relationshipStatus ?? this.relationshipStatus,
+      actionLabel: actionLabel ?? this.actionLabel,
     );
   }
 
   @override
-  List<Object?> get props => [liked, watched, watchProgress];
+  List<Object?> get props => [
+    liked,
+    watched,
+    watchProgress,
+    isOwner,
+    canEdit,
+    canDelete,
+    canReport,
+    targetUser,
+    isSelf,
+    isFollowing,
+    isFollowedBy,
+    isFriend,
+    relationshipStatus,
+    actionLabel,
+  ];
 }

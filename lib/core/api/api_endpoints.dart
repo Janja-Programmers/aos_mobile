@@ -45,7 +45,7 @@ class ApiEndpoints {
   static final String upsertAdDraftEndpoint =
       '/api/method/aos.api.ads.upsert_ad_draft';
   static final String getAdDraftEndpoint =
-      '/api/method/aos.api.ads.get_my_ad_draft';
+      '/api/method/aos.api.ads.get_ad_draft';
   static final String listAdDraftsEndpoint =
       '/api/method/aos.api.ads.list_my_ad_drafts';
   static final String submitAdDraftEndpoint =
@@ -154,6 +154,18 @@ class ApiEndpoints {
       '/api/method/aos.api.live.track_join';
   static const String trackLiveLeaveEndpoint =
       '/api/method/aos.api.live.track_leave';
+  // Live extras
+  static const String listLiveStreamsEndpoint =
+      '/api/method/aos.api.live.list_live_streams';
+  static const String getLiveTokenEndpoint =
+      '/api/method/aos.api.live.get_live_token';
+  static const String attachLiveAdEndpoint =
+      '/api/method/aos.api.live.attach_ad';
+  static const String removeLiveAdEndpoint =
+      '/api/method/aos.api.live.remove_ad';
+  static const String pinLiveAdEndpoint = '/api/method/aos.api.live.pin_ad';
+  static const String listLiveAdsEndpoint =
+      '/api/method/aos.api.live.list_live_ads';
 
   static const addLiveComment = '/api/method/aos.api.live.add_comment';
   static const replyLiveComment = '/api/method/aos.api.live.reply_comment';
@@ -212,6 +224,9 @@ class ApiEndpoints {
   static final String listShortReplies =
       '/api/method/aos.api.shorts.list_replies';
 
+  static const String toggleShortCommentLike =
+      '/api/method/aos.api.shorts.toggle_comment_like';
+
   static final String deleteShortComment =
       '/api/method/aos.api.shorts.delete_comment';
 
@@ -235,4 +250,12 @@ class ApiEndpoints {
       '/api/method/aos.api.notifications.deactivate_push_token';
   static final String registerPushToken =
       '/api/method/aos.api.notifications.register_push_token';
+
+  // Saved Searches
+  static const String saveSearchEndpoint =
+      '/api/method/aos.api.saved_search.save_search';
+  static const String listSavedSearchesEndpoint =
+      '/api/method/aos.api.saved_search.list_saved_searches';
+  static const String deleteSavedSearchEndpoint =
+      '/api/method/aos.api.saved_search.delete_saved_search';
 }

@@ -23,11 +23,11 @@ class ShortCard extends StatelessWidget {
     final caption = short.caption.toString().trim();
     final imageUrl = short.thumbnailUrl ?? '';
 
-    final sellerName = short.sellerShopName?.trim().isNotEmpty == true
-        ? short.sellerShopName!.trim()
+    final sellerName = short.sellerShopName.trim().isNotEmpty == true
+        ? short.sellerShopName.trim()
         : 'Shop';
 
-    final avatarUrl = _safeFileUrl(short.sellerAvator);
+    final avatarUrl = _safeFileUrl(short.sellerAvatar);
 
     return GestureDetector(
       onTap: onTap,

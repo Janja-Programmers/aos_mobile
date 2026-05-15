@@ -2,7 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/selected_media_type.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
 

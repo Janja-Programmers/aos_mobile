@@ -17,6 +17,7 @@ class AdListingContentView extends StatelessWidget {
     required this.tab,
     required this.onEdit,
     required this.onMarkSold,
+    required this.onMarkAvailable,
     required this.onDelete,
     required this.onContactSupport,
   });
@@ -26,6 +27,7 @@ class AdListingContentView extends StatelessWidget {
 
   final void Function(AOSAdListItem ad) onEdit;
   final void Function(AOSAdListItem ad) onMarkSold;
+  final void Function(AOSAdListItem ad) onMarkAvailable;
   final void Function(AOSAdListItem ad) onDelete;
   final void Function(AOSAdListItem ad) onContactSupport;
 
@@ -40,6 +42,7 @@ class AdListingContentView extends StatelessWidget {
         tab: tab,
         onEdit: onEdit,
         onMarkSold: onMarkSold,
+        onMarkAvailable: onMarkAvailable,
         onDelete: onDelete,
         onContactSupport: onContactSupport,
       ),
@@ -53,6 +56,7 @@ class _MyAdTile extends StatelessWidget {
     required this.tab,
     required this.onEdit,
     required this.onMarkSold,
+    required this.onMarkAvailable,
     required this.onDelete,
     required this.onContactSupport,
   });
@@ -62,8 +66,40 @@ class _MyAdTile extends StatelessWidget {
 
   final void Function(AOSAdListItem ad) onEdit;
   final void Function(AOSAdListItem ad) onMarkSold;
+  final void Function(AOSAdListItem ad) onMarkAvailable;
   final void Function(AOSAdListItem ad) onDelete;
   final void Function(AOSAdListItem ad) onContactSupport;
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final title = ad.title.trim().isEmpty ? 'this listing' : ad.title.trim();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: context.appColors.border,
+          shadowColor: context.appColors.border,
+          elevation: 1.5,
+          title: Text('Delete Ad: $title'),
+          content: const Text('This cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text('Cancel', style: context.p),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text('Delete', style: AppTextStylesX(context).button),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      onDelete(ad);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +119,8 @@ class _MyAdTile extends StatelessWidget {
       ad: ad,
       onEdit: onEdit,
       onMarkSold: onMarkSold,
-      onDelete: () => onDelete(ad),
+      onDelete: () => _confirmDelete(context),
+      onMarkAvailable: onMarkAvailable,
       onContactSupport: onContactSupport,
     );
 
@@ -145,7 +182,6 @@ class _MyAdTile extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          /// FINAL ACTIONS
           Wrap(
             spacing: 12,
             runSpacing: 8,
@@ -167,12 +203,11 @@ class _MyAdTile extends StatelessWidget {
                   );
 
                 case AdActionType.destructive:
-                  return OutlinedButton(
+                  return IconButton.filledTonal(
+                    tooltip: a.label,
                     onPressed: a.onPressed,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.error,
-                    ),
-                    child: Text(a.label),
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    color: colors.primary,
                   );
 
                 case AdActionType.disabled:

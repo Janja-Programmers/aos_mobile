@@ -14,8 +14,11 @@ class ShortVideoPage extends StatefulWidget {
   final bool isActive;
   final bool shouldPrepare;
   final bool isLikePending;
+  final bool isFollowPending;
   final Future<void> Function(String shortId) onToggleLike;
   final void Function(String shortId) onCommentAdded;
+  final Future<void> Function(String targetUser)? onToggleFollow;
+  final VoidCallback? onCreatorTap;
 
   const ShortVideoPage({
     super.key,
@@ -24,7 +27,10 @@ class ShortVideoPage extends StatefulWidget {
     required this.shouldPrepare,
     required this.onToggleLike,
     required this.onCommentAdded,
+    this.onToggleFollow,
+    this.onCreatorTap,
     this.isLikePending = false,
+    this.isFollowPending = false,
   });
 
   @override
@@ -278,7 +284,10 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
             child: ShortActionsPanel(
               short: widget.short,
               isLikePending: widget.isLikePending,
+              isFollowPending: widget.isFollowPending,
               onToggleLike: widget.onToggleLike,
+              onToggleFollow: widget.onToggleFollow,
+              onCreatorTap: widget.onCreatorTap,
               onCommentAdded: widget.onCommentAdded,
             ),
           ),

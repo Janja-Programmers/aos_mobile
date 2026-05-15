@@ -74,6 +74,47 @@ class AppTheme {
           side: BorderSide(color: tokens.border, width: 1),
         ),
       ),
+
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: tokens.surface,
+        headerBackgroundColor: tokens.primary,
+        headerForegroundColor: tokens.white,
+        todayForegroundColor: WidgetStatePropertyAll(tokens.primary),
+        todayBorder: BorderSide(color: tokens.primary),
+        dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return tokens.white;
+          }
+          return tokens.textPrimary;
+        }),
+        dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return tokens.primary;
+          }
+          return null;
+        }),
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: tokens.primary,
+        ),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: tokens.textMuted,
+        ),
+      ),
+
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: tokens.surface,
+        hourMinuteColor: tokens.border,
+        hourMinuteTextColor: tokens.textPrimary,
+        dialBackgroundColor: tokens.border,
+        dialHandColor: tokens.primary,
+        entryModeIconColor: tokens.primary,
+        confirmButtonStyle: TextButton.styleFrom(
+          foregroundColor: tokens.primary,
+        ),
+        cancelButtonStyle: TextButton.styleFrom(
+          foregroundColor: tokens.textMuted,
+        ),
+      ),
     );
   }
 

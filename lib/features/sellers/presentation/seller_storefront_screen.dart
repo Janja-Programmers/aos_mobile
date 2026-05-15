@@ -212,7 +212,7 @@ class _SellerStorefrontScreenState
           );
         },
       ),
-      bottomNavigationBar: seller == null
+      bottomNavigationBar: seller == null || seller.isSelf
           ? null
           : SafeArea(
               top: false,

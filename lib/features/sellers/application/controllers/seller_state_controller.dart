@@ -87,9 +87,24 @@ class SellerStateController extends StateNotifier<SellerState> {
     String? shopBanner,
     List<Map<String, dynamic>>? operatingHours,
   }) async {
-    final controller = ref.read(sellerControllerProvider);
+    if (state.updating) return null;
 
-    state = state.copyWith(loading: true, error: null);
+    final controller = ref.read(sellerControllerProvider);
+    final previousSeller = state.seller;
+
+    final optimisticSeller = previousSeller?.copyWith(
+      businessCategory: businessCategory,
+      aboutBusiness: aboutBusiness,
+      businessAddress: businessAddress,
+      shopBanner: shopBanner,
+      operatingHours: operatingHours,
+    );
+
+    state = state.copyWith(
+      updating: true,
+      error: null,
+      seller: optimisticSeller,
+    );
 
     final res = await controller.updateSellerProfile(
       businessCategory: businessCategory,
@@ -101,32 +116,16 @@ class SellerStateController extends StateNotifier<SellerState> {
 
     return res.fold(
       (failure) {
-        state = state.copyWith(loading: false, error: failure.message);
+        state = state.copyWith(
+          updating: false,
+          error: failure.message,
+          seller: previousSeller,
+        );
 
         return failure.message;
       },
-      (data) async {
-        final responseData = data['data'] is Map
-            ? Map<String, dynamic>.from(data['data'] as Map)
-            : Map<String, dynamic>.from(data);
-
-        final currentSeller = state.seller;
-
-        final updatedSeller = currentSeller?.copyWith(
-          businessCategory: responseData['business_category']?.toString(),
-          aboutBusiness: responseData['about_business']?.toString(),
-          businessAddress: responseData['business_address']?.toString(),
-          shopBanner: responseData['shop_banner']?.toString(),
-          operatingHours: responseData['operating_hours'] is List
-              ? List<dynamic>.from(responseData['operating_hours'] as List)
-              : null,
-        );
-
-        state = state.copyWith(
-          loading: false,
-          error: null,
-          seller: updatedSeller,
-        );
+      (_) async {
+        state = state.copyWith(updating: false, error: null);
 
         await load();
 

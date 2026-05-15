@@ -36,7 +36,8 @@ class AppRoutes {
   static const startSelling = '/seller';
   static const sellerVerification = '/seller/verification';
   static const sellerCustomizeStore = '/seller/customize/:sellerId';
-  static const sellerStore = '/seller/detail/:sellerId';
+  static const sellerStore = '/seller/store-detail/:sellerId';
+  static const myStoreFront = '/seller/detail/:sellerId';
 
   // Reports
   static const reportAdBase = '/report-ad';
@@ -95,6 +96,7 @@ class AppRoutes {
   static const nPrivacy = 'privacy';
 
   static const nSellerCustomizeStore = 'sellerCustomizeStore';
+  static const nMyStoreFront = 'myStoreFront';
   static const nSellerStore = 'sellerStore';
   static const nSellerVerification = 'sellerVerification';
   static const nStartSelling = 'seller';

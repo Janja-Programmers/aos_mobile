@@ -12,6 +12,7 @@ import 'package:africaonlinestores/features/home/presentation/sections/tips/phot
 import 'package:africaonlinestores/features/home/presentation/sections/tips/ranking_tips_screen.dart';
 import 'package:africaonlinestores/features/sellers/presentation/selling_tips_screen.dart';
 
+import 'package:africaonlinestores/shared/enums/ads.dart';
 import 'package:africaonlinestores/shared/enums/ads_mode.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
 import 'package:africaonlinestores/shared/utils/parse_sort.dart';
@@ -105,8 +106,29 @@ class AdNavigation {
     context.pushNamed(AppRoutes.nAdDetails, pathParameters: {'id': adId});
   }
 
-  static void toCreate(BuildContext context) {
+  static void toCreateAd(BuildContext context) {
     context.pushNamed(AppRoutes.nCreateAd);
+  }
+
+  static void toEditAd(
+    BuildContext context, {
+    String? adId,
+    String? draftId,
+    AdStatus? status,
+  }) {
+    assert(
+      adId != null || draftId != null,
+      'toEditAd requires either adId or draftId',
+    );
+
+    context.pushNamed(
+      AppRoutes.nCreateAd,
+      queryParameters: {
+        if (adId != null && adId.isNotEmpty) 'adId': adId,
+        if (draftId != null && draftId.isNotEmpty) 'draftId': draftId,
+        if (status != null) 'status': status.name,
+      },
+    );
   }
 
   static void toMyAds(BuildContext context) {
@@ -124,7 +146,7 @@ class AdNavigation {
     context.pushNamed(AppRoutes.nAllAds, queryParameters: {'mode': 'wishlist'});
   }
 
-  static void toReport(BuildContext context, String adId) {
+  static void toReportAd(BuildContext context, String adId) {
     context.pushNamed(AppRoutes.nReportAd, pathParameters: {'adId': adId});
   }
 }

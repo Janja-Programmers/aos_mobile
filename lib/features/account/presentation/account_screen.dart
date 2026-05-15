@@ -127,7 +127,7 @@ class AccountScreen extends ConsumerWidget {
                       title: "My Storefront",
                       onTap: () {
                         final current = auth;
-                        SellerNavigation.toSellerStore(
+                        SellerNavigation.toMyStoreFront(
                           context,
                           current.user.email,
                         );

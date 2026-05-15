@@ -7,7 +7,6 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
-import 'package:africaonlinestores/features/shorts/shared/data/models/short_feed_page.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
@@ -51,7 +50,7 @@ class ShortsManagementApi {
 
   // ───────────── MY SHORTS ─────────────
 
-  Future<Either<Failure, ShortFeedPage>> myShorts({String? cursor}) async {
+  Future<Either<Failure, List<Short>>> myShorts({String? cursor}) async {
     try {
       final query = <String, dynamic>{
         if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
@@ -67,20 +66,22 @@ class ShortsManagementApi {
       return unwrapped.fold((failure) => Either.left(failure), (json) {
         final data = json['data'] is Map<String, dynamic>
             ? json['data'] as Map<String, dynamic>
-            : json['message']?['data'] as Map<String, dynamic>? ?? json;
+            : json['message'] is Map<String, dynamic> &&
+                  json['message']['data'] is Map<String, dynamic>
+            ? json['message']['data'] as Map<String, dynamic>
+            : json;
 
-        final items = (data['items'] as List? ?? [])
+        final rawItems = data['items'] as List? ?? [];
+
+        final shorts = rawItems
             .whereType<Map<String, dynamic>>()
-            .map(ShortModel.fromJson)
-            .toList();
+            .map((item) {
+              final model = ShortModel.fromJson(item);
+              return ShortMapper.toDomain(model);
+            })
+            .toList(growable: false);
 
-        return Either.right(
-          ShortFeedPage(
-            items: items,
-            nextCursor: data['next_cursor'] as String?,
-            hasMore: data['has_more'] as bool? ?? false,
-          ),
-        );
+        return Either.right(shorts);
       });
     } on DioException catch (e) {
       return Either.left(mapDioException(e));

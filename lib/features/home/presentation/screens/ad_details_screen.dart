@@ -208,8 +208,9 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                           ),
                           onReview: () =>
                               ReviewNavigation.toCreateReview(context, ad.id),
-                          onReport: () => AdNavigation.toReport(context, ad.id),
-                          onPostSimilar: () => AdNavigation.toCreate(context),
+                          onReport: () =>
+                              AdNavigation.toReportAd(context, ad.id),
+                          onPostSimilar: () => AdNavigation.toCreateAd(context),
                         );
                       },
                     ),

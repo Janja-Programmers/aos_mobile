@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 
 import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
-import 'package:africaonlinestores/features/sellers/presentation/seller_customization_screen.dart';
+
+import 'package:africaonlinestores/features/sellers/presentation/my_storefront_screen.dart';
+import 'package:africaonlinestores/features/sellers/presentation/store_customization_screen.dart';
 import 'package:africaonlinestores/features/sellers/presentation/seller_storefront_screen.dart';
+
 import 'package:africaonlinestores/features/verifications/presentation/verification_screen.dart';
 
 class SellerRoutes {
@@ -47,6 +50,14 @@ class SellerRoutes {
         return StoreCustomizationScreen(sellerId: sellerId);
       },
     ),
+
+    GoRoute(
+      name: AppRoutes.nMyStoreFront,
+      path: AppRoutes.myStoreFront,
+      builder: (context, state) {
+        return MyStorefrontScreen(sellerId: _param(state, 'sellerId'));
+      },
+    ),
   ];
 }
 
@@ -62,6 +73,17 @@ class SellerNavigation {
       AppRoutes.nSellerStore,
       pathParameters: {'sellerId': sellerId},
       extra: seller,
+    );
+  }
+
+  static void toMyStoreFront(
+    BuildContext context,
+    String sellerId, {
+    AOSSellerProfile? seller,
+  }) {
+    context.pushNamed(
+      AppRoutes.nMyStoreFront,
+      pathParameters: {'sellerId': sellerId},
     );
   }
 

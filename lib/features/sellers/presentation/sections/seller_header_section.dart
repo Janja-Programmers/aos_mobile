@@ -118,68 +118,71 @@ class SellerHeaderSection extends ConsumerWidget {
 
           const SizedBox(height: 18),
 
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton.icon(
-              onPressed: state.followingLoading
-                  ? null
-                  : () async {
-                      final wasFollowing = isFollowing;
+          if (!seller.isSelf)
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: state.followingLoading
+                    ? null
+                    : () async {
+                        final wasFollowing = isFollowing;
 
-                      final error = await ref
-                          .read(sellerStateProvider(sellerId).notifier)
-                          .toggleFollow();
+                        final error = await ref
+                            .read(sellerStateProvider(sellerId).notifier)
+                            .toggleFollow();
 
-                      if (!context.mounted) return;
+                        if (!context.mounted) return;
 
-                      if (error != null) {
-                        ShowSnack(context, error).error();
-                      } else {
-                        ShowSnack(
-                          context,
-                          wasFollowing ? "Unfollowed" : "Following",
-                        ).success();
-                      }
-                    },
-              icon: state.followingLoading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(
-                      isFollowing ? Icons.check : Icons.person_add_alt_1,
-                      size: 18,
-                    ),
-              label: Text(
-                state.followingLoading
-                    ? 'Please wait...'
-                    : isFollowing
-                    ? 'Following'
-                    : 'Follow',
-              ),
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: isFollowing ? colors.surface : colors.primary,
-                foregroundColor: isFollowing
-                    ? colors.textPrimary
-                    : colors.white,
-                disabledBackgroundColor: isFollowing
-                    ? colors.surface
-                    : colors.primary,
-                disabledForegroundColor: isFollowing
-                    ? colors.textPrimary
-                    : colors.white,
-                side: BorderSide(
-                  color: isFollowing ? colors.border : colors.primary,
+                        if (error != null) {
+                          ShowSnack(context, error).error();
+                        } else {
+                          ShowSnack(
+                            context,
+                            wasFollowing ? "Unfollowed" : "Following",
+                          ).success();
+                        }
+                      },
+                icon: state.followingLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        isFollowing ? Icons.check : Icons.person_add_alt_1,
+                        size: 18,
+                      ),
+                label: Text(
+                  state.followingLoading
+                      ? 'Please wait...'
+                      : isFollowing
+                      ? 'Following'
+                      : 'Follow',
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: isFollowing
+                      ? colors.surface
+                      : colors.primary,
+                  foregroundColor: isFollowing
+                      ? colors.textPrimary
+                      : colors.white,
+                  disabledBackgroundColor: isFollowing
+                      ? colors.surface
+                      : colors.primary,
+                  disabledForegroundColor: isFollowing
+                      ? colors.textPrimary
+                      : colors.white,
+                  side: BorderSide(
+                    color: isFollowing ? colors.border : colors.primary,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

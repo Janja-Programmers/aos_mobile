@@ -93,8 +93,22 @@ class RingingScreen extends ConsumerWidget {
   }
 
   String _initials(String text) {
-    final parts = text.split(' ');
-    if (parts.length == 1) return parts.first[0].toUpperCase();
-    return (parts.first[0] + parts.last[0]).toUpperCase();
+    final clean = text.trim();
+
+    if (clean.isEmpty) return '?';
+
+    final parts = clean
+        .split(RegExp(r'\s+'))
+        .where((part) => part.trim().isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return '?';
+
+    if (parts.length == 1) {
+      return parts.first.characters.first.toUpperCase();
+    }
+
+    return '${parts.first.characters.first}${parts.last.characters.first}'
+        .toUpperCase();
   }
 }

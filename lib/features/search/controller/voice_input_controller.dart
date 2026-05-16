@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -21,16 +22,18 @@ class VoiceInputState {
     bool? isAvailable,
     bool? isListening,
     String? lastWords,
-    String? error,
+    Object? error = _keepError,
   }) {
     return VoiceInputState(
       isAvailable: isAvailable ?? this.isAvailable,
       isListening: isListening ?? this.isListening,
       lastWords: lastWords ?? this.lastWords,
-      error: error,
+      error: identical(error, _keepError) ? this.error : error as String?,
     );
   }
 }
+
+const Object _keepError = Object();
 
 final voiceInputControllerProvider =
     StateNotifierProvider<VoiceInputController, VoiceInputState>((ref) {
@@ -45,54 +48,71 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
   bool _initialized = false;
   Timer? _autoStopTimer;
 
-  /// Ensure speech engine ready
   Future<void> _ensureInitialized() async {
     if (_initialized) return;
 
     try {
-      final status = await Permission.microphone.request();
+      final micStatus = await Permission.microphone.request();
 
-      if (!status.isGranted) {
+      if (!micStatus.isGranted) {
         state = state.copyWith(
           isAvailable: false,
           isListening: false,
-          error: "Microphone permission denied",
+          error: 'Microphone permission denied',
         );
-        _initialized = true;
         return;
       }
 
+      if (Platform.isIOS) {
+        final speechStatus = await Permission.speech.request();
+
+        if (!speechStatus.isGranted) {
+          state = state.copyWith(
+            isAvailable: false,
+            isListening: false,
+            error: 'Speech recognition permission denied',
+          );
+          return;
+        }
+      }
+
       final available = await _speech.initialize(
-        onError: (e) {
-          state = state.copyWith(isListening: false, error: e.errorMsg);
+        onError: (error) {
+          _clearAutoStopTimer();
+
+          state = state.copyWith(isListening: false, error: error.errorMsg);
         },
-        onStatus: (s) {
-          if (s == "done" || s == "notListening") {
+        onStatus: (status) {
+          if (status == 'done' || status == 'notListening') {
+            _clearAutoStopTimer();
+
             state = state.copyWith(isListening: false);
           }
         },
       );
 
-      _initialized = true;
+      _initialized = available;
 
-      state = state.copyWith(isAvailable: available, error: null);
+      state = state.copyWith(
+        isAvailable: available,
+        isListening: false,
+        error: available ? null : 'Speech recognition unavailable',
+      );
     } catch (_) {
-      _initialized = true;
+      _initialized = false;
 
       state = state.copyWith(
         isAvailable: false,
         isListening: false,
-        error: "Speech recognition unavailable",
+        error: 'Speech recognition unavailable',
       );
     }
   }
 
-  /// Reset last words
   void reset() {
     state = state.copyWith(lastWords: '', error: null);
   }
 
-  /// Toggle listening
   Future<void> toggleListening({
     required void Function(String words, {required bool isFinal}) onWords,
   }) async {
@@ -104,7 +124,6 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
     await startListening(onWords: onWords);
   }
 
-  /// Start speech listening
   Future<void> startListening({
     required void Function(String words, {required bool isFinal}) onWords,
   }) async {
@@ -112,59 +131,77 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
 
     if (!state.isAvailable || state.isListening) return;
 
-    _autoStopTimer?.cancel();
+    _clearAutoStopTimer();
 
     state = state.copyWith(isListening: true, error: null, lastWords: '');
 
-    await _speech.listen(
-      listenMode: stt.ListenMode.confirmation,
-      partialResults: true,
-      cancelOnError: true,
-      onResult: (r) {
-        final words = r.recognizedWords.trim();
+    try {
+      await _speech.listen(
+        listenMode: stt.ListenMode.dictation,
+        partialResults: true,
+        cancelOnError: true,
+        onResult: (result) {
+          final words = result.recognizedWords.trim();
 
-        if (words.isEmpty) return;
+          state = state.copyWith(lastWords: words);
 
-        state = state.copyWith(lastWords: words);
+          if (words.isNotEmpty) {
+            onWords(words, isFinal: result.finalResult);
+          }
+        },
+      );
 
-        onWords(words, isFinal: r.finalResult);
-      },
-    );
+      /// Safety timeout to avoid endless listening.
+      _autoStopTimer = Timer(const Duration(seconds: 20), () {
+        unawaited(stopListening());
+      });
+    } catch (_) {
+      _clearAutoStopTimer();
 
-    /// Auto stop if user stays silent
-    _autoStopTimer = Timer(const Duration(seconds: 20), () {
-      stopListening();
-    });
+      state = state.copyWith(
+        isListening: false,
+        error: 'Could not start voice input',
+      );
+    }
   }
 
-  /// Stop listening
   Future<void> stopListening() async {
-    _autoStopTimer?.cancel();
-    _autoStopTimer = null;
+    _clearAutoStopTimer();
 
     try {
       await _speech.stop();
-    } catch (_) {}
+    } catch (_) {
+      // Ignore speech engine stop errors.
+    }
 
     state = state.copyWith(isListening: false);
   }
 
-  /// Cancel completely
   Future<void> cancel() async {
-    _autoStopTimer?.cancel();
-    _autoStopTimer = null;
+    _clearAutoStopTimer();
 
     try {
       await _speech.cancel();
-    } catch (_) {}
+    } catch (_) {
+      // Ignore speech engine cancel errors.
+    }
 
     state = state.copyWith(isListening: false);
+  }
+
+  Future<void> openPermissionSettings() async {
+    await openAppSettings();
+  }
+
+  void _clearAutoStopTimer() {
+    _autoStopTimer?.cancel();
+    _autoStopTimer = null;
   }
 
   @override
   void dispose() {
-    _autoStopTimer?.cancel();
-    _speech.cancel();
+    _clearAutoStopTimer();
+    unawaited(_speech.cancel());
     super.dispose();
   }
 }

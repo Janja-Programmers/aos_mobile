@@ -98,6 +98,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     final q = result.trim();
 
+    _debounce?.cancel();
+
     _searchCtrl.text = q;
     _searchCtrl.selection = TextSelection.fromPosition(
       TextPosition(offset: q.length),

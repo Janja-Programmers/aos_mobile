@@ -1,5 +1,3 @@
-import 'package:africaonlinestores/core/utils/logger.dart';
-import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +6,8 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+
+import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
@@ -134,8 +134,6 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
 
           // Replace this provider with your actual auth/current user provider
           final currentUser = ref.watch(currentUserProvider);
-          appLogger.i("Current user: $currentUser");
-          appLogger.i("Seller user: ${ad.sellerId}");
           final isOwnAd = currentUser?.toString() == ad.sellerId;
 
           return Column(

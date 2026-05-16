@@ -16,37 +16,59 @@ class CallKitParamsMapper {
   }) {
     final isVideo = callType == AOSCallType.video;
 
-    final callerName = caller?.displayName.trim().isNotEmpty == true
-        ? caller!.displayName
-        : caller?.userId ?? 'AOS User';
+    final callerUserId = _cleanString(caller?.userId);
+    final callerName =
+        _cleanString(caller?.displayName) ?? callerUserId ?? 'AOS User';
+
+    final callerAvatar = _cleanString(caller?.avatarUrl);
+
+    final callLabel = isVideo ? 'Incoming video call' : 'Incoming audio call';
 
     return CallKitParams(
       id: callId,
       nameCaller: callerName,
-      appName: 'AOS',
-      handle: isVideo ? 'Incoming Video Call' : 'Incoming Call',
+      appName: 'Africa Online Stores',
+      handle: callLabel,
+      avatar: callerAvatar,
       type: isVideo ? 1 : 0,
       duration: 30000,
       textAccept: 'Accept',
       textDecline: 'Decline',
+      missedCallNotification: null,
       extra: {
         'call_id': callId,
         'call_type': isVideo ? 'video' : 'audio',
-        if (roomName != null && roomName.isNotEmpty) 'room_name': roomName,
-        if (caller != null) 'caller': caller.userId,
+        'caller_display_name': callerName,
+        'caller': ?callerUserId,
+        'caller_avatar': ?callerAvatar,
+        if (_cleanString(roomName) != null) 'room_name': roomName!.trim(),
       },
       android: const AndroidParams(
         isCustomNotification: true,
         isShowLogo: false,
         ringtonePath: 'system_ringtone_default',
-        backgroundColor: '#0955FA',
-        actionColor: '#4CAF50',
-        textColor: '#FFFFFF',
+
+        // White UI / black text
+        backgroundColor: '#FFFFFF',
+        textColor: '#111111',
+
+        // Accept action color
+        actionColor: '#16A34A',
       ),
       ios: const IOSParams(
         supportsVideo: true,
         ringtonePath: 'system_ringtone_default',
       ),
     );
+  }
+
+  String? _cleanString(String? value) {
+    final text = value?.trim();
+
+    if (text == null || text.isEmpty || text.toLowerCase() == 'null') {
+      return null;
+    }
+
+    return text;
   }
 }

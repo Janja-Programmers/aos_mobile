@@ -15,49 +15,66 @@ class VoiceSearchSheet extends ConsumerStatefulWidget {
 
 class _VoiceSearchSheetState extends ConsumerState<VoiceSearchSheet> {
   String _words = '';
+  bool _closing = false;
 
   @override
   void initState() {
     super.initState();
 
-    /// Start listening immediately
     Future.microtask(() {
+      if (!mounted) return;
+
       ref
           .read(voiceInputControllerProvider.notifier)
-          .toggleListening(
+          .startListening(
             onWords: (words, {required bool isFinal}) {
-              if (!mounted) return;
+              if (!mounted || _closing) return;
 
               setState(() => _words = words);
 
-              /// If speech finished automatically → return result
-              if (isFinal && words.trim().isNotEmpty) {
-                Navigator.pop(context, words.trim());
-              }
+              // Do not auto-pop on iOS/final result.
+              // Let the user explicitly tap Search.
             },
           );
     });
   }
 
-  void _cancel() {
-    ref.read(voiceInputControllerProvider.notifier).stopListening();
-    Navigator.pop(context);
+  Future<void> _cancel() async {
+    if (_closing) return;
+    _closing = true;
+
+    await ref.read(voiceInputControllerProvider.notifier).cancel();
+
+    if (!mounted) return;
+    Navigator.of(context).pop();
   }
 
-  void _search() {
-    ref.read(voiceInputControllerProvider.notifier).stopListening();
+  Future<void> _search() async {
+    if (_closing) return;
 
-    if (_words.trim().isEmpty) {
-      Navigator.pop(context);
+    final q = _words.trim();
+
+    if (q.isEmpty) {
+      await _cancel();
       return;
     }
 
-    Navigator.pop(context, _words.trim());
+    _closing = true;
+
+    await ref.read(voiceInputControllerProvider.notifier).stopListening();
+
+    if (!mounted) return;
+
+    Navigator.of(context).pop(q);
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final voice = ref.watch(voiceInputControllerProvider);
+
+    final q = _words.trim();
+    final canSearch = q.isNotEmpty && !_closing;
 
     return SafeArea(
       child: Container(
@@ -76,17 +93,16 @@ class _VoiceSearchSheetState extends ConsumerState<VoiceSearchSheet> {
               ),
             ),
 
-            /// Listening animation
             const VoiceListeningIndicator(),
 
             const SizedBox(height: 20),
 
             Text(
-              _words.isEmpty ? "Listening..." : _words,
+              q.isEmpty ? voice.error ?? 'Listening...' : q,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: FontWeight.w700,
-                color: colors.textPrimary,
+                color: voice.error == null ? colors.textPrimary : colors.error,
                 fontSize: 16,
               ),
             ),
@@ -97,8 +113,8 @@ class _VoiceSearchSheetState extends ConsumerState<VoiceSearchSheet> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _cancel,
-                    child: const Text("Cancel"),
+                    onPressed: _closing ? null : _cancel,
+                    child: const Text('Cancel'),
                   ),
                 ),
 
@@ -106,9 +122,9 @@ class _VoiceSearchSheetState extends ConsumerState<VoiceSearchSheet> {
 
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _search,
+                    onPressed: canSearch ? _search : null,
                     child: Text(
-                      "Search",
+                      _closing ? 'Searching...' : 'Search',
                       style: context.p.copyWith(color: colors.white),
                     ),
                   ),

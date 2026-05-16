@@ -98,7 +98,7 @@ class CallManager extends StateNotifier<CallState> {
           receiver ??
           CallParticipant(
             userId: trimmedUserId,
-            displayName: 'Guest',
+            displayName: trimmedUserId,
             avatarUrl: null,
           );
 
@@ -106,6 +106,7 @@ class CallManager extends StateNotifier<CallState> {
         BackendCallStatus.initiated,
         activeCall: initiatedCall,
         direction: 'outgoing',
+        caller: initiatedCall.caller,
         receiver: safeReceiver,
       );
 

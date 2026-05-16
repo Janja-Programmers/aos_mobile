@@ -266,8 +266,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final typingMap = ref.watch(chatTypingControllerProvider);
     final currentUserId = _normalizeUser(ref.watch(currentUserProvider));
 
-    appLogger.i("Chat Screen | Current user: $currentUserId");
-
     final isTyping = typingMap[widget.conversationId] ?? false;
 
     final colors = context.appColors;

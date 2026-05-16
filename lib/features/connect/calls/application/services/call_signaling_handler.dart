@@ -10,12 +10,13 @@ class CallSignalingHandler {
   // ================= INCOMING =================
   Future<bool> handleIncomingCall(Map<String, dynamic> data) async {
     try {
-      final callId = data['call_id'] as String?;
-      final callerRaw = data['caller'] as String?;
-      final callerNameRaw = data['caller_name'] as String?;
-      final callerAvatarRaw = data['caller_avatar'] as String?;
-      final roomName = data['room_name'] as String?;
-      final callTypeRaw = data['call_type'] as String?;
+      final callId = _cleanString(data['call_id']) ?? _cleanString(data['id']);
+      final roomName = _cleanString(data['room_name']);
+      final callTypeRaw = _cleanString(data['call_type']);
+
+      final callerUser = _cleanString(data['caller']);
+      final callerDisplayName = _cleanString(data['caller_display_name']);
+      final callerAvatar = _cleanString(data['caller_avatar']);
 
       if (callId == null || roomName == null || callTypeRaw == null) {
         return false;
@@ -25,16 +26,13 @@ class CallSignalingHandler {
           ? AOSCallType.video
           : AOSCallType.audio;
 
-      final caller = callerRaw != null
-          ? CallParticipant(
-              userId: callerRaw,
-              displayName: _safeDisplayName(
-                callerNameRaw: callerNameRaw,
-                fallback: callerRaw,
-              ),
-              avatarUrl: _safeNullableString(callerAvatarRaw),
-            )
-          : null;
+      final caller = callerUser == null
+          ? null
+          : CallParticipant(
+              userId: callerUser,
+              displayName: callerDisplayName ?? callerUser,
+              avatarUrl: callerAvatar,
+            );
 
       return callManager.onIncomingCallEvent(
         callId: callId,
@@ -113,39 +111,15 @@ class CallSignalingHandler {
 
   // ================= HELPERS =================
 
-  String _safeDisplayName({
-    required String? callerNameRaw,
-    required String fallback,
-  }) {
-    final name = callerNameRaw?.trim();
+  String? _cleanString(dynamic value) {
+    if (value == null) return null;
 
-    if (name != null && name.isNotEmpty) {
-      return name;
-    }
+    final text = value.toString().trim();
 
-    return _emailToReadableName(fallback);
-  }
-
-  String _emailToReadableName(String value) {
-    if (!value.contains('@')) return value;
-
-    final localPart = value.split('@').first.trim();
-
-    if (localPart.isEmpty) return value;
-
-    return localPart
-        .replaceAll('.', ' ')
-        .replaceAll('_', ' ')
-        .replaceAll('-', ' ');
-  }
-
-  String? _safeNullableString(String? value) {
-    final trimmed = value?.trim();
-
-    if (trimmed == null || trimmed.isEmpty) {
+    if (text.isEmpty || text.toLowerCase() == 'null') {
       return null;
     }
 
-    return trimmed;
+    return text;
   }
 }

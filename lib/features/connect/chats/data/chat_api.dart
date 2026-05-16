@@ -128,17 +128,21 @@ class ChatApi {
     return Either.right(messages);
   }
 
-  Future<Either<Failure, void>> sendMessage({
+  Future<Either<Failure, ChatMessage>> sendMessage({
     required String conversationId,
     String? content,
+    String? ad,
     List<Map<String, dynamic>>? attachments,
   }) async {
     final cleanAttachments = attachments ?? [];
+
+    final cleanAd = ad?.trim();
 
     final payload = {
       'conversation_id': conversationId,
       'content': content ?? '',
       'attachments': cleanAttachments,
+      if (cleanAd != null && cleanAd.isNotEmpty) 'ad': cleanAd,
     };
 
     try {
@@ -149,12 +153,31 @@ class ChatApi {
 
       final result = unwrapFrappe(res);
 
-      if (result.isLeft) return Either.left(result.leftOrNull!);
+      if (result.isLeft) {
+        return Either.left(result.leftOrNull!);
+      }
 
-      return Either.right(null);
+      final raw = result.rightOrNull;
+      final messageData = raw?['data'];
+
+      if (messageData is! Map) {
+        return Either.left(
+          const Failure('Invalid message response from chat API'),
+        );
+      }
+
+      final message = ChatMessage.fromJson(
+        Map<String, dynamic>.from(messageData),
+      );
+
+      if (message.id.trim().isEmpty) {
+        return Either.left(const Failure('Invalid message id from chat API'));
+      }
+
+      return Either.right(message);
     } on DioException catch (e) {
       return Either.left(Failure(_friendlySendMessageError(e)));
-    } catch (e) {
+    } catch (_) {
       return Either.left(
         const Failure('Failed to send message. Please try again.'),
       );

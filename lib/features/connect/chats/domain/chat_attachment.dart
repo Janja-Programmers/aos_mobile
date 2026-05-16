@@ -12,7 +12,7 @@ class ChatAttachment {
   factory ChatAttachment.fromJson(Map<String, dynamic> json) {
     return ChatAttachment(
       url: json['url']?.toString() ?? '',
-      type: json['type']?.toString() ?? '',
+      type: json['type']?.toString().trim().toLowerCase() ?? '',
       sortOrder: json['sort_order'] is int
           ? json['sort_order'] as int
           : int.tryParse(json['sort_order']?.toString() ?? '') ?? 0,
@@ -32,7 +32,10 @@ class ChatAttachment {
   }
 
   bool get isImage => type == 'image';
+
   bool get isAudio => type == 'audio';
+
   bool get isVideo => type == 'video';
+
   bool get isDocument => type == 'document';
 }

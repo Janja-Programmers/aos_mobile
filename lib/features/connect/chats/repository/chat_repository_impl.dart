@@ -43,14 +43,16 @@ class ChatRepository {
     return api.listMessages(conversationId: conversationId, before: before);
   }
 
-  Future<Either<Failure, void>> sendMessage({
+  Future<Either<Failure, ChatMessage>> sendMessage({
     required String conversationId,
     String? content,
+    String? ad,
     List<Map<String, dynamic>>? attachments,
   }) {
     return api.sendMessage(
       conversationId: conversationId,
       content: content,
+      ad: ad,
       attachments: attachments,
     );
   }

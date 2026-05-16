@@ -126,7 +126,8 @@ class ApiEndpoints {
   static final String markDeliveredEndpoint =
       '/api/method/aos.api.chat.mark_delivered';
   static final String markReadEndpoint = '/api/method/aos.api.chat.mark_read';
-  static final String typingEndpoint = '/api/method/aos.api.chat.typing';
+  static final String typingEndpoint =
+      '/api/method/aos.api.chat.send_typing_event';
 
   // CALL Endpoints
   static final String initiateCallEndpoint =

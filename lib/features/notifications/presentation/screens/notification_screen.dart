@@ -45,12 +45,15 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) {
-        return NotificationActionSheet(
-          notification: notification,
-          onAction: () {
-            Navigator.pop(context);
-            handler.handleNotificationTap(notification);
-          },
+        return SafeArea(
+          top: false,
+          child: NotificationActionSheet(
+            notification: notification,
+            onAction: () {
+              Navigator.pop(context);
+              handler.handleNotificationTap(notification);
+            },
+          ),
         );
       },
     );

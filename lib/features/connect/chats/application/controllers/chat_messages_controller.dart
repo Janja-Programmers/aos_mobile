@@ -5,20 +5,11 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 
-import 'package:africaonlinestores/features/connect/chats/controllers/chat_service_providers.dart';
+import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_attachment.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
-
-final chatMessagesControllerProvider =
-    StateNotifierProvider.family<
-      ChatMessagesController,
-      AsyncValue<List<ChatMessage>>,
-      String
-    >((ref, conversationId) {
-      return ChatMessagesController(ref, conversationId);
-    });
 
 class ChatMessagesController
     extends StateNotifier<AsyncValue<List<ChatMessage>>> {
@@ -35,6 +26,7 @@ class ChatMessagesController
 
   final List<ChatMessage> _messages = [];
   StreamSubscription? _messageSub;
+  StreamSubscription? _messageStatusSub;
 
   Future<void> _init() async {
     await loadInitial();
@@ -61,6 +53,56 @@ class ChatMessagesController
     state = AsyncData(List.of(_messages));
 
     await repo.markRead(conversationId);
+  }
+
+  void _applyMessageStatus(Map<String, dynamic> data) {
+    final status = data['status']?.toString();
+    final rawMessageIds = data['message_ids'];
+
+    if (status == null || rawMessageIds is! List || rawMessageIds.isEmpty) {
+      return;
+    }
+
+    final messageIds = rawMessageIds.map((e) => e.toString()).toSet();
+
+    final deliveredAt = DateTime.tryParse(
+      data['delivered_at']?.toString() ?? '',
+    );
+
+    final readAt = DateTime.tryParse(data['read_at']?.toString() ?? '');
+
+    var changed = false;
+
+    for (var i = 0; i < _messages.length; i++) {
+      final message = _messages[i];
+
+      if (!messageIds.contains(message.id)) continue;
+
+      if (status == 'delivered') {
+        if (message.deliveredAt != null) continue;
+
+        _messages[i] = message.copyWith(
+          deliveredAt: deliveredAt ?? DateTime.now(),
+        );
+        changed = true;
+      }
+
+      if (status == 'read') {
+        if (message.readAt != null) continue;
+
+        final effectiveReadAt = readAt ?? DateTime.now();
+
+        _messages[i] = message.copyWith(
+          deliveredAt: message.deliveredAt ?? effectiveReadAt,
+          readAt: effectiveReadAt,
+        );
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      state = AsyncData(List.of(_messages));
+    }
   }
 
   // -----------------------------
@@ -133,12 +175,17 @@ class ChatMessagesController
       );
     }).toList();
 
+    final tempAdPreview = hasAd
+        ? {'title': adTitle, 'price': adPrice, 'image': adImage}
+        : null;
+
     final tempMessage = ChatMessage.temp(
       id: tempId,
       sender: safeSenderId,
       content: trimmedText,
       attachments: tempAttachments,
       ad: hasAd ? adId : null,
+      adPreview: tempAdPreview,
     );
 
     _messages.add(tempMessage);
@@ -172,6 +219,7 @@ class ChatMessagesController
   // -----------------------------
   // Send Message
   // -----------------------------
+
   Future<ChatMessage?> sendMessage({
     String? text,
     String? ad,
@@ -187,36 +235,15 @@ class ChatMessagesController
 
     if (!hasText && !hasAttachments && !hasAd) return null;
 
-    final apiAttachments = List<Map<String, dynamic>>.from(attachments);
-
     final res = await repo.sendMessage(
       conversationId: conversationId,
       content: hasText ? trimmedText : null,
-      attachments: apiAttachments,
+      ad: hasAd ? ad.trim() : null,
+      attachments: List<Map<String, dynamic>>.from(attachments),
     );
-
     if (res.isLeft) return null;
 
-    return ChatMessage(
-      id: 'server-${DateTime.now().millisecondsSinceEpoch}',
-      sender: currentUser,
-      content: hasText ? trimmedText : null,
-      messageType: hasAd
-          ? hasText || hasAttachments
-                ? 'mixed'
-                : 'ad'
-          : hasText && hasAttachments
-          ? 'mixed'
-          : hasAttachments
-          ? 'attachment'
-          : 'text',
-      ad: hasAd ? ad : null,
-      hasAttachments: hasAttachments || hasAd,
-      createdAt: DateTime.now(),
-      deliveredAt: DateTime.now(),
-      readAt: null,
-      attachments: const [],
-    );
+    return res.rightOrNull!;
   }
 
   // -----------------------------
@@ -227,6 +254,7 @@ class ChatMessagesController
     final repo = ref.read(chatRepositoryProvider);
 
     await _messageSub?.cancel();
+    await _messageStatusSub?.cancel();
 
     _messageSub = realtime.messages.listen((data) async {
       final convId = data['conversation_id'];
@@ -235,7 +263,7 @@ class ChatMessagesController
       final msgData = data['message'];
       if (msgData == null) return;
 
-      final newMsg = ChatMessage.fromJson(msgData);
+      final newMsg = ChatMessage.fromJson(Map<String, dynamic>.from(msgData));
 
       _messages.removeWhere((m) => _isSameTemp(m, newMsg));
 
@@ -244,7 +272,18 @@ class ChatMessagesController
       _messages.add(newMsg);
       state = AsyncData(List.of(_messages));
 
-      await repo.markDelivered(conversationId);
+      // Only mark delivered for incoming messages.
+      if (newMsg.sender.trim().toLowerCase() !=
+          currentUser.trim().toLowerCase()) {
+        await repo.markDelivered(conversationId);
+      }
+    });
+
+    _messageStatusSub = realtime.messageStatus.listen((data) {
+      final convId = data['conversation_id'];
+      if (convId != conversationId) return;
+
+      _applyMessageStatus(Map<String, dynamic>.from(data));
     });
   }
 
@@ -271,6 +310,7 @@ class ChatMessagesController
   @override
   void dispose() {
     _messageSub?.cancel();
+    _messageStatusSub?.cancel();
     super.dispose();
   }
 }

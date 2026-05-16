@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:africaonlinestores/features/connect/chats/controllers/chat_service_providers.dart';
+import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 
 class ChatPresenceState {
   final bool isOnline;

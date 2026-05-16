@@ -11,19 +11,17 @@ class ChatRealtimeService {
   // -----------------------------
   Stream<dynamic> get messages => realtime.events
       .where((e) => e.type == RealtimeEventType.chatNewMessage)
-      .map((e) {
-        return e.data;
-      });
+      .map((e) => e.data);
 
   Stream<dynamic> get typing => realtime.events
       .where((e) => e.type == RealtimeEventType.chatTyping)
-      .map((e) {
-        return e.data;
-      });
+      .map((e) => e.data);
 
   Stream<dynamic> get presence => realtime.events
       .where((e) => e.type == RealtimeEventType.presenceUpdate)
-      .map((e) {
-        return e.data;
-      });
+      .map((e) => e.data);
+
+  Stream<dynamic> get messageStatus => realtime.events
+      .where((e) => e.type == RealtimeEventType.aosMessageStatus)
+      .map((e) => e.data);
 }

@@ -1,14 +1,13 @@
 import 'dart:async';
 
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 
-import 'package:africaonlinestores/features/connect/chats/controllers/chat_conversations_controller.dart';
-import 'package:africaonlinestores/features/connect/chats/controllers/chat_messages_controller.dart';
-import 'package:africaonlinestores/features/connect/chats/controllers/chat_typing_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_ad_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_app_bar.dart';
@@ -19,6 +18,8 @@ import 'package:africaonlinestores/features/connect/chats/presentation/widgets/c
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
 
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
+
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String conversationId;
@@ -59,14 +60,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _loadedInitialIntoInput = false;
   bool _showAdPreview = false;
   Timer? _typingTimer;
-  Timer? _typingStopTimer;
   bool _isSending = false;
 
   @override
   void initState() {
     super.initState();
 
-    _showAdPreview = widget.adId != null && widget.adId!.trim().isNotEmpty;
+    _showAdPreview = _hasText(widget.adId);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onChatOpened();
@@ -79,22 +79,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _markAsRead() async {
+    final currentUserId = _normalizeUser(ref.read(currentUserProvider));
+
     final messagesState = ref.read(
       chatMessagesControllerProvider(widget.conversationId),
     );
 
-    final hasUnread = messagesState.maybeWhen(
-      data: (messages) => messages.any((m) => m.readAt == null),
+    final hasUnreadIncoming = messagesState.maybeWhen(
+      data: (messages) {
+        return messages.any((m) {
+          final sender = _normalizeUser(m.sender);
+
+          final isOwnMessage =
+              currentUserId.isNotEmpty && sender == currentUserId;
+
+          return !isOwnMessage && m.readAt == null;
+        });
+      },
       orElse: () => true,
     );
 
-    if (!hasUnread) return;
+    if (!hasUnreadIncoming) return;
 
     final repo = ref.read(chatRepositoryProvider);
     final res = await repo.markRead(widget.conversationId);
 
     if (res.isRight) {
-      await ref.read(chatConversationsControllerProvider.notifier).refresh();
+      ref
+          .read(chatConversationsControllerProvider.notifier)
+          .markConversationAsReadLocally(widget.conversationId);
     }
   }
 
@@ -124,19 +137,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _handleTyping(bool hasText) {
     _typingTimer?.cancel();
-    _typingStopTimer?.cancel();
 
     final repo = ref.read(chatRepositoryProvider);
 
+    Future<void> sendTypingSafe(bool value) async {
+      final res = await repo.sendTyping(
+        conversationId: widget.conversationId,
+        isTyping: value,
+      );
+
+      if (res.isLeft) {
+        debugPrint('Typing status failed: ${res.leftOrNull}');
+      }
+    }
+
     if (!hasText) {
-      repo.sendTyping(conversationId: widget.conversationId, isTyping: false);
+      unawaited(sendTypingSafe(false));
       return;
     }
 
-    repo.sendTyping(conversationId: widget.conversationId, isTyping: true);
+    unawaited(sendTypingSafe(true));
 
     _typingTimer = Timer(const Duration(seconds: 3), () {
-      repo.sendTyping(conversationId: widget.conversationId, isTyping: false);
+      unawaited(sendTypingSafe(false));
     });
   }
 
@@ -148,33 +171,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     final messageText = text?.trim();
 
-    final hasText = messageText != null && messageText.isNotEmpty;
+    final hasText = _hasText(messageText);
     final hasAttachments = attachments.isNotEmpty;
-    final hasAdContext =
-        _showAdPreview && widget.adId != null && widget.adId!.trim().isNotEmpty;
+    final hasAdContext = _showAdPreview && _hasText(widget.adId);
 
     if (!hasText && !hasAttachments && !hasAdContext) return;
 
-    final attachedAdId = hasAdContext ? widget.adId : null;
+    final attachedAdId = hasAdContext ? widget.adId?.trim() : null;
     final attachedAdTitle = hasAdContext ? widget.adTitle : null;
     final attachedAdPrice = hasAdContext ? widget.adPrice : null;
     final attachedAdImage = hasAdContext ? widget.adImage : null;
-    final attachedAdImageFileId = hasAdContext ? widget.adImageFileId : null;
 
     final effectiveAttachments = List<ChatInputAttachment>.from(attachments);
-
-    if (hasAdContext &&
-        effectiveAttachments.isEmpty &&
-        attachedAdImageFileId != null &&
-        attachedAdImageFileId.trim().isNotEmpty) {
-      effectiveAttachments.add(
-        ChatInputAttachment(
-          fileId: attachedAdImageFileId.trim(),
-          type: 'image',
-          previewUrl: attachedAdImage ?? '',
-        ),
-      );
-    }
 
     _isSending = true;
 
@@ -205,48 +213,48 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
 
       if (!sent) {
-        if (!mounted) return;
-
-        _inputController.text = messageText ?? '';
-        _inputController.selection = TextSelection.fromPosition(
-          TextPosition(offset: _inputController.text.length),
+        _restoreFailedMessage(
+          messageText: messageText,
+          attachedAdId: attachedAdId,
         );
-
-        setState(() {
-          _showAdPreview =
-              attachedAdId != null && attachedAdId.trim().isNotEmpty;
-        });
-
-        ShowSnack(
-          context,
-          attachedAdId != null
-              ? 'Failed to send ad message. Please try again.'
-              : 'Failed to send message. Please try again.',
-        ).error();
 
         return;
       }
 
       _scrollToBottom();
     } catch (e) {
-      debugPrint('Send message failed: $e');
+      appLogger.e('Send message failed: $e');
 
-      if (mounted) {
-        _inputController.text = messageText ?? '';
-        _inputController.selection = TextSelection.fromPosition(
-          TextPosition(offset: _inputController.text.length),
-        );
-
-        setState(() {
-          _showAdPreview =
-              attachedAdId != null && attachedAdId.trim().isNotEmpty;
-        });
-
-        ShowSnack(context, 'Failed to send message. Please try again.').error();
-      }
+      _restoreFailedMessage(
+        messageText: messageText,
+        attachedAdId: attachedAdId,
+      );
     } finally {
       _isSending = false;
     }
+  }
+
+  void _restoreFailedMessage({
+    required String? messageText,
+    required String? attachedAdId,
+  }) {
+    if (!mounted) return;
+
+    _inputController.text = messageText ?? '';
+    _inputController.selection = TextSelection.fromPosition(
+      TextPosition(offset: _inputController.text.length),
+    );
+
+    setState(() {
+      _showAdPreview = _hasText(attachedAdId);
+    });
+
+    ShowSnack(
+      context,
+      _hasText(attachedAdId)
+          ? 'Failed to send ad message. Please try again.'
+          : 'Failed to send message. Please try again.',
+    ).error();
   }
 
   @override
@@ -256,8 +264,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
 
     final typingMap = ref.watch(chatTypingControllerProvider);
+    final currentUserId = _normalizeUser(ref.watch(currentUserProvider));
 
-    final currentUserId = ref.watch(currentUserProvider);
+    appLogger.i("Chat Screen | Current user: $currentUserId");
 
     final isTyping = typingMap[widget.conversationId] ?? false;
 
@@ -292,11 +301,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       final msg = messages[messages.length - 1 - index];
                       final isSystem = msg.isSystemMessage;
 
-                      final isMe =
-                          !isSystem &&
-                          currentUserId != null &&
-                          msg.sender.trim().toLowerCase() ==
-                              currentUserId.trim().toLowerCase();
+                      final isMe = _isOwnMessage(
+                        sender: msg.sender,
+                        currentUserId: currentUserId,
+                        isSystem: isSystem,
+                      );
 
                       return MessageBubble(
                         message: msg,
@@ -344,6 +353,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
+  bool _isOwnMessage({
+    required String sender,
+    required String currentUserId,
+    required bool isSystem,
+  }) {
+    if (isSystem) return false;
+    if (currentUserId.isEmpty) return false;
+
+    return _normalizeUser(sender) == currentUserId;
+  }
+
+  static String _normalizeUser(String? value) {
+    return value?.trim().toLowerCase() ?? '';
+  }
+
+  static bool _hasText(String? value) {
+    return value != null && value.trim().isNotEmpty;
+  }
+
   void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_scrollController.hasClients) {
@@ -359,7 +387,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void dispose() {
     _typingTimer?.cancel();
-    _typingStopTimer?.cancel();
     _inputController.dispose();
     _scrollController.dispose();
     super.dispose();

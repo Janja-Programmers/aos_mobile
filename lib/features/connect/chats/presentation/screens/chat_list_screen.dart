@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/core.dart';
 
-import 'package:africaonlinestores/features/connect/chats/controllers/chat_conversations_controller.dart';
-import 'package:africaonlinestores/features/connect/chats/controllers/chat_presence_controller.dart';
-import 'package:africaonlinestores/features/connect/chats/controllers/chat_typing_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_presence_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/conversation_tile.dart';

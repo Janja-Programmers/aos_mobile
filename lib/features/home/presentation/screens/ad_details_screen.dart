@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -130,6 +132,12 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
           final reviewState = ref.watch(reviewControllerProvider(ad.id));
           bool isCalling = false;
 
+          // Replace this provider with your actual auth/current user provider
+          final currentUser = ref.watch(currentUserProvider);
+          appLogger.i("Current user: $currentUser");
+          appLogger.i("Seller user: ${ad.sellerId}");
+          final isOwnAd = currentUser?.toString() == ad.sellerId;
+
           return Column(
             children: [
               Expanded(
@@ -242,59 +250,64 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
               ),
 
               /// ACTION BAR
-              AdDetailActionBar(
-                onCall: () async {
-                  if (isCalling) return;
+              if (!isOwnAd)
+                AdDetailActionBar(
+                  onCall: () async {
+                    if (isCalling) return;
 
-                  isCalling = true;
+                    isCalling = true;
 
-                  try {
-                    await AppNavigation.requireAuth(
+                    try {
+                      await AppNavigation.requireAuth(
+                        context,
+                        ref,
+                        onAuthenticated: () async {
+                          final manager = ref.read(
+                            callManagerProvider.notifier,
+                          );
+
+                          if (ad.sellerId.isEmpty) {
+                            debugPrint('❌ sellerId is empty');
+                            return;
+                          }
+
+                          await manager.startOutgoingCall(
+                            userId: ad.sellerId,
+                            callType: AOSCallType.audio,
+                            receiver: _buildReceiver(ad, sellerAsync.value),
+                          );
+                        },
+                      );
+                    } finally {
+                      isCalling = false;
+                    }
+                  },
+
+                  onMessage: () {
+                    AppNavigation.requireAuth(
                       context,
                       ref,
-                      onAuthenticated: () async {
-                        final manager = ref.read(callManagerProvider.notifier);
+                      onAuthenticated: () {
+                        final seller = sellerAsync.value;
 
-                        if (ad.sellerId.isEmpty) {
-                          debugPrint('❌ sellerId is empty');
-                          return;
-                        }
+                        if (seller == null) return;
 
-                        await manager.startOutgoingCall(
-                          userId: ad.sellerId,
-                          callType: AOSCallType.audio,
-                          receiver: _buildReceiver(ad, sellerAsync.value),
+                        ChatActions.startChat(
+                          context: context,
+                          ref: ref,
+                          user: ad.sellerId,
+                          displayName: seller.displayName,
+                          initialMessage: "Hi, I'm interested in ${ad.title}",
+                          adId: ad.id,
+                          adTitle: ad.title,
+                          adPrice: ad.currentPrice,
+                          adImage: ad.primaryImage,
+                          adImageFileId: ad.primaryImageFileId,
                         );
                       },
                     );
-                  } finally {
-                    isCalling = false;
-                  }
-                },
-
-                onMessage: () {
-                  AppNavigation.requireAuth(
-                    context,
-                    ref,
-                    onAuthenticated: () {
-                      final seller = sellerAsync.value;
-
-                      ChatActions.startChat(
-                        context: context,
-                        ref: ref,
-                        user: ad.sellerId,
-                        displayName: seller!.displayName,
-                        initialMessage: "Hi, I'm interested in ${ad.title}",
-                        adId: ad.id,
-                        adTitle: ad.title,
-                        adPrice: ad.currentPrice,
-                        adImage: ad.primaryImage,
-                        adImageFileId: ad.primaryImageFileId,
-                      );
-                    },
-                  );
-                },
-              ),
+                  },
+                ),
             ],
           );
         },

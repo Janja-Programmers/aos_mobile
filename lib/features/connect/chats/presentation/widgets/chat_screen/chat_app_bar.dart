@@ -11,8 +11,8 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
-import 'package:africaonlinestores/features/connect/chats/controllers/chat_presence_controller.dart';
-import 'package:africaonlinestores/features/connect/chats/controllers/chat_typing_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_presence_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/presence_label.dart';
 
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';

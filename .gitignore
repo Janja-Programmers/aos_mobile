@@ -56,3 +56,10 @@ app.*.map.json
 # Flutter generated localization
 lib/l10n/gen/*.dart
 untranslated.txt
+
+/android/local.properties
+/android/.gradle/
+/android/app/build/
+/ios/Pods/
+/ios/.symlinks/
+*.xcuserstate

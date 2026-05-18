@@ -21,8 +21,8 @@ class AppNavConfig {
         activeIcon: Icons.grid_view_rounded,
         routeName: AppRoutes.nCategories,
       ),
-      AppNavItem(
-        label: l10n.nav_selling,
+      const AppNavItem(
+        label: 'Post',
         icon: Icons.add,
         activeIcon: Icons.add,
         routeName: AppRoutes.nStartSelling,

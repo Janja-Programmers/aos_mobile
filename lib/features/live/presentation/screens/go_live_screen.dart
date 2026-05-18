@@ -1,14 +1,16 @@
 import 'dart:io';
 
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
 import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+
+import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
+
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class GoLiveScreen extends ConsumerStatefulWidget {
   const GoLiveScreen({super.key});
@@ -47,7 +49,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     });
   }
 
-  void _startLive() {
+  Future<void> _startLive() async {
     final title = _titleController.text.trim();
 
     if (_uploadedImageUrl == null || title.isEmpty) {
@@ -55,7 +57,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
       return;
     }
 
-    ref
+    await ref
         .read(liveManagerProvider.notifier)
         .startLive(title: title, coverImage: _uploadedImageUrl!);
   }

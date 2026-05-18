@@ -1,6 +1,3 @@
-import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
-import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
-import 'package:africaonlinestores/features/verifications/controllers/seller_status_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,13 +16,6 @@ class StartSellingScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
-
-    final auth = ref.watch(authControllerProvider);
-    final isAuthenticated = auth is AuthAuthenticated;
-
-    final statusAsync = isAuthenticated
-        ? ref.watch(sellerStatusProvider)
-        : null;
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -59,39 +49,27 @@ class StartSellingScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            if (statusAsync != null)
-              ...statusAsync.when(
-                data: (status) {
-                  return [
-                    ActionTile(
-                      leading: Icon(
-                        Icons.add_photo_alternate_outlined,
-                        color: colors.primary,
-                      ),
-                      iconBackgroundColor: colors.primary.withOpacity(.15),
-                      title: "Create a Short Video",
-                      subtitle:
-                          "Show your products in short videos and reach more people.",
-                      onTap: () => ShortsNavigation.toPostShort(context),
-                    ),
-                    const SizedBox(height: 12),
-
-                    if (status.isVerified) ...[
-                      ActionTile(
-                        leading: Icon(Icons.tv, color: colors.primary),
-                        iconBackgroundColor: colors.primary.withOpacity(.15),
-                        title: "Go Live",
-                        subtitle:
-                            "Stream live, engage your audience and sell instantly",
-                        onTap: () => LiveNavigation.toGoLiveScreen(context),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                  ];
-                },
-                loading: () => <Widget>[const SizedBox.shrink()],
-                error: (_, _) => <Widget>[const SizedBox.shrink()],
+            ActionTile(
+              leading: Icon(
+                Icons.add_photo_alternate_outlined,
+                color: colors.primary,
               ),
+              iconBackgroundColor: colors.primary.withOpacity(.15),
+              title: "Create a Short Video",
+              subtitle:
+                  "Show your products in short videos and reach more people.",
+              onTap: () => ShortsNavigation.toPostShort(context),
+            ),
+            const SizedBox(height: 12),
+
+            ActionTile(
+              leading: Icon(Icons.tv, color: colors.primary),
+              iconBackgroundColor: colors.primary.withOpacity(.15),
+              title: "Go Live",
+              subtitle: "Stream live, engage your audience and sell instantly",
+              onTap: () => LiveNavigation.toGoLiveScreen(context),
+            ),
+            const SizedBox(height: 12),
           ],
         ),
       ),

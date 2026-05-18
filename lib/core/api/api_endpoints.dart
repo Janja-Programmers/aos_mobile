@@ -71,6 +71,10 @@ class ApiEndpoints {
       '/api/method/aos.api.reviews.list_reviews';
   static final String toggleAdReviewEndpoint =
       '/api/method/aos.api.reviews.toggle_reaction';
+  static final String getReviewViewerState =
+      '/api/method/aos.api.reviews.get_review_viewer_state';
+
+  // TODO: getReviewViewerState
 
   // Wishlist Endpoints
   static final String listWishlistEndpoint =
@@ -97,6 +101,16 @@ class ApiEndpoints {
   // Social Endpoints
   static final String toggleFollowEndpoint =
       '/api/method/aos.api.social.toggle_follow';
+  static final String getFollowsEndpoint =
+      '/api/method/aos.api.social.get_followers';
+  static final String getFollowingEndpoint =
+      '/api/method/aos.api.social.get_following';
+  static final String getFriendsEndpoint =
+      '/api/method/aos.api.social.get_friends';
+  static final String getRelationshipStatusEndpoint =
+      '/api/method/aos.api.social.get_relationship_status';
+
+  // TODO: getFollowsEndpoint, getFollowingEndpoint, getFriendsEndpoint, getRelationshipStatusEndpoint
 
   // Verification Endpoints
   static final String submitVerificationEndpoint =
@@ -160,13 +174,6 @@ class ApiEndpoints {
       '/api/method/aos.api.live.list_live_streams';
   static const String getLiveTokenEndpoint =
       '/api/method/aos.api.live.get_live_token';
-  static const String attachLiveAdEndpoint =
-      '/api/method/aos.api.live.attach_ad';
-  static const String removeLiveAdEndpoint =
-      '/api/method/aos.api.live.remove_ad';
-  static const String pinLiveAdEndpoint = '/api/method/aos.api.live.pin_ad';
-  static const String listLiveAdsEndpoint =
-      '/api/method/aos.api.live.list_live_ads';
 
   static const addLiveComment = '/api/method/aos.api.live.add_comment';
   static const replyLiveComment = '/api/method/aos.api.live.reply_comment';

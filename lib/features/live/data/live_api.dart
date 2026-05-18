@@ -31,27 +31,42 @@ class LiveApi {
       );
 
       final result = unwrapFrappe(res);
-      if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
-      if (data == null) {
-        return Either.left(const Failure("Invalid start live response"));
+      if (result.isLeft) {
+        return Either.left(result.leftOrNull!);
       }
 
-      return Either.right(mapJoinSession(data, role: AOSLiveRole.host));
-    }
-    /// ✅ HANDLE DIO PROPERLY
-    on DioException catch (e) {
+      final payload = result.rightOrNull;
+
+      final data = payload?['data'];
+
+      if (data == null || data is! Map) {
+        return Either.left(
+          const Failure("Invalid start live response: missing data"),
+        );
+      }
+
+      final sessionJson = data['session'];
+
+      if (sessionJson == null || sessionJson is! Map) {
+        return Either.left(
+          const Failure("Invalid start live response: missing session"),
+        );
+      }
+
+      final sessionMap = Map<String, dynamic>.from(sessionJson);
+
+      final role = sessionMap['role'] == 'host'
+          ? AOSLiveRole.host
+          : AOSLiveRole.viewer;
+
+      final session = mapJoinSession(sessionMap, role: role);
+
+      return Either.right(session);
+    } on DioException catch (e) {
       return Either.left(mapDioException(e));
-    }
-    /// ✅ HANDLE EVERYTHING ELSE
-    catch (e) {
-      return Either.left(
-        const Failure(
-          'Something went wrong. Please try again.',
-          type: FailureType.unknown,
-        ),
-      );
+    } catch (e) {
+      return Either.left(Failure(e.toString(), type: FailureType.unknown));
     }
   }
 
@@ -67,18 +82,37 @@ class LiveApi {
       );
 
       final result = unwrapFrappe(res);
-      if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
-      if (data == null) {
-        return Either.left(const Failure("Invalid join live response"));
+      if (result.isLeft) {
+        return Either.left(result.leftOrNull!);
       }
 
-      final role = data['role'] == 'host'
+      final payload = result.rightOrNull;
+
+      final data = payload?['data'];
+      if (data == null || data is! Map) {
+        return Either.left(
+          const Failure("Invalid join live response: missing data"),
+        );
+      }
+
+      final sessionJson = data['session'];
+      if (sessionJson == null || sessionJson is! Map) {
+        return Either.left(
+          const Failure("Invalid join live response: missing session"),
+        );
+      }
+
+      final role = sessionJson['role'] == 'host'
           ? AOSLiveRole.host
           : AOSLiveRole.viewer;
 
-      return Either.right(mapJoinSession(data, role: role));
+      final session = mapJoinSession(
+        Map<String, dynamic>.from(sessionJson),
+        role: role,
+      );
+
+      return Either.right(session);
     } catch (e) {
       return Either.left(Failure(e.toString()));
     }

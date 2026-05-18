@@ -141,8 +141,6 @@ class _SellButton extends StatelessWidget {
             ),
             child: Icon(Icons.add, size: 24, color: colors.white),
           ),
-          const SizedBox(height: 2),
-          Text("Selling", style: context.pStrong),
         ],
       ),
     );

@@ -148,7 +148,11 @@ class LiveManager extends StateNotifier<LiveState> {
       return;
     }
 
-    state = state.copyWith(viewerCount: viewerCount, clearError: true);
+    state = state.copyWith(
+      viewerCount: viewerCount,
+      live: state.live?.copyWith(viewerCount: viewerCount),
+      clearError: true,
+    );
   }
 
   // ================= ROOM =================
@@ -182,6 +186,10 @@ class LiveManager extends StateNotifier<LiveState> {
       // -----------------------------
       // 2. Join LiveKit room (CRITICAL)
       // -----------------------------
+      appLogger.i('LIVEKIT wsUrl: ${session.wsUrl}');
+      appLogger.i('LIVEKIT token empty: ${session.token.isEmpty}');
+      appLogger.i('LIVEKIT liveId: ${session.liveId}');
+      appLogger.i('LIVEKIT role: ${session.role}');
       await mediaService.joinLive(
         wsUrl: session.wsUrl,
         token: session.token,

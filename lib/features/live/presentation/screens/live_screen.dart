@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:africaonlinestores/features/live/domain/live_chat_message.dart';
-import 'package:africaonlinestores/features/live/presentation/widgets/floating_hearts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
@@ -15,9 +13,12 @@ import 'package:africaonlinestores/features/live/application/state/live_status_e
 
 import 'package:africaonlinestores/features/live/comments/live_comments_controller.dart';
 
+import 'package:africaonlinestores/features/live/domain/live_chat_message.dart';
+
 import 'package:africaonlinestores/features/live/presentation/views/host_live_view.dart';
 import 'package:africaonlinestores/features/live/presentation/views/viewer_live_view.dart';
 
+import 'package:africaonlinestores/features/live/presentation/widgets/floating_hearts.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_chat_overlay.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_input_bar.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_right_actions.dart';
@@ -274,7 +275,6 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
 
                 manager.sendReaction(reactionType: 'like');
               },
-              onProducts: () {},
               onFlip: state.isHost ? manager.flipCamera : () {},
             ),
 

@@ -43,7 +43,7 @@ class SellerTile extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              seller.shopName,
+              seller.seller,
               style: context.body.copyWith(fontWeight: FontWeight.w700),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

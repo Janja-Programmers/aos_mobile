@@ -14,7 +14,23 @@ class LiveMediaService {
     required AOSLiveRole role,
   }) async {
     if (role == AOSLiveRole.host) {
-      await _requestHostPermissions();
+      final allowed = await _requestHostPermissions();
+
+      if (!allowed) {
+        throw Exception('Camera and microphone permissions are required');
+      }
+    }
+
+    final uri = Uri.tryParse(wsUrl);
+
+    if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
+      throw Exception('Invalid LiveKit URL: $wsUrl');
+    }
+
+    if (uri.scheme != 'ws' && uri.scheme != 'wss') {
+      throw Exception(
+        'LiveKit URL must start with ws:// or wss://. Got: $wsUrl',
+      );
     }
 
     await liveKit.connect(wsUrl: wsUrl, token: token);
@@ -32,15 +48,19 @@ class LiveMediaService {
     await liveKit.disconnect();
   }
 
-  Future<void> _requestHostPermissions() async {
-    await [Permission.microphone, Permission.camera].request();
+  Future<bool> _requestHostPermissions() async {
+    final statuses = await [Permission.microphone, Permission.camera].request();
+
+    final micAllowed = statuses[Permission.microphone]?.isGranted == true;
+    final cameraAllowed = statuses[Permission.camera]?.isGranted == true;
+
+    return micAllowed && cameraAllowed;
   }
 
   Future<void> flipCamera() async {
     try {
       await liveKit.switchCamera();
-      // ignore: empty_catches
-    } catch (e) {
+    } catch (_) {
       return;
     }
   }

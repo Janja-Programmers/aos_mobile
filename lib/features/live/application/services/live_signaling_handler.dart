@@ -48,18 +48,11 @@ class LiveSignalingHandler {
   Future<void> handleViewerCountUpdated(Map<String, dynamic> data) async {
     try {
       final liveId = data['live_id']?.toString();
-
-      final rawViewerCount = data['viewer_count'];
-      final viewerCount = rawViewerCount is int
-          ? rawViewerCount
-          : int.tryParse(rawViewerCount?.toString() ?? '');
+      final viewerCount = _parseInt(data['viewer_count']);
 
       if (liveId == null || liveId.isEmpty || viewerCount == null) {
-        appLogger.e('❌ Invalid viewer-count payload: $data');
         return;
       }
-
-      appLogger.i('👀 Viewer count parsed → $viewerCount');
 
       await liveManager.onViewerCountUpdatedEvent(
         liveId: liveId,
@@ -68,5 +61,115 @@ class LiveSignalingHandler {
     } catch (e, s) {
       appLogger.e('handleViewerCountUpdated failed', error: e, stackTrace: s);
     }
+  }
+
+  // ================= VIEWER JOINED =================
+
+  Future<void> handleViewerJoined(Map<String, dynamic> data) async {
+    try {
+      final liveId = data['live_id']?.toString();
+
+      if (liveId == null || liveId.isEmpty) {
+        appLogger.e('❌ Invalid viewer-joined payload: $data');
+        return;
+      }
+
+      await liveManager.onViewerJoinedEvent(liveId: liveId, data: data);
+    } catch (e, s) {
+      appLogger.e('handleViewerJoined failed', error: e, stackTrace: s);
+    }
+  }
+
+  // ================= VIEWER LEFT =================
+
+  Future<void> handleViewerLeft(Map<String, dynamic> data) async {
+    try {
+      final liveId = data['live_id']?.toString();
+
+      if (liveId == null || liveId.isEmpty) {
+        appLogger.e('❌ Invalid viewer-left payload: $data');
+        return;
+      }
+
+      await liveManager.onViewerLeftEvent(liveId: liveId, data: data);
+    } catch (e, s) {
+      appLogger.e('handleViewerLeft failed', error: e, stackTrace: s);
+    }
+  }
+
+  // ================= LIVE COMMENT =================
+
+  Future<void> handleLiveComment(Map<String, dynamic> data) async {
+    try {
+      final liveId = data['live_id']?.toString();
+      final comment = data['comment'];
+
+      if (liveId == null || liveId.isEmpty || comment is! Map) {
+        appLogger.e('❌ Invalid live-comment payload: $data');
+        return;
+      }
+
+      await liveManager.onLiveCommentEvent(
+        liveId: liveId,
+        comment: Map<String, dynamic>.from(comment),
+      );
+    } catch (_) {}
+  }
+
+  // ================= LIVE COMMENT DELETED =================
+
+  Future<void> handleLiveCommentDeleted(Map<String, dynamic> data) async {
+    try {
+      final liveId = data['live_id']?.toString();
+      final commentId = data['comment_id']?.toString();
+
+      if (liveId == null ||
+          liveId.isEmpty ||
+          commentId == null ||
+          commentId.isEmpty) {
+        appLogger.e('❌ Invalid live-comment-deleted payload: $data');
+        return;
+      }
+
+      await liveManager.onLiveCommentDeletedEvent(
+        liveId: liveId,
+        commentId: commentId,
+      );
+    } catch (e, s) {
+      appLogger.e('handleLiveCommentDeleted failed', error: e, stackTrace: s);
+    }
+  }
+
+  // ================= LIVE REACTION =================
+
+  Future<void> handleLiveReaction(Map<String, dynamic> data) async {
+    try {
+      final liveId = data['live_id']?.toString();
+      final reactions = data['reactions'];
+
+      if (liveId == null || liveId.isEmpty || reactions is! List) {
+        appLogger.e('❌ Invalid live-reaction payload: $data');
+        return;
+      }
+
+      appLogger.i(
+        '❤️ Live reactions received → liveId=$liveId, count=${reactions.length}',
+      );
+
+      await liveManager.onLiveReactionEvent(
+        liveId: liveId,
+        reactions: reactions,
+      );
+    } catch (e, s) {
+      appLogger.e('handleLiveReaction failed', error: e, stackTrace: s);
+    }
+  }
+
+  // ================= HELPERS =================
+
+  int? _parseInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
   }
 }

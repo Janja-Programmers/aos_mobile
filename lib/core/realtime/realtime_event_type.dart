@@ -19,10 +19,13 @@ enum RealtimeEventType {
   aosLiveStarted,
   aosLiveEnded,
   aosLiveViewerCount,
+  aosLiveViewerJoined,
+  aosLiveViewerLeft,
+  aosLiveComment,
+  aosLiveCommentDeleted,
+  aosLiveReaction,
 
-  // =========================
-  // NOTIFICATIONS (NEW)
-  // =========================
+  // Notifications
   aosFollow,
   aosMissedCall,
   aosAdApproved,
@@ -35,9 +38,7 @@ enum RealtimeEventType {
   aosShortComment,
   aosCommentReply,
 
-  // =========================
-  // PUSH (OPTIONAL HOOK)
-  // =========================
+  // Push
   pushNotification,
 
   // Unknown
@@ -46,6 +47,9 @@ enum RealtimeEventType {
 
 RealtimeEventType mapRealtimeEvent(String event) {
   switch (event) {
+    // =========================
+    // CHAT
+    // =========================
     case "aos_new_message":
       return RealtimeEventType.chatNewMessage;
 
@@ -55,9 +59,15 @@ RealtimeEventType mapRealtimeEvent(String event) {
     case "aos_message_status":
       return RealtimeEventType.aosMessageStatus;
 
+    // =========================
+    // PRESENCE
+    // =========================
     case "aos_presence_update":
       return RealtimeEventType.presenceUpdate;
 
+    // =========================
+    // CALLS
+    // =========================
     case "aos_incoming_call":
       return RealtimeEventType.aosIncomingCall;
 
@@ -76,15 +86,32 @@ RealtimeEventType mapRealtimeEvent(String event) {
     case "aos_call_not_answered":
       return RealtimeEventType.aosCallNotAnswered;
 
-    // LIVE Mapping
+    // =========================
+    // LIVE
+    // =========================
     case "aos_live_started":
       return RealtimeEventType.aosLiveStarted;
 
     case "aos_live_ended":
       return RealtimeEventType.aosLiveEnded;
 
-    case "aos_live_viewers":
+    case "aos_live_viewer_count":
       return RealtimeEventType.aosLiveViewerCount;
+
+    case "aos_live_viewer_joined":
+      return RealtimeEventType.aosLiveViewerJoined;
+
+    case "aos_live_viewer_left":
+      return RealtimeEventType.aosLiveViewerLeft;
+
+    case "aos_live_comment":
+      return RealtimeEventType.aosLiveComment;
+
+    case "aos_live_comment_deleted":
+      return RealtimeEventType.aosLiveCommentDeleted;
+
+    case "aos_live_reaction":
+      return RealtimeEventType.aosLiveReaction;
 
     // =========================
     // NOTIFICATIONS
@@ -123,7 +150,7 @@ RealtimeEventType mapRealtimeEvent(String event) {
       return RealtimeEventType.aosCommentReply;
 
     // =========================
-    // PUSH (synthetic event if needed)
+    // PUSH
     // =========================
     case "push_notification":
       return RealtimeEventType.pushNotification;

@@ -77,14 +77,6 @@ class RealtimeService {
       _isConnected = false;
     });
 
-    // _socket!.on("aos_live_started", (data) {
-    //   appLogger.i("AOS LIVE STARTED: $data");
-    // });
-
-    // _socket!.on("aos_live_ended", (data) {
-    //   appLogger.i("AOS LIVE ENDED: $data");
-    // });
-
     // -----------------------------
     // All Events
     // -----------------------------

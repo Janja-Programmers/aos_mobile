@@ -131,9 +131,7 @@ class LiveManager extends StateNotifier<LiveState> {
   Future<void> onLiveEndedEvent({required String liveId}) async {
     final isCurrentLive = _isCurrentLive(liveId);
 
-    if (!isCurrentLive) {
-      return;
-    }
+    if (!isCurrentLive) return;
 
     await _leaveRoomInternal();
 
@@ -144,15 +142,83 @@ class LiveManager extends StateNotifier<LiveState> {
     required String liveId,
     required int viewerCount,
   }) async {
-    if (!_isCurrentLive(liveId)) {
-      return;
-    }
+    if (!_isCurrentLive(liveId)) return;
 
     state = state.copyWith(
       viewerCount: viewerCount,
       live: state.live?.copyWith(viewerCount: viewerCount),
       clearError: true,
     );
+
+    appLogger.i('👀 Viewer count updated → $viewerCount');
+  }
+
+  Future<void> onViewerJoinedEvent({
+    required String liveId,
+    required Map<String, dynamic> data,
+  }) async {
+    if (!_isCurrentLive(liveId)) return;
+
+    final displayName =
+        data['display_name']?.toString() ??
+        data['user']?.toString() ??
+        data['session_id']?.toString() ??
+        'Viewer';
+
+    appLogger.i('👋 Viewer joined current live → $displayName');
+  }
+
+  Future<void> onViewerLeftEvent({
+    required String liveId,
+    required Map<String, dynamic> data,
+  }) async {
+    if (!_isCurrentLive(liveId)) return;
+
+    final displayName =
+        data['display_name']?.toString() ??
+        data['user']?.toString() ??
+        data['session_id']?.toString() ??
+        'Viewer';
+
+    appLogger.i('👋 Viewer left current live → $displayName');
+  }
+
+  Future<void> onLiveCommentEvent({
+    required String liveId,
+    required Map<String, dynamic> comment,
+  }) async {
+    if (!_isCurrentLive(liveId)) return;
+
+    appLogger.i('💬 Live comment event received → ${comment['id']}');
+
+    // Keep this as a hook for now.
+    // If LiveCommentsController already handles comments, do not duplicate inserts here.
+  }
+
+  Future<void> onLiveCommentDeletedEvent({
+    required String liveId,
+    required String commentId,
+  }) async {
+    if (!_isCurrentLive(liveId)) return;
+
+    appLogger.i('🗑️ Live comment deleted event received → $commentId');
+
+    // Keep this as a hook for now.
+    // Wire to LiveCommentsController later if needed.
+  }
+
+  Future<void> onLiveReactionEvent({
+    required String liveId,
+    required List<dynamic> reactions,
+  }) async {
+    if (!_isCurrentLive(liveId)) return;
+
+    appLogger.i('❤️ Live reaction event received → ${reactions.length}');
+
+    // Optional future behavior:
+    // - increment reaction count
+    // - trigger floating hearts from socket events
+    // - show reaction avatars
   }
 
   // ================= ROOM =================
@@ -190,6 +256,7 @@ class LiveManager extends StateNotifier<LiveState> {
       appLogger.i('LIVEKIT token empty: ${session.token.isEmpty}');
       appLogger.i('LIVEKIT liveId: ${session.liveId}');
       appLogger.i('LIVEKIT role: ${session.role}');
+
       await mediaService.joinLive(
         wsUrl: session.wsUrl,
         token: session.token,

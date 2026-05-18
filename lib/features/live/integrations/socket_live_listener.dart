@@ -21,30 +21,59 @@ class SocketLiveListener {
     _sub?.cancel();
 
     _sub = eventStream.listen((event) async {
-      switch (event.type) {
-        case RealtimeEventType.aosLiveStarted:
-          appLogger.i('🔴 live-started');
-          await signalingHandler.handleLiveStarted(
-            Map<String, dynamic>.from(event.data),
-          );
-          break;
+      try {
+        final data = Map<String, dynamic>.from(event.data);
 
-        case RealtimeEventType.aosLiveEnded:
-          appLogger.i('🔚 live-ended');
-          await signalingHandler.handleLiveEnded(
-            Map<String, dynamic>.from(event.data),
-          );
-          break;
+        switch (event.type) {
+          case RealtimeEventType.aosLiveStarted:
+            appLogger.i('🔴 live-started');
+            await signalingHandler.handleLiveStarted(data);
+            break;
 
-        case RealtimeEventType.aosLiveViewerCount:
-          appLogger.i('👀 viewer-count');
-          await signalingHandler.handleViewerCountUpdated(
-            Map<String, dynamic>.from(event.data),
-          );
-          break;
+          case RealtimeEventType.aosLiveEnded:
+            appLogger.i('🔚 live-ended');
+            await signalingHandler.handleLiveEnded(data);
+            break;
 
-        default:
-          break;
+          case RealtimeEventType.aosLiveViewerCount:
+            appLogger.i('👀 viewer-count');
+            await signalingHandler.handleViewerCountUpdated(data);
+            break;
+
+          case RealtimeEventType.aosLiveViewerJoined:
+            appLogger.i('👋 viewer-joined');
+            await signalingHandler.handleViewerJoined(data);
+            break;
+
+          case RealtimeEventType.aosLiveViewerLeft:
+            appLogger.i('👋 viewer-left');
+            await signalingHandler.handleViewerLeft(data);
+            break;
+
+          case RealtimeEventType.aosLiveComment:
+            appLogger.i('💬 live-comment');
+            await signalingHandler.handleLiveComment(data);
+            break;
+
+          case RealtimeEventType.aosLiveCommentDeleted:
+            appLogger.i('🗑️ live-comment-deleted');
+            await signalingHandler.handleLiveCommentDeleted(data);
+            break;
+
+          case RealtimeEventType.aosLiveReaction:
+            appLogger.i('❤️ live-reaction');
+            await signalingHandler.handleLiveReaction(data);
+            break;
+
+          default:
+            break;
+        }
+      } catch (e, s) {
+        appLogger.e(
+          'SocketLiveListener failed for event: ${event.type}',
+          error: e,
+          stackTrace: s,
+        );
       }
     });
   }

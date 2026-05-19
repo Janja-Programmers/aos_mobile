@@ -45,7 +45,7 @@ class AccountScreen extends ConsumerWidget {
       initials: _initialsFromName(user.fullName),
       baseUrl: AppConfig.normalizedBaseUrl,
       imagePath: user.userImage.isNotEmpty ? user.userImage : null,
-      onEdit: () => context.pushNamed(AppRoutes.nUpdateProfile),
+      onEdit: () => context.pushNamed(AppRoutes.profile),
     );
   }
 

@@ -33,6 +33,7 @@ class AccountsApi {
   Future<Either<Failure, Map<String, dynamic>>> updateProfile({
     String? fullName,
     String? userImage,
+    String? bio,
   }) async {
     try {
       final data = <String, dynamic>{};

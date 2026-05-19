@@ -19,7 +19,6 @@ class AppRoutes {
 
   // Account
   static const account = '/account';
-  static const updateProfile = '/account/update-profile';
   static const passwordSecurity = '/account/security';
   static const preference = '/account/preference';
 
@@ -83,7 +82,6 @@ class AppRoutes {
   static const nResetPassword = 'resetPassword';
 
   static const nAccount = 'account';
-  static const nUpdateProfile = 'updateProfile';
   static const nPasswordSecurity = 'passwordSecurity';
   static const nPreference = 'preference';
 
@@ -158,4 +156,8 @@ class AppRoutes {
   // NAVIGATION routes
   static const notification = '/notification';
   static const nNotification = 'notification';
+
+  // PROFILE routes
+  static const profile = '/profile';
+  static const nProfile = 'profile';
 }

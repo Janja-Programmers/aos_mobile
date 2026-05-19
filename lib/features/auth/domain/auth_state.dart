@@ -1,15 +1,17 @@
 class AuthUser {
-  AuthUser({required this.email, required this.fullName, this.userImage = ''});
+  AuthUser({required this.email, required this.fullName, this.userImage = '', this.bio});
 
   final String email;
   final String fullName;
   final String userImage;
+  final String? bio;
 
   factory AuthUser.fromMap(Map<String, dynamic> m) {
     return AuthUser(
       email: (m['email'] ?? '').toString(),
       fullName: (m['full_name'] ?? '').toString(),
       userImage: (m['user_image'] ?? '').toString(),
+      bio: (m['bio'] ?? '').toString(),
     );
   }
 }

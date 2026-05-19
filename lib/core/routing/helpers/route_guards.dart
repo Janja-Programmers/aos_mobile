@@ -6,7 +6,7 @@ class RouteGuards {
     AppRoutes.myAds,
     AppRoutes.connect,
     AppRoutes.createAd,
-    AppRoutes.updateProfile,
+    AppRoutes.profile,
     AppRoutes.reportAdBase,
     AppRoutes.reviewAdBase,
   ];

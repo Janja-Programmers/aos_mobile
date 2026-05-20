@@ -1,14 +1,13 @@
 import 'dart:async';
-
+import 'package:uuid/uuid.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter_callkit_incoming/entities/call_event.dart';
 import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
-
-import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
-import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_action_handler.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_params_mapper.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_action_handler.dart';
 
 class CallKitService {
   final CallKitActionHandler actionHandler;
@@ -27,6 +26,9 @@ class CallKitService {
   final Set<String> _handledDeclineIds = <String>{};
   final Set<String> _handledEndIds = <String>{};
   final Set<String> _handledTimeoutIds = <String>{};
+
+  final Map<String, String> _callkitUuidByCallId = <String, String>{};
+  final Map<String, String> _callIdByCallkitUuid = <String, String>{};
 
   CallKitService({required this.actionHandler, required this.paramsMapper});
 
@@ -92,28 +94,40 @@ class CallKitService {
       return;
     }
 
+    final callkitUuid = _getOrCreateCallkitUuid(callId);
+
     _shownIncomingCallIds.add(callId);
     _currentCallId = callId;
 
     final params = paramsMapper.incoming(
+      callkitUuid: callkitUuid,
       callId: callId,
       callType: callType,
       caller: caller,
       roomName: roomName,
     );
 
-    await _showIncoming(params);
+    await _showIncoming(params, backendCallId: callId);
   }
 
-  Future<void> _showIncoming(CallKitParams params) async {
-    final callId = params.id;
+  Future<void> _showIncoming(
+    CallKitParams params, {
+    required String backendCallId,
+  }) async {
+    final callkitUuid = params.id;
 
     try {
       await FlutterCallkitIncoming.showCallkitIncoming(params);
-      appLogger.i('📞 CallKit incoming call shown: $callId');
+
+      appLogger.i(
+        '📞 CallKit incoming call shown: $callkitUuid for backend call $backendCallId',
+      );
     } catch (e, s) {
-      if (callId != null && callId.isNotEmpty) {
-        _shownIncomingCallIds.remove(callId);
+      _shownIncomingCallIds.remove(backendCallId);
+
+      if (callkitUuid != null && callkitUuid.isNotEmpty) {
+        _callkitUuidByCallId.remove(backendCallId);
+        _callIdByCallkitUuid.remove(callkitUuid);
       }
 
       appLogger.e(
@@ -134,12 +148,26 @@ class CallKitService {
       return;
     }
 
+    final callkitUuid = _callkitUuidByCallId[callId];
+
+    if (callkitUuid == null || callkitUuid.isEmpty) {
+      appLogger.w(
+        '⚠️ Cannot mark CallKit call connected: missing CallKit UUID for $callId',
+      );
+      return;
+    }
+
     _connectedCallIds.add(callId);
 
     try {
-      await FlutterCallkitIncoming.setCallConnected(callId);
-      appLogger.i('📞 CallKit native call connected: $callId');
+      await FlutterCallkitIncoming.setCallConnected(callkitUuid);
+
+      appLogger.i(
+        '📞 CallKit native call connected: $callkitUuid for backend call $callId',
+      );
     } catch (e, s) {
+      _connectedCallIds.remove(callId);
+
       appLogger.w(
         '⚠️ Failed to mark CallKit call connected: $callId',
         error: e,
@@ -157,18 +185,38 @@ class CallKitService {
       return;
     }
 
-    _endedCallIds.add(id);
+    final callkitUuid = _callkitUuidByCallId[id];
 
-    try {
-      await FlutterCallkitIncoming.endCall(id);
+    if (callkitUuid == null || callkitUuid.isEmpty) {
+      appLogger.i('📴 No CallKit UUID found for ended call: $id');
 
+      _endedCallIds.add(id);
       _clearActiveCallGuards(id);
 
       if (_currentCallId == id) {
         _currentCallId = null;
       }
 
-      appLogger.i('📴 CallKit native call ended: $id');
+      return;
+    }
+
+    _endedCallIds.add(id);
+
+    try {
+      await FlutterCallkitIncoming.endCall(callkitUuid);
+
+      _clearActiveCallGuards(id);
+
+      _callkitUuidByCallId.remove(id);
+      _callIdByCallkitUuid.remove(callkitUuid);
+
+      if (_currentCallId == id) {
+        _currentCallId = null;
+      }
+
+      appLogger.i(
+        '📴 CallKit native call ended: $callkitUuid for backend call $id',
+      );
     } catch (e, s) {
       appLogger.w(
         '⚠️ Failed to end CallKit call: $id',
@@ -192,6 +240,9 @@ class CallKitService {
       _handledDeclineIds.clear();
       _handledEndIds.clear();
       _handledTimeoutIds.clear();
+
+      _callkitUuidByCallId.clear();
+      _callIdByCallkitUuid.clear();
 
       appLogger.i('📴 All CallKit calls ended');
     } catch (e, s) {
@@ -286,15 +337,47 @@ class CallKitService {
     if (body is! Map) return null;
 
     final extra = body['extra'];
+
     if (extra is Map && extra['call_id'] != null) {
       return extra['call_id'].toString();
     }
 
-    if (body['id'] != null) {
-      return body['id'].toString();
+    final rawId = body['id']?.toString();
+
+    if (rawId == null || rawId.isEmpty) {
+      return null;
     }
 
+    // If native event gives CallKit UUID, map it back to backend call id.
+    final mappedCallId = _callIdByCallkitUuid[rawId];
+    if (mappedCallId != null && mappedCallId.isNotEmpty) {
+      return mappedCallId;
+    }
+
+    // Last fallback: only return rawId if it looks like your backend call id.
+    if (rawId.startsWith('CALL-')) {
+      return rawId;
+    }
+
+    appLogger.w(
+      '⚠️ Could not resolve CallKit event id to backend callId: $rawId',
+    );
     return null;
+  }
+
+  // CALLKIT Helpers
+  String _getOrCreateCallkitUuid(String callId) {
+    final existing = _callkitUuidByCallId[callId];
+    if (existing != null && existing.isNotEmpty) {
+      return existing;
+    }
+
+    final uuid = const Uuid().v4();
+
+    _callkitUuidByCallId[callId] = uuid;
+    _callIdByCallkitUuid[uuid] = callId;
+
+    return uuid;
   }
 
   void _clearActiveCallGuards(String callId) {

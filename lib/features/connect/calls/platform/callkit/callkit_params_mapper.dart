@@ -1,7 +1,6 @@
+import 'package:flutter_callkit_incoming/entities/ios_params.dart';
 import 'package:flutter_callkit_incoming/entities/android_params.dart';
 import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
-import 'package:flutter_callkit_incoming/entities/ios_params.dart';
-
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 
@@ -9,6 +8,7 @@ class CallKitParamsMapper {
   const CallKitParamsMapper();
 
   CallKitParams incoming({
+    required String callkitUuid,
     required String callId,
     required AOSCallType callType,
     CallParticipant? caller,
@@ -21,11 +21,12 @@ class CallKitParamsMapper {
         _cleanString(caller?.displayName) ?? callerUserId ?? 'AOS User';
 
     final callerAvatar = _cleanString(caller?.avatarUrl);
+    final cleanRoomName = _cleanString(roomName);
 
     final callLabel = isVideo ? 'Incoming video call' : 'Incoming audio call';
 
     return CallKitParams(
-      id: callId,
+      id: callkitUuid,
       nameCaller: callerName,
       appName: 'Africa Online Stores',
       handle: callLabel,
@@ -37,26 +38,33 @@ class CallKitParamsMapper {
       missedCallNotification: null,
       extra: {
         'call_id': callId,
+        'callkit_uuid': callkitUuid,
         'call_type': isVideo ? 'video' : 'audio',
         'caller_display_name': callerName,
-        'caller': ?callerUserId,
-        'caller_avatar': ?callerAvatar,
-        if (_cleanString(roomName) != null) 'room_name': roomName!.trim(),
+        'caller': callerUserId,
+        'caller_avatar': callerAvatar,
+        'room_name': cleanRoomName,
       },
+
       android: const AndroidParams(
         isCustomNotification: true,
         isShowLogo: false,
         ringtonePath: 'system_ringtone_default',
-
-        // White UI / black text
         backgroundColor: '#FFFFFF',
         textColor: '#111111',
-
-        // Accept action color
         actionColor: '#16A34A',
       ),
-      ios: const IOSParams(
-        supportsVideo: true,
+
+      ios: IOSParams(
+        handleType: 'generic',
+        supportsVideo: isVideo,
+        maximumCallGroups: 1,
+        maximumCallsPerCallGroup: 1,
+        configureAudioSession: false,
+        supportsDTMF: false,
+        supportsHolding: false,
+        supportsGrouping: false,
+        supportsUngrouping: false,
         ringtonePath: 'system_ringtone_default',
       ),
     );

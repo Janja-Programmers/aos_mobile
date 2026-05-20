@@ -3,10 +3,10 @@ class ShortContentModes {
 
   static const String shop = 'shop';
   static const String geo = 'geo';
-  static const String talent = 'talent';
+  static const String vibes = 'vibes';
   static const String learn = 'learn';
 
-  static const Set<String> validModes = {shop, geo, talent, learn};
+  static const Set<String> validModes = {shop, geo, vibes, learn};
 
   static const Set<String> modesRequiringAd = {shop};
 

@@ -1,41 +1,34 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/core.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/routing/app_nav.dart';
-import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
-import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
-
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
-
-import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/core/routing/app_nav_config.dart';
+import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
+import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
+import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/connect/chats/utils/chat_actions.dart';
-
+import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
+import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
+import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
+import 'package:africaonlinestores/features/reviews/controllers/review_controller.dart';
+import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';
+import 'package:africaonlinestores/features/home/shared/providers/similar_ads_provider.dart';
+import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
+import 'package:africaonlinestores/features/reviews/presentation/sections/review_ad_section.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/ad_detail_controller.dart';
-import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_seller_store_section.dart';
-import 'package:africaonlinestores/features/home/presentation/components/ad_details/ads_header_info_section.dart';
+import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/sellers/application/providers/seller_profile_provider.dart';
+import 'package:africaonlinestores/features/home/presentation/components/ad_details/grid_ads_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/image_header_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/product_detail_section.dart';
-import 'package:africaonlinestores/features/home/presentation/components/ad_details/grid_ads_section.dart';
-import 'package:africaonlinestores/features/home/shared/providers/similar_ads_provider.dart';
-
-import 'package:africaonlinestores/features/reviews/controllers/review_controller.dart';
-import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
-import 'package:africaonlinestores/features/reviews/presentation/sections/review_ad_section.dart';
-import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
-import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
-import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
-import 'package:africaonlinestores/features/sellers/application/providers/seller_profile_provider.dart';
-
-import 'package:africaonlinestores/shared/components/app_search_bar.dart';
-import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';
-import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_seller_store_section.dart';
+import 'package:africaonlinestores/features/home/presentation/components/ad_details/ads_header_info_section.dart';
 
 class AdDetailsScreen extends ConsumerStatefulWidget {
   const AdDetailsScreen({super.key, required this.id});
@@ -260,20 +253,13 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                         context,
                         ref,
                         onAuthenticated: () async {
-                          final manager = ref.read(
-                            callManagerProvider.notifier,
-                          );
-
-                          if (ad.sellerId.isEmpty) {
-                            debugPrint('❌ sellerId is empty');
-                            return;
-                          }
-
-                          await manager.startOutgoingCall(
-                            userId: ad.sellerId,
-                            callType: AOSCallType.audio,
-                            receiver: _buildReceiver(ad, sellerAsync.value),
-                          );
+                          await ref
+                              .read(callStarterServiceProvider)
+                              .startOutgoingCall(
+                                userId: ad.sellerId,
+                                callType: AOSCallType.audio,
+                                receiver: _buildReceiver(ad, sellerAsync.value),
+                              );
                         },
                       );
                     } finally {

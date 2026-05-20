@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 class InAppNotificationBanner extends StatefulWidget {
@@ -25,6 +26,8 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<Offset> _slide;
+
+  Timer? _dismissTimer;
   bool _dismissed = false;
 
   @override
@@ -44,22 +47,46 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
 
     _controller.forward();
 
-    Future.delayed(widget.duration, _dismissSafely);
+    _dismissTimer = Timer(widget.duration, _dismissSafely);
   }
 
   Future<void> _dismissSafely() async {
     if (_dismissed) return;
     _dismissed = true;
 
-    await _controller.reverse();
-    if (mounted) {
-      widget.onDismiss();
+    _dismissTimer?.cancel();
+    _dismissTimer = null;
+
+    if (!mounted) return;
+
+    try {
+      await _controller.reverse();
+    } catch (_) {
+      // Best effort only. The widget may already be leaving the tree.
     }
+
+    if (!mounted) return;
+
+    widget.onDismiss();
+  }
+
+  void _dismissImmediately() {
+    if (_dismissed) return;
+    _dismissed = true;
+
+    _dismissTimer?.cancel();
+    _dismissTimer = null;
+
+    widget.onDismiss();
   }
 
   @override
   void dispose() {
+    _dismissTimer?.cancel();
+    _dismissTimer = null;
+
     _controller.dispose();
+
     super.dispose();
   }
 
@@ -73,7 +100,7 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
           child: Dismissible(
             key: ValueKey('${widget.title}_${widget.body}'),
             direction: DismissDirection.up,
-            onDismissed: (_) => _dismissSafely(),
+            onDismissed: (_) => _dismissImmediately(),
             child: GestureDetector(
               onTap: () async {
                 widget.onTap?.call();

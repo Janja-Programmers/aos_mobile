@@ -1,25 +1,20 @@
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
-import 'package:africaonlinestores/features/shorts/create_short/application/controllers/post_short_controller.dart';
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/state/post_category_options.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
-import 'package:africaonlinestores/features/shorts/create_short/presentation/helpers/post_short_media_helpers.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/widgets/ad_picker_bottom_sheet.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
-
-import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/controllers/post_short_controller.dart';
+import 'package:africaonlinestores/features/shorts/create_short/presentation/helpers/post_short_media_helpers.dart';
 
 class PostShortDetailsScreen extends ConsumerStatefulWidget {
   final List<SelectedMedia> media;
@@ -275,7 +270,7 @@ class _PostShortDetailsScreenState
       children: [
         Text.rich(
           TextSpan(
-            text: 'Category ',
+            text: 'Content Mode ',
             style: context.pStrong,
             children: [
               TextSpan(

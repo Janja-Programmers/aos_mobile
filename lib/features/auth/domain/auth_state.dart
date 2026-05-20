@@ -1,5 +1,10 @@
 class AuthUser {
-  AuthUser({required this.email, required this.fullName, this.userImage = '', this.bio});
+  AuthUser({
+    required this.email,
+    required this.fullName,
+    this.userImage = '',
+    this.bio,
+  });
 
   final String email;
   final String fullName;

@@ -1,8 +1,7 @@
-import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:africaonlinestores/core/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/video_call_screen.dart';
 
@@ -14,29 +13,32 @@ class VideoRingingScreen extends ConsumerStatefulWidget {
 }
 
 class _VideoRingingScreenState extends ConsumerState<VideoRingingScreen> {
+  late final _callManager = ref.read(callManagerProvider.notifier);
+
   @override
   void initState() {
     super.initState();
 
     Future.microtask(() {
+      if (!mounted) return;
+
       final state = ref.read(callManagerProvider);
 
       if (state.direction == 'outgoing' || state.direction == 'incoming') {
-        ref.read(callManagerProvider.notifier).startLocalVideoPreview();
+        _callManager.startLocalVideoPreview();
       }
     });
   }
 
   @override
   void dispose() {
-    ref.read(callManagerProvider.notifier).stopLocalVideoPreviewIfNotInCall();
+    _callManager.stopLocalVideoPreviewIfNotInCall();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(callManagerProvider);
-    final manager = ref.read(callManagerProvider.notifier);
 
     final isIncoming = state.direction == 'incoming';
 
@@ -51,10 +53,10 @@ class _VideoRingingScreenState extends ConsumerState<VideoRingingScreen> {
           child: SafeArea(
             child: isIncoming
                 ? _IncomingVideoActions(
-                    onAccept: manager.acceptIncomingCall,
-                    onReject: manager.rejectIncomingCall,
+                    onAccept: _callManager.acceptIncomingCall,
+                    onReject: _callManager.rejectIncomingCall,
                   )
-                : _OutgoingVideoActions(onCancel: manager.endCurrentCall),
+                : _OutgoingVideoActions(onCancel: _callManager.endCurrentCall),
           ),
         ),
       ],

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
 
 class FeedCategoryOption {
@@ -34,10 +32,10 @@ const List<FeedCategoryOption> feedCategoryOptions = [
     contentMode: ShortContentModes.geo,
   ),
   FeedCategoryOption(
-    id: 'talent',
-    label: 'Vibe',
+    id: 'vibes',
+    label: 'Vibes',
     icon: Icons.emoji_events_outlined,
-    contentMode: ShortContentModes.talent,
+    contentMode: ShortContentModes.vibes,
   ),
   FeedCategoryOption(
     id: 'learn',
@@ -65,7 +63,7 @@ class FeedCategoryChips extends StatelessWidget {
     switch (option.id) {
       case 'geo':
         return Colors.green;
-      case 'talent':
+      case 'vibes':
         return Colors.purple;
       case 'learn':
         return Colors.blue;
@@ -87,7 +85,7 @@ class FeedCategoryChips extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         padding: padding,
         itemCount: feedCategoryOptions.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 3),
+        separatorBuilder: (_, _) => const SizedBox(width: 6),
         itemBuilder: (context, index) {
           final option = feedCategoryOptions[index];
           final isSelected = option.id == selectedId;
@@ -115,7 +113,7 @@ class FeedCategoryChips extends StatelessWidget {
                     size: option.id == 'learn' ? 13 : 15,
                     color: isSelected ? colors.white : colors.textMuted,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 6),
                   Text(
                     option.label,
                     style: context.small.copyWith(

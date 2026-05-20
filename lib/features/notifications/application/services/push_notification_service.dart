@@ -1,19 +1,17 @@
-import 'dart:async';
 import 'dart:io';
-
-import 'package:africaonlinestores/core/device/device_id.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-
+import 'dart:async';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
-
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:africaonlinestores/core/device/device_id.dart';
+import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
+import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
+import 'package:africaonlinestores/features/notifications/domain/push_token_device.dart';
+import 'package:africaonlinestores/features/notifications/domain/notification_payload.dart';
+import 'package:africaonlinestores/features/notifications/data/notification_repository_impl.dart';
 import 'package:africaonlinestores/features/notifications/application/controllers/notification_controller.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_notification_service.dart';
 import 'package:africaonlinestores/features/notifications/application/services/notification_navigation_handler.dart';
-import 'package:africaonlinestores/features/notifications/data/notification_repository_impl.dart';
-import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
-import 'package:africaonlinestores/features/notifications/domain/notification_payload.dart';
-import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
-import 'package:africaonlinestores/features/notifications/domain/push_token_device.dart';
 
 class PushNotificationService {
   final FirebaseMessaging _messaging;
@@ -26,7 +24,16 @@ class PushNotificationService {
   StreamSubscription<RemoteMessage>? _tapSub;
   StreamSubscription<String>? _tokenRefreshSub;
 
+  Timer? _tokenRetryTimer;
+
   bool _initialized = false;
+  bool _isSettingUpToken = false;
+
+  int _tokenRetryAttempt = 0;
+
+  static const int _maxTokenRetryAttempts = 8;
+  static const Duration _apnsWaitTimeout = Duration(seconds: 10);
+  static const Duration _apnsPollInterval = Duration(milliseconds: 500);
 
   PushNotificationService({
     required FirebaseMessaging messaging,
@@ -50,22 +57,26 @@ class PushNotificationService {
 
     _initialized = true;
 
+    appLogger.i('🔔 PushNotificationService init');
+
     try {
-      appLogger.i('🔔 PushNotificationService init');
-
       await _requestPermission();
-      await _setupToken();
 
+      _listenTokenRefresh();
       _listenForeground();
       _listenNotificationTap();
 
       await _handleTerminatedLaunch();
+
+      await _setupToken();
     } catch (e, s) {
-      appLogger.e(
-        'PushNotificationService init failed',
+      appLogger.w(
+        '⚠️ PushNotificationService init completed with non-fatal issue',
         error: e,
         stackTrace: s,
       );
+
+      _scheduleTokenRetry();
     }
   }
 
@@ -77,7 +88,7 @@ class PushNotificationService {
   }
 
   // =====================================================
-  // Get device type
+  // DEVICE
   // =====================================================
   PushDeviceType get _deviceType {
     if (Platform.isIOS) return PushDeviceType.ios;
@@ -88,13 +99,130 @@ class PushNotificationService {
   // TOKEN
   // =====================================================
   Future<void> _setupToken() async {
-    final token = await _messaging.getToken();
-
-    if (token == null) {
-      appLogger.w('⚠️ FCM token is null');
+    if (_isSettingUpToken) {
       return;
     }
 
+    _isSettingUpToken = true;
+
+    try {
+      if (Platform.isIOS) {
+        final apnsToken = await _waitForApnsToken();
+
+        if (apnsToken == null || apnsToken.isEmpty) {
+          appLogger.w(
+            '🔔 APNS token not ready yet. Push token registration will retry.',
+          );
+
+          _scheduleTokenRetry();
+          return;
+        }
+
+        appLogger.i('🔔 APNS token ready');
+      }
+
+      final token = await _messaging.getToken();
+
+      if (token == null || token.isEmpty) {
+        appLogger.w(
+          '🔔 FCM token not ready yet. Push token registration will retry.',
+        );
+
+        _scheduleTokenRetry();
+        return;
+      }
+
+      await _registerToken(token);
+
+      _tokenRetryAttempt = 0;
+      _tokenRetryTimer?.cancel();
+      _tokenRetryTimer = null;
+
+      appLogger.i('🔔 Push token registered');
+    } on FirebaseException catch (e, s) {
+      if (e.code == 'apns-token-not-set') {
+        appLogger.w(
+          '🔔 APNS token not set yet. Push token registration will retry.',
+          error: e,
+          stackTrace: s,
+        );
+
+        _scheduleTokenRetry();
+        return;
+      }
+
+      appLogger.w(
+        '⚠️ Push token setup failed. Will retry.',
+        error: e,
+        stackTrace: s,
+      );
+
+      _scheduleTokenRetry();
+    } catch (e, s) {
+      appLogger.w(
+        '⚠️ Push token setup failed. Will retry.',
+        error: e,
+        stackTrace: s,
+      );
+
+      _scheduleTokenRetry();
+    } finally {
+      _isSettingUpToken = false;
+    }
+  }
+
+  Future<String?> _waitForApnsToken() async {
+    final deadline = DateTime.now().add(_apnsWaitTimeout);
+
+    while (DateTime.now().isBefore(deadline)) {
+      try {
+        final token = await _messaging.getAPNSToken();
+
+        if (token != null && token.isNotEmpty) {
+          return token;
+        }
+      } catch (e, s) {
+        appLogger.w(
+          '🔔 APNS token check failed. Waiting briefly.',
+          error: e,
+          stackTrace: s,
+        );
+      }
+
+      await Future.delayed(_apnsPollInterval);
+    }
+
+    return null;
+  }
+
+  void _scheduleTokenRetry() {
+    if (_tokenRetryAttempt >= _maxTokenRetryAttempts) {
+      appLogger.w(
+        '🔔 Push token registration retry limit reached. Will wait for next app start/token refresh.',
+      );
+      return;
+    }
+
+    _tokenRetryTimer?.cancel();
+
+    _tokenRetryAttempt += 1;
+
+    final delaySeconds = _tokenRetryAttempt <= 3
+        ? 3
+        : _tokenRetryAttempt <= 5
+        ? 10
+        : 30;
+
+    appLogger.i(
+      '🔔 Scheduling push token retry attempt $_tokenRetryAttempt in ${delaySeconds}s',
+    );
+
+    _tokenRetryTimer = Timer(Duration(seconds: delaySeconds), () {
+      _setupToken();
+    });
+  }
+
+  Future<void> _registerToken(String token) async {
     final deviceId = await DeviceId.get();
 
     await _pushRepo.registerPushToken(
@@ -104,23 +232,32 @@ class PushNotificationService {
         deviceId: deviceId,
       ),
     );
+  }
 
-    await _tokenRefreshSub?.cancel();
+  void _listenTokenRefresh() {
+    _tokenRefreshSub?.cancel();
+
     _tokenRefreshSub = _messaging.onTokenRefresh.listen((newToken) async {
+      if (newToken.trim().isEmpty) {
+        return;
+      }
+
       try {
-        await _pushRepo.registerPushToken(
-          PushTokenDevice(
-            token: newToken,
-            deviceType: _deviceType,
-            deviceId: deviceId,
-          ),
-        );
+        await _registerToken(newToken);
+
+        _tokenRetryAttempt = 0;
+        _tokenRetryTimer?.cancel();
+        _tokenRetryTimer = null;
+
+        appLogger.i('🔔 Refreshed FCM token registered');
       } catch (e, s) {
-        appLogger.e(
-          'FCM token refresh registration failed',
+        appLogger.w(
+          '⚠️ FCM token refresh registration failed. Will retry.',
           error: e,
           stackTrace: s,
         );
+
+        _scheduleTokenRetry();
       }
     });
   }
@@ -128,8 +265,9 @@ class PushNotificationService {
   // =====================================================
   // FOREGROUND
   // =====================================================
-
   void _listenForeground() {
+    _foregroundSub?.cancel();
+
     _foregroundSub = FirebaseMessaging.onMessage.listen((message) {
       try {
         appLogger.i('📩 Foreground push received: ${message.data}');
@@ -152,29 +290,14 @@ class PushNotificationService {
         appLogger.e('Foreground push handling failed', error: e, stackTrace: s);
       }
     });
-
-    // CUSTOMBANNER Already Handles this
-
-    // flutterLocalNotificationsPlugin.show(
-    //   notification.hashCode,
-    //   notification.title,
-    //   notification.body,
-    //   NotificationDetails(
-    //     android: AndroidNotificationDetails(
-    //       AndroidNotificationConfig.channel.id,
-    //       AndroidNotificationConfig.channel.name,
-    //       channelDescription: AndroidNotificationConfig.channel.description,
-    //       importance: Importance.high,
-    //       priority: Priority.high,
-    //     ),
-    //   ),
-    // );
   }
 
   // =====================================================
   // TAP (BACKGROUND)
   // =====================================================
   void _listenNotificationTap() {
+    _tapSub?.cancel();
+
     _tapSub = FirebaseMessaging.onMessageOpenedApp.listen((message) {
       try {
         appLogger.i('📲 Notification tapped (background): ${message.data}');
@@ -263,13 +386,20 @@ class PushNotificationService {
     }
   }
 
+  // =====================================================
+  // RESET
+  // =====================================================
   void reset() {
     _initialized = false;
+    _isSettingUpToken = false;
+    _tokenRetryAttempt = 0;
 
+    _tokenRetryTimer?.cancel();
     _foregroundSub?.cancel();
     _tapSub?.cancel();
     _tokenRefreshSub?.cancel();
 
+    _tokenRetryTimer = null;
     _foregroundSub = null;
     _tapSub = null;
     _tokenRefreshSub = null;
@@ -279,8 +409,14 @@ class PushNotificationService {
   // DISPOSE
   // =====================================================
   void dispose() {
+    _tokenRetryTimer?.cancel();
     _foregroundSub?.cancel();
     _tapSub?.cancel();
     _tokenRefreshSub?.cancel();
+
+    _tokenRetryTimer = null;
+    _foregroundSub = null;
+    _tapSub = null;
+    _tokenRefreshSub = null;
   }
 }

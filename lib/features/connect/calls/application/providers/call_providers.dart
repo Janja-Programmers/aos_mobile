@@ -1,24 +1,21 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-
-import 'package:africaonlinestores/core/media/livekit_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/media/livekit_service.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
-
+import 'package:africaonlinestores/features/connect/calls/data/call_api.dart';
+import 'package:africaonlinestores/features/connect/calls/utils/call_timer.dart';
+import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
+import 'package:africaonlinestores/features/connect/calls/repository/call_repository_impl.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/managers/call_manager.dart';
+import 'package:africaonlinestores/features/connect/calls/integrations/socket_call_listener.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_params_mapper.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_media_service.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_action_handler.dart';
+import 'package:africaonlinestores/features/connect/calls/application/services/call_starter_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_signaling_handler.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_audio_feedback_service.dart';
-import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
-
-import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_action_handler.dart';
-import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_params_mapper.dart';
-import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_service.dart';
-
-import 'package:africaonlinestores/features/connect/calls/data/call_api.dart';
-import 'package:africaonlinestores/features/connect/calls/integrations/socket_call_listener.dart';
-import 'package:africaonlinestores/features/connect/calls/repository/call_repository_impl.dart';
-import 'package:africaonlinestores/features/connect/calls/utils/call_timer.dart';
 
 // ================= API =================
 final callApiProvider = Provider<CallApi>((ref) {
@@ -107,6 +104,13 @@ final callAudioFeedbackServiceProvider = Provider<CallAudioFeedbackService>((
   });
 
   return service;
+});
+
+final callStarterServiceProvider = Provider<CallStarterService>((ref) {
+  return CallStarterService(
+    callManager: ref.read(callManagerProvider.notifier),
+    callKitService: ref.read(callKitServiceProvider),
+  );
 });
 
 // ================= SOCKET LISTENER =================

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
+
 
 class PostCategoryOption {
   final String id;
@@ -39,10 +39,10 @@ const List<PostCategoryOption> postCategoriesData = [
         'Explore and share stunnning landscapes, mountains, nature trails, waterfalls, and geographical wonders from anywhere in the world.',
   ),
   PostCategoryOption(
-    id: 'talent',
-    label: 'Talent',
+    id: 'vibes',
+    label: 'Vibes',
     icon: Icons.emoji_events_outlined,
-    contentMode: ShortContentModes.talent,
+    contentMode: ShortContentModes.vibes,
     description:
         'Showcase your skills - music, art, fashion, sports and more. Let your creativity reach an audience that appreciates it.',
   ),

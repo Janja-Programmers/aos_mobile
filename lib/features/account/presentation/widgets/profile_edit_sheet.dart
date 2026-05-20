@@ -23,12 +23,10 @@ class ProfileEditSheet extends ConsumerStatefulWidget {
   const ProfileEditSheet({super.key});
 
   @override
-  ConsumerState<ProfileEditSheet> createState() =>
-      _ProfileEditSheetState();
+  ConsumerState<ProfileEditSheet> createState() => _ProfileEditSheetState();
 }
 
-class _ProfileEditSheetState
-    extends ConsumerState<ProfileEditSheet> {
+class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
   final _nameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
 
@@ -78,9 +76,7 @@ class _ProfileEditSheetState
     final payload = res.rightOrNull ?? {};
     final data = Map<String, dynamic>.from(payload['data'] ?? {});
 
-    ref
-        .read(authControllerProvider.notifier)
-        .setUserFromMap(data);
+    ref.read(authControllerProvider.notifier).setUserFromMap(data);
 
     showAppSnack(context, 'Profile updated.');
 
@@ -88,13 +84,11 @@ class _ProfileEditSheetState
   }
 
   Future<void> _pickPhoto() async {
-    final file =
-        await MediaHelper.pickImageWithChoice(context);
+    final file = await MediaHelper.pickImageWithChoice(context);
 
     if (file == null) return;
 
-    final fixedFile =
-        await normalizeImageOrientation(file);
+    final fixedFile = await normalizeImageOrientation(file);
 
     setState(() {
       _uploadingPhoto = true;
@@ -104,26 +98,23 @@ class _ProfileEditSheetState
     final uploaded = await MediaHelper.uploadSingle(
       ref: ref,
       file: fixedFile,
-      uploadFn: (f) =>
-          ref.read(filesApiProvider).uploadMedia(file: f),
+      uploadFn: (f) => ref.read(filesApiProvider).uploadMedia(file: f),
     );
 
     if (uploaded == null) {
       setState(() => _uploadingPhoto = false);
 
-      if(mounted) showAppSnack(context, 'Upload failed');
+      if (mounted) showAppSnack(context, 'Upload failed');
 
       return;
     }
 
-    final res = await _api.updateProfile(
-      userImage: uploaded.url,
-    );
+    final res = await _api.updateProfile(userImage: uploaded.url);
 
     if (res.isLeft) {
       setState(() => _uploadingPhoto = false);
 
-      if(mounted) showAppSnack(context, 'Failed to update image');
+      if (mounted) showAppSnack(context, 'Failed to update image');
 
       return;
     }
@@ -131,9 +122,7 @@ class _ProfileEditSheetState
     final payload = res.rightOrNull ?? {};
     final data = Map<String, dynamic>.from(payload['data']);
 
-    ref
-        .read(authControllerProvider.notifier)
-        .setUserFromMap(data);
+    ref.read(authControllerProvider.notifier).setUserFromMap(data);
 
     setState(() {
       _uploadingPhoto = false;
@@ -144,8 +133,7 @@ class _ProfileEditSheetState
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
-    final authenticated =
-        auth is AuthAuthenticated ? auth : null;
+    final authenticated = auth is AuthAuthenticated ? auth : null;
 
     return Container(
       padding: EdgeInsets.only(
@@ -156,9 +144,7 @@ class _ProfileEditSheetState
       ),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SafeArea(
         top: false,
@@ -178,20 +164,15 @@ class _ProfileEditSheetState
 
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(
-                'Edit profile',
-                style: context.h2,
-              ),
+              child: Text('Edit profile', style: context.h2),
             ),
 
             const SizedBox(height: 24),
 
             EditableAvatar(
               baseUrl: AppConfig.normalizedBaseUrl,
-              authFullName:
-                  authenticated?.user.fullName ?? '',
-              authUserImage:
-                  authenticated?.user.userImage ?? '',
+              authFullName: authenticated?.user.fullName ?? '',
+              authUserImage: authenticated?.user.userImage ?? '',
               apiUserImage: _userImage,
               localPhoto: _localPhoto,
               uploading: _uploadingPhoto,
@@ -202,9 +183,7 @@ class _ProfileEditSheetState
 
             TextField(
               controller: _nameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-              ),
+              decoration: const InputDecoration(labelText: 'Name'),
             ),
 
             const SizedBox(height: 20),
@@ -221,11 +200,7 @@ class _ProfileEditSheetState
 
             const SizedBox(height: 28),
 
-            PrimaryButton(
-              text: 'Save',
-              loading: _saving,
-              onPressed: _save,
-            ),
+            PrimaryButton(text: 'Save', loading: _saving, onPressed: _save),
           ],
         ),
       ),

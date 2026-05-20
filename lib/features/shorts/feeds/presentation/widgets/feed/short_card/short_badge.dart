@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
@@ -70,9 +69,9 @@ class _ShortBadgeConfig {
           color: colors.success,
         );
 
-      case ShortContentModes.talent:
+      case ShortContentModes.vibes:
         return _ShortBadgeConfig(
-          label: 'Vibe',
+          label: 'Vibes',
           icon: Icons.emoji_events_outlined,
           color: colors.purple,
         );

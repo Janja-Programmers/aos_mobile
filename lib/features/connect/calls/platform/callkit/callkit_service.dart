@@ -139,6 +139,35 @@ class CallKitService {
   }
 
   // -----------------------------
+  // Outgoing call
+  // -----------------------------
+  Future<String?> registerOutgoingCall({required String callId}) async {
+    final normalizedCallId = callId.trim();
+
+    if (normalizedCallId.isEmpty) {
+      appLogger.e('❌ Cannot register outgoing CallKit call: missing callId');
+      return null;
+    }
+
+    if (_endedCallIds.contains(normalizedCallId)) {
+      appLogger.i(
+        '📞 Ignoring outgoing CallKit registration for already ended call: $normalizedCallId',
+      );
+      return _callkitUuidByCallId[normalizedCallId];
+    }
+
+    final callkitUuid = _getOrCreateCallkitUuid(normalizedCallId);
+
+    _currentCallId = normalizedCallId;
+
+    appLogger.i(
+      '📞 Outgoing CallKit UUID registered: $callkitUuid for backend call $normalizedCallId',
+    );
+
+    return callkitUuid;
+  }
+
+  // -----------------------------
   // Connected / ended sync
   // -----------------------------
   Future<void> setCallConnected(String callId) async {

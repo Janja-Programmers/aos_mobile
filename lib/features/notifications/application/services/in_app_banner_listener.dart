@@ -1,11 +1,9 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:africaonlinestores/shared/widgets/in_app_notification_banner.dart';
 import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_notification_service.dart';
-import 'package:africaonlinestores/shared/widgets/in_app_notification_banner.dart';
 
 class InAppBannerListener extends ConsumerStatefulWidget {
   const InAppBannerListener({super.key});
@@ -16,6 +14,8 @@ class InAppBannerListener extends ConsumerStatefulWidget {
 }
 
 class _InAppBannerListenerState extends ConsumerState<InAppBannerListener> {
+  late final InAppNotificationService _service;
+
   StreamSubscription<InAppNotificationData?>? _sub;
   InAppNotificationData? _current;
 
@@ -23,14 +23,13 @@ class _InAppBannerListenerState extends ConsumerState<InAppBannerListener> {
   void initState() {
     super.initState();
 
-    Future.microtask(() {
-      final service = ref.read(inAppNotificationServiceProvider);
+    _service = ref.read(inAppNotificationServiceProvider);
 
-      _sub = service.stream.listen((data) {
-        if (!mounted) return;
-        setState(() {
-          _current = data;
-        });
+    _sub = _service.stream.listen((data) {
+      if (!mounted) return;
+
+      setState(() {
+        _current = data;
       });
     });
   }
@@ -38,22 +37,25 @@ class _InAppBannerListenerState extends ConsumerState<InAppBannerListener> {
   @override
   void dispose() {
     _sub?.cancel();
+    _sub = null;
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final current = _current;
-    if (current == null) return const SizedBox.shrink();
+
+    if (current == null) {
+      return const SizedBox.shrink();
+    }
 
     return InAppNotificationBanner(
+      key: ValueKey(current.id),
       title: current.title,
       body: current.body,
       duration: current.duration,
       onTap: current.onTap,
-      onDismiss: () {
-        ref.read(inAppNotificationServiceProvider).markDismissed();
-      },
+      onDismiss: _service.markDismissed,
     );
   }
 }

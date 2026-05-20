@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/routing/app_nav.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
-import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
-import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_presence_controller.dart';
-import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/presence_label.dart';
-
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/presence_label.dart';
+import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_presence_controller.dart';
 
 class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
   const ChatAppBar({
@@ -51,7 +48,6 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
   Future<void> _startCall(AOSCallType type) async {
     if (_isCalling) return;
 
-    final manager = ref.read(callManagerProvider.notifier);
     final presenceMap = ref.read(chatPresenceControllerProvider);
     final presence = presenceMap[widget.otherUserId];
 
@@ -64,15 +60,17 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
     try {
       await HapticFeedback.mediumImpact();
 
-      final success = await manager.startOutgoingCall(
-        userId: widget.otherUserId,
-        callType: type,
-        receiver: CallParticipant(
-          userId: widget.otherUserId,
-          displayName: widget.displayName,
-          avatarUrl: widget.imageUrl,
-        ),
-      );
+      final success = await ref
+          .read(callStarterServiceProvider)
+          .startOutgoingCall(
+            userId: widget.otherUserId,
+            callType: type,
+            receiver: CallParticipant(
+              userId: widget.otherUserId,
+              displayName: widget.displayName,
+              avatarUrl: widget.imageUrl,
+            ),
+          );
 
       if (!success && mounted) {
         ShowSnack(context, 'Failed to start call').error();

@@ -1,18 +1,14 @@
 import 'package:intl/intl.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
+import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
+import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
-
-import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 
 void showCallDetailsSheet(BuildContext context, WidgetRef ref, CallLog call) {
   final colors = context.appColors;
@@ -89,7 +85,7 @@ void showCallDetailsSheet(BuildContext context, WidgetRef ref, CallLog call) {
                           ref,
                           onAuthenticated: () async {
                             await ref
-                                .read(callManagerProvider.notifier)
+                                .read(callStarterServiceProvider)
                                 .startOutgoingCall(
                                   userId: call.user,
                                   callType: AOSCallType.audio,
@@ -123,7 +119,7 @@ void showCallDetailsSheet(BuildContext context, WidgetRef ref, CallLog call) {
                           ref,
                           onAuthenticated: () async {
                             await ref
-                                .read(callManagerProvider.notifier)
+                                .read(callStarterServiceProvider)
                                 .startOutgoingCall(
                                   userId: call.user,
                                   callType: AOSCallType.video,

@@ -11,13 +11,18 @@ class LiveRoutes {
   const LiveRoutes._();
 
   static List<GoRoute> routes() => [
-    // Chat list
+    // JOINLIVE Screen
     GoRoute(
       name: AppRoutes.nLiveRoom,
       path: AppRoutes.liveRoom,
-      builder: (_, _) => const LiveScreen(),
+      builder: (_, state) {
+        final liveId = state.uri.queryParameters['live_id'] ?? '';
+
+        return LiveScreen(liveId: liveId);
+      },
     ),
 
+    // GOLIVE Screen
     GoRoute(
       name: AppRoutes.nGoLive,
       path: AppRoutes.goLive,
@@ -31,5 +36,12 @@ class LiveNavigation {
 
   static void toGoLiveScreen(BuildContext context) {
     context.pushNamed(AppRoutes.nGoLive);
+  }
+
+  static void toLiveRoom(BuildContext context, {required String liveId}) {
+    context.pushNamed(
+      AppRoutes.nLiveRoom,
+      queryParameters: {'live_id': liveId},
+    );
   }
 }

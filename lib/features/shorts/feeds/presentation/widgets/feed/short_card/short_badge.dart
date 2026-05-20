@@ -72,7 +72,7 @@ class _ShortBadgeConfig {
 
       case ShortContentModes.talent:
         return _ShortBadgeConfig(
-          label: 'Talent',
+          label: 'Vibe',
           icon: Icons.emoji_events_outlined,
           color: colors.purple,
         );

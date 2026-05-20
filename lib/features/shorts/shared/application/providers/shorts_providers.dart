@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -67,10 +68,17 @@ final shortsCommentsApiProvider = Provider<ShortsCommentsApi>((ref) {
 
 final activeShortIndexProvider = StateProvider<int>((ref) => 0);
 
+final shortsRepositoryProvider = Provider<ShortsRepository>((ref) {
+  return ShortsRepository(
+    ref.read(shortsFeedApiProvider),
+    ref.read(liveApiProvider),
+  );
+});
+
 final shortsControllerProvider =
     StateNotifierProvider<ShortsController, ShortsState>((ref) {
       return ShortsController(
-        ShortsRepository(ref.read(shortsFeedApiProvider)),
+        ref.read(shortsRepositoryProvider),
         ref.read(shortsTrackingApiProvider),
         ref.read(shortsEngagementApiProvider),
       );
@@ -106,7 +114,7 @@ final shortDetailControllerProvider =
     >((ref, args) {
       return ShortDetailController(
         args: args,
-        repository: ShortsRepository(ref.read(shortsFeedApiProvider)),
+        repository: ref.read(shortsRepositoryProvider),
         engagementApi: ref.read(shortsEngagementApiProvider),
       );
     });

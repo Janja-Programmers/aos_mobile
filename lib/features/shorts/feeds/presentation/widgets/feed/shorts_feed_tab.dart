@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -6,11 +7,15 @@ import 'package:africaonlinestores/features/shorts/shared/application/providers/
 import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_type.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/components/following/suggested_sellers_section.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/empty_shorts_view.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/live_card.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card.dart';
 import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
+
+import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
+import 'package:africaonlinestores/features/live/domain/live_stream.dart';
 
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 
@@ -35,7 +40,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
 
   late final ShortsRepository _repository;
 
-  final List<Short> _items = [];
+  final List<Object> _items = [];
 
   String? _nextCursor;
   bool _hasMore = true;
@@ -53,7 +58,10 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
   void initState() {
     super.initState();
 
-    _repository = ShortsRepository(ref.read(shortsFeedApiProvider));
+    _repository = ShortsRepository(
+      ref.read(shortsFeedApiProvider),
+      ref.read(liveApiProvider),
+    );
 
     _loadInitial();
     _scrollController.addListener(_onScroll);
@@ -78,7 +86,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     }
   }
 
-  Future<ShortsFeedPage> _fetchPage({String? cursor}) {
+  Future<dynamic> _fetchPage({String? cursor}) {
     switch (widget.feedType) {
       case ShortsFeedType.forYou:
         return _repository.fetchForYou(
@@ -93,10 +101,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
         );
 
       case ShortsFeedType.live:
-        return _repository.fetchForYou(
-          cursor: cursor,
-          contentMode: widget.contentMode,
-        );
+        return _repository.fetchLive(cursor: cursor);
     }
   }
 
@@ -177,9 +182,15 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
   }
 
   void _openDetail(int index) {
+    if (widget.feedType == ShortsFeedType.live) {
+      return;
+    }
+
+    final shorts = _items.whereType<Short>().toList();
+
     ShortsNavigation.toShortDetail(
       context,
-      initialShorts: List.from(_items),
+      initialShorts: shorts,
       initialIndex: index,
       initialNextCursor: _nextCursor,
       initialHasMore: _hasMore,
@@ -194,7 +205,18 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
       );
     }
 
-    final short = _items[index];
+    final item = _items[index];
+
+    if (item is LiveStream) {
+      return LiveCard(
+        live: item,
+        onTap: () {
+          LiveNavigation.toLiveRoom(context, liveId: item.id);
+        },
+      );
+    }
+
+    final short = item as Short;
 
     return ShortCard(short: short, onTap: () => _openDetail(index));
   }

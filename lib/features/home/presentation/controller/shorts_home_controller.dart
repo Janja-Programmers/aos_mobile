@@ -14,7 +14,7 @@ class ShortsHomeController extends AsyncNotifier<List<Short>> {
 
   @override
   Future<List<Short>> build() async {
-    _repository = ShortsRepository(ref.read(shortsFeedApiProvider));
+    _repository = ref.read(shortsRepositoryProvider);
 
     return _load();
   }

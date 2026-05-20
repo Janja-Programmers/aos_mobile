@@ -15,6 +15,8 @@ abstract class LiveRepository {
 
   Future<LiveStream> getLive({required String liveId});
 
+  Future<List<LiveStream>> listLives({int start = 0, int limit = 20});
+
   Future<String?> trackJoin({required String liveId});
 
   Future<void> trackLeave({required String liveId});
@@ -70,6 +72,16 @@ class LiveRepositoryImpl implements LiveRepository {
   @override
   Future<LiveStream> getLive({required String liveId}) async {
     final res = await api.getLive(liveId: liveId);
+
+    return res.fold((e) => throw e, (data) => data);
+  }
+
+  // -----------------------------
+  // List Lives
+  // -----------------------------
+  @override
+  Future<List<LiveStream>> listLives({int start = 0, int limit = 20}) async {
+    final res = await api.listLives(start: start, limit: limit);
 
     return res.fold((e) => throw e, (data) => data);
   }

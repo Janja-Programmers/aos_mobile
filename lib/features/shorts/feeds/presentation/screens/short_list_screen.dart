@@ -24,59 +24,74 @@ class _ShortListScreenState extends State<ShortListScreen> {
 
     return DefaultTabController(
       length: 3,
-      child: Scaffold(
-        backgroundColor: colors.surface,
-        appBar: AppBar(
-          titleSpacing: 0,
-          title: const FeedHeader(),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'For You'),
-              Tab(text: 'Following'),
-              Tab(text: 'Live'),
-            ],
-          ),
-        ),
-        body: Column(
-          children: [
-            const SizedBox(height: 8),
+      child: Builder(
+        builder: (context) {
+          final tabController = DefaultTabController.of(context);
 
-            FeedCategoryChips(
-              selectedId: _selectedCategoryId,
-              onSelected: (option) {
-                setState(() {
-                  _selectedCategoryId = option.id;
-                  _selectedCategoryLabel = option.label;
-                  _selectedContentMode = option.contentMode;
-                });
-              },
-            ),
+          return AnimatedBuilder(
+            animation: tabController,
+            builder: (context, _) {
+              final isLiveTab = tabController.index == 2;
 
-            const SizedBox(height: 8),
+              return Scaffold(
+                backgroundColor: colors.surface,
+                appBar: AppBar(
+                  titleSpacing: 0,
+                  title: const FeedHeader(),
+                  bottom: const TabBar(
+                    tabs: [
+                      Tab(text: 'For You'),
+                      Tab(text: 'Following'),
+                      Tab(text: 'Live'),
+                    ],
+                  ),
+                ),
+                body: Column(
+                  children: [
+                    if (!isLiveTab) ...[
+                      const SizedBox(height: 8),
 
-            Expanded(
-              child: TabBarView(
-                children: [
-                  ShortsFeedTab(
-                    feedType: ShortsFeedType.forYou,
-                    contentMode: _selectedContentMode,
-                    categoryLabel: _selectedCategoryLabel,
-                  ),
-                  ShortsFeedTab(
-                    feedType: ShortsFeedType.following,
-                    contentMode: _selectedContentMode,
-                    categoryLabel: _selectedCategoryLabel,
-                  ),
-                  ShortsFeedTab(
-                    feedType: ShortsFeedType.live,
-                    contentMode: _selectedContentMode,
-                    categoryLabel: _selectedCategoryLabel,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+                      FeedCategoryChips(
+                        selectedId: _selectedCategoryId,
+                        onSelected: (option) {
+                          setState(() {
+                            _selectedCategoryId = option.id;
+                            _selectedCategoryLabel = option.label;
+                            _selectedContentMode = option.contentMode;
+                          });
+                        },
+                      ),
+
+                      const SizedBox(height: 8),
+                    ],
+
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          ShortsFeedTab(
+                            feedType: ShortsFeedType.forYou,
+                            contentMode: _selectedContentMode,
+                            categoryLabel: _selectedCategoryLabel,
+                          ),
+                          ShortsFeedTab(
+                            feedType: ShortsFeedType.following,
+                            contentMode: _selectedContentMode,
+                            categoryLabel: _selectedCategoryLabel,
+                          ),
+                          const ShortsFeedTab(
+                            feedType: ShortsFeedType.live,
+                            contentMode: null,
+                            categoryLabel: null,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

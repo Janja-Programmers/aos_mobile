@@ -98,7 +98,7 @@ class EmptyShortsView extends StatelessWidget {
       case ShortsFeedType.following:
         return 'No following shorts yet';
       case ShortsFeedType.live:
-        return 'No live shorts yet';
+        return 'No live yet';
     }
   }
 
@@ -115,7 +115,7 @@ class EmptyShortsView extends StatelessWidget {
       case ShortsFeedType.following:
         return 'Follow creators and shops to see their latest shorts here.';
       case ShortsFeedType.live:
-        return 'Live content will appear here when sellers and creators go live.';
+        return 'Live content will appear here when creators go live.';
     }
   }
 }

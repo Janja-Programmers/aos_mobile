@@ -35,14 +35,14 @@ const List<FeedCategoryOption> feedCategoryOptions = [
   ),
   FeedCategoryOption(
     id: 'talent',
-    label: 'Talent',
+    label: 'Vibe',
     icon: Icons.emoji_events_outlined,
     contentMode: ShortContentModes.talent,
   ),
   FeedCategoryOption(
     id: 'learn',
     label: 'Learn',
-    icon: Icons.biotech_outlined,
+    icon: Icons.school_outlined,
     contentMode: ShortContentModes.learn,
   ),
 ];
@@ -56,7 +56,7 @@ class FeedCategoryChips extends StatelessWidget {
     super.key,
     required this.selectedId,
     required this.onSelected,
-    this.padding = const EdgeInsets.symmetric(horizontal: 12),
+    this.padding = const EdgeInsets.all(6),
   });
 
   Color _selectedColor(BuildContext context, FeedCategoryOption option) {
@@ -87,7 +87,7 @@ class FeedCategoryChips extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         padding: padding,
         itemCount: feedCategoryOptions.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 3),
         itemBuilder: (context, index) {
           final option = feedCategoryOptions[index];
           final isSelected = option.id == selectedId;
@@ -115,7 +115,7 @@ class FeedCategoryChips extends StatelessWidget {
                     size: option.id == 'learn' ? 13 : 15,
                     color: isSelected ? colors.white : colors.textMuted,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 4),
                   Text(
                     option.label,
                     style: context.small.copyWith(

@@ -25,7 +25,9 @@ import 'package:africaonlinestores/features/live/presentation/widgets/live_right
 import 'package:africaonlinestores/features/live/presentation/widgets/live_top_bar.dart';
 
 class LiveScreen extends ConsumerStatefulWidget {
-  const LiveScreen({super.key});
+  final String? liveId;
+
+  const LiveScreen({super.key, this.liveId});
 
   @override
   ConsumerState<LiveScreen> createState() => _LiveScreenState();
@@ -44,13 +46,19 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
   void initState() {
     super.initState();
 
-    Future.microtask(() {
+    Future.microtask(() async {
       final liveKit = ref.read(liveKitCoreProvider);
       _mediaSub = liveKit.events.listen(_onMediaEvent);
 
+      final manager = ref.read(liveManagerProvider.notifier);
+
+      if (widget.liveId != null && widget.liveId!.trim().isNotEmpty) {
+        await manager.joinLive(liveId: widget.liveId!.trim());
+      }
+
       final liveId = ref.read(liveManagerProvider).session?.liveId;
       if (liveId != null) {
-        ref.read(liveCommentsControllerProvider.notifier).init(liveId);
+        await ref.read(liveCommentsControllerProvider.notifier).init(liveId);
       }
     });
   }

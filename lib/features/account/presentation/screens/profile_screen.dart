@@ -10,7 +10,6 @@ import 'package:africaonlinestores/features/account/presentation/widgets/profile
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 
-
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
@@ -19,11 +18,7 @@ class ProfileScreen extends ConsumerWidget {
     final auth = ref.watch(authControllerProvider);
 
     if (auth is! AuthAuthenticated) {
-      return const Scaffold(
-        body: Center(
-          child: Text('Not logged in'),
-        ),
-      );
+      return const Scaffold(body: Center(child: Text('Not logged in')));
     }
 
     final user = auth.user;
@@ -33,13 +28,7 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
-      appBar: AppBar(
-        title: Text(
-          'Me',
-          style: context.h2,
-        ),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text('Me', style: context.h5), centerTitle: true),
 
       body: SingleChildScrollView(
         child: Column(
@@ -56,29 +45,19 @@ class ProfileScreen extends ConsumerWidget {
                     )
                   : null,
               child: user.userImage.isEmpty
-                  ? Icon(
-                      Icons.person,
-                      size: 60,
-                      color: colors.primary,
-                    )
+                  ? Icon(Icons.person, size: 60, color: colors.primary)
                   : null,
             ),
 
             const SizedBox(height: 18),
 
             /// NAME
-            Text(
-              user.fullName,
-              style: context.h1,
-            ),
+            Text(user.fullName, style: context.h5),
 
             const SizedBox(height: 6),
 
             /// USERNAME
-            Text(
-              '@${user.email}',
-              style: context.p,
-            ),
+            Text('@${user.email}', style: context.p),
 
             const SizedBox(height: 20),
 
@@ -86,20 +65,11 @@ class ProfileScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const _StatItem(
-                  value: '142',
-                  label: 'Following',
-                ),
+                const _StatItem(value: '142', label: 'Following'),
                 _Divider(),
-                const _StatItem(
-                  value: '3.8K',
-                  label: 'Followers',
-                ),
+                const _StatItem(value: '3.8K', label: 'Followers'),
                 _Divider(),
-                const _StatItem(
-                  value: '24.5K',
-                  label: 'Likes',
-                ),
+                const _StatItem(value: '24.5K', label: 'Likes'),
               ],
             ),
 
@@ -153,16 +123,13 @@ class ProfileScreen extends ConsumerWidget {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: 9,
               padding: EdgeInsets.zero,
-              gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 crossAxisSpacing: 2,
                 mainAxisSpacing: 2,
               ),
               itemBuilder: (_, index) {
-                return Container(
-                  color: Colors.grey.shade300,
-                );
+                return Container(color: Colors.grey.shade300);
               },
             ),
           ],
@@ -188,24 +155,15 @@ class _StatItem extends StatelessWidget {
   final String value;
   final String label;
 
-  const _StatItem({
-    required this.value,
-    required this.label,
-  });
+  const _StatItem({required this.value, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
-          value,
-          style: context.h2,
-        ),
+        Text(value, style: context.pStrong),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: context.p
-        ),
+        Text(label, style: context.p),
       ],
     );
   }

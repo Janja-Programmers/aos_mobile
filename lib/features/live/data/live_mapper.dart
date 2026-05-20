@@ -67,7 +67,7 @@ LiveHost _parseHost(dynamic json) {
 
 LiveStream mapLiveStream(Map<String, dynamic> json) {
   return LiveStream(
-    id: json['live_id']?.toString() ?? json['id']?.toString() ?? '',
+    id: json['live_id']?.toString() ?? '',
     title: json['title']?.toString() ?? '',
     roomName: json['room_name']?.toString() ?? '',
     status: _parseStatus(json['status']?.toString()),

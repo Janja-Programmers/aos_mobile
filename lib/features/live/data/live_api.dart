@@ -159,6 +159,56 @@ class LiveApi {
     return Either.right(mapLiveStream(data));
   }
 
+  // ================= LIST LIVE STREAMS =================
+
+  Future<Either<Failure, List<LiveStream>>> listLives({
+    int start = 0,
+    int limit = 20,
+  }) async {
+    try {
+      final res = await _client.get(
+        ApiEndpoints.listLiveStreamsEndpoint,
+        queryParameters: {'start': start, 'limit': limit},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = result.rightOrNull?['data'];
+
+      if (data == null || data is! Map) {
+        return Either.left(
+          const Failure("Invalid list lives response: missing data"),
+        );
+      }
+
+      final items = data['items'];
+
+      if (items == null || items is! List) {
+        return Either.left(
+          const Failure("Invalid list lives response: missing items"),
+        );
+      }
+
+      final lives = items
+          .map((item) => mapLiveStream(Map<String, dynamic>.from(item)))
+          .toList();
+
+      return Either.right(lives);
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (e, s) {
+      appLogger.e("listLives failed", error: e, stackTrace: s);
+
+      return Either.left(
+        const Failure(
+          'Failed to fetch live streams.',
+          type: FailureType.unknown,
+        ),
+      );
+    }
+  }
+
   /* METRICS  */
 
   // ================= TRACK JOIN =================

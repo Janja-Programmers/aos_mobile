@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -6,7 +5,6 @@ import 'package:africaonlinestores/features/shorts/feeds/application/state/short
 import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_engagement_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-import 'package:image/image.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ShortDetailController extends StateNotifier<ShortDetailState> {

@@ -8,6 +8,7 @@ class MetricsMapper {
       commentCount: model.commentCount,
       viewCount: model.viewCount,
       shareCount: model.shareCount,
+      saveCount: model.saveCount,
       impressionCount: model.impressionCount,
       rankingScore: model.rankingScore,
     );

@@ -13,12 +13,18 @@ class ShortVideoPage extends StatefulWidget {
   final Short short;
   final bool isActive;
   final bool shouldPrepare;
-  final bool isLikePending;
+
+  final bool isLikedPending;
   final bool isFollowPending;
+  final bool isSaved;
+  final bool isSavePending;
+
   final Future<void> Function(String shortId) onToggleLike;
   final void Function(String shortId) onCommentAdded;
   final Future<void> Function(String targetUser)? onToggleFollow;
-  final VoidCallback? onCreatorTap;
+  final VoidCallback onCreatorTap;
+  final Future<void> Function(String shortId) onShare;
+  final Future<void> Function(String shortId) onSave;
 
   const ShortVideoPage({
     super.key,
@@ -27,10 +33,14 @@ class ShortVideoPage extends StatefulWidget {
     required this.shouldPrepare,
     required this.onToggleLike,
     required this.onCommentAdded,
+    required this.onCreatorTap,
+    required this.onShare,
+    required this.onSave,
     this.onToggleFollow,
-    this.onCreatorTap,
-    this.isLikePending = false,
+    this.isLikedPending = false,
     this.isFollowPending = false,
+    this.isSaved = false,
+    this.isSavePending = false,
   });
 
   @override
@@ -46,6 +56,7 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
   bool _isInitializing = false;
 
   bool _usePortraitFrame = true;
+  bool _showDoubleTapHeart = false;
 
   @override
   void initState() {
@@ -246,12 +257,35 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
     );
   }
 
+  Future<void> _handleDoubleTapLike() async {
+    if (!widget.isActive) return;
+
+    setState(() {
+      _showDoubleTapHeart = true;
+    });
+
+    Future.delayed(const Duration(milliseconds: 650), () {
+      if (!mounted) return;
+
+      setState(() {
+        _showDoubleTapHeart = false;
+      });
+    });
+
+    if (widget.short.isLiked || widget.isLikedPending) return;
+
+    await widget.onToggleLike(widget.short.id.value);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: _togglePlayPause,
+      onDoubleTap: _handleDoubleTapLike,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -283,19 +317,35 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
             bottom: 120,
             child: ShortActionsPanel(
               short: widget.short,
-              isLikePending: widget.isLikePending,
-              isFollowPending: widget.isFollowPending,
+
+              // Like
+              isLikedPending: widget.isLikedPending,
               onToggleLike: widget.onToggleLike,
-              onToggleFollow: widget.onToggleFollow,
-              onCreatorTap: widget.onCreatorTap,
+
+              // Comment
               onCommentAdded: widget.onCommentAdded,
+
+              // Creator / seller
+              onCreatorTap: widget.onCreatorTap,
+
+              // Follow
+              isFollowPending: widget.isFollowPending,
+              onToggleFollow: widget.onToggleFollow,
+
+              // Share
+              onShare: () => widget.onShare(widget.short.id.value),
+
+              // Save
+              isSaved: widget.isSaved,
+              isSavePending: widget.isSavePending,
+              onSave: () => widget.onSave(widget.short.id.value),
             ),
           ),
 
           Positioned(
             left: 16,
             right: 90,
-            bottom: 32,
+            bottom: bottomPadding + 32,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -311,6 +361,23 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
               ],
             ),
           ),
+
+          if (_showDoubleTapHeart)
+            Center(
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.6, end: 1.25),
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutBack,
+                builder: (context, scale, child) {
+                  return Transform.scale(scale: scale, child: child);
+                },
+                child: Icon(
+                  Icons.favorite_rounded,
+                  color: colors.primary,
+                  size: 112,
+                ),
+              ),
+            ),
 
           if (_isInitialized && !_isPlaying && widget.isActive)
             Center(

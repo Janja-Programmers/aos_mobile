@@ -3,6 +3,7 @@ class ShortMetricsModel {
   final int commentCount;
   final int viewCount;
   final int shareCount;
+  final int saveCount;
   final int impressionCount;
   final double rankingScore;
 
@@ -11,6 +12,7 @@ class ShortMetricsModel {
     required this.commentCount,
     required this.viewCount,
     required this.shareCount,
+    required this.saveCount,
     required this.impressionCount,
     required this.rankingScore,
   });
@@ -21,6 +23,7 @@ class ShortMetricsModel {
       commentCount: 0,
       viewCount: 0,
       shareCount: 0,
+      saveCount: 0,
       impressionCount: 0,
       rankingScore: 0,
     );
@@ -32,6 +35,7 @@ class ShortMetricsModel {
       commentCount: _toInt(json['comment_count']),
       viewCount: _toInt(json['view_count']),
       shareCount: _toInt(json['share_count']),
+      saveCount: _toInt(json['save_count']),
       impressionCount: _toInt(json['impression_count']),
       rankingScore: _toDouble(json['ranking_score']),
     );

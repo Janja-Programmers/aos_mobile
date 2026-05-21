@@ -5,6 +5,8 @@ class ShortViewerState extends Equatable {
   final bool watched;
   final double watchProgress;
 
+  final bool isSaved;
+
   final bool isOwner;
   final bool canEdit;
   final bool canDelete;
@@ -24,6 +26,7 @@ class ShortViewerState extends Equatable {
     required this.liked,
     required this.watched,
     required this.watchProgress,
+    required this.isSaved,
     required this.isOwner,
     required this.canEdit,
     required this.canDelete,
@@ -42,6 +45,7 @@ class ShortViewerState extends Equatable {
       liked: false,
       watched: false,
       watchProgress: 0,
+      isSaved: false,
       isOwner: false,
       canEdit: false,
       canDelete: false,
@@ -60,6 +64,7 @@ class ShortViewerState extends Equatable {
     bool? liked,
     bool? watched,
     double? watchProgress,
+    bool? isSaved,
     bool? isOwner,
     bool? canEdit,
     bool? canDelete,
@@ -76,6 +81,7 @@ class ShortViewerState extends Equatable {
       liked: liked ?? this.liked,
       watched: watched ?? this.watched,
       watchProgress: watchProgress ?? this.watchProgress,
+      isSaved: isSaved ?? this.isSaved,
       isOwner: isOwner ?? this.isOwner,
       canEdit: canEdit ?? this.canEdit,
       canDelete: canDelete ?? this.canDelete,
@@ -95,6 +101,7 @@ class ShortViewerState extends Equatable {
     liked,
     watched,
     watchProgress,
+    isSaved,
     isOwner,
     canEdit,
     canDelete,

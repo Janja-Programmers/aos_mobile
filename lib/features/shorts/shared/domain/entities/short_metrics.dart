@@ -5,6 +5,7 @@ class ShortMetrics extends Equatable {
   final int commentCount;
   final int viewCount;
   final int shareCount;
+  final int saveCount;
   final int impressionCount;
   final double rankingScore;
 
@@ -13,6 +14,7 @@ class ShortMetrics extends Equatable {
     required this.commentCount,
     required this.viewCount,
     required this.shareCount,
+    required this.saveCount,
     required this.impressionCount,
     required this.rankingScore,
   });
@@ -23,6 +25,7 @@ class ShortMetrics extends Equatable {
       commentCount: 0,
       viewCount: 0,
       shareCount: 0,
+      saveCount: 0,
       impressionCount: 0,
       rankingScore: 0.0,
     );
@@ -33,6 +36,7 @@ class ShortMetrics extends Equatable {
     int? commentCount,
     int? viewCount,
     int? shareCount,
+    int? saveCount,
     int? impressionCount,
     double? rankingScore,
   }) {
@@ -41,6 +45,7 @@ class ShortMetrics extends Equatable {
       commentCount: commentCount ?? this.commentCount,
       viewCount: viewCount ?? this.viewCount,
       shareCount: shareCount ?? this.shareCount,
+      saveCount: saveCount ?? this.saveCount,
       impressionCount: impressionCount ?? this.impressionCount,
       rankingScore: rankingScore ?? this.rankingScore,
     );
@@ -52,6 +57,7 @@ class ShortMetrics extends Equatable {
     commentCount,
     viewCount,
     shareCount,
+    saveCount,
     impressionCount,
     rankingScore,
   ];

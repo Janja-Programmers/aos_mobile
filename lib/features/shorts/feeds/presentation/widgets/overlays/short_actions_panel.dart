@@ -4,29 +4,41 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_session_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/components/feed_avatar_image.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/comment_sheet.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+
 class ShortActionsPanel extends ConsumerWidget {
   final Short short;
-  final bool isLikePending;
+
+  final bool isLikedPending;
   final bool isFollowPending;
+  final bool isSaved;
+  final bool isSavePending;
 
   final Future<void> Function(String shortId) onToggleLike;
-  final Future<void> Function(String targetUser)? onToggleFollow;
-  final VoidCallback? onCreatorTap;
   final void Function(String shortId) onCommentAdded;
+  final Future<void> Function(String targetUser)? onToggleFollow;
+  final VoidCallback onCreatorTap;
+  final Future<void> Function() onShare;
+  final Future<void> Function() onSave;
 
   const ShortActionsPanel({
     super.key,
     required this.short,
     required this.onToggleLike,
     required this.onCommentAdded,
+    required this.onCreatorTap,
+    required this.onShare,
+    required this.onSave,
     this.onToggleFollow,
-    this.onCreatorTap,
-    this.isLikePending = false,
+    this.isLikedPending = false,
     this.isFollowPending = false,
+    this.isSaved = false,
+    this.isSavePending = false,
   });
 
   @override
@@ -55,9 +67,9 @@ class ShortActionsPanel extends ConsumerWidget {
               : Icons.favorite_border_rounded,
           color: isLiked ? colors.primary : colors.white,
           label: _formatCount(metrics.likeCount),
-          isDisabled: isLikePending,
+          isDisabled: isLikedPending,
           semanticLabel: isLiked ? 'Unlike' : 'Like',
-          onTap: isLikePending
+          onTap: isLikedPending
               ? null
               : () {
                   onToggleLike(short.id.value);
@@ -91,13 +103,42 @@ class ShortActionsPanel extends ConsumerWidget {
             });
           },
         ),
+
+        const SizedBox(height: 18),
+
+        _iconWithLabel(
+          context,
+          icon: isSaved
+              ? Icons.bookmark_rounded
+              : Icons.bookmark_border_rounded,
+          color: isSaved ? colors.primary : colors.white,
+          label: _formatCount(metrics.saveCount),
+          isDisabled: isSavePending,
+          semanticLabel: isSaved ? 'Unsave short' : 'Save short',
+          onTap: isSavePending ? null : onSave,
+        ),
+
+        const SizedBox(height: 18),
+
+        _iconWithLabel(
+          context,
+          iconWidget: Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()..scale(-1.0, 1.0),
+            child: Icon(Icons.reply_outlined, color: colors.white, size: 34),
+          ),
+          label: _formatCount(metrics.shareCount),
+          semanticLabel: 'Share short',
+          onTap: onShare,
+        ),
       ],
     );
   }
 
   Widget _iconWithLabel(
     BuildContext context, {
-    required IconData icon,
+    IconData? icon,
+    Widget? iconWidget,
     required String label,
     required String semanticLabel,
     Color? color,
@@ -119,7 +160,9 @@ class ShortActionsPanel extends ConsumerWidget {
               onTap: onTap,
               child: Padding(
                 padding: const EdgeInsets.all(4),
-                child: Icon(icon, color: color ?? colors.white, size: 34),
+                child:
+                    iconWidget ??
+                    Icon(icon, color: color ?? colors.white, size: 34),
               ),
             ),
             const SizedBox(height: 6),
@@ -167,7 +210,9 @@ class _CreatorAvatarAction extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    final avatar = short.creator.avatar;
+    final imageUri = buildFileUrl(short.creator.avatar);
+    final avatar = imageUri;
+
     final targetUser = short.viewerState.targetUser ?? short.creator.user;
 
     final isSelf = short.viewerState.isSelf;
@@ -192,7 +237,7 @@ class _CreatorAvatarAction extends StatelessWidget {
                 color: Colors.black54,
               ),
               clipBehavior: Clip.antiAlias,
-              child: _AvatarImage(
+              child: FeedAvatarImage(
                 avatar: avatar,
                 fallbackText: short.creator.displayName,
               ),
@@ -254,56 +299,6 @@ class _CreatorAvatarAction extends StatelessWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _AvatarImage extends StatelessWidget {
-  final String? avatar;
-  final String fallbackText;
-
-  const _AvatarImage({required this.avatar, required this.fallbackText});
-
-  @override
-  Widget build(BuildContext context) {
-    final url = avatar?.trim();
-
-    if (url != null && url.isNotEmpty) {
-      return Image.network(
-        url,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) {
-          return _FallbackAvatar(text: fallbackText);
-        },
-      );
-    }
-
-    return _FallbackAvatar(text: fallbackText);
-  }
-}
-
-class _FallbackAvatar extends StatelessWidget {
-  final String text;
-
-  const _FallbackAvatar({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-
-    final initial = text.trim().isEmpty ? '?' : text.trim()[0].toUpperCase();
-
-    return Container(
-      color: Colors.white12,
-      alignment: Alignment.center,
-      child: Text(
-        initial,
-        style: TextStyle(
-          color: colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: 20,
-        ),
       ),
     );
   }

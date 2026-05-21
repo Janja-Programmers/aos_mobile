@@ -64,21 +64,38 @@ class _ShortDetailScreenState extends ConsumerState<ShortDetailScreen> {
         onPageChanged: controller.onPageChanged,
         itemBuilder: (context, index) {
           final short = state.items[index];
+          final shortId = short.id.value;
+          final targetUser = short.viewerState.targetUser ?? short.creator.user;
 
           return ShortVideoPage(
-            key: ValueKey(short.id.value),
+            key: ValueKey(shortId),
             short: short,
             isActive: index == state.currentIndex,
             shouldPrepare: controller.shouldPrepareVideo(index),
-            isLikePending: state.pendingLikeIds.contains(short.id.value),
+
+            // Like
+            isLikedPending: state.pendingLikeIds.contains(shortId),
             onToggleLike: controller.toggleLike,
+
+            // Comment
             onCommentAdded: controller.incrementCommentCount,
-            onCreatorTap: () =>
-                SellerNavigation.toSellerStore(context, short.sellerId),
-            isFollowPending: state.pendingFollowUserIds.contains(
-              short.viewerState.targetUser ?? short.creator.user,
-            ),
+
+            // Creator / seller
+            onCreatorTap: () {
+              SellerNavigation.toSellerStore(context, short.sellerId);
+            },
+
+            // Follow
+            isFollowPending: state.pendingFollowUserIds.contains(targetUser),
             onToggleFollow: controller.toggleFollow,
+
+            // Share
+            onShare: controller.shareShort,
+
+            // Save
+            isSaved: short.viewerState.isSaved,
+            isSavePending: state.pendingSaveIds.contains(shortId),
+            onSave: controller.toggleSave,
           );
         },
       ),

@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -5,6 +6,8 @@ import 'package:africaonlinestores/features/shorts/feeds/application/state/short
 import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_engagement_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:image/image.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ShortDetailController extends StateNotifier<ShortDetailState> {
   static const int _loadMoreThreshold = 2;
@@ -228,6 +231,99 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     );
   }
 
+  Future<void> toggleSave(String shortId) async {
+    if (state.pendingSaveIds.contains(shortId)) return;
+
+    final index = state.items.indexWhere((short) => short.id.value == shortId);
+    if (index == -1) return;
+
+    final originalShort = state.items[index];
+    final wasSaved = originalShort.viewerState.isSaved;
+
+    final optimisticShort = originalShort.copyWith(
+      viewerState: originalShort.viewerState.copyWith(isSaved: !wasSaved),
+    );
+
+    _replaceShortAt(
+      index,
+      optimisticShort,
+      pendingSaveIds: {...state.pendingSaveIds, shortId},
+    );
+
+    final result = await _engagementApi.toggleSave(shortId: shortId);
+
+    result.fold(
+      (failure) {
+        debugPrint('Toggle save failed: ${failure.message}');
+
+        final updatedPending = {...state.pendingSaveIds}..remove(shortId);
+
+        final rollbackIndex = state.items.indexWhere(
+          (short) => short.id.value == shortId,
+        );
+
+        if (rollbackIndex == -1) {
+          state = state.copyWith(
+            pendingSaveIds: updatedPending,
+            errorMessage: failure.message,
+          );
+          return;
+        }
+
+        _replaceShortAt(
+          rollbackIndex,
+          originalShort,
+          pendingSaveIds: updatedPending,
+        );
+
+        state = state.copyWith(errorMessage: failure.message);
+      },
+      (toggleResult) {
+        final updatedPending = {...state.pendingSaveIds}..remove(shortId);
+
+        final syncIndex = state.items.indexWhere(
+          (short) => short.id.value == shortId,
+        );
+
+        if (syncIndex == -1) {
+          state = state.copyWith(pendingSaveIds: updatedPending);
+          return;
+        }
+
+        final currentShort = state.items[syncIndex];
+
+        final syncedShort = currentShort.copyWith(
+          viewerState: currentShort.viewerState.copyWith(
+            isSaved: toggleResult.liked,
+          ),
+        );
+
+        _replaceShortAt(syncIndex, syncedShort, pendingSaveIds: updatedPending);
+      },
+    );
+  }
+
+  Future<void> shareShort(String shortId) async {
+    final index = state.items.indexWhere((short) => short.id.value == shortId);
+    if (index == -1) return;
+
+    final short = state.items[index];
+
+    try {
+      await SharePlus.instance.share(
+        ShareParams(
+          title: 'Share short',
+          subject: 'Check out this short',
+          text: _buildShareText(short),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Open share intent failed: $e');
+
+      state = state.copyWith(errorMessage: 'Unable to open share options.');
+    }
+  }
+
   void onPageChanged(int index) {
     if (index < 0 || index >= state.items.length) return;
 
@@ -336,6 +432,7 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     int index,
     Short updatedShort, {
     Set<String>? pendingLikeIds,
+    Set<String>? pendingSaveIds,
   }) {
     if (index < 0 || index >= state.items.length) return;
 
@@ -345,6 +442,25 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     state = state.copyWith(
       items: List.unmodifiable(updatedItems),
       pendingLikeIds: pendingLikeIds,
+      pendingSaveIds: pendingSaveIds,
     );
+  }
+
+  String _buildShareText(Short short) {
+    final title = short.caption.toString().trim();
+
+    final buffer = StringBuffer();
+
+    if (title.isNotEmpty) {
+      buffer.writeln(title);
+      buffer.writeln();
+    }
+
+    buffer.writeln('Check out this short');
+
+    // Replace this with your real public/deep link when available.
+    buffer.writeln(short.playbackUrl);
+
+    return buffer.toString().trim();
   }
 }

@@ -3,6 +3,8 @@ class ShortViewerStateModel {
   final bool watched;
   final double watchProgress;
 
+  final bool isSaved;
+
   final bool isOwner;
   final bool canEdit;
   final bool canDelete;
@@ -22,6 +24,7 @@ class ShortViewerStateModel {
     required this.liked,
     required this.watched,
     required this.watchProgress,
+    required this.isSaved,
     required this.isOwner,
     required this.canEdit,
     required this.canDelete,
@@ -40,6 +43,7 @@ class ShortViewerStateModel {
       liked: false,
       watched: false,
       watchProgress: 0,
+      isSaved: false,
       isOwner: false,
       canEdit: false,
       canDelete: false,
@@ -59,6 +63,8 @@ class ShortViewerStateModel {
       liked: _toBool(json['is_liked']),
       watched: _toBool(json['watched']),
       watchProgress: _toDouble(json['watch_progress']),
+
+      isSaved: _toBool(json['is_saved'] ?? json['saved']),
 
       isOwner: _toBool(json['is_owner']),
       canEdit: _toBool(json['can_edit']),

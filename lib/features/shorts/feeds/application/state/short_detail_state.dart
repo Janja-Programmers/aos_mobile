@@ -12,6 +12,7 @@ class ShortDetailState extends Equatable {
   final int currentIndex;
   final Set<String> pendingLikeIds;
   final Set<String> pendingFollowUserIds;
+  final Set<String> pendingSaveIds;
   final String? errorMessage;
 
   const ShortDetailState({
@@ -22,6 +23,7 @@ class ShortDetailState extends Equatable {
     required this.currentIndex,
     required this.pendingLikeIds,
     required this.pendingFollowUserIds,
+    required this.pendingSaveIds,
     required this.errorMessage,
   });
 
@@ -39,6 +41,7 @@ class ShortDetailState extends Equatable {
       currentIndex: currentIndex,
       pendingLikeIds: const {},
       pendingFollowUserIds: const {},
+      pendingSaveIds: const {},
       errorMessage: null,
     );
   }
@@ -50,6 +53,7 @@ class ShortDetailState extends Equatable {
     bool? isLoadingMore,
     int? currentIndex,
     Set<String>? pendingLikeIds,
+    Set<String>? pendingSaveIds,
     Set<String>? pendingFollowUserIds,
     Object? errorMessage = _unset,
   }) {
@@ -62,6 +66,7 @@ class ShortDetailState extends Equatable {
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       currentIndex: currentIndex ?? this.currentIndex,
       pendingLikeIds: pendingLikeIds ?? this.pendingLikeIds,
+      pendingSaveIds: pendingLikeIds ?? this.pendingSaveIds,
       pendingFollowUserIds: pendingFollowUserIds ?? this.pendingFollowUserIds,
       errorMessage: errorMessage == _unset
           ? this.errorMessage
@@ -77,6 +82,7 @@ class ShortDetailState extends Equatable {
     isLoadingMore,
     currentIndex,
     pendingLikeIds,
+    pendingSaveIds,
     pendingFollowUserIds,
     errorMessage,
   ];

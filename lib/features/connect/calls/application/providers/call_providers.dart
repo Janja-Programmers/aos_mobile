@@ -15,6 +15,7 @@ import 'package:africaonlinestores/features/connect/calls/application/services/c
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_action_handler.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_starter_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_signaling_handler.dart';
+import 'package:africaonlinestores/features/connect/calls/application/services/incoming_call_bootstrapper.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_audio_feedback_service.dart';
 
 // ================= API =================
@@ -65,6 +66,16 @@ final callSignalingHandlerProvider = Provider<CallSignalingHandler>((ref) {
   final manager = ref.read(callManagerProvider.notifier);
 
   return CallSignalingHandler(callManager: manager);
+});
+
+// ================= PUSH BOOTSTRAP =================
+final incomingCallBootstrapperProvider = Provider<IncomingCallBootstrapper>((
+  ref,
+) {
+  return IncomingCallBootstrapper(
+    repository: ref.read(callRepositoryProvider),
+    signalingHandler: ref.read(callSignalingHandlerProvider),
+  );
 });
 
 // ================= CALLKIT =================

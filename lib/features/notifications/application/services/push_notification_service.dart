@@ -8,6 +8,7 @@ import 'package:africaonlinestores/features/notifications/domain/notification_it
 import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
 import 'package:africaonlinestores/features/notifications/domain/push_token_device.dart';
 import 'package:africaonlinestores/features/notifications/data/notification_repository_impl.dart';
+import 'package:africaonlinestores/features/connect/calls/application/services/incoming_call_bootstrapper.dart';
 import 'package:africaonlinestores/features/notifications/application/controllers/notification_controller.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_notification_service.dart';
 import 'package:africaonlinestores/features/notifications/application/services/notification_navigation_handler.dart';
@@ -18,6 +19,7 @@ class PushNotificationService {
   final NotificationNavigationHandler _navigationHandler;
   final PushTokenRepository _pushRepo;
   final InAppNotificationService _bannerService;
+  final IncomingCallBootstrapper _incomingCallBootstrapper;
 
   StreamSubscription<RemoteMessage>? _foregroundSub;
   StreamSubscription<RemoteMessage>? _tapSub;
@@ -40,11 +42,13 @@ class PushNotificationService {
     required NotificationNavigationHandler navigationHandler,
     required PushTokenRepository pushRepo,
     required InAppNotificationService bannerService,
+    required IncomingCallBootstrapper incomingCallBootstrapper,
   }) : _messaging = messaging,
        _controller = controller,
        _navigationHandler = navigationHandler,
        _pushRepo = pushRepo,
-       _bannerService = bannerService;
+       _bannerService = bannerService,
+       _incomingCallBootstrapper = incomingCallBootstrapper;
 
   // =====================================================
   // INIT
@@ -267,7 +271,7 @@ class PushNotificationService {
   void _listenForeground() {
     _foregroundSub?.cancel();
 
-    _foregroundSub = FirebaseMessaging.onMessage.listen((message) {
+    _foregroundSub = FirebaseMessaging.onMessage.listen((message) async {
       try {
         appLogger.i('📩 Foreground push received: ${message.data}');
 
@@ -275,6 +279,13 @@ class PushNotificationService {
         if (notification == null) return;
 
         _controller.upsertNotification(notification);
+
+        if (notification.type == NotificationType.incomingCall) {
+          await _incomingCallBootstrapper.handlePushPayload(
+            notification.payload.extra,
+          );
+          return;
+        }
 
         _bannerService.show(
           id: notification.id,
@@ -297,13 +308,21 @@ class PushNotificationService {
   void _listenNotificationTap() {
     _tapSub?.cancel();
 
-    _tapSub = FirebaseMessaging.onMessageOpenedApp.listen((message) {
+    _tapSub = FirebaseMessaging.onMessageOpenedApp.listen((message) async {
       try {
         appLogger.i('📲 Notification tapped (background): ${message.data}');
 
         final notification = _mapMessageToNotification(message);
 
         if (notification == null) return;
+
+        if (notification.type == NotificationType.incomingCall) {
+          final handled = await _incomingCallBootstrapper.handlePushPayload(
+            notification.payload.extra,
+          );
+
+          if (handled) return;
+        }
 
         _navigationHandler.handleNotificationTap(notification);
       } catch (e, s) {
@@ -330,6 +349,14 @@ class PushNotificationService {
       final notification = _mapMessageToNotification(message);
 
       if (notification == null) return;
+
+      if (notification.type == NotificationType.incomingCall) {
+        final handled = await _incomingCallBootstrapper.handlePushPayload(
+          notification.payload.extra,
+        );
+
+        if (handled) return;
+      }
 
       _navigationHandler.handleNotificationTap(notification);
     } catch (e, s) {

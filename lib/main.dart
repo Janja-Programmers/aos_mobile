@@ -1,55 +1,103 @@
 import 'dart:async';
-
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:africaonlinestores/firebase_options.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
-
-import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
-
+import 'package:africaonlinestores/core/theme/app_theme.dart';
 import 'package:africaonlinestores/core/config/app_config.dart';
-import 'package:africaonlinestores/core/notifications/android_notification_channel.dart';
-import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
+import 'package:africaonlinestores/core/theme/theme_prefs.dart';
 import 'package:africaonlinestores/core/routing/app_router.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:africaonlinestores/core/utils/local_resolver.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
+import 'package:africaonlinestores/core/theme/theme_controller.dart';
+import 'package:flutter_callkit_incoming/entities/android_params.dart';
+import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage.dart';
-import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
-import 'package:africaonlinestores/core/theme/app_theme.dart';
-import 'package:africaonlinestores/core/theme/theme_controller.dart';
-import 'package:africaonlinestores/core/theme/theme_prefs.dart';
-import 'package:africaonlinestores/core/utils/local_resolver.dart';
-import 'package:africaonlinestores/core/utils/logger.dart';
-
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/shared/widgets/app_error_fallback.dart';
+import 'package:africaonlinestores/shared/widgets/active_call_overlay.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
+import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
+import 'package:africaonlinestores/core/notifications/android_notification_channel.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
-import 'package:africaonlinestores/features/connect/calls/application/listeners/call_audio_feedback_listener.dart';
-import 'package:africaonlinestores/features/connect/calls/application/listeners/call_navigation_listener.dart';
-import 'package:africaonlinestores/features/connect/calls/application/listeners/callkit_state_listener.dart';
+import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
-import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_banner_listener.dart';
-import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
+import 'package:africaonlinestores/features/connect/calls/application/listeners/callkit_state_listener.dart';
+import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/application/listeners/call_navigation_listener.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/listeners/upload_short_listener.dart';
+import 'package:africaonlinestores/features/connect/calls/application/listeners/call_audio_feedback_listener.dart';
 
-import 'package:africaonlinestores/firebase_options.dart';
+const String pendingIncomingCallPayloadKey = 'pending_incoming_call_payload';
 
-import 'package:africaonlinestores/shared/widgets/active_call_overlay.dart';
-import 'package:africaonlinestores/shared/widgets/app_error_fallback.dart';
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-}
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+  final data = message.data;
+
+  final isIncomingCall =
+      data['event'] == 'aos_incoming_call' ||
+      data['type'] == 'incoming_call' ||
+      data['notification_type'] == 'incoming_call';
+
+  if (!isIncomingCall) {
+    return;
+  }
+
+  final callId = (data['call_id'] ?? data['id'])?.toString().trim();
+
+  if (callId == null || callId.isEmpty || callId.toLowerCase() == 'null') {
+    return;
+  }
+
+  final prefs = await SharedPreferences.getInstance();
+
+  await prefs.setString(pendingIncomingCallPayloadKey, jsonEncode(data));
+
+  final callerName = data['caller_display_name']?.toString().trim();
+  final callType = data['call_type']?.toString().trim().toLowerCase();
+
+  await FlutterCallkitIncoming.showCallkitIncoming(
+    CallKitParams(
+      id: callId,
+      nameCaller: callerName == null || callerName.isEmpty
+          ? 'AOS User'
+          : callerName,
+      appName: 'AOS',
+      handle: callType == 'video'
+          ? 'Incoming Video Call'
+          : 'Incoming Audio Call',
+      type: callType == 'video' ? 1 : 0,
+      duration: 90000,
+      extra: Map<String, dynamic>.from(data),
+      android: const AndroidParams(
+        isCustomNotification: true,
+        isShowLogo: false,
+        ringtonePath: 'system_ringtone_default',
+        backgroundColor: '#FFFFFF',
+        actionColor: '#4CAF50',
+        incomingCallNotificationChannelName: 'AOS Calls',
+        missedCallNotificationChannelName: 'Missed Calls',
+      ),
+    ),
+  );
+}
 
 void main() {
   runZonedGuarded(
@@ -94,11 +142,18 @@ void main() {
         },
       );
 
-      await flutterLocalNotificationsPlugin
+      final androidNotifications = flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.createNotificationChannel(AndroidNotificationConfig.channel);
+          >();
+
+      await androidNotifications?.createNotificationChannel(
+        AndroidNotificationConfig.general,
+      );
+
+      await androidNotifications?.createNotificationChannel(
+        AndroidNotificationConfig.calls,
+      );
 
       final savedTheme = await ThemePrefs.readThemeMode();
       final initialTheme = savedTheme ?? ThemeMode.light;

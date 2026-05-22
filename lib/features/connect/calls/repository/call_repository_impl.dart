@@ -1,5 +1,5 @@
-import 'package:africaonlinestores/features/connect/calls/data/call_api.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
+import 'package:africaonlinestores/features/connect/calls/data/call_api.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
 
 abstract class CallRepository {
@@ -21,6 +21,8 @@ abstract class CallRepository {
   Future<void> endCall({required String callId});
 
   Future<List<CallLog>> listCalls({String? type});
+
+  Future<Map<String, dynamic>> getCallStatus({required String callId});
 
   Future<Call> getCallToken({required String callId});
 }
@@ -50,7 +52,7 @@ class CallRepositoryImpl implements CallRepository {
   }) async {
     final res = await api.initiateCall(
       conversationId: conversationId,
-      callType: callType.name, // 🔥 enum → string
+      callType: callType.name,
     );
 
     return res.fold((e) => throw e, (data) => data);
@@ -107,7 +109,7 @@ class CallRepositoryImpl implements CallRepository {
   }
 
   // -----------------------------
-  // List Calls (CallLog)
+  // List Calls
   // -----------------------------
   @override
   Future<List<CallLog>> listCalls({String? type}) async {
@@ -117,18 +119,27 @@ class CallRepositoryImpl implements CallRepository {
   }
 
   // -----------------------------
-  // Get Token (IMPORTANT)
+  // Get Call Status
+  // -----------------------------
+  @override
+  Future<Map<String, dynamic>> getCallStatus({required String callId}) async {
+    final res = await api.getCallStatus(callId: callId);
+
+    return res.fold((e) => throw e, (data) => data);
+  }
+
+  // -----------------------------
+  // Get Token
   // -----------------------------
   @override
   Future<Call> getCallToken({required String callId}) async {
     final res = await api.getCallToken(callId: callId);
 
     return res.fold((e) => throw e, (data) {
-      // ⚠️ partial data → construct minimal Call
       return Call(
         id: callId,
         conversationId: '',
-        callType: AOSCallType.audio, // placeholder
+        callType: AOSCallType.audio,
         roomName: data['room_name'] ?? '',
         token: data['token'] ?? '',
         wsUrl: data['ws_url'] ?? '',

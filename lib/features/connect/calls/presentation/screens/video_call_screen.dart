@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livekit_client/livekit_client.dart';
-
-import 'package:africaonlinestores/core/device/device_id.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
-import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
+import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+
+
 
 class VideoCallScreen extends ConsumerWidget {
   final bool showActiveControls;
@@ -122,7 +121,7 @@ class VideoCallScreen extends ConsumerWidget {
 
                           if (track is LocalVideoTrack) {
                             await track.switchCamera(
-                              DeviceId().toString(),
+                              "DeviceId().toString()",
                               fastSwitch: true,
                             );
                           }

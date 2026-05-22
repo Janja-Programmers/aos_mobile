@@ -159,6 +159,8 @@ class ApiEndpoints {
       '/api/method/aos.api.calls.mark_call_ringing';
   static final String cancelCallEndpoint =
       '/api/method/aos.api.calls.cancel_call';
+  static final String getCallStatusEndpoint =
+      '/api/method/aos.api.calls.get_call_status';
 
   // LIVE Endpoints
   static final String startLiveEndpoint = '/api/method/aos.api.live.start_live';

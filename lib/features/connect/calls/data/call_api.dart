@@ -1,15 +1,13 @@
 import 'package:dio/dio.dart';
-
-import 'package:africaonlinestores/core/api/api_client.dart';
-import 'package:africaonlinestores/core/api/api_endpoints.dart';
-import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
-
-import 'package:africaonlinestores/features/connect/calls/data/call_mapper.dart';
+import 'package:africaonlinestores/core/api/api_client.dart';
+import 'package:africaonlinestores/core/api/api_response.dart';
+import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
+import 'package:africaonlinestores/features/connect/calls/data/call_mapper.dart';
 
 class CallApi {
   final ApiClient _client;
@@ -65,7 +63,6 @@ class CallApi {
 
       return Either.right(mapCall(data));
     } catch (e) {
-      // 🔥 HANDLE DIO EXCEPTION WITH RESPONSE
       if (e is DioException && e.response != null) {
         final res = e.response!;
 
@@ -164,7 +161,6 @@ class CallApi {
 
       return Either.right(mapCall(data));
     } catch (e) {
-      // 🔥 HANDLE DIO EXCEPTION WITH RESPONSE
       if (e is DioException && e.response != null) {
         final res = e.response!;
 
@@ -172,7 +168,6 @@ class CallApi {
         if (result.isRight) {
           final data = result.rightOrNull?['data'];
           if (data != null) {
-            // ignore: void_checks
             return Either.right(mapCall(data));
           }
         }
@@ -201,20 +196,11 @@ class CallApi {
 
       return Either.right(null);
     } catch (e) {
-      // 🔥 HANDLE DIO EXCEPTION WITH RESPONSE
       if (e is DioException && e.response != null) {
         final res = e.response!;
 
         final result = unwrapFrappe(res);
-        if (result.isRight) {
-          final data = result.rightOrNull?['data'];
-          if (data != null) {
-            // ignore: void_checks
-            return Either.right(mapCall(data));
-          }
-        }
-
-        return Either.left(Failure(res.data.toString()));
+        if (result.isLeft) return Either.left(result.leftOrNull!);
       }
 
       return Either.left(Failure(e.toString()));
@@ -238,20 +224,11 @@ class CallApi {
 
       return Either.right(null);
     } catch (e) {
-      // 🔥 HANDLE DIO EXCEPTION WITH RESPONSE
       if (e is DioException && e.response != null) {
         final res = e.response!;
 
         final result = unwrapFrappe(res);
-        if (result.isRight) {
-          final data = result.rightOrNull?['data'];
-          if (data != null) {
-            // ignore: void_checks
-            return Either.right(mapCall(data));
-          }
-        }
-
-        return Either.left(Failure(res.data.toString()));
+        if (result.isLeft) return Either.left(result.leftOrNull!);
       }
 
       return Either.left(Failure(e.toString()));
@@ -274,8 +251,6 @@ class CallApi {
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
       final raw = result.rightOrNull;
-
-      // ✅ SAFER extraction
       final List<dynamic> dataList = (raw?['data'] is List) ? raw!['data'] : [];
 
       final calls = dataList
@@ -283,13 +258,55 @@ class CallApi {
           .map(mapCallLog)
           .toList();
 
-      // 🔥 IMPORTANT: sort latest first
       calls.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       return Either.right(calls);
     } catch (e, s) {
       appLogger.e("listCalls failed", error: e, stackTrace: s);
       return Either.left(const Failure("Failed to load calls"));
+    }
+  }
+
+  // -----------------------------
+  // Get Call Status
+  // -----------------------------
+  Future<Either<Failure, Map<String, dynamic>>> getCallStatus({
+    required String callId,
+  }) async {
+    appLogger.i("getCallStatus API");
+
+    try {
+      final res = await _client.post(
+        ApiEndpoints.getCallStatusEndpoint,
+        data: {'call_id': callId},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = result.rightOrNull?['data'];
+
+      if (data is Map<String, dynamic>) {
+        return Either.right(data);
+      }
+
+      if (data is Map) {
+        return Either.right(
+          data.map((key, value) => MapEntry(key.toString(), value)),
+        );
+      }
+
+      return Either.left(const Failure("Invalid call status response"));
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        final res = e.response!;
+        final result = unwrapFrappe(res);
+        if (result.isLeft) return Either.left(result.leftOrNull!);
+
+        return Either.left(Failure(res.data.toString()));
+      }
+
+      return Either.left(Failure(e.toString()));
     }
   }
 
@@ -315,6 +332,6 @@ class CallApi {
       return Either.left(const Failure("Invalid token response"));
     }
 
-    return Either.right(data);
+    return Either.right(Map<String, dynamic>.from(data as Map));
   }
 }

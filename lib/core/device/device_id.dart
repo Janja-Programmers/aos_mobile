@@ -1,22 +1,27 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class DeviceId {
-  static const _key = 'device_id';
+  DeviceId._();
+
+  static const _key = 'aos_device_id';
+
+  static const FlutterSecureStorage _storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+    ),
+  );
 
   static Future<String> get() async {
-    final prefs = await SharedPreferences.getInstance();
+    final existing = await _storage.read(key: _key);
 
-    String? id = prefs.getString(_key);
-
-    if (id != null && id.isNotEmpty) {
-      return id;
+    if (existing != null && existing.trim().isNotEmpty) {
+      return existing;
     }
 
-    // 🔥 Generate new
-    id = const Uuid().v4();
-
-    await prefs.setString(_key, id);
+    final id = const Uuid().v4();
+    await _storage.write(key: _key, value: id);
 
     return id;
   }

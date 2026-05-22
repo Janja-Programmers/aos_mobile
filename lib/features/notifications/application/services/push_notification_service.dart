@@ -7,7 +7,6 @@ import 'package:africaonlinestores/core/device/device_id.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
 import 'package:africaonlinestores/features/notifications/domain/push_token_device.dart';
-import 'package:africaonlinestores/features/notifications/domain/notification_payload.dart';
 import 'package:africaonlinestores/features/notifications/data/notification_repository_impl.dart';
 import 'package:africaonlinestores/features/notifications/application/controllers/notification_controller.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_notification_service.dart';
@@ -350,36 +349,26 @@ class PushNotificationService {
         return null;
       }
 
-      final typeString = data['type']?.toString();
+      final event = data['event']?.toString();
 
-      if (typeString == null) {
-        appLogger.w('⚠️ Missing notification type');
+      if (event == null || event.trim().isEmpty) {
+        appLogger.w('⚠️ Missing notification event: $data');
         return null;
       }
 
-      final type = NotificationTypeX.fromString(typeString);
-
-      final now = DateTime.now();
-
-      final notificationId =
-          data['notification_id']?.toString().trim().isNotEmpty == true
-          ? data['notification_id'].toString()
-          : message.messageId?.trim().isNotEmpty == true
-          ? message.messageId!
-          : 'push_${now.microsecondsSinceEpoch}';
-
-      return NotificationItem(
-        id: notificationId,
-        type: type,
-        title:
-            message.notification?.title ??
-            data['title']?.toString() ??
-            'Notification',
-        body: message.notification?.body ?? data['body']?.toString() ?? '',
-        isRead: false,
-        createdAt: message.sentTime ?? now,
-        payload: NotificationPayload.fromJson(data),
+      final notification = NotificationItem.fromPushData(
+        data: data,
+        messageId: message.messageId,
+        title: message.notification?.title,
+        body: message.notification?.body,
+        sentTime: message.sentTime,
       );
+
+      if (notification.type == NotificationType.unknown) {
+        appLogger.w('⚠️ Unknown notification event: $event');
+      }
+
+      return notification;
     } catch (e, s) {
       appLogger.e('_mapMessageToNotification failed', error: e, stackTrace: s);
       return null;

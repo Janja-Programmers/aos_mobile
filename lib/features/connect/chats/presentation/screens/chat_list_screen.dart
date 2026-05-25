@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_presence_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
@@ -9,6 +10,7 @@ import 'package:africaonlinestores/features/connect/chats/application/providers/
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/conversation_tile.dart';
+import 'package:africaonlinestores/features/connect/presentation/widgets/connect_state_view.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
   final String? searchQuery;
@@ -51,13 +53,19 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
 
         Expanded(
           child: state.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const ConnectStateView.loading(
+              title: 'Loading conversations',
+              message: 'Please wait while we fetch your chats.',
+            ),
 
-            error: (e, _) => _ErrorState(
-              message: e.toString(),
-              onRetry: () => ref
-                  .read(chatConversationsControllerProvider.notifier)
-                  .refresh(),
+            error: (e, _) => ConnectStateView.error(
+              title: 'Could not load chats',
+              message: 'Check your internet connection and try again.',
+              onAction: () {
+                ref
+                    .read(chatConversationsControllerProvider.notifier)
+                    .refresh();
+              },
             ),
 
             data: (conversations) {
@@ -67,7 +75,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                 final matchesSearch =
                     query.isEmpty ||
                     conv.displayName.toLowerCase().contains(query) ||
-                    (conv.lastMessage ?? "").toLowerCase().contains(query);
+                    (conv.lastMessage ?? '').toLowerCase().contains(query);
 
                 final matchesFilter = _applyFilter(conv);
 
@@ -75,7 +83,27 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               }).toList();
 
               if (filtered.isEmpty) {
-                return const _EmptyState();
+                final hasSearch = query.isNotEmpty;
+
+                return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.55,
+                      child: ConnectStateView.empty(
+                        icon: hasSearch
+                            ? Icons.search_off_rounded
+                            : Icons.chat_bubble_outline_rounded,
+                        title: hasSearch
+                            ? 'No chats found'
+                            : 'No conversations yet',
+                        message: hasSearch
+                            ? 'Try searching with another name or message.'
+                            : 'Your conversations will appear here once you start chatting.',
+                      ),
+                    ),
+                  ],
+                );
               }
 
               return ListView.builder(
@@ -96,7 +124,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                     ),
                   );
 
-                  final subtitle = isTyping ? "Typing..." : conv.lastMessage;
+                  final subtitle = isTyping ? 'Typing...' : conv.lastMessage;
 
                   final isOnline = ref
                       .read(chatPresenceControllerProvider.notifier)
@@ -140,24 +168,30 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     }
   }
 
-  // 🎯 FILTER UI (FIXED CENTERING)
+  // 🎯 FILTER UI WITH UNREAD BADGES
   Widget _buildFilters() {
+    final unreadCount = ref.watch(chatUnreadCountProvider);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _chip("All Chats", "all"),
-          _chip("Read", "read"),
-          _chip("Unread", "unread"),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _chip("All Chats", "all", badgeCount: unreadCount),
+            _chip("Read", "read"),
+            _chip("Unread", "unread", badgeCount: unreadCount),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _chip(String label, String value) {
+  Widget _chip(String label, String value, {int badgeCount = 0}) {
     final colors = context.appColors;
     final isSelected = selectedFilter == value;
+    final showBadge = badgeCount > 0;
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -167,60 +201,64 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             selectedFilter = value;
           });
         },
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: isSelected
                 ? colors.primary.withOpacity(0.1)
                 : colors.surface,
             borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? colors.primary : colors.textMuted,
-              fontWeight: FontWeight.w500,
+            border: Border.all(
+              color: isSelected
+                  ? colors.primary.withOpacity(0.35)
+                  : colors.border,
             ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? colors.primary : colors.textMuted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+
+              if (showBadge) ...[
+                const SizedBox(width: 6),
+                _chipBadge(count: badgeCount, isSelected: isSelected),
+              ],
+            ],
           ),
         ),
       ),
     );
   }
-}
 
-// -----------------------------
-// Empty State
-// -----------------------------
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  Widget _chipBadge({required int count, required bool isSelected}) {
+    final colors = context.appColors;
 
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text("No conversations yet", style: TextStyle(color: Colors.grey)),
-    );
-  }
-}
+    final text = count > 99 ? '99+' : count.toString();
 
-// -----------------------------
-// Error State
-// -----------------------------
-class _ErrorState extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorState({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(message),
-          const SizedBox(height: 12),
-          ElevatedButton(onPressed: onRetry, child: const Text("Retry")),
-        ],
+    return Container(
+      constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: colors.primary,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: context.p.copyWith(
+          color: colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          height: 1,
+        ),
       ),
     );
   }

@@ -1,4 +1,7 @@
 import 'dart:async';
+
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:flutter/material.dart';
 
 class InAppNotificationBanner extends StatefulWidget {
@@ -14,7 +17,7 @@ class InAppNotificationBanner extends StatefulWidget {
     required this.body,
     this.onTap,
     required this.onDismiss,
-    required this.duration,
+    this.duration = const Duration(seconds: 3),
   });
 
   @override
@@ -25,12 +28,11 @@ class InAppNotificationBanner extends StatefulWidget {
 class _InAppNotificationBannerState extends State<InAppNotificationBanner>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final Animation<Offset> _slide;
-  late final Animation<double> _fade;
-  late final Animation<double> _scale;
+  late final Animation<Offset> _slideAnimation;
+  late final Animation<double> _fadeAnimation;
 
-  Timer? _dismissTimer;
-  bool _dismissed = false;
+  Timer? _timer;
+  bool _isDismissed = false;
 
   @override
   void initState() {
@@ -38,43 +40,41 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 280),
-      reverseDuration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 220),
+      reverseDuration: const Duration(milliseconds: 160),
     );
 
-    final curved = CurvedAnimation(
+    final curve = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
 
-    _slide = Tween<Offset>(
-      begin: const Offset(0, -0.35),
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, -1),
       end: Offset.zero,
-    ).animate(curved);
+    ).animate(curve);
 
-    _fade = Tween<double>(begin: 0, end: 1).animate(curved);
-
-    _scale = Tween<double>(begin: 0.98, end: 1).animate(curved);
+    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(curve);
 
     _controller.forward();
 
-    _dismissTimer = Timer(widget.duration, _dismissSafely);
+    _timer = Timer(widget.duration, _dismiss);
   }
 
-  Future<void> _dismissSafely() async {
-    if (_dismissed) return;
-    _dismissed = true;
+  Future<void> _dismiss() async {
+    if (_isDismissed) return;
+    _isDismissed = true;
 
-    _dismissTimer?.cancel();
-    _dismissTimer = null;
+    _timer?.cancel();
+    _timer = null;
 
     if (!mounted) return;
 
     try {
       await _controller.reverse();
     } catch (_) {
-      // Best effort only. The widget may already be leaving the tree.
+      // Best effort only.
     }
 
     if (!mounted) return;
@@ -82,117 +82,128 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
     widget.onDismiss();
   }
 
-  void _dismissImmediately() {
-    if (_dismissed) return;
-    _dismissed = true;
-
-    _dismissTimer?.cancel();
-    _dismissTimer = null;
-
-    widget.onDismiss();
+  Future<void> _handleTap() async {
+    widget.onTap?.call();
+    await _dismiss();
   }
 
   @override
   void dispose() {
-    _dismissTimer?.cancel();
-    _dismissTimer = null;
-
+    _timer?.cancel();
     _controller.dispose();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = context.appColors;
+
+    final title = widget.title.trim();
+    final body = widget.body.trim();
 
     return SafeArea(
       bottom: false,
       child: Align(
         alignment: Alignment.topCenter,
         child: SlideTransition(
-          position: _slide,
+          position: _slideAnimation,
           child: FadeTransition(
-            opacity: _fade,
-            child: ScaleTransition(
-              scale: _scale,
-              child: Dismissible(
-                key: ValueKey(
-                  '${widget.title}_${widget.body}_${DateTime.now().microsecondsSinceEpoch}',
-                ),
-                direction: DismissDirection.horizontal,
-                onDismissed: (_) => _dismissImmediately(),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 560),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(18),
-                        onTap: () async {
-                          widget.onTap?.call();
-                          await _dismissSafely();
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: theme.dividerColor.withValues(alpha: 0.08),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                blurRadius: 24,
-                                spreadRadius: -4,
-                                offset: const Offset(0, 10),
-                                color: Colors.black.withValues(alpha: 0.18),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 42,
-                                height: 42,
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary.withValues(
-                                    alpha: 0.10,
-                                  ),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: Icon(
-                                  Icons.notifications_active_rounded,
-                                  color: theme.colorScheme.primary,
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _NotificationText(
-                                  title: widget.title,
-                                  body: widget.body,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              IconButton(
-                                tooltip: 'Dismiss',
-                                visualDensity: VisualDensity.compact,
-                                splashRadius: 20,
-                                onPressed: _dismissSafely,
-                                icon: Icon(
-                                  Icons.close_rounded,
-                                  size: 20,
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.55,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+            opacity: _fadeAnimation,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _handleTap,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: colors.border.withOpacity(0.12),
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colors.black.withOpacity(0.14),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: colors.primary.withOpacity(0.10),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.notifications_active_rounded,
+                              color: colors.primary,
+                              size: 22,
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (title.isNotEmpty)
+                                  Text(
+                                    title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: colors.textPrimary,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.15,
+                                    ),
+                                  ),
+
+                                if (title.isNotEmpty && body.isNotEmpty)
+                                  const SizedBox(height: 3),
+
+                                if (body.isNotEmpty)
+                                  Text(
+                                    body,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.pMuted.copyWith(
+                                      color: colors.textPrimary.withOpacity(
+                                        0.68,
+                                      ),
+                                      height: 1.25,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(width: 8),
+
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: _dismiss,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 20,
+                                color: colors.textPrimary.withOpacity(0.55),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -202,51 +213,6 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
           ),
         ),
       ),
-    );
-  }
-}
-
-class _NotificationText extends StatelessWidget {
-  final String title;
-  final String body;
-
-  const _NotificationText({required this.title, required this.body});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    final cleanTitle = title.trim();
-    final cleanBody = body.trim();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (cleanTitle.isNotEmpty)
-          Text(
-            cleanTitle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: theme.colorScheme.onSurface,
-              height: 1.15,
-            ),
-          ),
-        if (cleanTitle.isNotEmpty && cleanBody.isNotEmpty)
-          const SizedBox(height: 3),
-        if (cleanBody.isNotEmpty)
-          Text(
-            cleanBody,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.68),
-              height: 1.25,
-            ),
-          ),
-      ],
     );
   }
 }

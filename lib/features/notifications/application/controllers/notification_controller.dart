@@ -126,10 +126,6 @@ class NotificationController extends StateNotifier<NotificationState> {
       return;
     }
 
-    appLogger.i(
-      'NotificationController -> markNotificationRead optimistic: $notificationId',
-    );
-
     final previousItems = state.items;
 
     final updatedItems = [...state.items];
@@ -152,10 +148,6 @@ class NotificationController extends StateNotifier<NotificationState> {
       );
       return;
     }
-
-    appLogger.i(
-      'NotificationController -> markNotificationRead success: $notificationId',
-    );
   }
 
   // =====================================================
@@ -174,8 +166,6 @@ class NotificationController extends StateNotifier<NotificationState> {
       );
       return;
     }
-
-    appLogger.i('NotificationController -> markAllAsRead optimistic');
 
     final previousItems = state.items;
     final updatedItems = state.items
@@ -199,8 +189,6 @@ class NotificationController extends StateNotifier<NotificationState> {
       );
       return;
     }
-
-    appLogger.i('NotificationController -> markAllAsRead success');
   }
 
   void restoreNotification(NotificationItem notification, int index) {
@@ -218,8 +206,6 @@ class NotificationController extends StateNotifier<NotificationState> {
   // For realtime or push payloads already mapped to NotificationItem
   // =====================================================
   void upsertNotification(NotificationItem item) {
-    appLogger.i('NotificationController -> upsertNotification: ${item.id}');
-
     final existingIndex = state.items.indexWhere((n) => n.id == item.id);
 
     if (existingIndex == -1) {

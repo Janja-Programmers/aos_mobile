@@ -4,7 +4,8 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/attachment_grid.dart';
-import 'package:africaonlinestores/features/connect/utils/format_time.dart';
+
+import 'package:africaonlinestores/shared/utils/format_time.dart';
 
 class MessageBubble extends StatelessWidget {
   const MessageBubble({

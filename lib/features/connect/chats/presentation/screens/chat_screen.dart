@@ -92,7 +92,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
           final isOwnMessage =
               currentUserId.isNotEmpty && sender == currentUserId;
-
           return !isOwnMessage && m.readAt == null;
         });
       },
@@ -210,6 +209,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         adPrice: attachedAdPrice,
         adImage: attachedAdImage,
         senderId: currentUserId,
+        fallbackUser: widget.otherUser,
+        fallbackDisplayName: widget.displayName,
+        fallbackAvatar: widget.otherUserAvatar,
       );
 
       if (!sent) {

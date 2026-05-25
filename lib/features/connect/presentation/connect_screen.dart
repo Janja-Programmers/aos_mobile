@@ -13,6 +13,9 @@ import 'package:africaonlinestores/features/connect/calls/navigation/call_routes
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/call_list_screen.dart';
 import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 
+import 'package:africaonlinestores/features/social/application/providers/social_providers.dart';
+import 'package:africaonlinestores/features/social/presentation/widgets/social_friends_strip.dart';
+
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 
 class ConnectScreen extends ConsumerStatefulWidget {
@@ -45,6 +48,8 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
     final colors = context.appColors;
 
     final selectedTab = _resolveIndex(context);
+
+    final friendsState = ref.watch(socialFriendsControllerProvider);
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -120,7 +125,31 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
 
           _buildSearchBar(selectedTab == 1 ? "Messages" : "Calls"),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 6),
+
+          if (selectedTab == 1)
+            friendsState.maybeWhen(
+              data: (page) {
+                if (page.items.isEmpty) return const SizedBox.shrink();
+
+                return SocialFriendsStrip(
+                  friends: page.items,
+                  limit: 10,
+                  onSeeAll: () {
+                    // TODO: Navigate to full friends screen.
+                  },
+                  onFriendTap: (friend) {
+                    ChatNavigation.toNewMessage(context);
+
+                    // Later:
+                    // - open existing conversation with friend.user
+                    // - navigate to ProfileScreen(friend.user)
+                    // - preselect friend in NewMessageScreen
+                  },
+                );
+              },
+              orElse: () => const SizedBox.shrink(),
+            ),
 
           Expanded(
             child: selectedTab == 1

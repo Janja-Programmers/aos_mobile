@@ -273,8 +273,6 @@ class PushNotificationService {
 
     _foregroundSub = FirebaseMessaging.onMessage.listen((message) async {
       try {
-        appLogger.i('📩 Foreground push received: ${message.data}');
-
         final notification = _mapMessageToNotification(message);
         if (notification == null) return;
 
@@ -292,7 +290,6 @@ class PushNotificationService {
           title: notification.title,
           body: notification.body,
           onTap: () {
-            appLogger.i('📲 Foreground banner tapped: ${notification.id}');
             _navigationHandler.handleNotificationTap(notification);
           },
         );

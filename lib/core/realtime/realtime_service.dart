@@ -83,8 +83,6 @@ class RealtimeService {
     _socket!.onAny((event, data) {
       final mapped = mapRealtimeEvent(event);
 
-      appLogger.i("Event: $event | Data: $data");
-
       _controller.add(RealtimeEvent(type: mapped, data: data));
     });
 

@@ -7,8 +7,9 @@ import 'package:africaonlinestores/features/connect/calls/application/state/call
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_filter_utils.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/show_call_details_sheet.dart';
+import 'package:africaonlinestores/features/connect/presentation/widgets/connect_state_view.dart';
 
-
+import 'package:africaonlinestores/shared/utils/format_time.dart';
 
 class CallListScreen extends ConsumerStatefulWidget {
   final String? searchQuery;
@@ -51,13 +52,11 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(callManagerProvider);
 
-    return Scaffold(
-      body: Column(
-        children: [
-          _buildFilters(),
-          Expanded(child: _buildBody(state)),
-        ],
-      ),
+    return Column(
+      children: [
+        _buildFilters(),
+        Expanded(child: _buildBody(state)),
+      ],
     );
   }
 
@@ -65,33 +64,74 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
   // BODY (handles loading/error/data)
   // -------------------------
   Widget _buildBody(CallState state) {
-    // ⏳ LOADING
     if (state.isLoadingHistory) {
-      return const Center(child: CircularProgressIndicator());
+      return const ConnectStateView.loading(
+        title: 'Loading calls',
+        message: 'Please wait while we fetch your call history.',
+      );
     }
 
-    // ❌ ERROR
     if (state.historyErrorMessage != null) {
-      return Center(child: Text(state.historyErrorMessage!));
+      return RefreshIndicator(
+        onRefresh: () {
+          return ref.read(callManagerProvider.notifier).loadCallLogs();
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.55,
+              child: ConnectStateView.error(
+                title: 'Could not load calls',
+                message: 'Check your internet connection and try again.',
+                onAction: () {
+                  ref.read(callManagerProvider.notifier).loadCallLogs();
+                },
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    // 📦 DATA + FILTERING
     final filtered = CallFilterUtils.apply(
       calls: state.callLogs,
       query: _query,
       filter: selectedFilter,
     );
 
-    // 📭 EMPTY STATE (MATCHES CHAT UX)
     if (filtered.isEmpty) {
-      return Center(child: Text("No calls yet", style: context.p));
+      final hasSearch = _query.trim().isNotEmpty;
+
+      return RefreshIndicator(
+        onRefresh: () {
+          return ref.read(callManagerProvider.notifier).loadCallLogs();
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.55,
+              child: ConnectStateView.empty(
+                icon: hasSearch
+                    ? Icons.search_off_rounded
+                    : Icons.call_outlined,
+                title: hasSearch ? 'No calls found' : 'No calls yet',
+                message: hasSearch
+                    ? 'Try searching with another name or call type.'
+                    : 'Your audio and video call history will appear here.',
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     final grouped = _groupCalls(filtered);
 
     return RefreshIndicator(
-      onRefresh: () async {
-        await ref.read(callManagerProvider.notifier).loadCallLogs();
+      onRefresh: () {
+        return ref.read(callManagerProvider.notifier).loadCallLogs();
       },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -106,25 +146,16 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
   // GROUPING (unchanged)
   // -------------------------
   Map<String, List<CallLog>> _groupCalls(List<CallLog> calls) {
-    final now = DateTime.now();
+    final Map<String, List<CallLog>> grouped = {};
 
-    final Map<String, List<CallLog>> grouped = {"Today": [], "Yesterday": []};
+    for (final call in calls) {
+      final title = formatDateGroupTitle(call.createdAt);
 
-    for (var call in calls) {
-      final date = call.createdAt;
-
-      if (_isSameDay(date, now)) {
-        grouped["Today"]!.add(call);
-      } else if (_isSameDay(date, now.subtract(const Duration(days: 1)))) {
-        grouped["Yesterday"]!.add(call);
-      }
+      grouped.putIfAbsent(title, () => <CallLog>[]);
+      grouped[title]!.add(call);
     }
 
     return grouped;
-  }
-
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   // -------------------------
@@ -181,18 +212,20 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
   // SECTION (unchanged)
   // -------------------------
   Widget _buildSection(String title, List<CallLog> calls) {
-    if (calls.isEmpty) return const SizedBox();
+    if (calls.isEmpty) return const SizedBox.shrink();
+
+    final colors = context.appColors;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
           child: Text(
             title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
+            style: context.pMuted.copyWith(
+              fontWeight: FontWeight.w700,
+              color: colors.textMuted,
             ),
           ),
         ),

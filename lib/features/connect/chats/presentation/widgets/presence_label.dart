@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
-import 'package:africaonlinestores/features/connect/utils/format_time.dart';
+import 'package:africaonlinestores/shared/utils/format_time.dart';
 
 class PresenceLabel extends StatelessWidget {
   const PresenceLabel({

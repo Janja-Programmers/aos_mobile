@@ -52,7 +52,13 @@ class ChatMessagesController
 
     state = AsyncData(List.of(_messages));
 
-    await repo.markRead(conversationId);
+    final markReadRes = await repo.markRead(conversationId);
+
+    if (markReadRes.isRight) {
+      ref
+          .read(chatConversationsControllerProvider.notifier)
+          .markConversationAsReadLocally(conversationId);
+    }
   }
 
   void _applyMessageStatus(Map<String, dynamic> data) {
@@ -136,6 +142,9 @@ class ChatMessagesController
     String? adImage,
     String? adImageFileId,
     String? senderId,
+    String? fallbackUser,
+    String? fallbackDisplayName,
+    String? fallbackAvatar,
     List<ChatInputAttachment> attachments = const [],
   }) async {
     final safeSenderId = senderId?.trim().toLowerCase();
@@ -212,6 +221,17 @@ class ChatMessagesController
     }
 
     state = AsyncData(List.of(_messages));
+
+    ref
+        .read(chatConversationsControllerProvider.notifier)
+        .syncConversationWithMessage(
+          conversationId: conversationId,
+          message: realMsg,
+          fallbackUser: fallbackUser,
+          fallbackDisplayName: fallbackDisplayName,
+          fallbackAvatar: fallbackAvatar,
+          incrementUnread: false,
+        );
 
     return true;
   }

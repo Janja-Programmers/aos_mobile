@@ -7,8 +7,6 @@ import 'package:africaonlinestores/features/connect/calls/application/state/call
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 
-
-
 class VideoCallScreen extends ConsumerWidget {
   final bool showActiveControls;
 

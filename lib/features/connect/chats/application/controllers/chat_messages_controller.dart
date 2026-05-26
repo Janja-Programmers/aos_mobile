@@ -29,6 +29,9 @@ class ChatMessagesController
   StreamSubscription? _messageSub;
   StreamSubscription? _messageStatusSub;
 
+  Timer? _readSyncDebounce;
+  bool _isSyncingReadState = false;
+
   Future<void> _init() async {
     await loadInitial();
     await _listenRealtime();
@@ -53,13 +56,7 @@ class ChatMessagesController
 
     state = AsyncData(List.of(_messages));
 
-    final markReadRes = await repo.markRead(conversationId);
-
-    if (markReadRes.isRight) {
-      ref
-          .read(conversationsControllerProvider.notifier)
-          .markConversationAsReadLocally(conversationId);
-    }
+    await _syncIncomingReadState();
   }
 
   void _applyMessageStatus(Map<String, dynamic> data) {
@@ -272,7 +269,6 @@ class ChatMessagesController
   // -----------------------------
   Future<void> _listenRealtime() async {
     final realtime = ref.read(chatRealtimeServiceProvider);
-    final repo = ref.read(chatRepositoryProvider);
 
     await _messageSub?.cancel();
     await _messageStatusSub?.cancel();
@@ -293,10 +289,8 @@ class ChatMessagesController
       _messages.add(newMsg);
       state = AsyncData(List.of(_messages));
 
-      // Only mark delivered for incoming messages.
-      if (newMsg.sender.trim().toLowerCase() !=
-          currentUser.trim().toLowerCase()) {
-        await repo.markDelivered(conversationId);
+      if (_isIncomingMessage(newMsg)) {
+        _scheduleIncomingReadSync();
       }
     });
 
@@ -306,6 +300,86 @@ class ChatMessagesController
 
       _applyMessageStatus(Map<String, dynamic>.from(data));
     });
+  }
+
+  bool _isIncomingMessage(ChatMessage message) {
+    return message.sender.trim().toLowerCase() !=
+        currentUser.trim().toLowerCase();
+  }
+
+  void _scheduleIncomingReadSync() {
+    _readSyncDebounce?.cancel();
+
+    _readSyncDebounce = Timer(const Duration(milliseconds: 250), () {
+      _syncIncomingReadState();
+    });
+  }
+
+  Future<void> _syncIncomingReadState() async {
+    if (_isSyncingReadState) return;
+
+    _isSyncingReadState = true;
+
+    try {
+      final repo = ref.read(chatRepositoryProvider);
+
+      final hasIncomingUnread = _messages.any((message) {
+        return _isIncomingMessage(message) && message.readAt == null;
+      });
+
+      if (!hasIncomingUnread) {
+        ref
+            .read(conversationsControllerProvider.notifier)
+            .markConversationAsReadLocally(conversationId);
+        return;
+      }
+
+      final deliveredRes = await repo.markDelivered(conversationId);
+      final readRes = await repo.markRead(conversationId);
+
+      if (readRes.isRight) {
+        final now = DateTime.now();
+
+        _markIncomingMessagesReadLocally(now);
+
+        ref
+            .read(conversationsControllerProvider.notifier)
+            .markConversationAsReadLocally(conversationId);
+      }
+
+      if (deliveredRes.isLeft || readRes.isLeft) {
+        // Silent best-effort failure.
+        // Backend/realtime/next refresh can resync the actual state.
+      }
+    } finally {
+      _isSyncingReadState = false;
+    }
+  }
+
+  void _markIncomingMessagesReadLocally(DateTime timestamp) {
+    var changed = false;
+
+    for (var i = 0; i < _messages.length; i++) {
+      final message = _messages[i];
+
+      if (!_isIncomingMessage(message)) continue;
+
+      final shouldUpdateDelivered = message.deliveredAt == null;
+      final shouldUpdateRead = message.readAt == null;
+
+      if (!shouldUpdateDelivered && !shouldUpdateRead) continue;
+
+      _messages[i] = message.copyWith(
+        deliveredAt: message.deliveredAt ?? timestamp,
+        readAt: message.readAt ?? timestamp,
+      );
+
+      changed = true;
+    }
+
+    if (changed) {
+      state = AsyncData(List.of(_messages));
+    }
   }
 
   bool _isDuplicate(ChatMessage newMsg) {
@@ -330,6 +404,7 @@ class ChatMessagesController
   // -----------------------------
   @override
   void dispose() {
+    _readSyncDebounce?.cancel();
     _messageSub?.cancel();
     _messageStatusSub?.cancel();
     super.dispose();

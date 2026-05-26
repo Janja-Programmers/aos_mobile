@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_background.dart';
+import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -328,7 +330,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final colors = context.appColors;
 
     return Scaffold(
-      backgroundColor: colors.border,
+      backgroundColor: colors.surface.withOpacity(.55),
 
       appBar: ChatAppBar(
         conversationId: widget.conversationId,
@@ -336,7 +338,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         otherUserId: widget.otherUser,
         imageUrl: widget.otherUserAvatar,
         lastSeen: widget.lastSeen,
-        backgroundColor: colors.border,
+        onHeaderTap: () {
+          SocialNavigation.toProfileScreen(context, user: widget.otherUser);
+        },
         onDeleteMessages: _showDeleteMessagesInfo,
         onDeleteAllMessages: _confirmDeleteAllMessages,
       ),
@@ -345,33 +349,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         child: Column(
           children: [
             Expanded(
-              child: messagesState.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text(e.toString())),
-                data: (messages) {
-                  return ListView.builder(
-                    controller: _scrollController,
-                    reverse: true,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      final msg = messages[messages.length - 1 - index];
-                      final isSystem = msg.isSystemMessage;
+              child: ChatBackground(
+                assetPath: 'assets/images/logo_redone.png',
+                child: messagesState.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text(e.toString())),
+                  data: (messages) {
+                    return ListView.builder(
+                      controller: _scrollController,
+                      reverse: true,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        final msg = messages[messages.length - 1 - index];
+                        final isSystem = msg.isSystemMessage;
 
-                      final isMe = _isOwnMessage(
-                        sender: msg.sender,
-                        currentUserId: currentUserId,
-                        isSystem: isSystem,
-                      );
+                        final isMe = _isOwnMessage(
+                          sender: msg.sender,
+                          currentUserId: currentUserId,
+                          isSystem: isSystem,
+                        );
 
-                      return MessageBubble(
-                        message: msg,
-                        isMe: isMe,
-                        isSystem: isSystem,
-                      );
-                    },
-                  );
-                },
+                        return MessageBubble(
+                          message: msg,
+                          isMe: isMe,
+                          isSystem: isSystem,
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ),
 

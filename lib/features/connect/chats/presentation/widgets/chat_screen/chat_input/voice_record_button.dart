@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/features/connect/voice/voice_record_controller.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/connect/voice/voice_record_provider.dart';
 import 'package:africaonlinestores/features/connect/voice/voice_record_overlay.dart';
 import 'package:africaonlinestores/features/connect/voice/voice_record_state.dart';
 
@@ -11,10 +12,12 @@ class VoiceRecordButton extends ConsumerWidget {
     super.key,
     required this.onRecorded,
     this.disabled = false,
+    this.size = 44,
   });
 
   final Future<void> Function(String filePath) onRecorded;
   final bool disabled;
+  final double size;
 
   String _formatDuration(Duration d) {
     final mm = d.inMinutes.remainder(60).toString().padLeft(2, '0');
@@ -24,6 +27,8 @@ class VoiceRecordButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
+
     final state = ref.watch(voiceRecordControllerProvider);
     final controller = ref.read(voiceRecordControllerProvider.notifier);
 
@@ -40,9 +45,6 @@ class VoiceRecordButton extends ConsumerWidget {
         GestureDetector(
           behavior: HitTestBehavior.opaque,
 
-          // -------------------------
-          // START RECORDING
-          // -------------------------
           onLongPressStart: disabled
               ? null
               : (_) async {
@@ -50,15 +52,11 @@ class VoiceRecordButton extends ConsumerWidget {
                   await controller.startRecording();
                 },
 
-          // -------------------------
-          // DRAG (cancel / lock)
-          // -------------------------
           onLongPressMoveUpdate: disabled
               ? null
               : (details) {
                   controller.updateDrag(details.offsetFromOrigin.dx);
 
-                  // 🔒 Lock (slide up)
                   if (details.offsetFromOrigin.dy < -80 &&
                       state.status == VoiceRecordStatus.recording) {
                     HapticFeedback.lightImpact();
@@ -66,9 +64,6 @@ class VoiceRecordButton extends ConsumerWidget {
                   }
                 },
 
-          // -------------------------
-          // RELEASE
-          // -------------------------
           onLongPressEnd: disabled
               ? null
               : (_) async {
@@ -79,17 +74,20 @@ class VoiceRecordButton extends ConsumerWidget {
                   }
                 },
 
-          child: Container(
-            height: 40,
-            width: 40,
-            alignment: Alignment.center,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: state.isRecording ? colors.red : colors.primary,
+              shape: BoxShape.circle,
+            ),
             child: Icon(
-              state.isRecording ? Icons.radio_button_on : Icons.mic_none,
-              color: disabled
-                  ? Colors.grey
-                  : state.isRecording
-                  ? Colors.red
-                  : null,
+              state.isRecording
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.mic_rounded,
+              color: colors.textPrimary,
+              size: 22,
             ),
           ),
         ),

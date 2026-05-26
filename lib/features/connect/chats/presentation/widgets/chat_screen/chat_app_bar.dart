@@ -22,8 +22,8 @@ class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
     required this.otherUserId,
     this.imageUrl,
     this.lastSeen,
-    this.backgroundColor,
     this.textColor,
+    this.onHeaderTap,
     this.onDeleteMessages,
     this.onDeleteAllMessages,
   });
@@ -33,10 +33,10 @@ class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
   final String otherUserId;
   final String? imageUrl;
   final DateTime? lastSeen;
-  final Color? backgroundColor;
   final Color? textColor;
   final VoidCallback? onDeleteMessages;
   final VoidCallback? onDeleteAllMessages;
+  final VoidCallback? onHeaderTap;
 
   @override
   ConsumerState<ChatAppBar> createState() => _ChatAppBarState();
@@ -110,7 +110,7 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
     final lastSeen = presence?.lastSeen ?? widget.lastSeen;
 
     final fg = widget.textColor ?? colors.textPrimary;
-    final bg = widget.backgroundColor ?? colors.surface;
+    final bg = colors.surface;
 
     return AppBar(
       backgroundColor: bg,
@@ -126,12 +126,19 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
         children: [
           const SizedBox(width: 4),
 
-          AppCircularAvatar(
-            name: widget.displayName,
-            imageUrl: widget.imageUrl,
-            radius: 18,
-            backgroundColor: colors.border,
-            textColor: fg,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: widget.onHeaderTap,
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: AppCircularAvatar(
+                name: widget.displayName,
+                imageUrl: widget.imageUrl,
+                radius: 18,
+                backgroundColor: colors.border,
+                textColor: fg,
+              ),
+            ),
           ),
 
           const SizedBox(width: 10),
@@ -141,10 +148,17 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  widget.displayName,
-                  style: context.h5.copyWith(color: fg),
-                  overflow: TextOverflow.ellipsis,
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: widget.onHeaderTap,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Text(
+                      widget.displayName,
+                      style: context.h5.copyWith(color: fg),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ),
 
                 PresenceLabel(
@@ -157,35 +171,60 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
           ),
         ],
       ),
-
       // -----------------------------
       // ACTIONS
       // -----------------------------
       actions: [
-        /// 📞 AUDIO CALL
-        IconButton(
+        /// 📞 CALL MENU
+        PopupMenuButton<AOSCallType>(
+          enabled: !_isCalling,
+          color: colors.surface,
+          surfaceTintColor: Colors.transparent,
+          shadowColor: colors.black.withOpacity(0.12),
+          elevation: 8,
+          offset: const Offset(0, 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: colors.border, width: 1),
+          ),
           icon: _isCalling
               ? const SizedBox(
                   height: 18,
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.call),
-          color: fg,
-          onPressed: _isCalling ? null : () => _startCall(AOSCallType.audio),
-        ),
-
-        /// 🎥 VIDEO CALL
-        IconButton(
-          icon: _isCalling
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.videocam),
-          color: fg,
-          onPressed: _isCalling ? null : () => _startCall(AOSCallType.video),
+              : Icon(Icons.call, color: fg),
+          onSelected: _startCall,
+          itemBuilder: (context) {
+            return [
+              PopupMenuItem<AOSCallType>(
+                value: AOSCallType.audio,
+                child: Row(
+                  children: [
+                    Icon(Icons.call, color: colors.textPrimary),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Audio call',
+                      style: context.p.copyWith(color: colors.textPrimary),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem<AOSCallType>(
+                value: AOSCallType.video,
+                child: Row(
+                  children: [
+                    Icon(Icons.videocam, color: colors.textPrimary),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Video call',
+                      style: context.p.copyWith(color: colors.textPrimary),
+                    ),
+                  ],
+                ),
+              ),
+            ];
+          },
         ),
 
         /// ⋮ MENU

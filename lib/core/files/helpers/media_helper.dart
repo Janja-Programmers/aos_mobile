@@ -166,32 +166,60 @@ class MediaHelper {
   }
 
   // -------------------------
-  // ALLOWED DOCUMENT TYPES
+  // PICK DOCUMENT / ANY FILE
   // -------------------------
 
-  static const allowedDocExtensions = ['pdf', 'doc', 'docx'];
+  static const maxFileSizeMB = 25;
 
-  static const maxFileSizeMB = 5;
-
-  // -------------------------
-  // PICK DOCUMENT
-  // -------------------------
-
-  static Future<File?> pickDocument() async {
+  static Future<File?> pickAnyFile() async {
     final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: allowedDocExtensions,
+      type: FileType.any,
+      allowMultiple: false,
+      withData: false,
     );
 
-    if (result == null) return null;
+    if (result == null || result.files.isEmpty) return null;
 
     final path = result.files.single.path;
     if (path == null) return null;
 
     final file = File(path);
 
-    // Extra validation
-    final isValid = await _validateFile(file);
+    final isValid = await _validateFileSize(file);
+    if (!isValid) return null;
+
+    return file;
+  }
+
+  static Future<File?> pickDocument() {
+    return pickAnyFile();
+  }
+
+  static Future<List<File>> pickImagesFromGallery({
+    int imageQuality = 80,
+  }) async {
+    final files = await _picker.pickMultiImage(imageQuality: imageQuality);
+
+    if (files.isEmpty) return [];
+
+    return files.map((x) => File(x.path)).toList();
+  }
+
+  static Future<File?> pickMediaFromGallery() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.media,
+      allowMultiple: false,
+      withData: false,
+    );
+
+    if (result == null || result.files.isEmpty) return null;
+
+    final path = result.files.single.path;
+    if (path == null) return null;
+
+    final file = File(path);
+
+    final isValid = await _validateFileSize(file);
     if (!isValid) return null;
 
     return file;
@@ -201,20 +229,10 @@ class MediaHelper {
   // VALIDATION
   // -------------------------
 
-  static Future<bool> _validateFile(File file) async {
+  static Future<bool> _validateFileSize(File file) async {
     final sizeInBytes = await file.length();
     final sizeInMB = sizeInBytes / (1024 * 1024);
 
-    if (sizeInMB > maxFileSizeMB) {
-      return false;
-    }
-
-    final ext = file.path.split('.').last.toLowerCase();
-
-    if (!allowedDocExtensions.contains(ext)) {
-      return false;
-    }
-
-    return true;
+    return sizeInMB <= maxFileSizeMB;
   }
 }

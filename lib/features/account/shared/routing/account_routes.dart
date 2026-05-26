@@ -6,7 +6,6 @@ import 'package:africaonlinestores/features/account/presentation/account_screen.
 import 'package:africaonlinestores/features/account/presentation/screens/notification_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/password_security_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/privacy_policy_screen.dart';
-import 'package:africaonlinestores/features/account/presentation/screens/profile_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/terms_conditions_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/user_preference_screen.dart';
 
@@ -24,11 +23,6 @@ class AccountRoutes {
         name: AppRoutes.nAccount,
         path: AppRoutes.account,
         builder: (context, state) => const AccountScreen(),
-      ),
-      GoRoute(
-        name: AppRoutes.nProfile,
-        path: AppRoutes.profile,
-        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         name: AppRoutes.nPasswordSecurity,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/features/connect/presentation/widgets/seller_tile.dart';
+import 'package:africaonlinestores/features/connect/converaation/presentation/widgets/seller_tile.dart';
 import 'package:africaonlinestores/features/sellers/application/controllers/seller_list_controller.dart';
 import 'package:africaonlinestores/features/sellers/domain/seller_list_item.dart';
 

@@ -9,13 +9,18 @@ import 'package:africaonlinestores/features/connect/chats/application/controller
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/conversation_tile.dart';
-import 'package:africaonlinestores/features/connect/presentation/widgets/connect_state_view.dart';
+import 'package:africaonlinestores/features/connect/converaation/presentation/widgets/conversation_tile.dart';
+import 'package:africaonlinestores/features/connect/converaation/application/providers/conversation_provider.dart';
+import 'package:africaonlinestores/features/connect/converaation/presentation/widgets/connect_state_view.dart';
+import 'package:africaonlinestores/features/connect/converaation/presentation/widgets/delete_conversation_sheet.dart';
+
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
   final String? searchQuery;
+  final bool hideFilters;
 
-  const ChatListScreen({super.key, this.searchQuery});
+  const ChatListScreen({super.key, this.searchQuery, this.hideFilters = false});
 
   @override
   ConsumerState<ChatListScreen> createState() => _ChatListScreenState();
@@ -43,13 +48,45 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     }
   }
 
+  Future<void> _showDeleteConversationSheet(
+    ChatConversation conversation,
+  ) async {
+    final shouldDelete = await showModalBottomSheet<bool>(
+      context: context,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return DeleteConversationSheet(displayName: conversation.displayName);
+      },
+    );
+
+    if (shouldDelete != true) return;
+
+    final deleted = await ref
+        .read(conversationsControllerProvider.notifier)
+        .deleteConversation(conversation.id);
+
+    if (!mounted) return;
+
+    if (deleted) {
+      ShowSnack(context, 'Chat deleted from your conversation list.').success();
+    } else {
+      ShowSnack(context, 'Failed to delete chat. Please try again.').error();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(chatConversationsControllerProvider);
+    final state = ref.watch(conversationsControllerProvider);
 
     return Column(
       children: [
-        _buildFilters(),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          alignment: Alignment.topCenter,
+          child: widget.hideFilters ? const SizedBox.shrink() : _buildFilters(),
+        ),
 
         Expanded(
           child: state.when(
@@ -62,9 +99,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               title: 'Could not load chats',
               message: 'Check your internet connection and try again.',
               onAction: () {
-                ref
-                    .read(chatConversationsControllerProvider.notifier)
-                    .refresh();
+                ref.read(conversationsControllerProvider.notifier).refresh();
               },
             ),
 
@@ -143,6 +178,9 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                         displayName: conv.displayName,
                         otherUserAvatar: conv.avatar,
                       );
+                    },
+                    onLongPress: () {
+                      _showDeleteConversationSheet(conv);
                     },
                   );
                 },

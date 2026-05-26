@@ -7,14 +7,15 @@ import 'package:africaonlinestores/features/connect/calls/application/state/call
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_filter_utils.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/show_call_details_sheet.dart';
-import 'package:africaonlinestores/features/connect/presentation/widgets/connect_state_view.dart';
+import 'package:africaonlinestores/features/connect/converaation/presentation/widgets/connect_state_view.dart';
 
 import 'package:africaonlinestores/shared/utils/format_time.dart';
 
 class CallListScreen extends ConsumerStatefulWidget {
   final String? searchQuery;
+  final bool hideFilters;
 
-  const CallListScreen({super.key, this.searchQuery});
+  const CallListScreen({super.key, this.searchQuery, this.hideFilters = false});
 
   @override
   ConsumerState<CallListScreen> createState() => _CallListScreenState();
@@ -54,7 +55,13 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
 
     return Column(
       children: [
-        _buildFilters(),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          alignment: Alignment.topCenter,
+          child: widget.hideFilters ? const SizedBox.shrink() : _buildFilters(),
+        ),
+
         Expanded(child: _buildBody(state)),
       ],
     );

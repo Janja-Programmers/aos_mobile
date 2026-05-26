@@ -20,6 +20,7 @@ enum FailureType {
   forbidden,
   notFound,
   rateLimited,
+  validation,
   server,
   parse,
   unknown,

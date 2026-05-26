@@ -16,6 +16,7 @@ import 'package:africaonlinestores/features/connect/chats/presentation/widgets/c
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/typing_indicator.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
+import 'package:africaonlinestores/features/connect/converaation/application/providers/conversation_provider.dart';
 
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 
@@ -105,7 +106,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (res.isRight) {
       ref
-          .read(chatConversationsControllerProvider.notifier)
+          .read(conversationsControllerProvider.notifier)
           .markConversationAsReadLocally(widget.conversationId);
     }
   }
@@ -259,6 +260,60 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ).error();
   }
 
+  void _showDeleteMessagesInfo() {
+    ShowSnack(
+      context,
+      'Message selection will be enabled when message delete API is ready.',
+    ).info();
+  }
+
+  Future<void> _confirmDeleteAllMessages() async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final colors = dialogContext.appColors;
+
+        return AlertDialog(
+          backgroundColor: colors.elevated,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            'Delete all messages?',
+            style: TextStyle(color: colors.textPrimary),
+          ),
+          content: Text(
+            'This action will delete all messages in this chat for you when the backend endpoint is connected.',
+            style: TextStyle(color: colors.textMuted, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text('Cancel', style: TextStyle(color: colors.textMuted)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(
+                'Delete',
+                style: TextStyle(
+                  color: colors.red,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+
+    if (!mounted) return;
+
+    ShowSnack(context, 'Delete all messages API is not connected yet.').info();
+  }
+
   @override
   Widget build(BuildContext context) {
     final messagesState = ref.watch(
@@ -282,6 +337,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         imageUrl: widget.otherUserAvatar,
         lastSeen: widget.lastSeen,
         backgroundColor: colors.border,
+        onDeleteMessages: _showDeleteMessagesInfo,
+        onDeleteAllMessages: _confirmDeleteAllMessages,
       ),
 
       body: SafeArea(

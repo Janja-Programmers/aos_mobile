@@ -28,6 +28,8 @@ class ConnectScreen extends ConsumerStatefulWidget {
 class _ConnectScreenState extends ConsumerState<ConnectScreen> {
   final _searchCtrl = TextEditingController();
 
+  bool _headerCollapsed = false;
+
   @override
   void initState() {
     super.initState();
@@ -43,17 +45,48 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
     super.dispose();
   }
 
+  void _setHeaderCollapsed(bool collapsed) {
+    if (_headerCollapsed == collapsed) return;
+
+    setState(() {
+      _headerCollapsed = collapsed;
+    });
+  }
+
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    if (notification.metrics.pixels <= 8) {
+      _setHeaderCollapsed(false);
+      return false;
+    }
+
+    if (notification is ScrollUpdateNotification) {
+      final delta = notification.scrollDelta ?? 0;
+
+      if (delta > 4 && notification.metrics.pixels > 24) {
+        _setHeaderCollapsed(true);
+      } else if (delta < -4) {
+        _setHeaderCollapsed(false);
+      }
+    }
+
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
     final selectedTab = _resolveIndex(context);
+    final isMessages = selectedTab == 1;
 
     final friendsState = ref.watch(socialFriendsControllerProvider);
 
     return Scaffold(
       backgroundColor: colors.surface,
-
       appBar: AppBar(
         backgroundColor: colors.surface,
         elevation: 0,
@@ -116,55 +149,71 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
           ),
         ],
       ),
+      body: NotificationListener<ScrollNotification>(
+        onNotification: _handleScrollNotification,
+        child: Column(
+          children: [
+            _buildToggleTabs(),
 
-      body: Column(
-        children: [
-          _buildToggleTabs(),
-
-          const SizedBox(height: 12),
-
-          _buildSearchBar(selectedTab == 1 ? "Messages" : "Calls"),
-
-          const SizedBox(height: 6),
-
-          if (selectedTab == 1)
-            friendsState.maybeWhen(
-              data: (page) {
-                if (page.items.isEmpty) return const SizedBox.shrink();
-
-                return SocialFriendsStrip(
-                  friends: page.items,
-                  limit: 10,
-                  onSeeAll: () {
-                    // TODO: Navigate to full friends screen.
-                  },
-                  onFriendTap: (friend) {
-                    ChatNavigation.toNewMessage(context);
-
-                    // Later:
-                    // - open existing conversation with friend.user
-                    // - navigate to ProfileScreen(friend.user)
-                    // - preselect friend in NewMessageScreen
-                  },
-                );
-              },
-              orElse: () => const SizedBox.shrink(),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              height: _headerCollapsed ? 6 : 12,
             ),
 
-          Expanded(
-            child: selectedTab == 1
-                ? ChatListScreen(
-                    key: ValueKey('${selectedTab}_${_searchCtrl.text}'),
-                    searchQuery: _searchCtrl.text,
-                  )
-                : CallListScreen(
-                    key: ValueKey('${selectedTab}_${_searchCtrl.text}'),
-                    searchQuery: _searchCtrl.text,
-                  ),
-          ),
-        ],
-      ),
+            _buildSearchBar(
+              isMessages ? "Messages" : "Calls",
+              collapsed: _headerCollapsed,
+            ),
 
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: !_headerCollapsed && isMessages
+                  ? friendsState.maybeWhen(
+                      data: (page) {
+                        if (page.items.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return SocialFriendsStrip(
+                          friends: page.items,
+                          limit: 10,
+                          onSeeAll: () {
+                            // TODO: Navigate to full friends screen.
+                          },
+                          onFriendTap: (friend) {
+                            ChatNavigation.toNewMessage(context);
+
+                            // Later:
+                            // - open existing conversation with friend.user
+                            // - navigate to ProfileScreen(friend.user)
+                            // - preselect friend in NewMessageScreen
+                          },
+                        );
+                      },
+                      orElse: () => const SizedBox.shrink(),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+
+            Expanded(
+              child: isMessages
+                  ? ChatListScreen(
+                      key: ValueKey('${selectedTab}_${_searchCtrl.text}'),
+                      searchQuery: _searchCtrl.text,
+                      hideFilters: _headerCollapsed,
+                    )
+                  : CallListScreen(
+                      key: ValueKey('${selectedTab}_${_searchCtrl.text}'),
+                      searchQuery: _searchCtrl.text,
+                      hideFilters: _headerCollapsed,
+                    ),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: _buildFAB(),
     );
   }
@@ -200,6 +249,7 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
       child: GestureDetector(
         onTap: () {
           _searchCtrl.clear();
+          _setHeaderCollapsed(false);
 
           if (index == 0) {
             ConnectScreenNavigation.toCallsTab(context);
@@ -232,9 +282,14 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
     );
   }
 
-  Widget _buildSearchBar(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+  Widget _buildSearchBar(String title, {required bool collapsed}) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: collapsed ? 2 : 6,
+      ),
       child: AppSearchBar(
         hintText: "Search $title...",
         controller: _searchCtrl,

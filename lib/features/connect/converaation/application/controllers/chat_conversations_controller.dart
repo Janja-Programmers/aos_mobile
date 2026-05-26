@@ -10,14 +10,14 @@ import 'package:africaonlinestores/features/connect/chats/domain/chat_conversati
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
 
-class ChatConversationsController
+class ConversationsController
     extends StateNotifier<AsyncValue<List<ChatConversation>>> {
   final Ref ref;
 
   String _currentUser = '';
   StreamSubscription? _messageSub;
 
-  ChatConversationsController(this.ref) : super(const AsyncData([])) {
+  ConversationsController(this.ref) : super(const AsyncData([])) {
     _init();
   }
 
@@ -69,26 +69,34 @@ class ChatConversationsController
   // -----------------------------
   // Delete conversation
   // -----------------------------
-  Future<void> deleteConversation(String conversationId) async {
+  Future<bool> deleteConversation(String conversationId) async {
+    final cleanId = conversationId.trim();
+
+    if (cleanId.isEmpty) {
+      return false;
+    }
+
     final repo = ref.read(chatRepositoryProvider);
 
     final previousState = state;
 
     state = state.whenData((conversations) {
-      return conversations.where((c) => c.id != conversationId).toList();
+      return conversations.where((c) => c.id != cleanId).toList();
     });
 
-    final res = await repo.deleteConversation(conversationId);
+    final res = await repo.deleteConversation(cleanId);
 
-    if (!mounted) return;
+    if (!mounted) return false;
 
     if (res.isLeft) {
       state = previousState;
+
       appLogger.w('[ChatController] Failed to delete: ${res.leftOrNull}');
-      return;
+      return false;
     }
 
     appLogger.i('[ChatController] Conversation deleted successfully');
+    return true;
   }
 
   // -----------------------------

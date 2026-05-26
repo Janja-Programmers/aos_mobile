@@ -110,8 +110,6 @@ class ApiEndpoints {
   static final String getRelationshipStatusEndpoint =
       '/api/method/aos.api.social.get_relationship_status';
 
-  // TODO: getFollowsEndpoint, getFollowingEndpoint, getFriendsEndpoint, getRelationshipStatusEndpoint
-
   // Verification Endpoints
   static final String submitVerificationEndpoint =
       '/api/method/aos.api.verification.submit_verification';

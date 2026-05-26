@@ -10,6 +10,7 @@ import 'package:africaonlinestores/features/connect/chats/domain/chat_attachment
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
+import 'package:africaonlinestores/features/connect/converaation/application/providers/conversation_provider.dart';
 
 class ChatMessagesController
     extends StateNotifier<AsyncValue<List<ChatMessage>>> {
@@ -56,7 +57,7 @@ class ChatMessagesController
 
     if (markReadRes.isRight) {
       ref
-          .read(chatConversationsControllerProvider.notifier)
+          .read(conversationsControllerProvider.notifier)
           .markConversationAsReadLocally(conversationId);
     }
   }
@@ -223,7 +224,7 @@ class ChatMessagesController
     state = AsyncData(List.of(_messages));
 
     ref
-        .read(chatConversationsControllerProvider.notifier)
+        .read(conversationsControllerProvider.notifier)
         .syncConversationWithMessage(
           conversationId: conversationId,
           message: realMsg,

@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
@@ -14,6 +11,8 @@ import 'package:africaonlinestores/features/connect/chats/presentation/widgets/p
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_presence_controller.dart';
+
+enum ChatMenuAction { deleteMessages, deleteAllMessages }
 
 class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
   const ChatAppBar({
@@ -25,6 +24,8 @@ class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
     this.lastSeen,
     this.backgroundColor,
     this.textColor,
+    this.onDeleteMessages,
+    this.onDeleteAllMessages,
   });
 
   final String conversationId;
@@ -34,6 +35,8 @@ class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
   final DateTime? lastSeen;
   final Color? backgroundColor;
   final Color? textColor;
+  final VoidCallback? onDeleteMessages;
+  final VoidCallback? onDeleteAllMessages;
 
   @override
   ConsumerState<ChatAppBar> createState() => _ChatAppBarState();
@@ -186,9 +189,9 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
         ),
 
         /// ⋮ MENU
-        PopupMenuButton<int>(
+        PopupMenuButton<ChatMenuAction>(
           color: colors.surface,
-          surfaceTintColor: colors.surface,
+          surfaceTintColor: Colors.transparent,
           shadowColor: colors.black.withOpacity(0.12),
           elevation: 8,
           shape: RoundedRectangleBorder(
@@ -196,34 +199,45 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
             side: BorderSide(color: colors.border, width: 1),
           ),
           icon: Icon(Icons.more_vert, color: fg),
-          onSelected: (index) => AppNavigation.goTo(context, ref, index),
+          onSelected: (action) {
+            switch (action) {
+              case ChatMenuAction.deleteMessages:
+                widget.onDeleteMessages?.call();
+                break;
+              case ChatMenuAction.deleteAllMessages:
+                widget.onDeleteAllMessages?.call();
+                break;
+            }
+          },
           itemBuilder: (context) {
-            final items = AppNavConfig.items(context);
-            final location = GoRouterState.of(context).matchedLocation;
-
-            return List.generate(items.length, (i) {
-              final item = items[i];
-              final isActive = location.contains(item.routeName);
-
-              return PopupMenuItem<int>(
-                value: i,
+            return [
+              PopupMenuItem<ChatMenuAction>(
+                value: ChatMenuAction.deleteMessages,
                 child: Row(
                   children: [
-                    Icon(
-                      item.icon,
-                      color: isActive ? colors.primary : colors.textPrimary,
-                    ),
-                    const SizedBox(width: 8),
+                    Icon(Icons.checklist_rounded, color: colors.textPrimary),
+                    const SizedBox(width: 10),
                     Text(
-                      item.label,
-                      style: context.p.copyWith(
-                        color: isActive ? colors.primary : colors.textPrimary,
-                      ),
+                      'Delete messages',
+                      style: context.p.copyWith(color: colors.textPrimary),
                     ),
                   ],
                 ),
-              );
-            });
+              ),
+              PopupMenuItem<ChatMenuAction>(
+                value: ChatMenuAction.deleteAllMessages,
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_sweep_outlined, color: colors.red),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Delete all messages',
+                      style: context.p.copyWith(color: colors.red),
+                    ),
+                  ],
+                ),
+              ),
+            ];
           },
         ),
       ],

@@ -12,7 +12,7 @@ class CallLog {
   final String? avatar;
 
   final String direction; // incoming / outgoing
-  final String status; // missed / ended / rejected
+  final String status; // missed / ended / rejected / cancelled
 
   final bool isMissed;
 
@@ -23,6 +23,12 @@ class CallLog {
   final DateTime? startedAt;
   final DateTime? endedAt;
   final DateTime createdAt;
+
+  final String? groupId;
+  final String? latestCallId;
+  final String? oldestCallId;
+
+  final int groupCount;
 
   const CallLog({
     required this.id,
@@ -38,6 +44,10 @@ class CallLog {
     required this.startedAt,
     required this.endedAt,
     required this.createdAt,
+    this.groupId,
+    this.latestCallId,
+    this.oldestCallId,
+    this.groupCount = 1,
   });
 
   // ================= HELPERS =================
@@ -46,6 +56,17 @@ class CallLog {
   bool get isOutgoing => direction == "outgoing";
 
   bool get isAnswered => status == "ended";
+
+  bool get isGrouped => groupCount > 1;
+
+  String get detailLookupId =>
+      latestCallId?.trim().isNotEmpty == true ? latestCallId! : id;
+
+  String get effectiveLatestCallId =>
+      latestCallId?.trim().isNotEmpty == true ? latestCallId! : id;
+
+  String get effectiveOldestCallId =>
+      oldestCallId?.trim().isNotEmpty == true ? oldestCallId! : id;
 
   String get formattedTime {
     final dt = startedAt ?? createdAt;
@@ -70,6 +91,10 @@ class CallLog {
     DateTime? startedAt,
     DateTime? endedAt,
     DateTime? createdAt,
+    String? groupId,
+    String? latestCallId,
+    String? oldestCallId,
+    int? groupCount,
   }) {
     return CallLog(
       id: id ?? this.id,
@@ -85,6 +110,10 @@ class CallLog {
       startedAt: startedAt ?? this.startedAt,
       endedAt: endedAt ?? this.endedAt,
       createdAt: createdAt ?? this.createdAt,
+      groupId: groupId ?? this.groupId,
+      latestCallId: latestCallId ?? this.latestCallId,
+      oldestCallId: oldestCallId ?? this.oldestCallId,
+      groupCount: groupCount ?? this.groupCount,
     );
   }
 }

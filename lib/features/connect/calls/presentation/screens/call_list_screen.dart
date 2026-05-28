@@ -59,7 +59,9 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
           alignment: Alignment.topCenter,
-          child: widget.hideFilters ? const SizedBox.shrink() : _buildFilters(),
+          child: widget.hideFilters
+              ? const SizedBox.shrink()
+              : _buildFilters(state),
         ),
 
         Expanded(child: _buildBody(state)),
@@ -168,7 +170,9 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
   // -------------------------
   // FILTERS (CENTERED like chats)
   // -------------------------
-  Widget _buildFilters() {
+  Widget _buildFilters(CallState state) {
+    final colors = context.appColors;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Row(
@@ -178,6 +182,19 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
           _chip("Missed", "missed"),
           _chip("Incoming", "incoming"),
           _chip("Outgoing", "outgoing"),
+          if (state.callLogs.isNotEmpty) ...[
+            const SizedBox(width: 2),
+            IconButton(
+              tooltip: 'Clear call history',
+              visualDensity: VisualDensity.compact,
+              icon: Icon(
+                Icons.delete_sweep_outlined,
+                color: colors.textMuted,
+                size: 21,
+              ),
+              onPressed: _confirmClearCallHistory,
+            ),
+          ],
         ],
       ),
     );
@@ -254,12 +271,38 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
         child: Text(call.displayName.isNotEmpty ? call.displayName[0] : "?"),
       ),
 
-      title: Text(
-        call.displayName,
-        style: TextStyle(
-          color: isMissed ? colors.red : colors.textPrimary,
-          fontWeight: FontWeight.w600,
-        ),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              call.displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: isMissed ? colors.red : colors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          if (call.isGrouped) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: colors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                '${call.groupCount}',
+                style: TextStyle(
+                  color: colors.primary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
 
       subtitle: Row(
@@ -280,6 +323,10 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
           const SizedBox(width: 4),
 
           Text(call.formattedTime),
+          if (call.isGrouped) ...[
+            const SizedBox(width: 8),
+            Text('${call.groupCount} calls'),
+          ],
           const SizedBox(width: 8),
 
           /// ⏱ duration
@@ -290,11 +337,122 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
         ],
       ),
 
-      trailing: Icon(Icons.call, color: colors.success),
+      trailing: PopupMenuButton<String>(
+        icon: Icon(Icons.more_vert_rounded, color: colors.textSecondary),
+        onSelected: (value) async {
+          if (value == 'delete') {
+            await _confirmDeleteCall(call);
+          }
+        },
+        itemBuilder: (context) => [
+          const PopupMenuItem(
+            value: 'delete',
+            child: Row(
+              children: [
+                Icon(Icons.delete_outline_rounded),
+                SizedBox(width: 10),
+                Text('Delete'),
+              ],
+            ),
+          ),
+        ],
+      ),
 
       onTap: () {
         showCallDetailsSheet(context, ref, call);
       },
+    );
+  }
+
+  Future<void> _confirmDeleteCall(CallLog call) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(
+            call.isGrouped ? 'Delete call group?' : 'Delete call log?',
+          ),
+          content: Text(
+            call.isGrouped
+                ? 'This will delete ${call.groupCount} call logs from this group.'
+                : 'This will delete this call log from your history.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+
+    await _deleteCallLog(call);
+  }
+
+  Future<void> _deleteCallLog(CallLog call) async {
+    final deleted = await ref
+        .read(callManagerProvider.notifier)
+        .deleteCallLog(call);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          deleted
+              ? 'Call log deleted.'
+              : 'Could not delete call log. Please try again.',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmClearCallHistory() async {
+    final shouldClear = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Clear call history?'),
+          content: const Text(
+            'This will remove all call logs from your history. It will not delete them for the other person.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Clear'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldClear != true) return;
+
+    final cleared = await ref
+        .read(callManagerProvider.notifier)
+        .clearCallHistory();
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          cleared
+              ? 'Call history cleared.'
+              : 'Could not clear call history. Please try again.',
+        ),
+      ),
     );
   }
 }

@@ -45,27 +45,63 @@ Call mapCall(Map<String, dynamic> json) {
       displayName: json['receiver_display_name'],
       avatar: json['receiver_avatar'],
     ),
+    videoUpgradeStatus:
+        _cleanString(json['video_upgrade_status']) ??
+        _cleanString(json['videoUpgradeStatus']) ??
+        'none',
+    videoUpgradeRequestedBy:
+        _cleanString(json['video_upgrade_requested_by']) ??
+        _cleanString(json['videoUpgradeRequestedBy']) ??
+        _cleanString(json['requested_by']) ??
+        _cleanString(json['actor']),
   );
 }
 
 CallLog mapCallLog(Map<String, dynamic> json) {
-  final user = _cleanString(json['other_user']) ?? '';
+  final user =
+      _cleanString(json['other_user']) ??
+      _cleanString(json['user']) ??
+      _cleanString(json['participant']) ??
+      '';
 
-  final displayName = _cleanString(json['other_display_name']) ?? user;
+  final displayName =
+      _cleanString(json['other_display_name']) ??
+      _cleanString(json['display_name']) ??
+      _cleanString(json['user_display_name']) ??
+      user;
+
+  final historyCategory = _cleanString(json['history_category']);
+  final status = _cleanString(json['status']) ?? historyCategory ?? 'ended';
+
+  final direction = _cleanString(json['direction']) ?? 'incoming';
+
+  final isMissed =
+      json['is_missed'] == true ||
+      json['is_missed'] == 1 ||
+      historyCategory == 'missed' ||
+      (direction == 'incoming' && status == 'cancelled') ||
+      status == 'missed';
 
   return CallLog(
-    id: _cleanString(json['id']) ?? _cleanString(json['call_id']) ?? '',
+    id:
+        _cleanString(json['id']) ??
+        _cleanString(json['call_id']) ??
+        _cleanString(json['latest_call_id']) ??
+        '',
     conversationId: _cleanString(json['conversation_id']) ?? '',
 
     // Backend already gives the display target for current user.
     user: user,
     displayName: displayName,
-    avatar: _cleanString(json['other_avatar']),
+    avatar:
+        _cleanString(json['other_avatar']) ??
+        _cleanString(json['avatar']) ??
+        _cleanString(json['user_avatar']),
 
-    direction: _cleanString(json['direction']) ?? 'incoming',
-    status: _cleanString(json['status']) ?? 'ended',
+    direction: direction,
+    status: status,
 
-    isMissed: json['is_missed'] == true || json['is_missed'] == 1,
+    isMissed: isMissed,
 
     callType: _parseCallType(json['call_type']?.toString()),
 
@@ -73,8 +109,59 @@ CallLog mapCallLog(Map<String, dynamic> json) {
 
     startedAt: _parseDate(json['started_at']),
     endedAt: _parseDate(json['ended_at']),
-    createdAt: _parseDate(json['created_at']) ?? DateTime.now(),
+    createdAt:
+        _parseDate(json['created_at']) ??
+        _parseDate(json['latest_created_at']) ??
+        _parseDate(json['last_call_at']) ??
+        DateTime.now(),
+
+    groupId:
+        _cleanString(json['group_id']) ??
+        _cleanString(json['group_key']) ??
+        _cleanString(json['call_group_id']),
+    latestCallId:
+        _cleanString(json['latest_call_id']) ??
+        _cleanString(
+          json['latest_call'] is Map ? json['latest_call']['call_id'] : null,
+        ) ??
+        _cleanString(json['id']) ??
+        _cleanString(json['call_id']),
+    oldestCallId:
+        _cleanString(json['oldest_call_id']) ??
+        _cleanString(json['id']) ??
+        _cleanString(json['call_id']) ??
+        _cleanString(json['latest_call_id']),
+    groupCount: _parseInt(json['group_count']) > 0
+        ? _parseInt(json['group_count'])
+        : _parseInt(json['call_count']) > 0
+        ? _parseInt(json['call_count'])
+        : _parseInt(json['count']) > 0
+        ? _parseInt(json['count'])
+        : 1,
   );
+}
+
+List<CallLog> mapCallLogList(dynamic payload) {
+  final data = _extractCallList(payload);
+
+  return data
+      .whereType<Map>()
+      .map((item) => item.map((key, value) => MapEntry(key.toString(), value)))
+      .map(mapCallLog)
+      .toList();
+}
+
+List<dynamic> _extractCallList(dynamic payload) {
+  if (payload is List) return payload;
+
+  if (payload is Map) {
+    for (final key in const ['calls', 'logs', 'items', 'rows', 'data']) {
+      final value = payload[key];
+      if (value is List) return value;
+    }
+  }
+
+  return const [];
 }
 
 String? _cleanString(dynamic value) {

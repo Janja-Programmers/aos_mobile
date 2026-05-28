@@ -6,14 +6,19 @@ class CallFilterUtils {
     required String query,
     required String filter,
   }) {
-    final q = query.toLowerCase();
+    final q = query.trim().toLowerCase();
 
     return calls.where((call) {
-      final matchesSearch = call.displayName.toLowerCase().contains(q);
+      final matchesSearch =
+          q.isEmpty || call.displayName.toLowerCase().contains(q);
 
       final matchesFilter = switch (filter) {
-        "missed" => call.isMissed,
-        "incoming" => call.direction == "incoming",
+        "missed" => call.isMissed || call.status == "cancelled",
+        "incoming" =>
+          call.direction == "incoming" &&
+              !call.isMissed &&
+              call.status != "cancelled",
+
         "outgoing" => call.direction == "outgoing",
         _ => true,
       };

@@ -159,6 +159,16 @@ class ApiEndpoints {
       '/api/method/aos.api.calls.cancel_call';
   static final String getCallStatusEndpoint =
       '/api/method/aos.api.calls.get_call_status';
+  static final String getCallGroupDetailsEndpoint =
+      '/api/method/aos.api.calls.get_call_group_details';
+  static final String deleteCallLogsEndpoint =
+      '/api/method/aos.api.calls.delete_call_logs';
+  static final String clearCallHistoryEndpoint =
+      '/api/method/aos.api.calls.clear_call_history';
+  static final String requestVideoUpgradeEndpoint =
+      '/api/method/aos.api.calls.request_video_upgrade';
+  static final String respondVideoUpgradeEndpoint =
+      '/api/method/aos.api.calls.respond_video_upgrade';
 
   // LIVE Endpoints
   static final String startLiveEndpoint = '/api/method/aos.api.live.start_live';

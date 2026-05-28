@@ -9,11 +9,16 @@ enum RealtimeEventType {
 
   // Calls
   aosIncomingCall,
+  aosCallRinging,
   aosCallAccepted,
   aosCallRejected,
   aosCallEnded,
   aosCallNotAnswered,
   aosCallCancelled,
+  aosCallVideoUpgradeRequested,
+  aosCallVideoUpgradeAccepted,
+  aosCallVideoUpgradeDeclined,
+  aosCallVideoUpgradeCancelled,
 
   // LIVE Events
   aosLiveStarted,
@@ -71,6 +76,9 @@ RealtimeEventType mapRealtimeEvent(String event) {
     case "aos_incoming_call":
       return RealtimeEventType.aosIncomingCall;
 
+    case "aos_call_ringing":
+      return RealtimeEventType.aosCallRinging;
+
     case "aos_call_accepted":
       return RealtimeEventType.aosCallAccepted;
 
@@ -85,6 +93,20 @@ RealtimeEventType mapRealtimeEvent(String event) {
 
     case "aos_call_not_answered":
       return RealtimeEventType.aosCallNotAnswered;
+
+    case "aos_call_video_upgrade_request":
+    case "aos_call_video_upgrade_requested":
+      return RealtimeEventType.aosCallVideoUpgradeRequested;
+
+    case "aos_call_video_upgrade_accepted":
+      return RealtimeEventType.aosCallVideoUpgradeAccepted;
+
+    case "aos_call_video_upgrade_declined":
+      return RealtimeEventType.aosCallVideoUpgradeDeclined;
+
+    case "aos_call_video_upgrade_cancelled":
+    case "aos_call_video_upgrade_canceled":
+      return RealtimeEventType.aosCallVideoUpgradeCancelled;
 
     // =========================
     // LIVE

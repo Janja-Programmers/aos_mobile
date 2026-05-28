@@ -160,4 +160,8 @@ class AppRoutes {
   // PROFILE routes
   static const profile = '/profile';
   static const nProfile = 'profile';
+
+  //SOCIALCONNECTIONS routes
+  static const socialConnections = '/social/connections';
+  static const nSocialConnections = 'social-connections';
 }

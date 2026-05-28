@@ -14,6 +14,7 @@ import 'package:africaonlinestores/features/connect/calls/presentation/screens/c
 import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 
 import 'package:africaonlinestores/features/social/application/providers/social_providers.dart';
+import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/features/social/presentation/widgets/social_friends_strip.dart';
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
@@ -181,15 +182,17 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
                           friends: page.items,
                           limit: 10,
                           onSeeAll: () {
-                            // TODO: Navigate to full friends screen.
+                            SocialNavigation.toFriendsScreen(context);
                           },
                           onFriendTap: (friend) {
-                            ChatNavigation.toNewMessage(context);
+                            ChatNavigation.toMessage(
+                              context: context,
+                              conversationId: '',
+                              user: '',
+                              displayName: '',
+                            );
 
-                            // Later:
-                            // - open existing conversation with friend.user
-                            // - navigate to ProfileScreen(friend.user)
-                            // - preselect friend in NewMessageScreen
+                            //TODO: Pass the correct endpoints for the tomMessage
                           },
                         );
                       },

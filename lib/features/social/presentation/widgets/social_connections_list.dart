@@ -1,0 +1,178 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/social/application/providers/social_providers.dart';
+import 'package:africaonlinestores/features/social/application/state/social_connections_state.dart';
+import 'package:africaonlinestores/features/social/domain/social_friend.dart';
+import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
+import 'package:africaonlinestores/features/social/presentation/widgets/social_connection_tile.dart';
+import 'package:africaonlinestores/features/social/presentation/widgets/social_connections_state_view.dart';
+
+class SocialConnectionsList extends ConsumerWidget {
+  final SocialConnectionsState state;
+  final Future<void> Function() onRefresh;
+
+  const SocialConnectionsList({
+    super.key,
+    required this.state,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state.hasError) {
+      return SocialConnectionsStateView.error(
+        message: state.errorMessage ?? 'Something went wrong.',
+        onRetry: onRefresh,
+      );
+    }
+
+    final items = state.filteredItems;
+
+    if (items.isEmpty) {
+      return SocialConnectionsStateView.empty(
+        title: _emptyTitleForTab(state.selectedTab, state.query),
+        message: _emptyMessageForTab(state.selectedTab, state.query),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 18),
+        itemCount: items.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 2),
+        itemBuilder: (context, index) {
+          final friend = items[index];
+
+          return SocialConnectionTile(
+            friend: friend,
+            onTap: () {
+              SocialNavigation.toProfileScreen(context, user: friend.user);
+            },
+            onActionTap: () async {
+              try {
+                await ref
+                    .read(socialRelationshipControllerProvider.notifier)
+                    .toggleFollow(targetUser: friend.user);
+              } finally {
+                await onRefresh();
+              }
+            },
+            onMoreTap: () {
+              _showMoreActions(context, friend);
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  String _emptyTitleForTab(SocialConnectionsTab tab, String query) {
+    if (query.trim().isNotEmpty) return 'No results found';
+
+    switch (tab) {
+      case SocialConnectionsTab.following:
+        return 'No following yet';
+      case SocialConnectionsTab.followers:
+        return 'No followers yet';
+      case SocialConnectionsTab.friends:
+        return 'No friends yet';
+    }
+  }
+
+  String _emptyMessageForTab(SocialConnectionsTab tab, String query) {
+    if (query.trim().isNotEmpty) {
+      return 'Try searching with another name or username.';
+    }
+
+    switch (tab) {
+      case SocialConnectionsTab.following:
+        return 'People you follow will appear here.';
+      case SocialConnectionsTab.followers:
+        return 'People following you will appear here.';
+      case SocialConnectionsTab.friends:
+        return 'Mutual followers will appear here.';
+    }
+  }
+
+  Future<void> _showMoreActions(
+    BuildContext context,
+    SocialFriend friend,
+  ) async {
+    final colors = context.appColors;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return SafeArea(
+          child: Container(
+            margin: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.elevated,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: colors.border),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colors.border,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ListTile(
+                  leading: Icon(
+                    Icons.person_outline_rounded,
+                    color: colors.textPrimary,
+                  ),
+                  title: Text(
+                    'View profile',
+                    style: context.p.copyWith(
+                      color: colors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    SocialNavigation.toProfileScreen(
+                      context,
+                      user: friend.user,
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.flag_outlined, color: colors.red),
+                  title: Text(
+                    'Report',
+                    style: context.p.copyWith(
+                      color: colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    // TODO: report flow.
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}

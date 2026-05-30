@@ -3,6 +3,9 @@ enum RealtimeEventType {
   chatNewMessage,
   chatTyping,
   aosMessageStatus,
+  aosMessageEdited,
+  aosMessagesDeleted,
+  aosMessageReactionUpdated,
 
   // Presence
   presenceUpdate,
@@ -63,6 +66,15 @@ RealtimeEventType mapRealtimeEvent(String event) {
 
     case "aos_message_status":
       return RealtimeEventType.aosMessageStatus;
+
+    case "aos_message_edited":
+      return RealtimeEventType.aosMessageEdited;
+
+    case "aos_messages_deleted":
+      return RealtimeEventType.aosMessagesDeleted;
+
+    case "aos_message_reaction_updated":
+      return RealtimeEventType.aosMessageReactionUpdated;
 
     // =========================
     // PRESENCE

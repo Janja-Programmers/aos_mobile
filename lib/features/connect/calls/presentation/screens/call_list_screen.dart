@@ -327,13 +327,6 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
             const SizedBox(width: 8),
             Text('${call.groupCount} calls'),
           ],
-          const SizedBox(width: 8),
-
-          /// ⏱ duration
-          Icon(Icons.timer, size: 14, color: colors.textSecondary),
-          const SizedBox(width: 2),
-
-          Text(formatDuration(call.duration)),
         ],
       ),
 

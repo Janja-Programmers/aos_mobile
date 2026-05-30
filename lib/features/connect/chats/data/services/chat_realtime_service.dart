@@ -24,4 +24,16 @@ class ChatRealtimeService {
   Stream<dynamic> get messageStatus => realtime.events
       .where((e) => e.type == RealtimeEventType.aosMessageStatus)
       .map((e) => e.data);
+
+  Stream<dynamic> get messageEdited => realtime.events
+      .where((e) => e.type == RealtimeEventType.aosMessageEdited)
+      .map((e) => e.data);
+
+  Stream<dynamic> get messagesDeleted => realtime.events
+      .where((e) => e.type == RealtimeEventType.aosMessagesDeleted)
+      .map((e) => e.data);
+
+  Stream<dynamic> get messageReactionUpdated => realtime.events
+      .where((e) => e.type == RealtimeEventType.aosMessageReactionUpdated)
+      .map((e) => e.data);
 }

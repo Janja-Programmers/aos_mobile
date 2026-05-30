@@ -135,6 +135,21 @@ class ApiEndpoints {
       '/api/method/aos.api.chat.send_message';
   static final String listMessagesEndpoint =
       '/api/method/aos.api.chat.list_messages';
+  static final String editMessageEndpoint =
+      '/api/method/aos.api.chat.edit_message';
+  static final String deleteMessagesEndpoint =
+      '/api/method/aos.api.chat.delete_messages';
+  static final String clearChatEndpoint = '/api/method/aos.api.chat.clear_chat';
+  static final String toggleMessageStarEndpoint =
+      '/api/method/aos.api.chat.toggle_message_star';
+  static final String listStarredMessagesEndpoint =
+      '/api/method/aos.api.chat.list_starred_messages';
+  static final String toggleMessageReactionEndpoint =
+      '/api/method/aos.api.chat.toggle_message_reaction';
+  static final String forwardMessageEndpoint =
+      '/api/method/aos.api.chat.forward_message';
+  static final String translateMessageEndpoint =
+      '/api/method/aos.api.chat.translate_message';
   static final String markDeliveredEndpoint =
       '/api/method/aos.api.chat.mark_delivered';
   static final String markReadEndpoint = '/api/method/aos.api.chat.mark_read';

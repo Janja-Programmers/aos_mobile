@@ -47,13 +47,76 @@ class ChatRepository {
     required String conversationId,
     String? content,
     String? ad,
+    String? replyToMessage,
     List<Map<String, dynamic>>? attachments,
   }) {
     return api.sendMessage(
       conversationId: conversationId,
       content: content,
       ad: ad,
+      replyToMessage: replyToMessage,
       attachments: attachments,
+    );
+  }
+
+  Future<Either<Failure, ChatMessage>> editMessage({
+    required String messageId,
+    required String content,
+  }) {
+    return api.editMessage(messageId: messageId, content: content);
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> deleteMessages({
+    required List<String> messageIds,
+    required String deleteScope,
+  }) {
+    return api.deleteMessages(messageIds: messageIds, deleteScope: deleteScope);
+  }
+
+  Future<Either<Failure, void>> clearChat(String conversationId) {
+    return api.clearChat(conversationId);
+  }
+
+  Future<Either<Failure, bool>> toggleMessageStar(String messageId) {
+    return api.toggleMessageStar(messageId);
+  }
+
+  Future<Either<Failure, List<ChatMessage>>> listStarredMessages({
+    String? conversationId,
+    String? before,
+    int limit = 30,
+  }) {
+    return api.listStarredMessages(
+      conversationId: conversationId,
+      before: before,
+      limit: limit,
+    );
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> toggleMessageReaction({
+    required String messageId,
+    required String? emoji,
+  }) {
+    return api.toggleMessageReaction(messageId: messageId, emoji: emoji);
+  }
+
+  Future<Either<Failure, List<ChatMessage>>> forwardMessage({
+    required String messageId,
+    required List<String> targetConversationIds,
+  }) {
+    return api.forwardMessage(
+      messageId: messageId,
+      targetConversationIds: targetConversationIds,
+    );
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> translateMessage({
+    required String messageId,
+    required String targetLanguage,
+  }) {
+    return api.translateMessage(
+      messageId: messageId,
+      targetLanguage: targetLanguage,
     );
   }
 

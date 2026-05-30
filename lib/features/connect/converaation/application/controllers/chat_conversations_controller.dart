@@ -16,6 +16,8 @@ class ConversationsController
 
   String _currentUser = '';
   StreamSubscription? _messageSub;
+  StreamSubscription? _messageEditedSub;
+  StreamSubscription? _messagesDeletedSub;
 
   ConversationsController(this.ref) : super(const AsyncData([])) {
     _init();
@@ -143,6 +145,8 @@ class ConversationsController
     final realtime = ref.read(chatRealtimeServiceProvider);
 
     await _messageSub?.cancel();
+    await _messageEditedSub?.cancel();
+    await _messagesDeletedSub?.cancel();
 
     _messageSub = realtime.messages.listen((data) {
       final conversationId = data['conversation_id']?.toString();
@@ -166,6 +170,28 @@ class ConversationsController
         fallbackDisplayName: message.senderDisplayName,
         fallbackAvatar: message.senderAvatar,
       );
+    });
+
+    _messageEditedSub = realtime.messageEdited.listen((data) {
+      final conversationId = data['conversation_id']?.toString();
+      final rawMessage = data['message'];
+
+      if (conversationId == null || conversationId.trim().isEmpty) return;
+      if (rawMessage is! Map) return;
+
+      final message = ChatMessage.fromJson(
+        Map<String, dynamic>.from(rawMessage),
+      );
+
+      syncConversationWithMessage(
+        conversationId: conversationId,
+        message: message,
+        incrementUnread: false,
+      );
+    });
+
+    _messagesDeletedSub = realtime.messagesDeleted.listen((data) {
+      load();
     });
   }
 
@@ -271,6 +297,8 @@ class ConversationsController
   @override
   void dispose() {
     _messageSub?.cancel();
+    _messageEditedSub?.cancel();
+    _messagesDeletedSub?.cancel();
     super.dispose();
   }
 }

@@ -63,7 +63,7 @@ class PushNotificationService {
     appLogger.i('🔔 PushNotificationService init');
 
     try {
-      await _requestPermission();
+      final permissionGranted = await _requestPermission();
 
       _listenTokenRefresh();
       _listenForeground();
@@ -71,7 +71,13 @@ class PushNotificationService {
 
       await _handleTerminatedLaunch();
 
-      await _setupToken();
+      if (permissionGranted) {
+        await _setupToken();
+      } else {
+        appLogger.w(
+          '🔕 Notifications permission not granted. Token setup skipped.',
+        );
+      }
     } catch (e, s) {
       appLogger.w(
         '⚠️ PushNotificationService init completed with non-fatal issue',
@@ -86,8 +92,17 @@ class PushNotificationService {
   // =====================================================
   // PERMISSION
   // =====================================================
-  Future<void> _requestPermission() async {
-    await _messaging.requestPermission();
+  Future<bool> _requestPermission() async {
+    final settings = await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    final status = settings.authorizationStatus;
+
+    return status == AuthorizationStatus.authorized ||
+        status == AuthorizationStatus.provisional;
   }
 
   // =====================================================

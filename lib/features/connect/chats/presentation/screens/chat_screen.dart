@@ -23,6 +23,7 @@ import 'package:africaonlinestores/features/connect/chats/presentation/widgets/c
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
 import 'package:africaonlinestores/features/connect/converaation/application/providers/conversation_provider.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -240,6 +241,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  Future<void> _retryMessage(ChatMessage message) async {
+    if (!message.isLocalFailed) return;
+
+    final ok = await ref
+        .read(chatMessagesControllerProvider(widget.conversationId).notifier)
+        .retryMessage(message.id);
+
+    if (!mounted) return;
+
+    if (!ok) {
+      ShowSnack(context, 'Message still failed. Try again.').error();
+    }
+  }
+
   void _restoreFailedMessage({
     required String? messageText,
     required String? attachedAdId,
@@ -327,10 +342,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _openMessageActions(ChatMessage message, bool isMe) {
     if (message.isSystemMessage) return;
 
-    showModalBottomSheet<void>(
+    showModalBottomSheet(
       context: context,
-      showDragHandle: true,
-      backgroundColor: context.appColors.surface,
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (sheetContext) {
         return MessageActionsSheet(
           message: message,
@@ -357,12 +372,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             _toggleReaction(message, emoji);
           },
 
-          onTranslate: () {
+          onTranslate: () async {
             Navigator.pop(sheetContext);
-            ShowSnack(
-              context,
-              'Translate endpoint placeholder is ready. Backend is not connected yet.',
-            ).info();
+
+            final ok = await ref
+                .read(
+                  chatMessagesControllerProvider(
+                    widget.conversationId,
+                  ).notifier,
+                )
+                .translateMessage(messageId: message.id, targetLanguage: 'sw');
+
+            if (!mounted) return;
+
+            if (!ok) {
+              ShowSnack(context, 'Failed to translate message.').error();
+            }
           },
 
           onForward: () {
@@ -533,6 +558,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           isMe: isMe,
                           isSystem: isSystem,
                           onLongPress: () => _openMessageActions(msg, isMe),
+                          onRetry: msg.isLocalFailed
+                              ? () => _retryMessage(msg)
+                              : null,
+                          onAdTap: (adId) {
+                            AdNavigation.toDetail(context, adId);
+                          },
                         );
                       },
                     );

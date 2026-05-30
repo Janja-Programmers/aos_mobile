@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/features/connect/chats/domain/chat_attachment.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/chat_local_message_status.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message_reaction.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message_viewer_state.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_reply_preview.dart';
@@ -32,6 +33,10 @@ class ChatMessage {
   final DateTime? deletedForEveryoneAt;
   final String? displayText;
   final ChatMessageViewerState viewerState;
+  final ChatLocalMessageStatus localStatus;
+  final String? localError;
+  final String? translatedContent;
+  final String? translationLanguage;
 
   const ChatMessage({
     required this.id,
@@ -60,6 +65,10 @@ class ChatMessage {
     this.deletedForEveryoneAt,
     this.displayText,
     this.viewerState = const ChatMessageViewerState(),
+    this.localStatus = ChatLocalMessageStatus.none,
+    this.localError,
+    this.translatedContent,
+    this.translationLanguage,
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
@@ -126,6 +135,17 @@ class ChatMessage {
               Map<String, dynamic>.from(rawViewerState),
             )
           : const ChatMessageViewerState(),
+      localStatus: ChatLocalMessageStatus.none,
+      localError: null,
+
+      // Usually not present in normal message payloads.
+      // Useful if you ever hydrate translated messages from cache/API.
+      translatedContent: _cleanNullableString(json['translated_content']),
+      translationLanguage: _cleanNullableString(
+        json['target_language_label'] ??
+            json['target_language'] ??
+            json['translation_language'],
+      ),
     );
   }
 
@@ -171,6 +191,14 @@ class ChatMessage {
     Object? deletedForEveryoneAt = _unset,
     Object? displayText = _unset,
     ChatMessageViewerState? viewerState,
+    ChatLocalMessageStatus? localStatus,
+    String? localError,
+    bool clearLocalError = false,
+
+    // Translation
+    Object? translatedContent = _unset,
+    Object? translationLanguage = _unset,
+    bool clearTranslation = false,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -223,6 +251,18 @@ class ChatMessage {
           ? this.displayText
           : displayText as String?,
       viewerState: viewerState ?? this.viewerState,
+      localStatus: localStatus ?? this.localStatus,
+      localError: clearLocalError ? null : localError ?? this.localError,
+      translatedContent: clearTranslation
+          ? null
+          : identical(translatedContent, _unset)
+          ? this.translatedContent
+          : translatedContent as String?,
+      translationLanguage: clearTranslation
+          ? null
+          : identical(translationLanguage, _unset)
+          ? this.translationLanguage
+          : translationLanguage as String?,
     );
   }
 
@@ -271,6 +311,10 @@ class ChatMessage {
       deliveredAt: null,
       readAt: null,
       attachments: attachments,
+      localStatus: ChatLocalMessageStatus.sending,
+      localError: null,
+      translatedContent: null,
+      translationLanguage: null,
     );
   }
 
@@ -287,6 +331,7 @@ class ChatMessage {
       deletedForEveryoneAt: DateTime.now(),
       displayText: displayText ?? 'This message was deleted',
       viewerState: viewerState.copyWith(myReaction: null),
+      clearTranslation: true,
     );
   }
 
@@ -299,12 +344,18 @@ class ChatMessage {
   bool get isSystemType => messageType == 'system';
   bool get isDeletedType => messageType == 'deleted' || isDeletedForEveryone;
   bool get hasOnlyAttachments => !hasText && !hasAd && attachments.isNotEmpty;
+
   bool get isAttachmentOnly =>
       messageType == 'attachment' ||
       messageType == 'media' ||
       hasOnlyAttachments;
+
   bool get isStarred => viewerState.isStarred;
   String? get myReaction => viewerState.myReaction;
+
+  bool get hasTranslation => (translatedContent ?? '').trim().isNotEmpty;
+
+  String get translatedText => translatedContent ?? '';
 
   String get visibleText {
     if (isDeletedType) return displayText ?? 'This message was deleted';
@@ -314,6 +365,10 @@ class ChatMessage {
   bool get isSystemMessage {
     return sender.trim().toLowerCase() == 'administrator' || isSystemType;
   }
+
+  bool get isLocalSending => localStatus == ChatLocalMessageStatus.sending;
+  bool get isLocalFailed => localStatus == ChatLocalMessageStatus.failed;
+  bool get isLocalOnly => id.startsWith('temp-');
 }
 
 bool _truthy(dynamic value) {
@@ -328,8 +383,11 @@ bool _truthy(dynamic value) {
 
 DateTime? _parseDate(dynamic value) {
   if (value == null) return null;
+
   final text = value.toString().trim();
+
   if (text.isEmpty || text.toLowerCase() == 'null') return null;
+
   return DateTime.tryParse(text);
 }
 
@@ -337,6 +395,7 @@ String? _cleanNullableString(dynamic value) {
   if (value == null) return null;
 
   final text = value.toString().trim();
+
   if (text.isEmpty || text.toLowerCase() == 'null') return null;
 
   return text;

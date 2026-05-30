@@ -6,11 +6,13 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_attachment.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/chat_local_message_status.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message_reaction.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message_viewer_state.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_reply_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/pending_send_payload.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
 import 'package:africaonlinestores/features/connect/converaation/application/providers/conversation_provider.dart';
 
@@ -18,6 +20,7 @@ class ChatMessagesController
     extends StateNotifier<AsyncValue<List<ChatMessage>>> {
   final Ref ref;
   final String conversationId;
+
   late final String currentUser;
 
   ChatMessagesController(this.ref, this.conversationId)
@@ -26,7 +29,16 @@ class ChatMessagesController
     _init();
   }
 
+  // ---------------------------------------------------------------------------
+  // Local state
+  // ---------------------------------------------------------------------------
+
   final List<ChatMessage> _messages = [];
+  final Map<String, PendingSendPayload> _pendingSends = {};
+
+  final Set<String> _translatingMessageIds = {};
+  final Map<String, String> _translationErrors = {};
+
   StreamSubscription? _messageSub;
   StreamSubscription? _messageStatusSub;
   StreamSubscription? _messageEditedSub;
@@ -36,25 +48,32 @@ class ChatMessagesController
   Timer? _readSyncDebounce;
   bool _isSyncingReadState = false;
 
+  // ---------------------------------------------------------------------------
+  // Lifecycle / initial loading
+  // ---------------------------------------------------------------------------
+
   Future<void> _init() async {
-    await loadInitial();
     await _listenRealtime();
+    await loadInitial();
   }
 
   Future<void> loadInitial() async {
     final repo = ref.read(chatRepositoryProvider);
+
     final res = await repo.getMessages(conversationId: conversationId);
 
     if (res.isLeft) {
-      state = AsyncError(res.leftOrNull!, StackTrace.current);
+      if (_messages.isEmpty) {
+        state = AsyncError(res.leftOrNull!, StackTrace.current);
+      }
       return;
     }
 
-    _messages
-      ..clear()
-      ..addAll(res.rightOrNull!.reversed);
+    final serverMessages = List<ChatMessage>.from(res.rightOrNull ?? []);
 
-    state = AsyncData(List.of(_messages));
+    _mergeServerMessages(serverMessages);
+    _emitMessages();
+
     await _syncIncomingReadState();
   }
 
@@ -71,15 +90,19 @@ class ChatMessagesController
 
     if (res.isLeft) return;
 
-    final existingIds = _messages.map((m) => m.id).toSet();
-    final older = res.rightOrNull!
-        .where((message) => !existingIds.contains(message.id))
-        .toList()
-        .reversed;
+    final olderMessages = List<ChatMessage>.from(res.rightOrNull ?? []);
 
-    _messages.insertAll(0, older);
-    state = AsyncData(List.of(_messages));
+    for (final message in olderMessages.reversed) {
+      _upsertMessage(message, emit: false);
+    }
+
+    _sortMessages();
+    _emitMessages();
   }
+
+  // ---------------------------------------------------------------------------
+  // Sending / retry
+  // ---------------------------------------------------------------------------
 
   Future<bool> sendTempMessage({
     String? text,
@@ -98,26 +121,165 @@ class ChatMessagesController
   }) async {
     final safeSenderId = senderId?.trim().toLowerCase();
 
-    if (safeSenderId == null || safeSenderId.isEmpty) return false;
+    if (safeSenderId == null || safeSenderId.isEmpty) {
+      return false;
+    }
 
     final trimmedText = text?.trim();
     final hasText = trimmedText != null && trimmedText.isNotEmpty;
     final hasAttachments = attachments.isNotEmpty;
     final hasAd = adId != null && adId.trim().isNotEmpty;
 
-    if (!hasText && !hasAttachments && !hasAd) return false;
+    if (!hasText && !hasAttachments && !hasAd) {
+      return false;
+    }
 
     final tempId = 'temp-${DateTime.now().microsecondsSinceEpoch}';
 
-    final validAttachments = attachments
-        .where((a) => a.fileId.trim().isNotEmpty && a.type.trim().isNotEmpty)
-        .toList();
+    final validAttachments = attachments.where((attachment) {
+      return attachment.fileId.trim().isNotEmpty &&
+          attachment.type.trim().isNotEmpty;
+    }).toList();
 
     final apiAttachments = validAttachments
-        .map((a) => a.toApi(ad: hasAd ? adId : null))
+        .map((attachment) => attachment.toApi(ad: hasAd ? adId : null))
         .toList();
 
-    final tempAttachments = validAttachments.asMap().entries.map((entry) {
+    _pendingSends[tempId] = PendingSendPayload(
+      tempId: tempId,
+      text: trimmedText,
+      ad: hasAd ? adId.trim() : null,
+      attachments: apiAttachments,
+      fallbackUser: fallbackUser,
+      fallbackDisplayName: fallbackDisplayName,
+      fallbackAvatar: fallbackAvatar,
+    );
+
+    final tempMessage = _buildTempMessage(
+      tempId: tempId,
+      sender: safeSenderId,
+      text: trimmedText,
+      adId: hasAd ? adId : null,
+      adTitle: adTitle,
+      adPrice: adPrice,
+      adImage: adImage,
+      attachments: validAttachments,
+    );
+
+    _upsertMessage(tempMessage);
+
+    final realMsg = await sendMessage(
+      text: trimmedText,
+      ad: hasAd ? adId : null,
+      replyToMessage: replyToMessage,
+      attachments: apiAttachments,
+    );
+
+    if (realMsg == null) {
+      _markTempMessageFailed(tempId, error: 'Failed to send. Tap to retry.');
+      return true;
+    }
+
+    _upsertMessage(realMsg);
+    _pendingSends.remove(tempId);
+
+    _syncConversationPreview(
+      message: realMsg,
+      fallbackUser: fallbackUser,
+      fallbackDisplayName: fallbackDisplayName,
+      fallbackAvatar: fallbackAvatar,
+    );
+
+    return true;
+  }
+
+  Future<ChatMessage?> sendMessage({
+    String? text,
+    String? ad,
+    String? replyToMessage,
+    List<Map<String, dynamic>> attachments = const [],
+  }) async {
+    final trimmedText = text?.trim();
+
+    final hasText = trimmedText != null && trimmedText.isNotEmpty;
+    final hasAttachments = attachments.isNotEmpty;
+    final hasAd = ad != null && ad.trim().isNotEmpty;
+
+    if (!hasText && !hasAttachments && !hasAd) {
+      return null;
+    }
+
+    final repo = ref.read(chatRepositoryProvider);
+
+    final res = await repo.sendMessage(
+      conversationId: conversationId,
+      content: hasText ? trimmedText : null,
+      ad: hasAd ? ad.trim() : null,
+      replyToMessage: replyToMessage,
+      attachments: List<Map<String, dynamic>>.from(attachments),
+    );
+
+    if (res.isLeft) return null;
+
+    return res.rightOrNull;
+  }
+
+  Future<bool> retryMessage(String tempId) async {
+    final payload = _pendingSends[tempId];
+
+    if (payload == null) {
+      _markTempMessageFailed(tempId, error: 'Could not retry this message.');
+      return false;
+    }
+
+    final index = _messages.indexWhere((message) => message.id == tempId);
+
+    if (index == -1) {
+      return false;
+    }
+
+    _messages[index] = _messages[index].copyWith(
+      localStatus: ChatLocalMessageStatus.sending,
+      clearLocalError: true,
+    );
+
+    _emitMessages();
+
+    final realMsg = await sendMessage(
+      text: payload.text,
+      ad: payload.ad,
+      attachments: payload.attachments,
+    );
+
+    if (realMsg == null) {
+      _markTempMessageFailed(tempId, error: 'Still failed. Tap to retry.');
+      return false;
+    }
+
+    _upsertMessage(realMsg);
+    _pendingSends.remove(tempId);
+
+    _syncConversationPreview(
+      message: realMsg,
+      fallbackUser: payload.fallbackUser,
+      fallbackDisplayName: payload.fallbackDisplayName,
+      fallbackAvatar: payload.fallbackAvatar,
+    );
+
+    return true;
+  }
+
+  ChatMessage _buildTempMessage({
+    required String tempId,
+    required String sender,
+    required String? text,
+    required String? adId,
+    required String? adTitle,
+    required String? adPrice,
+    required String? adImage,
+    required List<ChatInputAttachment> attachments,
+  }) {
+    final tempAttachments = attachments.asMap().entries.map((entry) {
       final index = entry.key;
       final attachment = entry.value;
 
@@ -130,103 +292,64 @@ class ChatMessagesController
       );
     }).toList();
 
-    final tempAdPreview = hasAd
+    final tempAdPreview = adId != null
         ? {'title': adTitle, 'price': adPrice, 'image': adImage}
         : null;
 
-    final tempMessage = ChatMessage.temp(
+    return ChatMessage.temp(
       id: tempId,
-      sender: safeSenderId,
-      content: trimmedText,
+      sender: sender,
+      content: text,
       attachments: tempAttachments,
-      ad: hasAd ? adId : null,
+      ad: adId,
       adPreview: tempAdPreview,
-      replyToMessage: replyToMessage,
-      replyTo: replyTo,
+    ).copyWith(
+      localStatus: ChatLocalMessageStatus.sending,
+      clearLocalError: true,
     );
-
-    _messages.add(tempMessage);
-    state = AsyncData(List.of(_messages));
-
-    final realMsg = await sendMessage(
-      text: trimmedText,
-      ad: hasAd ? adId : null,
-      replyToMessage: replyToMessage,
-      attachments: apiAttachments,
-    );
-
-    if (realMsg == null) {
-      _messages.removeWhere((m) => m.id == tempId);
-      state = AsyncData(List.of(_messages));
-      return false;
-    }
-
-    final index = _messages.indexWhere((m) => m.id == tempId);
-    if (index != -1) {
-      _messages[index] = realMsg;
-    } else if (!_isDuplicate(realMsg)) {
-      _messages.add(realMsg);
-    }
-
-    state = AsyncData(List.of(_messages));
-
-    ref
-        .read(conversationsControllerProvider.notifier)
-        .syncConversationWithMessage(
-          conversationId: conversationId,
-          message: realMsg,
-          fallbackUser: fallbackUser,
-          fallbackDisplayName: fallbackDisplayName,
-          fallbackAvatar: fallbackAvatar,
-          incrementUnread: false,
-        );
-
-    return true;
   }
 
-  Future<ChatMessage?> sendMessage({
-    String? text,
-    String? ad,
-    String? replyToMessage,
-    List<Map<String, dynamic>> attachments = const [],
-  }) async {
-    final repo = ref.read(chatRepositoryProvider);
-    final trimmedText = text?.trim();
+  void _markTempMessageFailed(String tempId, {required String error}) {
+    final index = _messages.indexWhere((message) => message.id == tempId);
 
-    final hasText = trimmedText != null && trimmedText.isNotEmpty;
-    final hasAttachments = attachments.isNotEmpty;
-    final hasAd = ad != null && ad.trim().isNotEmpty;
+    if (index == -1) return;
 
-    if (!hasText && !hasAttachments && !hasAd) return null;
-
-    final res = await repo.sendMessage(
-      conversationId: conversationId,
-      content: hasText ? trimmedText : null,
-      ad: hasAd ? ad.trim() : null,
-      replyToMessage: replyToMessage,
-      attachments: List<Map<String, dynamic>>.from(attachments),
+    _messages[index] = _messages[index].copyWith(
+      localStatus: ChatLocalMessageStatus.failed,
+      localError: error,
     );
 
-    if (res.isLeft) return null;
-    return res.rightOrNull!;
+    _emitMessages();
   }
+
+  // ---------------------------------------------------------------------------
+  // Message actions
+  // ---------------------------------------------------------------------------
 
   Future<bool> editMessage({
     required String messageId,
     required String content,
   }) async {
+    final cleanMessageId = messageId.trim();
     final cleanContent = content.trim();
-    if (messageId.trim().isEmpty || cleanContent.isEmpty) return false;
+
+    if (cleanMessageId.isEmpty || cleanContent.isEmpty) {
+      return false;
+    }
 
     final repo = ref.read(chatRepositoryProvider);
+
     final res = await repo.editMessage(
-      messageId: messageId,
+      messageId: cleanMessageId,
       content: cleanContent,
     );
 
     if (res.isLeft) return false;
 
-    _upsertMessage(res.rightOrNull!);
+    final updated = res.rightOrNull;
+    if (updated == null) return false;
+
+    _upsertMessage(updated);
     return true;
   }
 
@@ -235,21 +358,26 @@ class ChatMessagesController
     required String deleteScope,
   }) async {
     final ids = messageIds
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
         .toList();
+
     if (ids.isEmpty) return false;
 
     final repo = ref.read(chatRepositoryProvider);
+
     final res = await repo.deleteMessages(
       messageIds: ids,
       deleteScope: deleteScope,
     );
+
     if (res.isLeft) return false;
 
     final data = res.rightOrNull ?? <String, dynamic>{};
+
     final returnedIds = _readMessageIds(data['message_ids']);
     final effectiveIds = returnedIds.isEmpty ? ids : returnedIds;
+
     final scope = data['delete_scope']?.toString() ?? deleteScope;
     final displayText = data['display_text']?.toString();
 
@@ -265,30 +393,45 @@ class ChatMessagesController
 
   Future<bool> clearChat() async {
     final repo = ref.read(chatRepositoryProvider);
+
     final res = await repo.clearChat(conversationId);
+
     if (res.isLeft) return false;
 
     _messages.clear();
+    _pendingSends.clear();
+
     state = const AsyncData([]);
+
     await ref.read(conversationsControllerProvider.notifier).load();
     return true;
   }
 
   Future<bool> toggleMessageStar(String messageId) async {
-    final index = _messages.indexWhere((message) => message.id == messageId);
+    final cleanMessageId = messageId.trim();
+
+    if (cleanMessageId.isEmpty) return false;
+
+    final index = _messages.indexWhere(
+      (message) => message.id == cleanMessageId,
+    );
+
     if (index == -1) return false;
 
     final repo = ref.read(chatRepositoryProvider);
-    final res = await repo.toggleMessageStar(messageId);
+    final res = await repo.toggleMessageStar(cleanMessageId);
+
     if (res.isLeft) return false;
 
     final current = _messages[index];
+
     _messages[index] = current.copyWith(
       viewerState: current.viewerState.copyWith(
         isStarred: res.rightOrNull ?? false,
       ),
     );
-    state = AsyncData(List.of(_messages));
+
+    _emitMessages();
     return true;
   }
 
@@ -296,11 +439,17 @@ class ChatMessagesController
     required String messageId,
     required String? emoji,
   }) async {
+    final cleanMessageId = messageId.trim();
+
+    if (cleanMessageId.isEmpty) return false;
+
     final repo = ref.read(chatRepositoryProvider);
+
     final res = await repo.toggleMessageReaction(
-      messageId: messageId,
+      messageId: cleanMessageId,
       emoji: emoji,
     );
+
     if (res.isLeft) return false;
 
     _applyReactionPayload(res.rightOrNull ?? <String, dynamic>{});
@@ -311,75 +460,233 @@ class ChatMessagesController
     required String messageId,
     required List<String> targetConversationIds,
   }) async {
+    final cleanMessageId = messageId.trim();
+
+    final cleanTargets = targetConversationIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toList();
+
+    if (cleanMessageId.isEmpty || cleanTargets.isEmpty) {
+      return false;
+    }
+
     final repo = ref.read(chatRepositoryProvider);
+
     final res = await repo.forwardMessage(
-      messageId: messageId,
-      targetConversationIds: targetConversationIds,
+      messageId: cleanMessageId,
+      targetConversationIds: cleanTargets,
     );
+
     return res.isRight;
   }
+
+  // ---------------------------------------------------------------------------
+  // Translation
+  // ---------------------------------------------------------------------------
+
+  bool isTranslatingMessage(String messageId) {
+    return _translatingMessageIds.contains(messageId.trim());
+  }
+
+  String? translationErrorFor(String messageId) {
+    return _translationErrors[messageId.trim()];
+  }
+
+  Future<bool> translateMessage({
+    required String messageId,
+    required String targetLanguage,
+  }) async {
+    final cleanMessageId = messageId.trim();
+    final cleanTargetLanguage = targetLanguage.trim();
+
+    if (cleanMessageId.isEmpty || cleanTargetLanguage.isEmpty) {
+      return false;
+    }
+
+    if (_translatingMessageIds.contains(cleanMessageId)) {
+      return false;
+    }
+
+    _translatingMessageIds.add(cleanMessageId);
+    _translationErrors.remove(cleanMessageId);
+    _emitMessages();
+
+    final repo = ref.read(chatRepositoryProvider);
+
+    final res = await repo.translateMessage(
+      messageId: cleanMessageId,
+      targetLanguage: cleanTargetLanguage,
+    );
+
+    _translatingMessageIds.remove(cleanMessageId);
+
+    if (res.isLeft) {
+      _translationErrors[cleanMessageId] = 'Failed to translate message.';
+      _emitMessages();
+      return false;
+    }
+
+    final data = res.rightOrNull ?? <String, dynamic>{};
+
+    final translatedContent = data['translated_content']?.toString().trim();
+    final translationLanguage =
+        data['target_language_label']?.toString().trim() ??
+        data['target_language']?.toString().trim();
+
+    if (translatedContent == null || translatedContent.isEmpty) {
+      _translationErrors[cleanMessageId] = 'No translation returned.';
+      _emitMessages();
+      return false;
+    }
+
+    final index = _messages.indexWhere(
+      (message) => message.id == cleanMessageId,
+    );
+
+    if (index == -1) {
+      _emitMessages();
+      return false;
+    }
+
+    final current = _messages[index];
+
+    _messages[index] = current.copyWith(
+      translatedContent: translatedContent,
+      translationLanguage: translationLanguage,
+    );
+
+    _translationErrors.remove(cleanMessageId);
+    _emitMessages();
+
+    return true;
+  }
+
+  void clearMessageTranslation(String messageId) {
+    final cleanMessageId = messageId.trim();
+
+    if (cleanMessageId.isEmpty) return;
+
+    final index = _messages.indexWhere(
+      (message) => message.id == cleanMessageId,
+    );
+
+    if (index == -1) return;
+
+    _messages[index] = _messages[index].copyWith(clearTranslation: true);
+
+    _translationErrors.remove(cleanMessageId);
+    _emitMessages();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Realtime listeners
+  // ---------------------------------------------------------------------------
 
   Future<void> _listenRealtime() async {
     final realtime = ref.read(chatRealtimeServiceProvider);
 
+    await _cancelRealtimeSubscriptions();
+
+    _messageSub = realtime.messages.listen((data) {
+      _handleRealtimeMessage(Map<String, dynamic>.from(data));
+    });
+
+    _messageStatusSub = realtime.messageStatus.listen((data) {
+      _handleRealtimeMessageStatus(Map<String, dynamic>.from(data));
+    });
+
+    _messageEditedSub = realtime.messageEdited.listen((data) {
+      _handleRealtimeMessageEdited(Map<String, dynamic>.from(data));
+    });
+
+    _messagesDeletedSub = realtime.messagesDeleted.listen((data) async {
+      await _handleRealtimeMessagesDeleted(Map<String, dynamic>.from(data));
+    });
+
+    _messageReactionSub = realtime.messageReactionUpdated.listen((data) {
+      _handleRealtimeReactionUpdated(Map<String, dynamic>.from(data));
+    });
+  }
+
+  Future<void> _cancelRealtimeSubscriptions() async {
     await _messageSub?.cancel();
     await _messageStatusSub?.cancel();
     await _messageEditedSub?.cancel();
     await _messagesDeletedSub?.cancel();
     await _messageReactionSub?.cancel();
 
-    _messageSub = realtime.messages.listen((data) async {
-      final convId = data['conversation_id'];
-      if (convId != conversationId) return;
-
-      final msgData = data['message'];
-      if (msgData == null) return;
-
-      final newMsg = ChatMessage.fromJson(Map<String, dynamic>.from(msgData));
-
-      _messages.removeWhere((m) => _isSameTemp(m, newMsg));
-      if (_isDuplicate(newMsg)) return;
-
-      _messages.add(newMsg);
-      state = AsyncData(List.of(_messages));
-
-      if (_isIncomingMessage(newMsg)) {
-        _scheduleIncomingReadSync();
-      }
-    });
-
-    _messageStatusSub = realtime.messageStatus.listen((data) {
-      final convId = data['conversation_id'];
-      if (convId != conversationId) return;
-      _applyMessageStatus(Map<String, dynamic>.from(data));
-    });
-
-    _messageEditedSub = realtime.messageEdited.listen((data) {
-      final convId = data['conversation_id'];
-      if (convId != conversationId) return;
-      final msgData = data['message'];
-      if (msgData is! Map) return;
-      _upsertMessage(ChatMessage.fromJson(Map<String, dynamic>.from(msgData)));
-    });
-
-    _messagesDeletedSub = realtime.messagesDeleted.listen((data) async {
-      final convId = data['conversation_id'];
-      if (convId != conversationId) return;
-
-      final payload = Map<String, dynamic>.from(data);
-      final ids = _readMessageIds(payload['message_ids']);
-      final displayText = payload['display_text']?.toString();
-
-      _markMessagesDeletedForEveryone(ids, displayText: displayText);
-      await ref.read(conversationsControllerProvider.notifier).load();
-    });
-
-    _messageReactionSub = realtime.messageReactionUpdated.listen((data) {
-      final convId = data['conversation_id'];
-      if (convId != conversationId) return;
-      _applyReactionPayload(Map<String, dynamic>.from(data));
-    });
+    _messageSub = null;
+    _messageStatusSub = null;
+    _messageEditedSub = null;
+    _messagesDeletedSub = null;
+    _messageReactionSub = null;
   }
+
+  void _handleRealtimeMessage(Map<String, dynamic> data) {
+    final convId = data['conversation_id']?.toString();
+
+    if (convId != conversationId) return;
+
+    final msgData = data['message'];
+
+    if (msgData is! Map) return;
+
+    final newMsg = ChatMessage.fromJson(Map<String, dynamic>.from(msgData));
+
+    _upsertMessage(newMsg);
+
+    if (_isIncomingMessage(newMsg)) {
+      _scheduleIncomingReadSync();
+    }
+  }
+
+  void _handleRealtimeMessageStatus(Map<String, dynamic> data) {
+    final convId = data['conversation_id']?.toString();
+
+    if (convId != conversationId) return;
+
+    _applyMessageStatus(data);
+  }
+
+  void _handleRealtimeMessageEdited(Map<String, dynamic> data) {
+    final convId = data['conversation_id']?.toString();
+
+    if (convId != conversationId) return;
+
+    final msgData = data['message'];
+
+    if (msgData is! Map) return;
+
+    final message = ChatMessage.fromJson(Map<String, dynamic>.from(msgData));
+
+    _upsertMessage(message);
+  }
+
+  Future<void> _handleRealtimeMessagesDeleted(Map<String, dynamic> data) async {
+    final convId = data['conversation_id']?.toString();
+
+    if (convId != conversationId) return;
+
+    final ids = _readMessageIds(data['message_ids']);
+    final displayText = data['display_text']?.toString();
+
+    _markMessagesDeletedForEveryone(ids, displayText: displayText);
+
+    await ref.read(conversationsControllerProvider.notifier).load();
+  }
+
+  void _handleRealtimeReactionUpdated(Map<String, dynamic> data) {
+    final convId = data['conversation_id']?.toString();
+
+    if (convId != conversationId) return;
+
+    _applyReactionPayload(data);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Realtime payload appliers
+  // ---------------------------------------------------------------------------
 
   void _applyMessageStatus(Map<String, dynamic> data) {
     final status = data['status']?.toString();
@@ -389,54 +696,70 @@ class ChatMessagesController
       return;
     }
 
-    final messageIds = rawMessageIds.map((e) => e.toString()).toSet();
+    final messageIds = rawMessageIds.map((id) => id.toString()).toSet();
+
     final deliveredAt = DateTime.tryParse(
       data['delivered_at']?.toString() ?? '',
     );
+
     final readAt = DateTime.tryParse(data['read_at']?.toString() ?? '');
 
     var changed = false;
 
     for (var i = 0; i < _messages.length; i++) {
       final message = _messages[i];
+
       if (!messageIds.contains(message.id)) continue;
 
       if (status == 'delivered' && message.deliveredAt == null) {
         _messages[i] = message.copyWith(
           deliveredAt: deliveredAt ?? DateTime.now(),
         );
+
         changed = true;
       }
 
       if (status == 'read' && message.readAt == null) {
         final effectiveReadAt = readAt ?? DateTime.now();
+
         _messages[i] = message.copyWith(
           deliveredAt: message.deliveredAt ?? effectiveReadAt,
           readAt: effectiveReadAt,
         );
+
         changed = true;
       }
     }
 
-    if (changed) state = AsyncData(List.of(_messages));
+    if (changed) {
+      _emitMessages();
+    }
   }
 
   void _applyReactionPayload(Map<String, dynamic> data) {
     final messageId = data['message_id']?.toString();
+
     if (messageId == null || messageId.isEmpty) return;
 
     final index = _messages.indexWhere((message) => message.id == messageId);
+
     if (index == -1) return;
 
     final current = _messages[index];
+
     final rawReactions = data['reactions'];
+
     final reactions = (rawReactions is List ? rawReactions : const [])
         .whereType<Map>()
-        .map((e) => ChatMessageReaction.fromJson(Map<String, dynamic>.from(e)))
+        .map(
+          (reaction) =>
+              ChatMessageReaction.fromJson(Map<String, dynamic>.from(reaction)),
+        )
         .where((reaction) => reaction.emoji.trim().isNotEmpty)
         .toList();
 
     final rawViewerState = data['viewer_state'];
+
     final viewerState = rawViewerState is Map
         ? ChatMessageViewerState.fromJson(
             Map<String, dynamic>.from(rawViewerState),
@@ -450,25 +773,68 @@ class ChatMessagesController
       ),
     );
 
-    state = AsyncData(List.of(_messages));
+    _emitMessages();
   }
 
-  void _upsertMessage(ChatMessage message) {
-    final index = _messages.indexWhere((existing) => existing.id == message.id);
+  // ---------------------------------------------------------------------------
+  // Local message list mutation
+  // ---------------------------------------------------------------------------
 
-    if (index == -1) {
-      _messages.add(message);
-    } else {
-      _messages[index] = message;
+  void _mergeServerMessages(List<ChatMessage> serverMessages) {
+    for (final serverMessage in serverMessages.reversed) {
+      _upsertMessage(serverMessage, emit: false);
     }
 
-    state = AsyncData(List.of(_messages));
+    _sortMessages();
+  }
+
+  void _upsertMessage(ChatMessage message, {bool emit = true}) {
+    final existingIndex = _messages.indexWhere(
+      (existing) => existing.id == message.id,
+    );
+
+    if (existingIndex != -1) {
+      _messages[existingIndex] = message;
+      _sortMessages();
+
+      if (emit) _emitMessages();
+      return;
+    }
+
+    final tempIndex = _messages.indexWhere(
+      (existing) => _isSameTemp(existing, message),
+    );
+
+    if (tempIndex != -1) {
+      final tempId = _messages[tempIndex].id;
+
+      _messages[tempIndex] = message;
+      _pendingSends.remove(tempId);
+
+      _sortMessages();
+
+      if (emit) _emitMessages();
+      return;
+    }
+
+    _messages.add(message);
+    _sortMessages();
+
+    if (emit) _emitMessages();
   }
 
   void _removeMessages(List<String> messageIds) {
+    if (messageIds.isEmpty) return;
+
     final ids = messageIds.toSet();
+
     _messages.removeWhere((message) => ids.contains(message.id));
-    state = AsyncData(List.of(_messages));
+
+    for (final id in ids) {
+      _pendingSends.remove(id);
+    }
+
+    _emitMessages();
   }
 
   void _markMessagesDeletedForEveryone(
@@ -482,25 +848,32 @@ class ChatMessagesController
 
     for (var i = 0; i < _messages.length; i++) {
       final message = _messages[i];
+
       if (!ids.contains(message.id)) continue;
 
       _messages[i] = message.asDeletedPlaceholder(displayText: displayText);
+
       changed = true;
     }
 
-    if (changed) state = AsyncData(List.of(_messages));
+    if (changed) {
+      _emitMessages();
+    }
   }
 
-  List<String> _readMessageIds(dynamic value) {
-    if (value is String && value.trim().isNotEmpty) return [value.trim()];
-    if (value is List) {
-      return value
-          .map((item) => item.toString().trim())
-          .where((item) => item.isNotEmpty)
-          .toList();
-    }
-    return const [];
+  void _sortMessages() {
+    _messages.sort((a, b) {
+      return a.createdAt.compareTo(b.createdAt);
+    });
   }
+
+  void _emitMessages() {
+    state = AsyncData(List.of(_messages));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Read / delivered sync
+  // ---------------------------------------------------------------------------
 
   bool _isIncomingMessage(ChatMessage message) {
     return message.sender.trim().toLowerCase() !=
@@ -509,6 +882,7 @@ class ChatMessagesController
 
   void _scheduleIncomingReadSync() {
     _readSyncDebounce?.cancel();
+
     _readSyncDebounce = Timer(const Duration(milliseconds: 250), () {
       _syncIncomingReadState();
     });
@@ -516,10 +890,12 @@ class ChatMessagesController
 
   Future<void> _syncIncomingReadState() async {
     if (_isSyncingReadState) return;
+
     _isSyncingReadState = true;
 
     try {
       final repo = ref.read(chatRepositoryProvider);
+
       final hasIncomingUnread = _messages.any((message) {
         return _isIncomingMessage(message) && message.readAt == null;
       });
@@ -536,14 +912,16 @@ class ChatMessagesController
 
       if (readRes.isRight) {
         final now = DateTime.now();
+
         _markIncomingMessagesReadLocally(now);
+
         ref
             .read(conversationsControllerProvider.notifier)
             .markConversationAsReadLocally(conversationId);
       }
 
       if (deliveredRes.isLeft || readRes.isLeft) {
-        // Silent best-effort failure. Backend/realtime/next refresh can resync.
+        // Best-effort sync. Backend/realtime/next refresh can correct state.
       }
     } finally {
       _isSyncingReadState = false;
@@ -555,24 +933,66 @@ class ChatMessagesController
 
     for (var i = 0; i < _messages.length; i++) {
       final message = _messages[i];
+
       if (!_isIncomingMessage(message)) continue;
 
       final shouldUpdateDelivered = message.deliveredAt == null;
       final shouldUpdateRead = message.readAt == null;
+
       if (!shouldUpdateDelivered && !shouldUpdateRead) continue;
 
       _messages[i] = message.copyWith(
         deliveredAt: message.deliveredAt ?? timestamp,
         readAt: message.readAt ?? timestamp,
       );
+
       changed = true;
     }
 
-    if (changed) state = AsyncData(List.of(_messages));
+    if (changed) {
+      _emitMessages();
+    }
   }
 
-  bool _isDuplicate(ChatMessage newMsg) {
-    return _messages.any((m) => m.id == newMsg.id);
+  // ---------------------------------------------------------------------------
+  // Conversation sync
+  // ---------------------------------------------------------------------------
+
+  void _syncConversationPreview({
+    required ChatMessage message,
+    String? fallbackUser,
+    String? fallbackDisplayName,
+    String? fallbackAvatar,
+  }) {
+    ref
+        .read(conversationsControllerProvider.notifier)
+        .syncConversationWithMessage(
+          conversationId: conversationId,
+          message: message,
+          fallbackUser: fallbackUser,
+          fallbackDisplayName: fallbackDisplayName,
+          fallbackAvatar: fallbackAvatar,
+          incrementUnread: false,
+        );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  List<String> _readMessageIds(dynamic value) {
+    if (value is String && value.trim().isNotEmpty) {
+      return [value.trim()];
+    }
+
+    if (value is List) {
+      return value
+          .map((item) => item.toString().trim())
+          .where((item) => item.isNotEmpty)
+          .toList();
+    }
+
+    return const [];
   }
 
   bool _isSameTemp(ChatMessage temp, ChatMessage real) {
@@ -586,14 +1006,20 @@ class ChatMessagesController
     return sameText && sameReply && sameAttachments;
   }
 
+  // ---------------------------------------------------------------------------
+  // Dispose
+  // ---------------------------------------------------------------------------
+
   @override
   void dispose() {
     _readSyncDebounce?.cancel();
+
     _messageSub?.cancel();
     _messageStatusSub?.cancel();
     _messageEditedSub?.cancel();
     _messagesDeletedSub?.cancel();
     _messageReactionSub?.cancel();
+
     super.dispose();
   }
 }

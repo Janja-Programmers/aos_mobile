@@ -4,8 +4,10 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
-import 'package:africaonlinestores/features/connect/chats/domain/chat_reply_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/attachment_grid.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/message_ad_preview.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/reaction_chips.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/reply_preview.dart';
 import 'package:africaonlinestores/shared/utils/format_time.dart';
 
 class MessageBubble extends StatelessWidget {
@@ -15,12 +17,16 @@ class MessageBubble extends StatelessWidget {
     required this.isMe,
     this.isSystem = false,
     this.onLongPress,
+    this.onRetry,
+    this.onAdTap,
   });
 
   final ChatMessage message;
   final bool isMe;
   final bool isSystem;
   final VoidCallback? onLongPress;
+  final VoidCallback? onRetry;
+  final ValueChanged<String>? onAdTap;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +53,10 @@ class MessageBubble extends StatelessWidget {
 
     final bgColor = isMe ? colors.chatCardColor : colors.surface;
     final textColor = isMe ? colors.white : colors.textPrimary;
+    final mutedTextColor = isMe
+        ? colors.white.withOpacity(0.78)
+        : colors.textMuted;
+
     final isDeleted = message.isDeletedType;
 
     return Align(
@@ -92,7 +102,7 @@ class MessageBubble extends StatelessWidget {
               ],
 
               if (message.replyTo != null && !isDeleted) ...[
-                _ReplyPreview(reply: message.replyTo!, isMe: isMe),
+                ReplyPreview(reply: message.replyTo!, isMe: isMe),
                 const SizedBox(height: 7),
               ],
 
@@ -118,12 +128,39 @@ class MessageBubble extends StatelessWidget {
                   ],
                 )
               else ...[
-                if (message.hasText)
-                  Text(message.content!, style: TextStyle(color: textColor)),
+                if (message.hasTranslation) ...[
+                  Text(
+                    message.translatedText,
+                    style: context.p.copyWith(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (message.hasText) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      message.visibleText,
+                      style: context.p.copyWith(
+                        color: mutedTextColor,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ] else if (message.hasText) ...[
+                  Text(
+                    message.visibleText,
+                    style: context.p.copyWith(color: textColor),
+                  ),
+                ],
 
                 if (message.hasAd) ...[
-                  if (message.hasText) const SizedBox(height: 8),
-                  _MessageAdPreview(message: message, isMe: isMe),
+                  if (message.hasText || message.hasTranslation)
+                    const SizedBox(height: 8),
+                  MessageAdPreview(
+                    message: message,
+                    isMe: isMe,
+                    onTap: onAdTap,
+                  ),
                 ],
 
                 if (message.attachments.isNotEmpty) ...[
@@ -134,7 +171,7 @@ class MessageBubble extends StatelessWidget {
 
               if (message.reactions.isNotEmpty) ...[
                 const SizedBox(height: 6),
-                _ReactionChips(message: message, isMe: isMe),
+                ReactionChips(message: message, isMe: isMe),
               ],
 
               const SizedBox(height: 4),
@@ -173,6 +210,43 @@ class MessageBubble extends StatelessWidget {
                   if (isMe) _buildStatusIcon(context),
                 ],
               ),
+
+              if (message.isLocalSending)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(
+                    'Sending...',
+                    style: TextStyle(fontSize: 11, color: colors.textMuted),
+                  ),
+                ),
+
+              if (message.isLocalFailed)
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onRetry,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.error_outline_rounded,
+                          size: 14,
+                          color: colors.red,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Tap to retry',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.red,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -192,227 +266,5 @@ class MessageBubble extends StatelessWidget {
     }
 
     return Icon(Icons.done, size: 14, color: colors.white);
-  }
-}
-
-class _ReplyPreview extends StatelessWidget {
-  const _ReplyPreview({required this.reply, required this.isMe});
-
-  final ChatReplyPreview reply;
-  final bool isMe;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-      decoration: BoxDecoration(
-        color: isMe ? colors.white.withOpacity(0.12) : colors.elevated,
-        borderRadius: BorderRadius.circular(9),
-        border: Border(
-          left: BorderSide(
-            color: isMe ? colors.white : colors.primary,
-            width: 3,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            reply.senderDisplayName ?? reply.sender,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: context.p.copyWith(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: isMe ? colors.white : colors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            reply.previewText,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: context.p.copyWith(
-              fontSize: 12,
-              color: isMe ? colors.white : colors.textMuted,
-              fontStyle: reply.isDeleted ? FontStyle.italic : FontStyle.normal,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ReactionChips extends StatelessWidget {
-  const _ReactionChips({required this.message, required this.isMe});
-
-  final ChatMessage message;
-  final bool isMe;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-
-    return Wrap(
-      spacing: 4,
-      runSpacing: 4,
-      alignment: isMe ? WrapAlignment.end : WrapAlignment.start,
-      children: message.reactions.map((reaction) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-          decoration: BoxDecoration(
-            color: reaction.reactedByMe
-                ? colors.primary.withOpacity(0.16)
-                : colors.elevated,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: reaction.reactedByMe ? colors.primary : colors.border,
-            ),
-          ),
-          child: Text(
-            '${reaction.emoji} ${reaction.count}',
-            style: context.p.copyWith(
-              fontSize: 12,
-              color: isMe ? colors.white : colors.textPrimary,
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class _MessageAdPreview extends StatelessWidget {
-  const _MessageAdPreview({required this.message, required this.isMe});
-
-  final ChatMessage message;
-  final bool isMe;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final preview = message.adPreview ?? {};
-
-    final title = _readString(preview, const ['title', 'ad_title', 'name']);
-    final price = _readString(preview, const [
-      'price',
-      'current_price',
-      'formatted_price',
-    ]);
-    final image = _readString(preview, const [
-      'image',
-      'thumbnail',
-      'thumbnail_url',
-      'primary_image',
-    ]);
-
-    final fallbackTitle = message.ad ?? 'Ad';
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: isMe ? colors.white.withOpacity(0.12) : colors.elevated,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isMe ? colors.white.withOpacity(0.18) : colors.border,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: _AdImage(imageUrl: image),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title ?? fallbackTitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.p.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isMe ? colors.white : colors.textPrimary,
-                  ),
-                ),
-                if (price != null && price.trim().isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    price,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.p.copyWith(
-                      fontSize: 12,
-                      color: isMe ? colors.white : colors.textMuted,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static String? _readString(Map<String, dynamic> data, List<String> keys) {
-    for (final key in keys) {
-      final value = data[key];
-      if (value == null) continue;
-
-      final text = value.toString().trim();
-      if (text.isNotEmpty && text.toLowerCase() != 'null') return text;
-    }
-
-    return null;
-  }
-}
-
-class _AdImage extends StatelessWidget {
-  const _AdImage({required this.imageUrl});
-
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final url = imageUrl?.trim();
-
-    if (url == null || url.isEmpty) {
-      return Container(
-        width: 52,
-        height: 52,
-        color: colors.border,
-        child: Icon(Icons.image_outlined, size: 22, color: colors.textMuted),
-      );
-    }
-
-    return Image.network(
-      url,
-      width: 52,
-      height: 52,
-      fit: BoxFit.cover,
-      errorBuilder: (_, _, _) {
-        return Container(
-          width: 52,
-          height: 52,
-          color: colors.border,
-          child: Icon(
-            Icons.broken_image_outlined,
-            size: 22,
-            color: colors.textMuted,
-          ),
-        );
-      },
-    );
   }
 }

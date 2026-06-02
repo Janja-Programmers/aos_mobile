@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/media/livekit_service.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
+import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:africaonlinestores/features/connect/calls/data/call_api.dart';
 import 'package:africaonlinestores/features/connect/calls/utils/call_timer.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
@@ -58,6 +59,7 @@ final callManagerProvider = StateNotifierProvider<CallManager, CallState>((
     repository: repository,
     mediaService: mediaService,
     callTimer: callTimer,
+    currentUserIdReader: () => ref.read(currentUserProvider),
   );
 });
 

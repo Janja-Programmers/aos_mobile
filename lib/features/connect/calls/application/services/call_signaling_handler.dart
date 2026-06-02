@@ -18,11 +18,15 @@ class CallSignalingHandler {
       final callerDisplayName = _cleanString(data['caller_display_name']);
       final callerAvatar = _cleanString(data['caller_avatar']);
 
+      final receiverUser = _cleanString(data['receiver']);
+      final receiverDisplayName = _cleanString(data['receiver_display_name']);
+      final receiverAvatar = _cleanString(data['receiver_avatar']);
+
       if (callId == null || roomName == null || callTypeRaw == null) {
         return false;
       }
 
-      final callType = callTypeRaw == 'video'
+      final callType = callTypeRaw.toLowerCase() == 'video'
           ? AOSCallType.video
           : AOSCallType.audio;
 
@@ -34,11 +38,20 @@ class CallSignalingHandler {
               avatarUrl: callerAvatar,
             );
 
+      final receiver = receiverUser == null
+          ? null
+          : CallParticipant(
+              userId: receiverUser,
+              displayName: receiverDisplayName ?? receiverUser,
+              avatarUrl: receiverAvatar,
+            );
+
       return callManager.onIncomingCallEvent(
         callId: callId,
         roomName: roomName,
         callType: callType,
         caller: caller,
+        receiver: receiver,
       );
     } catch (_) {
       return false;

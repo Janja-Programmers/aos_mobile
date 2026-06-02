@@ -12,6 +12,7 @@ import 'package:africaonlinestores/features/connect/chats/domain/chat_message.da
 import 'package:africaonlinestores/features/connect/chats/domain/chat_reply_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_background.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/active_call_chat_banner.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_ad_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_app_bar.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input_bar.dart';
@@ -531,6 +532,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            ActiveCallChatBanner(
+              conversationId: widget.conversationId,
+              otherUserId: widget.otherUser,
+              fallbackDisplayName: widget.displayName,
+              fallbackAvatarUrl: widget.otherUserAvatar,
+            ),
             Expanded(
               child: ChatBackground(
                 patternAssetPath: 'assets/images/chat_pattern.png',

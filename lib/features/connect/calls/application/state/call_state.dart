@@ -114,6 +114,11 @@ class CallState {
     return isUpgradePending && !hasIncomingVideoUpgradeRequest;
   }
 
+  bool get isOutgoingNoAnswer {
+    return backendStatus == BackendCallStatus.missed &&
+        direction?.trim().toLowerCase() == 'outgoing';
+  }
+
   CallState copyWith({
     UiCallPhase? uiPhase,
     BackendCallStatus? backendStatus,

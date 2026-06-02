@@ -177,7 +177,7 @@ class _GroupDetails extends StatelessWidget {
             children: [
               Icon(
                 isMissed
-                    ? Icons.call_missed
+                    ? Icons.phone_missed
                     : call.direction == 'incoming'
                     ? Icons.call_received
                     : Icons.call_made,

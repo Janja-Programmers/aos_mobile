@@ -28,10 +28,7 @@ class _CallNavigationListenerState
     super.initState();
 
     _sub = ref.listenManual<CallState>(callManagerProvider, (previous, next) {
-      _onStateChanged(
-        previousPhase: previous?.uiPhase,
-        nextPhase: next.uiPhase,
-      );
+      _onStateChanged(previous: previous, next: next);
     });
   }
 
@@ -47,28 +44,32 @@ class _CallNavigationListenerState
   }
 
   void _onStateChanged({
-    required UiCallPhase? previousPhase,
-    required UiCallPhase nextPhase,
+    required CallState? previous,
+    required CallState next,
   }) {
-    if (previousPhase == nextPhase) return;
+    if (previous?.uiPhase == next.uiPhase &&
+        previous?.backendStatus == next.backendStatus &&
+        previous?.direction == next.direction) {
+      return;
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      _handleNavigation(previousPhase: previousPhase, nextPhase: nextPhase);
+      _handleNavigation(previous: previous, next: next);
     });
   }
 
   void _handleNavigation({
-    required UiCallPhase? previousPhase,
-    required UiCallPhase nextPhase,
+    required CallState? previous,
+    required CallState next,
   }) {
     final router = ref.read(appRouterProvider);
 
     final wasAosCallSessionPhase =
-        previousPhase != null && _shouldBeOnAosCallSession(previousPhase);
+        previous != null && _shouldBeOnAosCallSession(previous);
 
-    final shouldBeOnAosCallSession = _shouldBeOnAosCallSession(nextPhase);
+    final shouldBeOnAosCallSession = _shouldBeOnAosCallSession(next);
 
     final shouldExitCallSession =
         wasAosCallSessionPhase && !shouldBeOnAosCallSession;
@@ -98,8 +99,12 @@ class _CallNavigationListenerState
     }
   }
 
-  bool _shouldBeOnAosCallSession(UiCallPhase phase) {
-    switch (phase) {
+  bool _shouldBeOnAosCallSession(CallState state) {
+    if (state.isOutgoingNoAnswer) {
+      return true;
+    }
+
+    switch (state.uiPhase) {
       /// Incoming ringing is owned by native CallKit.
       case UiCallPhase.incomingRinging:
         return false;

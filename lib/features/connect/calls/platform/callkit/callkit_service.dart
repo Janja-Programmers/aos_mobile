@@ -294,11 +294,12 @@ class CallKitService {
 
     final resolvedCallId = _currentCallId;
 
-    appLogger.i('📞 CallKit event: ${event.event}');
-    appLogger.i('📞 CallKit resolved callId: $resolvedCallId');
-
     if (resolvedCallId == null || resolvedCallId.isEmpty) {
       appLogger.w('⚠️ Ignoring CallKit event with no callId');
+      return;
+    }
+
+    if (_endedCallIds.contains(resolvedCallId)) {
       return;
     }
 
@@ -325,6 +326,12 @@ class CallKitService {
   }
 
   Future<void> _handleAccept(String callId) async {
+    if (_handledDeclineIds.contains(callId) ||
+        _handledTimeoutIds.contains(callId) ||
+        _handledEndIds.contains(callId)) {
+      return;
+    }
+
     if (!_handledAcceptIds.add(callId)) {
       appLogger.i('📞 Duplicate CallKit accept ignored: $callId');
       return;
@@ -334,6 +341,10 @@ class CallKitService {
   }
 
   Future<void> _handleDecline(String callId) async {
+    if (_handledAcceptIds.contains(callId) || _handledEndIds.contains(callId)) {
+      return;
+    }
+
     if (!_handledDeclineIds.add(callId)) {
       appLogger.i('📞 Duplicate CallKit decline ignored: $callId');
       return;
@@ -344,7 +355,6 @@ class CallKitService {
 
   Future<void> _handleEnded(String callId) async {
     if (!_handledEndIds.add(callId)) {
-      appLogger.i('📞 Duplicate CallKit end ignored: $callId');
       return;
     }
 
@@ -352,6 +362,12 @@ class CallKitService {
   }
 
   Future<void> _handleTimeout(String callId) async {
+    if (_handledAcceptIds.contains(callId) ||
+        _handledDeclineIds.contains(callId) ||
+        _handledEndIds.contains(callId)) {
+      return;
+    }
+
     if (!_handledTimeoutIds.add(callId)) {
       appLogger.i('📞 Duplicate CallKit timeout ignored: $callId');
       return;
@@ -367,11 +383,31 @@ class CallKitService {
 
     final extra = body['extra'];
 
-    if (extra is Map && extra['call_id'] != null) {
-      return extra['call_id'].toString();
+    final callIdFromExtra = _readString(extra, const [
+      'call_id',
+      'backend_call_id',
+      'backendCallId',
+      'aos_call_id',
+    ]);
+
+    final rawId = _readString(body, const ['id', 'uuid', 'callkit_uuid']);
+    final callkitUuidFromExtra = _readString(extra, const [
+      'callkit_uuid',
+      'callkitUuid',
+      'uuid',
+    ]);
+
+    final backendCallId = callIdFromExtra;
+    final nativeUuid = callkitUuidFromExtra ?? rawId;
+    if (backendCallId != null && nativeUuid != null) {
+      _callkitUuidByCallId[backendCallId] = nativeUuid;
+      _callIdByCallkitUuid[nativeUuid] = backendCallId;
+      return backendCallId;
     }
 
-    final rawId = body['id']?.toString();
+    if (backendCallId != null) {
+      return backendCallId;
+    }
 
     if (rawId == null || rawId.isEmpty) {
       return null;
@@ -391,6 +427,19 @@ class CallKitService {
     appLogger.w(
       '⚠️ Could not resolve CallKit event id to backend callId: $rawId',
     );
+    return null;
+  }
+
+  String? _readString(Object? source, List<String> keys) {
+    if (source is! Map) return null;
+
+    for (final key in keys) {
+      final value = source[key]?.toString().trim();
+      if (value != null && value.isNotEmpty && value.toLowerCase() != 'null') {
+        return value;
+      }
+    }
+
     return null;
   }
 

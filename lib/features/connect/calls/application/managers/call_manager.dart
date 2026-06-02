@@ -15,6 +15,7 @@ class CallManager extends StateNotifier<CallState> {
   final CallRepository repository;
   final CallMediaService mediaService;
   final CallTimer callTimer;
+  final String? Function() currentUserIdReader;
 
   bool _isJoining = false;
   bool _isLeaving = false;
@@ -30,6 +31,7 @@ class CallManager extends StateNotifier<CallState> {
     required this.repository,
     required this.mediaService,
     required this.callTimer,
+    required this.currentUserIdReader,
   }) : super(CallState.initial()) {
     _durationSub = callTimer.stream.listen((duration) {
       if (state.duration != duration) {
@@ -272,6 +274,7 @@ class CallManager extends StateNotifier<CallState> {
     String? token,
     String? wsUrl,
     CallParticipant? caller,
+    CallParticipant? receiver,
   }) async {
     final activeCall = state.activeCall;
 
@@ -302,9 +305,10 @@ class CallManager extends StateNotifier<CallState> {
     try {
       state = state.copyWith(
         isBusy: true,
-        activeCall: incomingCall,
+        activeCall: incomingCall.copyWith(receiver: receiver),
         direction: 'incoming',
         caller: caller,
+        receiver: receiver,
         hasIncomingCallUi: false,
         clearErrorMessage: true,
         callMediaMode: callType == AOSCallType.video
@@ -320,9 +324,10 @@ class CallManager extends StateNotifier<CallState> {
 
       _applyBackendState(
         BackendCallStatus.ringing,
-        activeCall: incomingCall,
+        activeCall: incomingCall.copyWith(receiver: receiver),
         direction: 'incoming',
         caller: caller,
+        receiver: receiver,
         hasIncomingCallUi: true,
       );
 
@@ -914,6 +919,13 @@ class CallManager extends StateNotifier<CallState> {
     await mediaService.toggleCamera(newValue);
   }
 
+  Future<void> switchCamera() async {
+    if (state.callMediaMode != CallMediaMode.video) return;
+    if (!state.isLocalVideoEnabled) return;
+
+    await mediaService.switchCamera();
+  }
+
   Future<void> requestVideoUpgrade() async {
     final call = state.activeCall;
     if (call == null || call.id.isEmpty) return;
@@ -1037,15 +1049,20 @@ class CallManager extends StateNotifier<CallState> {
   // ================= INTERNAL =================
 
   String? _currentUserId() {
+    final explicitCurrentUser = _cleanVideoUpgradeUser(currentUserIdReader());
+    if (explicitCurrentUser != null) {
+      return explicitCurrentUser;
+    }
+
     final call = state.activeCall;
     if (call == null) return null;
 
     if (state.direction == 'outgoing') {
-      return call.caller?.userId;
+      return _cleanVideoUpgradeUser(call.caller?.userId);
     }
 
     if (state.direction == 'incoming') {
-      return call.receiver?.userId;
+      return _cleanVideoUpgradeUser(call.receiver?.userId);
     }
 
     return null;
@@ -1068,7 +1085,7 @@ class CallManager extends StateNotifier<CallState> {
       return null;
     }
 
-    return text;
+    return text.toLowerCase();
   }
 
   Call _mergeCallForVideoUpgrade(Call current, Call updated) {
@@ -1223,6 +1240,9 @@ class CallManager extends StateNotifier<CallState> {
 
   void _scheduleReset() {
     _resetTimer?.cancel();
+    if (state.isOutgoingNoAnswer) {
+      return;
+    }
 
     final currentCallId = state.activeCall?.id;
 
@@ -1233,6 +1253,27 @@ class CallManager extends StateNotifier<CallState> {
         _resetToIdle();
       }
     });
+  }
+
+  Future<bool> callAgainAfterNoAnswer() async {
+    final call = state.activeCall;
+    final receiver = state.receiver ?? call?.receiver;
+    final callType =
+        call?.callType ??
+        (state.callMediaMode == CallMediaMode.video
+            ? AOSCallType.video
+            : AOSCallType.audio);
+    final userId = receiver?.userId.trim();
+
+    if (userId == null || userId.isEmpty) {
+      return false;
+    }
+
+    return startOutgoingCall(
+      userId: userId,
+      callType: callType,
+      receiver: receiver,
+    );
   }
 
   void resetToIdle() {

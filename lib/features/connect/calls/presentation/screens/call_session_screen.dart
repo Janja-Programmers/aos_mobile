@@ -10,6 +10,7 @@ import 'package:africaonlinestores/features/connect/calls/presentation/widgets/a
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/ringing_screen.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/video_call_ringing_screen.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/video_call_screen.dart';
+import 'package:africaonlinestores/features/connect/calls/presentation/screens/no_answer_call_screen.dart';
 
 class CallSessionScreen extends ConsumerWidget {
   final String? user;
@@ -31,6 +32,10 @@ class CallSessionScreen extends ConsumerWidget {
 
   Widget _buildByPhase(CallState state) {
     final isVideo = state.callMediaMode == CallMediaMode.video;
+
+    if (state.isOutgoingNoAnswer) {
+      return const NoAnswerCallScreen();
+    }
 
     switch (state.uiPhase) {
       /// Incoming ringing is handled by native CallKit.

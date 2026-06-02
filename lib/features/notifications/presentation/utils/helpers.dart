@@ -63,7 +63,7 @@ IconData iconForType(NotificationType type) {
       return Icons.person_add;
 
     case NotificationType.missedCall:
-      return Icons.call_missed;
+      return Icons.phone_missed;
 
     case NotificationType.liveStarted:
       return Icons.wifi_tethering;

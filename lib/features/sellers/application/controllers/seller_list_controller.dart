@@ -35,6 +35,7 @@ class SellerListController extends StateNotifier<SellerListState> {
 
     final result = await _sellerController.listSellers(
       search: state.search,
+      isVerified: 1,
       limit: _limit,
       offset: 0,
     );
@@ -65,6 +66,7 @@ class SellerListController extends StateNotifier<SellerListState> {
 
     final result = await _sellerController.listSellers(
       search: state.search,
+      isVerified: 1,
       limit: state.limit,
       offset: state.offset,
     );

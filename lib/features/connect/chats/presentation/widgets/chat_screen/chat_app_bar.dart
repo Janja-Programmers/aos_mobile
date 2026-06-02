@@ -193,7 +193,7 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Icon(Icons.call, color: fg),
+              : Icon(Icons.call_outlined, color: fg),
           onSelected: _startCall,
           itemBuilder: (context) {
             return [
@@ -201,7 +201,7 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
                 value: AOSCallType.audio,
                 child: Row(
                   children: [
-                    Icon(Icons.call, color: colors.textPrimary),
+                    Icon(Icons.call_outlined, color: colors.textPrimary),
                     const SizedBox(width: 10),
                     Text(
                       'Audio call',
@@ -214,7 +214,7 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
                 value: AOSCallType.video,
                 child: Row(
                   children: [
-                    Icon(Icons.videocam, color: colors.textPrimary),
+                    Icon(Icons.videocam_outlined, color: colors.textPrimary),
                     const SizedBox(width: 10),
                     Text(
                       'Video call',

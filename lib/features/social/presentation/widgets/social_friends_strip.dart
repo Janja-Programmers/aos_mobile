@@ -149,7 +149,7 @@ class _SocialFriendItem extends StatelessWidget {
                       width: 18,
                       height: 18,
                       decoration: BoxDecoration(
-                        color: colors.primary,
+                        color: colors.blue,
                         shape: BoxShape.circle,
                         border: Border.all(color: colors.surface, width: 2),
                       ),

@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 class ChatBackground extends StatelessWidget {
   final Widget child;
-  final String assetPath;
+  final String patternAssetPath;
 
   const ChatBackground({
     super.key,
     required this.child,
-    required this.assetPath,
+    required this.patternAssetPath,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Stack(
       children: [
@@ -23,13 +23,22 @@ class ChatBackground extends StatelessWidget {
         Positioned.fill(
           child: IgnorePointer(
             child: Opacity(
-              opacity: 0.5,
-              child: Center(
-                child: Image.asset(
-                  assetPath,
-                  width: 260,
-                  height: 260,
-                  fit: BoxFit.contain,
+              opacity: isDark ? 0.18 : 0.10,
+              child: ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  isDark
+                      ? colors.white.withOpacity(0.45)
+                      : colors.black.withOpacity(0.35),
+                  BlendMode.srcIn,
+                ),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(patternAssetPath),
+                      repeat: ImageRepeat.repeat,
+                      scale: 1.6,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -40,7 +49,7 @@ class ChatBackground extends StatelessWidget {
           child: IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: colors.surface.withOpacity(0.55),
+                color: colors.surface.withOpacity(isDark ? 0.45 : 0.25),
               ),
             ),
           ),
@@ -51,50 +60,3 @@ class ChatBackground extends StatelessWidget {
     );
   }
 }
-
-// import 'package:flutter/material.dart';
-
-// import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
-// class ChatBackground extends StatelessWidget {
-//   final Widget child;
-//   final String assetPath;
-
-//   const ChatBackground({
-//     super.key,
-//     required this.child,
-//     required this.assetPath,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Stack(
-//       children: [
-//         Positioned.fill(child: ColoredBox(color: context.appColors.surface)),
-
-//         Positioned.fill(
-//           child: IgnorePointer(
-//             child: Opacity(
-//               opacity: 0.025,
-//               child: GridView.builder(
-//                 physics: const NeverScrollableScrollPhysics(),
-//                 padding: const EdgeInsets.all(24),
-//                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-//                   crossAxisCount: 3,
-//                   mainAxisSpacing: 48,
-//                   crossAxisSpacing: 48,
-//                 ),
-//                 itemCount: 30,
-//                 itemBuilder: (_, _) {
-//                   return Image.asset(assetPath, fit: BoxFit.contain);
-//                 },
-//               ),
-//             ),
-//           ),
-//         ),
-
-//         child,
-//       ],
-//     );
-//   }
-// }

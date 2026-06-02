@@ -533,7 +533,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           children: [
             Expanded(
               child: ChatBackground(
-                assetPath: 'assets/images/logo_redone.png',
+                patternAssetPath: 'assets/images/chat_pattern.png',
                 child: messagesState.when(
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
@@ -571,6 +571,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
               ),
             ),
+
             if (isTyping) const TypingIndicator(isTyping: true),
             ChatQuickReplies(
               replies: const [

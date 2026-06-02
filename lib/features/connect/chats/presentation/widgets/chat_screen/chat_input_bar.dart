@@ -198,7 +198,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
               constraints: const BoxConstraints(minHeight: 42),
               padding: const EdgeInsets.only(left: 14, right: 4),
               decoration: BoxDecoration(
-                color: colors.elevated,
+                color: colors.surface,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: colors.border),
                 boxShadow: [

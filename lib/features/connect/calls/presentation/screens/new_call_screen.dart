@@ -19,6 +19,16 @@ class NewCallScreen extends ConsumerStatefulWidget {
 class _NewCallScreenState extends ConsumerState<NewCallScreen> {
   bool _isCalling = false;
 
+  CallParticipant _buildReceiver(SellerListItem seller) {
+    final sellerName = seller.displayName.trim();
+
+    return CallParticipant(
+      userId: seller.user,
+      displayName: sellerName,
+      avatarUrl: seller.avatar,
+    );
+  }
+
   Future<void> _startCall({
     required BuildContext context,
     required SellerListItem seller,
@@ -44,18 +54,6 @@ class _NewCallScreenState extends ConsumerState<NewCallScreen> {
     } finally {
       _isCalling = false;
     }
-  }
-
-  CallParticipant _buildReceiver(SellerListItem? seller) {
-    final sellerName = seller?.shopName.trim();
-
-    return CallParticipant(
-      userId: seller!.user,
-      displayName: sellerName != null && sellerName.isNotEmpty
-          ? sellerName
-          : seller.seller,
-      avatarUrl: seller.avatar,
-    );
   }
 
   @override

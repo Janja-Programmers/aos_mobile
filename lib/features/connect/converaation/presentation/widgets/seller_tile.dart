@@ -34,16 +34,17 @@ class SellerTile extends StatelessWidget {
             : null,
         child: seller.avatar == null
             ? Text(
-                _initials(seller.shopName),
+                _initials(seller.displayName),
                 style: context.body.copyWith(fontWeight: FontWeight.w700),
               )
             : null,
       ),
       title: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
+          Flexible(
             child: Text(
-              seller.seller,
+              seller.displayName,
               style: context.body.copyWith(fontWeight: FontWeight.w700),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

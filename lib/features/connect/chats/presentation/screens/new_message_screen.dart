@@ -31,7 +31,8 @@ class NewMessageScreen extends ConsumerWidget {
                   context: context,
                   ref: ref,
                   user: seller.user,
-                  displayName: seller.shopName,
+                  displayName: seller.displayName,
+                  avatar: seller.avatar,
                 );
               },
             );

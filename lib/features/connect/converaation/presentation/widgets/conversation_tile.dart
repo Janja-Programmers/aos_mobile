@@ -41,17 +41,77 @@ class ConversationTile extends StatelessWidget {
     return colors[conversation.displayName.hashCode % colors.length];
   }
 
+  Widget _buildSubtitle(BuildContext context) {
+    final colors = context.appColors;
+
+    if (isTyping) {
+      return Text(
+        'Typing...',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: colors.success, fontStyle: FontStyle.italic),
+      );
+    }
+
+    final message = conversation.lastMessage ?? '';
+    final isMine = conversation.lastSender == conversation.user;
+
+    if (!isMine) {
+      return Text(
+        message,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: colors.textMuted),
+      );
+    }
+
+    return Row(
+      children: [
+        _buildMessageStatusIcon(context),
+        const SizedBox(width: 4),
+        Text(
+          'You: ',
+          style: TextStyle(
+            color: colors.textMuted,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            message,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: colors.textMuted),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMessageStatusIcon(BuildContext context) {
+    final colors = context.appColors;
+
+    final isRead = conversation.lastMessageReadAt != null;
+    final isDelivered = conversation.lastMessageDeliveredAt != null;
+
+    if (isRead) {
+      return Icon(
+        Icons.done_all_rounded,
+        size: 16,
+        color: colors.primary, // blue/read color
+      );
+    }
+
+    if (isDelivered) {
+      return Icon(Icons.done_all_rounded, size: 16, color: colors.textMuted);
+    }
+
+    return Icon(Icons.check_rounded, size: 16, color: colors.textMuted);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
-    final subtitleText = isTyping
-        ? "Typing..."
-        : (conversation.lastMessage ?? '');
-
-    final subtitleStyle = isTyping
-        ? TextStyle(color: colors.success, fontStyle: FontStyle.italic)
-        : TextStyle(color: colors.textMuted);
 
     return ListTile(
       onTap: onTap,
@@ -100,12 +160,7 @@ class ConversationTile extends StatelessWidget {
       // -------------------------
       // SUBTITLE
       // -------------------------
-      subtitle: Text(
-        subtitleText,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: subtitleStyle,
-      ),
+      subtitle: _buildSubtitle(context),
 
       // -------------------------
       // TRAILING (time + unread)

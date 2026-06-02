@@ -388,10 +388,13 @@ class PushNotificationService {
         return null;
       }
 
-      final event = data['event']?.toString();
+      final event =
+          data['event']?.toString() ??
+          data['notification_type']?.toString() ??
+          data['type']?.toString();
 
       if (event == null || event.trim().isEmpty) {
-        appLogger.w('⚠️ Missing notification event: $data');
+        appLogger.w('⚠️ Missing notification type/event: $data');
         return null;
       }
 

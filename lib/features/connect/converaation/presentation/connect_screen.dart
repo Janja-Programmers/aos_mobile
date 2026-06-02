@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,15 +10,23 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_list_screen.dart';
+import 'package:africaonlinestores/features/connect/chats/utils/chat_actions.dart';
+
+import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 import 'package:africaonlinestores/features/connect/calls/navigation/call_routes.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/call_list_screen.dart';
+
 import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 
 import 'package:africaonlinestores/features/social/application/providers/social_providers.dart';
+import 'package:africaonlinestores/features/social/domain/social_friend.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/features/social/presentation/widgets/social_friends_strip.dart';
 
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ConnectScreen extends ConsumerStatefulWidget {
   const ConnectScreen({super.key});
@@ -30,13 +39,22 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
   final _searchCtrl = TextEditingController();
 
   bool _headerCollapsed = false;
+  bool _isStartingFriendCall = false;
 
   @override
   void initState() {
     super.initState();
 
     _searchCtrl.addListener(() {
-      setState(() {});
+      if (!mounted) return;
+
+      final hasQuery = _searchCtrl.text.trim().isNotEmpty;
+
+      setState(() {
+        if (hasQuery) {
+          _headerCollapsed = true;
+        }
+      });
     });
   }
 
@@ -77,6 +95,71 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
     return false;
   }
 
+  Future<void> _startMessageWithFriend(SocialFriend friend) async {
+    final user = friend.user.trim();
+
+    if (user.isEmpty || friend.isSelf) {
+      return;
+    }
+
+    await ChatActions.startChat(
+      context: context,
+      ref: ref,
+      user: user,
+      displayName: friend.displayName,
+      avatar: friend.userImage,
+    );
+  }
+
+  Future<void> _startAudioCallWithFriend(SocialFriend friend) async {
+    if (_isStartingFriendCall) return;
+
+    final user = friend.user.trim();
+
+    if (user.isEmpty || friend.isSelf) {
+      return;
+    }
+
+    _isStartingFriendCall = true;
+
+    try {
+      await HapticFeedback.mediumImpact();
+
+      final started = await ref
+          .read(callStarterServiceProvider)
+          .startOutgoingCall(
+            userId: user,
+            callType: AOSCallType.audio,
+            receiver: CallParticipant(
+              userId: user,
+              displayName: friend.displayName,
+              avatarUrl: friend.userImage,
+            ),
+          );
+
+      if (!started && mounted) {
+        ShowSnack(context, 'Failed to start call').error();
+      }
+    } catch (_) {
+      if (mounted) {
+        ShowSnack(context, 'Failed to start call').error();
+      }
+    } finally {
+      _isStartingFriendCall = false;
+    }
+  }
+
+  Future<void> _handleFriendTap(SocialFriend friend) async {
+    final selectedTab = _resolveIndex(context);
+    final isMessages = selectedTab == 1;
+
+    if (isMessages) {
+      await _startMessageWithFriend(friend);
+    } else {
+      await _startAudioCallWithFriend(friend);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
@@ -85,6 +168,9 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
     final isMessages = selectedTab == 1;
 
     final friendsState = ref.watch(socialFriendsControllerProvider);
+
+    final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final shouldShowFriendsStrip = !_headerCollapsed && !keyboardVisible;
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -171,7 +257,7 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeOutCubic,
               alignment: Alignment.topCenter,
-              child: !_headerCollapsed && isMessages
+              child: shouldShowFriendsStrip
                   ? friendsState.maybeWhen(
                       data: (page) {
                         if (page.items.isEmpty) {
@@ -181,19 +267,13 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
                         return SocialFriendsStrip(
                           friends: page.items,
                           limit: 10,
+                          title: isMessages
+                              ? 'Message Friends'
+                              : 'Call Friends',
                           onSeeAll: () {
                             SocialNavigation.toFriendsScreen(context);
                           },
-                          onFriendTap: (friend) {
-                            ChatNavigation.toMessage(
-                              context: context,
-                              conversationId: '',
-                              user: '',
-                              displayName: '',
-                            );
-
-                            //TODO: Pass the correct endpoints for the tomMessage
-                          },
+                          onFriendTap: _handleFriendTap,
                         );
                       },
                       orElse: () => const SizedBox.shrink(),

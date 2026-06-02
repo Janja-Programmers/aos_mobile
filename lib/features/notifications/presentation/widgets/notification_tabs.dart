@@ -13,7 +13,7 @@ class NotificationTabs extends StatelessWidget {
     required this.onChanged,
   });
 
-  static const tabs = ['All', 'Messages', 'Activity', 'Promotions'];
+  static const tabs = ['All', 'Messages', 'Activity'];
 
   @override
   Widget build(BuildContext context) {

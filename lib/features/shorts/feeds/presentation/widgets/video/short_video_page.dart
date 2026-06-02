@@ -87,7 +87,7 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
 
   @override
   void dispose() {
-    _disposeVideo();
+    _disposeVideo(updateState: false);
     super.dispose();
   }
 
@@ -209,22 +209,33 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
     });
   }
 
-  void _disposeVideo() {
+  void _disposeVideo({bool updateState = true}) {
     final controller = _controller;
     _controller = null;
+    _isInitialized = false;
+    _isPlaying = false;
+    _hasError = false;
+    _isInitializing = false;
+    _usePortraitFrame = true;
 
-    controller?.pause();
-    controller?.dispose();
+    if (controller != null) {
+      unawaited(
+        controller.pause().catchError((Object error, StackTrace stackTrace) {
+          debugPrint('Video pause during dispose failed: $error');
+        }),
+      );
 
-    if (!mounted) return;
+      unawaited(
+        controller.dispose().catchError((Object error, StackTrace stackTrace) {
+          debugPrint('Video dispose failed: $error');
+        }),
+      );
+    }
 
-    setState(() {
-      _isInitialized = false;
-      _isPlaying = false;
-      _hasError = false;
-      _isInitializing = false;
-      _usePortraitFrame = true;
-    });
+    // Important:
+    if (!updateState || !mounted) return;
+
+    setState(() {});
   }
 
   Future<void> _togglePlayPause() async {

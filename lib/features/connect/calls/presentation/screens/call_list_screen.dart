@@ -175,27 +175,44 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _chip("All", "all"),
-          _chip("Missed", "missed"),
-          _chip("Incoming", "incoming"),
-          _chip("Outgoing", "outgoing"),
-          if (state.callLogs.isNotEmpty) ...[
-            const SizedBox(width: 2),
-            IconButton(
-              tooltip: 'Clear call history',
-              visualDensity: VisualDensity.compact,
-              icon: Icon(
-                Icons.delete_sweep_outlined,
-                color: colors.textMuted,
-                size: 21,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _chip("All", "all"),
+                  _chip("Missed", "missed"),
+                  _chip("Incoming", "incoming"),
+                  _chip("Outgoing", "outgoing"),
+                  if (state.callLogs.isNotEmpty) ...[
+                    const SizedBox(width: 2),
+                    IconButton(
+                      tooltip: 'Clear call history',
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.all(6),
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                      icon: Icon(
+                        Icons.delete_sweep_outlined,
+                        color: colors.textMuted,
+                        size: 21,
+                      ),
+                      onPressed: _confirmClearCallHistory,
+                    ),
+                  ],
+                ],
               ),
-              onPressed: _confirmClearCallHistory,
             ),
-          ],
-        ],
+          );
+        },
       ),
     );
   }
@@ -205,7 +222,7 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
     final isSelected = selectedFilter == value;
 
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.only(right: 6),
       child: GestureDetector(
         onTap: () {
           setState(() {
@@ -213,7 +230,7 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
           });
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: isSelected
                 ? colors.primary.withOpacity(0.1)
@@ -222,6 +239,8 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
           ),
           child: Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: isSelected ? colors.primary : colors.textMuted,
               fontWeight: FontWeight.w500,
@@ -263,7 +282,13 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
   // -------------------------
   Widget _callTile(CallLog call) {
     final colors = context.appColors;
-    final isMissed = call.isMissed;
+    final direction = call.direction.trim().toLowerCase();
+    final status = call.status.trim().toLowerCase();
+
+    final isMissed =
+        call.isMissed ||
+        status == 'missed' ||
+        (direction == 'incoming' && status == 'cancelled');
 
     return ListTile(
       leading: CircleAvatar(

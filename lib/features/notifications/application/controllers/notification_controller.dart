@@ -23,9 +23,7 @@ class NotificationController extends StateNotifier<NotificationState> {
 
     if (result.isLeft) {
       final failure = result.leftOrNull!;
-      appLogger.w(
-        'NotificationController -> loadNotifications failed: ${failure.message}',
-      );
+
       state = state.failure(failure.message);
       return;
     }
@@ -47,9 +45,6 @@ class NotificationController extends StateNotifier<NotificationState> {
 
     if (result.isLeft) {
       final failure = result.leftOrNull!;
-      appLogger.w(
-        'NotificationController -> refreshNotifications failed: ${failure.message}',
-      );
       state = state.failure(failure.message);
       return;
     }
@@ -66,15 +61,8 @@ class NotificationController extends StateNotifier<NotificationState> {
     final index = state.items.indexWhere((n) => n.id == notificationId);
 
     if (index == -1) {
-      appLogger.w(
-        'NotificationController -> deleteNotification skipped: not found ($notificationId)',
-      );
       return;
     }
-
-    appLogger.i(
-      'NotificationController -> deleteNotification optimistic: $notificationId',
-    );
 
     final previousItems = state.items;
 
@@ -100,10 +88,6 @@ class NotificationController extends StateNotifier<NotificationState> {
 
       return;
     }
-
-    appLogger.i(
-      'NotificationController -> deleteNotification success: $notificationId',
-    );
   }
 
   // =====================================================
@@ -112,17 +96,11 @@ class NotificationController extends StateNotifier<NotificationState> {
   Future<void> markNotificationRead(String notificationId) async {
     final index = state.items.indexWhere((n) => n.id == notificationId);
     if (index == -1) {
-      appLogger.w(
-        'NotificationController -> markNotificationRead skipped: not found ($notificationId)',
-      );
       return;
     }
 
     final target = state.items[index];
     if (target.isRead) {
-      appLogger.i(
-        'NotificationController -> markNotificationRead skipped: already read ($notificationId)',
-      );
       return;
     }
 
@@ -155,15 +133,11 @@ class NotificationController extends StateNotifier<NotificationState> {
   // =====================================================
   Future<void> markAllAsRead() async {
     if (state.items.isEmpty) {
-      appLogger.i('NotificationController -> markAllAsRead skipped: no items');
       return;
     }
 
     final hasUnread = state.items.any((n) => !n.isRead);
     if (!hasUnread) {
-      appLogger.i(
-        'NotificationController -> markAllAsRead skipped: all already read',
-      );
       return;
     }
 
@@ -236,10 +210,6 @@ class NotificationController extends StateNotifier<NotificationState> {
   void reconcileNotifications(List<NotificationItem> incoming) {
     if (incoming.isEmpty) return;
 
-    appLogger.i(
-      'NotificationController -> reconcileNotifications: ${incoming.length}',
-    );
-
     final map = <String, NotificationItem>{
       for (final item in state.items) item.id: item,
     };
@@ -261,7 +231,6 @@ class NotificationController extends StateNotifier<NotificationState> {
   // CLEAR
   // =====================================================
   void clear() {
-    appLogger.i('NotificationController -> clear');
     state = NotificationState.initial();
   }
 

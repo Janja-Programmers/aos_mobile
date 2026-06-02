@@ -239,8 +239,6 @@ class CallApi {
   // List Calls
   // -----------------------------
   Future<Either<Failure, List<CallLog>>> listCalls({String? type}) async {
-    appLogger.i("listCalls API");
-
     try {
       final res = await _client.get(
         ApiEndpoints.listCallsEndpoint,

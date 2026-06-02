@@ -175,7 +175,7 @@ class NotificationRealtimeListener {
           final actor = data['actor']?.toString();
           return NotificationItem(
             id: 'short_${data['short_id']}_$now',
-            type: NotificationType.liveStarted,
+            type: NotificationType.newShort,
             title: 'New Short 🎬',
             body: '$actor posted a new short',
             actorId: actor,

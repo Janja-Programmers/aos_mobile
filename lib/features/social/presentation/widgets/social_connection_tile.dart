@@ -68,7 +68,7 @@ class SocialConnectionTile extends StatelessWidget {
                         Icon(
                           Icons.verified_rounded,
                           size: 15,
-                          color: colors.primary,
+                          color: colors.blue,
                         ),
                       ],
                     ],

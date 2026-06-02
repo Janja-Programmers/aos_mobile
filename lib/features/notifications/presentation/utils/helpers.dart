@@ -43,12 +43,8 @@ List<NotificationItem> filterNotifications(
       return items.where((n) {
         return n.type == NotificationType.follow ||
             n.type == NotificationType.missedCall ||
-            n.type == NotificationType.liveStarted;
-      }).toList();
-
-    case 'Promotions':
-      return items.where((n) {
-        return n.type == NotificationType.adApproved ||
+            n.type == NotificationType.liveStarted ||
+            n.type == NotificationType.adApproved ||
             n.type == NotificationType.adRejected;
       }).toList();
 
@@ -92,10 +88,10 @@ Color colorForType(NotificationType type, dynamic colors) {
       return colors.blue;
 
     case NotificationType.adApproved:
-      return Colors.green;
+      return colors.success;
 
     case NotificationType.adRejected:
-      return Colors.red;
+      return colors.primary;
 
     default:
       return colors.primary;

@@ -57,12 +57,12 @@ class NotificationItem {
     final payloadMap = _parsePayload(json['payload']);
     final payload = NotificationPayload.fromJson(payloadMap);
 
-    // DB list response should normally use top-level `type`.
-    // FCM/local constructed items may only have payload/data `event`.
     final typeValue =
         _read(json, 'type') ??
         payload.event ??
+        payload.notificationType ??
         _read(payloadMap, 'event') ??
+        _read(payloadMap, 'notification_type') ??
         _read(payloadMap, 'type');
 
     final type = NotificationTypeX.fromBackendValue(typeValue);
@@ -106,7 +106,11 @@ class NotificationItem {
     final payload = NotificationPayload.fromJson(data);
 
     final eventOrType =
-        _read(data, 'event') ?? _read(data, 'type') ?? payload.event;
+        _read(data, 'event') ??
+        _read(data, 'notification_type') ??
+        _read(data, 'type') ??
+        payload.event ??
+        payload.notificationType;
 
     final type = NotificationTypeX.fromBackendValue(eventOrType);
 
@@ -130,8 +134,15 @@ class NotificationItem {
       title: title ?? _read(data, 'title') ?? _fallbackTitleForType(type),
       body: body ?? _read(data, 'body') ?? '',
       actorId: actorId,
-      actorName: _read(data, 'actor_name') ?? actorId,
-      actorAvatar: _read(data, 'actor_avatar'),
+      actorName:
+          _read(data, 'actor_name') ??
+          _read(data, 'sender_display_name') ??
+          _read(data, 'caller_display_name') ??
+          actorId,
+      actorAvatar:
+          _read(data, 'actor_avatar') ??
+          _read(data, 'sender_avatar') ??
+          _read(data, 'caller_avatar'),
       isRead: false,
       createdAt: sentTime ?? now,
       payload: payload,

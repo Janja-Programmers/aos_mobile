@@ -277,6 +277,7 @@ class AOSApp extends ConsumerWidget {
     final prefs = ref.watch(userPreferenceControllerProvider);
 
     ref.watch(socketCallListenerProvider);
+    ref.watch(notificationRealtimeListenerProvider);
 
     return MaterialApp.router(
       title: 'Africa Online Stores',

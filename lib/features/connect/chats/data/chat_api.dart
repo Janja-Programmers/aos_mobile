@@ -10,6 +10,7 @@ import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/chat_message_status_update.dart';
 
 /// Provider
 final chatApiProvider = Provider<ChatApi>((ref) {
@@ -115,14 +116,14 @@ class ChatApi {
     final result = unwrapFrappe(res);
     if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    final data = result.rightOrNull;
-    if (data == null || data['data'] == null) {
+    final data = _extractDataPayload(result.rightOrNull);
+    if (data is! List) {
       return Either.left(const Failure('Empty response from chat API'));
     }
 
-    final messagesData = data['data'] as List<dynamic>;
-    final messages = messagesData
-        .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+    final messages = data
+        .whereType<Map>()
+        .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
         .toList();
 
     return Either.right(messages);
@@ -161,7 +162,7 @@ class ChatApi {
       }
 
       final raw = result.rightOrNull;
-      final messageData = raw?['data'];
+      final messageData = _extractDataPayload(raw);
 
       if (messageData is! Map) {
         return Either.left(
@@ -200,7 +201,7 @@ class ChatApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final messageData = result.rightOrNull?['data'];
+      final messageData = _extractDataPayload(result.rightOrNull);
       if (messageData is! Map) {
         return Either.left(const Failure('Invalid edit message response'));
       }
@@ -226,7 +227,7 @@ class ChatApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
+      final data = _extractDataPayload(result.rightOrNull);
       return Either.right(
         data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{},
       );
@@ -261,7 +262,7 @@ class ChatApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
+      final data = _extractDataPayload(result.rightOrNull);
       final isStarred =
           data is Map &&
           (data['is_starred'] == true || data['is_starred'] == 1);
@@ -294,7 +295,7 @@ class ChatApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
+      final data = _extractDataPayload(result.rightOrNull);
       final messages = (data is List ? data : const [])
           .whereType<Map>()
           .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
@@ -319,7 +320,7 @@ class ChatApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
+      final data = _extractDataPayload(result.rightOrNull);
       return Either.right(
         data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{},
       );
@@ -344,7 +345,7 @@ class ChatApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
+      final data = _extractDataPayload(result.rightOrNull);
       final rows = data is Map ? data['messages'] : null;
 
       final messages = (rows is List ? rows : const [])
@@ -373,7 +374,7 @@ class ChatApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
+      final data = _extractDataPayload(result.rightOrNull);
       return Either.right(
         data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{},
       );
@@ -387,7 +388,9 @@ class ChatApi {
   // -----------------------------
   // Status
   // -----------------------------
-  Future<Either<Failure, void>> markDelivered(String conversationId) async {
+  Future<Either<Failure, ChatMessageStatusUpdate>> markDelivered(
+    String conversationId,
+  ) async {
     final res = await _client.post(
       ApiEndpoints.markDeliveredEndpoint,
       data: {'conversation_id': conversationId},
@@ -396,10 +399,17 @@ class ChatApi {
     final result = unwrapFrappe(res);
     if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    return Either.right(null);
+    final data = _extractDataPayload(result.rightOrNull);
+    return Either.right(
+      data is Map
+          ? ChatMessageStatusUpdate.fromJson(Map<String, dynamic>.from(data))
+          : const ChatMessageStatusUpdate.empty(),
+    );
   }
 
-  Future<Either<Failure, void>> markRead(String conversationId) async {
+  Future<Either<Failure, ChatMessageStatusUpdate>> markRead(
+    String conversationId,
+  ) async {
     final res = await _client.post(
       ApiEndpoints.markReadEndpoint,
       data: {'conversation_id': conversationId},
@@ -408,7 +418,12 @@ class ChatApi {
     final result = unwrapFrappe(res);
     if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    return Either.right(null);
+    final data = _extractDataPayload(result.rightOrNull);
+    return Either.right(
+      data is Map
+          ? ChatMessageStatusUpdate.fromJson(Map<String, dynamic>.from(data))
+          : const ChatMessageStatusUpdate.empty(),
+    );
   }
 
   // -----------------------------
@@ -428,6 +443,21 @@ class ChatApi {
 
     return Either.right(null);
   }
+}
+
+dynamic _extractDataPayload(Map<String, dynamic>? raw) {
+  if (raw == null) return null;
+
+  final data = raw['data'];
+  if (data != null) return data;
+
+  final nestedMessage = raw['message'];
+  if (nestedMessage is Map) {
+    final nestedData = nestedMessage['data'];
+    if (nestedData != null) return nestedData;
+  }
+
+  return raw;
 }
 
 String _friendlyOpenConversationError(DioException e) {

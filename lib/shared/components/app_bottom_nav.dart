@@ -33,9 +33,9 @@ class AppBottomNav extends ConsumerWidget {
               onTap: () => AppNavigation.goTo(context, ref, 0),
             ),
             _NavItem(
-              label: 'Categories',
-              icon: Icons.grid_view_outlined,
-              activeIcon: Icons.grid_view_rounded,
+              label: 'Shop',
+              icon: Icons.category_outlined,
+              activeIcon: Icons.category_rounded,
               active: currentIndex == 1,
               onTap: () => AppNavigation.goTo(context, ref, 1),
             ),
@@ -43,7 +43,7 @@ class AppBottomNav extends ConsumerWidget {
             _SellButton(onTap: () => AppNavigation.goTo(context, ref, 2)),
 
             _NavItem(
-              label: 'Feeds',
+              label: 'Feed',
               icon: Icons.forum_outlined,
               activeIcon: Icons.forum_outlined,
               active: currentIndex == 3,

@@ -7,26 +7,24 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_throttle.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_reply_preview.dart';
-import 'package:africaonlinestores/features/connect/chats/domain/translation_language.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_background.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/translation_language.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/active_call_chat_banner.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_ad_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_app_bar.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input_bar.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_quick_replies.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_clear_chat_dialog.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_composer_area.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_edit_message_dialog.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_forward_conversation_picker.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_messages_view.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_actions_sheet.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/reply_composer_preview.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/typing_indicator.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/translation_language_picker.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
-import 'package:africaonlinestores/features/connect/converaation/application/providers/conversation_provider.dart';
+import 'package:africaonlinestores/features/connect/conversations/application/providers/conversation_provider.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
-import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -67,7 +65,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   bool _loadedInitialIntoInput = false;
   bool _showAdPreview = false;
-  Timer? _typingTimer;
+  late final ChatTypingThrottle _typingThrottle;
   bool _isSending = false;
   bool _isLoadingMoreMessages = false;
   ChatMessage? _replyingTo;
@@ -79,6 +77,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.initState();
     _showAdPreview = _hasText(widget.adId);
     _scrollController.addListener(_onScroll);
+    _typingThrottle = ChatTypingThrottle(
+      conversationId: widget.conversationId,
+      sendTyping: ref.read(chatRepositoryProvider).sendTyping,
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onChatOpened();
@@ -86,39 +88,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _onChatOpened() async {
-    await _markAsRead();
     _loadInitialMessageIntoInput();
-  }
-
-  Future<void> _markAsRead() async {
-    final currentUserId = _normalizeUser(ref.read(currentUserProvider));
-
-    final messagesState = ref.read(
-      chatMessagesControllerProvider(widget.conversationId),
-    );
-
-    final hasUnreadIncoming = messagesState.maybeWhen(
-      data: (messages) {
-        return messages.any((m) {
-          final sender = _normalizeUser(m.sender);
-          final isOwnMessage =
-              currentUserId.isNotEmpty && sender == currentUserId;
-          return !isOwnMessage && m.readAt == null;
-        });
-      },
-      orElse: () => true,
-    );
-
-    if (!hasUnreadIncoming) return;
-
-    final repo = ref.read(chatRepositoryProvider);
-    final res = await repo.markRead(widget.conversationId);
-
-    if (res.isRight) {
-      ref
-          .read(conversationsControllerProvider.notifier)
-          .markConversationAsReadLocally(widget.conversationId);
-    }
   }
 
   void _loadInitialMessageIntoInput() {
@@ -144,29 +114,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _handleTyping(bool hasText) {
-    _typingTimer?.cancel();
-    final repo = ref.read(chatRepositoryProvider);
-
-    Future<void> sendTypingSafe(bool value) async {
-      final res = await repo.sendTyping(
-        conversationId: widget.conversationId,
-        isTyping: value,
-      );
-
-      if (res.isLeft) {
-        debugPrint('Typing status failed: ${res.leftOrNull}');
-      }
-    }
-
-    if (!hasText) {
-      unawaited(sendTypingSafe(false));
-      return;
-    }
-
-    unawaited(sendTypingSafe(true));
-    _typingTimer = Timer(const Duration(seconds: 3), () {
-      unawaited(sendTypingSafe(false));
-    });
+    _typingThrottle.update(hasText);
   }
 
   Future<void> _sendMessage({
@@ -315,44 +263,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _confirmDeleteAllMessages() async {
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        final colors = dialogContext.appColors;
-
-        return AlertDialog(
-          backgroundColor: colors.elevated,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            'Clear chat?',
-            style: TextStyle(color: colors.textPrimary),
-          ),
-          content: Text(
-            'This clears all visible messages in this chat for you only. The other participant will still keep their copy.',
-            style: TextStyle(color: colors.textMuted, height: 1.4),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text('Cancel', style: TextStyle(color: colors.textMuted)),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(
-                'Clear',
-                style: TextStyle(
-                  color: colors.red,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+    final shouldDelete = await showChatClearChatDialog(context);
 
     if (shouldDelete != true) return;
 
@@ -409,10 +320,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
           onForward: () {
             Navigator.pop(sheetContext);
-            ShowSnack(
-              context,
-              'Forward API is ready. Conversation picker can be connected next.',
-            ).info();
+            _forwardMessage(message);
           },
 
           onDeleteForMe: () {
@@ -447,6 +355,50 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (!mounted) return;
     if (!ok) ShowSnack(context, 'Failed to update reaction.').error();
+  }
+
+  Future<void> _forwardMessage(ChatMessage message) async {
+    final selectedConversations = await showChatForwardConversationPicker(
+      context: context,
+      currentConversationId: widget.conversationId,
+    );
+
+    if (!mounted ||
+        selectedConversations == null ||
+        selectedConversations.isEmpty) {
+      return;
+    }
+
+    final targetConversationIds = selectedConversations
+        .map((conversation) => conversation.id.trim())
+        .where((id) => id.isNotEmpty)
+        .toList(growable: false);
+
+    if (targetConversationIds.isEmpty) return;
+
+    final ok = await ref
+        .read(chatMessagesControllerProvider(widget.conversationId).notifier)
+        .forwardMessage(
+          messageId: message.id,
+          targetConversationIds: targetConversationIds,
+        );
+
+    if (!mounted) return;
+
+    if (!ok) {
+      ShowSnack(context, 'Failed to forward message.').error();
+      return;
+    }
+
+    await ref.read(conversationsControllerProvider.notifier).refresh();
+
+    if (!mounted) return;
+
+    final count = targetConversationIds.length;
+    ShowSnack(
+      context,
+      count == 1 ? 'Message forwarded.' : 'Message forwarded to $count chats.',
+    ).success();
   }
 
   Future<void> _translateMessageWithPicker(ChatMessage message) async {
@@ -500,44 +452,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _showEditDialog(ChatMessage message) async {
-    final controller = TextEditingController(text: message.content ?? '');
-
-    final updated = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        final colors = dialogContext.appColors;
-
-        return AlertDialog(
-          backgroundColor: colors.elevated,
-          surfaceTintColor: Colors.transparent,
-          title: Text(
-            'Edit message',
-            style: TextStyle(color: colors.textPrimary),
-          ),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            minLines: 1,
-            maxLines: 5,
-            style: TextStyle(color: colors.textPrimary),
-            decoration: const InputDecoration(hintText: 'Message'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text('Cancel', style: TextStyle(color: colors.textMuted)),
-            ),
-            TextButton(
-              onPressed: () =>
-                  Navigator.pop(dialogContext, controller.text.trim()),
-              child: Text('Save', style: TextStyle(color: colors.primary)),
-            ),
-          ],
-        );
-      },
-    );
-
-    controller.dispose();
+    final updated = await showChatEditMessageDialog(context, message);
 
     if (!_hasText(updated) || updated == message.content?.trim()) return;
 
@@ -588,99 +503,33 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               fallbackAvatarUrl: widget.otherUserAvatar,
             ),
             Expanded(
-              child: ChatBackground(
-                patternAssetPath: 'assets/images/chat_pattern.png',
-                child: messagesState.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(child: Text(e.toString())),
-                  data: (messages) {
-                    return ListView.builder(
-                      controller: _scrollController,
-                      reverse: true,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        final msg = messages[messages.length - 1 - index];
-                        final isSystem = msg.isSystemMessage;
-                        final isMe = _isOwnMessage(
-                          sender: msg.sender,
-                          currentUserId: currentUserId,
-                          isSystem: isSystem,
-                        );
-
-                        return Dismissible(
-                          key: ValueKey(
-                            'reply-${msg.id}-${msg.createdAt.microsecondsSinceEpoch}',
-                          ),
-                          direction: isSystem || msg.isDeletedType
-                              ? DismissDirection.none
-                              : DismissDirection.startToEnd,
-                          confirmDismiss: (_) async {
-                            _startReply(msg);
-                            return false;
-                          },
-                          background: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 20),
-                              child: Icon(
-                                Icons.reply_rounded,
-                                color: colors.primary,
-                              ),
-                            ),
-                          ),
-                          child: MessageBubble(
-                            message: msg,
-                            isMe: isMe,
-                            isSystem: isSystem,
-                            conversationId: widget.conversationId,
-                            otherUserId: widget.otherUser,
-                            otherDisplayName: widget.displayName,
-                            otherAvatarUrl: widget.otherUserAvatar,
-                            onLongPress: () => _openMessageActions(msg, isMe),
-                            onRetry: msg.isLocalFailed
-                                ? () => _retryMessage(msg)
-                                : null,
-                            onAdTap: (adId) {
-                              AdNavigation.toDetail(context, adId);
-                            },
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
+              child: ChatMessagesView(
+                messagesState: messagesState,
+                scrollController: _scrollController,
+                currentUserId: currentUserId,
+                conversationId: widget.conversationId,
+                otherUserId: widget.otherUser,
+                otherDisplayName: widget.displayName,
+                otherAvatarUrl: widget.otherUserAvatar,
+                onReply: _startReply,
+                onLongPress: _openMessageActions,
+                onRetry: _retryMessage,
               ),
             ),
-
-            if (isTyping) const TypingIndicator(isTyping: true),
-            ChatQuickReplies(
-              replies: const [
-                'Is this still available?',
-                'What’s your best price?',
-                'Can you share your location?',
-                'Can I call you about this item?',
-              ],
-              onTap: _appendQuickReply,
-            ),
-            if (_showAdPreview)
-              ChatAdPreview(
-                title: widget.adTitle ?? '',
-                price: widget.adPrice ?? '',
-                imageUrl: widget.adImage,
-                onClose: () => setState(() => _showAdPreview = false),
-              ),
-            if (_replyingTo != null)
-              ReplyComposerPreview(
-                message: _replyingTo!,
-                onClose: () => setState(() => _replyingTo = null),
-              ),
-            ChatInputBar(
-              controller: _inputController,
-              onSend: _sendMessage,
+            ChatComposerArea(
+              isTyping: isTyping,
+              showAdPreview: _showAdPreview,
+              adId: widget.adId,
+              adTitle: widget.adTitle,
+              adPrice: widget.adPrice,
+              adImage: widget.adImage,
+              replyingTo: _replyingTo,
+              inputController: _inputController,
+              onQuickReplyTap: _appendQuickReply,
+              onCloseAdPreview: () => setState(() => _showAdPreview = false),
+              onCloseReplyPreview: () => setState(() => _replyingTo = null),
               onTyping: _handleTyping,
-              adId: _showAdPreview ? widget.adId : null,
+              onSend: _sendMessage,
             ),
           ],
         ),
@@ -717,16 +566,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  bool _isOwnMessage({
-    required String sender,
-    required String currentUserId,
-    required bool isSystem,
-  }) {
-    if (isSystem) return false;
-    if (currentUserId.isEmpty) return false;
-    return _normalizeUser(sender) == currentUserId;
-  }
-
   static String _normalizeUser(String? value) {
     return value?.trim().toLowerCase() ?? '';
   }
@@ -757,7 +596,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   void dispose() {
-    _typingTimer?.cancel();
+    _typingThrottle.dispose();
     _scrollController.removeListener(_onScroll);
     _inputController.dispose();
     _scrollController.dispose();

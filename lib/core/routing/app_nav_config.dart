@@ -29,7 +29,7 @@ class AppNavConfig {
         requiresAuth: true,
       ),
       const AppNavItem(
-        label: "Feeds",
+        label: "Feed",
         icon: Icons.play_circle_outlined,
         activeIcon: Icons.play_circle_outlined,
         routeName: AppRoutes.nFeeds,

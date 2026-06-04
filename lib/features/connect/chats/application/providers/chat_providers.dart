@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/features/connect/chats/data/services/chat_realtime_service.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_messages_controller.dart';
-import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
-import 'package:africaonlinestores/features/connect/converaation/application/providers/conversation_provider.dart';
+import 'package:africaonlinestores/features/connect/conversations/application/providers/conversation_provider.dart';
 
 //********************
 // REALTIME service provider (singleton)
@@ -20,7 +19,7 @@ final chatRealtimeServiceProvider = Provider<ChatRealtimeService>((ref) {
 final chatMessagesControllerProvider =
     StateNotifierProvider.family<
       ChatMessagesController,
-      AsyncValue<List<ChatMessage>>,
+      ChatMessagesState,
       String
     >((ref, conversationId) {
       return ChatMessagesController(ref, conversationId);

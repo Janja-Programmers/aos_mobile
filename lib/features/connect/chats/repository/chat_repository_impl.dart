@@ -6,6 +6,7 @@ import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/features/connect/chats/data/chat_api.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/chat_message_status_update.dart';
 
 /// Provider
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
@@ -123,11 +124,15 @@ class ChatRepository {
   // -----------------------------
   // Status
   // -----------------------------
-  Future<Either<Failure, void>> markDelivered(String conversationId) {
+  Future<Either<Failure, ChatMessageStatusUpdate>> markDelivered(
+    String conversationId,
+  ) {
     return api.markDelivered(conversationId);
   }
 
-  Future<Either<Failure, void>> markRead(String conversationId) {
+  Future<Either<Failure, ChatMessageStatusUpdate>> markRead(
+    String conversationId,
+  ) {
     return api.markRead(conversationId);
   }
 

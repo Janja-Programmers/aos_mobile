@@ -7,7 +7,7 @@ import 'package:africaonlinestores/features/connect/calls/application/state/call
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_filter_utils.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/show_call_details_sheet.dart';
-import 'package:africaonlinestores/features/connect/converaation/presentation/widgets/connect_state_view.dart';
+import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_state_view.dart';
 
 import 'package:africaonlinestores/shared/utils/format_time.dart';
 

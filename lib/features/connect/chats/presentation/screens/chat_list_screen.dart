@@ -9,10 +9,10 @@ import 'package:africaonlinestores/features/connect/chats/application/controller
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
-import 'package:africaonlinestores/features/connect/converaation/presentation/widgets/conversation_tile.dart';
-import 'package:africaonlinestores/features/connect/converaation/application/providers/conversation_provider.dart';
-import 'package:africaonlinestores/features/connect/converaation/presentation/widgets/connect_state_view.dart';
-import 'package:africaonlinestores/features/connect/converaation/presentation/widgets/delete_conversation_sheet.dart';
+import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/conversation_tile.dart';
+import 'package:africaonlinestores/features/connect/conversations/application/providers/conversation_provider.dart';
+import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_state_view.dart';
+import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/delete_conversation_sheet.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 

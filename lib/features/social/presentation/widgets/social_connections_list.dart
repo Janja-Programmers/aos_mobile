@@ -55,7 +55,12 @@ class SocialConnectionsList extends ConsumerWidget {
           return SocialConnectionTile(
             friend: friend,
             onTap: () {
-              SocialNavigation.toProfileScreen(context, user: friend.user);
+              SocialNavigation.toProfileScreen(
+                context,
+                user: friend.user,
+                displayName: friend.displayName,
+                avatar: friend.userImage,
+              );
             },
             onActionTap: () async {
               try {
@@ -151,6 +156,8 @@ class SocialConnectionsList extends ConsumerWidget {
                     SocialNavigation.toProfileScreen(
                       context,
                       user: friend.user,
+                      displayName: friend.displayName,
+                      avatar: friend.userImage,
                     );
                   },
                 ),

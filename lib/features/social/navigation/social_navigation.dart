@@ -17,8 +17,14 @@ class SocialRoutes {
         path: AppRoutes.profile,
         builder: (context, state) {
           final user = state.uri.queryParameters['user'];
+          final displayName = state.uri.queryParameters['display_name'];
+          final avatar = state.uri.queryParameters['avatar'];
 
-          return ProfileScreen(user: user);
+          return ProfileScreen(
+            user: user,
+            fallbackDisplayName: displayName,
+            fallbackAvatar: avatar,
+          );
         },
       ),
 
@@ -28,6 +34,7 @@ class SocialRoutes {
         builder: (context, state) {
           final tab = state.uri.queryParameters['tab'];
           final title = state.uri.queryParameters['title'] ?? 'Connections';
+          final user = state.uri.queryParameters['user'];
 
           final initialTab = switch (tab) {
             'following' => SocialConnectionsTab.following,
@@ -35,7 +42,11 @@ class SocialRoutes {
             'followers' || _ => SocialConnectionsTab.followers,
           };
 
-          return SocialConnectionsScreen(title: title, initialTab: initialTab);
+          return SocialConnectionsScreen(
+            title: title,
+            initialTab: initialTab,
+            targetUser: user,
+          );
         },
       ),
     ];
@@ -45,24 +56,39 @@ class SocialRoutes {
 class SocialNavigation {
   const SocialNavigation._();
 
-  static void toProfileScreen(BuildContext context, {required String user}) {
+  static void toProfileScreen(
+    BuildContext context, {
+    required String user,
+    String? displayName,
+    String? avatar,
+  }) {
     final cleanUser = user.trim();
 
     if (cleanUser.isEmpty) return;
 
-    context.pushNamed(AppRoutes.nProfile, queryParameters: {'user': cleanUser});
+    context.pushNamed(
+      AppRoutes.nProfile,
+      queryParameters: {
+        'user': cleanUser,
+        if (displayName?.trim().isNotEmpty == true)
+          'display_name': displayName!.trim(),
+        if (avatar?.trim().isNotEmpty == true) 'avatar': avatar!.trim(),
+      },
+    );
   }
 
   static void toSocialConnectionsScreen(
     BuildContext context, {
     SocialConnectionsTab tab = SocialConnectionsTab.followers,
     String? title,
+    String? user,
   }) {
     context.pushNamed(
       AppRoutes.nSocialConnections,
       queryParameters: {
         'tab': _tabToQuery(tab),
         if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
+        if (user != null && user.trim().isNotEmpty) 'user': user.trim(),
       },
     );
   }

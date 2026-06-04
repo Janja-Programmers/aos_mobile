@@ -437,6 +437,7 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
+          backgroundColor: context.appColors.surface,
           title: const Text('Clear call history?'),
           content: const Text(
             'This will remove all call logs from your history. It will not delete them for the other person.',

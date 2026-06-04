@@ -23,11 +23,13 @@ class SocialApi {
   Future<Either<Failure, SocialFriendsPage>> getFollowers({
     int limit = 20,
     int start = 0,
+    String? targetUser,
   }) {
     return _getPeoplePage(
       endpoint: ApiEndpoints.getFollowsEndpoint,
       limit: limit,
       start: start,
+      targetUser: targetUser,
       parseFailureMessage: 'Invalid followers response format',
       fallbackFailureMessage: 'Failed to load followers. Please try again.',
     );
@@ -39,11 +41,13 @@ class SocialApi {
   Future<Either<Failure, SocialFriendsPage>> getFollowing({
     int limit = 20,
     int start = 0,
+    String? targetUser,
   }) {
     return _getPeoplePage(
       endpoint: ApiEndpoints.getFollowingEndpoint,
       limit: limit,
       start: start,
+      targetUser: targetUser,
       parseFailureMessage: 'Invalid following response format',
       fallbackFailureMessage: 'Failed to load following. Please try again.',
     );
@@ -55,11 +59,13 @@ class SocialApi {
   Future<Either<Failure, SocialFriendsPage>> getFriends({
     int limit = 20,
     int start = 0,
+    String? targetUser,
   }) {
     return _getPeoplePage(
       endpoint: ApiEndpoints.getFriendsEndpoint,
       limit: limit,
       start: start,
+      targetUser: targetUser,
       parseFailureMessage: 'Invalid friends response format',
       fallbackFailureMessage: 'Failed to load friends. Please try again.',
     );
@@ -180,13 +186,21 @@ class SocialApi {
     required String endpoint,
     required int limit,
     required int start,
+    String? targetUser,
     required String parseFailureMessage,
     required String fallbackFailureMessage,
   }) async {
     try {
       final res = await _apiClient.get(
         endpoint,
-        queryParameters: {'limit': limit, 'start': start},
+        queryParameters: {
+          'limit': limit,
+          'start': start,
+          if (targetUser?.trim().isNotEmpty == true) ...{
+            'target_user': targetUser!.trim(),
+            'user': targetUser.trim(),
+          },
+        },
       );
 
       final result = unwrapFrappe(res);

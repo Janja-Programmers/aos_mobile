@@ -37,6 +37,13 @@ class ChatMessage {
   final String? localError;
   final String? translatedContent;
   final String? translationLanguage;
+  final String? callId;
+  final String? callType;
+  final String? callStatus;
+  final String? callDirection;
+  final int? callDurationSeconds;
+  final bool isTranslating;
+  final String? translationError;
 
   const ChatMessage({
     required this.id,
@@ -69,6 +76,13 @@ class ChatMessage {
     this.localError,
     this.translatedContent,
     this.translationLanguage,
+    this.callId,
+    this.callType,
+    this.callStatus,
+    this.callDirection,
+    this.callDurationSeconds,
+    this.isTranslating = false,
+    this.translationError,
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
@@ -146,6 +160,24 @@ class ChatMessage {
             json['target_language'] ??
             json['translation_language'],
       ),
+      callId: _cleanNullableString(json['call_id'] ?? json['call']),
+      callType: _cleanNullableString(
+        json['call_type'] ?? json['call_media_type'] ?? json['media_type'],
+      ),
+      callStatus: _cleanNullableString(
+        json['call_status'] ?? json['call_state'] ?? json['status'],
+      ),
+      callDirection: _cleanNullableString(
+        json['call_direction'] ?? json['direction'],
+      ),
+      callDurationSeconds: _parseInt(
+        json['call_duration_seconds'] ??
+            json['duration_seconds'] ??
+            json['call_duration'] ??
+            json['duration'],
+      ),
+      isTranslating: false,
+      translationError: null,
     );
   }
 
@@ -157,6 +189,7 @@ class ChatMessage {
       case 'mixed':
       case 'ad':
       case 'system':
+      case 'call':
       case 'deleted':
         return type!;
       default:
@@ -198,7 +231,15 @@ class ChatMessage {
     // Translation
     Object? translatedContent = _unset,
     Object? translationLanguage = _unset,
+    Object? callId = _unset,
+    Object? callType = _unset,
+    Object? callStatus = _unset,
+    Object? callDirection = _unset,
+    Object? callDurationSeconds = _unset,
+    bool? isTranslating,
+    String? translationError,
     bool clearTranslation = false,
+    bool clearTranslationError = false,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -263,6 +304,23 @@ class ChatMessage {
           : identical(translationLanguage, _unset)
           ? this.translationLanguage
           : translationLanguage as String?,
+      callId: identical(callId, _unset) ? this.callId : callId as String?,
+      callType: identical(callType, _unset)
+          ? this.callType
+          : callType as String?,
+      callStatus: identical(callStatus, _unset)
+          ? this.callStatus
+          : callStatus as String?,
+      callDirection: identical(callDirection, _unset)
+          ? this.callDirection
+          : callDirection as String?,
+      callDurationSeconds: identical(callDurationSeconds, _unset)
+          ? this.callDurationSeconds
+          : callDurationSeconds as int?,
+      isTranslating: isTranslating ?? this.isTranslating,
+      translationError: clearTranslationError
+          ? null
+          : translationError ?? this.translationError,
     );
   }
 
@@ -277,6 +335,11 @@ class ChatMessage {
     Map<String, dynamic>? adPreview,
     String? replyToMessage,
     ChatReplyPreview? replyTo,
+    String? callId,
+    String? callType,
+    String? callStatus,
+    String? callDirection,
+    int? callDurationSeconds,
   }) {
     final cleanContent = content?.trim();
     final cleanAd = ad?.trim();
@@ -315,6 +378,13 @@ class ChatMessage {
       localError: null,
       translatedContent: null,
       translationLanguage: null,
+      callId: callId,
+      callType: callType,
+      callStatus: callStatus,
+      callDirection: callDirection,
+      callDurationSeconds: callDurationSeconds,
+      isTranslating: false,
+      translationError: null,
     );
   }
 
@@ -330,8 +400,12 @@ class ChatMessage {
       isDeletedForEveryone: true,
       deletedForEveryoneAt: DateTime.now(),
       displayText: displayText ?? 'This message was deleted',
-      viewerState: viewerState.copyWith(myReaction: null),
+      viewerState: const ChatMessageViewerState(
+        isStarred: false,
+        myReaction: null,
+      ),
       clearTranslation: true,
+      clearTranslationError: true,
     );
   }
 
@@ -342,6 +416,10 @@ class ChatMessage {
   bool get isMixed => messageType == 'mixed';
   bool get isAd => messageType == 'ad';
   bool get isSystemType => messageType == 'system';
+  bool get isCallType =>
+      messageType == 'call' ||
+      (callId ?? '').trim().isNotEmpty ||
+      _looksLikeCallMessage(visibleText);
   bool get isDeletedType => messageType == 'deleted' || isDeletedForEveryone;
   bool get hasOnlyAttachments => !hasText && !hasAd && attachments.isNotEmpty;
 
@@ -358,11 +436,17 @@ class ChatMessage {
   String get translatedText => translatedContent ?? '';
 
   String get visibleText {
-    if (isDeletedType) return displayText ?? 'This message was deleted';
+    if (isDeletedType) return displayText!;
     return content ?? '';
   }
 
   bool get isSystemMessage {
+    return sender.trim().toLowerCase() == 'administrator' ||
+        isSystemType ||
+        isCallType;
+  }
+
+  bool get isGenericSystemMessage {
     return sender.trim().toLowerCase() == 'administrator' || isSystemType;
   }
 
@@ -399,4 +483,35 @@ String? _cleanNullableString(dynamic value) {
   if (text.isEmpty || text.toLowerCase() == 'null') return null;
 
   return text;
+}
+
+bool _looksLikeCallMessage(String value) {
+  final text = value.trim().toLowerCase();
+  if (text.isEmpty) return false;
+
+  return text.contains('voice call') ||
+      text.contains('video call') ||
+      text.contains('missed call') ||
+      text.contains('missed voice') ||
+      text.contains('missed video') ||
+      text.contains('no answer') ||
+      text.contains('calling…') ||
+      text.contains('calling...') ||
+      text.contains('📞') ||
+      text.contains('🎥');
+}
+
+int? _parseInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.round();
+
+  final raw = value.toString().trim();
+  if (raw.isEmpty) return null;
+
+  final parsed = int.tryParse(raw);
+  if (parsed != null) return parsed;
+
+  final asDouble = double.tryParse(raw);
+  return asDouble?.round();
 }

@@ -307,6 +307,7 @@ class _Actions extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
+          backgroundColor: context.appColors.surface,
           title: Text(
             call.isGrouped ? 'Delete call group?' : 'Delete call log?',
           ),

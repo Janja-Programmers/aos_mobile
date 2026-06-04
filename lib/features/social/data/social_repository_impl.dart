@@ -9,16 +9,19 @@ abstract class SocialRepository {
   Future<Either<Failure, SocialFriendsPage>> getFollowers({
     int limit = 20,
     int start = 0,
+    String? targetUser,
   });
 
   Future<Either<Failure, SocialFriendsPage>> getFollowing({
     int limit = 20,
     int start = 0,
+    String? targetUser,
   });
 
   Future<Either<Failure, SocialFriendsPage>> getFriends({
     int limit = 20,
     int start = 0,
+    String? targetUser,
   });
 
   Future<Either<Failure, SocialRelationship>> toggleFollow({
@@ -39,24 +42,27 @@ class SocialRepositoryImpl implements SocialRepository {
   Future<Either<Failure, SocialFriendsPage>> getFollowers({
     int limit = 20,
     int start = 0,
+    String? targetUser,
   }) {
-    return api.getFollowers(limit: limit, start: start);
+    return api.getFollowers(limit: limit, start: start, targetUser: targetUser);
   }
 
   @override
   Future<Either<Failure, SocialFriendsPage>> getFollowing({
     int limit = 20,
     int start = 0,
+    String? targetUser,
   }) {
-    return api.getFollowing(limit: limit, start: start);
+    return api.getFollowing(limit: limit, start: start, targetUser: targetUser);
   }
 
   @override
   Future<Either<Failure, SocialFriendsPage>> getFriends({
     int limit = 20,
     int start = 0,
+    String? targetUser,
   }) {
-    return api.getFriends(limit: limit, start: start);
+    return api.getFriends(limit: limit, start: start, targetUser: targetUser);
   }
 
   @override

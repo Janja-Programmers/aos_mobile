@@ -19,9 +19,7 @@ class ReplyComposerPreview extends StatelessWidget {
 
     final title = message.senderDisplayName ?? message.sender;
 
-    final body = message.isDeletedType
-        ? message.displayText ?? 'This message was deleted'
-        : message.hasText
+    final body = message.hasText
         ? message.content!.trim()
         : message.hasAd
         ? 'Ad preview'

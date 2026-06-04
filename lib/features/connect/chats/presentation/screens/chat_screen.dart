@@ -10,6 +10,7 @@ import 'package:africaonlinestores/features/connect/chats/application/controller
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_reply_preview.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/translation_language.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_background.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/active_call_chat_banner.dart';
@@ -21,6 +22,7 @@ import 'package:africaonlinestores/features/connect/chats/presentation/widgets/c
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_actions_sheet.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/reply_composer_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/typing_indicator.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/translation_language_picker.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
 import 'package:africaonlinestores/features/connect/converaation/application/providers/conversation_provider.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
@@ -67,12 +69,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _showAdPreview = false;
   Timer? _typingTimer;
   bool _isSending = false;
+  bool _isLoadingMoreMessages = false;
   ChatMessage? _replyingTo;
+  TranslationLanguage _selectedTranslationLanguage =
+      chatTranslationLanguages.first;
 
   @override
   void initState() {
     super.initState();
     _showAdPreview = _hasText(widget.adId);
+    _scrollController.addListener(_onScroll);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onChatOpened();
@@ -242,6 +248,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  Future<void> _loadMoreMessagesIfNeeded() async {
+    if (_isLoadingMoreMessages || !_scrollController.hasClients) return;
+
+    final position = _scrollController.position;
+    final isNearOldestMessage =
+        position.pixels >= position.maxScrollExtent - 260;
+
+    if (!isNearOldestMessage) return;
+
+    _isLoadingMoreMessages = true;
+    try {
+      await ref
+          .read(chatMessagesControllerProvider(widget.conversationId).notifier)
+          .loadMore();
+    } finally {
+      _isLoadingMoreMessages = false;
+    }
+  }
+
+  void _onScroll() {
+    unawaited(_loadMoreMessagesIfNeeded());
+  }
+
   Future<void> _retryMessage(ChatMessage message) async {
     if (!message.isLocalFailed) return;
 
@@ -355,7 +384,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
           onReply: () {
             Navigator.pop(sheetContext);
-            setState(() => _replyingTo = message);
+            _startReply(message);
           },
 
           onEdit: () {
@@ -375,20 +404,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
           onTranslate: () async {
             Navigator.pop(sheetContext);
-
-            final ok = await ref
-                .read(
-                  chatMessagesControllerProvider(
-                    widget.conversationId,
-                  ).notifier,
-                )
-                .translateMessage(messageId: message.id, targetLanguage: 'sw');
-
-            if (!mounted) return;
-
-            if (!ok) {
-              ShowSnack(context, 'Failed to translate message.').error();
-            }
+            await _translateMessageWithPicker(message);
           },
 
           onForward: () {
@@ -431,6 +447,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (!mounted) return;
     if (!ok) ShowSnack(context, 'Failed to update reaction.').error();
+  }
+
+  Future<void> _translateMessageWithPicker(ChatMessage message) async {
+    final language = await showModalBottomSheet<TranslationLanguage>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => TranslationLanguagePicker(
+        initialLanguage: _selectedTranslationLanguage,
+      ),
+    );
+
+    if (language == null || !mounted) return;
+
+    setState(() {
+      _selectedTranslationLanguage = language;
+    });
+
+    final ok = await ref
+        .read(chatMessagesControllerProvider(widget.conversationId).notifier)
+        .translateMessage(messageId: message.id, targetLanguage: language.code);
+
+    if (!mounted) return;
+
+    if (!ok) {
+      ShowSnack(context, 'Failed to translate message.').error();
+    }
   }
 
   Future<void> _deleteMessage(
@@ -524,7 +568,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         imageUrl: widget.otherUserAvatar,
         lastSeen: widget.lastSeen,
         onHeaderTap: () {
-          SocialNavigation.toProfileScreen(context, user: widget.otherUser);
+          SocialNavigation.toProfileScreen(
+            context,
+            user: widget.otherUser,
+            displayName: widget.displayName,
+            avatar: widget.otherUserAvatar,
+          );
         },
         onDeleteMessages: _showDeleteMessagesInfo,
         onDeleteAllMessages: _confirmDeleteAllMessages,
@@ -560,17 +609,43 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           isSystem: isSystem,
                         );
 
-                        return MessageBubble(
-                          message: msg,
-                          isMe: isMe,
-                          isSystem: isSystem,
-                          onLongPress: () => _openMessageActions(msg, isMe),
-                          onRetry: msg.isLocalFailed
-                              ? () => _retryMessage(msg)
-                              : null,
-                          onAdTap: (adId) {
-                            AdNavigation.toDetail(context, adId);
+                        return Dismissible(
+                          key: ValueKey(
+                            'reply-${msg.id}-${msg.createdAt.microsecondsSinceEpoch}',
+                          ),
+                          direction: isSystem || msg.isDeletedType
+                              ? DismissDirection.none
+                              : DismissDirection.startToEnd,
+                          confirmDismiss: (_) async {
+                            _startReply(msg);
+                            return false;
                           },
+                          background: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 20),
+                              child: Icon(
+                                Icons.reply_rounded,
+                                color: colors.primary,
+                              ),
+                            ),
+                          ),
+                          child: MessageBubble(
+                            message: msg,
+                            isMe: isMe,
+                            isSystem: isSystem,
+                            conversationId: widget.conversationId,
+                            otherUserId: widget.otherUser,
+                            otherDisplayName: widget.displayName,
+                            otherAvatarUrl: widget.otherUserAvatar,
+                            onLongPress: () => _openMessageActions(msg, isMe),
+                            onRetry: msg.isLocalFailed
+                                ? () => _retryMessage(msg)
+                                : null,
+                            onAdTap: (adId) {
+                              AdNavigation.toDetail(context, adId);
+                            },
+                          ),
                         );
                       },
                     );
@@ -602,9 +677,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 onClose: () => setState(() => _replyingTo = null),
               ),
             ChatInputBar(
-              key: ValueKey(
-                '${_showAdPreview ? widget.adId : 'no-ad'}-${_replyingTo?.id ?? 'no-reply'}',
-              ),
               controller: _inputController,
               onSend: _sendMessage,
               onTyping: _handleTyping,
@@ -675,9 +747,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
   }
 
+  void _startReply(ChatMessage message) {
+    if (message.isSystemMessage || message.isDeletedType) return;
+
+    setState(() {
+      _replyingTo = message;
+    });
+  }
+
   @override
   void dispose() {
     _typingTimer?.cancel();
+    _scrollController.removeListener(_onScroll);
     _inputController.dispose();
     _scrollController.dispose();
     super.dispose();

@@ -5,6 +5,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/attachment_grid.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/call_message_tile.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/message_ad_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/reaction_chips.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/reply_preview.dart';
@@ -16,6 +17,10 @@ class MessageBubble extends StatelessWidget {
     required this.message,
     required this.isMe,
     this.isSystem = false,
+    this.conversationId,
+    this.otherUserId,
+    this.otherDisplayName,
+    this.otherAvatarUrl,
     this.onLongPress,
     this.onRetry,
     this.onAdTap,
@@ -24,6 +29,10 @@ class MessageBubble extends StatelessWidget {
   final ChatMessage message;
   final bool isMe;
   final bool isSystem;
+  final String? conversationId;
+  final String? otherUserId;
+  final String? otherDisplayName;
+  final String? otherAvatarUrl;
   final VoidCallback? onLongPress;
   final VoidCallback? onRetry;
   final ValueChanged<String>? onAdTap;
@@ -31,6 +40,17 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+
+    if (message.isCallType) {
+      return CallMessageTile(
+        message: message,
+        isMe: isMe,
+        conversationId: conversationId ?? '',
+        otherUserId: otherUserId ?? '',
+        otherDisplayName: otherDisplayName ?? 'AOS user',
+        otherAvatarUrl: otherAvatarUrl,
+      );
+    }
 
     if (isSystem) {
       return Center(
@@ -71,7 +91,7 @@ class MessageBubble extends StatelessWidget {
           decoration: BoxDecoration(
             color: isDeleted ? colors.elevated : bgColor,
             borderRadius: BorderRadius.circular(14),
-            border: isDeleted ? Border.all(color: colors.border) : null,
+            border: Border.all(color: colors.border),
           ),
           child: Column(
             crossAxisAlignment: isMe
@@ -118,7 +138,9 @@ class MessageBubble extends StatelessWidget {
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(
-                        message.displayText ?? 'This message was deleted',
+                        isMe
+                            ? message.displayText!.trim()
+                            : 'You deleted this message',
                         style: context.p.copyWith(
                           color: colors.textMuted,
                           fontStyle: FontStyle.italic,
@@ -150,6 +172,65 @@ class MessageBubble extends StatelessWidget {
                   Text(
                     message.visibleText,
                     style: context.p.copyWith(color: textColor),
+                  ),
+                ],
+
+                if (message.isTranslating) ...[
+                  if (message.hasText || message.hasTranslation)
+                    const SizedBox(height: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: mutedTextColor,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Translating...',
+                        style: context.p.copyWith(
+                          color: mutedTextColor,
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+
+                if ((message.translationError ?? '').trim().isNotEmpty) ...[
+                  if (message.hasText ||
+                      message.hasTranslation ||
+                      message.isTranslating)
+                    const SizedBox(height: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        size: 14,
+                        color: isMe
+                            ? colors.white.withOpacity(0.85)
+                            : colors.red,
+                      ),
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          message.translationError!,
+                          style: context.p.copyWith(
+                            color: isMe
+                                ? colors.white.withOpacity(0.85)
+                                : colors.red,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
 

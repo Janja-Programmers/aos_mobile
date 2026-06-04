@@ -7,11 +7,16 @@ import 'package:africaonlinestores/features/social/data/social_repository_impl.d
 class SocialConnectionsController
     extends StateNotifier<SocialConnectionsState> {
   final SocialRepository _repository;
+  final String? _targetUser;
 
   SocialConnectionsController(
     this._repository, {
     SocialConnectionsTab initialTab = SocialConnectionsTab.followers,
-  }) : super(SocialConnectionsState(selectedTab: initialTab)) {
+    String? targetUser,
+  }) : _targetUser = targetUser?.trim().isNotEmpty == true
+           ? targetUser!.trim()
+           : null,
+       super(SocialConnectionsState(selectedTab: initialTab)) {
     loadInitial();
   }
 
@@ -47,9 +52,15 @@ class SocialConnectionsController
     state = state.copyWith(isLoading: !refresh, clearError: true);
 
     final result = switch (tab) {
-      SocialConnectionsTab.following => await _repository.getFollowing(),
-      SocialConnectionsTab.followers => await _repository.getFollowers(),
-      SocialConnectionsTab.friends => await _repository.getFriends(),
+      SocialConnectionsTab.following => await _repository.getFollowing(
+        targetUser: _targetUser,
+      ),
+      SocialConnectionsTab.followers => await _repository.getFollowers(
+        targetUser: _targetUser,
+      ),
+      SocialConnectionsTab.friends => await _repository.getFriends(
+        targetUser: _targetUser,
+      ),
     };
 
     if (result.isLeft) {
@@ -77,9 +88,9 @@ class SocialConnectionsController
 
   Future<void> _loadCounts() async {
     final results = await Future.wait([
-      _repository.getFollowing(limit: 1, start: 0),
-      _repository.getFollowers(limit: 1, start: 0),
-      _repository.getFriends(limit: 1, start: 0),
+      _repository.getFollowing(limit: 1, start: 0, targetUser: _targetUser),
+      _repository.getFollowers(limit: 1, start: 0, targetUser: _targetUser),
+      _repository.getFriends(limit: 1, start: 0, targetUser: _targetUser),
     ]);
 
     int following = state.followingCount;

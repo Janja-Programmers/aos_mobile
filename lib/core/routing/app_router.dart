@@ -32,7 +32,7 @@ import 'package:africaonlinestores/features/notifications/navigation/notificatio
 
 import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 import 'package:africaonlinestores/features/onboarding/screens/onboarding_screen.dart';
-import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
+import 'package:africaonlinestores/features/reviews/application/navigation/reviews_routes.dart';
 import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
 import 'package:africaonlinestores/features/sellers/presentation/start_selling_screen.dart';

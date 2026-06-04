@@ -39,6 +39,7 @@ class MessageActionsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final colors = context.appColors;
+    final isDeleted = message.isDeletedType;
 
     final maxHeight = math.max(
       220.0,
@@ -72,29 +73,7 @@ class MessageActionsSheet extends StatelessWidget {
 
                 const SizedBox(height: 8),
 
-                ChatActionTile(
-                  icon: Icons.reply_rounded,
-                  label: 'Reply',
-                  onTap: onReply,
-                ),
-
-                if (isMe && !message.isDeletedType && canEdit)
-                  ChatActionTile(
-                    icon: Icons.edit_outlined,
-                    label: 'Edit',
-                    onTap: onEdit,
-                  ),
-
-                if (!message.isDeletedType)
-                  ChatActionTile(
-                    icon: message.isStarred
-                        ? Icons.star_rounded
-                        : Icons.star_border_rounded,
-                    label: message.isStarred ? 'Unstar' : 'Star',
-                    onTap: onToggleStar,
-                  ),
-
-                if (!message.isDeletedType)
+                if (!isDeleted)
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -136,7 +115,30 @@ class MessageActionsSheet extends StatelessWidget {
                     ),
                   ),
 
-                if (!message.isDeletedType)
+                if (!isDeleted)
+                  ChatActionTile(
+                    icon: Icons.reply_rounded,
+                    label: 'Reply',
+                    onTap: onReply,
+                  ),
+
+                if (isMe && !isDeleted && canEdit)
+                  ChatActionTile(
+                    icon: Icons.edit_outlined,
+                    label: 'Edit',
+                    onTap: onEdit,
+                  ),
+
+                if (!isDeleted)
+                  ChatActionTile(
+                    icon: message.isStarred
+                        ? Icons.star_rounded
+                        : Icons.star_border_rounded,
+                    label: message.isStarred ? 'Unstar' : 'Star',
+                    onTap: onToggleStar,
+                  ),
+
+                if (!isDeleted)
                   ChatActionTile(
                     icon: Icons.translate_rounded,
                     label: message.hasTranslation
@@ -145,7 +147,7 @@ class MessageActionsSheet extends StatelessWidget {
                     onTap: onTranslate,
                   ),
 
-                if (!message.isDeletedType)
+                if (!isDeleted)
                   ChatActionTile(
                     icon: Icons.shortcut_rounded,
                     label: 'Forward',
@@ -159,7 +161,7 @@ class MessageActionsSheet extends StatelessWidget {
                   onTap: onDeleteForMe,
                 ),
 
-                if (isMe && !message.isDeletedType)
+                if (isMe && !isDeleted)
                   ChatActionTile(
                     icon: Icons.delete_forever_outlined,
                     label: 'Delete for everyone',

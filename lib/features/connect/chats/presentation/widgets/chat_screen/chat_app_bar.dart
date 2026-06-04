@@ -12,7 +12,7 @@ import 'package:africaonlinestores/features/connect/calls/application/providers/
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_presence_controller.dart';
 
-enum ChatMenuAction { deleteMessages, deleteAllMessages }
+enum ChatMenuAction { deleteAllMessages }
 
 class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
   const ChatAppBar({
@@ -240,9 +240,6 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
           icon: Icon(Icons.more_vert, color: fg),
           onSelected: (action) {
             switch (action) {
-              case ChatMenuAction.deleteMessages:
-                widget.onDeleteMessages?.call();
-                break;
               case ChatMenuAction.deleteAllMessages:
                 widget.onDeleteAllMessages?.call();
                 break;
@@ -251,26 +248,13 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
           itemBuilder: (context) {
             return [
               PopupMenuItem<ChatMenuAction>(
-                value: ChatMenuAction.deleteMessages,
-                child: Row(
-                  children: [
-                    Icon(Icons.checklist_rounded, color: colors.textPrimary),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Delete messages',
-                      style: context.p.copyWith(color: colors.textPrimary),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem<ChatMenuAction>(
                 value: ChatMenuAction.deleteAllMessages,
                 child: Row(
                   children: [
                     Icon(Icons.delete_sweep_outlined, color: colors.red),
                     const SizedBox(width: 10),
                     Text(
-                      'Delete all messages',
+                      'Clear chats',
                       style: context.p.copyWith(color: colors.red),
                     ),
                   ],

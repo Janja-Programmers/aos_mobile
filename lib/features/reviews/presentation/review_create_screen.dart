@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
-import 'package:africaonlinestores/features/reviews/controllers/review_create_controller.dart';
+import 'package:africaonlinestores/features/reviews/application/controllers/review_create_controller.dart';
 import 'package:africaonlinestores/features/reviews/presentation/widgets/image_picker_bottom_sheet.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';

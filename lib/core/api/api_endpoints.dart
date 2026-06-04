@@ -74,8 +74,6 @@ class ApiEndpoints {
   static final String getReviewViewerState =
       '/api/method/aos.api.reviews.get_review_viewer_state';
 
-  // TODO: getReviewViewerState
-
   // Wishlist Endpoints
   static final String listWishlistEndpoint =
       '/api/method/aos.api.wishlist.list_wishlist';

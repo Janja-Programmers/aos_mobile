@@ -73,18 +73,58 @@ class ChatReplyPreview {
   bool get isDeleted => isDeletedForEveryone || messageType == 'deleted';
 
   String get previewText {
-    if (isDeleted) return displayText ?? 'This message was deleted';
     if (hasText) return content!.trim();
+
     if (hasAdPreview) {
       final title =
           adPreview?['title'] ?? adPreview?['ad_title'] ?? adPreview?['name'];
+
       if (title != null && title.toString().trim().isNotEmpty) {
         return title.toString().trim();
       }
     }
+
     if (hasAd) return '[Ad]';
-    if (hasAttachments) return '[Attachment]';
+
+    if (hasAttachments) {
+      return _attachmentPreviewText;
+    }
+
     return '[Message]';
+  }
+
+  String get _attachmentPreviewText {
+    final type = (originalMessageType ?? messageType).trim().toLowerCase();
+
+    switch (type) {
+      case 'image':
+      case 'photo':
+        return '[Image]';
+
+      case 'video':
+        return '[Video]';
+
+      case 'audio':
+      case 'voice':
+      case 'voice_note':
+        return '[Audio]';
+
+      case 'document':
+      case 'file':
+        return '[Document]';
+
+      case 'location':
+        return '[Location]';
+
+      case 'contact':
+        return '[Contact]';
+
+      case 'sticker':
+        return '[Sticker]';
+
+      default:
+        return '[Attachment]';
+    }
   }
 }
 
@@ -100,8 +140,10 @@ bool _truthy(dynamic value) {
 
 DateTime? _parseDate(dynamic value) {
   if (value == null) return null;
+
   final text = value.toString().trim();
   if (text.isEmpty || text.toLowerCase() == 'null') return null;
+
   return DateTime.tryParse(text);
 }
 

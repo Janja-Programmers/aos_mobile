@@ -12,11 +12,13 @@ import 'package:africaonlinestores/features/social/presentation/widgets/social_c
 class SocialConnectionsScreen extends ConsumerStatefulWidget {
   final String title;
   final SocialConnectionsTab initialTab;
+  final String? targetUser;
 
   const SocialConnectionsScreen({
     super.key,
-    this.title = 'kalutudaniel',
+    this.title = 'Connections',
     this.initialTab = SocialConnectionsTab.followers,
+    this.targetUser,
   });
 
   @override
@@ -38,12 +40,15 @@ class _SocialConnectionsScreenState
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    final state = ref.watch(
-      socialConnectionsControllerProvider(widget.initialTab),
+    final args = SocialConnectionsArgs(
+      initialTab: widget.initialTab,
+      targetUser: widget.targetUser,
     );
 
+    final state = ref.watch(socialConnectionsControllerProvider(args));
+
     final controller = ref.read(
-      socialConnectionsControllerProvider(widget.initialTab).notifier,
+      socialConnectionsControllerProvider(args).notifier,
     );
 
     return Scaffold(

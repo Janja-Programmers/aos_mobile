@@ -7,10 +7,11 @@ final socialConnectionsControllerProvider =
     StateNotifierProvider.family<
       SocialConnectionsController,
       SocialConnectionsState,
-      SocialConnectionsTab
-    >((ref, initialTab) {
+      SocialConnectionsArgs
+    >((ref, args) {
       return SocialConnectionsController(
         ref.read(socialRepositoryProvider),
-        initialTab: initialTab,
+        initialTab: args.initialTab,
+        targetUser: args.targetUser,
       );
     });

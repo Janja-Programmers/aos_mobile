@@ -5,6 +5,27 @@ import 'package:africaonlinestores/features/social/domain/social_friend.dart';
 enum SocialConnectionsTab { following, followers, friends }
 
 @immutable
+class SocialConnectionsArgs {
+  final SocialConnectionsTab initialTab;
+  final String? targetUser;
+
+  const SocialConnectionsArgs({
+    this.initialTab = SocialConnectionsTab.followers,
+    this.targetUser,
+  });
+
+  @override
+  bool operator ==(Object other) {
+    return other is SocialConnectionsArgs &&
+        other.initialTab == initialTab &&
+        other.targetUser == targetUser;
+  }
+
+  @override
+  int get hashCode => Object.hash(initialTab, targetUser);
+}
+
+@immutable
 class SocialConnectionsState {
   final SocialConnectionsTab selectedTab;
   final String query;

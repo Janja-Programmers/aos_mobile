@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_pending_attachment.dart';
@@ -12,6 +13,15 @@ import 'package:africaonlinestores/features/connect/chats/presentation/widgets/c
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/attachment_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/input_icon_button.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/voice_record_button.dart';
+
+class ChatAttachmentUploadException implements Exception {
+  final String message;
+
+  const ChatAttachmentUploadException(this.message);
+
+  @override
+  String toString() => message;
+}
 
 class ChatInputBar extends ConsumerStatefulWidget {
   final TextEditingController controller;
@@ -73,9 +83,13 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
               pending,
             );
 
-        if (uploaded != null) {
-          uploadedAttachments.add(uploaded);
+        if (uploaded == null) {
+          throw const ChatAttachmentUploadException(
+            'Attachment upload failed.',
+          );
         }
+
+        uploadedAttachments.add(uploaded);
       }
 
       await widget.onSend(
@@ -89,9 +103,14 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
             ..clear()
             ..addAll(pendingAttachments);
         });
+
+        ShowSnack(
+          context,
+          'Attachment upload failed. Please try again.',
+        ).error();
       }
 
-      rethrow;
+      return;
     } finally {
       if (mounted) {
         setState(() => _isSending = false);

@@ -21,11 +21,8 @@ class ChatMessagesController
   final Ref ref;
   final String conversationId;
 
-  late final String currentUser;
-
   ChatMessagesController(this.ref, this.conversationId)
     : super(const AsyncLoading()) {
-    currentUser = ref.read(currentUserProvider) ?? '';
     _init();
   }
 
@@ -38,6 +35,9 @@ class ChatMessagesController
 
   final Set<String> _translatingMessageIds = {};
   final Map<String, String> _translationErrors = {};
+
+  bool _isLoadingMore = false;
+  bool _hasMoreMessages = true;
 
   StreamSubscription? _messageSub;
   StreamSubscription? _messageStatusSub;
@@ -78,26 +78,37 @@ class ChatMessagesController
   }
 
   Future<void> loadMore() async {
-    if (_messages.isEmpty) return;
+    if (_messages.isEmpty || _isLoadingMore || !_hasMoreMessages) return;
 
-    final repo = ref.read(chatRepositoryProvider);
-    final oldest = _messages.first;
+    _isLoadingMore = true;
 
-    final res = await repo.getMessages(
-      conversationId: conversationId,
-      before: oldest.id,
-    );
+    try {
+      final repo = ref.read(chatRepositoryProvider);
+      final oldest = _messages.first;
 
-    if (res.isLeft) return;
+      final res = await repo.getMessages(
+        conversationId: conversationId,
+        before: oldest.id,
+      );
 
-    final olderMessages = List<ChatMessage>.from(res.rightOrNull ?? []);
+      if (res.isLeft) return;
 
-    for (final message in olderMessages.reversed) {
-      _upsertMessage(message, emit: false);
+      final olderMessages = List<ChatMessage>.from(res.rightOrNull ?? []);
+
+      if (olderMessages.isEmpty) {
+        _hasMoreMessages = false;
+        return;
+      }
+
+      for (final message in olderMessages.reversed) {
+        _upsertMessage(message, emit: false);
+      }
+
+      _sortMessages();
+      _emitMessages();
+    } finally {
+      _isLoadingMore = false;
     }
-
-    _sortMessages();
-    _emitMessages();
   }
 
   // ---------------------------------------------------------------------------
@@ -149,6 +160,8 @@ class ChatMessagesController
       tempId: tempId,
       text: trimmedText,
       ad: hasAd ? adId.trim() : null,
+      replyToMessage: replyToMessage,
+      replyTo: replyTo,
       attachments: apiAttachments,
       fallbackUser: fallbackUser,
       fallbackDisplayName: fallbackDisplayName,
@@ -164,6 +177,8 @@ class ChatMessagesController
       adPrice: adPrice,
       adImage: adImage,
       attachments: validAttachments,
+      replyToMessage: replyToMessage,
+      replyTo: replyTo,
     );
 
     _upsertMessage(tempMessage);
@@ -248,6 +263,7 @@ class ChatMessagesController
     final realMsg = await sendMessage(
       text: payload.text,
       ad: payload.ad,
+      replyToMessage: payload.replyToMessage,
       attachments: payload.attachments,
     );
 
@@ -278,6 +294,8 @@ class ChatMessagesController
     required String? adPrice,
     required String? adImage,
     required List<ChatInputAttachment> attachments,
+    String? replyToMessage,
+    ChatReplyPreview? replyTo,
   }) {
     final tempAttachments = attachments.asMap().entries.map((entry) {
       final index = entry.key;
@@ -303,6 +321,8 @@ class ChatMessagesController
       attachments: tempAttachments,
       ad: adId,
       adPreview: tempAdPreview,
+      replyToMessage: replyToMessage,
+      replyTo: replyTo,
     ).copyWith(
       localStatus: ChatLocalMessageStatus.sending,
       clearLocalError: true,
@@ -349,7 +369,7 @@ class ChatMessagesController
     final updated = res.rightOrNull;
     if (updated == null) return false;
 
-    _upsertMessage(updated);
+    _applyEditedMessage(updated);
     return true;
   }
 
@@ -510,7 +530,11 @@ class ChatMessagesController
 
     _translatingMessageIds.add(cleanMessageId);
     _translationErrors.remove(cleanMessageId);
-    _emitMessages();
+    _setMessageTranslationState(
+      cleanMessageId,
+      isTranslating: true,
+      clearError: true,
+    );
 
     final repo = ref.read(chatRepositoryProvider);
 
@@ -523,7 +547,11 @@ class ChatMessagesController
 
     if (res.isLeft) {
       _translationErrors[cleanMessageId] = 'Failed to translate message.';
-      _emitMessages();
+      _setMessageTranslationState(
+        cleanMessageId,
+        isTranslating: false,
+        error: 'Failed to translate message.',
+      );
       return false;
     }
 
@@ -536,7 +564,11 @@ class ChatMessagesController
 
     if (translatedContent == null || translatedContent.isEmpty) {
       _translationErrors[cleanMessageId] = 'No translation returned.';
-      _emitMessages();
+      _setMessageTranslationState(
+        cleanMessageId,
+        isTranslating: false,
+        error: 'No translation returned.',
+      );
       return false;
     }
 
@@ -554,6 +586,8 @@ class ChatMessagesController
     _messages[index] = current.copyWith(
       translatedContent: translatedContent,
       translationLanguage: translationLanguage,
+      isTranslating: false,
+      clearTranslationError: true,
     );
 
     _translationErrors.remove(cleanMessageId);
@@ -573,9 +607,35 @@ class ChatMessagesController
 
     if (index == -1) return;
 
-    _messages[index] = _messages[index].copyWith(clearTranslation: true);
+    _messages[index] = _messages[index].copyWith(
+      clearTranslation: true,
+      isTranslating: false,
+      clearTranslationError: true,
+    );
 
     _translationErrors.remove(cleanMessageId);
+    _emitMessages();
+  }
+
+  void _setMessageTranslationState(
+    String messageId, {
+    required bool isTranslating,
+    String? error,
+    bool clearError = false,
+  }) {
+    final index = _messages.indexWhere((message) => message.id == messageId);
+
+    if (index == -1) {
+      _emitMessages();
+      return;
+    }
+
+    _messages[index] = _messages[index].copyWith(
+      isTranslating: isTranslating,
+      translationError: error,
+      clearTranslationError: clearError,
+    );
+
     _emitMessages();
   }
 
@@ -660,7 +720,7 @@ class ChatMessagesController
 
     final message = ChatMessage.fromJson(Map<String, dynamic>.from(msgData));
 
-    _upsertMessage(message);
+    _applyEditedMessage(message);
   }
 
   Future<void> _handleRealtimeMessagesDeleted(Map<String, dynamic> data) async {
@@ -876,8 +936,14 @@ class ChatMessagesController
   // ---------------------------------------------------------------------------
 
   bool _isIncomingMessage(ChatMessage message) {
-    return message.sender.trim().toLowerCase() !=
-        currentUser.trim().toLowerCase();
+    final currentUser =
+        ref.read(currentUserProvider)?.trim().toLowerCase() ?? '';
+
+    if (currentUser.isEmpty) {
+      return false;
+    }
+
+    return message.sender.trim().toLowerCase() != currentUser;
   }
 
   void _scheduleIncomingReadSync() {
@@ -1004,6 +1070,49 @@ class ChatMessagesController
     final sameAttachments = temp.attachments.length == real.attachments.length;
 
     return sameText && sameReply && sameAttachments;
+  }
+
+  void _applyEditedMessage(ChatMessage updated) {
+    final index = _messages.indexWhere((message) => message.id == updated.id);
+
+    if (index == -1) {
+      _upsertMessage(updated);
+      return;
+    }
+
+    final current = _messages[index];
+
+    _messages[index] = current.copyWith(
+      content: updated.content,
+      messageType: updated.messageType,
+      originalMessageType: updated.originalMessageType,
+      isEdited: true,
+      editedAt: updated.editedAt ?? DateTime.now(),
+
+      // Keep stable UI fields from current message.
+      senderDisplayName: updated.senderDisplayName ?? current.senderDisplayName,
+      senderAvatar: updated.senderAvatar ?? current.senderAvatar,
+      ad: updated.ad ?? current.ad,
+      adPreview: updated.adPreview ?? current.adPreview,
+      replyToMessage: updated.replyToMessage ?? current.replyToMessage,
+      replyTo: updated.replyTo ?? current.replyTo,
+
+      hasAttachments: updated.hasAttachments || current.hasAttachments,
+      attachments: updated.attachments.isNotEmpty
+          ? updated.attachments
+          : current.attachments,
+
+      reactions: updated.reactions.isNotEmpty
+          ? updated.reactions
+          : current.reactions,
+
+      viewerState: updated.viewerState,
+
+      clearTranslation: true,
+    );
+
+    _sortMessages();
+    _emitMessages();
   }
 
   // ---------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:africaonlinestores/features/reviews/controllers/review_create_state.dart';
+import 'package:africaonlinestores/features/reviews/application/state/review_create_state.dart';
 import 'package:africaonlinestores/features/reviews/data/review_api.dart';
 
 final reviewCreateControllerProvider =

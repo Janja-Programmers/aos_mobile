@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/core/utils/either.dart';
 
-import 'package:africaonlinestores/features/reviews/controllers/review_state.dart';
+import 'package:africaonlinestores/features/reviews/application/state/review_state.dart';
 import 'package:africaonlinestores/features/reviews/data/review_api.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_model.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_summary.dart';
@@ -18,11 +18,41 @@ final reviewControllerProvider =
 
 class ReviewController extends StateNotifier<ReviewState> {
   ReviewController(this.ref, this.adId) : super(const ReviewState()) {
-    loadReviews();
+    loadInitial();
   }
 
   final Ref ref;
   final String adId;
+
+  Future<void> loadInitial() async {
+    await Future.wait([loadReviews(), loadReviewViewerState()]);
+  }
+
+  /// ---------------------------
+  /// Load Review Viewer State
+  /// ---------------------------
+  Future<void> loadReviewViewerState() async {
+    state = state.copyWith(viewerStateLoading: true, clearError: true);
+
+    final api = ref.read(reviewApiProvider);
+
+    final result = await api.getReviewViewerState(ad: adId);
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          viewerStateLoading: false,
+          error: failure.message,
+        );
+      },
+      (viewerState) {
+        state = state.copyWith(
+          viewerStateLoading: false,
+          viewerState: viewerState,
+        );
+      },
+    );
+  }
 
   /// ---------------------------
   /// Load Reviews
@@ -92,8 +122,8 @@ class ReviewController extends StateNotifier<ReviewState> {
       (_) async {
         state = state.copyWith(submitting: false);
 
-        /// refresh after submit
         await loadReviews();
+        await loadReviewViewerState();
 
         return true;
       },

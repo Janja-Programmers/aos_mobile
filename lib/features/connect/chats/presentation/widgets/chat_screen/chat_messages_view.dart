@@ -5,7 +5,10 @@ import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_messages_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_background.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_date_separator.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble.dart';
+
+import 'package:africaonlinestores/shared/utils/format_time.dart';
 
 class ChatMessagesView extends StatelessWidget {
   final ChatMessagesState messagesState;
@@ -43,6 +46,26 @@ class ChatMessagesView extends StatelessWidget {
     );
   }
 
+  bool _shouldShowDateSeparator({
+    required List<ChatMessage> messages,
+    required int index,
+  }) {
+    if (index == messages.length - 1) {
+      return true;
+    }
+
+    final currentDate = messages[index].createdAt.toLocal();
+    final olderDate = messages[index + 1].createdAt.toLocal();
+
+    return !_isSameCalendarDay(currentDate, olderDate);
+  }
+
+  bool _isSameCalendarDay(DateTime first, DateTime second) {
+    return first.year == second.year &&
+        first.month == second.month &&
+        first.day == second.day;
+  }
+
   Widget _buildContent(BuildContext context, dynamic colors) {
     if (messagesState.isInitialLoading && messagesState.messages.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -62,48 +85,63 @@ class ChatMessagesView extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           itemCount: messages.length,
           itemBuilder: (context, index) {
-            // Backend is the message order SSOT and returns newest -> oldest.
-            // With reverse:true, index 0 is visually at the bottom.
-            final msg = messages[index];
-            final isSystem = msg.isSystemMessage;
+            final message = messages[index];
+            final isSystem = message.isSystemMessage;
+
             final isMe = _isOwnMessage(
-              sender: msg.sender,
+              sender: message.sender,
               currentUserId: currentUserId,
               isSystem: isSystem,
             );
 
-            return Dismissible(
-              key: ValueKey(
-                'reply-${msg.id}-${msg.createdAt.microsecondsSinceEpoch}',
-              ),
-              direction: isSystem || msg.isDeletedType
-                  ? DismissDirection.none
-                  : DismissDirection.startToEnd,
-              confirmDismiss: (_) async {
-                onReply(msg);
-                return false;
-              },
-              background: Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 20),
-                  child: Icon(Icons.reply_rounded, color: colors.primary),
+            final showDateSeparator = _shouldShowDateSeparator(
+              messages: messages,
+              index: index,
+            );
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showDateSeparator)
+                  ChatDateSeparator(
+                    label: formatDateGroupTitle(message.createdAt),
+                  ),
+                Dismissible(
+                  key: ValueKey(
+                    'reply-${message.id}-${message.createdAt.microsecondsSinceEpoch}',
+                  ),
+                  direction: isSystem || message.isDeletedType
+                      ? DismissDirection.none
+                      : DismissDirection.startToEnd,
+                  confirmDismiss: (_) async {
+                    onReply(message);
+                    return false;
+                  },
+                  background: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 20),
+                      child: Icon(Icons.reply_rounded, color: colors.primary),
+                    ),
+                  ),
+                  child: MessageBubble(
+                    message: message,
+                    isMe: isMe,
+                    isSystem: isSystem,
+                    conversationId: conversationId,
+                    otherUserId: otherUserId,
+                    otherDisplayName: otherDisplayName,
+                    otherAvatarUrl: otherAvatarUrl,
+                    onLongPress: () => onLongPress(message, isMe),
+                    onRetry: message.isLocalFailed
+                        ? () => onRetry(message)
+                        : null,
+                    onAdTap: (adId) {
+                      AdNavigation.toDetail(context, adId);
+                    },
+                  ),
                 ),
-              ),
-              child: MessageBubble(
-                message: msg,
-                isMe: isMe,
-                isSystem: isSystem,
-                conversationId: conversationId,
-                otherUserId: otherUserId,
-                otherDisplayName: otherDisplayName,
-                otherAvatarUrl: otherAvatarUrl,
-                onLongPress: () => onLongPress(msg, isMe),
-                onRetry: msg.isLocalFailed ? () => onRetry(msg) : null,
-                onAdTap: (adId) {
-                  AdNavigation.toDetail(context, adId);
-                },
-              ),
+              ],
             );
           },
         ),

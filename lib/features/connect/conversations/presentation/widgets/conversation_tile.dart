@@ -54,7 +54,9 @@ class ConversationTile extends StatelessWidget {
     }
 
     final message = conversation.lastMessage ?? '';
-    final isMine = conversation.lastSender == conversation.user;
+    final isMine =
+        conversation.lastSender != conversation.user &&
+        conversation.lastSender != 'Administrator';
 
     if (!isMine) {
       return Text(
@@ -95,11 +97,7 @@ class ConversationTile extends StatelessWidget {
     final isDelivered = conversation.lastMessageDeliveredAt != null;
 
     if (isRead) {
-      return Icon(
-        Icons.done_all_rounded,
-        size: 16,
-        color: colors.primary, // blue/read color
-      );
+      return Icon(Icons.done_all_rounded, size: 16, color: colors.primary);
     }
 
     if (isDelivered) {

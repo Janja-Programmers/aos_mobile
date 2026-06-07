@@ -43,7 +43,7 @@ mixin ChatMessagesSending on ChatMessagesControllerBase {
     }).toList();
 
     final apiAttachments = validAttachments
-        .map((attachment) => attachment.toApi(ad: hasAd ? adId : null))
+        .map((attachment) => attachment.toApi())
         .toList();
 
     _pendingSends[tempId] = PendingSendPayload(

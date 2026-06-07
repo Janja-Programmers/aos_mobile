@@ -269,7 +269,7 @@ class MessageBubble extends StatelessWidget {
                     const SizedBox(width: 3),
                   ],
                   Text(
-                    formatTime(message.createdAt),
+                    formatMessageTime(message.createdAt),
                     style: context.p.copyWith(
                       fontSize: 10,
                       color: isMe && !isDeleted

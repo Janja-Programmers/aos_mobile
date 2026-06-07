@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -195,6 +196,16 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
     final file = File(path);
 
     if (!await file.exists()) return;
+
+    final filename = file.path.split(Platform.pathSeparator).last;
+    final extension = filename.contains('.')
+        ? filename.split('.').last.toLowerCase()
+        : '';
+
+    appLogger.i('Audio path: ${file.path}');
+    appLogger.i('Audio filename: $filename');
+    appLogger.i('Audio extension: $extension');
+    appLogger.i('Audio size: ${await file.length()} bytes');
 
     setState(() {
       _attachments.add(ChatPendingAttachment(file: file, type: 'audio'));

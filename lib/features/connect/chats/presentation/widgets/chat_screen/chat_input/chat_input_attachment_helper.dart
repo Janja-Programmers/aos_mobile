@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_pending_attachment.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,6 +7,7 @@ import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
 import 'package:africaonlinestores/core/files/domain/upload_file.dart';
 import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
 
+import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_pending_attachment.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 
 class ChatInputAttachmentHelper {

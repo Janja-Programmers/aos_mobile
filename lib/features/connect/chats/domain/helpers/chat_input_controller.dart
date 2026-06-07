@@ -9,12 +9,8 @@ class ChatInputAttachment {
     required this.previewUrl,
   });
 
-  Map<String, dynamic> toApi({String? ad}) {
-    return {
-      if (ad != null && ad.trim().isNotEmpty) 'ad': ad.trim(),
-      'file': fileId.trim(),
-      'file_type': type.trim(),
-    };
+  Map<String, dynamic> toApi() {
+    return {'file': fileId.trim(), 'file_type': type.trim()};
   }
 
   ChatInputAttachment copyWith({

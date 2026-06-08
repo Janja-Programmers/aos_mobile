@@ -125,7 +125,7 @@ class CallKitService {
     } catch (e, s) {
       _shownIncomingCallIds.remove(backendCallId);
 
-      if (callkitUuid != null && callkitUuid.isNotEmpty) {
+      if (callkitUuid.isNotEmpty) {
         _callkitUuidByCallId.remove(backendCallId);
         _callIdByCallkitUuid.remove(callkitUuid);
       }
@@ -290,36 +290,76 @@ class CallKitService {
     if (event == null) return;
 
     final extractedCallId = _extractCallId(event);
-    _currentCallId = extractedCallId ?? _currentCallId;
 
-    final resolvedCallId = _currentCallId;
-
-    appLogger.i('📞 CallKit event: ${event.event}');
-    appLogger.i('📞 CallKit resolved callId: $resolvedCallId');
-
-    if (resolvedCallId == null || resolvedCallId.isEmpty) {
-      appLogger.w('⚠️ Ignoring CallKit event with no callId');
-      return;
+    if (extractedCallId != null && extractedCallId.isNotEmpty) {
+      _currentCallId = extractedCallId;
     }
 
-    switch (event.event) {
-      case Event.actionCallAccept:
+    final resolvedCallId = extractedCallId ?? _currentCallId;
+
+    appLogger.i('📞 CallKit event: ${event.eventName}');
+    appLogger.i('📞 CallKit resolved callId: $resolvedCallId');
+
+    switch (event) {
+      case CallEventActionCallAccept():
+        if (resolvedCallId == null || resolvedCallId.isEmpty) {
+          appLogger.w('⚠️ Ignoring CallKit accept with no callId');
+          return;
+        }
+
         await _handleAccept(resolvedCallId);
         break;
 
-      case Event.actionCallDecline:
+      case CallEventActionCallDecline():
+        if (resolvedCallId == null || resolvedCallId.isEmpty) {
+          appLogger.w('⚠️ Ignoring CallKit decline with no callId');
+          return;
+        }
+
         await _handleDecline(resolvedCallId);
         break;
 
-      case Event.actionCallEnded:
+      case CallEventActionCallEnded():
+        if (resolvedCallId == null || resolvedCallId.isEmpty) {
+          appLogger.w('⚠️ Ignoring CallKit end with no callId');
+          return;
+        }
+
         await _handleEnded(resolvedCallId);
         break;
 
-      case Event.actionCallTimeout:
+      case CallEventActionCallTimeout():
+        if (resolvedCallId == null || resolvedCallId.isEmpty) {
+          appLogger.w('⚠️ Ignoring CallKit timeout with no callId');
+          return;
+        }
+
         await _handleTimeout(resolvedCallId);
         break;
 
-      default:
+      case CallEventActionCallIncoming():
+        appLogger.i('📞 Incoming CallKit event received');
+        break;
+
+      case CallEventActionCallStart():
+        appLogger.i('📞 Outgoing CallKit event started');
+        break;
+
+      case CallEventActionCallConnected():
+        appLogger.i('📞 CallKit call connected');
+        break;
+
+      case CallEventActionCallCallback():
+        appLogger.i('📞 CallKit callback requested');
+        break;
+
+      case CallEventActionCallToggleHold():
+      case CallEventActionCallToggleMute():
+      case CallEventActionCallToggleDmtf():
+      case CallEventActionCallToggleGroup():
+      case CallEventActionCallToggleAudioSession():
+      case CallEventActionDidUpdateDevicePushTokenVoip():
+      case CallEventActionCallCustom():
         break;
     }
   }
@@ -361,36 +401,103 @@ class CallKitService {
   }
 
   String? _extractCallId(CallEvent event) {
-    final body = event.body;
+    final String? rawId;
 
-    if (body is! Map) return null;
+    switch (event) {
+      case CallEventActionCallIncoming():
+        final params = event.callKitParams;
 
-    final extra = body['extra'];
+        final extra = params.extra;
 
-    if (extra is Map && extra['call_id'] != null) {
-      return extra['call_id'].toString();
+        if (extra is Map && extra?['call_id'] != null) {
+          final backendCallId = extra?['call_id'].toString().trim();
+
+          if (backendCallId != null) {
+            final callkitUuid = params.id;
+
+            if (callkitUuid.isNotEmpty) {
+              _callkitUuidByCallId[backendCallId] = callkitUuid;
+              _callIdByCallkitUuid[callkitUuid] = backendCallId;
+            }
+
+            return backendCallId;
+          }
+        }
+
+        rawId = params.id;
+
+      case CallEventActionCallStart():
+        rawId = event.id;
+
+      case CallEventActionCallAccept():
+        rawId = event.id;
+
+      case CallEventActionCallDecline():
+        rawId = event.id;
+
+      case CallEventActionCallEnded():
+        rawId = event.id;
+
+      case CallEventActionCallTimeout():
+        rawId = event.id;
+
+      case CallEventActionCallConnected():
+        rawId = event.id;
+
+      case CallEventActionCallCallback():
+        rawId = event.id;
+
+      case CallEventActionCallToggleHold():
+        rawId = event.id;
+
+      case CallEventActionCallToggleMute():
+        rawId = event.id;
+
+      case CallEventActionCallToggleDmtf():
+        rawId = event.id;
+
+      case CallEventActionCallToggleGroup():
+        rawId = event.id;
+
+      case CallEventActionCallCustom():
+        final body = event.body;
+        final extra = body['extra'];
+
+        if (extra is Map && extra['call_id'] != null) {
+          final backendCallId = extra['call_id'].toString().trim();
+
+          if (backendCallId.isNotEmpty) {
+            return backendCallId;
+          }
+        }
+
+        rawId = body['id']?.toString();
+
+      case CallEventActionCallToggleAudioSession():
+      case CallEventActionDidUpdateDevicePushTokenVoip():
+        return null;
     }
-
-    final rawId = body['id']?.toString();
 
     if (rawId == null || rawId.isEmpty) {
       return null;
     }
 
-    // If native event gives CallKit UUID, map it back to backend call id.
+    // Native CallKit events normally provide the CallKit UUID.
     final mappedCallId = _callIdByCallkitUuid[rawId];
+
     if (mappedCallId != null && mappedCallId.isNotEmpty) {
       return mappedCallId;
     }
 
-    // Last fallback: only return rawId if it looks like your backend call id.
+    // Backend ID fallback.
     if (rawId.startsWith('CALL-')) {
       return rawId;
     }
 
     appLogger.w(
-      '⚠️ Could not resolve CallKit event id to backend callId: $rawId',
+      '⚠️ Could not resolve CallKit event ID to backend callId: $rawId',
     );
+
     return null;
   }
 

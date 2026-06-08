@@ -33,8 +33,8 @@ class CallKitParamsMapper {
       avatar: callerAvatar,
       type: isVideo ? 1 : 0,
       duration: 30000,
-      textAccept: 'Accept',
-      textDecline: 'Decline',
+      // textAccept: 'Accept',
+      // textDecline: 'Decline',
       missedCallNotification: null,
       extra: {
         'call_id': callId,

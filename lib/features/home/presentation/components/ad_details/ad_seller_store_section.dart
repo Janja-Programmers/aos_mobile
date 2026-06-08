@@ -1,5 +1,7 @@
 import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/features/account/shared/utils/avator_image.dart';
+import 'package:africaonlinestores/features/reviews/application/state/review_state.dart';
+import 'package:africaonlinestores/features/reviews/presentation/helpers/build_review_button.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
@@ -18,6 +20,7 @@ class AdSellerInfoSection extends StatelessWidget {
     required this.joined,
     required this.isFollowing,
     this.isVerified = false,
+    required this.reviewState,
     required this.onVisitStore,
     required this.onReview,
     required this.onReport,
@@ -33,6 +36,8 @@ class AdSellerInfoSection extends StatelessWidget {
   final String joined;
   final bool isFollowing;
   final bool isVerified;
+
+  final ReviewState reviewState;
 
   final VoidCallback onVisitStore;
   final VoidCallback onReview;
@@ -178,24 +183,6 @@ class AdSellerInfoSection extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: onReview,
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  child: Text(
-                    'Review Product',
-                    style: context.p.copyWith(
-                      color: colors.primary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton(
                   onPressed: onReport,
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
@@ -211,18 +198,30 @@ class AdSellerInfoSection extends StatelessWidget {
                   ),
                 ),
               ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onPostSimilar,
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  child: Text(
+                    'Post similar Ad',
+                    style: context.p.copyWith(
+                      color: colors.primary,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
 
           const SizedBox(height: 12),
 
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: onPostSimilar,
-              child: const Text('Post an Ad like this'),
-            ),
-          ),
+          buildReviewButton(reviewState: reviewState, onReview: onReview),
         ],
       ),
     );

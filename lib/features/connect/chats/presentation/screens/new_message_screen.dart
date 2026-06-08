@@ -5,7 +5,7 @@ import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/connect/chats/utils/chat_actions.dart';
-import 'package:africaonlinestores/features/connect/presentation/widgets/seller_picker_body.dart';
+import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/seller_picker_body.dart';
 
 class NewMessageScreen extends ConsumerWidget {
   const NewMessageScreen({super.key});
@@ -31,7 +31,8 @@ class NewMessageScreen extends ConsumerWidget {
                   context: context,
                   ref: ref,
                   user: seller.user,
-                  displayName: seller.shopName,
+                  displayName: seller.displayName,
+                  avatar: seller.avatar,
                 );
               },
             );

@@ -4,9 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
-import 'package:africaonlinestores/features/connect/utils/format_time.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
 import 'package:africaonlinestores/features/notifications/presentation/utils/helpers.dart';
+
+import 'package:africaonlinestores/shared/utils/format_time.dart';
 
 class NotificationTile extends StatefulWidget {
   final NotificationItem notification;

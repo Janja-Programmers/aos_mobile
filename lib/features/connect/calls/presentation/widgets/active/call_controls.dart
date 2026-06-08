@@ -20,6 +20,8 @@ class CallControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isVideoCall = callState.callMediaMode == CallMediaMode.video;
+    final isWaitingForUpgrade = callState.isWaitingForVideoUpgradeResponse;
+    final hasIncomingUpgrade = callState.hasIncomingVideoUpgradeRequest;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 30),
@@ -35,15 +37,20 @@ class CallControls extends StatelessWidget {
           ),
 
           ActionButton(
-            icon: callState.isUpgradePending
-                ? Icons
-                      .hourglass_top // 🔥 waiting state
+            icon: isWaitingForUpgrade
+                ? Icons.hourglass_top
+                : hasIncomingUpgrade
+                ? Icons.video_call_outlined
                 : callState.isLocalVideoEnabled
                 ? Icons.videocam
                 : Icons.videocam_off,
-            label: callState.isUpgradePending ? 'Requesting...' : 'Video',
+            label: isWaitingForUpgrade
+                ? 'Waiting...'
+                : hasIncomingUpgrade
+                ? 'Respond'
+                : 'Video',
             active: isVideoCall && callState.isLocalVideoEnabled,
-            onTap: callState.isUpgradePending
+            onTap: isWaitingForUpgrade || hasIncomingUpgrade
                 ? () {}
                 : () => manager.toggleVideo(),
           ),

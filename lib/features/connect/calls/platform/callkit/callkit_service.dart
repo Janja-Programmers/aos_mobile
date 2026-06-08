@@ -290,50 +290,38 @@ class CallKitService {
     if (event == null) return;
 
     final extractedCallId = _extractCallId(event);
-
     if (extractedCallId != null && extractedCallId.isNotEmpty) {
       _currentCallId = extractedCallId;
     }
 
-    final resolvedCallId = extractedCallId ?? _currentCallId;
+    final resolvedCallId = _currentCallId;
 
     appLogger.i('📞 CallKit event: ${event.eventName}');
     appLogger.i('📞 CallKit resolved callId: $resolvedCallId');
 
+    if (resolvedCallId == null || resolvedCallId.isEmpty) {
+      appLogger.w('⚠️ Ignoring CallKit event with no callId');
+      return;
+    }
+
+    if (_endedCallIds.contains(resolvedCallId)) {
+      return;
+    }
+
     switch (event) {
       case CallEventActionCallAccept():
-        if (resolvedCallId == null || resolvedCallId.isEmpty) {
-          appLogger.w('⚠️ Ignoring CallKit accept with no callId');
-          return;
-        }
-
         await _handleAccept(resolvedCallId);
         break;
 
       case CallEventActionCallDecline():
-        if (resolvedCallId == null || resolvedCallId.isEmpty) {
-          appLogger.w('⚠️ Ignoring CallKit decline with no callId');
-          return;
-        }
-
         await _handleDecline(resolvedCallId);
         break;
 
       case CallEventActionCallEnded():
-        if (resolvedCallId == null || resolvedCallId.isEmpty) {
-          appLogger.w('⚠️ Ignoring CallKit end with no callId');
-          return;
-        }
-
         await _handleEnded(resolvedCallId);
         break;
 
       case CallEventActionCallTimeout():
-        if (resolvedCallId == null || resolvedCallId.isEmpty) {
-          appLogger.w('⚠️ Ignoring CallKit timeout with no callId');
-          return;
-        }
-
         await _handleTimeout(resolvedCallId);
         break;
 
@@ -365,6 +353,12 @@ class CallKitService {
   }
 
   Future<void> _handleAccept(String callId) async {
+    if (_handledDeclineIds.contains(callId) ||
+        _handledTimeoutIds.contains(callId) ||
+        _handledEndIds.contains(callId)) {
+      return;
+    }
+
     if (!_handledAcceptIds.add(callId)) {
       appLogger.i('📞 Duplicate CallKit accept ignored: $callId');
       return;
@@ -374,6 +368,10 @@ class CallKitService {
   }
 
   Future<void> _handleDecline(String callId) async {
+    if (_handledAcceptIds.contains(callId) || _handledEndIds.contains(callId)) {
+      return;
+    }
+
     if (!_handledDeclineIds.add(callId)) {
       appLogger.i('📞 Duplicate CallKit decline ignored: $callId');
       return;
@@ -384,7 +382,6 @@ class CallKitService {
 
   Future<void> _handleEnded(String callId) async {
     if (!_handledEndIds.add(callId)) {
-      appLogger.i('📞 Duplicate CallKit end ignored: $callId');
       return;
     }
 
@@ -392,6 +389,12 @@ class CallKitService {
   }
 
   Future<void> _handleTimeout(String callId) async {
+    if (_handledAcceptIds.contains(callId) ||
+        _handledDeclineIds.contains(callId) ||
+        _handledEndIds.contains(callId)) {
+      return;
+    }
+
     if (!_handledTimeoutIds.add(callId)) {
       appLogger.i('📞 Duplicate CallKit timeout ignored: $callId');
       return;
@@ -406,13 +409,17 @@ class CallKitService {
     switch (event) {
       case CallEventActionCallIncoming():
         final params = event.callKitParams;
-
         final extra = params.extra;
 
-        if (extra is Map && extra?['call_id'] != null) {
-          final backendCallId = extra?['call_id'].toString().trim();
+        if (extra is Map) {
+          final backendCallId = _readString(extra, const [
+            'call_id',
+            'backend_call_id',
+            'backendCallId',
+            'aos_call_id',
+          ]);
 
-          if (backendCallId != null) {
+          if (backendCallId != null && backendCallId.isNotEmpty) {
             final callkitUuid = params.id;
 
             if (callkitUuid.isNotEmpty) {
@@ -425,53 +432,40 @@ class CallKitService {
         }
 
         rawId = params.id;
+        break;
 
-      case CallEventActionCallStart():
-        rawId = event.id;
+      case CallEventActionCallStart(id: final id):
+      case CallEventActionCallAccept(id: final id):
+      case CallEventActionCallDecline(id: final id):
+      case CallEventActionCallEnded(id: final id):
+      case CallEventActionCallTimeout(id: final id):
+      case CallEventActionCallConnected(id: final id):
+      case CallEventActionCallCallback(id: final id):
+      case CallEventActionCallToggleHold(id: final id, isOnHold: _):
+      case CallEventActionCallToggleMute(id: final id, isMuted: _):
+      case CallEventActionCallToggleDmtf(id: final id, digits: _, type: _):
+      case CallEventActionCallToggleGroup(id: final id, callUUIDToGroupWith: _):
+        rawId = id;
+        break;
 
-      case CallEventActionCallAccept():
-        rawId = event.id;
-
-      case CallEventActionCallDecline():
-        rawId = event.id;
-
-      case CallEventActionCallEnded():
-        rawId = event.id;
-
-      case CallEventActionCallTimeout():
-        rawId = event.id;
-
-      case CallEventActionCallConnected():
-        rawId = event.id;
-
-      case CallEventActionCallCallback():
-        rawId = event.id;
-
-      case CallEventActionCallToggleHold():
-        rawId = event.id;
-
-      case CallEventActionCallToggleMute():
-        rawId = event.id;
-
-      case CallEventActionCallToggleDmtf():
-        rawId = event.id;
-
-      case CallEventActionCallToggleGroup():
-        rawId = event.id;
-
-      case CallEventActionCallCustom():
-        final body = event.body;
+      case CallEventActionCallCustom(body: final body):
         final extra = body['extra'];
 
-        if (extra is Map && extra['call_id'] != null) {
-          final backendCallId = extra['call_id'].toString().trim();
+        if (extra is Map) {
+          final backendCallId = _readString(extra, const [
+            'call_id',
+            'backend_call_id',
+            'backendCallId',
+            'aos_call_id',
+          ]);
 
-          if (backendCallId.isNotEmpty) {
+          if (backendCallId != null && backendCallId.isNotEmpty) {
             return backendCallId;
           }
         }
 
         rawId = body['id']?.toString();
+        break;
 
       case CallEventActionCallToggleAudioSession():
       case CallEventActionDidUpdateDevicePushTokenVoip():
@@ -497,6 +491,19 @@ class CallKitService {
     appLogger.w(
       '⚠️ Could not resolve CallKit event ID to backend callId: $rawId',
     );
+
+    return null;
+  }
+
+  String? _readString(Object? source, List<String> keys) {
+    if (source is! Map) return null;
+
+    for (final key in keys) {
+      final value = source[key]?.toString().trim();
+      if (value != null && value.isNotEmpty && value.toLowerCase() != 'null') {
+        return value;
+      }
+    }
 
     return null;
   }

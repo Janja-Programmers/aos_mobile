@@ -16,29 +16,28 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:africaonlinestores/core/utils/local_resolver.dart';
 import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/core/theme/theme_controller.dart';
-import 'package:flutter_callkit_incoming/entities/android_params.dart';
-import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage.dart';
+import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
+import 'package:africaonlinestores/core/notifications/android_notification_channel.dart';
+import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/application/listeners/callkit_state_listener.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_payload_mapper.dart';
+import 'package:africaonlinestores/features/connect/calls/application/listeners/call_navigation_listener.dart';
+import 'package:africaonlinestores/features/connect/calls/application/listeners/call_audio_feedback_listener.dart';
+import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
+import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
+import 'package:africaonlinestores/features/notifications/application/services/in_app_banner_listener.dart';
+import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/listeners/upload_short_listener.dart';
 import 'package:africaonlinestores/shared/widgets/app_error_fallback.dart';
 import 'package:africaonlinestores/shared/widgets/active_call_overlay.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
-import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
-import 'package:africaonlinestores/core/notifications/android_notification_channel.dart';
-import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
-import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
-import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
-import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
-import 'package:africaonlinestores/features/notifications/application/services/in_app_banner_listener.dart';
-import 'package:africaonlinestores/features/connect/calls/application/listeners/callkit_state_listener.dart';
-import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
-import 'package:africaonlinestores/features/connect/calls/application/listeners/call_navigation_listener.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/listeners/upload_short_listener.dart';
-import 'package:africaonlinestores/features/connect/calls/application/listeners/call_audio_feedback_listener.dart';
 
 const String pendingIncomingCallPayloadKey = 'pending_incoming_call_payload';
 
@@ -49,19 +48,16 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  final data = message.data;
+  final data = Map<String, dynamic>.from(message.data);
 
   final isIncomingCall =
       data['event'] == 'aos_incoming_call' ||
       data['type'] == 'incoming_call' ||
       data['notification_type'] == 'incoming_call';
 
-  if (!isIncomingCall) {
-    return;
-  }
+  if (!isIncomingCall) return;
 
-  final callId = (data['call_id'] ?? data['id'])?.toString().trim();
-
+  final callId = data['call_id']?.toString().trim();
   if (callId == null || callId.isEmpty || callId.toLowerCase() == 'null') {
     return;
   }
@@ -70,33 +66,9 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   await prefs.setString(pendingIncomingCallPayloadKey, jsonEncode(data));
 
-  final callerName = data['caller_display_name']?.toString().trim();
-  final callType = data['call_type']?.toString().trim().toLowerCase();
+  final params = const CallKitPayloadMapper().fromPushData(data);
 
-  await FlutterCallkitIncoming.showCallkitIncoming(
-    CallKitParams(
-      id: callId,
-      nameCaller: callerName == null || callerName.isEmpty
-          ? 'AOS User'
-          : callerName,
-      appName: 'AOS',
-      handle: callType == 'video'
-          ? 'Incoming Video Call'
-          : 'Incoming Audio Call',
-      type: callType == 'video' ? 1 : 0,
-      duration: 90000,
-      extra: Map<String, dynamic>.from(data),
-      android: const AndroidParams(
-        isCustomNotification: true,
-        isShowLogo: false,
-        ringtonePath: 'system_ringtone_default',
-        backgroundColor: '#FFFFFF',
-        actionColor: '#4CAF50',
-        incomingCallNotificationChannelName: 'AOS Calls',
-        missedCallNotificationChannelName: 'Missed Calls',
-      ),
-    ),
-  );
+  await FlutterCallkitIncoming.showCallkitIncoming(params);
 }
 
 void main() {
@@ -277,6 +249,7 @@ class AOSApp extends ConsumerWidget {
     final prefs = ref.watch(userPreferenceControllerProvider);
 
     ref.watch(socketCallListenerProvider);
+    ref.watch(notificationRealtimeListenerProvider);
 
     return MaterialApp.router(
       title: 'Africa Online Stores',

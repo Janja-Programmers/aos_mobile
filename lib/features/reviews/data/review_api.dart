@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/reviews/application/state/review_viewer_state.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -93,6 +94,38 @@ class ReviewApi {
       return Either.left(mapDioException(e));
     } catch (_) {
       return Either.left(const Failure('Failed to toggle review.'));
+    }
+  }
+
+  /// GET REVIEW VIEWER STATE
+  Future<Either<Failure, ReviewViewerState>> getReviewViewerState({
+    required String ad,
+  }) async {
+    try {
+      final res = await _client.get(
+        ApiEndpoints.getReviewViewerState,
+        queryParameters: {'ad': ad},
+      );
+
+      final parsed = unwrapFrappe(res);
+
+      return parsed.fold((failure) => Either.left(failure), (payload) {
+        final data = payload['data'];
+
+        if (data is! Map) {
+          return Either.left(
+            const Failure('Invalid review viewer state response.'),
+          );
+        }
+
+        return Either.right(
+          ReviewViewerState.fromJson(Map<String, dynamic>.from(data)),
+        );
+      });
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to fetch review viewer state.'));
     }
   }
 }

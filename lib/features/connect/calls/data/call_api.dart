@@ -239,8 +239,6 @@ class CallApi {
   // List Calls
   // -----------------------------
   Future<Either<Failure, List<CallLog>>> listCalls({String? type}) async {
-    appLogger.i("listCalls API");
-
     try {
       final res = await _client.get(
         ApiEndpoints.listCallsEndpoint,
@@ -251,12 +249,7 @@ class CallApi {
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
       final raw = result.rightOrNull;
-      final List<dynamic> dataList = (raw?['data'] is List) ? raw!['data'] : [];
-
-      final calls = dataList
-          .whereType<Map<String, dynamic>>()
-          .map(mapCallLog)
-          .toList();
+      final calls = mapCallLogList(raw?['data']);
 
       calls.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
@@ -264,6 +257,204 @@ class CallApi {
     } catch (e, s) {
       appLogger.e("listCalls failed", error: e, stackTrace: s);
       return Either.left(const Failure("Failed to load calls"));
+    }
+  }
+
+  // -----------------------------
+  // Get Call Group Detail
+  // -----------------------------
+  Future<Either<Failure, List<CallLog>>> getCallGroupDetail({
+    required CallLog call,
+  }) async {
+    appLogger.i("getCallGroupDetail API");
+
+    try {
+      final latestCallId = call.effectiveLatestCallId.trim();
+      final oldestCallId = call.effectiveOldestCallId.trim();
+
+      if (latestCallId.isEmpty || oldestCallId.isEmpty) {
+        return Either.left(const Failure("Invalid call group boundary"));
+      }
+
+      final query = <String, dynamic>{
+        'latest_call_id': latestCallId,
+        'oldest_call_id': oldestCallId,
+      };
+
+      final res = await _client.get(
+        ApiEndpoints.getCallGroupDetailsEndpoint,
+        queryParameters: query,
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = result.rightOrNull?['data'];
+      final calls = mapCallLogList(data);
+
+      calls.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return Either.right(calls);
+    } catch (e, s) {
+      appLogger.e("getCallGroupDetail failed", error: e, stackTrace: s);
+      return Either.left(const Failure("Failed to load call details"));
+    }
+  }
+
+  // -----------------------------
+  // Delete Call Log(s)
+  // -----------------------------
+  Future<Either<Failure, void>> deleteCallLogs({
+    required List<String> callIds,
+  }) async {
+    appLogger.i("deleteCallLogs API");
+
+    final ids = callIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList();
+
+    if (ids.isEmpty) {
+      return Either.left(const Failure("No call logs selected"));
+    }
+
+    try {
+      final res = await _client.post(
+        ApiEndpoints.deleteCallLogsEndpoint,
+        data: {'call_ids': ids},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      return Either.right(null);
+    } catch (e, s) {
+      appLogger.e("deleteCallLogs failed", error: e, stackTrace: s);
+
+      if (e is DioException && e.response != null) {
+        final res = e.response!;
+        final result = unwrapFrappe(res);
+        if (result.isLeft) return Either.left(result.leftOrNull!);
+
+        return Either.left(Failure(res.data.toString()));
+      }
+
+      return Either.left(Failure(e.toString()));
+    }
+  }
+
+  // -----------------------------
+  // Clear Call History
+  // -----------------------------
+  Future<Either<Failure, int>> clearCallHistory() async {
+    appLogger.i("clearCallHistory API");
+
+    try {
+      final res = await _client.post(ApiEndpoints.clearCallHistoryEndpoint);
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = result.rightOrNull?['data'];
+      final deletedCount = data is Map ? data['deleted_count'] : null;
+
+      return Either.right(int.tryParse('${deletedCount ?? 0}') ?? 0);
+    } catch (e, s) {
+      appLogger.e("clearCallHistory failed", error: e, stackTrace: s);
+
+      if (e is DioException && e.response != null) {
+        final res = e.response!;
+        final result = unwrapFrappe(res);
+        if (result.isLeft) return Either.left(result.leftOrNull!);
+
+        return Either.left(Failure(res.data.toString()));
+      }
+
+      return Either.left(Failure(e.toString()));
+    }
+  }
+
+  // -----------------------------
+  // Request Video Upgrade
+  // -----------------------------
+  Future<Either<Failure, Call>> requestVideoUpgrade({
+    required String callId,
+  }) async {
+    appLogger.i("requestVideoUpgrade API");
+
+    try {
+      final res = await _client.post(
+        ApiEndpoints.requestVideoUpgradeEndpoint,
+        data: {'call_id': callId},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = result.rightOrNull?['data'];
+      if (data == null) {
+        return Either.left(
+          const Failure("Invalid request video upgrade response"),
+        );
+      }
+
+      return Either.right(mapCall(Map<String, dynamic>.from(data as Map)));
+    } catch (e, s) {
+      appLogger.e("requestVideoUpgrade failed", error: e, stackTrace: s);
+
+      if (e is DioException && e.response != null) {
+        final res = e.response!;
+        final result = unwrapFrappe(res);
+        if (result.isLeft) return Either.left(result.leftOrNull!);
+
+        return Either.left(Failure(res.data.toString()));
+      }
+
+      return Either.left(Failure(e.toString()));
+    }
+  }
+
+  // -----------------------------
+  // Respond Video Upgrade
+  // -----------------------------
+  Future<Either<Failure, Call>> respondVideoUpgrade({
+    required String callId,
+    required String action,
+  }) async {
+    appLogger.i("respondVideoUpgrade API");
+
+    final normalizedAction = action.trim().toLowerCase();
+
+    try {
+      final res = await _client.post(
+        ApiEndpoints.respondVideoUpgradeEndpoint,
+        data: {'call_id': callId, 'action': normalizedAction},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = result.rightOrNull?['data'];
+      if (data == null) {
+        return Either.left(
+          const Failure("Invalid respond video upgrade response"),
+        );
+      }
+
+      return Either.right(mapCall(Map<String, dynamic>.from(data as Map)));
+    } catch (e, s) {
+      appLogger.e("respondVideoUpgrade failed", error: e, stackTrace: s);
+
+      if (e is DioException && e.response != null) {
+        final res = e.response!;
+        final result = unwrapFrappe(res);
+        if (result.isLeft) return Either.left(result.leftOrNull!);
+
+        return Either.left(Failure(res.data.toString()));
+      }
+
+      return Either.left(Failure(e.toString()));
     }
   }
 

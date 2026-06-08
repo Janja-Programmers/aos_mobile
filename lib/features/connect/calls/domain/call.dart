@@ -15,6 +15,9 @@ class Call {
   final CallParticipant? caller;
   final CallParticipant? receiver;
 
+  final String videoUpgradeStatus;
+  final String? videoUpgradeRequestedBy;
+
   const Call({
     required this.id,
     required this.conversationId,
@@ -24,6 +27,8 @@ class Call {
     required this.wsUrl,
     this.caller,
     this.receiver,
+    this.videoUpgradeStatus = 'none',
+    this.videoUpgradeRequestedBy,
   });
 
   Call copyWith({
@@ -35,6 +40,9 @@ class Call {
     String? wsUrl,
     CallParticipant? caller,
     CallParticipant? receiver,
+    String? videoUpgradeStatus,
+    String? videoUpgradeRequestedBy,
+    bool clearVideoUpgradeRequestedBy = false,
   }) {
     return Call(
       id: id ?? this.id,
@@ -45,6 +53,10 @@ class Call {
       wsUrl: wsUrl ?? this.wsUrl,
       caller: caller ?? this.caller,
       receiver: receiver ?? this.receiver,
+      videoUpgradeStatus: videoUpgradeStatus ?? this.videoUpgradeStatus,
+      videoUpgradeRequestedBy: clearVideoUpgradeRequestedBy
+          ? null
+          : videoUpgradeRequestedBy ?? this.videoUpgradeRequestedBy,
     );
   }
 }

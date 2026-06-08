@@ -23,7 +23,7 @@ class CallKitParamsMapper {
     final callerAvatar = _cleanString(caller?.avatarUrl);
     final cleanRoomName = _cleanString(roomName);
 
-    final callLabel = isVideo ? 'Incoming video call' : 'Incoming audio call';
+    final callLabel = isVideo ? 'Incoming video call' : 'Incoming voice call';
 
     return CallKitParams(
       id: callkitUuid,
@@ -33,8 +33,6 @@ class CallKitParamsMapper {
       avatar: callerAvatar,
       type: isVideo ? 1 : 0,
       duration: 30000,
-      // textAccept: 'Accept',
-      // textDecline: 'Decline',
       missedCallNotification: null,
       extra: {
         'call_id': callId,

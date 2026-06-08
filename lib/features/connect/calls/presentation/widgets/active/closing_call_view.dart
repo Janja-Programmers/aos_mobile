@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
+import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/ringing/avator.dart';
 
-class ClosingCallView extends StatelessWidget {
+class ClosingCallView extends ConsumerWidget {
   final CallState state;
 
   const ClosingCallView({super.key, required this.state});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
+    final currentUserId = ref.watch(currentUserProvider);
 
-    final name = _displayName(state);
-    final initials = _initials(name);
+    final participant = CallParticipantResolver.otherParticipant(
+      state,
+      currentUserId: currentUserId,
+      fallbackName: 'AOS Call',
+    );
     final status = _statusText(state);
 
     return Scaffold(
@@ -27,12 +34,12 @@ class ClosingCallView extends StatelessWidget {
             children: [
               const SizedBox(height: 40),
 
-              Avatar(initials: initials),
+              Avatar(initials: participant.initials),
 
               const SizedBox(height: 20),
 
               Text(
-                name,
+                participant.displayName,
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
@@ -65,11 +72,26 @@ class ClosingCallView extends StatelessWidget {
   }
 
   String _statusText(CallState state) {
-    switch (state.uiPhase) {
-      case UiCallPhase.finished:
+    switch (state.backendStatus) {
+      case BackendCallStatus.ended:
         return 'Call ended';
-      case UiCallPhase.cancelled:
+      case BackendCallStatus.rejected:
+        return 'Call declined';
+      case BackendCallStatus.missed:
+        return 'No answer';
+      case BackendCallStatus.cancelled:
         return 'Call cancelled';
+      case BackendCallStatus.failed:
+        return 'Call failed';
+      case BackendCallStatus.initiated:
+      case BackendCallStatus.ringing:
+      case BackendCallStatus.ongoing:
+        return 'Ending call...';
+      case null:
+        break;
+    }
+
+    switch (state.uiPhase) {
       case UiCallPhase.error:
         return 'Call failed';
       case UiCallPhase.idle:
@@ -79,33 +101,5 @@ class ClosingCallView extends StatelessWidget {
       default:
         return 'Ending call...';
     }
-  }
-
-  String _displayName(CallState state) {
-    return state.caller?.displayName ??
-        state.receiver?.displayName ??
-        state.caller?.userId ??
-        state.receiver?.userId ??
-        'AOS Call';
-  }
-
-  String _initials(String text) {
-    final cleaned = text.trim();
-
-    if (cleaned.isEmpty) return 'A';
-
-    final parts = cleaned
-        .split(RegExp(r'\s+'))
-        .where((part) => part.trim().isNotEmpty)
-        .toList();
-
-    if (parts.isEmpty) return 'A';
-
-    if (parts.length == 1) {
-      return parts.first.characters.first.toUpperCase();
-    }
-
-    return '${parts.first.characters.first}${parts.last.characters.first}'
-        .toUpperCase();
   }
 }

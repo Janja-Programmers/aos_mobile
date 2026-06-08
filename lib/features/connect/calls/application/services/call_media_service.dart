@@ -39,6 +39,10 @@ class CallMediaService {
     await liveKit.switchSpeaker(enabled);
   }
 
+  Future<void> switchCamera() async {
+    await liveKit.switchCamera();
+  }
+
   Future<void> _requestPermissions(bool isVideo) async {
     final permissions = [Permission.microphone, if (isVideo) Permission.camera];
 

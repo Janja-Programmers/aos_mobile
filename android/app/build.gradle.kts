@@ -7,8 +7,6 @@ plugins {
     // Firebase
     id("com.google.gms.google-services")
 
-    id("kotlin-android")
-
     // Flutter plugin (must be last)
     id("dev.flutter.flutter-gradle-plugin")
 }

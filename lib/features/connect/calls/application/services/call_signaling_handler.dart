@@ -18,11 +18,15 @@ class CallSignalingHandler {
       final callerDisplayName = _cleanString(data['caller_display_name']);
       final callerAvatar = _cleanString(data['caller_avatar']);
 
+      final receiverUser = _cleanString(data['receiver']);
+      final receiverDisplayName = _cleanString(data['receiver_display_name']);
+      final receiverAvatar = _cleanString(data['receiver_avatar']);
+
       if (callId == null || roomName == null || callTypeRaw == null) {
         return false;
       }
 
-      final callType = callTypeRaw == 'video'
+      final callType = callTypeRaw.toLowerCase() == 'video'
           ? AOSCallType.video
           : AOSCallType.audio;
 
@@ -34,15 +38,37 @@ class CallSignalingHandler {
               avatarUrl: callerAvatar,
             );
 
+      final receiver = receiverUser == null
+          ? null
+          : CallParticipant(
+              userId: receiverUser,
+              displayName: receiverDisplayName ?? receiverUser,
+              avatarUrl: receiverAvatar,
+            );
+
       return callManager.onIncomingCallEvent(
         callId: callId,
         roomName: roomName,
         callType: callType,
         caller: caller,
+        receiver: receiver,
       );
     } catch (_) {
       return false;
     }
+  }
+
+  // ================= RINGING =================
+  Future<void> handleCallRinging(Map<String, dynamic> data) async {
+    try {
+      final callId = _cleanString(data['call_id']) ?? _cleanString(data['id']);
+
+      if (callId == null) {
+        return;
+      }
+
+      await callManager.onCallRingingEvent(callId: callId);
+    } catch (_) {}
   }
 
   // ================= ACCEPTED =================
@@ -106,6 +132,67 @@ class CallSignalingHandler {
       }
 
       await callManager.onCallCancelledEvent(callId: callId);
+    } catch (_) {}
+  }
+
+  // ================= VIDEO UPGRADE REQUESTED =================
+  Future<void> handleVideoUpgradeRequested(Map<String, dynamic> data) async {
+    try {
+      final callId = _cleanString(data['call_id']) ?? _cleanString(data['id']);
+      final requestedBy =
+          _cleanString(data['video_upgrade_requested_by']) ??
+          _cleanString(data['requested_by']) ??
+          _cleanString(data['actor']) ??
+          _cleanString(data['from_user']) ??
+          _cleanString(data['user']);
+
+      if (callId == null) {
+        return;
+      }
+
+      await callManager.onVideoUpgradeRequestedEvent(
+        callId: callId,
+        requestedBy: requestedBy,
+      );
+    } catch (_) {}
+  }
+
+  // ================= VIDEO UPGRADE ACCEPTED =================
+  Future<void> handleVideoUpgradeAccepted(Map<String, dynamic> data) async {
+    try {
+      final callId = _cleanString(data['call_id']) ?? _cleanString(data['id']);
+
+      if (callId == null) {
+        return;
+      }
+
+      await callManager.onVideoUpgradeAcceptedEvent(callId: callId);
+    } catch (_) {}
+  }
+
+  // ================= VIDEO UPGRADE DECLINED =================
+  Future<void> handleVideoUpgradeDeclined(Map<String, dynamic> data) async {
+    try {
+      final callId = _cleanString(data['call_id']) ?? _cleanString(data['id']);
+
+      if (callId == null) {
+        return;
+      }
+
+      await callManager.onVideoUpgradeDeclinedEvent(callId: callId);
+    } catch (_) {}
+  }
+
+  // ================= VIDEO UPGRADE CANCELLED =================
+  Future<void> handleVideoUpgradeCancelled(Map<String, dynamic> data) async {
+    try {
+      final callId = _cleanString(data['call_id']) ?? _cleanString(data['id']);
+
+      if (callId == null) {
+        return;
+      }
+
+      await callManager.onVideoUpgradeCancelledEvent(callId: callId);
     } catch (_) {}
   }
 

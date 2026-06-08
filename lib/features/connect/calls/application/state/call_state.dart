@@ -16,6 +16,10 @@ class CallState {
   final CallParticipant? receiver;
   final CallMediaMode callMediaMode;
   final bool isUpgradePending;
+  final String videoUpgradeStatus;
+  final String? videoUpgradeRequestedBy;
+  final bool hasIncomingVideoUpgradeRequest;
+  final String? videoUpgradeErrorMessage;
   final bool isMuted;
   final bool isSpeakerOn;
   final bool isRemoteVideoEnabled;
@@ -43,6 +47,10 @@ class CallState {
     this.receiver,
     required this.callMediaMode,
     required this.isUpgradePending,
+    required this.videoUpgradeStatus,
+    this.videoUpgradeRequestedBy,
+    required this.hasIncomingVideoUpgradeRequest,
+    this.videoUpgradeErrorMessage,
     required this.isMuted,
     required this.isSpeakerOn,
     required this.isRemoteVideoEnabled,
@@ -71,6 +79,10 @@ class CallState {
       receiver: null,
       callMediaMode: CallMediaMode.audio,
       isUpgradePending: false,
+      videoUpgradeStatus: 'none',
+      videoUpgradeRequestedBy: null,
+      hasIncomingVideoUpgradeRequest: false,
+      videoUpgradeErrorMessage: null,
       isMuted: false,
       isSpeakerOn: false,
       isRemoteVideoEnabled: true,
@@ -98,6 +110,15 @@ class CallState {
         backendStatus == BackendCallStatus.ongoing;
   }
 
+  bool get isWaitingForVideoUpgradeResponse {
+    return isUpgradePending && !hasIncomingVideoUpgradeRequest;
+  }
+
+  bool get isOutgoingNoAnswer {
+    return backendStatus == BackendCallStatus.missed &&
+        direction?.trim().toLowerCase() == 'outgoing';
+  }
+
   CallState copyWith({
     UiCallPhase? uiPhase,
     BackendCallStatus? backendStatus,
@@ -110,6 +131,12 @@ class CallState {
     ValueGetter<CallParticipant?>? receiverBuilder,
     CallMediaMode? callMediaMode,
     bool? isUpgradePending,
+    String? videoUpgradeStatus,
+    String? videoUpgradeRequestedBy,
+    bool clearVideoUpgradeRequestedBy = false,
+    bool? hasIncomingVideoUpgradeRequest,
+    String? videoUpgradeErrorMessage,
+    bool clearVideoUpgradeErrorMessage = false,
     bool? isMuted,
     bool? isSpeakerOn,
     bool? isRemoteVideoEnabled,
@@ -146,6 +173,15 @@ class CallState {
           : receiver ?? this.receiver,
       callMediaMode: callMediaMode ?? this.callMediaMode,
       isUpgradePending: isUpgradePending ?? this.isUpgradePending,
+      videoUpgradeStatus: videoUpgradeStatus ?? this.videoUpgradeStatus,
+      videoUpgradeRequestedBy: clearVideoUpgradeRequestedBy
+          ? null
+          : videoUpgradeRequestedBy ?? this.videoUpgradeRequestedBy,
+      hasIncomingVideoUpgradeRequest:
+          hasIncomingVideoUpgradeRequest ?? this.hasIncomingVideoUpgradeRequest,
+      videoUpgradeErrorMessage: clearVideoUpgradeErrorMessage
+          ? null
+          : videoUpgradeErrorMessage ?? this.videoUpgradeErrorMessage,
       isMuted: isMuted ?? this.isMuted,
       isSpeakerOn: isSpeakerOn ?? this.isSpeakerOn,
       isRemoteVideoEnabled: isRemoteVideoEnabled ?? this.isRemoteVideoEnabled,
@@ -181,6 +217,9 @@ class CallState {
         'receiver: ${receiver?.userId}, '
         'callMediaMode: $callMediaMode, '
         'isUpgradePending: $isUpgradePending, '
+        'videoUpgradeStatus: $videoUpgradeStatus, '
+        'videoUpgradeRequestedBy: $videoUpgradeRequestedBy, '
+        'hasIncomingVideoUpgradeRequest: $hasIncomingVideoUpgradeRequest, '
         'isMuted: $isMuted, '
         'isSpeakerOn: $isSpeakerOn, '
         'duration: $duration, '

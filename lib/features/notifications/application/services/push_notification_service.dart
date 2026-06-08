@@ -63,7 +63,7 @@ class PushNotificationService {
     appLogger.i('🔔 PushNotificationService init');
 
     try {
-      await _requestPermission();
+      final permissionGranted = await _requestPermission();
 
       _listenTokenRefresh();
       _listenForeground();
@@ -71,7 +71,13 @@ class PushNotificationService {
 
       await _handleTerminatedLaunch();
 
-      await _setupToken();
+      if (permissionGranted) {
+        await _setupToken();
+      } else {
+        appLogger.w(
+          '🔕 Notifications permission not granted. Token setup skipped.',
+        );
+      }
     } catch (e, s) {
       appLogger.w(
         '⚠️ PushNotificationService init completed with non-fatal issue',
@@ -86,8 +92,17 @@ class PushNotificationService {
   // =====================================================
   // PERMISSION
   // =====================================================
-  Future<void> _requestPermission() async {
-    await _messaging.requestPermission();
+  Future<bool> _requestPermission() async {
+    final settings = await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    final status = settings.authorizationStatus;
+
+    return status == AuthorizationStatus.authorized ||
+        status == AuthorizationStatus.provisional;
   }
 
   // =====================================================
@@ -273,8 +288,6 @@ class PushNotificationService {
 
     _foregroundSub = FirebaseMessaging.onMessage.listen((message) async {
       try {
-        appLogger.i('📩 Foreground push received: ${message.data}');
-
         final notification = _mapMessageToNotification(message);
         if (notification == null) return;
 
@@ -292,7 +305,6 @@ class PushNotificationService {
           title: notification.title,
           body: notification.body,
           onTap: () {
-            appLogger.i('📲 Foreground banner tapped: ${notification.id}');
             _navigationHandler.handleNotificationTap(notification);
           },
         );
@@ -376,10 +388,13 @@ class PushNotificationService {
         return null;
       }
 
-      final event = data['event']?.toString();
+      final event =
+          data['event']?.toString() ??
+          data['notification_type']?.toString() ??
+          data['type']?.toString();
 
       if (event == null || event.trim().isEmpty) {
-        appLogger.w('⚠️ Missing notification event: $data');
+        appLogger.w('⚠️ Missing notification type/event: $data');
         return null;
       }
 

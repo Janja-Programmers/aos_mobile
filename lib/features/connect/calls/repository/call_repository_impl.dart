@@ -22,6 +22,19 @@ abstract class CallRepository {
 
   Future<List<CallLog>> listCalls({String? type});
 
+  Future<List<CallLog>> getCallGroupDetail({required CallLog call});
+
+  Future<void> deleteCallLogs({required List<String> callIds});
+
+  Future<int> clearCallHistory();
+
+  Future<Call> requestVideoUpgrade({required String callId});
+
+  Future<Call> respondVideoUpgrade({
+    required String callId,
+    required String action,
+  });
+
   Future<Map<String, dynamic>> getCallStatus({required String callId});
 
   Future<Call> getCallToken({required String callId});
@@ -114,6 +127,59 @@ class CallRepositoryImpl implements CallRepository {
   @override
   Future<List<CallLog>> listCalls({String? type}) async {
     final res = await api.listCalls(type: type);
+
+    return res.fold((e) => throw e, (data) => data);
+  }
+
+  // -----------------------------
+  // Get Call Group Detail
+  // -----------------------------
+  @override
+  Future<List<CallLog>> getCallGroupDetail({required CallLog call}) async {
+    final res = await api.getCallGroupDetail(call: call);
+
+    return res.fold((e) => throw e, (data) => data);
+  }
+
+  // -----------------------------
+  // Delete Call Log(s)
+  // -----------------------------
+  @override
+  Future<void> deleteCallLogs({required List<String> callIds}) async {
+    final res = await api.deleteCallLogs(callIds: callIds);
+
+    return res.fold((e) => throw e, (_) => null);
+  }
+
+  // -----------------------------
+  // Clear Call History
+  // -----------------------------
+  @override
+  Future<int> clearCallHistory() async {
+    final res = await api.clearCallHistory();
+
+    return res.fold((e) => throw e, (deletedCount) => deletedCount);
+  }
+
+  // -----------------------------
+  // Request Video Upgrade
+  // -----------------------------
+  @override
+  Future<Call> requestVideoUpgrade({required String callId}) async {
+    final res = await api.requestVideoUpgrade(callId: callId);
+
+    return res.fold((e) => throw e, (data) => data);
+  }
+
+  // -----------------------------
+  // Respond Video Upgrade
+  // -----------------------------
+  @override
+  Future<Call> respondVideoUpgrade({
+    required String callId,
+    required String action,
+  }) async {
+    final res = await api.respondVideoUpgrade(callId: callId, action: action);
 
     return res.fold((e) => throw e, (data) => data);
   }

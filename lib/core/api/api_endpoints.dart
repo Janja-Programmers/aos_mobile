@@ -74,8 +74,6 @@ class ApiEndpoints {
   static final String getReviewViewerState =
       '/api/method/aos.api.reviews.get_review_viewer_state';
 
-  // TODO: getReviewViewerState
-
   // Wishlist Endpoints
   static final String listWishlistEndpoint =
       '/api/method/aos.api.wishlist.list_wishlist';
@@ -110,8 +108,6 @@ class ApiEndpoints {
   static final String getRelationshipStatusEndpoint =
       '/api/method/aos.api.social.get_relationship_status';
 
-  // TODO: getFollowsEndpoint, getFollowingEndpoint, getFriendsEndpoint, getRelationshipStatusEndpoint
-
   // Verification Endpoints
   static final String submitVerificationEndpoint =
       '/api/method/aos.api.verification.submit_verification';
@@ -137,6 +133,21 @@ class ApiEndpoints {
       '/api/method/aos.api.chat.send_message';
   static final String listMessagesEndpoint =
       '/api/method/aos.api.chat.list_messages';
+  static final String editMessageEndpoint =
+      '/api/method/aos.api.chat.edit_message';
+  static final String deleteMessagesEndpoint =
+      '/api/method/aos.api.chat.delete_messages';
+  static final String clearChatEndpoint = '/api/method/aos.api.chat.clear_chat';
+  static final String toggleMessageStarEndpoint =
+      '/api/method/aos.api.chat.toggle_message_star';
+  static final String listStarredMessagesEndpoint =
+      '/api/method/aos.api.chat.list_starred_messages';
+  static final String toggleMessageReactionEndpoint =
+      '/api/method/aos.api.chat.toggle_message_reaction';
+  static final String forwardMessageEndpoint =
+      '/api/method/aos.api.chat.forward_message';
+  static final String translateMessageEndpoint =
+      '/api/method/aos.api.chat.translate_message';
   static final String markDeliveredEndpoint =
       '/api/method/aos.api.chat.mark_delivered';
   static final String markReadEndpoint = '/api/method/aos.api.chat.mark_read';
@@ -161,6 +172,16 @@ class ApiEndpoints {
       '/api/method/aos.api.calls.cancel_call';
   static final String getCallStatusEndpoint =
       '/api/method/aos.api.calls.get_call_status';
+  static final String getCallGroupDetailsEndpoint =
+      '/api/method/aos.api.calls.get_call_group_details';
+  static final String deleteCallLogsEndpoint =
+      '/api/method/aos.api.calls.delete_call_logs';
+  static final String clearCallHistoryEndpoint =
+      '/api/method/aos.api.calls.clear_call_history';
+  static final String requestVideoUpgradeEndpoint =
+      '/api/method/aos.api.calls.request_video_upgrade';
+  static final String respondVideoUpgradeEndpoint =
+      '/api/method/aos.api.calls.respond_video_upgrade';
 
   // LIVE Endpoints
   static final String startLiveEndpoint = '/api/method/aos.api.live.start_live';

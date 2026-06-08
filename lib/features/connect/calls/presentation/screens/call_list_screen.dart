@@ -7,13 +7,15 @@ import 'package:africaonlinestores/features/connect/calls/application/state/call
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_filter_utils.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/show_call_details_sheet.dart';
+import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_state_view.dart';
 
-
+import 'package:africaonlinestores/shared/utils/format_time.dart';
 
 class CallListScreen extends ConsumerStatefulWidget {
   final String? searchQuery;
+  final bool hideFilters;
 
-  const CallListScreen({super.key, this.searchQuery});
+  const CallListScreen({super.key, this.searchQuery, this.hideFilters = false});
 
   @override
   ConsumerState<CallListScreen> createState() => _CallListScreenState();
@@ -51,13 +53,19 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(callManagerProvider);
 
-    return Scaffold(
-      body: Column(
-        children: [
-          _buildFilters(),
-          Expanded(child: _buildBody(state)),
-        ],
-      ),
+    return Column(
+      children: [
+        AnimatedSize(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          alignment: Alignment.topCenter,
+          child: widget.hideFilters
+              ? const SizedBox.shrink()
+              : _buildFilters(state),
+        ),
+
+        Expanded(child: _buildBody(state)),
+      ],
     );
   }
 
@@ -65,33 +73,74 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
   // BODY (handles loading/error/data)
   // -------------------------
   Widget _buildBody(CallState state) {
-    // ⏳ LOADING
     if (state.isLoadingHistory) {
-      return const Center(child: CircularProgressIndicator());
+      return const ConnectStateView.loading(
+        title: 'Loading calls',
+        message: 'Please wait while we fetch your call history.',
+      );
     }
 
-    // ❌ ERROR
     if (state.historyErrorMessage != null) {
-      return Center(child: Text(state.historyErrorMessage!));
+      return RefreshIndicator(
+        onRefresh: () {
+          return ref.read(callManagerProvider.notifier).loadCallLogs();
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.55,
+              child: ConnectStateView.error(
+                title: 'Could not load calls',
+                message: 'Check your internet connection and try again.',
+                onAction: () {
+                  ref.read(callManagerProvider.notifier).loadCallLogs();
+                },
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    // 📦 DATA + FILTERING
     final filtered = CallFilterUtils.apply(
       calls: state.callLogs,
       query: _query,
       filter: selectedFilter,
     );
 
-    // 📭 EMPTY STATE (MATCHES CHAT UX)
     if (filtered.isEmpty) {
-      return Center(child: Text("No calls yet", style: context.p));
+      final hasSearch = _query.trim().isNotEmpty;
+
+      return RefreshIndicator(
+        onRefresh: () {
+          return ref.read(callManagerProvider.notifier).loadCallLogs();
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.55,
+              child: ConnectStateView.empty(
+                icon: hasSearch
+                    ? Icons.search_off_rounded
+                    : Icons.call_outlined,
+                title: hasSearch ? 'No calls found' : 'No calls yet',
+                message: hasSearch
+                    ? 'Try searching with another name or call type.'
+                    : 'Your audio and video call history will appear here.',
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     final grouped = _groupCalls(filtered);
 
     return RefreshIndicator(
-      onRefresh: () async {
-        await ref.read(callManagerProvider.notifier).loadCallLogs();
+      onRefresh: () {
+        return ref.read(callManagerProvider.notifier).loadCallLogs();
       },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -106,41 +155,64 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
   // GROUPING (unchanged)
   // -------------------------
   Map<String, List<CallLog>> _groupCalls(List<CallLog> calls) {
-    final now = DateTime.now();
+    final Map<String, List<CallLog>> grouped = {};
 
-    final Map<String, List<CallLog>> grouped = {"Today": [], "Yesterday": []};
+    for (final call in calls) {
+      final title = formatDateGroupTitle(call.createdAt);
 
-    for (var call in calls) {
-      final date = call.createdAt;
-
-      if (_isSameDay(date, now)) {
-        grouped["Today"]!.add(call);
-      } else if (_isSameDay(date, now.subtract(const Duration(days: 1)))) {
-        grouped["Yesterday"]!.add(call);
-      }
+      grouped.putIfAbsent(title, () => <CallLog>[]);
+      grouped[title]!.add(call);
     }
 
     return grouped;
   }
 
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
-  }
-
   // -------------------------
   // FILTERS (CENTERED like chats)
   // -------------------------
-  Widget _buildFilters() {
+  Widget _buildFilters(CallState state) {
+    final colors = context.appColors;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _chip("All", "all"),
-          _chip("Missed", "missed"),
-          _chip("Incoming", "incoming"),
-          _chip("Outgoing", "outgoing"),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _chip("All", "all"),
+                  _chip("Missed", "missed"),
+                  _chip("Incoming", "incoming"),
+                  _chip("Outgoing", "outgoing"),
+                  if (state.callLogs.isNotEmpty) ...[
+                    const SizedBox(width: 2),
+                    IconButton(
+                      tooltip: 'Clear call history',
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.all(6),
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                      icon: Icon(
+                        Icons.delete_sweep_outlined,
+                        color: colors.textMuted,
+                        size: 21,
+                      ),
+                      onPressed: _confirmClearCallHistory,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -150,7 +222,7 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
     final isSelected = selectedFilter == value;
 
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.only(right: 6),
       child: GestureDetector(
         onTap: () {
           setState(() {
@@ -158,7 +230,7 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
           });
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: isSelected
                 ? colors.primary.withOpacity(0.1)
@@ -167,6 +239,8 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
           ),
           child: Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: isSelected ? colors.primary : colors.textMuted,
               fontWeight: FontWeight.w500,
@@ -181,18 +255,20 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
   // SECTION (unchanged)
   // -------------------------
   Widget _buildSection(String title, List<CallLog> calls) {
-    if (calls.isEmpty) return const SizedBox();
+    if (calls.isEmpty) return const SizedBox.shrink();
+
+    final colors = context.appColors;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
           child: Text(
             title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
+            style: context.pMuted.copyWith(
+              fontWeight: FontWeight.w700,
+              color: colors.textMuted,
             ),
           ),
         ),
@@ -206,7 +282,13 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
   // -------------------------
   Widget _callTile(CallLog call) {
     final colors = context.appColors;
-    final isMissed = call.isMissed;
+    final direction = call.direction.trim().toLowerCase();
+    final status = call.status.trim().toLowerCase();
+
+    final isMissed =
+        call.isMissed ||
+        status == 'missed' ||
+        (direction == 'incoming' && status == 'cancelled');
 
     return ListTile(
       leading: CircleAvatar(
@@ -214,19 +296,45 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
         child: Text(call.displayName.isNotEmpty ? call.displayName[0] : "?"),
       ),
 
-      title: Text(
-        call.displayName,
-        style: TextStyle(
-          color: isMissed ? colors.red : colors.textPrimary,
-          fontWeight: FontWeight.w600,
-        ),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              call.displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: isMissed ? colors.red : colors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          if (call.isGrouped) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: colors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                '${call.groupCount}',
+                style: TextStyle(
+                  color: colors.primary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
 
       subtitle: Row(
         children: [
           Icon(
             isMissed
-                ? Icons.call_missed
+                ? Icons.phone_missed
                 : call.direction == "incoming"
                 ? Icons.call_received
                 : Icons.call_made,
@@ -240,21 +348,130 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
           const SizedBox(width: 4),
 
           Text(call.formattedTime),
-          const SizedBox(width: 8),
-
-          /// ⏱ duration
-          Icon(Icons.timer, size: 14, color: colors.textSecondary),
-          const SizedBox(width: 2),
-
-          Text(formatDuration(call.duration)),
+          if (call.isGrouped) ...[
+            const SizedBox(width: 8),
+            Text('${call.groupCount} calls'),
+          ],
         ],
       ),
 
-      trailing: Icon(Icons.call, color: colors.success),
+      trailing: PopupMenuButton<String>(
+        icon: Icon(Icons.more_vert_rounded, color: colors.textSecondary),
+        onSelected: (value) async {
+          if (value == 'delete') {
+            await _confirmDeleteCall(call);
+          }
+        },
+        itemBuilder: (context) => [
+          const PopupMenuItem(
+            value: 'delete',
+            child: Row(
+              children: [
+                Icon(Icons.delete_outline_rounded),
+                SizedBox(width: 10),
+                Text('Delete'),
+              ],
+            ),
+          ),
+        ],
+      ),
 
       onTap: () {
         showCallDetailsSheet(context, ref, call);
       },
+    );
+  }
+
+  Future<void> _confirmDeleteCall(CallLog call) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(
+            call.isGrouped ? 'Delete call group?' : 'Delete call log?',
+          ),
+          content: Text(
+            call.isGrouped
+                ? 'This will delete ${call.groupCount} call logs from this group.'
+                : 'This will delete this call log from your history.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+
+    await _deleteCallLog(call);
+  }
+
+  Future<void> _deleteCallLog(CallLog call) async {
+    final deleted = await ref
+        .read(callManagerProvider.notifier)
+        .deleteCallLog(call);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          deleted
+              ? 'Call log deleted.'
+              : 'Could not delete call log. Please try again.',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmClearCallHistory() async {
+    final shouldClear = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: context.appColors.surface,
+          title: const Text('Clear call history?'),
+          content: const Text(
+            'This will remove all call logs from your history. It will not delete them for the other person.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Clear'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldClear != true) return;
+
+    final cleared = await ref
+        .read(callManagerProvider.notifier)
+        .clearCallHistory();
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          cleared
+              ? 'Call history cleared.'
+              : 'Could not clear call history. Please try again.',
+        ),
+      ),
     );
   }
 }

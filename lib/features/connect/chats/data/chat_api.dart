@@ -10,6 +10,7 @@ import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/chat_message_status_update.dart';
 
 /// Provider
 final chatApiProvider = Provider<ChatApi>((ref) {
@@ -115,14 +116,14 @@ class ChatApi {
     final result = unwrapFrappe(res);
     if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    final data = result.rightOrNull;
-    if (data == null || data['data'] == null) {
+    final data = _extractDataPayload(result.rightOrNull);
+    if (data is! List) {
       return Either.left(const Failure('Empty response from chat API'));
     }
 
-    final messagesData = data['data'] as List<dynamic>;
-    final messages = messagesData
-        .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+    final messages = data
+        .whereType<Map>()
+        .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
         .toList();
 
     return Either.right(messages);
@@ -132,6 +133,7 @@ class ChatApi {
     required String conversationId,
     String? content,
     String? ad,
+    String? replyToMessage,
     List<Map<String, dynamic>>? attachments,
   }) async {
     final cleanAttachments = attachments ?? [];
@@ -143,6 +145,8 @@ class ChatApi {
       'content': content ?? '',
       'attachments': cleanAttachments,
       if (cleanAd != null && cleanAd.isNotEmpty) 'ad': cleanAd,
+      if (replyToMessage != null && replyToMessage.trim().isNotEmpty)
+        'reply_to_message': replyToMessage.trim(),
     };
 
     try {
@@ -158,7 +162,7 @@ class ChatApi {
       }
 
       final raw = result.rightOrNull;
-      final messageData = raw?['data'];
+      final messageData = _extractDataPayload(raw);
 
       if (messageData is! Map) {
         return Either.left(
@@ -184,10 +188,209 @@ class ChatApi {
     }
   }
 
+  Future<Either<Failure, ChatMessage>> editMessage({
+    required String messageId,
+    required String content,
+  }) async {
+    try {
+      final res = await _client.post(
+        ApiEndpoints.editMessageEndpoint,
+        data: {'message_id': messageId, 'content': content},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final messageData = _extractDataPayload(result.rightOrNull);
+      if (messageData is! Map) {
+        return Either.left(const Failure('Invalid edit message response'));
+      }
+
+      return Either.right(
+        ChatMessage.fromJson(Map<String, dynamic>.from(messageData)),
+      );
+    } catch (_) {
+      return Either.left(const Failure('Failed to edit message'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> deleteMessages({
+    required List<String> messageIds,
+    required String deleteScope,
+  }) async {
+    try {
+      final res = await _client.post(
+        ApiEndpoints.deleteMessagesEndpoint,
+        data: {'message_ids': messageIds, 'delete_scope': deleteScope},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = _extractDataPayload(result.rightOrNull);
+      return Either.right(
+        data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{},
+      );
+    } catch (_) {
+      return Either.left(const Failure('Failed to delete messages'));
+    }
+  }
+
+  Future<Either<Failure, void>> clearChat(String conversationId) async {
+    try {
+      final res = await _client.post(
+        ApiEndpoints.clearChatEndpoint,
+        data: {'conversation_id': conversationId},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      return Either.right(null);
+    } catch (_) {
+      return Either.left(const Failure('Failed to clear chat'));
+    }
+  }
+
+  Future<Either<Failure, bool>> toggleMessageStar(String messageId) async {
+    try {
+      final res = await _client.post(
+        ApiEndpoints.toggleMessageStarEndpoint,
+        data: {'message_id': messageId},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = _extractDataPayload(result.rightOrNull);
+      final isStarred =
+          data is Map &&
+          (data['is_starred'] == true || data['is_starred'] == 1);
+
+      return Either.right(isStarred);
+    } catch (_) {
+      return Either.left(const Failure('Failed to update star'));
+    }
+  }
+
+  Future<Either<Failure, List<ChatMessage>>> listStarredMessages({
+    String? conversationId,
+    String? before,
+    int limit = 30,
+  }) async {
+    try {
+      final params = <String, dynamic>{'limit': limit};
+      if (conversationId != null && conversationId.trim().isNotEmpty) {
+        params['conversation_id'] = conversationId.trim();
+      }
+      if (before != null && before.trim().isNotEmpty) {
+        params['before'] = before.trim();
+      }
+
+      final res = await _client.get(
+        ApiEndpoints.listStarredMessagesEndpoint,
+        queryParameters: params,
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = _extractDataPayload(result.rightOrNull);
+      final messages = (data is List ? data : const [])
+          .whereType<Map>()
+          .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+
+      return Either.right(messages);
+    } catch (_) {
+      return Either.left(const Failure('Failed to load starred messages'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> toggleMessageReaction({
+    required String messageId,
+    required String? emoji,
+  }) async {
+    try {
+      final res = await _client.post(
+        ApiEndpoints.toggleMessageReactionEndpoint,
+        data: {'message_id': messageId, 'emoji': emoji},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = _extractDataPayload(result.rightOrNull);
+      return Either.right(
+        data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{},
+      );
+    } catch (_) {
+      return Either.left(const Failure('Failed to update reaction'));
+    }
+  }
+
+  Future<Either<Failure, List<ChatMessage>>> forwardMessage({
+    required String messageId,
+    required List<String> targetConversationIds,
+  }) async {
+    try {
+      final res = await _client.post(
+        ApiEndpoints.forwardMessageEndpoint,
+        data: {
+          'message_id': messageId,
+          'target_conversation_ids': targetConversationIds,
+        },
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = _extractDataPayload(result.rightOrNull);
+      final rows = data is Map ? data['messages'] : null;
+
+      final messages = (rows is List ? rows : const [])
+          .whereType<Map>()
+          .map((row) => row['message'])
+          .whereType<Map>()
+          .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+
+      return Either.right(messages);
+    } catch (_) {
+      return Either.left(const Failure('Failed to forward message'));
+    }
+  }
+
+  Future<Either<Failure, Map<String, dynamic>>> translateMessage({
+    required String messageId,
+    required String targetLanguage,
+  }) async {
+    try {
+      final res = await _client.post(
+        ApiEndpoints.translateMessageEndpoint,
+        data: {'message_id': messageId, 'target_language': targetLanguage},
+      );
+
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final data = _extractDataPayload(result.rightOrNull);
+      return Either.right(
+        data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{},
+      );
+    } catch (_) {
+      return Either.left(
+        const Failure('Message translation is not available yet'),
+      );
+    }
+  }
+
   // -----------------------------
   // Status
   // -----------------------------
-  Future<Either<Failure, void>> markDelivered(String conversationId) async {
+  Future<Either<Failure, ChatMessageStatusUpdate>> markDelivered(
+    String conversationId,
+  ) async {
     final res = await _client.post(
       ApiEndpoints.markDeliveredEndpoint,
       data: {'conversation_id': conversationId},
@@ -196,10 +399,17 @@ class ChatApi {
     final result = unwrapFrappe(res);
     if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    return Either.right(null);
+    final data = _extractDataPayload(result.rightOrNull);
+    return Either.right(
+      data is Map
+          ? ChatMessageStatusUpdate.fromJson(Map<String, dynamic>.from(data))
+          : const ChatMessageStatusUpdate.empty(),
+    );
   }
 
-  Future<Either<Failure, void>> markRead(String conversationId) async {
+  Future<Either<Failure, ChatMessageStatusUpdate>> markRead(
+    String conversationId,
+  ) async {
     final res = await _client.post(
       ApiEndpoints.markReadEndpoint,
       data: {'conversation_id': conversationId},
@@ -208,7 +418,12 @@ class ChatApi {
     final result = unwrapFrappe(res);
     if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    return Either.right(null);
+    final data = _extractDataPayload(result.rightOrNull);
+    return Either.right(
+      data is Map
+          ? ChatMessageStatusUpdate.fromJson(Map<String, dynamic>.from(data))
+          : const ChatMessageStatusUpdate.empty(),
+    );
   }
 
   // -----------------------------
@@ -228,6 +443,21 @@ class ChatApi {
 
     return Either.right(null);
   }
+}
+
+dynamic _extractDataPayload(Map<String, dynamic>? raw) {
+  if (raw == null) return null;
+
+  final data = raw['data'];
+  if (data != null) return data;
+
+  final nestedMessage = raw['message'];
+  if (nestedMessage is Map) {
+    final nestedData = nestedMessage['data'];
+    if (nestedData != null) return nestedData;
+  }
+
+  return raw;
 }
 
 String _friendlyOpenConversationError(DioException e) {

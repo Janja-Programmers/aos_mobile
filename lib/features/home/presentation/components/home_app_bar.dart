@@ -75,13 +75,29 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
           children: [
             Row(
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: colors.textPrimary,
+                RichText(
+                  text: TextSpan(
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: colors.textPrimary,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: 'Africa',
+                        style: TextStyle(color: colors.primary),
+                      ),
+                      TextSpan(
+                        text: ' Online ',
+                        style: TextStyle(color: colors.textPrimary),
+                      ),
+                      TextSpan(
+                        text: 'Stores',
+                        style: TextStyle(color: colors.success),
+                      ),
+                    ],
                   ),
                 ),
+
                 const Spacer(),
 
                 NotificationBadge(

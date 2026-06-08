@@ -17,7 +17,8 @@ class IncomingCallBootstrapper {
         return false;
       }
 
-      final callId = _cleanString(payload['call_id']) ?? _cleanString(payload['id']);
+      final callId =
+          _cleanString(payload['call_id']) ?? _cleanString(payload['id']);
 
       if (callId == null) {
         appLogger.w('📞 Incoming call push ignored: missing call_id');

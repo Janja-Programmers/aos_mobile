@@ -34,6 +34,13 @@ class SocketCallListener {
 
           break;
 
+        case RealtimeEventType.aosCallRinging:
+          appLogger.i('📳 call-ringing');
+          await signalingHandler.handleCallRinging(
+            Map<String, dynamic>.from(event.data),
+          );
+          break;
+
         case RealtimeEventType.aosCallAccepted:
           appLogger.i('✅ call-accepted');
           await signalingHandler.handleCallAccepted(
@@ -75,6 +82,34 @@ class SocketCallListener {
           );
 
           await _endNativeCallFromPayload(event.data);
+          break;
+
+        case RealtimeEventType.aosCallVideoUpgradeRequested:
+          appLogger.i('📹 video-upgrade-requested');
+          await signalingHandler.handleVideoUpgradeRequested(
+            Map<String, dynamic>.from(event.data),
+          );
+          break;
+
+        case RealtimeEventType.aosCallVideoUpgradeAccepted:
+          appLogger.i('✅ video-upgrade-accepted');
+          await signalingHandler.handleVideoUpgradeAccepted(
+            Map<String, dynamic>.from(event.data),
+          );
+          break;
+
+        case RealtimeEventType.aosCallVideoUpgradeDeclined:
+          appLogger.i('🚫 video-upgrade-declined');
+          await signalingHandler.handleVideoUpgradeDeclined(
+            Map<String, dynamic>.from(event.data),
+          );
+          break;
+
+        case RealtimeEventType.aosCallVideoUpgradeCancelled:
+          appLogger.i('📵 video-upgrade-cancelled');
+          await signalingHandler.handleVideoUpgradeCancelled(
+            Map<String, dynamic>.from(event.data),
+          );
           break;
 
         default:

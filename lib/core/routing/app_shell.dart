@@ -28,7 +28,7 @@ class AppShell extends StatelessWidget {
   int _calculateIndex(String location) {
     if (location.startsWith('/categories')) return 1;
     if (location.startsWith('/seller')) return 2;
-    if (location.startsWith('/feeds')) return 3;
+    if (location.startsWith('/feed')) return 3;
     if (location.startsWith('/account')) return 4;
 
     return 0;

@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/attachment_grid.dart';
-import 'package:africaonlinestores/features/connect/utils/format_time.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/call_message_tile.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/message_ad_preview.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/reaction_chips.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/reply_preview.dart';
+import 'package:africaonlinestores/shared/utils/format_time.dart';
 
 class MessageBubble extends StatelessWidget {
   const MessageBubble({
@@ -12,18 +17,40 @@ class MessageBubble extends StatelessWidget {
     required this.message,
     required this.isMe,
     this.isSystem = false,
+    this.conversationId,
+    this.otherUserId,
+    this.otherDisplayName,
+    this.otherAvatarUrl,
+    this.onLongPress,
+    this.onRetry,
+    this.onAdTap,
   });
 
   final ChatMessage message;
   final bool isMe;
   final bool isSystem;
+  final String? conversationId;
+  final String? otherUserId;
+  final String? otherDisplayName;
+  final String? otherAvatarUrl;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onRetry;
+  final ValueChanged<String>? onAdTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    final bgColor = isMe ? colors.chatCardColor : colors.surface;
-    final textColor = isMe ? colors.white : colors.textPrimary;
+    if (message.isCallType) {
+      return CallMessageTile(
+        message: message,
+        isMe: isMe,
+        conversationId: conversationId ?? '',
+        otherUserId: otherUserId ?? '',
+        otherDisplayName: otherDisplayName ?? 'AOS user',
+        otherAvatarUrl: otherAvatarUrl,
+      );
+    }
 
     if (isSystem) {
       return Center(
@@ -36,7 +63,7 @@ class MessageBubble extends StatelessWidget {
             border: Border.all(color: colors.border),
           ),
           child: Text(
-            message.content ?? '',
+            message.visibleText,
             textAlign: TextAlign.center,
             style: context.p.copyWith(color: colors.textMuted, fontSize: 12),
           ),
@@ -44,52 +71,265 @@ class MessageBubble extends StatelessWidget {
       );
     }
 
+    final bgColor = isMe ? colors.chatCardColor : colors.surface;
+    final textColor = isMe ? colors.white : colors.textPrimary;
+    final mutedTextColor = isMe
+        ? colors.white.withOpacity(0.78)
+        : colors.textMuted;
+
+    final isDeleted = message.isDeletedType;
+
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        padding: const EdgeInsets.all(10),
-        constraints: const BoxConstraints(maxWidth: 280),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: isMe
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          children: [
-            if (message.content != null && message.content!.trim().isNotEmpty)
-              Text(message.content!, style: TextStyle(color: textColor)),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onLongPress: onLongPress,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          padding: const EdgeInsets.all(10),
+          constraints: const BoxConstraints(maxWidth: 292),
+          decoration: BoxDecoration(
+            color: isDeleted ? colors.elevated : bgColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: isMe
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            children: [
+              if (message.isForwarded && !isDeleted) ...[
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.shortcut_rounded,
+                      size: 13,
+                      color: isMe ? colors.white : colors.textMuted,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Forwarded',
+                      style: context.p.copyWith(
+                        fontSize: 11,
+                        color: isMe ? colors.white : colors.textMuted,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+              ],
 
-            if (message.hasAd) ...[
-              if (message.content != null && message.content!.trim().isNotEmpty)
-                const SizedBox(height: 8),
-              _MessageAdPreview(message: message, isMe: isMe),
-            ],
+              if (message.replyTo != null && !isDeleted) ...[
+                ReplyPreview(reply: message.replyTo!, isMe: isMe),
+                const SizedBox(height: 7),
+              ],
 
-            if (message.attachments.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              AttachmentGrid(attachments: message.attachments),
-            ],
+              if (isDeleted)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.block_rounded,
+                      size: 16,
+                      color: colors.textMuted,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        isMe
+                            ? message.displayText!.trim()
+                            : 'You deleted this message',
+                        style: context.p.copyWith(
+                          color: colors.textMuted,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              else ...[
+                if (message.hasTranslation) ...[
+                  Text(
+                    message.translatedText,
+                    style: context.p.copyWith(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (message.hasText) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      message.visibleText,
+                      style: context.p.copyWith(
+                        color: mutedTextColor,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ] else if (message.hasText) ...[
+                  Text(
+                    message.visibleText,
+                    style: context.p.copyWith(color: textColor),
+                  ),
+                ],
 
-            const SizedBox(height: 4),
+                if (message.isTranslating) ...[
+                  if (message.hasText || message.hasTranslation)
+                    const SizedBox(height: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: mutedTextColor,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Translating...',
+                        style: context.p.copyWith(
+                          color: mutedTextColor,
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
 
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  formatTime(message.createdAt),
-                  style: context.p.copyWith(
-                    fontSize: 10,
-                    color: isMe ? colors.white : colors.textPrimary,
+                if ((message.translationError ?? '').trim().isNotEmpty) ...[
+                  if (message.hasText ||
+                      message.hasTranslation ||
+                      message.isTranslating)
+                    const SizedBox(height: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        size: 14,
+                        color: isMe
+                            ? colors.white.withOpacity(0.85)
+                            : colors.red,
+                      ),
+                      const SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          message.translationError!,
+                          style: context.p.copyWith(
+                            color: isMe
+                                ? colors.white.withOpacity(0.85)
+                                : colors.red,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+
+                if (message.hasAd) ...[
+                  if (message.hasText || message.hasTranslation)
+                    const SizedBox(height: 8),
+                  MessageAdPreview(
+                    message: message,
+                    isMe: isMe,
+                    onTap: onAdTap,
+                  ),
+                ],
+
+                if (message.attachments.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  AttachmentGrid(attachments: message.attachments),
+                ],
+              ],
+
+              if (message.reactions.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                ReactionChips(message: message, isMe: isMe),
+              ],
+
+              const SizedBox(height: 4),
+
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (message.isStarred) ...[
+                    Icon(
+                      Icons.star_rounded,
+                      size: 13,
+                      color: isMe ? colors.white : colors.textMuted,
+                    ),
+                    const SizedBox(width: 3),
+                  ],
+                  Text(
+                    formatMessageTime(message.createdAt),
+                    style: context.p.copyWith(
+                      fontSize: 10,
+                      color: isMe && !isDeleted
+                          ? colors.white
+                          : colors.textMuted,
+                    ),
+                  ),
+                  if (message.isEdited && !isDeleted) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      'Edited',
+                      style: context.p.copyWith(
+                        fontSize: 10,
+                        color: isMe ? colors.white : colors.textMuted,
+                      ),
+                    ),
+                  ],
+                  if (isMe) const SizedBox(width: 4),
+                  if (isMe) _buildStatusIcon(context),
+                ],
+              ),
+
+              if (message.isLocalSending)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(
+                    'Sending...',
+                    style: TextStyle(fontSize: 11, color: colors.textMuted),
                   ),
                 ),
-                if (isMe) const SizedBox(width: 4),
-                if (isMe) _buildStatusIcon(context),
-              ],
-            ),
-          ],
+
+              if (message.isLocalFailed)
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onRetry,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.error_outline_rounded,
+                          size: 14,
+                          color: colors.red,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Tap to retry',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: colors.red,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -107,141 +347,5 @@ class MessageBubble extends StatelessWidget {
     }
 
     return Icon(Icons.done, size: 14, color: colors.white);
-  }
-}
-
-class _MessageAdPreview extends StatelessWidget {
-  const _MessageAdPreview({required this.message, required this.isMe});
-
-  final ChatMessage message;
-  final bool isMe;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-
-    final preview = message.adPreview ?? {};
-
-    final title = _readString(preview, const ['title', 'ad_title', 'name']);
-
-    final price = _readString(preview, const [
-      'price',
-      'current_price',
-      'formatted_price',
-    ]);
-
-    final image = _readString(preview, const [
-      'image',
-      'thumbnail',
-      'thumbnail_url',
-      'primary_image',
-    ]);
-
-    final fallbackTitle = message.ad ?? 'Ad';
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: isMe ? colors.white.withValues(alpha: 0.12) : colors.elevated,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isMe ? colors.white.withValues(alpha: 0.18) : colors.border,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: _AdImage(imageUrl: image),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title ?? fallbackTitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.p.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isMe ? colors.white : colors.textPrimary,
-                  ),
-                ),
-                if (price != null && price.trim().isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    price,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.p.copyWith(
-                      fontSize: 12,
-                      color: isMe ? colors.white : colors.textMuted,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static String? _readString(Map<String, dynamic> data, List<String> keys) {
-    for (final key in keys) {
-      final value = data[key];
-      if (value == null) continue;
-
-      final text = value.toString().trim();
-      if (text.isNotEmpty && text.toLowerCase() != 'null') {
-        return text;
-      }
-    }
-
-    return null;
-  }
-}
-
-class _AdImage extends StatelessWidget {
-  const _AdImage({required this.imageUrl});
-
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-
-    final url = imageUrl?.trim();
-
-    if (url == null || url.isEmpty) {
-      return Container(
-        width: 52,
-        height: 52,
-        color: colors.border,
-        child: Icon(Icons.image_outlined, size: 22, color: colors.textMuted),
-      );
-    }
-
-    return Image.network(
-      url,
-      width: 52,
-      height: 52,
-      fit: BoxFit.cover,
-      errorBuilder: (_, _, _) {
-        return Container(
-          width: 52,
-          height: 52,
-          color: colors.border,
-          child: Icon(
-            Icons.broken_image_outlined,
-            size: 22,
-            color: colors.textMuted,
-          ),
-        );
-      },
-    );
   }
 }

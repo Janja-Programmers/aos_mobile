@@ -6,7 +6,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/sellers/domain/seller_list_item.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
-import 'package:africaonlinestores/features/connect/presentation/widgets/seller_picker_body.dart';
+import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/seller_picker_body.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 
 class NewCallScreen extends ConsumerStatefulWidget {
@@ -18,6 +18,16 @@ class NewCallScreen extends ConsumerStatefulWidget {
 
 class _NewCallScreenState extends ConsumerState<NewCallScreen> {
   bool _isCalling = false;
+
+  CallParticipant _buildReceiver(SellerListItem seller) {
+    final sellerName = seller.displayName.trim();
+
+    return CallParticipant(
+      userId: seller.user,
+      displayName: sellerName,
+      avatarUrl: seller.avatar,
+    );
+  }
 
   Future<void> _startCall({
     required BuildContext context,
@@ -44,18 +54,6 @@ class _NewCallScreenState extends ConsumerState<NewCallScreen> {
     } finally {
       _isCalling = false;
     }
-  }
-
-  CallParticipant _buildReceiver(SellerListItem? seller) {
-    final sellerName = seller?.shopName.trim();
-
-    return CallParticipant(
-      userId: seller!.user,
-      displayName: sellerName != null && sellerName.isNotEmpty
-          ? sellerName
-          : seller.seller,
-      avatarUrl: seller.avatar,
-    );
   }
 
   @override

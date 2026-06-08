@@ -1,23 +1,17 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/features/connect/voice/voice_sound_feedback_service.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/features/connect/voice/audio_recorder_service.dart';
 import 'package:africaonlinestores/features/connect/voice/voice_record_state.dart';
 
-final voiceRecordControllerProvider =
-    StateNotifierProvider.autoDispose<VoiceRecordController, VoiceRecordState>((
-      ref,
-    ) {
-      final controller = VoiceRecordController(AudioRecorderService());
-      ref.onDispose(controller.dispose);
-      return controller;
-    });
-
 class VoiceRecordController extends StateNotifier<VoiceRecordState> {
-  VoiceRecordController(this._service) : super(const VoiceRecordState());
+  VoiceRecordController(this._service, this._soundService)
+    : super(const VoiceRecordState());
 
   final AudioRecorderService _service;
+  final VoiceSoundFeedbackService _soundService;
   Timer? _timer;
 
   static const double cancelThreshold = -100;
@@ -34,6 +28,8 @@ class VoiceRecordController extends StateNotifier<VoiceRecordState> {
       );
       return;
     }
+
+    await _soundService.playStartCue();
 
     await _service.start();
 
@@ -79,12 +75,15 @@ class VoiceRecordController extends StateNotifier<VoiceRecordState> {
 
     if (shouldCancel) {
       await _service.cancel();
+      await _soundService.playCancelCue();
+
       state = state.copyWith(
         status: VoiceRecordStatus.idle,
         duration: Duration.zero,
         dragDx: 0,
         clearRecordedFilePath: true,
       );
+
       return null;
     }
 
@@ -103,7 +102,9 @@ class VoiceRecordController extends StateNotifier<VoiceRecordState> {
   Future<void> cancelRecording() async {
     _timer?.cancel();
     _timer = null;
+
     await _service.cancel();
+    await _soundService.playCancelCue();
 
     state = state.copyWith(
       status: VoiceRecordStatus.idle,
@@ -114,9 +115,13 @@ class VoiceRecordController extends StateNotifier<VoiceRecordState> {
   }
 
   @override
-  Future<void> dispose() async {
-    super.dispose();
+  void dispose() {
     _timer?.cancel();
-    await _service.dispose();
+    _timer = null;
+
+    unawaited(_service.dispose());
+    unawaited(_soundService.dispose());
+
+    super.dispose();
   }
 }

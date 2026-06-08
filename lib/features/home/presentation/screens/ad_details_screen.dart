@@ -13,10 +13,10 @@ import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/connect/chats/utils/chat_actions.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
-import 'package:africaonlinestores/features/reviews/navigation/reviews_routes.dart';
+import 'package:africaonlinestores/features/reviews/application/navigation/reviews_routes.dart';
 import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
-import 'package:africaonlinestores/features/reviews/controllers/review_controller.dart';
+import 'package:africaonlinestores/features/reviews/application/controllers/review_controller.dart';
 import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';
 import 'package:africaonlinestores/features/home/shared/providers/similar_ads_provider.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
@@ -125,7 +125,6 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
           final reviewState = ref.watch(reviewControllerProvider(ad.id));
           bool isCalling = false;
 
-          // Replace this provider with your actual auth/current user provider
           final currentUser = ref.watch(currentUserProvider);
           final isOwnAd = currentUser?.toString() == ad.sellerId;
 
@@ -200,6 +199,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                           joined: seller.joined,
                           isFollowing: seller.isFollowing,
                           isVerified: seller.isVerified,
+                          reviewState: reviewState,
                           onVisitStore: () => SellerNavigation.toSellerStore(
                             context,
                             ad.sellerId,

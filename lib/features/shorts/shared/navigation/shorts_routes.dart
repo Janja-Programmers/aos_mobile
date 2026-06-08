@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
@@ -8,6 +9,7 @@ import 'package:africaonlinestores/features/shorts/create_short/presentation/scr
 
 import 'package:africaonlinestores/features/shorts/feeds/presentation/screens/short_detail_screen.dart';
 
+import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 
@@ -39,6 +41,20 @@ class ShortDetailArgs {
   });
 }
 
+final _shortDetailByIdProvider = FutureProvider.family<Short, String>((
+  ref,
+  shortId,
+) async {
+  final result = await ref
+      .read(shortsManagementApiProvider)
+      .getShort(shortId: shortId);
+
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (short) => short,
+  );
+});
+
 class ShortsRoutes {
   const ShortsRoutes._();
 
@@ -59,18 +75,27 @@ class ShortsRoutes {
         builder: (context, state) {
           final args = state.extra as ShortDetailArgs?;
 
-          if (args == null) {
-            return Scaffold(
-              appBar: AppBar(leading: const BackButton()),
-              body: const Center(child: Text('Missing short detail data')),
+          if (args != null) {
+            return ShortDetailScreen(
+              initialShorts: args.initialShorts,
+              initialIndex: args.initialIndex,
+              initialNextCursor: args.initialNextCursor,
+              initialHasMore: args.initialHasMore,
             );
           }
 
-          return ShortDetailScreen(
-            initialShorts: args.initialShorts,
-            initialIndex: args.initialIndex,
-            initialNextCursor: args.initialNextCursor,
-            initialHasMore: args.initialHasMore,
+          final shortId =
+              state.uri.queryParameters['short_id'] ??
+              state.uri.queryParameters['shortId'] ??
+              state.uri.queryParameters['short'];
+
+          if (shortId != null && shortId.trim().isNotEmpty) {
+            return _ShortDetailByIdScreen(shortId: shortId.trim());
+          }
+
+          return Scaffold(
+            appBar: AppBar(leading: const BackButton()),
+            body: const Center(child: Text('Missing short detail data')),
           );
         },
       ),
@@ -106,6 +131,42 @@ class ShortsRoutes {
   }
 }
 
+class _ShortDetailByIdScreen extends ConsumerWidget {
+  final String shortId;
+
+  const _ShortDetailByIdScreen({required this.shortId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final shortAsync = ref.watch(_shortDetailByIdProvider(shortId));
+
+    return shortAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => Scaffold(
+        appBar: AppBar(leading: const BackButton()),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              'Failed to load short.\n$error',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+      data: (short) => ShortDetailScreen(
+        initialShorts: [short],
+        initialIndex: 0,
+        initialNextCursor: null,
+        initialHasMore: false,
+      ),
+    );
+  }
+}
+
 /// ─────────────────────────────────────────
 /// NAVIGATION HELPERS
 /// ─────────────────────────────────────────
@@ -129,6 +190,16 @@ class ShortsNavigation {
         initialNextCursor: initialNextCursor,
         initialHasMore: initialHasMore,
       ),
+    );
+  }
+
+  static void toShortDetailById(
+    BuildContext context, {
+    required String shortId,
+  }) {
+    context.pushNamed(
+      AppRoutes.nShortDetail,
+      queryParameters: {'short_id': shortId},
     );
   }
 

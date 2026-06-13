@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/features/reviews/application/state/review_viewer_state.dart';
+import 'package:africaonlinestores/features/reviews/domain/review_sort.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,26 +11,37 @@ import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
-/// Provider for Review API
 final reviewApiProvider = Provider<ReviewApi>((ref) {
   return ReviewApi(ref.read(apiClientProvider));
 });
 
 class ReviewApi {
-  final ApiClient _client;
-
   ReviewApi(this._client);
 
-  /// GET REVIEWS FOR AN AD
+  final ApiClient _client;
+
   Future<Either<Failure, Map<String, dynamic>>> getAdReviews({
     required String adId,
-    int limit = 10,
+    ReviewSort sort = ReviewSort.newest,
+    int? rating,
+    int limit = 50,
     int offset = 0,
   }) async {
     try {
+      final queryParameters = <String, dynamic>{
+        'ad': adId,
+        'sort': sort.apiValue,
+        'limit': limit,
+        'offset': offset,
+      };
+
+      if (rating != null) {
+        queryParameters['rating'] = rating;
+      }
+
       final res = await _client.get(
         ApiEndpoints.getAdReviewsEndpoint,
-        queryParameters: {'ad': adId, 'limit': limit, 'offset': offset},
+        queryParameters: queryParameters,
       );
 
       return unwrapFrappe(res);
@@ -40,7 +52,6 @@ class ReviewApi {
     }
   }
 
-  /// CREATE REVIEW
   Future<Either<Failure, void>> createAdReview({
     required String ad,
     required double rating,
@@ -48,15 +59,19 @@ class ReviewApi {
     required String comment,
     List<String>? images,
   }) async {
+    if ((images?.length ?? 0) > 5) {
+      return Either.left(const Failure('Maximum 5 images allowed.'));
+    }
+
     try {
       final res = await _client.post(
         ApiEndpoints.createAdReviewEndpoint,
         data: {
-          "ad": ad,
-          "rating": rating,
-          "title": title,
-          "comment": comment,
-          "images": images ?? [],
+          'ad': ad,
+          'rating': rating,
+          'title': title,
+          'comment': comment,
+          'images': images ?? [],
         },
       );
 
@@ -73,7 +88,6 @@ class ReviewApi {
     }
   }
 
-  /// CREATE REVIEW
   Future<Either<Failure, void>> toggleReview({
     required String reviewId,
     required String reaction,
@@ -81,7 +95,7 @@ class ReviewApi {
     try {
       final res = await _client.post(
         ApiEndpoints.toggleAdReviewEndpoint,
-        data: {"review": reviewId, "reaction": reaction},
+        data: {'review': reviewId, 'reaction': reaction},
       );
 
       final parsed = unwrapFrappe(res);
@@ -97,7 +111,6 @@ class ReviewApi {
     }
   }
 
-  /// GET REVIEW VIEWER STATE
   Future<Either<Failure, ReviewViewerState>> getReviewViewerState({
     required String ad,
   }) async {

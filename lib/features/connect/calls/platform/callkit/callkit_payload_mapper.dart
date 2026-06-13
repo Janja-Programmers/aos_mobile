@@ -37,8 +37,8 @@ class CallKitPayloadMapper {
       handle: isVideo ? 'Incoming video call' : 'Incoming voice call',
       type: isVideo ? 1 : 0,
       duration: 30000,
-      textAccept: 'Answer',
-      textDecline: 'Reject',
+      // textAccept: 'Answer',
+      // textDecline: 'Reject',
       extra: {
         ...data,
         'call_id': callId,

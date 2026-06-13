@@ -9,23 +9,21 @@ import 'package:africaonlinestores/core/files/domain/upload_file.dart';
 class ReviewMediaHelper {
   ReviewMediaHelper._();
 
-  static final _picker = ImagePicker();
-  static const int maxImages = 4;
+  static final ImagePicker _picker = ImagePicker();
+  static const int maxImages = 5;
 
   static Future<File?> takePhoto() async {
-    final x = await _picker.pickImage(
+    final image = await _picker.pickImage(
       source: ImageSource.camera,
       imageQuality: 80,
     );
-    return x == null ? null : File(x.path);
+
+    return image == null ? null : File(image.path);
   }
 
-  static Future<File?> pickFromGallery() async {
-    final x = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-    return x == null ? null : File(x.path);
+  static Future<List<File>> pickFromGallery() async {
+    final images = await _picker.pickMultiImage(imageQuality: 80);
+    return images.map((image) => File(image.path)).toList();
   }
 
   static Future<List<String>> upload({
@@ -35,9 +33,9 @@ class ReviewMediaHelper {
     final urls = <String>[];
 
     for (final file in files) {
-      final res = await ref.read(filesApiProvider).uploadMedia(file: file);
+      final result = await ref.read(filesApiProvider).uploadMedia(file: file);
 
-      res.fold((_) {}, (UploadedFile data) {
+      result.fold((_) {}, (UploadedFile data) {
         if (data.url.isNotEmpty) {
           urls.add(data.url);
         }

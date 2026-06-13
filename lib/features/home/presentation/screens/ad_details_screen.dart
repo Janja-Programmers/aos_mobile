@@ -224,12 +224,18 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                       ),
                       error: (_, _) => const SizedBox.shrink(),
                       data: (items) {
-                        if (items.isEmpty) return const SizedBox.shrink();
+                        final similarItems = items
+                            .where((item) => item.id != ad.id)
+                            .toList();
+
+                        if (similarItems.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
 
                         return SectionCard(
                           child: GridAdsSectionBox(
                             title: "Similar Products",
-                            items: items.where((e) => e.id != ad.id).toList(),
+                            items: similarItems,
                           ),
                         );
                       },

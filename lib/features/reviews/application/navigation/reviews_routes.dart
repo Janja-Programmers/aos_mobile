@@ -42,11 +42,17 @@ class ReviewsRoutes {
 class ReviewNavigation {
   const ReviewNavigation._();
 
-  static void toAllReviews(BuildContext context, String adId) {
-    context.pushNamed(AppRoutes.nReview, queryParameters: {'adId': adId});
+  static Future<T?> toAllReviews<T>(BuildContext context, String adId) {
+    return context.pushNamed<T>(
+      AppRoutes.nReview,
+      queryParameters: {'adId': adId},
+    );
   }
 
-  static void toCreateReview(BuildContext context, String adId) {
-    context.pushNamed(AppRoutes.nCreateReview, pathParameters: {'adId': adId});
+  static Future<T?> toCreateReview<T>(BuildContext context, String adId) {
+    return context.pushNamed<T>(
+      AppRoutes.nCreateReview,
+      pathParameters: {'adId': adId},
+    );
   }
 }

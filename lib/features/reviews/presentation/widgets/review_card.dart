@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_model.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 
 class ReviewCard extends StatelessWidget {
   const ReviewCard({
@@ -20,11 +21,9 @@ class ReviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
     final avatarLetter = review.reviewer.isNotEmpty
         ? review.reviewer[0].toUpperCase()
         : '?';
-
     final formattedDate = review.creation != null
         ? '${_month(review.creation!.month)} ${review.creation!.day}, ${review.creation!.year}'
         : '';
@@ -32,7 +31,6 @@ class ReviewCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        /// HEADER
         Row(
           children: [
             CircleAvatar(
@@ -52,11 +50,15 @@ class ReviewCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      _StarRating(rating: review.rating.toInt()),
+                      _StarRating(rating: review.rating),
                       const SizedBox(width: 8),
-                      Text(
-                        formattedDate,
-                        style: context.p.copyWith(color: colors.textMuted),
+                      Flexible(
+                        child: Text(
+                          formattedDate,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.p.copyWith(color: colors.textMuted),
+                        ),
                       ),
                     ],
                   ),
@@ -65,14 +67,17 @@ class ReviewCard extends StatelessWidget {
             ),
           ],
         ),
-
         const SizedBox(height: 12),
-
+        if (review.title.trim().isNotEmpty) ...[
+          Text(review.title, style: context.pStrong),
+          const SizedBox(height: 8),
+        ],
         Text(review.comment, style: context.p),
-
-        const SizedBox(height: 14),
-
-        /// FOOTER
+        if (review.images.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          _ReviewImages(images: review.images),
+        ],
+        const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -80,53 +85,27 @@ class ReviewCard extends StatelessWidget {
               'Helpful?',
               style: context.p.copyWith(color: colors.textMuted),
             ),
-
-            const SizedBox(width: 10),
-
-            /// 👍 LIKE
-            GestureDetector(
+            const SizedBox(width: 4),
+            _ReactionButton(
+              semanticLabel: review.isLiked
+                  ? 'Remove helpful reaction'
+                  : 'Mark review as helpful',
+              selected: review.isLiked,
+              selectedIcon: Icons.thumb_up,
+              unselectedIcon: Icons.thumb_up_alt_outlined,
+              count: review.likeCount,
               onTap: onLike,
-              child: Row(
-                children: [
-                  Icon(
-                    review.isLiked
-                        ? Icons.thumb_up
-                        : Icons.thumb_up_alt_outlined,
-                    size: 16,
-                    color: review.isLiked ? colors.primary : colors.textMuted,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '(${review.likeCount})',
-                    style: context.p.copyWith(color: colors.textMuted),
-                  ),
-                ],
-              ),
             ),
-
-            const SizedBox(width: 12),
-
-            /// 👎 DISLIKE
-            GestureDetector(
+            const SizedBox(width: 2),
+            _ReactionButton(
+              semanticLabel: review.isDisliked
+                  ? 'Remove not helpful reaction'
+                  : 'Mark review as not helpful',
+              selected: review.isDisliked,
+              selectedIcon: Icons.thumb_down,
+              unselectedIcon: Icons.thumb_down_alt_outlined,
+              count: review.dislikeCount,
               onTap: onDislike,
-              child: Row(
-                children: [
-                  Icon(
-                    review.isDisliked
-                        ? Icons.thumb_down
-                        : Icons.thumb_down_alt_outlined,
-                    size: 16,
-                    color: review.isDisliked
-                        ? colors.primary
-                        : colors.textMuted,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '(${review.dislikeCount})',
-                    style: context.p.copyWith(color: colors.textMuted),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
@@ -134,7 +113,7 @@ class ReviewCard extends StatelessWidget {
     );
   }
 
-  String _month(int m) {
+  String _month(int month) {
     const months = [
       'Jan',
       'Feb',
@@ -149,28 +128,136 @@ class ReviewCard extends StatelessWidget {
       'Nov',
       'Dec',
     ];
-    return months[m - 1];
+
+    return months[month - 1];
+  }
+}
+
+class _ReviewImages extends StatelessWidget {
+  const _ReviewImages({required this.images});
+
+  final List<String> images;
+
+  @override
+  Widget build(BuildContext context) {
+    final resolvedImages = images
+        .map(buildFileUrl)
+        .whereType<String>()
+        .where((url) => url.isNotEmpty)
+        .toList(growable: false);
+
+    if (resolvedImages.isEmpty) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 96,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: resolvedImages.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          return AppNetworkImage(
+            url: resolvedImages[index],
+            width: 96,
+            height: 96,
+            fit: BoxFit.cover,
+            borderRadius: BorderRadius.circular(10),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ReactionButton extends StatelessWidget {
+  const _ReactionButton({
+    required this.semanticLabel,
+    required this.selected,
+    required this.selectedIcon,
+    required this.unselectedIcon,
+    required this.count,
+    required this.onTap,
+  });
+
+  final String semanticLabel;
+  final bool selected;
+  final IconData selectedIcon;
+  final IconData unselectedIcon;
+  final int count;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final foreground = selected ? colors.primary : colors.textMuted;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: semanticLabel,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 52, minHeight: 44),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    selected ? selectedIcon : unselectedIcon,
+                    size: 18,
+                    color: foreground,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '($count)',
+                    style: context.p.copyWith(color: foreground),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
 class _StarRating extends StatelessWidget {
   const _StarRating({required this.rating});
 
-  final int rating;
+  final double rating;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final normalizedRating = rating.clamp(0, 5).toDouble();
 
     return Row(
-      children: List.generate(
-        5,
-        (i) => Icon(
-          Icons.star,
-          size: 14,
-          color: i < rating ? colors.amber : colors.border,
-        ),
-      ),
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        final starPosition = index + 1;
+        final IconData icon;
+        final Color color;
+
+        if (normalizedRating >= starPosition) {
+          icon = Icons.star;
+          color = colors.amber;
+        } else if (normalizedRating >= starPosition - 0.5) {
+          icon = Icons.star_half;
+          color = colors.amber;
+        } else {
+          icon = Icons.star_border;
+          color = colors.border;
+        }
+
+        return Icon(icon, size: 14, color: color);
+      }),
     );
   }
 }

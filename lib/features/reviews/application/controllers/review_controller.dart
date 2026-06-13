@@ -2,10 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/core/utils/either.dart';
-
 import 'package:africaonlinestores/features/reviews/application/state/review_state.dart';
 import 'package:africaonlinestores/features/reviews/data/review_api.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_model.dart';
+import 'package:africaonlinestores/features/reviews/domain/review_sort.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_summary.dart';
 
 final reviewControllerProvider =
@@ -16,27 +16,37 @@ final reviewControllerProvider =
       return ReviewController(ref, adId);
     });
 
+final reviewListControllerProvider =
+    StateNotifierProvider.family<ReviewController, ReviewState, String>(
+      (ref, adId) =>
+          ReviewController(ref, adId, syncPrimaryProviderAfterReaction: true),
+    );
+
 class ReviewController extends StateNotifier<ReviewState> {
-  ReviewController(this.ref, this.adId) : super(const ReviewState()) {
+  ReviewController(
+    this.ref,
+    this.adId, {
+    this.syncPrimaryProviderAfterReaction = false,
+  }) : super(const ReviewState()) {
     loadInitial();
   }
 
   final Ref ref;
   final String adId;
+  final bool syncPrimaryProviderAfterReaction;
+  final Set<String> _pendingReactionIds = <String>{};
+  int _reviewsRequestId = 0;
 
   Future<void> loadInitial() async {
     await Future.wait([loadReviews(), loadReviewViewerState()]);
   }
 
-  /// ---------------------------
-  /// Load Review Viewer State
-  /// ---------------------------
   Future<void> loadReviewViewerState() async {
     state = state.copyWith(viewerStateLoading: true, clearError: true);
 
-    final api = ref.read(reviewApiProvider);
-
-    final result = await api.getReviewViewerState(ad: adId);
+    final result = await ref
+        .read(reviewApiProvider)
+        .getReviewViewerState(ad: adId);
 
     result.fold(
       (failure) {
@@ -54,15 +64,18 @@ class ReviewController extends StateNotifier<ReviewState> {
     );
   }
 
-  /// ---------------------------
-  /// Load Reviews
-  /// ---------------------------
   Future<void> loadReviews() async {
+    final requestId = ++_reviewsRequestId;
+    final selectedSort = state.sort;
+    final selectedRating = state.ratingFilter;
+
     state = state.copyWith(loading: true, clearError: true);
 
-    final api = ref.read(reviewApiProvider);
+    final result = await ref
+        .read(reviewApiProvider)
+        .getAdReviews(adId: adId, sort: selectedSort, rating: selectedRating);
 
-    final result = await api.getAdReviews(adId: adId);
+    if (requestId != _reviewsRequestId) return;
 
     result.fold(
       (failure) {
@@ -70,18 +83,21 @@ class ReviewController extends StateNotifier<ReviewState> {
       },
       (payload) {
         final data = payload['data'];
+        final summaryJson = data is Map ? data['summary'] : null;
+        final items = data is Map ? data['reviews'] : null;
 
-        final summaryJson = data?['summary'];
-        final items = data?['reviews'];
-
-        final summary = summaryJson != null
+        final summary = summaryJson is Map
             ? ReviewSummary.fromJson(Map<String, dynamic>.from(summaryJson))
             : null;
 
-        final reviews = (items is List)
-            ? items.map((e) {
-                return AdReview.fromJson(Map<String, dynamic>.from(e));
-              }).toList()
+        final reviews = items is List
+            ? items
+                  .whereType<Map>()
+                  .map(
+                    (item) =>
+                        AdReview.fromJson(Map<String, dynamic>.from(item)),
+                  )
+                  .toList()
             : <AdReview>[];
 
         state = state.copyWith(
@@ -93,26 +109,42 @@ class ReviewController extends StateNotifier<ReviewState> {
     );
   }
 
-  /// ---------------------------
-  /// Submit Review
-  /// ---------------------------
+  Future<void> setSort(ReviewSort sort) async {
+    if (state.sort == sort) return;
+
+    state = state.copyWith(sort: sort);
+    await loadReviews();
+  }
+
+  Future<void> setRatingFilter(int? rating) async {
+    if (rating != null && (rating < 1 || rating > 5)) return;
+    if (state.ratingFilter == rating) return;
+
+    state = state.copyWith(
+      ratingFilter: rating,
+      clearRatingFilter: rating == null,
+    );
+
+    await loadReviews();
+  }
+
   Future<bool> submit({
     required double rating,
     required String title,
     required String comment,
     required List<String> images,
   }) async {
-    state = state.copyWith(submitting: true, error: null);
+    state = state.copyWith(submitting: true, clearError: true);
 
-    final api = ref.read(reviewApiProvider);
-
-    final res = await api.createAdReview(
-      ad: adId,
-      rating: rating,
-      title: title,
-      comment: comment,
-      images: images,
-    );
+    final res = await ref
+        .read(reviewApiProvider)
+        .createAdReview(
+          ad: adId,
+          rating: rating,
+          title: title,
+          comment: comment,
+          images: images,
+        );
 
     return res.fold(
       (failure) {
@@ -121,104 +153,95 @@ class ReviewController extends StateNotifier<ReviewState> {
       },
       (_) async {
         state = state.copyWith(submitting: false);
-
-        await loadReviews();
-        await loadReviewViewerState();
-
+        await loadInitial();
         return true;
       },
     );
   }
 
-  /// ---------------------------
-  /// Toggle Review
-  /// ---------------------------
   Future<Either<String, void>> toggleReaction({
     required String reviewId,
     required bool isLikeAction,
   }) async {
-    final api = ref.read(reviewApiProvider);
+    if (!_pendingReactionIds.add(reviewId)) {
+      return Either.right(null);
+    }
 
-    final current = state.reviews.firstWhere((r) => r.id == reviewId);
+    final reviewIndex = state.reviews.indexWhere((review) {
+      return review.id == reviewId;
+    });
 
-    bool newLiked = current.isLiked;
-    bool newDisliked = current.isDisliked;
+    if (reviewIndex == -1) {
+      _pendingReactionIds.remove(reviewId);
+      return Either.left('Review not found.');
+    }
 
-    int likeCount = current.likeCount;
-    int dislikeCount = current.dislikeCount;
+    final previousReviews = List<AdReview>.from(state.reviews);
+    final current = state.reviews[reviewIndex];
 
-    String reaction;
+    var newLiked = current.isLiked;
+    var newDisliked = current.isDisliked;
+    var likeCount = current.likeCount;
+    var dislikeCount = current.dislikeCount;
+    final reaction = isLikeAction ? 'Like' : 'Dislike';
 
     if (isLikeAction) {
-      /// LIKE toggle
       if (current.isLiked) {
-        // Unlike
         newLiked = false;
-        likeCount = (likeCount - 1).clamp(0, 999999);
-        reaction = "Like";
+        likeCount = (likeCount - 1).clamp(0, 999999).toInt();
       } else {
-        // Like
         newLiked = true;
         likeCount += 1;
-        reaction = "Like";
 
-        /// remove dislike if exists
         if (current.isDisliked) {
           newDisliked = false;
-          dislikeCount = (dislikeCount - 1).clamp(0, 999999);
+          dislikeCount = (dislikeCount - 1).clamp(0, 999999).toInt();
         }
       }
     } else {
-      /// DISLIKE toggle
       if (current.isDisliked) {
-        // Undislike
         newDisliked = false;
-        dislikeCount = (dislikeCount - 1).clamp(0, 999999);
-        reaction = "Dislike";
+        dislikeCount = (dislikeCount - 1).clamp(0, 999999).toInt();
       } else {
-        // Dislike
         newDisliked = true;
         dislikeCount += 1;
-        reaction = "Dislike";
 
-        /// remove like if exists
         if (current.isLiked) {
           newLiked = false;
-          likeCount = (likeCount - 1).clamp(0, 999999);
+          likeCount = (likeCount - 1).clamp(0, 999999).toInt();
         }
       }
     }
 
-    /// ✅ optimistic update
-    final updated = state.reviews.map((r) {
-      if (r.id != reviewId) return r;
-
-      return AdReview(
-        id: r.id,
-        rating: r.rating,
-        title: r.title,
-        comment: r.comment,
-        reviewer: r.reviewer,
-        creation: r.creation,
-        likeCount: likeCount,
-        dislikeCount: dislikeCount,
-        isLiked: newLiked,
-        isDisliked: newDisliked,
-      );
-    }).toList();
-
-    state = state.copyWith(reviews: updated);
-
-    final res = await api.toggleReview(reviewId: reviewId, reaction: reaction);
-
-    return res.fold(
-      (failure) {
-        loadReviews();
-        return Either.left(failure.message);
-      },
-      (_) {
-        return Either.right(null);
-      },
+    final updatedReviews = List<AdReview>.from(state.reviews);
+    updatedReviews[reviewIndex] = current.copyWith(
+      likeCount: likeCount,
+      dislikeCount: dislikeCount,
+      isLiked: newLiked,
+      isDisliked: newDisliked,
     );
+
+    state = state.copyWith(reviews: updatedReviews);
+
+    try {
+      final result = await ref
+          .read(reviewApiProvider)
+          .toggleReview(reviewId: reviewId, reaction: reaction);
+
+      return result.fold(
+        (failure) {
+          state = state.copyWith(reviews: previousReviews);
+          return Either.left(failure.message);
+        },
+        (_) {
+          if (syncPrimaryProviderAfterReaction) {
+            ref.invalidate(reviewControllerProvider(adId));
+          }
+          return Either.right(null);
+        },
+      );
+    } finally {
+      _pendingReactionIds.remove(reviewId);
+    }
   }
 }

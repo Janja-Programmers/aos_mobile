@@ -11,19 +11,32 @@ class ImageHeaderOverlayActions extends StatelessWidget {
   const ImageHeaderOverlayActions({
     super.key,
     required this.isFavorite,
+    this.isFavoritePending = false,
+    this.onShareTap,
     this.onFavoriteTap,
   });
 
   final bool isFavorite;
+  final bool isFavoritePending;
+  final VoidCallback? onShareTap;
   final VoidCallback? onFavoriteTap;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         _CircleActionButton(
+          icon: Icons.share_outlined,
+          tooltip: 'Share ad',
+          onTap: onShareTap,
+        ),
+        const SizedBox(width: 2.5),
+        _CircleActionButton(
           icon: isFavorite ? Icons.favorite : Icons.favorite_border,
-          onTap: onFavoriteTap,
+          tooltip: isFavorite ? 'Remove from wishlist' : 'Add to wishlist',
+          isLoading: isFavoritePending,
+          onTap: isFavoritePending ? null : onFavoriteTap,
         ),
       ],
     );
@@ -284,26 +297,47 @@ class _VideoThumbnail extends StatelessWidget {
 }
 
 class _CircleActionButton extends StatelessWidget {
-  const _CircleActionButton({required this.icon, this.onTap});
+  const _CircleActionButton({
+    required this.icon,
+    required this.tooltip,
+    this.isLoading = false,
+    this.onTap,
+  });
 
   final IconData icon;
+  final String tooltip;
+  final bool isLoading;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return Material(
-      color: colors.white,
-      shape: const CircleBorder(),
-      elevation: 0,
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          width: 38,
-          height: 38,
-          child: Icon(icon, size: 20, color: colors.black),
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: colors.white,
+        shape: const CircleBorder(),
+        elevation: 0,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 38,
+            height: 38,
+            child: Center(
+              child: isLoading
+                  ? SizedBox(
+                      width: 17,
+                      height: 17,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colors.primary,
+                      ),
+                    )
+                  : Icon(icon, size: 20, color: colors.primary),
+            ),
+          ),
         ),
       ),
     );

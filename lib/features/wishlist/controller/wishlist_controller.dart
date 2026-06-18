@@ -80,27 +80,67 @@ class WishlistController extends AsyncNotifier<WishlistState> {
     if (auth is! AuthAuthenticated) return false;
 
     final id = adId.trim();
+    if (id.isEmpty) return false;
+
     final current = state.value ?? WishlistState.initial();
+    if (current.pending.contains(id)) return false;
 
-    final currentIds = Set<String>.from(current.ids);
+    final wasWishlisted = current.ids.contains(id);
 
-    final wasLiked = currentIds.contains(id);
-    wasLiked ? currentIds.remove(id) : currentIds.add(id);
+    final optimisticIds = Set<String>.from(current.ids);
+    if (wasWishlisted) {
+      optimisticIds.remove(id);
+    } else {
+      optimisticIds.add(id);
+    }
 
-    state = AsyncData(current.copyWith(ids: currentIds));
+    final pendingIds = Set<String>.from(current.pending)..add(id);
 
-    /// Persist immediately
-    await _storage.writeIds(currentIds);
+    state = AsyncData(
+      current.copyWith(ids: optimisticIds, pending: pendingIds),
+    );
 
-    final res = await _api.toggleWishlist(adId: id);
+    try {
+      await _storage.writeIds(optimisticIds);
 
-    return res.fold((_) async {
-      wasLiked ? currentIds.add(id) : currentIds.remove(id);
+      final res = await _api.toggleWishlist(adId: id);
 
-      state = AsyncData(current.copyWith(ids: currentIds));
-      await _storage.writeIds(currentIds);
-
+      return await res.fold(
+        (_) async {
+          await _finishToggle(id: id, shouldBeWishlisted: wasWishlisted);
+          return false;
+        },
+        (_) async {
+          await _finishToggle(id: id, shouldBeWishlisted: !wasWishlisted);
+          return true;
+        },
+      );
+    } catch (_) {
+      await _finishToggle(id: id, shouldBeWishlisted: wasWishlisted);
       return false;
-    }, (_) => true);
+    }
+  }
+
+  Future<void> _finishToggle({
+    required String id,
+    required bool shouldBeWishlisted,
+  }) async {
+    final latest = state.value ?? WishlistState.initial();
+    final ids = Set<String>.from(latest.ids);
+    final pending = Set<String>.from(latest.pending)..remove(id);
+
+    if (shouldBeWishlisted) {
+      ids.add(id);
+    } else {
+      ids.remove(id);
+    }
+
+    state = AsyncData(latest.copyWith(ids: ids, pending: pending));
+
+    try {
+      await _storage.writeIds(ids);
+    } catch (_) {
+      // The server response remains authoritative; storage can resync later.
+    }
   }
 }

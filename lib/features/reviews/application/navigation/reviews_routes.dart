@@ -11,7 +11,6 @@ class ReviewsRoutes {
   static List<GoRoute> routes() => [..._publicRoutes];
 
   static final List<GoRoute> _publicRoutes = [
-    // REVIEW ROUTE
     GoRoute(
       name: AppRoutes.nReview,
       path: AppRoutes.review,
@@ -21,8 +20,6 @@ class ReviewsRoutes {
         return ReviewScreen(adId: adId);
       },
     ),
-
-    // CREATE REVIEW ROUTE
     GoRoute(
       name: AppRoutes.nCreateReview,
       path: AppRoutes.createReview,
@@ -42,15 +39,15 @@ class ReviewsRoutes {
 class ReviewNavigation {
   const ReviewNavigation._();
 
-  static Future<T?> toAllReviews<T>(BuildContext context, String adId) {
-    return context.pushNamed<T>(
+  static Future<void> toAllReviews(BuildContext context, String adId) async {
+    await context.pushNamed<void>(
       AppRoutes.nReview,
       queryParameters: {'adId': adId},
     );
   }
 
-  static Future<T?> toCreateReview<T>(BuildContext context, String adId) {
-    return context.pushNamed<T>(
+  static Future<bool?> toCreateReview(BuildContext context, String adId) {
+    return context.pushNamed<bool>(
       AppRoutes.nCreateReview,
       pathParameters: {'adId': adId},
     );

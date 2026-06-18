@@ -103,7 +103,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 NotificationBadge(
                   count: chatUnreadCount,
                   child: _CircleIconButton(
-                    icon: Icons.chat_bubble_outline,
+                    icon: Icons.contact_phone_outlined,
                     onTap: onTapConnect,
                   ),
                 ),

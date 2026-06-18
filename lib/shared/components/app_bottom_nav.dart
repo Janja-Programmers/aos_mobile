@@ -44,8 +44,8 @@ class AppBottomNav extends ConsumerWidget {
 
             _NavItem(
               label: 'Feed',
-              icon: Icons.forum_outlined,
-              activeIcon: Icons.forum_outlined,
+              icon: Icons.play_circle_outline_outlined,
+              activeIcon: Icons.play_circle_outline_rounded,
               active: currentIndex == 3,
               onTap: () => AppNavigation.goTo(context, ref, 3),
             ),

@@ -69,10 +69,7 @@ class ReviewScreen extends ConsumerWidget {
     }
 
     Future<void> openCreateReview() async {
-      final created = await ReviewNavigation.toCreateReview<bool>(
-        context,
-        adId,
-      );
+      final created = await ReviewNavigation.toCreateReview(context, adId);
 
       if (!context.mounted) return;
 

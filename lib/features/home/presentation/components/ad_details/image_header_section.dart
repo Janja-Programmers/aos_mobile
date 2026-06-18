@@ -1,14 +1,22 @@
 import 'dart:async';
 
 import 'package:chewie/chewie.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 import 'package:video_player/video_player.dart';
 
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/routing/helpers/route_observer.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/image_header_widgets.dart';
+import 'package:africaonlinestores/features/home/presentation/services/ad_image_export_service.dart';
+
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ImageHeaderSection extends StatefulWidget {
   const ImageHeaderSection({
@@ -18,16 +26,20 @@ class ImageHeaderSection extends StatefulWidget {
     required this.onSelect,
     this.videoUrl,
     this.isFavorite = false,
+    this.isFavoritePending = false,
     this.onFavoriteTap,
     this.onShareTap,
   });
 
   final List<String> images;
   final String? videoUrl;
+
   final int selected;
   final ValueChanged<int> onSelect;
 
   final bool isFavorite;
+  final bool isFavoritePending;
+
   final VoidCallback? onFavoriteTap;
   final VoidCallback? onShareTap;
 
@@ -37,16 +49,23 @@ class ImageHeaderSection extends StatefulWidget {
 
 class _ImageHeaderSectionState extends State<ImageHeaderSection>
     with WidgetsBindingObserver, RouteAware {
-  VideoPlayerController? _vc;
+  VideoPlayerController? _videoController;
   ChewieController? _chewieController;
   VoidCallback? _videoListener;
 
-  Future<void>? _init;
+  Future<void>? _videoInitialization;
   String? _currentVideoUrl;
 
+  int _videoGeneration = 0;
+  bool _videoCompletionHandled = false;
+
   late final PageController _pageController;
+  late int _currentIndex;
+
+  ModalRoute<void>? _subscribedRoute;
 
   Timer? _autoScrollTimer;
+
   static const Duration _autoScrollInterval = Duration(seconds: 4);
 
   bool get _hasVideo => (widget.videoUrl ?? '').trim().isNotEmpty;
@@ -54,46 +73,75 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection>
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addObserver(this);
 
-    _pageController = PageController(initialPage: widget.selected);
-    _maybeInitInlineVideo(widget.selected);
-    _startAutoScrollIfNeeded();
+    final media = _buildMedia();
+
+    _currentIndex = _safeIndex(widget.selected, media.length);
+
+    _pageController = PageController(initialPage: _currentIndex);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      _maybeInitializeInlineVideo(_currentIndex);
+      _startAutoScrollIfNeeded();
+    });
   }
 
   @override
   void didUpdateWidget(covariant ImageHeaderSection oldWidget) {
     super.didUpdateWidget(oldWidget);
 
+    final imagesChanged = !listEquals(oldWidget.images, widget.images);
+
+    final videoChanged = oldWidget.videoUrl != widget.videoUrl;
+    final selectedChanged = oldWidget.selected != widget.selected;
+
+    if (!imagesChanged && !videoChanged && !selectedChanged) {
+      return;
+    }
+
     final media = _buildMedia();
-    final safeSelected = media.isEmpty
-        ? 0
-        : widget.selected.clamp(0, media.length - 1);
 
-    if (oldWidget.selected != widget.selected && _pageController.hasClients) {
-      _pageController.animateToPage(
-        safeSelected,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOut,
-      );
+    if (media.isEmpty) {
+      _currentIndex = 0;
+      _stopAutoScroll();
+      _disposeInlineVideo();
+      return;
     }
 
-    if (oldWidget.videoUrl != widget.videoUrl ||
-        oldWidget.images != widget.images ||
-        oldWidget.selected != widget.selected) {
-      _maybeInitInlineVideo(safeSelected);
-      _startAutoScrollIfNeeded();
+    final previousIndex = _currentIndex;
+
+    if (selectedChanged) {
+      _currentIndex = _safeIndex(widget.selected, media.length);
+    } else {
+      _currentIndex = _safeIndex(_currentIndex, media.length);
     }
+
+    if (_currentIndex != previousIndex || selectedChanged) {
+      _moveToPage(_currentIndex);
+    }
+
+    _maybeInitializeInlineVideo(_currentIndex);
+    _startAutoScrollIfNeeded();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final route = ModalRoute.of(context);
-    if (route != null) {
-      routeObserver.subscribe(this, route);
+    final route = ModalRoute.of<void>(context);
+
+    if (route == null || identical(route, _subscribedRoute)) {
+      return;
     }
+
+    routeObserver.unsubscribe(this);
+
+    _subscribedRoute = route;
+    routeObserver.subscribe(this, route);
   }
 
   @override
@@ -102,7 +150,8 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection>
     WidgetsBinding.instance.removeObserver(this);
 
     _stopAutoScroll();
-    _disposeInline();
+    _disposeInlineVideo();
+
     _pageController.dispose();
 
     super.dispose();
@@ -110,20 +159,52 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive) {
-      _pauseVideo();
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _resumeSelectedMedia();
+
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.detached:
+        _pauseVideo();
+        _stopAutoScroll();
     }
   }
 
   @override
   void didPushNext() {
     _pauseVideo();
+    _stopAutoScroll();
+  }
+
+  @override
+  void didPopNext() {
+    _resumeSelectedMedia();
+  }
+
+  void _resumeSelectedMedia() {
+    if (!mounted) return;
+
+    final media = _buildMedia();
+
+    if (media.isEmpty) return;
+
+    final index = _safeIndex(_currentIndex, media.length);
+
+    _maybeInitializeInlineVideo(index);
+    _startAutoScrollIfNeeded();
   }
 
   void _pauseVideo() {
-    _vc?.pause();
-    _chewieController?.pause();
+    final chewieController = _chewieController;
+
+    if (chewieController != null) {
+      unawaited(chewieController.pause());
+      return;
+    }
+
+    unawaited(_videoController?.pause());
   }
 
   void _stopAutoScroll() {
@@ -135,113 +216,191 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection>
     _stopAutoScroll();
 
     final media = _buildMedia();
+
     if (media.length <= 1) return;
 
-    final current = widget.selected.clamp(0, media.length - 1);
-    final item = media[current];
+    final current = _safeIndex(_currentIndex, media.length);
 
-    if (item.isVideo) return;
+    if (media[current].isVideo) {
+      return;
+    }
 
     _autoScrollTimer = Timer.periodic(_autoScrollInterval, (_) {
-      if (!mounted || !_pageController.hasClients) return;
+      if (!mounted || !_pageController.hasClients) {
+        return;
+      }
 
       final latestMedia = _buildMedia();
-      if (latestMedia.length <= 1) return;
 
-      final current = widget.selected.clamp(0, latestMedia.length - 1);
-      final next = (current + 1) % latestMedia.length;
+      if (latestMedia.length <= 1) {
+        _stopAutoScroll();
+        return;
+      }
 
-      widget.onSelect(next);
+      final latestCurrent = _safeIndex(_currentIndex, latestMedia.length);
 
-      _pageController.animateToPage(
-        next,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeOut,
-      );
+      if (latestMedia[latestCurrent].isVideo) {
+        _stopAutoScroll();
+        return;
+      }
+
+      final next = (latestCurrent + 1) % latestMedia.length;
+
+      _selectMedia(next);
     });
   }
 
-  void _disposeInline() {
-    try {
-      if (_videoListener != null) {
-        _vc?.removeListener(_videoListener!);
-        _videoListener = null;
-      }
+  void _disposeInlineVideo() {
+    _videoGeneration++;
+    _videoCompletionHandled = false;
 
-      _chewieController?.pause();
-      _chewieController?.dispose();
-    } catch (_) {}
+    final videoController = _videoController;
+    final chewieController = _chewieController;
+    final videoListener = _videoListener;
 
+    _videoController = null;
     _chewieController = null;
+    _videoListener = null;
+    _videoInitialization = null;
+    _currentVideoUrl = null;
 
     try {
-      _vc?.pause();
-      _vc?.dispose();
-    } catch (_) {}
+      if (videoListener != null) {
+        videoController?.removeListener(videoListener);
+      }
+    } catch (_) {
+      // Best effort.
+    }
 
-    _vc = null;
-    _init = null;
-    _currentVideoUrl = null;
+    try {
+      unawaited(chewieController?.pause());
+      chewieController?.dispose();
+    } catch (_) {
+      // Best effort.
+    }
+
+    try {
+      unawaited(videoController?.pause());
+      unawaited(videoController?.dispose());
+    } catch (_) {
+      // Best effort.
+    }
+  }
+
+  List<String> _visibleImages() {
+    return widget.images
+        .map((image) => image.trim())
+        .where((image) => image.isNotEmpty)
+        .take(4)
+        .toList(growable: false);
   }
 
   List<ImageHeaderMediaItem> _buildMedia() {
-    final cleanImages = widget.images
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList(growable: false);
+    final visibleImages = _visibleImages();
 
-    final visibleImages = cleanImages.take(4);
-
-    return <ImageHeaderMediaItem>[
+    return [
       for (final image in visibleImages) ImageHeaderMediaItem.image(image),
       if (_hasVideo) ImageHeaderMediaItem.video(widget.videoUrl!.trim()),
     ];
   }
 
-  void _maybeInitInlineVideo(int selectedIndex) {
+  void _maybeInitializeInlineVideo(int selectedIndex) {
     final media = _buildMedia();
 
-    final safeSelected = media.isEmpty
-        ? 0
-        : selectedIndex.clamp(0, media.length - 1);
+    if (media.isEmpty) {
+      if (_videoController != null ||
+          _chewieController != null ||
+          _videoInitialization != null) {
+        _disposeInlineVideo();
 
-    final selectedItem = media.isEmpty ? null : media[safeSelected];
-
-    if (selectedItem == null || !selectedItem.isVideo) {
-      if (_vc != null) {
-        _disposeInline();
-        if (mounted) setState(() {});
+        if (mounted) {
+          setState(() {});
+        }
       }
+
       return;
     }
 
-    final resolved = (buildFileUrl(selectedItem.url) ?? '').trim();
+    final safeSelected = _safeIndex(selectedIndex, media.length);
 
-    if (resolved.isEmpty) {
-      if (_vc != null) {
-        _disposeInline();
-        if (mounted) setState(() {});
+    final selectedItem = media[safeSelected];
+
+    if (!selectedItem.isVideo) {
+      if (_videoController != null ||
+          _chewieController != null ||
+          _videoInitialization != null) {
+        _disposeInlineVideo();
+
+        if (mounted) {
+          setState(() {});
+        }
       }
+
       return;
     }
 
-    if (_vc != null && _currentVideoUrl == resolved) {
-      if (_vc!.value.isInitialized && !_vc!.value.isPlaying) {
-        _vc!.play();
+    final resolvedUrl = (buildFileUrl(selectedItem.url) ?? '').trim();
+
+    if (resolvedUrl.isEmpty) {
+      _disposeInlineVideo();
+
+      if (mounted) {
+        setState(() {});
       }
+
       return;
     }
 
-    _disposeInline();
+    final existingController = _videoController;
 
-    final controller = VideoPlayerController.networkUrl(Uri.parse(resolved));
-    _vc = controller;
-    _currentVideoUrl = resolved;
+    if (existingController != null && _currentVideoUrl == resolvedUrl) {
+      if (existingController.value.isInitialized) {
+        _videoCompletionHandled = false;
 
-    _init = controller.initialize().then((_) {
-      controller.setLooping(false);
+        unawaited(_resumeExistingVideo(existingController, _videoGeneration));
+      }
 
-      _chewieController = ChewieController(
+      return;
+    }
+
+    _disposeInlineVideo();
+
+    final controller = VideoPlayerController.networkUrl(Uri.parse(resolvedUrl));
+
+    final generation = ++_videoGeneration;
+
+    _videoController = controller;
+    _currentVideoUrl = resolvedUrl;
+    _videoCompletionHandled = false;
+
+    _videoInitialization = _initializeInlineVideo(
+      controller: controller,
+      generation: generation,
+    );
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _initializeInlineVideo({
+    required VideoPlayerController controller,
+    required int generation,
+  }) async {
+    try {
+      await controller.initialize();
+
+      if (!_isCurrentVideoController(controller, generation)) {
+        return;
+      }
+
+      await controller.setLooping(false);
+
+      if (!_isCurrentVideoController(controller, generation)) {
+        return;
+      }
+
+      final chewieController = ChewieController(
         videoPlayerController: controller,
         autoPlay: true,
         looping: false,
@@ -250,85 +409,221 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection>
         showControls: true,
       );
 
-      _videoListener = () {
-        if (!controller.value.isInitialized) return;
+      if (!_isCurrentVideoController(controller, generation)) {
+        chewieController.dispose();
+        return;
+      }
+
+      _chewieController = chewieController;
+
+      void listener() {
+        if (!_isCurrentVideoController(controller, generation) ||
+            _videoCompletionHandled ||
+            !controller.value.isInitialized) {
+          return;
+        }
 
         final position = controller.value.position;
         final duration = controller.value.duration;
 
-        if (duration == Duration.zero) return;
-
-        if (position >= duration) {
-          final latestMedia = _buildMedia();
-          if (latestMedia.isEmpty) return;
-
-          final next = (widget.selected + 1) % latestMedia.length;
-
-          widget.onSelect(next);
-
-          _pageController.animateToPage(
-            next,
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOut,
-          );
-
-          _startAutoScrollIfNeeded();
+        if (duration == Duration.zero) {
+          return;
         }
-      };
 
-      controller.addListener(_videoListener!);
+        final threshold = duration > const Duration(milliseconds: 150)
+            ? duration - const Duration(milliseconds: 150)
+            : duration;
 
-      if (mounted) setState(() {});
-    });
+        if (position < threshold) {
+          return;
+        }
 
-    if (mounted) setState(() {});
+        _videoCompletionHandled = true;
+
+        unawaited(controller.pause());
+
+        final media = _buildMedia();
+
+        if (media.length <= 1) {
+          return;
+        }
+
+        final next =
+            (_safeIndex(_currentIndex, media.length) + 1) % media.length;
+
+        scheduleMicrotask(() {
+          if (!mounted || !_isCurrentVideoController(controller, generation)) {
+            return;
+          }
+
+          _selectMedia(next);
+        });
+      }
+
+      _videoListener = listener;
+      controller.addListener(listener);
+
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (error, stackTrace) {
+      if (!_isCurrentVideoController(controller, generation)) {
+        return;
+      }
+
+      appLogger.e(
+        'Inline ad video initialization failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      _disposeInlineVideo();
+
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  Future<void> _resumeExistingVideo(
+    VideoPlayerController controller,
+    int generation,
+  ) async {
+    try {
+      if (!_isCurrentVideoController(controller, generation) ||
+          !controller.value.isInitialized) {
+        return;
+      }
+
+      final duration = controller.value.duration;
+      final position = controller.value.position;
+
+      if (duration != Duration.zero) {
+        final restartThreshold = duration > const Duration(milliseconds: 150)
+            ? duration - const Duration(milliseconds: 150)
+            : duration;
+
+        if (position >= restartThreshold) {
+          await controller.seekTo(Duration.zero);
+        }
+      }
+
+      if (!_isCurrentVideoController(controller, generation)) {
+        return;
+      }
+
+      if (!controller.value.isPlaying) {
+        await controller.play();
+      }
+    } catch (error, stackTrace) {
+      if (!_isCurrentVideoController(controller, generation)) {
+        return;
+      }
+
+      appLogger.w(
+        'Unable to resume inline ad video',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  bool _isCurrentVideoController(
+    VideoPlayerController controller,
+    int generation,
+  ) {
+    return mounted &&
+        generation == _videoGeneration &&
+        identical(_videoController, controller);
   }
 
   void _selectMedia(int index) {
     final media = _buildMedia();
+
     if (media.isEmpty) return;
 
-    final safeIndex = index.clamp(0, media.length - 1);
+    final safeIndex = _safeIndex(index, media.length);
 
     _stopAutoScroll();
-    widget.onSelect(safeIndex);
 
-    _pageController.animateToPage(
-      safeIndex,
-      duration: const Duration(milliseconds: 280),
-      curve: Curves.easeOut,
-    );
+    if (_currentIndex != safeIndex && mounted) {
+      setState(() {
+        _currentIndex = safeIndex;
+      });
+    }
 
-    _maybeInitInlineVideo(safeIndex);
+    if (widget.selected != safeIndex) {
+      widget.onSelect(safeIndex);
+    }
+
+    _moveToPage(safeIndex);
+    _maybeInitializeInlineVideo(safeIndex);
     _startAutoScrollIfNeeded();
   }
 
-  void _openFullScreenImage(String imageUrl) {
-    final cleanUrl = imageUrl.trim();
-    if (cleanUrl.isEmpty) return;
+  void _moveToPage(int index) {
+    void animate() {
+      if (!mounted || !_pageController.hasClients) {
+        return;
+      }
+
+      final page = _pageController.page;
+
+      if (page != null && (page - index).abs() < 0.01) {
+        return;
+      }
+
+      unawaited(
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOut,
+        ),
+      );
+    }
+
+    if (_pageController.hasClients) {
+      animate();
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      animate();
+    });
+  }
+
+  Future<void> _openFullScreenImage(int initialImageIndex) async {
+    final images = _visibleImages();
+
+    if (images.isEmpty) return;
+
+    final safeIndex = _safeIndex(initialImageIndex, images.length);
 
     _pauseVideo();
+    _stopAutoScroll();
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
         builder: (_) {
-          return FullScreenImageViewer(imageUrl: cleanUrl);
+          return FullScreenImageViewer(images: images, initialIndex: safeIndex);
         },
       ),
     );
+
+    if (mounted) {
+      _resumeSelectedMedia();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final media = _buildMedia();
 
-    final safeSelected = media.isEmpty
-        ? 0
-        : widget.selected.clamp(0, media.length - 1);
+    final safeSelected = _safeIndex(_currentIndex, media.length);
 
-    final posterImage = widget.images.isNotEmpty
-        ? widget.images.first.trim()
-        : null;
+    final visibleImages = _visibleImages();
+
+    final posterImage = visibleImages.isEmpty ? null : visibleImages.first;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -354,11 +649,17 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection>
                           onPageChanged: (index) {
                             _stopAutoScroll();
 
-                            if (index != widget.selected) {
+                            if (_currentIndex != index && mounted) {
+                              setState(() {
+                                _currentIndex = index;
+                              });
+                            }
+
+                            if (widget.selected != index) {
                               widget.onSelect(index);
                             }
 
-                            _maybeInitInlineVideo(index);
+                            _maybeInitializeInlineVideo(index);
                             _startAutoScrollIfNeeded();
                           },
                           itemBuilder: (_, index) {
@@ -369,29 +670,33 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection>
                               item: item,
                               posterImage: posterImage,
                               videoController: isActive && item.isVideo
-                                  ? _vc
+                                  ? _videoController
                                   : null,
-                              init: isActive && item.isVideo ? _init : null,
+                              init: isActive && item.isVideo
+                                  ? _videoInitialization
+                                  : null,
                               chewieController: isActive && item.isVideo
                                   ? _chewieController
                                   : null,
                               onImageTap: item.isVideo
                                   ? null
-                                  : () => _openFullScreenImage(item.url),
+                                  : () {
+                                      _openFullScreenImage(index);
+                                    },
                             );
                           },
                         ),
                 ),
-
                 Positioned(
                   top: 12,
                   right: 12,
                   child: ImageHeaderOverlayActions(
                     isFavorite: widget.isFavorite,
+                    isFavoritePending: widget.isFavoritePending,
+                    onShareTap: widget.onShareTap,
                     onFavoriteTap: widget.onFavoriteTap,
                   ),
                 ),
-
                 if (media.length > 1)
                   Positioned(
                     left: 0,
@@ -406,7 +711,6 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection>
             ),
           ),
         ),
-
         if (media.isNotEmpty) ...[
           const SizedBox(height: 8),
           ImageHeaderThumbnailStrip(
@@ -421,16 +725,119 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection>
   }
 }
 
-class FullScreenImageViewer extends StatelessWidget {
-  const FullScreenImageViewer({super.key, required this.imageUrl});
+class FullScreenImageViewer extends ConsumerStatefulWidget {
+  const FullScreenImageViewer({
+    super.key,
+    required this.images,
+    required this.initialIndex,
+  });
 
-  final String imageUrl;
+  final List<String> images;
+  final int initialIndex;
+
+  @override
+  ConsumerState<FullScreenImageViewer> createState() {
+    return _FullScreenImageViewerState();
+  }
+}
+
+class _FullScreenImageViewerState extends ConsumerState<FullScreenImageViewer> {
+  late final PageController _pageController;
+  late int _currentIndex;
+
+  final GlobalKey _exportButtonKey = GlobalKey();
+
+  bool _isExporting = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _currentIndex = _safeIndex(widget.initialIndex, widget.images.length);
+
+    _pageController = PageController(initialPage: _currentIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Rect _resolveSharePositionOrigin() {
+    final buttonContext = _exportButtonKey.currentContext;
+    final renderBox = buttonContext?.findRenderObject();
+
+    if (renderBox is RenderBox && renderBox.hasSize) {
+      final topLeft = renderBox.localToGlobal(Offset.zero);
+
+      return topLeft & renderBox.size;
+    }
+
+    final screenSize = MediaQuery.sizeOf(context);
+
+    return Rect.fromLTWH(screenSize.width - 60, 12, 48, 48);
+  }
+
+  Future<void> _exportCurrentImage() async {
+    if (_isExporting || widget.images.isEmpty) {
+      return;
+    }
+
+    final safeIndex = _safeIndex(_currentIndex, widget.images.length);
+
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      final service = ref.read(adImageExportServiceProvider);
+
+      await service.exportImage(
+        imageUrl: widget.images[safeIndex],
+        sharePositionOrigin: _resolveSharePositionOrigin(),
+      );
+
+      // No success snackbar is needed.
+      // The native platform sheet provides the visible result.
+    } on AdImageExportException catch (error) {
+      if (!mounted) return;
+
+      ShowSnack(context, error.message).error();
+    } catch (error, stackTrace) {
+      appLogger.e(
+        'Unexpected full-screen image export failure',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      if (!mounted) return;
+
+      final detail = error
+          .toString()
+          .replaceFirst('Exception: ', '')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+
+      final message = detail.isEmpty
+          ? 'Unexpected image-export error '
+                '(${error.runtimeType}).'
+          : 'Unexpected image-export error '
+                '(${error.runtimeType}): $detail';
+
+      ShowSnack(context, message).error();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isExporting = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
-    final resolvedUrl = buildFileUrl(imageUrl) ?? '';
 
     return Scaffold(
       backgroundColor: colors.black,
@@ -438,41 +845,185 @@ class FullScreenImageViewer extends StatelessWidget {
         child: Stack(
           children: [
             Positioned.fill(
-              child: InteractiveViewer(
-                minScale: 1,
-                maxScale: 5,
-                panEnabled: true,
-                child: Center(
-                  child: Image.network(
-                    resolvedUrl,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) {
-                      return Icon(
-                        Icons.broken_image_outlined,
+              child: widget.images.isEmpty
+                  ? Center(
+                      child: Icon(
+                        Icons.image_not_supported_outlined,
                         color: colors.white,
-                        size: 42,
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
+                        size: 44,
+                      ),
+                    )
+                  : PhotoViewGallery.builder(
+                      pageController: _pageController,
+                      itemCount: widget.images.length,
+                      scrollPhysics: const BouncingScrollPhysics(),
+                      backgroundDecoration: BoxDecoration(color: colors.black),
+                      onPageChanged: (index) {
+                        if (_currentIndex == index) {
+                          return;
+                        }
 
+                        setState(() {
+                          _currentIndex = index;
+                        });
+                      },
+                      loadingBuilder: (_, event) {
+                        final expected = event?.expectedTotalBytes;
+
+                        final loaded = event?.cumulativeBytesLoaded ?? 0;
+
+                        return Center(
+                          child: SizedBox(
+                            width: 30,
+                            height: 30,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: colors.white,
+                              value: expected == null || expected <= 0
+                                  ? null
+                                  : loaded / expected,
+                            ),
+                          ),
+                        );
+                      },
+                      builder: (_, index) {
+                        final resolvedUrl =
+                            (buildFileUrl(widget.images[index]) ?? '').trim();
+
+                        return PhotoViewGalleryPageOptions(
+                          imageProvider: NetworkImage(resolvedUrl),
+                          initialScale: PhotoViewComputedScale.contained,
+                          minScale: PhotoViewComputedScale.contained,
+                          maxScale: PhotoViewComputedScale.covered * 4,
+                          errorBuilder: (_, _, _) {
+                            return Center(
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                color: colors.white,
+                                size: 42,
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+            ),
             Positioned(
               top: 12,
               left: 12,
-              child: Material(
-                color: colors.black.withOpacity(0.45),
-                shape: const CircleBorder(),
-                child: IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: Icon(Icons.close, color: colors.white),
-                ),
+              child: _FullScreenActionButton(
+                tooltip: 'Close',
+                icon: Icons.close,
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
               ),
             ),
+            Positioned(
+              top: 12,
+              right: 12,
+              child: _FullScreenActionButton(
+                key: _exportButtonKey,
+                tooltip: 'Save or share image',
+                icon: Icons.download_outlined,
+                isLoading: _isExporting,
+                onPressed: _isExporting ? null : _exportCurrentImage,
+              ),
+            ),
+            if (widget.images.length > 1)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 20,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colors.black.withOpacity(0.55),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      '${_currentIndex + 1} / '
+                      '${widget.images.length}',
+                      style: TextStyle(
+                        color: colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
+}
+
+class _FullScreenActionButton extends StatelessWidget {
+  const _FullScreenActionButton({
+    super.key,
+    required this.tooltip,
+    required this.icon,
+    this.isLoading = false,
+    this.onPressed,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final bool isLoading;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Material(
+      color: colors.black.withOpacity(0.45),
+      shape: const CircleBorder(),
+      child: Tooltip(
+        message: tooltip,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onPressed,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Center(
+              child: isLoading
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.2,
+                        color: colors.white,
+                      ),
+                    )
+                  : Icon(icon, color: colors.white),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+int _safeIndex(int requestedIndex, int itemCount) {
+  if (itemCount <= 0) {
+    return 0;
+  }
+
+  if (requestedIndex < 0) {
+    return 0;
+  }
+
+  if (requestedIndex >= itemCount) {
+    return itemCount - 1;
+  }
+
+  return requestedIndex;
 }

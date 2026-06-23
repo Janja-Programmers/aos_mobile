@@ -7,25 +7,65 @@ class SellerVerificationStatus {
   final String? verifiedOn;
   final String? rejectionReason;
 
+  final String? sellerStatus;
+  final String? sellerId;
+  final String? sellerType;
+
   const SellerVerificationStatus({
     required this.isSeller,
     required this.isVerified,
     required this.status,
     this.verifiedOn,
     this.rejectionReason,
+    this.sellerStatus,
+    this.sellerId,
+    this.sellerType,
   });
 
-  factory SellerVerificationStatus.fromJson(Map<String, dynamic> json) {
-    final data = json["data"] is Map
-        ? Map<String, dynamic>.from(json["data"] as Map)
+  bool get isSuspended {
+    return sellerStatus?.trim().toLowerCase() == "suspended";
+  }
+
+  factory SellerVerificationStatus.fromSellerStatusJson(
+    Map<String, dynamic> json,
+  ) {
+    final message = json["message"] is Map
+        ? Map<String, dynamic>.from(json["message"] as Map)
+        : <String, dynamic>{};
+
+    final data = message["data"] is Map
+        ? Map<String, dynamic>.from(message["data"] as Map)
+        : <String, dynamic>{};
+
+    return SellerVerificationStatus(
+      isSeller: data["is_seller"] == true,
+      isVerified: false,
+      status: VerificationStatus.notSubmitted,
+      sellerStatus: data["status"]?.toString(),
+      sellerId: data["seller_id"]?.toString(),
+      sellerType: data["seller_type"]?.toString(),
+    );
+  }
+
+  factory SellerVerificationStatus.fromVerificationJson(
+    Map<String, dynamic> json, {
+    String? sellerStatus,
+    String? sellerId,
+    String? sellerType,
+  }) {
+    final message = json["message"] is Map
+        ? Map<String, dynamic>.from(json["message"] as Map)
+        : <String, dynamic>{};
+
+    final data = message["data"] is Map
+        ? Map<String, dynamic>.from(message["data"] as Map)
         : <String, dynamic>{};
 
     final verification = data["verification"] is Map
         ? Map<String, dynamic>.from(data["verification"] as Map)
         : <String, dynamic>{};
 
-    final rawStatus =
-        data["verification_status"] ?? data["status"] ?? verification["status"];
+    final rawStatus = data["verification_status"] ?? verification["status"];
 
     return SellerVerificationStatus(
       isSeller: data["is_seller"] == true,
@@ -35,6 +75,31 @@ class SellerVerificationStatus {
           data["verified_on"]?.toString() ??
           verification["verified_on"]?.toString(),
       rejectionReason: verification["rejection_reason"]?.toString(),
+      sellerStatus: sellerStatus,
+      sellerId: sellerId,
+      sellerType: sellerType,
+    );
+  }
+
+  SellerVerificationStatus copyWith({
+    bool? isSeller,
+    bool? isVerified,
+    VerificationStatus? status,
+    String? verifiedOn,
+    String? rejectionReason,
+    String? sellerStatus,
+    String? sellerId,
+    String? sellerType,
+  }) {
+    return SellerVerificationStatus(
+      isSeller: isSeller ?? this.isSeller,
+      isVerified: isVerified ?? this.isVerified,
+      status: status ?? this.status,
+      verifiedOn: verifiedOn ?? this.verifiedOn,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
+      sellerStatus: sellerStatus ?? this.sellerStatus,
+      sellerId: sellerId ?? this.sellerId,
+      sellerType: sellerType ?? this.sellerType,
     );
   }
 

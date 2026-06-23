@@ -10,32 +10,21 @@ final sellerStatusProvider = FutureProvider<SellerVerificationStatus>((
 
   final sellerRes = await api.getMySellerStatus();
 
-  final sellerData = sellerRes.fold(
+  final sellerStatus = sellerRes.fold(
     (l) => throw l,
-    (r) => r["data"] is Map<String, dynamic>
-        ? r["data"] as Map<String, dynamic>
-        : Map<String, dynamic>.from(r["data"] ?? {}),
+    (r) => r["status"]?.toString(),
   );
-
-  final isSeller = sellerData["is_seller"] == true;
-
-  if (!isSeller) {
-    return const SellerVerificationStatus(
-      isSeller: false,
-      isVerified: false,
-      status: VerificationStatus.notSubmitted,
-    );
-  }
 
   final verificationRes = await api.getMyVerification();
 
   return verificationRes.fold(
     (l) {
       // Seller exists, but no verification record yet.
-      return const SellerVerificationStatus(
+      return SellerVerificationStatus(
         isSeller: true,
         isVerified: false,
         status: VerificationStatus.notSubmitted,
+        sellerStatus: sellerStatus,
       );
     },
     (r) {
@@ -60,6 +49,7 @@ final sellerStatusProvider = FutureProvider<SellerVerificationStatus>((
             data["verified_on"]?.toString() ??
             verification["verified_on"]?.toString(),
         rejectionReason: verification["rejection_reason"]?.toString(),
+        sellerStatus: sellerStatus,
       );
     },
   );

@@ -52,41 +52,49 @@ class AccountHeaderCard extends StatelessWidget {
     final ImageProvider? img = resolveAvatarImage(imagePath, baseUrl);
 
     return AccountCard(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: scheme.surfaceContainerHighest.withOpacity(0.7),
-              backgroundImage: img,
-              onBackgroundImageError: img != null ? (_, _) {} : null,
-              child: img == null ? Text(initials, style: context.h2) : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    fullName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.h5,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onEdit,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: scheme.surfaceContainerHighest.withOpacity(
+                    0.7,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    email,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.pMuted.copyWith(fontSize: 12),
+                  backgroundImage: img,
+                  onBackgroundImageError: img != null ? (_, _) {} : null,
+                  child: img == null ? Text(initials, style: context.h2) : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        fullName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.h5,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        email,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.pMuted.copyWith(fontSize: 12),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 10),
+                const _SquareIconButton(icon: Icons.chevron_right_rounded),
+              ],
             ),
-            const SizedBox(width: 10),
-            _SquareIconButton(icon: Icons.edit_outlined, onPressed: onEdit),
-          ],
+          ),
         ),
       ),
     );
@@ -104,27 +112,22 @@ class AccountSectionTitle extends StatelessWidget {
 }
 
 class _SquareIconButton extends StatelessWidget {
-  const _SquareIconButton({required this.icon, this.onPressed});
+  const _SquareIconButton({required this.icon});
 
   final IconData icon;
-  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onPressed,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest.withOpacity(0.55),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, size: 20, color: scheme.onSurface),
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(12),
       ),
+      child: Icon(icon, size: 22, color: scheme.onSurface),
     );
   }
 }

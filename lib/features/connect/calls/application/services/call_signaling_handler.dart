@@ -13,6 +13,8 @@ class CallSignalingHandler {
       final callId = _cleanString(data['call_id']) ?? _cleanString(data['id']);
       final roomName = _cleanString(data['room_name']);
       final callTypeRaw = _cleanString(data['call_type']);
+      final token = _cleanString(data['token']);
+      final wsUrl = _cleanString(data['ws_url']);
 
       final callerUser = _cleanString(data['caller']);
       final callerDisplayName = _cleanString(data['caller_display_name']);
@@ -50,6 +52,8 @@ class CallSignalingHandler {
         callId: callId,
         roomName: roomName,
         callType: callType,
+        token: token,
+        wsUrl: wsUrl,
         caller: caller,
         receiver: receiver,
       );

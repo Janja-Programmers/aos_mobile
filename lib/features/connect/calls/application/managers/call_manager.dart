@@ -348,6 +348,85 @@ class CallManager extends StateNotifier<CallState> {
     }
   }
 
+  Future<bool> ensureIncomingCallHydrated({required String callId}) async {
+    final normalizedCallId = callId.trim();
+
+    if (normalizedCallId.isEmpty) {
+      return false;
+    }
+
+    if (state.activeCall?.id == normalizedCallId) {
+      return true;
+    }
+
+    if (state.isCallInProgress && state.activeCall?.id != normalizedCallId) {
+      return false;
+    }
+
+    try {
+      final statusPayload = await repository.getCallStatus(
+        callId: normalizedCallId,
+      );
+
+      final backendStatus = _parseBackendStatus(statusPayload['status']);
+
+      if (backendStatus == null || _isTerminalStatus(backendStatus)) {
+        return false;
+      }
+
+      final callType = _parseCallType(statusPayload['call_type']);
+      final caller = _parseParticipant(
+        user: statusPayload['caller'],
+        displayName: statusPayload['caller_display_name'],
+        avatar: statusPayload['caller_avatar'],
+      );
+      final receiver = _parseParticipant(
+        user: statusPayload['receiver'],
+        displayName: statusPayload['receiver_display_name'],
+        avatar: statusPayload['receiver_avatar'],
+      );
+
+      final hydratedCall = Call(
+        id: normalizedCallId,
+        conversationId: _cleanString(statusPayload['conversation_id']) ?? '',
+        callType: callType,
+        roomName: _cleanString(statusPayload['room_name']) ?? '',
+        token: _cleanString(statusPayload['token']) ?? '',
+        wsUrl: _cleanString(statusPayload['ws_url']) ?? '',
+        caller: caller,
+        receiver: receiver,
+        videoUpgradeStatus:
+            _cleanString(statusPayload['video_upgrade_status']) ?? 'none',
+        videoUpgradeRequestedBy: _cleanString(
+          statusPayload['video_upgrade_requested_by'],
+        ),
+      );
+
+      if (backendStatus == BackendCallStatus.initiated) {
+        try {
+          await repository.markCallRinging(callId: normalizedCallId);
+        } catch (_) {
+          // Best effort only. The backend may already have marked it ringing.
+        }
+      }
+
+      _applyBackendState(
+        backendStatus == BackendCallStatus.initiated
+            ? BackendCallStatus.ringing
+            : backendStatus,
+        activeCall: hydratedCall,
+        direction: 'incoming',
+        caller: caller,
+        receiver: receiver,
+        hasIncomingCallUi: true,
+      );
+
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> acceptIncomingCall({String? expectedCallId}) async {
     if (!_matchesActiveCall(expectedCallId)) {
       return;
@@ -863,6 +942,40 @@ class CallManager extends StateNotifier<CallState> {
     } catch (_) {
       return null;
     }
+  }
+
+  AOSCallType _parseCallType(dynamic value) {
+    switch (_cleanString(value)?.toLowerCase()) {
+      case 'video':
+        return AOSCallType.video;
+      default:
+        return AOSCallType.audio;
+    }
+  }
+
+  CallParticipant? _parseParticipant({
+    required dynamic user,
+    dynamic displayName,
+    dynamic avatar,
+  }) {
+    final userId = _cleanString(user);
+    if (userId == null) return null;
+
+    return CallParticipant(
+      userId: userId,
+      displayName: _cleanString(displayName) ?? userId,
+      avatarUrl: _cleanString(avatar),
+    );
+  }
+
+  String? _cleanString(dynamic value) {
+    final text = value?.toString().trim();
+
+    if (text == null || text.isEmpty || text.toLowerCase() == 'null') {
+      return null;
+    }
+
+    return text;
   }
 
   BackendCallStatus? _parseBackendStatus(dynamic value) {

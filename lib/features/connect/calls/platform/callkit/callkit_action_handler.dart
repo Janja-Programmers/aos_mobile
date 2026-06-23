@@ -9,6 +9,8 @@ class CallKitActionHandler {
   const CallKitActionHandler({required this.callManager});
 
   Future<void> onAccept({required String? callId}) async {
+    await _hydrateIfNeeded(callId);
+
     final snapshot = callManager.currentState;
     final activeCallId = snapshot.activeCall?.id;
 
@@ -31,6 +33,8 @@ class CallKitActionHandler {
   }
 
   Future<void> onDecline({required String? callId}) async {
+    await _hydrateIfNeeded(callId);
+
     final snapshot = callManager.currentState;
     final activeCallId = snapshot.activeCall?.id;
 
@@ -49,6 +53,8 @@ class CallKitActionHandler {
   }
 
   Future<void> onEnded({required String? callId}) async {
+    await _hydrateIfNeeded(callId);
+
     final snapshot = callManager.currentState;
     final activeCallId = snapshot.activeCall?.id;
 
@@ -73,6 +79,8 @@ class CallKitActionHandler {
   }
 
   Future<void> onTimeout({required String? callId}) async {
+    await _hydrateIfNeeded(callId);
+
     final snapshot = callManager.currentState;
     final activeCallId = snapshot.activeCall?.id;
 
@@ -85,6 +93,24 @@ class CallKitActionHandler {
     }
 
     await callManager.callNotAnswered(expectedCallId: callId);
+  }
+
+  Future<void> _hydrateIfNeeded(String? callId) async {
+    final normalizedCallId = callId?.trim();
+    if (normalizedCallId == null || normalizedCallId.isEmpty) return;
+
+    final snapshot = callManager.currentState;
+    if (snapshot.activeCall?.id == normalizedCallId) return;
+
+    final hydrated = await callManager.ensureIncomingCallHydrated(
+      callId: normalizedCallId,
+    );
+
+    if (hydrated) {
+      appLogger.i(
+        '📞 Hydrated CallManager from CallKit event: $normalizedCallId',
+      );
+    }
   }
 
   bool _matchesActiveCall(String? eventCallId, String? activeCallId) {

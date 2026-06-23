@@ -1,17 +1,18 @@
 import 'package:flutter_callkit_incoming/entities/ios_params.dart';
 import 'package:flutter_callkit_incoming/entities/android_params.dart';
 import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
+import 'package:uuid/uuid.dart';
 
 class CallKitPayloadMapper {
   const CallKitPayloadMapper();
 
   CallKitParams fromPushData(Map<String, dynamic> data) {
     final callId = _clean(data['call_id'] ?? data['id']);
-    final callkitUuid = _clean(data['callkit_uuid']) ?? callId;
-
-    if (callId == null || callkitUuid == null) {
-      throw ArgumentError('Missing call_id/callkit_uuid');
+    if (callId == null) {
+      throw ArgumentError('Missing call_id');
     }
+
+    final callkitUuid = _resolveCallkitUuid(data, fallbackSeed: callId);
 
     final callerName =
         _clean(data['caller_display_name']) ??
@@ -37,8 +38,6 @@ class CallKitPayloadMapper {
       handle: isVideo ? 'Incoming video call' : 'Incoming voice call',
       type: isVideo ? 1 : 0,
       duration: 30000,
-      // textAccept: 'Answer',
-      // textDecline: 'Reject',
       extra: {
         ...data,
         'call_id': callId,
@@ -52,12 +51,17 @@ class CallKitPayloadMapper {
         isCustomNotification: true,
         isShowLogo: true,
         isShowCallID: false,
+        isShowFullLockedScreen: true,
+        isFullScreen: true,
+        isImportant: true,
         ringtonePath: 'system_ringtone_default',
         backgroundColor: '#FFFFFF',
         textColor: '#111111',
         actionColor: '#16A34A',
         incomingCallNotificationChannelName: 'AOS Calls',
         missedCallNotificationChannelName: 'Missed Calls',
+        textAccept: 'Answer',
+        textDecline: 'Reject',
       ),
       ios: IOSParams(
         iconName: 'CallKitLogo',
@@ -73,6 +77,32 @@ class CallKitPayloadMapper {
         ringtonePath: 'system_ringtone_default',
       ),
     );
+  }
+
+  String _resolveCallkitUuid(
+    Map<String, dynamic> data, {
+    required String fallbackSeed,
+  }) {
+    final explicit =
+        _clean(data['callkit_uuid']) ??
+        _clean(data['callkit_id']) ??
+        _clean(data['uuid']);
+
+    if (explicit != null && _looksLikeUuid(explicit)) {
+      return explicit;
+    }
+
+    if (_looksLikeUuid(fallbackSeed)) {
+      return fallbackSeed;
+    }
+
+    return const Uuid().v4();
+  }
+
+  bool _looksLikeUuid(String value) {
+    return RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+    ).hasMatch(value.trim());
   }
 
   String? _clean(Object? value) {

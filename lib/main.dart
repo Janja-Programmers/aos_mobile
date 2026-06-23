@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -29,6 +28,7 @@ import 'package:africaonlinestores/features/auth/shared/providers/auth_controlle
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/application/listeners/callkit_state_listener.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_payload_mapper.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_pending_payload_store.dart';
 import 'package:africaonlinestores/features/connect/calls/application/listeners/call_navigation_listener.dart';
 import 'package:africaonlinestores/features/connect/calls/application/listeners/call_audio_feedback_listener.dart';
 import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
@@ -38,8 +38,6 @@ import 'package:africaonlinestores/features/preferences/controllers/user_prefere
 import 'package:africaonlinestores/features/shorts/create_short/application/listeners/upload_short_listener.dart';
 import 'package:africaonlinestores/shared/widgets/app_error_fallback.dart';
 import 'package:africaonlinestores/shared/widgets/active_call_overlay.dart';
-
-const String pendingIncomingCallPayloadKey = 'pending_incoming_call_payload';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -62,11 +60,10 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     return;
   }
 
-  final prefs = await SharedPreferences.getInstance();
-
-  await prefs.setString(pendingIncomingCallPayloadKey, jsonEncode(data));
-
   final params = const CallKitPayloadMapper().fromPushData(data);
+  final pendingPayload = Map<String, dynamic>.from(params.extra ?? data);
+
+  await const CallKitPendingPayloadStore().save(pendingPayload);
 
   await FlutterCallkitIncoming.showCallkitIncoming(params);
 }

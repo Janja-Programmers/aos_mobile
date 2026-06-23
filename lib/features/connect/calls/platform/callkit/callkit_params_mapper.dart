@@ -47,10 +47,18 @@ class CallKitParamsMapper {
       android: const AndroidParams(
         isCustomNotification: true,
         isShowLogo: false,
+        isShowCallID: false,
+        isShowFullLockedScreen: true,
+        isFullScreen: true,
+        isImportant: true,
         ringtonePath: 'system_ringtone_default',
         backgroundColor: '#FFFFFF',
         textColor: '#111111',
         actionColor: '#16A34A',
+        incomingCallNotificationChannelName: 'AOS Calls',
+        missedCallNotificationChannelName: 'Missed Calls',
+        textAccept: 'Answer',
+        textDecline: 'Reject',
       ),
 
       ios: IOSParams(

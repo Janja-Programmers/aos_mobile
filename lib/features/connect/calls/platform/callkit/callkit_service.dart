@@ -8,10 +8,12 @@ import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_params_mapper.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_action_handler.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_pending_payload_store.dart';
 
 class CallKitService {
   final CallKitActionHandler actionHandler;
   final CallKitParamsMapper paramsMapper;
+  final CallKitPendingPayloadStore pendingPayloadStore;
 
   StreamSubscription<CallEvent?>? _sub;
 
@@ -30,7 +32,11 @@ class CallKitService {
   final Map<String, String> _callkitUuidByCallId = <String, String>{};
   final Map<String, String> _callIdByCallkitUuid = <String, String>{};
 
-  CallKitService({required this.actionHandler, required this.paramsMapper});
+  CallKitService({
+    required this.actionHandler,
+    required this.paramsMapper,
+    this.pendingPayloadStore = const CallKitPendingPayloadStore(),
+  });
 
   // -----------------------------
   // Lifecycle
@@ -39,6 +45,7 @@ class CallKitService {
     if (_initialized) return;
 
     await ensurePermissions();
+    await _hydratePendingCallkitMapping();
 
     await _sub?.cancel();
     _sub = FlutterCallkitIncoming.onEvent.listen(_handleEvent);
@@ -107,6 +114,13 @@ class CallKitService {
       roomName: roomName,
     );
 
+    await pendingPayloadStore.save(
+      Map<String, dynamic>.from(
+        params.extra ??
+            <String, dynamic>{'call_id': callId, 'callkit_uuid': callkitUuid},
+      ),
+    );
+
     await _showIncoming(params, backendCallId: callId);
   }
 
@@ -129,6 +143,8 @@ class CallKitService {
         _callkitUuidByCallId.remove(backendCallId);
         _callIdByCallkitUuid.remove(callkitUuid);
       }
+
+      await pendingPayloadStore.clearIfMatches(backendCallId);
 
       appLogger.e(
         '❌ Failed to show CallKit incoming call',
@@ -221,6 +237,7 @@ class CallKitService {
 
       _endedCallIds.add(id);
       _clearActiveCallGuards(id);
+      await pendingPayloadStore.clearIfMatches(id);
 
       if (_currentCallId == id) {
         _currentCallId = null;
@@ -238,6 +255,7 @@ class CallKitService {
 
       _callkitUuidByCallId.remove(id);
       _callIdByCallkitUuid.remove(callkitUuid);
+      await pendingPayloadStore.clearIfMatches(id);
 
       if (_currentCallId == id) {
         _currentCallId = null;
@@ -272,11 +290,49 @@ class CallKitService {
 
       _callkitUuidByCallId.clear();
       _callIdByCallkitUuid.clear();
+      await pendingPayloadStore.clear();
 
       appLogger.i('📴 All CallKit calls ended');
     } catch (e, s) {
       appLogger.w(
         '⚠️ Failed to end all CallKit calls',
+        error: e,
+        stackTrace: s,
+      );
+    }
+  }
+
+  Future<void> _hydratePendingCallkitMapping() async {
+    try {
+      final payload = await pendingPayloadStore.read();
+      if (payload == null) return;
+
+      final callId = _readString(payload, const [
+        'call_id',
+        'backend_call_id',
+        'backendCallId',
+        'aos_call_id',
+        'id',
+      ]);
+
+      final callkitUuid = _readString(payload, const [
+        'callkit_uuid',
+        'callkit_id',
+        'uuid',
+      ]);
+
+      if (callId == null || callId.isEmpty) return;
+
+      _currentCallId ??= callId;
+      _shownIncomingCallIds.add(callId);
+
+      if (callkitUuid != null && callkitUuid.isNotEmpty) {
+        _callkitUuidByCallId[callId] = callkitUuid;
+        _callIdByCallkitUuid[callkitUuid] = callId;
+      }
+    } catch (e, s) {
+      appLogger.w(
+        '⚠️ Failed to hydrate pending CallKit mapping',
         error: e,
         stackTrace: s,
       );
@@ -289,6 +345,8 @@ class CallKitService {
   Future<void> _handleEvent(CallEvent? event) async {
     if (event == null) return;
 
+    await _hydratePendingCallkitMapping();
+
     final extractedCallId = _extractCallId(event);
     if (extractedCallId != null && extractedCallId.isNotEmpty) {
       _currentCallId = extractedCallId;
@@ -296,7 +354,7 @@ class CallKitService {
 
     final resolvedCallId = _currentCallId;
 
-    appLogger.i('📞 CallKit event: ${event.eventName}');
+    appLogger.i('📞 CallKit event: ${_eventName(event)}');
     appLogger.i('📞 CallKit resolved callId: $resolvedCallId');
 
     if (resolvedCallId == null || resolvedCallId.isEmpty) {
@@ -404,93 +462,169 @@ class CallKitService {
   }
 
   String? _extractCallId(CallEvent event) {
-    final String? rawId;
+    final callKitObject = _readCallKitObject(event);
+    final bodyObject = _readBodyObject(event);
 
-    switch (event) {
-      case CallEventActionCallIncoming():
-        final params = event.callKitParams;
-        final extra = params.extra;
+    final candidates = <Object?>[callKitObject, bodyObject, event];
 
-        if (extra is Map) {
-          final backendCallId = _readString(extra, const [
-            'call_id',
-            'backend_call_id',
-            'backendCallId',
-            'aos_call_id',
-          ]);
+    for (final candidate in candidates) {
+      final backendCallId = _extractBackendCallIdFromCandidate(candidate);
+      if (backendCallId == null || backendCallId.isEmpty) continue;
 
-          if (backendCallId != null && backendCallId.isNotEmpty) {
-            final callkitUuid = params.id;
+      final rawNativeId = _readRawId(candidate) ?? _readRawId(callKitObject);
+      final callkitUuid = rawNativeId?.toString().trim();
 
-            if (callkitUuid.isNotEmpty) {
-              _callkitUuidByCallId[backendCallId] = callkitUuid;
-              _callIdByCallkitUuid[callkitUuid] = backendCallId;
-            }
+      if (callkitUuid != null && callkitUuid.isNotEmpty) {
+        _callkitUuidByCallId[backendCallId] = callkitUuid;
+        _callIdByCallkitUuid[callkitUuid] = backendCallId;
+      }
 
-            return backendCallId;
-          }
-        }
-
-        rawId = params.id;
-        break;
-
-      case CallEventActionCallStart(id: final id):
-      case CallEventActionCallAccept(id: final id):
-      case CallEventActionCallDecline(id: final id):
-      case CallEventActionCallEnded(id: final id):
-      case CallEventActionCallTimeout(id: final id):
-      case CallEventActionCallConnected(id: final id):
-      case CallEventActionCallCallback(id: final id):
-      case CallEventActionCallToggleHold(id: final id, isOnHold: _):
-      case CallEventActionCallToggleMute(id: final id, isMuted: _):
-      case CallEventActionCallToggleDmtf(id: final id, digits: _, type: _):
-      case CallEventActionCallToggleGroup(id: final id, callUUIDToGroupWith: _):
-        rawId = id;
-        break;
-
-      case CallEventActionCallCustom(body: final body):
-        final extra = body['extra'];
-
-        if (extra is Map) {
-          final backendCallId = _readString(extra, const [
-            'call_id',
-            'backend_call_id',
-            'backendCallId',
-            'aos_call_id',
-          ]);
-
-          if (backendCallId != null && backendCallId.isNotEmpty) {
-            return backendCallId;
-          }
-        }
-
-        rawId = body['id']?.toString();
-        break;
-
-      case CallEventActionCallToggleAudioSession():
-      case CallEventActionDidUpdateDevicePushTokenVoip():
-        return null;
+      return backendCallId;
     }
 
-    if (rawId == null || rawId.isEmpty) {
-      return null;
+    for (final candidate in candidates) {
+      final rawId = _readRawId(candidate)?.toString().trim();
+      if (rawId == null || rawId.isEmpty || rawId.toLowerCase() == 'null') {
+        continue;
+      }
+
+      final mappedCallId = _callIdByCallkitUuid[rawId];
+
+      if (mappedCallId != null && mappedCallId.isNotEmpty) {
+        return mappedCallId;
+      }
+
+      if (rawId.startsWith('CALL-')) {
+        return rawId;
+      }
+
+      appLogger.w(
+        '⚠️ Could not resolve CallKit event ID to backend callId: $rawId',
+      );
     }
 
-    // Native CallKit events normally provide the CallKit UUID.
-    final mappedCallId = _callIdByCallkitUuid[rawId];
+    return null;
+  }
 
-    if (mappedCallId != null && mappedCallId.isNotEmpty) {
-      return mappedCallId;
+  String _eventName(CallEvent event) {
+    final dynamic dynamicEvent = event;
+
+    try {
+      final value = dynamicEvent.eventName?.toString().trim();
+      if (value != null && value.isNotEmpty) return value;
+    } catch (_) {}
+
+    try {
+      final value = dynamicEvent.eventNames?.toString().trim();
+      if (value != null && value.isNotEmpty) return value;
+    } catch (_) {}
+
+    return event.runtimeType.toString();
+  }
+
+  Object? _readCallKitObject(CallEvent event) {
+    final dynamic dynamicEvent = event;
+
+    try {
+      final value = dynamicEvent.callKit;
+      if (value != null) return value;
+    } catch (_) {}
+
+    try {
+      final value = dynamicEvent.callKitParams;
+      if (value != null) return value;
+    } catch (_) {}
+
+    return null;
+  }
+
+  Object? _readBodyObject(CallEvent event) {
+    final dynamic dynamicEvent = event;
+
+    try {
+      final value = dynamicEvent.body;
+      if (value != null) return value;
+    } catch (_) {}
+
+    return null;
+  }
+
+  String? _extractBackendCallIdFromCandidate(Object? candidate) {
+    final direct = _readString(candidate, const [
+      'call_id',
+      'backend_call_id',
+      'backendCallId',
+      'aos_call_id',
+    ]);
+
+    if (direct != null && direct.isNotEmpty) {
+      return direct;
     }
 
-    // Backend ID fallback.
-    if (rawId.startsWith('CALL-')) {
-      return rawId;
+    final extra = _readExtra(candidate);
+    return _readString(extra, const [
+      'call_id',
+      'backend_call_id',
+      'backendCallId',
+      'aos_call_id',
+    ]);
+  }
+
+  Object? _readExtra(Object? source) {
+    if (source == null) return null;
+
+    if (source is Map) {
+      final extra = source['extra'] ?? source['extras'];
+      return extra ?? source;
     }
 
-    appLogger.w(
-      '⚠️ Could not resolve CallKit event ID to backend callId: $rawId',
-    );
+    final dynamic dynamicSource = source;
+
+    try {
+      final value = dynamicSource.extra;
+      if (value != null) return value;
+    } catch (_) {}
+
+    try {
+      final value = dynamicSource.extras;
+      if (value != null) return value;
+    } catch (_) {}
+
+    return null;
+  }
+
+  Object? _readRawId(Object? source) {
+    if (source == null) return null;
+
+    if (source is Map) {
+      return source['id'] ??
+          source['uuid'] ??
+          source['callkit_uuid'] ??
+          source['callkit_id'] ??
+          source['call_id'];
+    }
+
+    final dynamic dynamicSource = source;
+
+    try {
+      final value = dynamicSource.id;
+      if (value != null) return value;
+    } catch (_) {}
+
+    try {
+      final value = dynamicSource.uuid;
+      if (value != null) return value;
+    } catch (_) {}
+
+    try {
+      final value = dynamicSource.callkitUuid;
+      if (value != null) return value;
+    } catch (_) {}
+
+    try {
+      final value = dynamicSource.callkitId;
+      if (value != null) return value;
+    } catch (_) {}
 
     return null;
   }
@@ -531,9 +665,6 @@ class CallKitService {
     _handledDeclineIds.remove(callId);
     _handledEndIds.remove(callId);
     _handledTimeoutIds.remove(callId);
-
-    // Keep _endedCallIds intact.
-    // This prevents stale duplicate events from reviving a native call.
   }
 
   void dispose() {

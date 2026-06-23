@@ -27,6 +27,7 @@ class AdListingActions {
     required void Function(AOSAdListItem ad) onEdit,
     required void Function(AOSAdListItem ad) onMarkSold,
     required void Function(AOSAdListItem ad) onMarkAvailable,
+    required void Function(AOSAdListItem ad) onRenew,
     required VoidCallback onDelete,
     required void Function(AOSAdListItem ad) onContactSupport,
   }) {
@@ -95,7 +96,7 @@ class AdListingActions {
       case AdTab.sold:
         return [
           AdAction(
-            label: 'Mark as Available',
+            label: 'Mark Available',
             onPressed: () => onMarkAvailable(ad),
             type: AdActionType.primary,
           ),
@@ -109,8 +110,8 @@ class AdListingActions {
       case AdTab.expired:
         return [
           AdAction(
-            label: 'Mark as Available',
-            onPressed: () => onMarkAvailable(ad),
+            label: 'Renew',
+            onPressed: () => onRenew(ad),
             type: AdActionType.primary,
           ),
           AdAction(

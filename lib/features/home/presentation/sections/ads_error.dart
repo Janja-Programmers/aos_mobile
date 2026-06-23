@@ -16,7 +16,7 @@ class AdListErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
 
     return Center(
       child: Padding(
@@ -24,19 +24,25 @@ class AdListErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 56, color: scheme.error),
+            Icon(Icons.error_outline, size: 56, color: colors.error),
             const SizedBox(height: 16),
+
             Text('Something went wrong', style: context.h4),
             const SizedBox(height: 8),
+
             Text(
               message,
-              style: context.p.copyWith(color: context.appColors.textMuted),
+              style: context.p.copyWith(color: colors.textMuted),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
+
             OutlinedButton(
               onPressed: onRetry,
-              style: OutlinedButton.styleFrom(foregroundColor: scheme.primary),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: colors.white,
+                backgroundColor: colors.primary,
+              ),
               child: const Text('Try again'),
             ),
           ],

@@ -31,23 +31,25 @@ class AdListingTabs extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemBuilder: (_, i) {
-          final s = tabs[i];
-          final active = s == selected;
-          final c = counts?[s] ?? 0;
+          final tab = tabs[i];
+          final active = tab == selected;
+          final count = counts?[tab] ?? 0;
 
           return ChoiceChip(
-            selectedColor: colors.primary.withOpacity(.75),
+            selectedColor: colors.primary,
             selected: active,
-            onSelected: (_) => onChanged(s),
+            showCheckmark: false,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(99),
+            ),
+            onSelected: (_) => onChanged(tab),
             label: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  s.label,
+                  tab.label,
                   style: context.body.copyWith(
-                    color: active
-                        ? colors.textPrimary
-                        : colors.textPrimary.withOpacity(.75),
+                    color: active ? colors.white : colors.textPrimary,
                   ),
                 ),
 
@@ -63,12 +65,10 @@ class AdListingTabs extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    '$c',
+                    '$count',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                      color: active
-                          ? colors.textPrimary
-                          : Theme.of(context).hintColor,
+                      color: active ? colors.white : colors.textPrimary,
                     ),
                   ),
                 ),

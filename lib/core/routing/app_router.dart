@@ -99,9 +99,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             );
           }
 
-          final mode = adId != null || draftId != null
-              ? AdFormMode.edit
-              : AdFormMode.create;
+          final mode = adId != null ? AdFormMode.edit : AdFormMode.create;
 
           return AdFormScreen(
             mode: mode,

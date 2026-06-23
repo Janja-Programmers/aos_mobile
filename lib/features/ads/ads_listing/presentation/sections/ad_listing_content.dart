@@ -4,7 +4,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
-import 'package:africaonlinestores/features/ads/ads_listing/utils/ad_lissting_actions.dart';
+import 'package:africaonlinestores/features/ads/ads_listing/utils/ad_listing_actions.dart';
 
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
@@ -18,6 +18,7 @@ class AdListingContentView extends StatelessWidget {
     required this.onEdit,
     required this.onMarkSold,
     required this.onMarkAvailable,
+    required this.onRenew,
     required this.onDelete,
     required this.onContactSupport,
   });
@@ -28,6 +29,7 @@ class AdListingContentView extends StatelessWidget {
   final void Function(AOSAdListItem ad) onEdit;
   final void Function(AOSAdListItem ad) onMarkSold;
   final void Function(AOSAdListItem ad) onMarkAvailable;
+  final void Function(AOSAdListItem ad) onRenew;
   final void Function(AOSAdListItem ad) onDelete;
   final void Function(AOSAdListItem ad) onContactSupport;
 
@@ -43,6 +45,7 @@ class AdListingContentView extends StatelessWidget {
         onEdit: onEdit,
         onMarkSold: onMarkSold,
         onMarkAvailable: onMarkAvailable,
+        onRenew: onRenew,
         onDelete: onDelete,
         onContactSupport: onContactSupport,
       ),
@@ -57,6 +60,7 @@ class _MyAdTile extends StatelessWidget {
     required this.onEdit,
     required this.onMarkSold,
     required this.onMarkAvailable,
+    required this.onRenew,
     required this.onDelete,
     required this.onContactSupport,
   });
@@ -67,6 +71,7 @@ class _MyAdTile extends StatelessWidget {
   final void Function(AOSAdListItem ad) onEdit;
   final void Function(AOSAdListItem ad) onMarkSold;
   final void Function(AOSAdListItem ad) onMarkAvailable;
+  final void Function(AOSAdListItem ad) onRenew;
   final void Function(AOSAdListItem ad) onDelete;
   final void Function(AOSAdListItem ad) onContactSupport;
 
@@ -121,6 +126,7 @@ class _MyAdTile extends StatelessWidget {
       onMarkSold: onMarkSold,
       onDelete: () => _confirmDelete(context),
       onMarkAvailable: onMarkAvailable,
+      onRenew: onRenew,
       onContactSupport: onContactSupport,
     );
 

@@ -208,13 +208,11 @@ class AdListingsController extends StateNotifier<AdListingsState> {
     await load(tab, showLoader: false);
   }
 
-  /// -------------------------
-  /// MARK AS SOLD / RENEW
-  /// -------------------------
-  Future<void> markSold(AOSAdListItem ad) async {
+  Future<void> _runStatusAction({
+    required AOSAdListItem ad,
+    required String action,
+  }) async {
     final api = ref.read(adsApiProvider);
-
-    final action = state.selectedTab == AdTab.declined ? 'renew' : 'mark_sold';
 
     final res = await api.setAdStatus(adId: ad.id, action: action);
 
@@ -229,9 +227,35 @@ class AdListingsController extends StateNotifier<AdListingsState> {
   }
 
   /// -------------------------
-  /// ABANDON DRAFT
+  /// MARK AS SOLD
   /// -------------------------
-  Future<void> abandonDraft(AOSAdListItem ad) async {
+  Future<void> markSold(AOSAdListItem ad) async {
+    await _runStatusAction(ad: ad, action: 'mark_sold');
+  }
+
+  /// -------------------------
+  /// MARK SOLD AD AS AVAILABLE
+  /// -------------------------
+  Future<void> markAvailable(AOSAdListItem ad) async {
+    await _runStatusAction(ad: ad, action: 'mark_available');
+  }
+
+  /// -------------------------
+  /// RENEW EXPIRED AD
+  /// -------------------------
+  Future<void> renew(AOSAdListItem ad) async {
+    await _runStatusAction(ad: ad, action: 'renew');
+  }
+
+  /// -------------------------
+  /// DELETE LISTING / ABANDON DRAFT
+  /// -------------------------
+  Future<void> deleteListing(AOSAdListItem ad) async {
+    if (state.selectedTab != AdTab.drafts) {
+      await _runStatusAction(ad: ad, action: 'delete');
+      return;
+    }
+
     final api = ref.read(adsApiProvider);
 
     final res = await api.abandonAdDraft(draftId: ad.id);

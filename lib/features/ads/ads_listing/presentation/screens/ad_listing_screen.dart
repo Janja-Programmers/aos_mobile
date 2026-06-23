@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,11 +9,12 @@ import 'package:africaonlinestores/features/ads/ads_listing/configs/ad_listing_e
 import 'package:africaonlinestores/features/ads/ads_listing/controllers/ad_listing_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/presentation/sections/ad_listing_content.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/presentation/sections/ad_listing_empty.dart';
-import 'package:africaonlinestores/features/ads/ads_listing/presentation/sections/ad_listing_error.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/presentation/widgets/ad_listing_tabs.dart';
+import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+
+import 'package:africaonlinestores/features/home/presentation/sections/ads_error.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
-import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 
 class AdListingScreen extends ConsumerWidget {
   const AdListingScreen({super.key});
@@ -29,7 +31,11 @@ class AdListingScreen extends ConsumerWidget {
     Future<void> openCreateOrEdit({String? draftId, String? adId}) async {
       await context.pushNamed(
         AppRoutes.nCreateAd,
-        queryParameters: {'draftId': ?draftId, 'adId': ?adId},
+        queryParameters: {
+          if (draftId != null && draftId.trim().isNotEmpty)
+            'draftId': draftId.trim(),
+          if (adId != null && adId.trim().isNotEmpty) 'adId': adId.trim(),
+        },
       );
 
       await refreshAfterReturn();
@@ -49,7 +55,7 @@ class AdListingScreen extends ConsumerWidget {
           children: [
             SizedBox(
               height: MediaQuery.sizeOf(context).height * 0.55,
-              child: AdListingErrorView(
+              child: AdListErrorView(
                 message: state.error!,
                 onRetry: controller.reload,
               ),
@@ -85,16 +91,17 @@ class AdListingScreen extends ConsumerWidget {
       return AdListingContentView(
         items: state.items,
         tab: state.selectedTab,
-        onDelete: controller.abandonDraft,
+        onDelete: controller.deleteListing,
         onEdit: (ad) async {
-          final isDraft = ad.id.startsWith('DRAFT');
+          final isDraft = state.selectedTab == AdTab.drafts;
 
           await openCreateOrEdit(
             draftId: isDraft ? ad.id : null,
             adId: isDraft ? null : ad.id,
           );
         },
-        onMarkAvailable: onContactSupport,
+        onMarkAvailable: controller.markAvailable,
+        onRenew: controller.renew,
         onContactSupport: onContactSupport,
         onMarkSold: controller.markSold,
       );

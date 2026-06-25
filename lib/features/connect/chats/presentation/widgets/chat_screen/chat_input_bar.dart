@@ -3,11 +3,14 @@ import 'dart:io';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
+import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_pending_attachment.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/chat_attachment_sheet.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/chat_input_attachment_helper.dart';
@@ -182,7 +185,21 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
 
   Future<void> _handleLocationTap() async {
     _closeAttachmentPanel();
-    // TODO: connect location picker later.
+
+    final picked = await context.pushNamed<AOSPlace>(
+      AppRoutes.nMapPicker,
+      queryParameters: {'title': 'Share location'},
+    );
+
+    if (picked == null) return;
+
+    final message =
+        '''📍 Shared location
+${picked.shortLabel}
+${picked.displayAddress}
+https://maps.google.com/?q=${picked.latitude},${picked.longitude}''';
+
+    await widget.onSend(text: message, attachments: const []);
   }
 
   Future<void> _handleFolderTap() async {

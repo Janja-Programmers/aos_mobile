@@ -14,6 +14,7 @@ import 'package:africaonlinestores/features/auth/shared/providers/auth_controlle
 import 'package:africaonlinestores/features/social/application/providers/social_providers.dart';
 import 'package:africaonlinestores/features/social/application/state/social_connections_state.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
+import 'package:africaonlinestores/features/social/safety/presentation/widgets/user_safety_sheet.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_mapper.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
@@ -99,6 +100,9 @@ class ProfileScreen extends ConsumerWidget {
           appBar: _ProfileAppBar(
             title: fallback.displayName,
             onShareTap: () => _shareProfile(fallback),
+            onMoreTap: fallback.isOwnProfile
+                ? null
+                : () => _showSafetySheet(context, fallback),
           ),
           body: Center(
             child: Padding(
@@ -194,6 +198,19 @@ class ProfileScreen extends ConsumerWidget {
 
     await Share.share('View $title on AOS\n$url', subject: title);
   }
+
+  static void _showSafetySheet(BuildContext context, _ProfileViewData data) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) =>
+          UserSafetySheet(targetUser: data.user, displayName: data.displayName),
+    );
+  }
 }
 
 class _ProfileScaffold extends StatelessWidget {
@@ -221,7 +238,13 @@ class _ProfileScaffold extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colors.surface,
-      appBar: _ProfileAppBar(title: data.displayName, onShareTap: onShareTap),
+      appBar: _ProfileAppBar(
+        title: data.displayName,
+        onShareTap: onShareTap,
+        onMoreTap: data.isOwnProfile
+            ? null
+            : () => ProfileScreen._showSafetySheet(context, data),
+      ),
       body: RefreshIndicator(
         onRefresh: onRefresh,
         child: CustomScrollView(
@@ -327,8 +350,13 @@ class _ProfileScaffold extends StatelessWidget {
 class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final VoidCallback onShareTap;
+  final VoidCallback? onMoreTap;
 
-  const _ProfileAppBar({required this.title, required this.onShareTap});
+  const _ProfileAppBar({
+    required this.title,
+    required this.onShareTap,
+    this.onMoreTap,
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -357,6 +385,12 @@ class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: onShareTap,
           icon: Icon(Icons.near_me_outlined, color: colors.textPrimary),
         ),
+        if (onMoreTap != null)
+          IconButton(
+            tooltip: 'More',
+            onPressed: onMoreTap,
+            icon: Icon(Icons.more_horiz, color: colors.textPrimary),
+          ),
       ],
     );
   }

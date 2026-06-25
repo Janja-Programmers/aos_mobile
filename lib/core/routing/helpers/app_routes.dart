@@ -21,6 +21,9 @@ class AppRoutes {
   static const account = '/account';
   static const passwordSecurity = '/account/security';
   static const preference = '/account/preference';
+  static const activityCenter = '/account/activity';
+  static const deleteAccount = '/account/delete';
+  static const restoreAccount = '/account/restore';
 
   // Learn
   static const photoTips = '/photoTips';
@@ -31,12 +34,18 @@ class AppRoutes {
   // Search
   static const search = '/search';
 
+  // Maps
+  static const mapPicker = '/maps/picker';
+  static const nMapPicker = 'mapPicker';
+
   // Seller
   static const startSelling = '/seller';
   static const sellerVerification = '/seller/verification';
   static const sellerCustomizeStore = '/seller/customize/:sellerId';
   static const sellerStore = '/seller/store-detail/:sellerId';
   static const myStoreFront = '/seller/detail/:sellerId';
+  static const sellerLocation = '/seller/location';
+  static const nSellerLocation = 'sellerLocation';
 
   // Reports
   static const reportAdBase = '/report-ad';
@@ -84,6 +93,9 @@ class AppRoutes {
   static const nAccount = 'account';
   static const nPasswordSecurity = 'passwordSecurity';
   static const nPreference = 'preference';
+  static const nActivityCenter = 'activityCenter';
+  static const nDeleteAccount = 'deleteAccount';
+  static const nRestoreAccount = 'restoreAccount';
 
   static const nMyAds = 'myAds';
   static const nCreateAd = 'createAd';
@@ -164,4 +176,8 @@ class AppRoutes {
   //SOCIALCONNECTIONS routes
   static const socialConnections = '/social/connections';
   static const nSocialConnections = 'social-connections';
+  static const socialUserSearch = '/social/search';
+  static const nSocialUserSearch = 'social-user-search';
+  static const blockedUsers = '/social/blocked';
+  static const nBlockedUsers = 'blocked-users';
 }

@@ -17,10 +17,14 @@ class AppConfig {
         '779793412118-8n4ml1k5rgeic3bifvg9e57nntdiqdhb.apps.googleusercontent.com',
   );
 
-  /// Runtime-safe baseUrl (removes any trailing slash in case a value
-  /// is provided with `/` via environment).
   static String get normalizedBaseUrl {
     final v = baseUrl.trim();
     return v.endsWith('/') ? v.substring(0, v.length - 1) : v;
+  }
+
+  static String get mapStyleUrl {
+    const override = String.fromEnvironment('AOS_MAP_STYLE_URL');
+    if (override.trim().isNotEmpty) return override.trim();
+    return '$normalizedBaseUrl/maps/styles/aos/style.json';
   }
 }

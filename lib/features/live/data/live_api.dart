@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:uuid/uuid.dart';
 
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
@@ -15,6 +16,8 @@ import 'package:africaonlinestores/features/live/domain/live_role.dart';
 
 class LiveApi {
   final ApiClient _client;
+
+  static const _uuid = Uuid();
 
   LiveApi(this._client);
 
@@ -76,9 +79,10 @@ class LiveApi {
     required String liveId,
   }) async {
     try {
+      final clientSessionId = _uuid.v4();
       final res = await _client.post(
         ApiEndpoints.joinLiveEndpoint,
-        data: {'live_id': liveId},
+        data: {'live_id': liveId, 'session_id': clientSessionId},
       );
 
       final result = unwrapFrappe(res);
@@ -107,10 +111,10 @@ class LiveApi {
           ? AOSLiveRole.host
           : AOSLiveRole.viewer;
 
-      final session = mapJoinSession(
-        Map<String, dynamic>.from(sessionJson),
-        role: role,
-      );
+      final sessionMap = Map<String, dynamic>.from(sessionJson);
+      sessionMap['session_id'] ??= clientSessionId;
+
+      final session = mapJoinSession(sessionMap, role: role);
 
       return Either.right(session);
     } catch (e) {
@@ -213,11 +217,17 @@ class LiveApi {
 
   // ================= TRACK JOIN =================
 
-  Future<Either<Failure, String?>> trackJoin({required String liveId}) async {
+  Future<Either<Failure, String?>> trackJoin({
+    required String liveId,
+    String? sessionId,
+  }) async {
     try {
       final res = await _client.post(
         ApiEndpoints.trackLiveJoinEndpoint,
-        data: {'live_id': liveId},
+        data: {
+          'live_id': liveId,
+          if (sessionId?.isNotEmpty == true) 'session_id': sessionId,
+        },
       );
 
       final result = unwrapFrappe(res);
@@ -241,11 +251,17 @@ class LiveApi {
 
   // ================= TRACK LEAVE =================
 
-  Future<Either<Failure, void>> trackLeave({required String liveId}) async {
+  Future<Either<Failure, void>> trackLeave({
+    required String liveId,
+    String? sessionId,
+  }) async {
     try {
       final res = await _client.post(
         ApiEndpoints.trackLiveLeaveEndpoint,
-        data: {'live_id': liveId},
+        data: {
+          'live_id': liveId,
+          if (sessionId?.isNotEmpty == true) 'session_id': sessionId,
+        },
       );
 
       final result = unwrapFrappe(res);

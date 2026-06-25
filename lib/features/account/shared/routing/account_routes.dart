@@ -8,6 +8,9 @@ import 'package:africaonlinestores/features/account/presentation/screens/passwor
 import 'package:africaonlinestores/features/account/presentation/screens/privacy_policy_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/terms_conditions_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/user_preference_screen.dart';
+import 'package:africaonlinestores/features/account/presentation/screens/delete_account_screen.dart';
+import 'package:africaonlinestores/features/account/presentation/screens/restore_account_screen.dart';
+import 'package:africaonlinestores/features/activity/presentation/screens/activity_center_screen.dart';
 
 class AccountRoutes {
   const AccountRoutes._();
@@ -43,6 +46,21 @@ class AccountRoutes {
         name: AppRoutes.nPreference,
         path: AppRoutes.preference,
         builder: (context, state) => const PreferenceScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.nActivityCenter,
+        path: AppRoutes.activityCenter,
+        builder: (context, state) => const ActivityCenterScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.nDeleteAccount,
+        path: AppRoutes.deleteAccount,
+        builder: (context, state) => const DeleteAccountScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.nRestoreAccount,
+        path: AppRoutes.restoreAccount,
+        builder: (context, state) => const RestoreAccountScreen(),
       ),
     ];
   }

@@ -102,7 +102,7 @@ class LiveSignalingHandler {
   Future<void> handleLiveComment(Map<String, dynamic> data) async {
     try {
       final liveId = data['live_id']?.toString();
-      final comment = data['comment'];
+      final comment = data['message'] ?? data['comment'];
 
       if (liveId == null || liveId.isEmpty || comment is! Map) {
         appLogger.e('❌ Invalid live-comment payload: $data');
@@ -121,7 +121,8 @@ class LiveSignalingHandler {
   Future<void> handleLiveCommentDeleted(Map<String, dynamic> data) async {
     try {
       final liveId = data['live_id']?.toString();
-      final commentId = data['comment_id']?.toString();
+      final commentId =
+          data['message_id']?.toString() ?? data['comment_id']?.toString();
 
       if (liveId == null ||
           liveId.isEmpty ||
@@ -162,6 +163,18 @@ class LiveSignalingHandler {
       );
     } catch (e, s) {
       appLogger.e('handleLiveReaction failed', error: e, stackTrace: s);
+    }
+  }
+
+  // ================= LIVE CO-HOST =================
+
+  Future<void> handleLiveCohostEvent(Map<String, dynamic> data) async {
+    try {
+      final liveId = data['live_id']?.toString();
+      if (liveId == null || liveId.isEmpty) return;
+      await liveManager.onLiveCohostEvent(liveId: liveId, data: data);
+    } catch (e, s) {
+      appLogger.e('handleLiveCohostEvent failed', error: e, stackTrace: s);
     }
   }
 

@@ -28,6 +28,7 @@
 		<string>LaunchScreen</string>
 		<key>UIMainStoryboardFile</key>
 		<string>Main</string>
+
 		<!-- ================= PERMISSIONS ================= -->
 		<key>NSCameraUsageDescription</key>
 		<string>AOS needs camera access for video calls, live streams, taking photos, and uploading product media.</string>
@@ -39,6 +40,11 @@
 		<string>AOS needs permission to save images and videos to your photo library.</string>
 		<key>NSSpeechRecognitionUsageDescription</key>
 		<string>AOS uses speech recognition to help you search faster using your voice.</string>
+
+		<!-- Maps / seller location / chat location sharing -->
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>AOS uses your location to set seller store locations, share locations in chat, and show nearby marketplace results.</string>
+
 		<!-- ================= BACKGROUND / CALLS / LIVEKIT ================= -->
 		<key>UIBackgroundModes</key>
 		<array>
@@ -46,12 +52,14 @@
 			<string>voip</string>
 			<string>remote-notification</string>
 		</array>
+
 		<!-- ================= NETWORK ================= -->
 		<key>NSAppTransportSecurity</key>
 		<dict>
 			<key>NSAllowsArbitraryLoads</key>
 			<true/>
 		</dict>
+
 		<!-- ================= ORIENTATION ================= -->
 		<key>UISupportedInterfaceOrientations</key>
 		<array>

@@ -34,6 +34,7 @@ class LiveManager extends StateNotifier<LiveState> {
   Future<void> startLive({
     required String title,
     required String coverImage,
+    bool micEnabled = true,
   }) async {
     try {
       if (state.isLive || state.isLoading || state.hasActiveRoom) {
@@ -59,7 +60,7 @@ class LiveManager extends StateNotifier<LiveState> {
         clearError: true,
       );
 
-      await _joinRoomInternal(session);
+      await _joinRoomInternal(session, micEnabled: micEnabled);
     } catch (e, s) {
       appLogger.e('startLive failed', error: e, stackTrace: s);
 
@@ -70,6 +71,15 @@ class LiveManager extends StateNotifier<LiveState> {
         errorMessage: message,
         hasLiveUi: false,
       );
+    }
+  }
+
+  Future<void> setMicrophoneMuted(bool muted) async {
+    try {
+      if (!state.hasActiveRoom) return;
+      await mediaService.setMicrophoneEnabled(!muted);
+    } catch (e, s) {
+      appLogger.e('setMicrophoneMuted failed', error: e, stackTrace: s);
     }
   }
 
@@ -114,6 +124,24 @@ class LiveManager extends StateNotifier<LiveState> {
         status: LiveStatus.error,
         errorMessage: e is Failure ? e.message : e.toString(),
         hasLiveUi: false,
+      );
+    }
+  }
+
+  Future<void> startCohostSession(LiveJoinSession session) async {
+    try {
+      await mediaService.leaveLive();
+      state = state.copyWith(
+        session: session,
+        role: AOSLiveRole.host,
+        clearError: true,
+      );
+      await _joinRoomInternal(session);
+    } catch (e, s) {
+      appLogger.e('startCohostSession failed', error: e, stackTrace: s);
+      state = state.copyWith(
+        status: LiveStatus.error,
+        errorMessage: e.toString(),
       );
     }
   }
@@ -221,9 +249,22 @@ class LiveManager extends StateNotifier<LiveState> {
     // - show reaction avatars
   }
 
+  Future<void> onLiveCohostEvent({
+    required String liveId,
+    required Map<String, dynamic> data,
+  }) async {
+    if (!_isCurrentLive(liveId)) return;
+    appLogger.i(
+      '🎙️ Live co-host event received → ${data['cohost_id'] ?? data['status'] ?? data}',
+    );
+  }
+
   // ================= ROOM =================
 
-  Future<void> _joinRoomInternal(LiveJoinSession session) async {
+  Future<void> _joinRoomInternal(
+    LiveJoinSession session, {
+    bool micEnabled = true,
+  }) async {
     if (_isJoining) return;
     _isJoining = true;
 
@@ -261,6 +302,7 @@ class LiveManager extends StateNotifier<LiveState> {
         wsUrl: session.wsUrl,
         token: session.token,
         role: session.role,
+        micEnabled: micEnabled,
       );
 
       state = state.copyWith(
@@ -277,7 +319,10 @@ class LiveManager extends StateNotifier<LiveState> {
       // -----------------------------
       if (session.role == AOSLiveRole.viewer) {
         try {
-          await repository.trackJoin(liveId: session.liveId);
+          await repository.trackJoin(
+            liveId: session.liveId,
+            sessionId: session.sessionId,
+          );
         } catch (e, s) {
           appLogger.e(
             'trackJoin failed → continuing session',
@@ -313,7 +358,10 @@ class LiveManager extends StateNotifier<LiveState> {
     try {
       if (wasViewer && liveId != null) {
         try {
-          await repository.trackLeave(liveId: liveId);
+          await repository.trackLeave(
+            liveId: liveId,
+            sessionId: state.session?.sessionId,
+          );
           appLogger.i('👀 Live viewer tracked leave → liveId=$liveId');
         } catch (e, s) {
           appLogger.e(

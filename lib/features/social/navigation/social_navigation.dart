@@ -6,6 +6,8 @@ import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/social/presentation/screens/profile_screen.dart';
 import 'package:africaonlinestores/features/social/application/state/social_connections_state.dart';
 import 'package:africaonlinestores/features/social/presentation/screens/social_connections_screen.dart';
+import 'package:africaonlinestores/features/social/safety/presentation/screens/social_user_search_screen.dart';
+import 'package:africaonlinestores/features/social/safety/presentation/screens/blocked_users_screen.dart';
 
 class SocialRoutes {
   const SocialRoutes._();
@@ -26,6 +28,18 @@ class SocialRoutes {
             fallbackAvatar: avatar,
           );
         },
+      ),
+
+      GoRoute(
+        name: AppRoutes.nSocialUserSearch,
+        path: AppRoutes.socialUserSearch,
+        builder: (context, state) => const SocialUserSearchScreen(),
+      ),
+
+      GoRoute(
+        name: AppRoutes.nBlockedUsers,
+        path: AppRoutes.blockedUsers,
+        builder: (context, state) => const BlockedUsersScreen(),
       ),
 
       GoRoute(
@@ -115,6 +129,14 @@ class SocialNavigation {
       tab: SocialConnectionsTab.friends,
       title: title,
     );
+  }
+
+  static void toUserSearch(BuildContext context) {
+    context.pushNamed(AppRoutes.nSocialUserSearch);
+  }
+
+  static void toBlockedUsers(BuildContext context) {
+    context.pushNamed(AppRoutes.nBlockedUsers);
   }
 
   static String _tabToQuery(SocialConnectionsTab tab) {

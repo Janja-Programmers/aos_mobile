@@ -200,11 +200,12 @@ class ApiEndpoints {
   static const String getLiveTokenEndpoint =
       '/api/method/aos.api.live.get_live_token';
 
-  static const addLiveComment = '/api/method/aos.api.live.add_comment';
-  static const replyLiveComment = '/api/method/aos.api.live.reply_comment';
-  static const listLiveComments = '/api/method/aos.api.live.list_comments';
-  static const listLiveReplies = '/api/method/aos.api.live.list_replies';
-  static const deleteLiveComment = '/api/method/aos.api.live.delete_comment';
+  static const addLiveComment = '/api/method/aos.api.live.add_live_message';
+  static const replyLiveComment = '/api/method/aos.api.live.reply_live_message';
+  static const listLiveComments = '/api/method/aos.api.live.list_live_messages';
+  static const listLiveReplies = '/api/method/aos.api.live.list_live_replies';
+  static const deleteLiveComment =
+      '/api/method/aos.api.live.delete_live_message';
   static const String sendLiveReaction =
       '/api/method/aos.api.live.send_reaction';
 
@@ -303,11 +304,70 @@ class ApiEndpoints {
   static final String listNotifications =
       '/api/method/aos.api.notifications.list_notifications';
   static const String deleteNotification =
-      '/api/method/africaonlinestores.api.notifications.delete_notification';
+      '/api/method/aos.api.notifications.delete_notification';
+  static const String clearNotifications =
+      '/api/method/aos.api.notifications.clear_notifications';
   static final String deactivatePushToken =
       '/api/method/aos.api.notifications.deactivate_push_token';
   static final String registerPushToken =
       '/api/method/aos.api.notifications.register_push_token';
+
+  // Live Co-host
+  static const String inviteLiveCohost =
+      '/api/method/aos.api.live.invite_live_cohost';
+  static const String requestLiveCohost =
+      '/api/method/aos.api.live.request_live_cohost';
+  static const String respondLiveCohost =
+      '/api/method/aos.api.live.respond_live_cohost';
+  static const String cancelLiveCohost =
+      '/api/method/aos.api.live.cancel_live_cohost';
+  static const String activateLiveCohost =
+      '/api/method/aos.api.live.activate_live_cohost';
+  static const String endLiveCohost =
+      '/api/method/aos.api.live.end_live_cohost';
+  static const String getLiveCohost =
+      '/api/method/aos.api.live.get_live_cohost';
+  static const String listLiveCohosts =
+      '/api/method/aos.api.live.list_live_cohosts';
+  static const String getLiveCohostToken =
+      '/api/method/aos.api.live.get_live_cohost_token';
+
+  // Maps
+  static const String searchPlaces = '/api/method/aos.api.maps.search_places';
+  static const String reverseGeocode =
+      '/api/method/aos.api.maps.reverse_geocode';
+  static const String getRoute = '/api/method/aos.api.maps.get_route';
+
+  // Seller Location
+  static const String setMySellerLocation =
+      '/api/method/aos.api.sellers.set_my_seller_location';
+  static const String getSellerLocation =
+      '/api/method/aos.api.sellers.get_seller_location';
+  static const String removeMySellerLocation =
+      '/api/method/aos.api.sellers.remove_my_seller_location';
+
+  // Activity Center
+  static const String hideActivity =
+      '/api/method/aos.api.activity.hide_activity';
+  static const String clearActivity =
+      '/api/method/aos.api.activity.clear_activity';
+
+  // Social safety/discovery
+  static const String searchUsers = '/api/method/aos.api.social.search_users';
+  static const String blockUser = '/api/method/aos.api.social.block_user';
+  static const String unblockUser = '/api/method/aos.api.social.unblock_user';
+  static const String getBlockStatus =
+      '/api/method/aos.api.social.get_block_status';
+  static const String listBlockedUsers =
+      '/api/method/aos.api.social.list_blocked_users';
+  static const String reportUser = '/api/method/aos.api.reports.report_user';
+
+  // Account deletion / restore
+  static const String deleteAccount = '/api/method/aos.api.auth.delete_account';
+  static const String requestRestoreAccount =
+      '/api/method/aos.api.auth.request_restore_account';
+  static const String restoreAccount =
+      '/api/method/aos.api.auth.restore_account';
 
   // Saved Searches
   static const String saveSearchEndpoint =

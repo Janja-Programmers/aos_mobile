@@ -17,9 +17,9 @@ abstract class LiveRepository {
 
   Future<List<LiveStream>> listLives({int start = 0, int limit = 20});
 
-  Future<String?> trackJoin({required String liveId});
+  Future<String?> trackJoin({required String liveId, String? sessionId});
 
-  Future<void> trackLeave({required String liveId});
+  Future<void> trackLeave({required String liveId, String? sessionId});
 
   Future<void> sendReaction({
     required String liveId,
@@ -90,8 +90,8 @@ class LiveRepositoryImpl implements LiveRepository {
   // 🔥 TRACK JOIN
   // =============================
   @override
-  Future<String?> trackJoin({required String liveId}) async {
-    final res = await api.trackJoin(liveId: liveId);
+  Future<String?> trackJoin({required String liveId, String? sessionId}) async {
+    final res = await api.trackJoin(liveId: liveId, sessionId: sessionId);
 
     return res.fold((e) => throw e, (data) => data);
   }
@@ -100,8 +100,8 @@ class LiveRepositoryImpl implements LiveRepository {
   // 🔥 TRACK LEAVE
   // =============================
   @override
-  Future<void> trackLeave({required String liveId}) async {
-    final res = await api.trackLeave(liveId: liveId);
+  Future<void> trackLeave({required String liveId, String? sessionId}) async {
+    final res = await api.trackLeave(liveId: liveId, sessionId: sessionId);
 
     return res.fold((e) => throw e, (_) => null);
   }

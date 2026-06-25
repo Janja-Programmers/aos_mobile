@@ -23,19 +23,33 @@ class LiveCommentModel {
 
   factory LiveCommentModel.fromJson(Map<String, dynamic> json) {
     return LiveCommentModel(
-      id: json['id']?.toString() ?? json['name']?.toString() ?? '',
+      id:
+          json['message_id']?.toString() ??
+          json['id']?.toString() ??
+          json['name']?.toString() ??
+          '',
       liveId:
           json['live_id']?.toString() ?? json['live_stream']?.toString() ?? '',
-      userId: json['user_id']?.toString() ?? json['user']?.toString() ?? '',
+      userId:
+          json['display_name']?.toString() ??
+          json['user_id']?.toString() ??
+          json['user']?.toString() ??
+          '',
       comment: json['comment']?.toString() ?? json['content']?.toString() ?? '',
       parentId:
-          json['parent_id']?.toString() ?? json['parent_comment']?.toString(),
-      rootId: json['root_id']?.toString() ?? json['root_comment']?.toString(),
+          json['parent_id']?.toString() ??
+          json['parent_comment']?.toString() ??
+          json['parent_message']?.toString(),
+      rootId:
+          json['root_id']?.toString() ??
+          json['root_comment']?.toString() ??
+          json['root_message']?.toString(),
       replyCount: int.tryParse(json['reply_count']?.toString() ?? '0') ?? 0,
       isDeleted:
           json['is_deleted'] == true ||
           json['is_deleted'] == 1 ||
-          json['is_deleted']?.toString() == '1',
+          json['is_deleted']?.toString() == '1' ||
+          json['status']?.toString() == 'deleted',
       createdAt:
           json['created_at']?.toString() ??
           json['creation']?.toString() ??

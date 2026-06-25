@@ -32,6 +32,14 @@ enum RealtimeEventType {
   aosLiveComment,
   aosLiveCommentDeleted,
   aosLiveReaction,
+  aosLiveCohostInvited,
+  aosLiveCohostRequestReceived,
+  aosLiveCohostAccepted,
+  aosLiveCohostRejected,
+  aosLiveCohostCancelled,
+  aosLiveCohostActivated,
+  aosLiveCohostStarted,
+  aosLiveCohostEnded,
 
   // Notifications
   aosFollow,
@@ -139,13 +147,40 @@ RealtimeEventType mapRealtimeEvent(String event) {
       return RealtimeEventType.aosLiveViewerLeft;
 
     case "aos_live_comment":
+    case "aos_live_message":
       return RealtimeEventType.aosLiveComment;
 
     case "aos_live_comment_deleted":
+    case "aos_live_message_deleted":
       return RealtimeEventType.aosLiveCommentDeleted;
 
     case "aos_live_reaction":
       return RealtimeEventType.aosLiveReaction;
+
+    case "aos_live_cohost_invited":
+      return RealtimeEventType.aosLiveCohostInvited;
+
+    case "aos_live_cohost_request_received":
+      return RealtimeEventType.aosLiveCohostRequestReceived;
+
+    case "aos_live_cohost_accepted":
+      return RealtimeEventType.aosLiveCohostAccepted;
+
+    case "aos_live_cohost_rejected":
+      return RealtimeEventType.aosLiveCohostRejected;
+
+    case "aos_live_cohost_cancelled":
+    case "aos_live_cohost_canceled":
+      return RealtimeEventType.aosLiveCohostCancelled;
+
+    case "aos_live_cohost_activated":
+      return RealtimeEventType.aosLiveCohostActivated;
+
+    case "aos_live_cohost_started":
+      return RealtimeEventType.aosLiveCohostStarted;
+
+    case "aos_live_cohost_ended":
+      return RealtimeEventType.aosLiveCohostEnded;
 
     // =========================
     // NOTIFICATIONS

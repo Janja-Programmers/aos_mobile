@@ -123,5 +123,6 @@ LiveJoinSession mapJoinSession(
     token: json['token']?.toString() ?? '',
     wsUrl: json['ws_url']?.toString() ?? '',
     role: role,
+    sessionId: json['session_id']?.toString(),
   );
 }

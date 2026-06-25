@@ -9,6 +9,7 @@ class LiveJoinSession {
   final String token;
   final String wsUrl;
   final AOSLiveRole role;
+  final String? sessionId;
 
   const LiveJoinSession({
     required this.liveId,
@@ -16,6 +17,7 @@ class LiveJoinSession {
     required this.token,
     required this.wsUrl,
     required this.role,
+    this.sessionId,
   });
 
   LiveJoinSession copyWith({
@@ -24,6 +26,7 @@ class LiveJoinSession {
     String? token,
     String? wsUrl,
     AOSLiveRole? role,
+    String? sessionId,
   }) {
     return LiveJoinSession(
       liveId: liveId ?? this.liveId,
@@ -31,6 +34,7 @@ class LiveJoinSession {
       token: token ?? this.token,
       wsUrl: wsUrl ?? this.wsUrl,
       role: role ?? this.role,
+      sessionId: sessionId ?? this.sessionId,
     );
   }
 }

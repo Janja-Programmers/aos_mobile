@@ -8,6 +8,7 @@ import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/sellers/presentation/my_storefront_screen.dart';
 import 'package:africaonlinestores/features/sellers/presentation/store_customization_screen.dart';
 import 'package:africaonlinestores/features/sellers/presentation/seller_storefront_screen.dart';
+import 'package:africaonlinestores/features/sellers/location/presentation/screens/seller_location_screen.dart';
 
 import 'package:africaonlinestores/features/verifications/presentation/verification_screen.dart';
 
@@ -58,6 +59,12 @@ class SellerRoutes {
         return MyStorefrontScreen(sellerId: _param(state, 'sellerId'));
       },
     ),
+
+    GoRoute(
+      name: AppRoutes.nSellerLocation,
+      path: AppRoutes.sellerLocation,
+      builder: (context, state) => const SellerLocationScreen(),
+    ),
   ];
 }
 
@@ -96,6 +103,10 @@ class SellerNavigation {
       AppRoutes.nSellerCustomizeStore,
       pathParameters: {'sellerId': sellerId},
     );
+  }
+
+  static Future<void> toSellerLocation(BuildContext context) async {
+    await context.pushNamed(AppRoutes.nSellerLocation);
   }
 }
 

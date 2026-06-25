@@ -12,6 +12,7 @@ class LiveMediaService {
     required String wsUrl,
     required String token,
     required AOSLiveRole role,
+    bool micEnabled = true,
   }) async {
     if (role == AOSLiveRole.host) {
       final allowed = await _requestHostPermissions();
@@ -36,7 +37,7 @@ class LiveMediaService {
     await liveKit.connect(wsUrl: wsUrl, token: token);
 
     if (role == AOSLiveRole.host) {
-      await liveKit.enableMicrophone(true);
+      await liveKit.enableMicrophone(micEnabled);
       await liveKit.enableCamera(true);
     } else {
       await liveKit.enableMicrophone(false);
@@ -55,6 +56,10 @@ class LiveMediaService {
     final cameraAllowed = statuses[Permission.camera]?.isGranted == true;
 
     return micAllowed && cameraAllowed;
+  }
+
+  Future<void> setMicrophoneEnabled(bool enabled) async {
+    await liveKit.enableMicrophone(enabled);
   }
 
   Future<void> flipCamera() async {

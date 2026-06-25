@@ -5,6 +5,8 @@ import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/live/comments/live_comments_state.dart';
 import 'package:africaonlinestores/features/live/comments/live_comments_api.dart';
 import 'package:africaonlinestores/features/live/comments/live_comment.dart';
+import 'package:africaonlinestores/features/live/comments/live_comment_mapper.dart';
+import 'package:africaonlinestores/features/live/comments/live_comment_model.dart';
 
 final liveCommentsControllerProvider =
     StateNotifierProvider<LiveCommentsController, LiveCommentsState>((ref) {
@@ -131,13 +133,29 @@ class LiveCommentsController extends StateNotifier<LiveCommentsState> {
     );
   }
 
+  // ───────────── REALTIME ─────────────
+
+  void insertFromRealtime(Map<String, dynamic> json) {
+    final raw = json['message'] ?? json['comment'] ?? json;
+    if (raw is! Map) return;
+    final model = LiveCommentModel.fromJson(Map<String, dynamic>.from(raw));
+    if (model.id.isEmpty) return;
+    final comment = LiveCommentMapper.toDomain(model);
+    if (state.comments.any((item) => item.id == comment.id)) return;
+    _insertComment(comment, limit: 50);
+  }
+
+  void removeFromRealtime(String commentId) {
+    _removeComment(commentId);
+  }
+
   // ───────────── HELPERS ─────────────
 
-  void _insertComment(LiveComment comment) {
+  void _insertComment(LiveComment comment, {int limit = 50}) {
     final updated = [comment, ...state.comments];
 
     state = state.copyWith(
-      comments: updated.take(10).toList(),
+      comments: updated.take(limit).toList(),
       clearError: true,
     );
   }

@@ -65,6 +65,18 @@ class SocketLiveListener {
             await signalingHandler.handleLiveReaction(data);
             break;
 
+          case RealtimeEventType.aosLiveCohostInvited:
+          case RealtimeEventType.aosLiveCohostRequestReceived:
+          case RealtimeEventType.aosLiveCohostAccepted:
+          case RealtimeEventType.aosLiveCohostRejected:
+          case RealtimeEventType.aosLiveCohostCancelled:
+          case RealtimeEventType.aosLiveCohostActivated:
+          case RealtimeEventType.aosLiveCohostStarted:
+          case RealtimeEventType.aosLiveCohostEnded:
+            appLogger.i('🎙️ live-cohost');
+            await signalingHandler.handleLiveCohostEvent(data);
+            break;
+
           default:
             break;
         }

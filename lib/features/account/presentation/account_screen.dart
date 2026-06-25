@@ -139,6 +139,16 @@ class AccountScreen extends ConsumerWidget {
                       title: "My Wishlist",
                       onTap: () => AdNavigation.toWishlist(context),
                     ),
+                    AccountOptionTile(
+                      icon: Icons.place_outlined,
+                      title: "Seller Location",
+                      onTap: () => SellerNavigation.toSellerLocation(context),
+                    ),
+                    AccountOptionTile(
+                      icon: Icons.history_rounded,
+                      title: "Activity Center",
+                      onTap: () => context.pushNamed(AppRoutes.nActivityCenter),
+                    ),
                     const SizedBox(height: 18),
                   ],
                 ),
@@ -168,6 +178,24 @@ class AccountScreen extends ConsumerWidget {
                     title: l10n.app_preferences,
                     onTap: () => context.pushNamed(AppRoutes.nPreference),
                   ),
+                  if (isAuthenticated) ...[
+                    AccountOptionTile(
+                      icon: Icons.person_search_outlined,
+                      title: 'Find People',
+                      onTap: () =>
+                          context.pushNamed(AppRoutes.nSocialUserSearch),
+                    ),
+                    AccountOptionTile(
+                      icon: Icons.block_outlined,
+                      title: 'Blocked Users',
+                      onTap: () => context.pushNamed(AppRoutes.nBlockedUsers),
+                    ),
+                    AccountOptionTile(
+                      icon: Icons.delete_forever_outlined,
+                      title: 'Delete Account',
+                      onTap: () => context.pushNamed(AppRoutes.nDeleteAccount),
+                    ),
+                  ],
                   AppSwitchTile(
                     icon: Icons.dark_mode_outlined,
                     title: l10n.settings_dark_mode,

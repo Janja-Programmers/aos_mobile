@@ -20,36 +20,39 @@ class LiveInputBar extends StatelessWidget {
     return Positioned(
       left: 12,
       right: 12,
-      bottom: 20,
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(.2),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: TextField(
-                controller: controller,
-                style: context.p.copyWith(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: "Say something...",
-                  hintStyle: context.p.copyWith(color: Colors.white70),
-                  border: InputBorder.none,
+      bottom: 0,
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(.2),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: TextField(
+                  controller: controller,
+                  style: context.p.copyWith(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: "Say something...",
+                    hintStyle: context.p.copyWith(color: Colors.white70),
+                    border: InputBorder.none,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: onSend,
-            child: CircleAvatar(
-              backgroundColor: colors.primary,
-              child: const Icon(Icons.send, color: Colors.white),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onSend,
+              child: CircleAvatar(
+                backgroundColor: colors.primary,
+                child: const Icon(Icons.send, color: Colors.white),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

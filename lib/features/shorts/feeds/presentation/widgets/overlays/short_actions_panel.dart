@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_session_controller.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/components/feed_avatar_image.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/comment_sheet.dart';
-
+import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/report_short_sheet.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 
 class ShortActionsPanel extends ConsumerWidget {
@@ -18,6 +17,8 @@ class ShortActionsPanel extends ConsumerWidget {
   final bool isFollowPending;
   final bool isSaved;
   final bool isSavePending;
+  final bool isSharePending;
+  final bool isDownloadPending;
 
   final Future<void> Function(String shortId) onToggleLike;
   final void Function(String shortId) onCommentAdded;
@@ -25,6 +26,13 @@ class ShortActionsPanel extends ConsumerWidget {
   final VoidCallback onCreatorTap;
   final Future<void> Function() onShare;
   final Future<void> Function() onSave;
+  final Future<void> Function() onDownload;
+  final Future<String?> Function({
+    required String shortId,
+    required String reason,
+    required String details,
+  })
+  onReport;
 
   const ShortActionsPanel({
     super.key,
@@ -34,19 +42,23 @@ class ShortActionsPanel extends ConsumerWidget {
     required this.onCreatorTap,
     required this.onShare,
     required this.onSave,
+    required this.onDownload,
+    required this.onReport,
     this.onToggleFollow,
     this.isLikedPending = false,
     this.isFollowPending = false,
     this.isSaved = false,
     this.isSavePending = false,
+    this.isSharePending = false,
+    this.isDownloadPending = false,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
-
     final isLiked = short.isLiked;
     final metrics = short.metrics;
+    final canDownload = short.allowDownloads || short.isOwner;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -57,9 +69,7 @@ class ShortActionsPanel extends ConsumerWidget {
           onCreatorTap: onCreatorTap,
           onToggleFollow: onToggleFollow,
         ),
-
         const SizedBox(height: 18),
-
         _iconWithLabel(
           context,
           icon: isLiked
@@ -69,43 +79,35 @@ class ShortActionsPanel extends ConsumerWidget {
           label: _formatCount(metrics.likeCount),
           isDisabled: isLikedPending,
           semanticLabel: isLiked ? 'Unlike' : 'Like',
-          onTap: isLikedPending
-              ? null
-              : () {
-                  onToggleLike(short.id.value);
-                },
+          onTap: isLikedPending ? null : () => onToggleLike(short.id.value),
         ),
-
         const SizedBox(height: 18),
-
         _iconWithLabel(
           context,
           icon: Icons.mode_comment_outlined,
           color: colors.white,
           label: _formatCount(metrics.commentCount),
           semanticLabel: 'Comments',
-          onTap: () {
-            ref.read(shortSessionControllerProvider.notifier).pause();
+          onTap: short.allowComments
+              ? () {
+                  ref.read(shortSessionControllerProvider.notifier).pause();
 
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              useSafeArea: true,
-              backgroundColor: Colors.transparent,
-              builder: (_) => CommentsSheet(
-                short: short,
-                onCommentAdded: () {
-                  onCommentAdded(short.id.value);
-                },
-              ),
-            ).whenComplete(() {
-              ref.read(shortSessionControllerProvider.notifier).resume();
-            });
-          },
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    useSafeArea: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => CommentsSheet(
+                      short: short,
+                      onCommentAdded: () => onCommentAdded(short.id.value),
+                    ),
+                  ).whenComplete(() {
+                    ref.read(shortSessionControllerProvider.notifier).resume();
+                  });
+                }
+              : null,
         ),
-
         const SizedBox(height: 18),
-
         _iconWithLabel(
           context,
           icon: isSaved
@@ -117,9 +119,7 @@ class ShortActionsPanel extends ConsumerWidget {
           semanticLabel: isSaved ? 'Unsave short' : 'Save short',
           onTap: isSavePending ? null : onSave,
         ),
-
         const SizedBox(height: 18),
-
         _iconWithLabel(
           context,
           iconWidget: Transform(
@@ -128,10 +128,107 @@ class ShortActionsPanel extends ConsumerWidget {
             child: Icon(Icons.reply_outlined, color: colors.white, size: 34),
           ),
           label: _formatCount(metrics.shareCount),
+          isDisabled: isSharePending,
           semanticLabel: 'Share short',
-          onTap: onShare,
+          onTap: isSharePending ? null : onShare,
+        ),
+        const SizedBox(height: 18),
+        _iconWithLabel(
+          context,
+          icon: Icons.more_horiz_rounded,
+          color: colors.white,
+          label: 'More',
+          semanticLabel: 'More short actions',
+          onTap: () => _showMoreActions(context, canDownload: canDownload),
         ),
       ],
+    );
+  }
+
+  void _showMoreActions(BuildContext context, {required bool canDownload}) {
+    final colors = context.appColors;
+
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: colors.surface,
+      builder: (_) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _sheetAction(
+                  context,
+                  icon: Icons.file_download_outlined,
+                  title: canDownload
+                      ? 'Download / export short'
+                      : 'Downloads disabled',
+                  subtitle: canDownload
+                      ? 'Save or share the video through your system sheet'
+                      : 'The creator has disabled downloads for this short',
+                  enabled: canDownload && !isDownloadPending,
+                  trailing: isDownloadPending
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : null,
+                  onTap: () {
+                    Navigator.pop(context);
+                    onDownload();
+                  },
+                ),
+                _sheetAction(
+                  context,
+                  icon: Icons.flag_outlined,
+                  title: 'Report short',
+                  subtitle: 'Tell us what is wrong with this video',
+                  enabled: short.canReport,
+                  onTap: () {
+                    Navigator.pop(context);
+                    showReportShortSheet(
+                      context: context,
+                      shortId: short.id.value,
+                      onSubmit: onReport,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _sheetAction(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool enabled,
+    required VoidCallback onTap,
+    Widget? trailing,
+  }) {
+    final colors = context.appColors;
+
+    return ListTile(
+      enabled: enabled,
+      contentPadding: EdgeInsets.zero,
+      leading: CircleAvatar(
+        backgroundColor: colors.primary.withOpacity(.10),
+        child: Icon(icon, color: colors.primary),
+      ),
+      title: Text(title, style: context.pStrong),
+      subtitle: Text(
+        subtitle,
+        style: context.small.copyWith(color: colors.textMuted),
+      ),
+      trailing: trailing,
+      onTap: enabled ? onTap : null,
     );
   }
 
@@ -184,11 +281,9 @@ class ShortActionsPanel extends ConsumerWidget {
     if (value >= 1000000) {
       return '${(value / 1000000).toStringAsFixed(1)}M';
     }
-
     if (value >= 1000) {
       return '${(value / 1000).toStringAsFixed(1)}K';
     }
-
     return value.toString();
   }
 }
@@ -209,12 +304,8 @@ class _CreatorAvatarAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
-    final imageUri = buildFileUrl(short.creator.avatar);
-    final avatar = imageUri;
-
+    final avatar = buildFileUrl(short.creator.avatar);
     final targetUser = short.viewerState.targetUser ?? short.creator.user;
-
     final isSelf = short.viewerState.isSelf;
     final isFollowing = short.viewerState.isFollowing;
 
@@ -243,7 +334,6 @@ class _CreatorAvatarAction extends StatelessWidget {
               ),
             ),
           ),
-
           if (!isSelf)
             Positioned(
               bottom: 2,
@@ -251,9 +341,7 @@ class _CreatorAvatarAction extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 onTap: isFollowPending || onToggleFollow == null
                     ? null
-                    : () {
-                        onToggleFollow!(targetUser);
-                      },
+                    : () => onToggleFollow!(targetUser),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   width: 24,
@@ -279,7 +367,6 @@ class _CreatorAvatarAction extends StatelessWidget {
                 ),
               ),
             ),
-
           if (isSelf)
             Positioned(
               bottom: 2,

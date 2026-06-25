@@ -11,7 +11,7 @@ import 'package:africaonlinestores/shared/components/cards/widgets/ad_card_body.
 import 'package:africaonlinestores/shared/components/cards/widgets/ad_card_image.dart';
 
 class AdPickerBottomSheet extends ConsumerStatefulWidget {
-  final Function(String adId) onSelected;
+  final Function(AOSAdListItem ad) onSelected;
 
   const AdPickerBottomSheet({super.key, required this.onSelected});
 
@@ -76,7 +76,7 @@ class _AdPickerBottomSheetState extends ConsumerState<AdPickerBottomSheet> {
                           ad: ad,
                           imageHeight: 110,
                           onTap: () {
-                            widget.onSelected(ad.id.toString());
+                            widget.onSelected(ad);
                             Navigator.pop(context);
                           },
                         );

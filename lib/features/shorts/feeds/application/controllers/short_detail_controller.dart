@@ -1,24 +1,52 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:share_plus/share_plus.dart';
 
+import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/short_detail_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_engagement_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_library_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_report_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_share_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_tracking_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-import 'package:share_plus/share_plus.dart';
 
 class ShortDetailController extends StateNotifier<ShortDetailState> {
   static const int _loadMoreThreshold = 2;
 
   final ShortsRepository _repository;
   final ShortsEngagementApi _engagementApi;
+  final ShortsTrackingApi _trackingApi;
+  final ShortsShareApi _shareApi;
+  final ShortsLibraryApi _libraryApi;
+  final ShortsReportApi _reportApi;
+  final ApiClient _apiClient;
+
+  final String _sessionId = 'shorts_${DateTime.now().microsecondsSinceEpoch}';
+  final Set<String> _impressedShortIds = <String>{};
+  final Map<String, int> _lastTrackedWatchMs = <String, int>{};
 
   ShortDetailController({
     required ShortDetailArgs args,
     required ShortsRepository repository,
     required ShortsEngagementApi engagementApi,
+    required ShortsTrackingApi trackingApi,
+    required ShortsShareApi shareApi,
+    required ShortsLibraryApi libraryApi,
+    required ShortsReportApi reportApi,
+    required ApiClient apiClient,
   }) : _repository = repository,
        _engagementApi = engagementApi,
+       _trackingApi = trackingApi,
+       _shareApi = shareApi,
+       _libraryApi = libraryApi,
+       _reportApi = reportApi,
+       _apiClient = apiClient,
        super(
          ShortDetailState.initial(
            items: args.initialShorts,
@@ -239,6 +267,11 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     final wasSaved = originalShort.viewerState.isSaved;
 
     final optimisticShort = originalShort.copyWith(
+      metrics: originalShort.metrics.copyWith(
+        saveCount: wasSaved
+            ? (originalShort.metrics.saveCount - 1).clamp(0, 1 << 31)
+            : originalShort.metrics.saveCount + 1,
+      ),
       viewerState: originalShort.viewerState.copyWith(isSaved: !wasSaved),
     );
 
@@ -255,7 +288,6 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
         debugPrint('Toggle save failed: ${failure.message}');
 
         final updatedPending = {...state.pendingSaveIds}..remove(shortId);
-
         final rollbackIndex = state.items.indexWhere(
           (short) => short.id.value == shortId,
         );
@@ -278,9 +310,8 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
       },
       (toggleResult) {
         final updatedPending = {...state.pendingSaveIds}..remove(shortId);
-
         final syncIndex = state.items.indexWhere(
-          (short) => short.id.value == shortId,
+          (short) => short.id.value == toggleResult.shortId,
         );
 
         if (syncIndex == -1) {
@@ -289,10 +320,12 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
         }
 
         final currentShort = state.items[syncIndex];
-
         final syncedShort = currentShort.copyWith(
+          metrics: currentShort.metrics.copyWith(
+            saveCount: toggleResult.saveCount ?? currentShort.metrics.saveCount,
+          ),
           viewerState: currentShort.viewerState.copyWith(
-            isSaved: toggleResult.liked,
+            isSaved: toggleResult.saved,
           ),
         );
 
@@ -302,24 +335,209 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
   }
 
   Future<void> shareShort(String shortId) async {
+    if (state.pendingShareIds.contains(shortId)) return;
+
     final index = state.items.indexWhere((short) => short.id.value == shortId);
     if (index == -1) return;
 
     final short = state.items[index];
+    state = state.copyWith(
+      pendingShareIds: {...state.pendingShareIds, shortId},
+    );
 
-    try {
-      await SharePlus.instance.share(
-        ShareParams(
-          title: 'Share short',
-          subject: 'Check out this short',
-          text: _buildShareText(short),
-        ),
-      );
-    } catch (e) {
-      debugPrint('Open share intent failed: $e');
+    final result = await _shareApi.createShareLink(
+      shortId: shortId,
+      channel: 'system_share',
+      sessionId: _sessionId,
+    );
 
-      state = state.copyWith(errorMessage: 'Unable to open share options.');
-    }
+    await result.fold(
+      (failure) async {
+        final updatedPending = {...state.pendingShareIds}..remove(shortId);
+        state = state.copyWith(
+          pendingShareIds: updatedPending,
+          errorMessage: failure.message,
+        );
+      },
+      (shareResult) async {
+        final updatedPending = {...state.pendingShareIds}..remove(shortId);
+        final syncIndex = state.items.indexWhere(
+          (item) => item.id.value == shareResult.shortId,
+        );
+
+        if (syncIndex != -1) {
+          final current = state.items[syncIndex];
+          _replaceShortAt(
+            syncIndex,
+            current.copyWith(
+              metrics: current.metrics.copyWith(
+                shareCount:
+                    shareResult.shareCount ?? current.metrics.shareCount + 1,
+              ),
+            ),
+            pendingShareIds: updatedPending,
+          );
+        } else {
+          state = state.copyWith(pendingShareIds: updatedPending);
+        }
+
+        try {
+          await SharePlus.instance.share(
+            ShareParams(
+              title: 'Share short',
+              subject: 'Check out this short',
+              text: _buildShareText(short, shareResult.shareUrl),
+            ),
+          );
+        } catch (e) {
+          debugPrint('Open share intent failed: $e');
+          state = state.copyWith(errorMessage: 'Unable to open share options.');
+        }
+      },
+    );
+  }
+
+  Future<void> downloadShort(String shortId) async {
+    if (state.pendingDownloadIds.contains(shortId)) return;
+
+    final index = state.items.indexWhere((short) => short.id.value == shortId);
+    if (index == -1) return;
+
+    state = state.copyWith(
+      pendingDownloadIds: {...state.pendingDownloadIds, shortId},
+      errorMessage: null,
+    );
+
+    final result = await _libraryApi.downloadShort(
+      shortId: shortId,
+      sessionId: _sessionId,
+    );
+
+    await result.fold(
+      (failure) async {
+        final updatedPending = {...state.pendingDownloadIds}..remove(shortId);
+        state = state.copyWith(
+          pendingDownloadIds: updatedPending,
+          errorMessage: failure.message,
+        );
+      },
+      (download) async {
+        File? tempFile;
+        try {
+          tempFile = File(
+            '${Directory.systemTemp.path}${Platform.pathSeparator}'
+            'aos_short_${shortId}_${DateTime.now().microsecondsSinceEpoch}.mp4',
+          );
+
+          await _apiClient.dio.download(
+            download.downloadUrl,
+            tempFile.path,
+            deleteOnError: true,
+            options: Options(
+              followRedirects: true,
+              receiveTimeout: const Duration(seconds: 90),
+              sendTimeout: const Duration(seconds: 15),
+              headers: const {'Accept': 'video/*,*/*;q=0.8'},
+            ),
+          );
+
+          if (!await tempFile.exists()) {
+            throw const FileSystemException(
+              'Temporary short file was not created.',
+            );
+          }
+
+          final short = state.items.firstWhere(
+            (item) => item.id.value == shortId,
+          );
+
+          await SharePlus.instance.share(
+            ShareParams(
+              title: 'Save or share short',
+              subject: 'AOS Short',
+              text: short.caption.toString().trim().isEmpty
+                  ? 'AOS Short'
+                  : short.caption.toString().trim(),
+              files: [XFile(tempFile.path, mimeType: 'video/mp4')],
+            ),
+          );
+
+          final updatedPending = {...state.pendingDownloadIds}..remove(shortId);
+          final syncIndex = state.items.indexWhere(
+            (item) => item.id.value == shortId,
+          );
+          if (syncIndex != -1) {
+            final current = state.items[syncIndex];
+            _replaceShortAt(
+              syncIndex,
+              current.copyWith(
+                metrics: current.metrics.copyWith(
+                  downloadCount:
+                      download.downloadCount ??
+                      current.metrics.downloadCount + 1,
+                ),
+              ),
+              pendingDownloadIds: updatedPending,
+            );
+          } else {
+            state = state.copyWith(pendingDownloadIds: updatedPending);
+          }
+        } catch (e) {
+          debugPrint('Short download/export failed: $e');
+          final updatedPending = {...state.pendingDownloadIds}..remove(shortId);
+          state = state.copyWith(
+            pendingDownloadIds: updatedPending,
+            errorMessage: 'Unable to prepare short download.',
+          );
+        }
+      },
+    );
+  }
+
+  Future<String?> reportShort({
+    required String shortId,
+    required String reason,
+    required String details,
+  }) async {
+    final result = await _reportApi.reportShort(
+      shortId: shortId,
+      reason: reason,
+      details: details,
+    );
+
+    return result.fold((failure) => failure.message, (_) => null);
+  }
+
+  void trackImpression(String shortId) {
+    if (_impressedShortIds.contains(shortId)) return;
+    _impressedShortIds.add(shortId);
+
+    unawaited(
+      _trackingApi.trackImpression(shortId: shortId, sessionId: _sessionId),
+    );
+  }
+
+  void trackWatchProgress({
+    required String shortId,
+    required int watchMs,
+    bool force = false,
+  }) {
+    if (watchMs < 500) return;
+
+    final previous = _lastTrackedWatchMs[shortId] ?? 0;
+    final shouldSend = force || watchMs >= 2000 && watchMs - previous >= 1000;
+
+    if (!shouldSend) return;
+
+    _lastTrackedWatchMs[shortId] = watchMs;
+
+    unawaited(
+      _trackingApi.trackView(
+        shortId: shortId,
+        watchMs: watchMs,
+        sessionId: _sessionId,
+      ),
+    );
   }
 
   void onPageChanged(int index) {
@@ -341,7 +559,6 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     if (index == -1) return;
 
     final short = state.items[index];
-
     final updatedShort = short.copyWith(
       metrics: short.metrics.copyWith(
         commentCount: short.metrics.commentCount + 1,
@@ -349,6 +566,14 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     );
 
     _replaceShortAt(index, updatedShort);
+  }
+
+  void removeShort(String shortId) {
+    state = state.copyWith(
+      items: List.unmodifiable(
+        state.items.where((short) => short.id.value != shortId).toList(),
+      ),
+    );
   }
 
   List<int> _indexesForCreator(String targetUser) {
@@ -431,6 +656,8 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     Short updatedShort, {
     Set<String>? pendingLikeIds,
     Set<String>? pendingSaveIds,
+    Set<String>? pendingShareIds,
+    Set<String>? pendingDownloadIds,
   }) {
     if (index < 0 || index >= state.items.length) return;
 
@@ -441,12 +668,13 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
       items: List.unmodifiable(updatedItems),
       pendingLikeIds: pendingLikeIds,
       pendingSaveIds: pendingSaveIds,
+      pendingShareIds: pendingShareIds,
+      pendingDownloadIds: pendingDownloadIds,
     );
   }
 
-  String _buildShareText(Short short) {
+  String _buildShareText(Short short, String shareUrl) {
     final title = short.caption.toString().trim();
-
     final buffer = StringBuffer();
 
     if (title.isNotEmpty) {
@@ -454,10 +682,8 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
       buffer.writeln();
     }
 
-    buffer.writeln('Check out this short');
-
-    // Replace this with your real public/deep link when available.
-    buffer.writeln(short.playbackUrl);
+    buffer.writeln('Check out this short on AOS');
+    buffer.writeln(shareUrl);
 
     return buffer.toString().trim();
   }

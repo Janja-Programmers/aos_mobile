@@ -36,29 +36,45 @@ class RepliesList extends ConsumerWidget {
     }
 
     return Column(
-      children: state.replies
-          .map((reply) {
-            final isLikePending = state.pendingLikeIds.contains(reply.id.value);
-            final isDeletePending = state.pendingDeleteIds.contains(
-              reply.id.value,
-            );
+      children: [
+        ...state.replies.map((reply) {
+          final isLikePending = state.pendingLikeIds.contains(reply.id.value);
+          final isDeletePending = state.pendingDeleteIds.contains(
+            reply.id.value,
+          );
 
-            return ReplyTile(
-              key: ValueKey(reply.id.value),
-              reply: reply,
-              isLikePending: isLikePending,
-              isDeletePending: isDeletePending,
-              onToggleLike: () {
-                controller.toggleCommentLike(reply.id.value);
-              },
-              onDelete: reply.canDelete || reply.isOwner
-                  ? () {
-                      controller.deleteComment(reply.id.value);
-                    }
-                  : null,
-            );
-          })
-          .toList(growable: false),
+          return ReplyTile(
+            key: ValueKey(reply.id.value),
+            reply: reply,
+            isLikePending: isLikePending,
+            isDeletePending: isDeletePending,
+            onToggleLike: () {
+              controller.toggleCommentLike(reply.id.value);
+            },
+            onDelete: reply.canDelete || reply.isOwner
+                ? () {
+                    controller.deleteComment(reply.id.value);
+                  }
+                : null,
+          );
+        }),
+        if (state.hasMore)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: state.isLoadingMore
+                  ? null
+                  : controller.loadMoreReplies,
+              child: state.isLoadingMore
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('View more replies'),
+            ),
+          ),
+      ],
     );
   }
 }

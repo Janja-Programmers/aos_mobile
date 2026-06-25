@@ -7,6 +7,8 @@ class ShortMetrics extends Equatable {
   final int shareCount;
   final int saveCount;
   final int impressionCount;
+  final int downloadCount;
+  final int repostCount;
   final double rankingScore;
 
   const ShortMetrics({
@@ -16,6 +18,8 @@ class ShortMetrics extends Equatable {
     required this.shareCount,
     required this.saveCount,
     required this.impressionCount,
+    required this.downloadCount,
+    required this.repostCount,
     required this.rankingScore,
   });
 
@@ -27,6 +31,8 @@ class ShortMetrics extends Equatable {
       shareCount: 0,
       saveCount: 0,
       impressionCount: 0,
+      downloadCount: 0,
+      repostCount: 0,
       rankingScore: 0.0,
     );
   }
@@ -38,6 +44,8 @@ class ShortMetrics extends Equatable {
     int? shareCount,
     int? saveCount,
     int? impressionCount,
+    int? downloadCount,
+    int? repostCount,
     double? rankingScore,
   }) {
     return ShortMetrics(
@@ -47,6 +55,8 @@ class ShortMetrics extends Equatable {
       shareCount: shareCount ?? this.shareCount,
       saveCount: saveCount ?? this.saveCount,
       impressionCount: impressionCount ?? this.impressionCount,
+      downloadCount: downloadCount ?? this.downloadCount,
+      repostCount: repostCount ?? this.repostCount,
       rankingScore: rankingScore ?? this.rankingScore,
     );
   }
@@ -59,6 +69,8 @@ class ShortMetrics extends Equatable {
     shareCount,
     saveCount,
     impressionCount,
+    downloadCount,
+    repostCount,
     rankingScore,
   ];
 }

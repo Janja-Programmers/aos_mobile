@@ -66,7 +66,19 @@ class ShortCard extends StatelessWidget {
               Positioned(
                 top: 8,
                 left: 8,
-                child: ShortBadge(contentMode: short.contentMode),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShortBadge(contentMode: short.contentMode),
+                    const SizedBox(height: 6),
+                    if (_statusLabel(short) != null)
+                      _StatusBadge(label: _statusLabel(short)!),
+                    if (short.isPrivateAudience) ...[
+                      const SizedBox(height: 6),
+                      _StatusBadge(label: _audienceLabel(short.audience)),
+                    ],
+                  ],
+                ),
               ),
 
               Positioned(
@@ -97,6 +109,27 @@ class ShortCard extends StatelessWidget {
     );
   }
 
+  String? _statusLabel(Short short) {
+    if (short.isProcessing) return 'Processing';
+    if (short.canRetry) return 'Failed';
+    if (short.isHidden) return 'Hidden';
+    if (short.isDeleted) return 'Deleted';
+    return null;
+  }
+
+  String _audienceLabel(String audience) {
+    switch (audience) {
+      case 'followers':
+        return 'Followers';
+      case 'friends':
+        return 'Friends';
+      case 'only_me':
+        return 'Only me';
+      default:
+        return 'Private';
+    }
+  }
+
   String? _safeFileUrl(String? value) {
     if (value == null || value.trim().isEmpty) return null;
 
@@ -105,5 +138,33 @@ class ShortCard extends StatelessWidget {
     if (url!.trim().isEmpty) return null;
 
     return url;
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String label;
+
+  const _StatusBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: colors.black.withOpacity(.58),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: colors.white.withOpacity(.26)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
   }
 }

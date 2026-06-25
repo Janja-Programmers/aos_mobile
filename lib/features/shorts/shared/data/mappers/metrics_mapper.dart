@@ -10,6 +10,8 @@ class MetricsMapper {
       shareCount: model.shareCount,
       saveCount: model.saveCount,
       impressionCount: model.impressionCount,
+      downloadCount: model.downloadCount,
+      repostCount: model.repostCount,
       rankingScore: model.rankingScore,
     );
   }

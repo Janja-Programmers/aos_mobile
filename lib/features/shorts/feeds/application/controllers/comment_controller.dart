@@ -22,7 +22,7 @@ class CommentsController extends StateNotifier<CommentsState> {
 
     _activeShortId = shortId;
 
-    state = state.copyWith(comments: []);
+    state = state.copyWith(comments: [], clearNextCursor: true, hasMore: false);
 
     appLogger.i('🚀 INIT COMMENTS');
 
@@ -83,22 +83,60 @@ class CommentsController extends StateNotifier<CommentsState> {
   Future<void> fetchComments(String shortId) async {
     if (state.isLoading) return;
 
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(
+      isLoading: true,
+      clearNextCursor: true,
+      hasMore: false,
+    );
 
     try {
       final res = await api.listComments(shortId: shortId);
 
       res.fold(
         (e) {
-          state = state.copyWith(comments: [], isLoading: false);
+          state = state.copyWith(
+            comments: [],
+            isLoading: false,
+            hasMore: false,
+          );
         },
-        (items) {
-          state = state.copyWith(comments: items, isLoading: false);
+        (page) {
+          state = state.copyWith(
+            comments: page.items,
+            isLoading: false,
+            nextCursor: page.nextCursor,
+            hasMore: page.hasMore,
+          );
         },
       );
     } catch (e) {
-      state = state.copyWith(comments: [], isLoading: false);
+      state = state.copyWith(comments: [], isLoading: false, hasMore: false);
     }
+  }
+
+  Future<void> loadMore(String shortId) async {
+    if (state.isLoading || state.isLoadingMore || !state.hasMore) return;
+
+    final cursor = state.nextCursor?.trim();
+    if (cursor == null || cursor.isEmpty) return;
+
+    state = state.copyWith(isLoadingMore: true);
+
+    final res = await api.listComments(shortId: shortId, cursor: cursor);
+
+    res.fold(
+      (e) {
+        state = state.copyWith(isLoadingMore: false);
+      },
+      (page) {
+        state = state.copyWith(
+          comments: List.unmodifiable([...state.comments, ...page.items]),
+          isLoadingMore: false,
+          nextCursor: page.nextCursor,
+          hasMore: page.hasMore,
+        );
+      },
+    );
   }
 
   // ───────────── LIKE COMMENTS ─────────────

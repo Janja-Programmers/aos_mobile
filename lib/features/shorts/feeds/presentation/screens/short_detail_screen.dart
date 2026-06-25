@@ -90,12 +90,20 @@ class _ShortDetailScreenState extends ConsumerState<ShortDetailScreen> {
             onToggleFollow: controller.toggleFollow,
 
             // Share
+            isSharePending: state.pendingShareIds.contains(shortId),
             onShare: controller.shareShort,
 
             // Save
             isSaved: short.viewerState.isSaved,
             isSavePending: state.pendingSaveIds.contains(shortId),
             onSave: controller.toggleSave,
+
+            // Download / Report / Tracking
+            isDownloadPending: state.pendingDownloadIds.contains(shortId),
+            onDownload: controller.downloadShort,
+            onReport: controller.reportShort,
+            onImpression: controller.trackImpression,
+            onWatchProgress: controller.trackWatchProgress,
           );
         },
       ),

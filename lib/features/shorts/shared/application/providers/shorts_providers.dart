@@ -11,6 +11,10 @@ import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_feed_a
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_management_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_upload_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_tracking_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_share_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_library_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_report_api.dart';
+import 'package:africaonlinestores/features/shorts/analytics/data/shorts_analytics_api.dart';
 
 // Controllers
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/comment_controller.dart';
@@ -58,6 +62,22 @@ final shortsCommentsApiProvider = Provider<ShortsCommentsApi>((ref) {
   return ShortsCommentsApi(ref.read(apiClientProvider));
 });
 
+final shortsShareApiProvider = Provider<ShortsShareApi>((ref) {
+  return ShortsShareApi(ref.read(apiClientProvider));
+});
+
+final shortsLibraryApiProvider = Provider<ShortsLibraryApi>((ref) {
+  return ShortsLibraryApi(ref.read(apiClientProvider));
+});
+
+final shortsReportApiProvider = Provider<ShortsReportApi>((ref) {
+  return ShortsReportApi(ref.read(apiClientProvider));
+});
+
+final shortsAnalyticsApiProvider = Provider<ShortsAnalyticsApi>((ref) {
+  return ShortsAnalyticsApi(ref.read(apiClientProvider));
+});
+
 // ─────────────────────────────────────────────
 // CONTROLLERS (THE BRAIN)
 // ─────────────────────────────────────────────
@@ -67,6 +87,8 @@ final shortsCommentsApiProvider = Provider<ShortsCommentsApi>((ref) {
 // );
 
 final activeShortIndexProvider = StateProvider<int>((ref) => 0);
+
+final activeShortUploadSessionProvider = StateProvider<String?>((ref) => null);
 
 final shortsRepositoryProvider = Provider<ShortsRepository>((ref) {
   return ShortsRepository(
@@ -116,6 +138,11 @@ final shortDetailControllerProvider =
         args: args,
         repository: ref.read(shortsRepositoryProvider),
         engagementApi: ref.read(shortsEngagementApiProvider),
+        trackingApi: ref.read(shortsTrackingApiProvider),
+        shareApi: ref.read(shortsShareApiProvider),
+        libraryApi: ref.read(shortsLibraryApiProvider),
+        reportApi: ref.read(shortsReportApiProvider),
+        apiClient: ref.read(apiClientProvider),
       );
     });
 

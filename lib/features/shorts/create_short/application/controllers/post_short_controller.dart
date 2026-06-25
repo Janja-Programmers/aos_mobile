@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/init_short_upload_result.dart';
@@ -54,8 +56,24 @@ class PostShortController extends StateNotifier<UploadState> {
     );
   }
 
-  void setAd(String? adId) {
-    state = state.copyWith(selectedAdId: adId);
+  void setAd(String? adId, {AOSAdListItem? preview}) {
+    state = state.copyWith(selectedAdId: adId, selectedAdPreview: preview);
+  }
+
+  void setAudience(String audience) {
+    state = state.copyWith(audience: audience);
+  }
+
+  void setAllowComments(bool value) {
+    state = state.copyWith(allowComments: value);
+  }
+
+  void setAllowDownloads(bool value) {
+    state = state.copyWith(allowDownloads: value);
+  }
+
+  void setSound(ShortSound sound) {
+    state = state.copyWith(selectedSound: sound);
   }
 
   void clearAd() {
@@ -97,6 +115,7 @@ class PostShortController extends StateNotifier<UploadState> {
     if (init == null) return;
 
     final shortId = init.shortId.value;
+    state = state.copyWith(shortId: init.shortId);
 
     // 2. UPLOAD
     if (!await _uploadFile(file, init.uploadUrl)) return;
@@ -204,6 +223,7 @@ class PostShortController extends StateNotifier<UploadState> {
         return false;
       });
 
+      if (state.status == UploadStatus.failed) return false;
       if (done) return true;
 
       await Future.delayed(const Duration(seconds: 3));
@@ -226,6 +246,10 @@ class PostShortController extends StateNotifier<UploadState> {
       adId: state.requiresAd ? state.selectedAdId : null,
       caption: state.caption,
       hashtags: state.hashtags,
+      audience: state.audience,
+      allowComments: state.allowComments,
+      allowDownloads: state.allowDownloads,
+      // selectedSound is UI-only until the backend sound endpoints exist.
     );
 
     final metadataUpdated = res.fold((e) {
@@ -247,6 +271,36 @@ class PostShortController extends StateNotifier<UploadState> {
       );
       return null;
     }, (short) => short);
+  }
+
+  // ───────────── RETRY PROCESSING ─────────────
+
+  Future<void> retryProcessingCurrent() async {
+    final currentShortId = state.shortId?.value ?? state.short?.id.value;
+    if (currentShortId == null || currentShortId.trim().isEmpty) return;
+
+    state = state.copyWith(status: UploadStatus.processing, clearError: true);
+
+    final retryRes = await managementApi.retryProcessing(
+      shortId: currentShortId,
+    );
+
+    final retryStarted = retryRes.fold((e) {
+      state = state.copyWith(
+        status: UploadStatus.failed,
+        errorMessage: e.message,
+      );
+      return false;
+    }, (_) => true);
+
+    if (!retryStarted) return;
+
+    if (!await _waitUntilReady(currentShortId)) return;
+
+    final finalShort = await _updateMetadataAndFetch(currentShortId);
+    if (finalShort == null) return;
+
+    state = state.copyWith(status: UploadStatus.ready, short: finalShort);
   }
 
   // ───────────── RESET ─────────────

@@ -63,6 +63,8 @@ class ApiEndpoints {
       '/api/method/aos.api.reports.list_report_reasons';
   static final String reportAdEndpoint =
       '/api/method/aos.api.reports.report_ad';
+  static final String reportShortEndpoint =
+      '/api/method/aos.api.reports.report_short';
 
   // Reviews Endpoints
   static final String createAdReviewEndpoint =
@@ -203,7 +205,6 @@ class ApiEndpoints {
   static const listLiveComments = '/api/method/aos.api.live.list_comments';
   static const listLiveReplies = '/api/method/aos.api.live.list_replies';
   static const deleteLiveComment = '/api/method/aos.api.live.delete_comment';
-
   static const String sendLiveReaction =
       '/api/method/aos.api.live.send_reaction';
 
@@ -212,59 +213,85 @@ class ApiEndpoints {
   // FEED
   static final String shortsFeedForYou =
       '/api/method/aos.api.shorts.feed_for_you';
-
   static final String shortsFeedFollowing =
       '/api/method/aos.api.shorts.feed_following';
-
   static final String shortsFeedByAd = '/api/method/aos.api.shorts.feed_by_ad';
 
   // MANAGEMENT
   static final String getShort = '/api/method/aos.api.shorts.get_short';
-
   static final String myShorts = '/api/method/aos.api.shorts.my_shorts';
-
+  static final String userShorts = '/api/method/aos.api.shorts.user_shorts';
+  static final String savedShorts = '/api/method/aos.api.shorts.saved_shorts';
+  static final String likedShorts = '/api/method/aos.api.shorts.liked_shorts';
+  static final String repostedShorts =
+      '/api/method/aos.api.shorts.reposted_shorts';
   static final String deleteShort = '/api/method/aos.api.shorts.delete_short';
-
   static final String retryProcessing =
       '/api/method/aos.api.shorts.retry_processing';
 
   // UPLOAD
   static final String initShortUpload =
       '/api/method/aos.api.shorts.init_upload';
-
   static final String confirmShortUpload =
       '/api/method/aos.api.shorts.confirm_upload';
-
   static final String updateShortMetadata =
       '/api/method/aos.api.shorts.update_short_metadata';
 
   // ENGAGEMENT
   static final String toggleShortLike =
       '/api/method/aos.api.shorts.toggle_like';
+  static final String toggleShortSave =
+      '/api/method/aos.api.shorts.toggle_save_short';
+  static final String toggleShortRepost =
+      '/api/method/aos.api.shorts.toggle_repost';
 
   // COMMENTS
   static final String addShortComment =
       '/api/method/aos.api.shorts.add_comment';
-
   static final String replyShortComment =
       '/api/method/aos.api.shorts.reply_comment';
-
   static final String listShortComments =
       '/api/method/aos.api.shorts.list_comments';
-
   static final String listShortReplies =
       '/api/method/aos.api.shorts.list_replies';
-
   static const String toggleShortCommentLike =
       '/api/method/aos.api.shorts.toggle_comment_like';
-
   static final String deleteShortComment =
       '/api/method/aos.api.shorts.delete_comment';
+
+  // SHARING / DOWNLOAD
+  static final String createShortShareLink =
+      '/api/method/aos.api.shorts.create_short_share_link';
+  static final String shareShortToChat =
+      '/api/method/aos.api.shorts.share_short_to_chat';
+  static final String downloadShort =
+      '/api/method/aos.api.shorts.download_short';
+
+  // ANALYTICS
+  static final String getShortAnalytics =
+      '/api/method/aos.api.shorts.get_short_analytics';
+  static final String myShortsAnalytics =
+      '/api/method/aos.api.shorts.my_shorts_analytics';
+  static final String userShortAnalytics =
+      '/api/method/aos.api.shorts.user_short_analytics';
+  static final String generalShortAnalytics =
+      '/api/method/aos.api.shorts.general_short_analytics';
+  static final String listActivity =
+      '/api/method/aos.api.activity.list_activity';
+
+  // MUSIC / SOUNDS (UI-ready placeholders; backend endpoints can be wired here later)
+  static final String listShortSounds =
+      '/api/method/aos.api.shorts.list_sounds';
+  static final String getShortSound = '/api/method/aos.api.shorts.get_sound';
+  static final String toggleShortSoundFavorite =
+      '/api/method/aos.api.shorts.toggle_sound_favorite';
+  static final String attachShortSound =
+      '/api/method/aos.api.shorts.attach_sound';
+  static final String feedBySound = '/api/method/aos.api.shorts.feed_by_sound';
 
   // TRACKING
   static final String trackShortImpression =
       '/api/method/aos.api.shorts.track_impression';
-
   static final String trackShortView = '/api/method/aos.api.shorts.track_view';
 
   // ───────────── NOTIFICATIONS ─────────────

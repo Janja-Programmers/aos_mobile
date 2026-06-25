@@ -13,6 +13,8 @@ class ShortDetailState extends Equatable {
   final Set<String> pendingLikeIds;
   final Set<String> pendingFollowUserIds;
   final Set<String> pendingSaveIds;
+  final Set<String> pendingShareIds;
+  final Set<String> pendingDownloadIds;
   final String? errorMessage;
 
   const ShortDetailState({
@@ -24,6 +26,8 @@ class ShortDetailState extends Equatable {
     required this.pendingLikeIds,
     required this.pendingFollowUserIds,
     required this.pendingSaveIds,
+    required this.pendingShareIds,
+    required this.pendingDownloadIds,
     required this.errorMessage,
   });
 
@@ -42,6 +46,8 @@ class ShortDetailState extends Equatable {
       pendingLikeIds: const {},
       pendingFollowUserIds: const {},
       pendingSaveIds: const {},
+      pendingShareIds: const {},
+      pendingDownloadIds: const {},
       errorMessage: null,
     );
   }
@@ -55,6 +61,8 @@ class ShortDetailState extends Equatable {
     Set<String>? pendingLikeIds,
     Set<String>? pendingSaveIds,
     Set<String>? pendingFollowUserIds,
+    Set<String>? pendingShareIds,
+    Set<String>? pendingDownloadIds,
     Object? errorMessage = _unset,
   }) {
     return ShortDetailState(
@@ -66,8 +74,10 @@ class ShortDetailState extends Equatable {
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       currentIndex: currentIndex ?? this.currentIndex,
       pendingLikeIds: pendingLikeIds ?? this.pendingLikeIds,
-      pendingSaveIds: pendingLikeIds ?? this.pendingSaveIds,
+      pendingSaveIds: pendingSaveIds ?? this.pendingSaveIds,
       pendingFollowUserIds: pendingFollowUserIds ?? this.pendingFollowUserIds,
+      pendingShareIds: pendingShareIds ?? this.pendingShareIds,
+      pendingDownloadIds: pendingDownloadIds ?? this.pendingDownloadIds,
       errorMessage: errorMessage == _unset
           ? this.errorMessage
           : errorMessage as String?,
@@ -84,6 +94,8 @@ class ShortDetailState extends Equatable {
     pendingLikeIds,
     pendingSaveIds,
     pendingFollowUserIds,
+    pendingShareIds,
+    pendingDownloadIds,
     errorMessage,
   ];
 }

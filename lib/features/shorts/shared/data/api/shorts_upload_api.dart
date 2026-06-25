@@ -78,6 +78,9 @@ class ShortsUploadApi {
     String? adId,
     String? caption,
     List<String>? hashtags,
+    String audience = 'everyone',
+    bool allowComments = true,
+    bool allowDownloads = false,
   }) async {
     try {
       final data = <String, dynamic>{
@@ -86,6 +89,9 @@ class ShortsUploadApi {
         if (adId != null && adId.trim().isNotEmpty) 'ad_id': adId,
         if (caption != null && caption.trim().isNotEmpty) 'caption': caption,
         if (hashtags != null && hashtags.isNotEmpty) 'hashtags': hashtags,
+        'audience': audience,
+        'allow_comments': allowComments,
+        'allow_downloads': allowDownloads,
       };
 
       final res = await _client.post(

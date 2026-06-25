@@ -12,16 +12,18 @@ class ShortsTrackingApi {
 
   ShortsTrackingApi(this._client);
 
-  // ───────────── TRACK IMPRESSION ─────────────
-  // Called when short becomes visible
-
   Future<Either<Failure, void>> trackImpression({
     required String shortId,
+    String? sessionId,
   }) async {
     try {
       final res = await _client.post(
         ApiEndpoints.trackShortImpression,
-        data: {'short_id': shortId},
+        data: {
+          'short_id': shortId,
+          if (sessionId != null && sessionId.trim().isNotEmpty)
+            'session_id': sessionId.trim(),
+        },
       );
 
       final unwrapped = unwrapFrappe(res);
@@ -37,14 +39,20 @@ class ShortsTrackingApi {
     }
   }
 
-  // ───────────── TRACK VIEW ─────────────
-  // Called when playback threshold reached
-
-  Future<Either<Failure, void>> trackView({required String shortId}) async {
+  Future<Either<Failure, void>> trackView({
+    required String shortId,
+    required int watchMs,
+    String? sessionId,
+  }) async {
     try {
       final res = await _client.post(
         ApiEndpoints.trackShortView,
-        data: {'short_id': shortId},
+        data: {
+          'short_id': shortId,
+          'watch_ms': watchMs.clamp(0, 1 << 31),
+          if (sessionId != null && sessionId.trim().isNotEmpty)
+            'session_id': sessionId.trim(),
+        },
       );
 
       final unwrapped = unwrapFrappe(res);

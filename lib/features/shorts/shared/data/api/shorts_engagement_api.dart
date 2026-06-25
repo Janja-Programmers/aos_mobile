@@ -8,14 +8,13 @@ import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_like_result.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_save_result.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_follow_result.dart';
 
 class ShortsEngagementApi {
   final ApiClient _client;
 
   ShortsEngagementApi(this._client);
-
-  // ───────────── TOGGLE LIKE ─────────────
 
   Future<Either<Failure, ToggleLikeResult>> toggleLike({
     required String shortId,
@@ -29,22 +28,16 @@ class ShortsEngagementApi {
       final unwrapped = unwrapFrappe(res);
 
       return unwrapped.fold((failure) => Either.left(failure), (json) {
-        final data = json['data'] is Map<String, dynamic>
-            ? json['data'] as Map<String, dynamic>
-            : json['message'] is Map<String, dynamic> &&
-                  json['message']['data'] is Map<String, dynamic>
-            ? json['message']['data'] as Map<String, dynamic>
-            : json;
+        final data = _payload(json);
+        final resultShortId = data['short_id']?.toString() ?? shortId;
+        final likedRaw = data['liked'] ?? data['viewer_state']?['is_liked'];
 
-        final resultShortId = data['short_id'] as String? ?? shortId;
-        final liked = data['liked'] as bool?;
-
-        if (liked == null) {
+        if (likedRaw == null) {
           return Either.left(const Failure('Invalid toggle like response'));
         }
 
         return Either.right(
-          ToggleLikeResult(shortId: resultShortId, liked: liked),
+          ToggleLikeResult(shortId: resultShortId, liked: _toBool(likedRaw)),
         );
       });
     } on DioException catch (e) {
@@ -53,8 +46,6 @@ class ShortsEngagementApi {
       return Either.left(const Failure('Unexpected error toggling like'));
     }
   }
-
-  // ───────────── TOGGLE FOLLOW ─────────────
 
   Future<Either<Failure, ToggleFollowResult>> toggleFollow({
     required String targetUser,
@@ -68,12 +59,7 @@ class ShortsEngagementApi {
       final unwrapped = unwrapFrappe(res);
 
       return unwrapped.fold((failure) => Either.left(failure), (json) {
-        final data = json['data'] is Map<String, dynamic>
-            ? json['data'] as Map<String, dynamic>
-            : json['message'] is Map<String, dynamic> &&
-                  json['message']['data'] is Map<String, dynamic>
-            ? json['message']['data'] as Map<String, dynamic>
-            : json;
+        final data = _payload(json);
 
         final resultTargetUser =
             data['target_user']?.toString() ??
@@ -113,46 +99,58 @@ class ShortsEngagementApi {
     }
   }
 
-  // ───────────── TOGGLE SAVE ─────────────
-
-  Future<Either<Failure, ToggleLikeResult>> toggleSave({
+  Future<Either<Failure, ToggleSaveResult>> toggleSave({
     required String shortId,
   }) async {
     try {
       final res = await _client.post(
-        ApiEndpoints.toggleShortLike,
+        ApiEndpoints.toggleShortSave,
         data: {'short_id': shortId},
       );
 
       final unwrapped = unwrapFrappe(res);
 
       return unwrapped.fold((failure) => Either.left(failure), (json) {
-        final data = json['data'] is Map<String, dynamic>
-            ? json['data'] as Map<String, dynamic>
-            : json['message'] is Map<String, dynamic> &&
-                  json['message']['data'] is Map<String, dynamic>
-            ? json['message']['data'] as Map<String, dynamic>
-            : json;
+        final data = _payload(json);
+        final resultShortId = data['short_id']?.toString() ?? shortId;
+        final savedRaw = data['saved'] ?? data['viewer_state']?['is_saved'];
 
-        final resultShortId = data['short_id'] as String? ?? shortId;
-        final liked = data['liked'] as bool?;
-
-        if (liked == null) {
-          return Either.left(const Failure('Invalid toggle like response'));
+        if (savedRaw == null) {
+          return Either.left(const Failure('Invalid toggle save response'));
         }
 
+        final metrics = data['metrics'];
+        final saveCount = metrics is Map<String, dynamic>
+            ? _toNullableInt(metrics['save_count'])
+            : _toNullableInt(data['save_count']);
+
         return Either.right(
-          ToggleLikeResult(shortId: resultShortId, liked: liked),
+          ToggleSaveResult(
+            shortId: resultShortId,
+            saved: _toBool(savedRaw),
+            saveCount: saveCount,
+          ),
         );
       });
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure('Unexpected error toggling like'));
+      return Either.left(const Failure('Unexpected error toggling save'));
     }
   }
 
-  // ───────────── HELPERS  ─────────────
+  static Map<String, dynamic> _payload(Map<String, dynamic> json) {
+    if (json['data'] is Map<String, dynamic>) {
+      return json['data'] as Map<String, dynamic>;
+    }
+
+    if (json['message'] is Map<String, dynamic> &&
+        json['message']['data'] is Map<String, dynamic>) {
+      return json['message']['data'] as Map<String, dynamic>;
+    }
+
+    return json;
+  }
 
   static bool _toBool(dynamic value) {
     if (value is bool) return value;
@@ -161,6 +159,13 @@ class ShortsEngagementApi {
     final raw = value?.toString().trim().toLowerCase();
 
     return raw == 'true' || raw == '1' || raw == 'yes';
+  }
+
+  static int? _toNullableInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString());
   }
 
   static String _relationshipStatusFor({

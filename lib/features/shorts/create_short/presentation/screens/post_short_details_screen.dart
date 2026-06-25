@@ -8,6 +8,9 @@ import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
+import 'package:africaonlinestores/features/shorts/music/presentation/music_picker_sheet.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
@@ -55,6 +58,13 @@ class _PostShortDetailsScreenState
       previous,
       next,
     ) {
+      if (next.status == UploadStatus.uploading ||
+          next.status == UploadStatus.confirming ||
+          next.status == UploadStatus.processing) {
+        ref.read(activeShortUploadSessionProvider.notifier).state =
+            widget.sessionId;
+      }
+
       if (next.status == UploadStatus.processing &&
           previous?.status != UploadStatus.processing) {
         if (mounted) {
@@ -65,6 +75,8 @@ class _PostShortDetailsScreenState
       if (next.status == UploadStatus.ready &&
           previous?.status != UploadStatus.ready) {
         ref.read(shortsControllerProvider.notifier).loadInitial();
+        ref.read(activeShortUploadSessionProvider.notifier).state =
+            widget.sessionId;
       }
 
       if (next.status == UploadStatus.failed &&
@@ -153,6 +165,12 @@ class _PostShortDetailsScreenState
                         const SizedBox(height: 14),
 
                         _hashtags(colors),
+                        const SizedBox(height: 14),
+
+                        _musicSection(state, colors),
+                        const SizedBox(height: 14),
+
+                        _privacySection(state, colors),
                         const SizedBox(height: 14),
 
                         if (requiresAd) ...[
@@ -473,7 +491,8 @@ class _PostShortDetailsScreenState
   }
 
   Widget _selectedAdCard(UploadState state, AppColorTokens colors) {
-    final selectedAdThumbnail = state.short?.ad?.thumbnail;
+    final selectedAd = state.selectedAdPreview;
+    final selectedAdThumbnail = selectedAd?.primaryImage;
     final selectedAdId = state.selectedAdId;
 
     if (selectedAdId == null || selectedAdId.trim().isEmpty) {
@@ -532,7 +551,7 @@ class _PostShortDetailsScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Product tagged ✓",
+                    selectedAd?.title ?? "Product tagged ✓",
                     style: context.pStrong,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -565,6 +584,114 @@ class _PostShortDetailsScreenState
     );
   }
 
+  Widget _musicSection(UploadState state, AppColorTokens colors) {
+    final sound = state.selectedSound;
+
+    return GestureDetector(
+      onTap: _openMusicPicker,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.music_note_rounded, color: colors.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(sound.title, style: context.pStrong),
+                  const SizedBox(height: 2),
+                  Text(
+                    sound.id == ShortSound.original.id
+                        ? 'Original video audio'
+                        : 'UI-only until sound backend is wired',
+                    style: context.small.copyWith(color: colors.textMuted),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _privacySection(UploadState state, AppColorTokens colors) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Privacy & interactions', style: context.pStrong),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _audienceChip('Everyone', 'everyone', state, colors),
+              _audienceChip('Followers', 'followers', state, colors),
+              _audienceChip('Friends', 'friends', state, colors),
+              _audienceChip('Only me', 'only_me', state, colors),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SwitchListTile.adaptive(
+            value: state.allowComments,
+            onChanged: controller.setAllowComments,
+            contentPadding: EdgeInsets.zero,
+            title: Text('Allow comments', style: context.p),
+          ),
+          SwitchListTile.adaptive(
+            value: state.allowDownloads,
+            onChanged: controller.setAllowDownloads,
+            contentPadding: EdgeInsets.zero,
+            title: Text('Allow downloads', style: context.p),
+            subtitle: Text(
+              'Disabled by default. Owner downloads still work.',
+              style: context.small.copyWith(color: colors.textMuted),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _audienceChip(
+    String label,
+    String value,
+    UploadState state,
+    AppColorTokens colors,
+  ) {
+    final selected = state.audience == value;
+
+    return ChoiceChip(
+      selected: selected,
+      label: Text(label),
+      onSelected: (_) => controller.setAudience(value),
+      selectedColor: colors.primary.withOpacity(.16),
+      side: BorderSide(color: selected ? colors.primary : colors.border),
+    );
+  }
+
+  Future<void> _openMusicPicker() async {
+    final sound = await showMusicPickerSheet(context);
+    if (sound == null) return;
+    controller.setSound(sound);
+  }
+
   void _openAdPicker() {
     showModalBottomSheet(
       context: context,
@@ -576,8 +703,8 @@ class _PostShortDetailsScreenState
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           clipBehavior: Clip.antiAlias,
           child: AdPickerBottomSheet(
-            onSelected: (id) {
-              controller.setAd(id);
+            onSelected: (AOSAdListItem ad) {
+              controller.setAd(ad.id, preview: ad);
             },
           ),
         );

@@ -28,22 +28,55 @@ class RepliesController extends StateNotifier<RepliesState> {
   Future<void> fetchReplies(String rootCommentId) async {
     if (state.isLoading) return;
 
-    state = state.copyWith(isLoading: true);
+    state = state.copyWith(
+      isLoading: true,
+      clearNextCursor: true,
+      hasMore: false,
+    );
 
     final res = await api.listReplies(rootCommentId: this.rootCommentId);
 
     res.fold(
       (e) {
         appLogger.e('❌ FETCH REPLIES FAILED', error: e);
-
-        state = state.copyWith(isLoading: false);
+        state = state.copyWith(isLoading: false, hasMore: false);
       },
-      (items) {
-        appLogger.i('✅ REPLIES LOADED | count=${items.length}');
+      (page) {
+        appLogger.i('✅ REPLIES LOADED | count=${page.items.length}');
 
         state = state.copyWith(
-          replies: List.unmodifiable(items),
+          replies: List.unmodifiable(page.items),
           isLoading: false,
+          nextCursor: page.nextCursor,
+          hasMore: page.hasMore,
+        );
+      },
+    );
+  }
+
+  Future<void> loadMoreReplies() async {
+    if (state.isLoading || state.isLoadingMore || !state.hasMore) return;
+
+    final cursor = state.nextCursor?.trim();
+    if (cursor == null || cursor.isEmpty) return;
+
+    state = state.copyWith(isLoadingMore: true);
+
+    final res = await api.listReplies(
+      rootCommentId: rootCommentId,
+      cursor: cursor,
+    );
+
+    res.fold(
+      (e) {
+        state = state.copyWith(isLoadingMore: false);
+      },
+      (page) {
+        state = state.copyWith(
+          replies: List.unmodifiable([...state.replies, ...page.items]),
+          isLoadingMore: false,
+          nextCursor: page.nextCursor,
+          hasMore: page.hasMore,
         );
       },
     );

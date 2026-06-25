@@ -216,7 +216,10 @@ class ShortsController extends StateNotifier<ShortsState> {
     _pendingImpressions.clear();
 
     for (final id in _pendingViews) {
-      await trackingApi.trackView(shortId: id);
+      await trackingApi.trackView(
+        shortId: id,
+        watchMs: _viewThreshold.inMilliseconds,
+      );
       _viewsSent.add(id);
     }
     _pendingViews.clear();

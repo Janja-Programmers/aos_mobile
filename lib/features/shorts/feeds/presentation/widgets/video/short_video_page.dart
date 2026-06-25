@@ -18,6 +18,8 @@ class ShortVideoPage extends StatefulWidget {
   final bool isFollowPending;
   final bool isSaved;
   final bool isSavePending;
+  final bool isSharePending;
+  final bool isDownloadPending;
 
   final Future<void> Function(String shortId) onToggleLike;
   final void Function(String shortId) onCommentAdded;
@@ -25,6 +27,20 @@ class ShortVideoPage extends StatefulWidget {
   final VoidCallback onCreatorTap;
   final Future<void> Function(String shortId) onShare;
   final Future<void> Function(String shortId) onSave;
+  final Future<void> Function(String shortId) onDownload;
+  final Future<String?> Function({
+    required String shortId,
+    required String reason,
+    required String details,
+  })
+  onReport;
+  final void Function(String shortId) onImpression;
+  final void Function({
+    required String shortId,
+    required int watchMs,
+    bool force,
+  })
+  onWatchProgress;
 
   const ShortVideoPage({
     super.key,
@@ -36,11 +52,17 @@ class ShortVideoPage extends StatefulWidget {
     required this.onCreatorTap,
     required this.onShare,
     required this.onSave,
+    required this.onDownload,
+    required this.onReport,
+    required this.onImpression,
+    required this.onWatchProgress,
     this.onToggleFollow,
     this.isLikedPending = false,
     this.isFollowPending = false,
     this.isSaved = false,
     this.isSavePending = false,
+    this.isSharePending = false,
+    this.isDownloadPending = false,
   });
 
   @override
@@ -57,6 +79,9 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
 
   bool _usePortraitFrame = true;
   bool _showDoubleTapHeart = false;
+  int _maxWatchMs = 0;
+  int _lastForceTrackedMs = 0;
+  bool _impressionSent = false;
 
   @override
   void initState() {
@@ -81,7 +106,13 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
     }
 
     if (oldWidget.isActive != widget.isActive) {
-      widget.isActive ? _play() : _pause();
+      if (widget.isActive) {
+        _sendImpressionIfNeeded();
+        _play();
+      } else {
+        _flushWatchProgress();
+        _pause();
+      }
     }
   }
 
@@ -105,6 +136,7 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
       );
 
       _controller = controller;
+      controller.addListener(_onVideoTick);
 
       await Future.wait([
         controller.initialize(),
@@ -195,6 +227,8 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
     setState(() {
       _isPlaying = true;
     });
+
+    _sendImpressionIfNeeded();
   }
 
   Future<void> _pause() async {
@@ -218,7 +252,10 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
     _isInitializing = false;
     _usePortraitFrame = true;
 
+    _flushWatchProgress();
+
     if (controller != null) {
+      controller.removeListener(_onVideoTick);
       unawaited(
         controller.pause().catchError((Object error, StackTrace stackTrace) {
           debugPrint('Video pause during dispose failed: $error');
@@ -236,6 +273,51 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
     if (!updateState || !mounted) return;
 
     setState(() {});
+  }
+
+  void _sendImpressionIfNeeded() {
+    if (_impressionSent || !widget.isActive) return;
+    _impressionSent = true;
+    widget.onImpression(widget.short.id.value);
+  }
+
+  void _onVideoTick() {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    if (!widget.isActive || !controller.value.isPlaying) return;
+
+    final positionMs = controller.value.position.inMilliseconds;
+    if (positionMs > _maxWatchMs) {
+      _maxWatchMs = positionMs;
+    }
+
+    final durationMs = controller.value.duration.inMilliseconds;
+    final thresholdMs = _viewThresholdMs(durationMs);
+
+    if (_maxWatchMs >= thresholdMs &&
+        _maxWatchMs - _lastForceTrackedMs >= 1000) {
+      _lastForceTrackedMs = _maxWatchMs;
+      widget.onWatchProgress(
+        shortId: widget.short.id.value,
+        watchMs: _maxWatchMs,
+        force: false,
+      );
+    }
+  }
+
+  int _viewThresholdMs(int durationMs) {
+    if (durationMs <= 0) return 2000;
+    final percentThreshold = (durationMs * .30).round();
+    return percentThreshold < 2000 ? percentThreshold : 2000;
+  }
+
+  void _flushWatchProgress() {
+    if (_maxWatchMs <= 0) return;
+    widget.onWatchProgress(
+      shortId: widget.short.id.value,
+      watchMs: _maxWatchMs,
+      force: true,
+    );
   }
 
   Future<void> _togglePlayPause() async {
@@ -344,12 +426,18 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
               onToggleFollow: widget.onToggleFollow,
 
               // Share
+              isSharePending: widget.isSharePending,
               onShare: () => widget.onShare(widget.short.id.value),
 
               // Save
               isSaved: widget.isSaved,
               isSavePending: widget.isSavePending,
               onSave: () => widget.onSave(widget.short.id.value),
+
+              // More
+              isDownloadPending: widget.isDownloadPending,
+              onDownload: () => widget.onDownload(widget.short.id.value),
+              onReport: widget.onReport,
             ),
           ),
 

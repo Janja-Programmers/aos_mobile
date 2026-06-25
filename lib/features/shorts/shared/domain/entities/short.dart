@@ -19,6 +19,13 @@ class Short extends Equatable {
 
   final String contentMode;
   final ShortStatus status;
+  final String visibilityStatus;
+  final String audience;
+  final bool allowComments;
+  final bool allowDownloads;
+  final bool isReady;
+  final bool isProcessingFlag;
+  final bool isFailedFlag;
 
   final ShortCreator creator;
   final ShortMetrics metrics;
@@ -36,6 +43,13 @@ class Short extends Equatable {
     required this.caption,
     required this.hashtags,
     required this.status,
+    this.visibilityStatus = 'visible',
+    this.audience = 'everyone',
+    this.allowComments = true,
+    this.allowDownloads = false,
+    this.isReady = false,
+    this.isProcessingFlag = false,
+    this.isFailedFlag = false,
     required this.creator,
     required this.metrics,
     required this.viewerState,
@@ -43,10 +57,14 @@ class Short extends Equatable {
     this.postedAt,
   });
 
-  bool get isPlayable => status.isPlayable;
-  bool get isProcessing => status.isProcessing;
-  bool get canRetry => status.canRetry;
-  bool get isVisible => status.isVisible;
+  bool get isPlayable => isReady || status.isPlayable;
+  bool get isProcessing => isProcessingFlag || status.isProcessing;
+  bool get canRetry => isFailedFlag || status.canRetry;
+  bool get isVisible => visibilityStatus == 'visible' && status.isVisible;
+  bool get isHidden => visibilityStatus == 'hidden';
+  bool get isDeleted =>
+      visibilityStatus == 'deleted' || status == ShortStatus.deleted;
+  bool get isPrivateAudience => audience != 'everyone';
 
   bool get isLiked => viewerState.liked;
   bool get isWatched => viewerState.watched;
@@ -71,6 +89,13 @@ class Short extends Equatable {
     Caption? caption,
     List<String>? hashtags,
     ShortStatus? status,
+    String? visibilityStatus,
+    String? audience,
+    bool? allowComments,
+    bool? allowDownloads,
+    bool? isReady,
+    bool? isProcessingFlag,
+    bool? isFailedFlag,
     ShortCreator? creator,
     ShortMetrics? metrics,
     ShortAd? ad,
@@ -86,6 +111,13 @@ class Short extends Equatable {
       caption: caption ?? this.caption,
       hashtags: hashtags ?? this.hashtags,
       status: status ?? this.status,
+      visibilityStatus: visibilityStatus ?? this.visibilityStatus,
+      audience: audience ?? this.audience,
+      allowComments: allowComments ?? this.allowComments,
+      allowDownloads: allowDownloads ?? this.allowDownloads,
+      isReady: isReady ?? this.isReady,
+      isProcessingFlag: isProcessingFlag ?? this.isProcessingFlag,
+      isFailedFlag: isFailedFlag ?? this.isFailedFlag,
       creator: creator ?? this.creator,
       metrics: metrics ?? this.metrics,
       ad: ad ?? this.ad,
@@ -104,6 +136,13 @@ class Short extends Equatable {
     caption,
     hashtags,
     status,
+    visibilityStatus,
+    audience,
+    allowComments,
+    allowDownloads,
+    isReady,
+    isProcessingFlag,
+    isFailedFlag,
     creator,
     metrics,
     ad,

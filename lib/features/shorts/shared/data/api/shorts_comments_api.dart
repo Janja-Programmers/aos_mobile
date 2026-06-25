@@ -9,6 +9,7 @@ import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_comment_model.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/models/short_comments_page.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/comment_mapper.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_comment.dart';
 
@@ -19,12 +20,15 @@ class ShortsCommentsApi {
 
   // ───────────── LIST COMMENTS (TOP LEVEL) ─────────────
 
-  Future<Either<Failure, List<ShortComment>>> listComments({
+  Future<Either<Failure, ShortCommentsPage>> listComments({
     required String shortId,
     String? cursor,
   }) async {
     try {
-      final query = {'short_id': shortId, 'cursor': ?cursor};
+      final query = <String, dynamic>{
+        'short_id': shortId,
+        if (cursor != null && cursor.trim().isNotEmpty) 'cursor': cursor.trim(),
+      };
 
       final res = await _client.get(
         ApiEndpoints.listShortComments,
@@ -50,7 +54,13 @@ class ShortsCommentsApi {
             }
           }).toList();
 
-          return Either.right(items);
+          return Either.right(
+            ShortCommentsPage(
+              items: items,
+              nextCursor: data['next_cursor']?.toString(),
+              hasMore: _toBool(data['has_more']),
+            ),
+          );
         },
       );
     } on DioException catch (e) {
@@ -62,12 +72,15 @@ class ShortsCommentsApi {
 
   // ───────────── LIST REPLIES ─────────────
 
-  Future<Either<Failure, List<ShortComment>>> listReplies({
+  Future<Either<Failure, ShortCommentsPage>> listReplies({
     required String rootCommentId,
     String? cursor,
   }) async {
     try {
-      final query = {'root_comment_id': rootCommentId, 'cursor': ?cursor};
+      final query = <String, dynamic>{
+        'root_comment_id': rootCommentId,
+        if (cursor != null && cursor.trim().isNotEmpty) 'cursor': cursor.trim(),
+      };
 
       final res = await _client.get(
         ApiEndpoints.listShortReplies,
@@ -83,7 +96,13 @@ class ShortsCommentsApi {
             .map((e) => CommentMapper.toDomain(ShortCommentModel.fromJson(e)))
             .toList();
 
-        return Either.right(items);
+        return Either.right(
+          ShortCommentsPage(
+            items: items,
+            nextCursor: data['next_cursor']?.toString(),
+            hasMore: _toBool(data['has_more']),
+          ),
+        );
       });
     } on DioException catch (e) {
       return Either.left(mapDioException(e));

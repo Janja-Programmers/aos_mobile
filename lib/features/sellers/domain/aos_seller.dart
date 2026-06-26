@@ -24,6 +24,13 @@ class AOSSellerProfile {
     required this.isFriend,
     required this.relationshipStatus,
     required this.actionLabel,
+    this.responseTimeSeconds,
+    this.responseTimeDisplay,
+    this.responseRate = 0,
+    this.responseRateDisplay,
+    this.responseSampleSize = 0,
+    this.responseRequests = 0,
+    this.responseMetricsUpdatedAt,
     required this.operatingHours,
   });
 
@@ -51,6 +58,13 @@ class AOSSellerProfile {
   final bool isFriend;
   final String relationshipStatus;
   final String actionLabel;
+  final int? responseTimeSeconds;
+  final String? responseTimeDisplay;
+  final double responseRate;
+  final String? responseRateDisplay;
+  final int responseSampleSize;
+  final int responseRequests;
+  final String? responseMetricsUpdatedAt;
   final List<dynamic> operatingHours;
 
   factory AOSSellerProfile.fromJson(Map<String, dynamic> json) {
@@ -100,6 +114,17 @@ class AOSSellerProfile {
       isFriend: parseBool(json['is_friend']),
       relationshipStatus: parseString(json['relationship_status']),
       actionLabel: parseString(json['action_label']),
+      responseTimeSeconds: json['response_time_seconds'] == null
+          ? null
+          : parseInt(json['response_time_seconds']),
+      responseTimeDisplay: parseNullableString(json['response_time_display']),
+      responseRate: parseDouble(json['response_rate']),
+      responseRateDisplay: parseNullableString(json['response_rate_display']),
+      responseSampleSize: parseInt(json['response_sample_size']),
+      responseRequests: parseInt(json['response_requests']),
+      responseMetricsUpdatedAt: parseNullableString(
+        json['response_metrics_updated_at'],
+      ),
       operatingHours: json['operating_hours'] is List
           ? List<dynamic>.from(json['operating_hours'] as List)
           : const [],
@@ -131,6 +156,13 @@ class AOSSellerProfile {
     bool? isFriend,
     String? relationshipStatus,
     String? actionLabel,
+    int? responseTimeSeconds,
+    String? responseTimeDisplay,
+    double? responseRate,
+    String? responseRateDisplay,
+    int? responseSampleSize,
+    int? responseRequests,
+    String? responseMetricsUpdatedAt,
     List<dynamic>? operatingHours,
   }) {
     return AOSSellerProfile(
@@ -158,6 +190,14 @@ class AOSSellerProfile {
       isFriend: isFriend ?? this.isFriend,
       relationshipStatus: relationshipStatus ?? this.relationshipStatus,
       actionLabel: actionLabel ?? this.actionLabel,
+      responseTimeSeconds: responseTimeSeconds ?? this.responseTimeSeconds,
+      responseTimeDisplay: responseTimeDisplay ?? this.responseTimeDisplay,
+      responseRate: responseRate ?? this.responseRate,
+      responseRateDisplay: responseRateDisplay ?? this.responseRateDisplay,
+      responseSampleSize: responseSampleSize ?? this.responseSampleSize,
+      responseRequests: responseRequests ?? this.responseRequests,
+      responseMetricsUpdatedAt:
+          responseMetricsUpdatedAt ?? this.responseMetricsUpdatedAt,
       operatingHours: operatingHours ?? this.operatingHours,
     );
   }

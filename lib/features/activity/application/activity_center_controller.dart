@@ -105,12 +105,21 @@ class ActivityCenterController extends StateNotifier<ActivityCenterState> {
     );
     res.fold(
       (f) => state = state.copyWith(loadingMore: false, error: f.message),
-      (page) => state = state.copyWith(
-        loadingMore: false,
-        items: [...state.items, ...page.items],
-        start: state.start + page.items.length,
-        hasMore: page.hasMore,
-      ),
+      (page) {
+        final byId = <String, ActivityItem>{
+          for (final item in state.items) item.id: item,
+        };
+        for (final item in page.items) {
+          byId[item.id] = item;
+        }
+
+        state = state.copyWith(
+          loadingMore: false,
+          items: List.unmodifiable(byId.values),
+          start: state.start + page.items.length,
+          hasMore: page.hasMore,
+        );
+      },
     );
   }
 

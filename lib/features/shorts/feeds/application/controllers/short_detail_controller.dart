@@ -525,7 +525,11 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     if (watchMs < 500) return;
 
     final previous = _lastTrackedWatchMs[shortId] ?? 0;
-    final shouldSend = force || watchMs >= 2000 && watchMs - previous >= 1000;
+    final delta = watchMs - previous;
+
+    if (delta <= 0) return;
+
+    final shouldSend = force ? delta >= 500 : watchMs >= 2000 && delta >= 5000;
 
     if (!shouldSend) return;
 

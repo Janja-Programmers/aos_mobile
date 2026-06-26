@@ -280,15 +280,25 @@ class ApiEndpoints {
   static final String listActivity =
       '/api/method/aos.api.activity.list_activity';
 
-  // MUSIC / SOUNDS (UI-ready placeholders; backend endpoints can be wired here later)
+  // MUSIC / SOUNDS
+  static final String initShortSoundUpload =
+      '/api/method/aos.api.shorts.init_sound_upload';
+  static final String confirmShortSoundUpload =
+      '/api/method/aos.api.shorts.confirm_sound_upload';
   static final String listShortSounds =
       '/api/method/aos.api.shorts.list_sounds';
+  static final String searchShortSounds =
+      '/api/method/aos.api.shorts.search_sounds';
   static final String getShortSound = '/api/method/aos.api.shorts.get_sound';
-  static final String toggleShortSoundFavorite =
-      '/api/method/aos.api.shorts.toggle_sound_favorite';
-  static final String attachShortSound =
-      '/api/method/aos.api.shorts.attach_sound';
-  static final String feedBySound = '/api/method/aos.api.shorts.feed_by_sound';
+  static final String favoriteShortSound =
+      '/api/method/aos.api.shorts.favorite_sound';
+  static final String myFavoriteShortSounds =
+      '/api/method/aos.api.shorts.my_favorite_sounds';
+  static final String soundShorts = '/api/method/aos.api.shorts.sound_shorts';
+  static final String changeShortSound =
+      '/api/method/aos.api.shorts.change_short_sound';
+  static final String removeShortSound =
+      '/api/method/aos.api.shorts.remove_short_sound';
 
   // TRACKING
   static final String trackShortImpression =

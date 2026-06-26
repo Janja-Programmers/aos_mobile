@@ -31,6 +31,9 @@ class SocialConnectionsState {
   final String query;
 
   final bool isLoading;
+  final bool isLoadingMore;
+  final bool hasMore;
+  final int nextStart;
   final String? errorMessage;
 
   final List<SocialFriend> items;
@@ -43,6 +46,9 @@ class SocialConnectionsState {
     this.selectedTab = SocialConnectionsTab.followers,
     this.query = '',
     this.isLoading = false,
+    this.isLoadingMore = false,
+    this.hasMore = true,
+    this.nextStart = 0,
     this.errorMessage,
     this.items = const [],
     this.followingCount = 0,
@@ -81,6 +87,9 @@ class SocialConnectionsState {
     SocialConnectionsTab? selectedTab,
     String? query,
     bool? isLoading,
+    bool? isLoadingMore,
+    bool? hasMore,
+    int? nextStart,
     String? errorMessage,
     bool clearError = false,
     List<SocialFriend>? items,
@@ -92,6 +101,9 @@ class SocialConnectionsState {
       selectedTab: selectedTab ?? this.selectedTab,
       query: query ?? this.query,
       isLoading: isLoading ?? this.isLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasMore: hasMore ?? this.hasMore,
+      nextStart: nextStart ?? this.nextStart,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
       items: items ?? this.items,
       followingCount: followingCount ?? this.followingCount,

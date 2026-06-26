@@ -9,15 +9,18 @@ import 'package:africaonlinestores/features/social/domain/social_friend.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/features/social/presentation/widgets/social_connection_tile.dart';
 import 'package:africaonlinestores/features/social/presentation/widgets/social_connections_state_view.dart';
+import 'package:africaonlinestores/features/social/safety/presentation/widgets/user_safety_sheet.dart';
 
 class SocialConnectionsList extends ConsumerWidget {
   final SocialConnectionsState state;
   final Future<void> Function() onRefresh;
+  final Future<void> Function() onLoadMore;
 
   const SocialConnectionsList({
     super.key,
     required this.state,
     required this.onRefresh,
+    required this.onLoadMore,
   });
 
   @override
@@ -44,38 +47,64 @@ class SocialConnectionsList extends ConsumerWidget {
 
     return RefreshIndicator(
       onRefresh: onRefresh,
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 18),
-        itemCount: items.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 2),
-        itemBuilder: (context, index) {
-          final friend = items[index];
-
-          return SocialConnectionTile(
-            friend: friend,
-            onTap: () {
-              SocialNavigation.toProfileScreen(
-                context,
-                user: friend.user,
-                displayName: friend.displayName,
-                avatar: friend.userImage,
-              );
-            },
-            onActionTap: () async {
-              try {
-                await ref
-                    .read(socialRelationshipControllerProvider.notifier)
-                    .toggleFollow(targetUser: friend.user);
-              } finally {
-                await onRefresh();
-              }
-            },
-            onMoreTap: () {
-              _showMoreActions(context, friend);
-            },
-          );
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification.metrics.extentAfter < 360 &&
+              state.hasMore &&
+              !state.isLoadingMore) {
+            onLoadMore();
+          }
+          return false;
         },
+        child: ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          cacheExtent: 700,
+          padding: const EdgeInsets.only(bottom: 18),
+          itemCount: items.length + (state.isLoadingMore ? 1 : 0),
+          separatorBuilder: (_, _) => const SizedBox(height: 2),
+          itemBuilder: (context, index) {
+            if (index >= items.length) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 18),
+                child: Center(
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              );
+            }
+
+            final friend = items[index];
+
+            return RepaintBoundary(
+              child: SocialConnectionTile(
+                friend: friend,
+                onTap: () {
+                  SocialNavigation.toProfileScreen(
+                    context,
+                    user: friend.user,
+                    displayName: friend.displayName,
+                    avatar: friend.userImage,
+                  );
+                },
+                onActionTap: () async {
+                  try {
+                    await ref
+                        .read(socialRelationshipControllerProvider.notifier)
+                        .toggleFollow(targetUser: friend.user);
+                  } finally {
+                    await onRefresh();
+                  }
+                },
+                onMoreTap: () {
+                  _showMoreActions(context, friend, onRefresh);
+                },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -111,6 +140,7 @@ class SocialConnectionsList extends ConsumerWidget {
   Future<void> _showMoreActions(
     BuildContext context,
     SocialFriend friend,
+    Future<void> Function() onRefresh,
   ) async {
     final colors = context.appColors;
 
@@ -162,17 +192,38 @@ class SocialConnectionsList extends ConsumerWidget {
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.flag_outlined, color: colors.red),
+                  leading: Icon(Icons.shield_outlined, color: colors.red),
                   title: Text(
-                    'Report',
+                    'Report or block',
                     style: context.p.copyWith(
                       color: colors.red,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  onTap: () {
+                  subtitle: Text(
+                    'Use safety actions for this user',
+                    style: AppTextStylesX(
+                      context,
+                    ).caption.copyWith(color: colors.textMuted),
+                  ),
+                  onTap: () async {
                     Navigator.pop(context);
-                    // TODO: report flow.
+                    await showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      backgroundColor: colors.elevated,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(24),
+                        ),
+                      ),
+                      builder: (_) => UserSafetySheet(
+                        targetUser: friend.user,
+                        displayName: friend.displayName,
+                      ),
+                    );
+                    await onRefresh();
                   },
                 ),
               ],

@@ -9,7 +9,6 @@ import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/music/presentation/music_picker_sheet.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
@@ -588,7 +587,7 @@ class _PostShortDetailsScreenState
     final sound = state.selectedSound;
 
     return GestureDetector(
-      onTap: _openMusicPicker,
+      onTap: () => _openMusicPicker(commercialSafeOnly: state.requiresAd),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(14),
@@ -608,10 +607,17 @@ class _PostShortDetailsScreenState
                   Text(sound.title, style: context.pStrong),
                   const SizedBox(height: 2),
                   Text(
-                    sound.id == ShortSound.original.id
+                    sound.isOriginal
                         ? 'Original video audio'
-                        : 'UI-only until sound backend is wired',
+                        : [
+                            if (sound.artist.trim().isNotEmpty) sound.artist,
+                            if (sound.durationLabel.isNotEmpty)
+                              sound.durationLabel,
+                            if (sound.isCommercialSafe) 'Commercial safe',
+                          ].join(' • '),
                     style: context.small.copyWith(color: colors.textMuted),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -686,8 +692,11 @@ class _PostShortDetailsScreenState
     );
   }
 
-  Future<void> _openMusicPicker() async {
-    final sound = await showMusicPickerSheet(context);
+  Future<void> _openMusicPicker({bool commercialSafeOnly = false}) async {
+    final sound = await showMusicPickerSheet(
+      context,
+      commercialSafeOnly: commercialSafeOnly,
+    );
     if (sound == null) return;
     controller.setSound(sound);
   }

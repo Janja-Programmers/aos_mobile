@@ -23,12 +23,9 @@ class _LiveChatOverlayState extends State<LiveChatOverlay> {
     if (widget.messages.length != oldWidget.messages.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!_scrollController.hasClients) return;
+        if (_scrollController.position.pixels > 80) return;
 
-        _scrollController.animateTo(
-          0,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOut,
-        );
+        _scrollController.jumpTo(0);
       });
     }
   }
@@ -50,33 +47,36 @@ class _LiveChatOverlayState extends State<LiveChatOverlay> {
         child: ListView.builder(
           controller: _scrollController,
           reverse: true,
+          cacheExtent: 120,
           padding: EdgeInsets.zero,
           itemCount: visibleMessages.length,
           itemBuilder: (_, i) {
             final msg = visibleMessages[visibleMessages.length - 1 - i];
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: '${msg.username}: ',
-                      style: context.p.copyWith(
-                        color: colors.amber,
-                        fontWeight: FontWeight.w600,
+            return RepaintBoundary(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '${msg.username}: ',
+                        style: context.p.copyWith(
+                          color: colors.amber,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    TextSpan(
-                      text: msg.message,
-                      style: context.p.copyWith(
-                        color: colors.white,
-                        shadows: const [
-                          Shadow(blurRadius: 4, color: Colors.black54),
-                        ],
+                      TextSpan(
+                        text: msg.message,
+                        style: context.p.copyWith(
+                          color: colors.white,
+                          shadows: const [
+                            Shadow(blurRadius: 4, color: Colors.black54),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );

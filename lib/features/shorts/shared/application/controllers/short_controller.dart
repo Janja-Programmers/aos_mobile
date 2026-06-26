@@ -82,8 +82,15 @@ class ShortsController extends StateNotifier<ShortsState> {
     try {
       final page = await repository.fetchForYou(cursor: state.cursor);
 
+      final byId = <String, Short>{
+        for (final item in state.shorts) item.id.value: item,
+      };
+      for (final item in page.items) {
+        byId[item.id.value] = item;
+      }
+
       state = state.copyWith(
-        shorts: [...state.shorts, ...page.items],
+        shorts: List.unmodifiable(byId.values),
         cursor: page.nextCursor,
         hasMore: page.hasMore,
       );
@@ -209,20 +216,30 @@ class ShortsController extends StateNotifier<ShortsState> {
   }
 
   Future<void> _flushTracking() async {
-    for (final id in _pendingImpressions) {
-      await trackingApi.trackImpression(shortId: id);
-      _impressionsSent.add(id);
-    }
-    _pendingImpressions.clear();
+    final impressions = _pendingImpressions.difference(_impressionsSent);
+    final views = _pendingViews.difference(_viewsSent);
 
-    for (final id in _pendingViews) {
-      await trackingApi.trackView(
-        shortId: id,
-        watchMs: _viewThreshold.inMilliseconds,
-      );
-      _viewsSent.add(id);
-    }
+    _pendingImpressions.clear();
     _pendingViews.clear();
+
+    if (impressions.isNotEmpty) {
+      await Future.wait(
+        impressions.map((id) => trackingApi.trackImpression(shortId: id)),
+      );
+      _impressionsSent.addAll(impressions);
+    }
+
+    if (views.isNotEmpty) {
+      await Future.wait(
+        views.map(
+          (id) => trackingApi.trackView(
+            shortId: id,
+            watchMs: _viewThreshold.inMilliseconds,
+          ),
+        ),
+      );
+      _viewsSent.addAll(views);
+    }
   }
 
   // ───────────── METRICS / ENGAGEMENT ─────────────

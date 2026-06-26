@@ -1,11 +1,17 @@
 import 'package:flutter_riverpod/legacy.dart';
 
+import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/social/application/state/social_connections_state.dart';
 import 'package:africaonlinestores/features/social/data/social_repository_impl.dart';
+import 'package:africaonlinestores/features/social/domain/social_friend.dart';
+import 'package:africaonlinestores/features/social/domain/social_friends_page.dart';
 
 class SocialConnectionsController
     extends StateNotifier<SocialConnectionsState> {
+  static const int _pageSize = 20;
+
   final SocialRepository _repository;
   final String? _targetUser;
 
@@ -32,6 +38,9 @@ class SocialConnectionsController
       selectedTab: tab,
       query: '',
       isLoading: true,
+      isLoadingMore: false,
+      hasMore: true,
+      nextStart: 0,
       clearError: true,
       items: const [],
     );
@@ -49,19 +58,15 @@ class SocialConnectionsController
   }
 
   Future<void> loadTab(SocialConnectionsTab tab, {bool refresh = false}) async {
-    state = state.copyWith(isLoading: !refresh, clearError: true);
+    state = state.copyWith(
+      isLoading: !refresh,
+      isLoadingMore: false,
+      hasMore: true,
+      nextStart: 0,
+      clearError: true,
+    );
 
-    final result = switch (tab) {
-      SocialConnectionsTab.following => await _repository.getFollowing(
-        targetUser: _targetUser,
-      ),
-      SocialConnectionsTab.followers => await _repository.getFollowers(
-        targetUser: _targetUser,
-      ),
-      SocialConnectionsTab.friends => await _repository.getFriends(
-        targetUser: _targetUser,
-      ),
-    };
+    final result = await _fetchTab(tab: tab, start: 0);
 
     if (result.isLeft) {
       final failure = result.leftOrNull!;
@@ -70,7 +75,11 @@ class SocialConnectionsController
         'SocialConnectionsController -> loadTab failed: ${failure.message}',
       );
 
-      state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      state = state.copyWith(
+        isLoading: false,
+        isLoadingMore: false,
+        errorMessage: failure.message,
+      );
       return;
     }
 
@@ -78,12 +87,80 @@ class SocialConnectionsController
 
     state = state.copyWith(
       isLoading: false,
+      isLoadingMore: false,
       items: page.items,
+      hasMore: page.hasMore,
+      nextStart: page.start + page.items.length,
       clearError: true,
       followingCount: tab == SocialConnectionsTab.following ? page.total : null,
       followersCount: tab == SocialConnectionsTab.followers ? page.total : null,
       friendsCount: tab == SocialConnectionsTab.friends ? page.total : null,
     );
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoading || state.isLoadingMore || !state.hasMore) return;
+
+    final tab = state.selectedTab;
+    final start = state.nextStart;
+
+    state = state.copyWith(isLoadingMore: true, clearError: true);
+
+    final result = await _fetchTab(tab: tab, start: start);
+
+    if (result.isLeft) {
+      final failure = result.leftOrNull!;
+      appLogger.w(
+        'SocialConnectionsController -> loadMore failed: ${failure.message}',
+      );
+      state = state.copyWith(
+        isLoadingMore: false,
+        errorMessage: failure.message,
+      );
+      return;
+    }
+
+    final page = result.rightOrNull!;
+    final byUser = <String, SocialFriend>{
+      for (final item in state.items) item.user: item,
+    };
+    for (final item in page.items) {
+      byUser[item.user] = item;
+    }
+
+    state = state.copyWith(
+      isLoadingMore: false,
+      items: List.unmodifiable(byUser.values),
+      hasMore: page.hasMore,
+      nextStart: page.start + page.items.length,
+      clearError: true,
+      followingCount: tab == SocialConnectionsTab.following ? page.total : null,
+      followersCount: tab == SocialConnectionsTab.followers ? page.total : null,
+      friendsCount: tab == SocialConnectionsTab.friends ? page.total : null,
+    );
+  }
+
+  Future<Either<Failure, SocialFriendsPage>> _fetchTab({
+    required SocialConnectionsTab tab,
+    required int start,
+  }) {
+    return switch (tab) {
+      SocialConnectionsTab.following => _repository.getFollowing(
+        limit: _pageSize,
+        start: start,
+        targetUser: _targetUser,
+      ),
+      SocialConnectionsTab.followers => _repository.getFollowers(
+        limit: _pageSize,
+        start: start,
+        targetUser: _targetUser,
+      ),
+      SocialConnectionsTab.friends => _repository.getFriends(
+        limit: _pageSize,
+        start: start,
+        targetUser: _targetUser,
+      ),
+    };
   }
 
   Future<void> _loadCounts() async {

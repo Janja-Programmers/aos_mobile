@@ -15,6 +15,7 @@ import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_share_
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_library_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_report_api.dart';
 import 'package:africaonlinestores/features/shorts/analytics/data/shorts_analytics_api.dart';
+import 'package:africaonlinestores/features/shorts/music/data/shorts_sounds_api.dart';
 
 // Controllers
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/comment_controller.dart';
@@ -76,6 +77,10 @@ final shortsReportApiProvider = Provider<ShortsReportApi>((ref) {
 
 final shortsAnalyticsApiProvider = Provider<ShortsAnalyticsApi>((ref) {
   return ShortsAnalyticsApi(ref.read(apiClientProvider));
+});
+
+final shortsSoundsApiProvider = Provider<ShortsSoundsApi>((ref) {
+  return ShortsSoundsApi(ref.read(apiClientProvider));
 });
 
 // ─────────────────────────────────────────────

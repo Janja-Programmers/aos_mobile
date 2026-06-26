@@ -25,17 +25,23 @@ class _ActivityCenterScreenState extends ConsumerState<ActivityCenterScreen> {
     Future.microtask(
       () => ref.read(activityCenterControllerProvider.notifier).load(),
     );
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >
-          _scrollController.position.maxScrollExtent - 240) {
-        ref.read(activityCenterControllerProvider.notifier).loadMore();
-      }
-    });
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
+    final metrics = _scrollController.position;
+    if (metrics.extentAfter < 360) {
+      ref.read(activityCenterControllerProvider.notifier).loadMore();
+    }
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
     super.dispose();
   }
 
@@ -112,6 +118,7 @@ class _ActivityCenterScreenState extends ConsumerState<ActivityCenterScreen> {
                     )
                   : ListView.separated(
                       controller: _scrollController,
+                      cacheExtent: 700,
                       padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
                       itemCount:
                           state.items.length + (state.loadingMore ? 1 : 0),
@@ -125,9 +132,13 @@ class _ActivityCenterScreenState extends ConsumerState<ActivityCenterScreen> {
                             ),
                           );
                         }
-                        return _ActivityTile(
-                          item: state.items[index],
-                          onHide: () => controller.hide(state.items[index].id),
+                        final item = state.items[index];
+                        return RepaintBoundary(
+                          key: ValueKey(item.id),
+                          child: _ActivityTile(
+                            item: item,
+                            onHide: () => controller.hide(item.id),
+                          ),
                         );
                       },
                     ),

@@ -50,9 +50,12 @@ class PostShortController extends StateNotifier<UploadState> {
   void setContentMode(String contentMode) {
     final requiresAd = ShortContentModes.requiresAd(contentMode);
 
+    final soundAllowed = !requiresAd || state.selectedSound.isCommercialSafe;
+
     state = state.copyWith(
       contentMode: contentMode,
       clearSelectedAd: !requiresAd,
+      selectedSound: soundAllowed ? state.selectedSound : ShortSound.original,
     );
   }
 
@@ -249,7 +252,10 @@ class PostShortController extends StateNotifier<UploadState> {
       audience: state.audience,
       allowComments: state.allowComments,
       allowDownloads: state.allowDownloads,
-      // selectedSound is UI-only until the backend sound endpoints exist.
+      soundId: state.selectedSound.isOriginal ? null : state.selectedSound.id,
+      soundStartMs: state.selectedSound.startMs,
+      soundDurationMs: state.selectedSound.durationMs,
+      soundVolume: state.selectedSound.volume,
     );
 
     final metadataUpdated = res.fold((e) {

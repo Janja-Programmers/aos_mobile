@@ -8,9 +8,9 @@ import 'package:flutter/material.dart';
 
 Map<String, List<NotificationItem>> groupByDate(List<NotificationItem> items) {
   final Map<String, List<NotificationItem>> grouped = {};
+  final now = DateTime.now();
 
   for (final item in items) {
-    final now = DateTime.now();
     final diff = now.difference(item.createdAt);
 
     String key;

@@ -15,6 +15,8 @@ import 'package:africaonlinestores/features/sellers/presentation/widgets/my_stor
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
 import 'package:africaonlinestores/features/sellers/domain/storefront_post.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
+import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
+import 'package:africaonlinestores/features/shorts/music/presentation/music_picker_sheet.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class MyStorefrontScreen extends ConsumerStatefulWidget {
@@ -97,9 +99,11 @@ class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
     var audience = short.audience;
     var allowComments = short.allowComments;
     var allowDownloads = short.allowDownloads;
+    var selectedSound = short.sound ?? ShortSound.original;
     var saving = false;
 
     await showModalBottomSheet<void>(
+      backgroundColor: context.appColors.surface,
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -131,23 +135,45 @@ class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
                     audience: audience,
                     allowComments: allowComments,
                     allowDownloads: allowDownloads,
+                    soundId: selectedSound.isOriginal ? null : selectedSound.id,
+                    soundStartMs: selectedSound.startMs,
+                    soundDurationMs: selectedSound.durationMs,
+                    soundVolume: selectedSound.volume,
                   );
 
               if (!mounted) return;
 
-              result.fold(
-                (failure) {
+              final metadataOk = result.fold((failure) {
+                setSheetState(() => saving = false);
+                ShowSnack(context, failure.message).error();
+                return false;
+              }, (_) => true);
+
+              if (!metadataOk) return;
+
+              if (selectedSound.isOriginal && short.hasSound) {
+                final removeResult = await ref
+                    .read(shortsSoundsApiProvider)
+                    .removeShortSound(shortId: short.id.value);
+                if (!mounted) return;
+
+                final removeOk = removeResult.fold((failure) {
                   setSheetState(() => saving = false);
                   ShowSnack(context, failure.message).error();
-                },
-                (_) {
-                  Navigator.pop(sheetContext);
-                  ShowSnack(context, 'Short updated').success();
-                  ref
-                      .read(storefrontDashboardControllerProvider.notifier)
-                      .load();
-                },
-              );
+                  return false;
+                }, (_) => true);
+
+                if (!removeOk) return;
+              }
+
+              if (!sheetContext.mounted) return;
+              Navigator.pop(sheetContext);
+
+              if (!context.mounted) return;
+              ShowSnack(context, 'Short updated').success();
+              await ref
+                  .read(storefrontDashboardControllerProvider.notifier)
+                  .load();
             }
 
             return Padding(
@@ -233,13 +259,63 @@ class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      SwitchListTile.adaptive(
-                        value: allowComments,
-                        onChanged: (value) =>
-                            setSheetState(() => allowComments = value),
-                        contentPadding: EdgeInsets.zero,
-                        title: Text('Allow comments', style: context.p),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeOut,
+                        decoration: BoxDecoration(
+                          color: allowComments
+                              ? colors.primary.withOpacity(0.08)
+                              : colors.surface.withOpacity(0.45),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: SwitchListTile.adaptive(
+                          value: allowComments,
+                          onChanged: (value) =>
+                              setSheetState(() => allowComments = value),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 2,
+                          ),
+                          title: Text('Allow comments', style: context.p),
+                        ),
                       ),
+                      const SizedBox(height: 12),
+
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.music_note_rounded),
+                        title: Text(
+                          selectedSound.title,
+                          style: context.pStrong,
+                        ),
+                        subtitle: Text(
+                          selectedSound.isOriginal
+                              ? 'Original video audio'
+                              : [
+                                  if (selectedSound.artist.trim().isNotEmpty)
+                                    selectedSound.artist,
+                                  if (selectedSound.durationLabel.isNotEmpty)
+                                    selectedSound.durationLabel,
+                                  if (selectedSound.isCommercialSafe)
+                                    'Commercial safe',
+                                ].join(' • '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: saving
+                            ? null
+                            : () async {
+                                final picked = await showMusicPickerSheet(
+                                  sheetContext,
+                                  commercialSafeOnly:
+                                      short.contentMode == 'shop',
+                                );
+                                if (picked == null) return;
+                                setSheetState(() => selectedSound = picked);
+                              },
+                      ),
+                      const SizedBox(height: 10),
                       SwitchListTile.adaptive(
                         value: allowDownloads,
                         onChanged: (value) =>
@@ -267,7 +343,10 @@ class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text('Save changes'),
+                              : const Text(
+                                  'Save changes',
+                                  style: TextStyle(color: Colors.white),
+                                ),
                         ),
                       ),
                     ],

@@ -8,6 +8,7 @@ import 'package:africaonlinestores/features/social/presentation/widgets/social_c
 import 'package:africaonlinestores/features/social/presentation/widgets/social_connections_list.dart';
 import 'package:africaonlinestores/features/social/presentation/widgets/social_connections_search.dart';
 import 'package:africaonlinestores/features/social/presentation/widgets/social_connections_tabs.dart';
+import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 
 class SocialConnectionsScreen extends ConsumerStatefulWidget {
   final String title;
@@ -56,7 +57,7 @@ class _SocialConnectionsScreenState
       appBar: SocialConnectionsAppBar(
         title: widget.title,
         onAddTap: () {
-          // TODO: add/invite people route.
+          SocialNavigation.toUserSearch(context);
         },
       ),
       body: Column(
@@ -76,6 +77,7 @@ class _SocialConnectionsScreenState
             child: SocialConnectionsList(
               state: state,
               onRefresh: controller.refresh,
+              onLoadMore: controller.loadMore,
             ),
           ),
         ],

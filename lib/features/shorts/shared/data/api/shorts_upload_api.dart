@@ -81,6 +81,10 @@ class ShortsUploadApi {
     String audience = 'everyone',
     bool allowComments = true,
     bool allowDownloads = false,
+    String? soundId,
+    int soundStartMs = 0,
+    int soundDurationMs = 0,
+    double soundVolume = 1,
   }) async {
     try {
       final data = <String, dynamic>{
@@ -92,6 +96,13 @@ class ShortsUploadApi {
         'audience': audience,
         'allow_comments': allowComments,
         'allow_downloads': allowDownloads,
+        if (soundId != null && soundId.trim().isNotEmpty) 'sound_id': soundId,
+        if (soundId != null && soundId.trim().isNotEmpty)
+          'sound_start_ms': soundStartMs,
+        if (soundId != null && soundId.trim().isNotEmpty)
+          'sound_duration_ms': soundDurationMs,
+        if (soundId != null && soundId.trim().isNotEmpty)
+          'sound_volume': soundVolume,
       };
 
       final res = await _client.post(

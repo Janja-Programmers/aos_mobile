@@ -7,6 +7,7 @@ import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_viewer_state.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/caption.dart';
+import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 
 class Short extends Equatable {
   final ShortId id;
@@ -26,12 +27,15 @@ class Short extends Equatable {
   final bool isReady;
   final bool isProcessingFlag;
   final bool isFailedFlag;
+  final String audioMixStatus;
+  final String? audioMixError;
 
   final ShortCreator creator;
   final ShortMetrics metrics;
   final ShortViewerState viewerState;
 
   final ShortAd? ad;
+  final ShortSound? sound;
   final DateTime? postedAt;
 
   const Short({
@@ -50,10 +54,13 @@ class Short extends Equatable {
     this.isReady = false,
     this.isProcessingFlag = false,
     this.isFailedFlag = false,
+    this.audioMixStatus = 'none',
+    this.audioMixError,
     required this.creator,
     required this.metrics,
     required this.viewerState,
     this.ad,
+    this.sound,
     this.postedAt,
   });
 
@@ -65,6 +72,10 @@ class Short extends Equatable {
   bool get isDeleted =>
       visibilityStatus == 'deleted' || status == ShortStatus.deleted;
   bool get isPrivateAudience => audience != 'everyone';
+  bool get hasSound => sound != null && !sound!.isOriginal;
+  bool get isAudioMixing =>
+      audioMixStatus == 'pending' || audioMixStatus == 'processing';
+  bool get hasAudioMixFailed => audioMixStatus == 'failed';
 
   bool get isLiked => viewerState.liked;
   bool get isWatched => viewerState.watched;
@@ -96,9 +107,12 @@ class Short extends Equatable {
     bool? isReady,
     bool? isProcessingFlag,
     bool? isFailedFlag,
+    String? audioMixStatus,
+    String? audioMixError,
     ShortCreator? creator,
     ShortMetrics? metrics,
     ShortAd? ad,
+    ShortSound? sound,
     DateTime? postedAt,
     ShortViewerState? viewerState,
   }) {
@@ -118,9 +132,12 @@ class Short extends Equatable {
       isReady: isReady ?? this.isReady,
       isProcessingFlag: isProcessingFlag ?? this.isProcessingFlag,
       isFailedFlag: isFailedFlag ?? this.isFailedFlag,
+      audioMixStatus: audioMixStatus ?? this.audioMixStatus,
+      audioMixError: audioMixError ?? this.audioMixError,
       creator: creator ?? this.creator,
       metrics: metrics ?? this.metrics,
       ad: ad ?? this.ad,
+      sound: sound ?? this.sound,
       postedAt: postedAt ?? this.postedAt,
       viewerState: viewerState ?? this.viewerState,
     );
@@ -143,9 +160,12 @@ class Short extends Equatable {
     isReady,
     isProcessingFlag,
     isFailedFlag,
+    audioMixStatus,
+    audioMixError,
     creator,
     metrics,
     ad,
+    sound,
     postedAt,
     viewerState,
   ];

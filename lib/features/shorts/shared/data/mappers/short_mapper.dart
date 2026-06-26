@@ -27,9 +27,12 @@ class ShortMapper {
       isReady: model.isReady,
       isProcessingFlag: model.isProcessing,
       isFailedFlag: model.isFailed,
+      audioMixStatus: model.audioMixStatus,
+      audioMixError: model.audioMixError,
       creator: ShortCreatorMapper.toDomain(model.creator),
       metrics: MetricsMapper.toDomain(model.metrics),
       ad: model.ad == null ? null : ShortAdMapper.toDomain(model.ad!),
+      sound: model.sound,
       postedAt: model.postedAt == null || model.postedAt!.trim().isEmpty
           ? null
           : DateTime.tryParse(model.postedAt!),

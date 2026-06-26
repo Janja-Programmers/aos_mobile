@@ -138,14 +138,16 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
       _controller = controller;
       controller.addListener(_onVideoTick);
 
-      await Future.wait([
-        controller.initialize(),
-        _detectThumbnailOrientation(),
-      ]);
+      await controller.initialize();
+      _usePortraitFrame = controller.value.aspectRatio <= 1;
 
       await controller.setLooping(true);
 
       if (!mounted || !widget.shouldPrepare) {
+        controller.removeListener(_onVideoTick);
+        if (_controller == controller) {
+          _controller = null;
+        }
         await controller.dispose();
         return;
       }
@@ -167,53 +169,6 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
       });
 
       debugPrint('Video init error: $e');
-    }
-  }
-
-  Future<void> _detectThumbnailOrientation() async {
-    final url = widget.short.thumbnailUrl;
-
-    if (url == null || url.isEmpty) {
-      _usePortraitFrame = true;
-      return;
-    }
-
-    final image = NetworkImage(url);
-    final stream = image.resolve(const ImageConfiguration());
-    final completer = Completer<ImageInfo>();
-
-    late ImageStreamListener listener;
-
-    listener = ImageStreamListener(
-      (info, _) {
-        if (!completer.isCompleted) {
-          completer.complete(info);
-        }
-        stream.removeListener(listener);
-      },
-      onError: (_, _) {
-        if (!completer.isCompleted) {
-          completer.completeError('thumbnail failed');
-        }
-        stream.removeListener(listener);
-      },
-    );
-
-    stream.addListener(listener);
-
-    try {
-      final info = await completer.future;
-      final width = info.image.width;
-      final height = info.image.height;
-
-      _usePortraitFrame = height >= width;
-
-      debugPrint(
-        'THUMB ${widget.short.id} size=${width}x$height '
-        'portrait=$_usePortraitFrame',
-      );
-    } catch (_) {
-      _usePortraitFrame = true;
     }
   }
 
@@ -253,6 +208,8 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
     _usePortraitFrame = true;
 
     _flushWatchProgress();
+    _maxWatchMs = 0;
+    _lastForceTrackedMs = 0;
 
     if (controller != null) {
       controller.removeListener(_onVideoTick);
@@ -295,7 +252,7 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
     final thresholdMs = _viewThresholdMs(durationMs);
 
     if (_maxWatchMs >= thresholdMs &&
-        _maxWatchMs - _lastForceTrackedMs >= 1000) {
+        _maxWatchMs - _lastForceTrackedMs >= 5000) {
       _lastForceTrackedMs = _maxWatchMs;
       widget.onWatchProgress(
         shortId: widget.short.id.value,

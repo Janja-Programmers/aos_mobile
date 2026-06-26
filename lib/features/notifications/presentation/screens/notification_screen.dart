@@ -6,6 +6,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 
 import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
+import 'package:africaonlinestores/features/notifications/application/state/notification_state.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
 import 'package:africaonlinestores/features/notifications/presentation/utils/helpers.dart';
 import 'package:africaonlinestores/features/notifications/presentation/widgets/empty_view.dart';
@@ -114,7 +115,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   // BODY
   // =====================================================
   Widget _buildBody({
-    required dynamic state,
+    required NotificationState state,
     required List<NotificationItem> items,
     required dynamic controller,
     required dynamic handler,
@@ -139,68 +140,76 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
     // ✅ Data
     final grouped = groupByDate(items);
+    final originalIndexes = <String, int>{
+      for (var i = 0; i < state.items.length; i++) state.items[i].id: i,
+    };
+    final rows = <Object>[];
+
+    for (final entry in grouped.entries) {
+      rows.add(entry.key);
+      for (final item in entry.value) {
+        rows.add(item);
+      }
+    }
 
     return RefreshIndicator(
       onRefresh: controller.refreshNotifications,
-      child: ListView(
+      child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
-        children: grouped.entries.map((entry) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Section header
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Text(
-                  entry.key,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+        cacheExtent: 600,
+        itemCount: rows.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 2),
+        itemBuilder: (context, index) {
+          final row = rows[index];
+
+          if (row is String) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                row,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
               ),
+            );
+          }
 
-              // Items
-              ...entry.value.asMap().entries.map((itemEntry) {
-                final index = itemEntry.key;
-                final n = itemEntry.value;
+          final n = row as NotificationItem;
+          final originalIndex = originalIndexes[n.id] ?? 0;
 
-                return NotificationTile(
+          return RepaintBoundary(
+            child: NotificationTile(
+              notification: n,
+              onTap: () {
+                controller.markNotificationRead(n.id);
+
+                _showNotificationBottomSheet(
+                  context: context,
                   notification: n,
-                  onTap: () {
-                    controller.markNotificationRead(n.id);
-
-                    _showNotificationBottomSheet(
-                      context: context,
-                      notification: n,
-                      controller: controller,
-                      handler: handler,
-                    );
-                  },
-                  onDelete: () {
-                    controller.deleteNotification(n.id);
-
-                    ScaffoldMessenger.of(context).clearSnackBars();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Notification deleted'),
-                        action: SnackBarAction(
-                          label: 'Undo',
-                          onPressed: () {
-                            controller.restoreNotification(n, index);
-                          },
-                        ),
-                      ),
-                    );
-                  },
+                  controller: controller,
+                  handler: handler,
                 );
-              }),
-            ],
+              },
+              onDelete: () {
+                controller.deleteNotification(n.id);
+
+                ScaffoldMessenger.of(context).clearSnackBars();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Notification deleted'),
+                    action: SnackBarAction(
+                      label: 'Undo',
+                      onPressed: () {
+                        controller.restoreNotification(n, originalIndex);
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
           );
-        }).toList(),
+        },
       ),
     );
   }

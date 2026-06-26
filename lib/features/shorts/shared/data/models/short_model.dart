@@ -3,6 +3,7 @@ import 'package:africaonlinestores/features/shorts/shared/data/models/short_crea
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_metrics_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_viewer_state_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
+import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 
 class ShortModel {
   final String id;
@@ -19,6 +20,8 @@ class ShortModel {
   final bool isReady;
   final bool isProcessing;
   final bool isFailed;
+  final String audioMixStatus;
+  final String? audioMixError;
 
   final String caption;
   final List<String> hashtags;
@@ -30,6 +33,7 @@ class ShortModel {
   final ShortViewerStateModel viewerState;
 
   final ShortAdModel? ad;
+  final ShortSound? sound;
 
   final String? postedAt;
 
@@ -46,6 +50,8 @@ class ShortModel {
     required this.isReady,
     required this.isProcessing,
     required this.isFailed,
+    required this.audioMixStatus,
+    this.audioMixError,
     required this.caption,
     required this.hashtags,
     this.status,
@@ -53,6 +59,7 @@ class ShortModel {
     required this.metrics,
     required this.viewerState,
     this.ad,
+    this.sound,
     this.postedAt,
   });
 
@@ -70,12 +77,15 @@ class ShortModel {
       isReady: _toBool(json['is_ready']),
       isProcessing: _toBool(json['is_processing']),
       isFailed: _toBool(json['is_failed']),
+      audioMixStatus: json['audio_mix_status']?.toString() ?? 'none',
+      audioMixError: json['audio_mix_error']?.toString(),
       caption: json['caption']?.toString() ?? '',
       hashtags: _parseStringList(json['hashtags']),
       status: json['status']?.toString(),
       creator: _parseCreator(json['creator']),
       metrics: ShortMetricsModel.fromJson(json),
       ad: _parseAd(json['ad']),
+      sound: _parseSound(json['sound']),
       postedAt: json['posted_on']?.toString(),
       viewerState: ShortViewerStateModel.fromJson(
         json['viewer_state'] is Map<String, dynamic>
@@ -135,6 +145,18 @@ class ShortModel {
     final ad = ShortAdModel.fromJson(value);
 
     return ad.isEmpty ? null : ad;
+  }
+
+  static ShortSound? _parseSound(dynamic value) {
+    if (value is! Map<String, dynamic>) {
+      if (value is Map) {
+        return ShortSound.fromJson(Map<String, dynamic>.from(value));
+      }
+      return null;
+    }
+
+    final sound = ShortSound.fromJson(value);
+    return sound.id.trim().isEmpty ? null : sound;
   }
 
   static List<String> _parseStringList(dynamic value) {

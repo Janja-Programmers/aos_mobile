@@ -49,6 +49,38 @@ class ShortBottomInfo extends StatelessWidget {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
+
+          if (short.hasSound) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.music_note_rounded, color: colors.white, size: 15),
+                const SizedBox(width: 5),
+                Flexible(
+                  child: Text(
+                    _soundLabel(),
+                    style: context.small.copyWith(
+                      color: colors.white.withOpacity(.92),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          if (short.isAudioMixing) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Updating audio...',
+              style: context.small.copyWith(
+                color: colors.white.withOpacity(.72),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -72,6 +104,15 @@ class ShortBottomInfo extends StatelessWidget {
     }
 
     return 'User';
+  }
+
+  String _soundLabel() {
+    final sound = short.sound;
+    if (sound == null) return '';
+
+    final artist = sound.artist.trim();
+    if (artist.isEmpty) return sound.title;
+    return '${sound.title} • $artist';
   }
 
   String _composeCaption() {

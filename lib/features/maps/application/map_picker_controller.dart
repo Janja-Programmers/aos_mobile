@@ -57,17 +57,35 @@ final mapPickerControllerProvider =
 class MapPickerController extends StateNotifier<MapPickerState> {
   final MapsApi api;
 
+  String? _lastSearchQuery;
+  int _searchSerial = 0;
+
   MapPickerController(this.api) : super(MapPickerState.initial());
 
   Future<void> search(String query) async {
     final clean = query.trim();
     if (clean.length < 2) {
-      state = state.copyWith(results: const [], clearError: true);
+      _lastSearchQuery = null;
+      state = state.copyWith(
+        loading: false,
+        results: const [],
+        clearError: true,
+      );
       return;
     }
 
+    if (clean == _lastSearchQuery && state.results.isNotEmpty) {
+      return;
+    }
+
+    _lastSearchQuery = clean;
+    final serial = ++_searchSerial;
+
     state = state.copyWith(loading: true, clearError: true);
     final res = await api.searchPlaces(query: clean);
+
+    if (serial != _searchSerial) return;
+
     res.fold(
       (f) => state = state.copyWith(loading: false, error: f.message),
       (items) => state = state.copyWith(loading: false, results: items),
@@ -108,8 +126,18 @@ class MapPickerController extends StateNotifier<MapPickerState> {
         return;
       }
 
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        state = state.copyWith(
+          resolving: false,
+          error: 'Turn on location services to use current location.',
+        );
+        return;
+      }
+
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        desiredAccuracy: LocationAccuracy.medium,
+        timeLimit: const Duration(seconds: 12),
       );
 
       await selectCoordinates(position.latitude, position.longitude);

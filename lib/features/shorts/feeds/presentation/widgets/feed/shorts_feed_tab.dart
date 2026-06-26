@@ -208,17 +208,23 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     final item = _items[index];
 
     if (item is LiveStream) {
-      return LiveCard(
-        live: item,
-        onTap: () {
-          LiveNavigation.toLiveRoom(context, liveId: item.id);
-        },
+      return RepaintBoundary(
+        key: ValueKey('live_${item.id}'),
+        child: LiveCard(
+          live: item,
+          onTap: () {
+            LiveNavigation.toLiveRoom(context, liveId: item.id);
+          },
+        ),
       );
     }
 
     final short = item as Short;
 
-    return ShortCard(short: short, onTap: () => _openDetail(index));
+    return RepaintBoundary(
+      key: ValueKey('short_${short.id.value}'),
+      child: ShortCard(short: short, onTap: () => _openDetail(index)),
+    );
   }
 
   @override
@@ -238,6 +244,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     if (widget.feedType == ShortsFeedType.following) {
       return ListView(
         controller: _scrollController,
+        cacheExtent: 900,
         padding: const EdgeInsets.all(16),
         children: [
           const SuggestedSellersSection(),
@@ -263,6 +270,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
 
     return MasonryGridView.count(
       controller: _scrollController,
+      cacheExtent: 900,
       padding: const EdgeInsets.all(8),
       crossAxisCount: 2,
       mainAxisSpacing: 8,

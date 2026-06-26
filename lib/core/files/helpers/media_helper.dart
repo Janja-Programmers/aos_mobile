@@ -172,7 +172,7 @@ class MediaHelper {
   static const maxFileSizeMB = 25;
 
   static Future<File?> pickAnyFile() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.any,
       allowMultiple: false,
       withData: false,
@@ -206,7 +206,7 @@ class MediaHelper {
   }
 
   static Future<File?> pickMediaFromGallery() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.media,
       allowMultiple: false,
       withData: false,

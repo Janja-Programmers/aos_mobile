@@ -114,9 +114,16 @@ class SellerHeaderSection extends ConsumerWidget {
 
           const SizedBox(height: 14),
 
-          const SellerResponseBadge(),
+          SellerResponseBadge(
+            responseTimeDisplay: seller.responseTimeDisplay,
+            responseRateDisplay: seller.responseRateDisplay,
+          ),
 
-          const SizedBox(height: 18),
+          if (seller.responseTimeDisplay != null ||
+              seller.responseRateDisplay != null)
+            const SizedBox(height: 18)
+          else
+            const SizedBox(height: 4),
 
           if (!seller.isSelf)
             SizedBox(

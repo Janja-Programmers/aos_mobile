@@ -276,7 +276,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
     final targetController = TextEditingController();
     await ref.read(liveCohostControllerProvider.notifier).load(liveId: liveId);
 
-    if (!mounted) return;
+    if (!context.mounted) return;
 
     await showModalBottomSheet<void>(
       context: context,

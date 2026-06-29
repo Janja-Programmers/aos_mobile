@@ -76,24 +76,14 @@ class FollowingSellerCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onFollowTap,
               style: ElevatedButton.styleFrom(
-                backgroundColor: seller.isFollowing
-                    ? colors.surface
-                    : colors.primary,
-                foregroundColor: seller.isFollowing
-                    ? colors.primary
-                    : colors.textPrimary,
+                backgroundColor: colors.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(99),
                   side: BorderSide(color: colors.primary),
                 ),
                 elevation: 0,
               ),
-              child: Text(
-                seller.isFollowing ? 'Following' : 'Follow',
-                style: AppTextStylesX(context).button.copyWith(
-                  color: seller.isFollowing ? colors.textPrimary : null,
-                ),
-              ),
+              child: Text('Follow', style: AppTextStylesX(context).button),
             ),
           ),
         ],

@@ -151,16 +151,13 @@ class _PostShortDetailsScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _mediaPreview(state, colors),
+                        _mediaAndCaptionRow(state, colors),
                         const SizedBox(height: 14),
 
                         _categorySelector(colors),
                         const SizedBox(height: 10),
 
                         _categoryDescriptionCard(colors),
-                        const SizedBox(height: 14),
-
-                        _caption(colors),
                         const SizedBox(height: 14),
 
                         _hashtags(colors),
@@ -214,58 +211,83 @@ class _PostShortDetailsScreenState
     );
   }
 
+  Widget _mediaAndCaptionRow(UploadState state, AppColorTokens colors) {
+    return SizedBox(
+      height: 170,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 4, // 40%
+            child: _mediaPreview(state, colors),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 6, // 60%
+            child: _caption(colors),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _mediaPreview(UploadState state, AppColorTokens colors) {
     final media = state.primaryMedia;
     if (media == null) return const SizedBox();
 
-    return SizedBox(
-      height: 96,
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: _thumbnail == null
-                ? Container(
-                    width: 84,
-                    height: 96,
-                    color: colors.black,
-                    child: const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                : Stack(
-                    children: [
-                      Image.memory(
-                        _thumbnail!,
-                        width: 84,
-                        height: 96,
-                        fit: BoxFit.cover,
-                      ),
-                      Positioned.fill(
-                        child: Container(
-                          alignment: Alignment.center,
-                          color: colors.black.withOpacity(.35),
-                          child: Icon(
-                            Icons.play_circle_outline_rounded,
-                            color: colors.white,
-                            size: 28,
-                          ),
-                        ),
-                      ),
-                    ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: _thumbnail == null
+          ? Container(
+              width: double.infinity,
+              height: double.infinity,
+              color: colors.black,
+              child: const Center(
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          : Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.memory(_thumbnail!, fit: BoxFit.cover),
+                Container(
+                  alignment: Alignment.center,
+                  color: colors.black.withOpacity(.35),
+                  child: Icon(
+                    Icons.play_circle_outline_rounded,
+                    color: colors.white,
+                    size: 34,
                   ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            width: 84,
-            height: 96,
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(10),
+                ),
+              ],
             ),
-            child: Icon(Icons.add_rounded, color: colors.textMuted, size: 30),
-          ),
-        ],
+    );
+  }
+
+  Widget _caption(AppColorTokens colors) {
+    return TextField(
+      controller: captionController,
+      expands: true,
+      minLines: null,
+      maxLines: null,
+      maxLength: 512,
+      textAlignVertical: TextAlignVertical.top,
+      decoration: InputDecoration(
+        hintText:
+            "What's on your mind? Describe your post, share a story, or tell people about your product...",
+        hintStyle: context.pMuted,
+        filled: true,
+        fillColor: colors.surface,
+        contentPadding: const EdgeInsets.all(12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: colors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: colors.primary),
+        ),
       ),
     );
   }
@@ -381,30 +403,6 @@ class _PostShortDetailsScreenState
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _caption(AppColorTokens colors) {
-    return TextField(
-      controller: captionController,
-      maxLines: 6,
-      maxLength: 512,
-      decoration: InputDecoration(
-        hintText:
-            "What's on your mind? Describe your post, share a story, or tell people about your product...",
-        hintStyle: context.pMuted,
-        filled: true,
-        fillColor: colors.surface,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: colors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: colors.primary),
-        ),
       ),
     );
   }

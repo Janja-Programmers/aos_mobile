@@ -239,7 +239,7 @@ class _ProfileScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: _ProfileAppBar(
-        title: data.displayName,
+        title: data.isOwnProfile ? 'Me' : data.displayName,
         onShareTap: onShareTap,
         onMoreTap: data.isOwnProfile
             ? null

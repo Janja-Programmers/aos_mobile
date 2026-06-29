@@ -55,6 +55,8 @@ class SellerSuggestion {
     );
   }
 
+  bool get canBeSuggested => !isFollowing;
+
   SellerSuggestion copyWith({
     String? sellerId,
     String? shopName,

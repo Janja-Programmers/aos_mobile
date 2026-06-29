@@ -1,7 +1,8 @@
-import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_type.dart';
@@ -16,8 +17,7 @@ import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_rout
 
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
 import 'package:africaonlinestores/features/live/domain/live_stream.dart';
-
-import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 
 class ShortsFeedTab extends ConsumerStatefulWidget {
   final ShortsFeedType feedType;
@@ -251,18 +251,27 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
 
           const SizedBox(height: 22),
 
-          SectionCard(
-            title: 'Following Shorts',
-            child: MasonryGridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              crossAxisCount: 2,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              itemCount: _items.length + (_isLoadingMore ? 1 : 0),
-              itemBuilder: _buildShortItem,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Following Shorts',
+                style: context.h6.copyWith(fontWeight: FontWeight.w700),
+              ),
+
+              const SizedBox(height: 12),
+
+              MasonryGridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                crossAxisCount: 2,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                itemCount: _items.length + (_isLoadingMore ? 1 : 0),
+                itemBuilder: _buildShortItem,
+              ),
+            ],
           ),
         ],
       );

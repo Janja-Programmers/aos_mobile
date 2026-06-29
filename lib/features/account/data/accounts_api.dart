@@ -39,6 +39,7 @@ class AccountsApi {
       final data = <String, dynamic>{};
       if (fullName != null) data['full_name'] = fullName;
       if (userImage != null) data['user_image'] = userImage;
+      if (bio != null) data['bio'] = bio;
 
       final res = await _client.dio.post(
         ApiEndpoints.updateProfileEndpoint,

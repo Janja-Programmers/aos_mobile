@@ -29,11 +29,15 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
   File? _selectedImage;
   String? _uploadedImageUrl;
   lk.LocalVideoTrack? _previewTrack;
+
   bool _isUploading = false;
   bool _isStartingPreview = false;
   bool _isMicMuted = false;
   bool _isCountingDown = false;
   int? _countdown;
+
+  bool _isFlippingCamera = false;
+  bool _isFrontCamera = true;
 
   @override
   void initState() {
@@ -41,8 +45,19 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     unawaited(_startCameraPreview());
   }
 
+  Future<lk.LocalVideoTrack> _createPreviewTrack({required bool frontCamera}) {
+    return lk.LocalVideoTrack.createCameraTrack(
+      lk.CameraCaptureOptions(
+        cameraPosition: frontCamera
+            ? lk.CameraPosition.front
+            : lk.CameraPosition.back,
+      ),
+    );
+  }
+
   Future<void> _startCameraPreview() async {
     if (_isStartingPreview || _previewTrack != null) return;
+
     setState(() => _isStartingPreview = true);
 
     final statuses = await [Permission.camera, Permission.microphone].request();
@@ -55,46 +70,89 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
           context,
           'Camera and microphone permissions are required.',
         ).error();
+
         setState(() => _isStartingPreview = false);
       }
       return;
     }
 
     try {
-      final track = await lk.LocalVideoTrack.createCameraTrack();
+      final track = await _createPreviewTrack(frontCamera: _isFrontCamera);
+
       if (!mounted) {
         await track.stop();
         return;
       }
+
       setState(() {
         _previewTrack = track;
         _isStartingPreview = false;
       });
     } catch (_) {
       if (!mounted) return;
+
       setState(() => _isStartingPreview = false);
       ShowSnack(context, 'Could not start camera preview.').error();
     }
   }
 
   Future<void> _flipPreviewCamera() async {
-    final track = _previewTrack;
-    if (track == null) return;
+    final oldTrack = _previewTrack;
+
+    if (oldTrack == null || _isFlippingCamera || _isStartingPreview) {
+      return;
+    }
+
+    setState(() => _isFlippingCamera = true);
+
+    final nextIsFrontCamera = !_isFrontCamera;
 
     try {
-      final devices = await lk.Hardware.instance.enumerateDevices();
-      final cameras = devices.where((d) => d.kind == 'videoinput').toList();
-      if (cameras.length < 2) return;
+      setState(() => _previewTrack = null);
 
-      final currentDeviceId = track.currentOptions.deviceId;
-      final currentIndex = cameras.indexWhere(
-        (camera) => camera.deviceId == currentDeviceId,
+      await oldTrack.stop();
+
+      // Some Android camera stacks, especially MIUI/Xiaomi, need a tiny
+      // release window before opening the opposite camera.
+      await Future<void>.delayed(const Duration(milliseconds: 180));
+
+      final newTrack = await _createPreviewTrack(
+        frontCamera: nextIsFrontCamera,
       );
-      final nextCamera = cameras[(currentIndex + 1) % cameras.length];
-      await track.switchCamera(nextCamera.deviceId);
+
+      if (!mounted) {
+        await newTrack.stop();
+        return;
+      }
+
+      setState(() {
+        _previewTrack = newTrack;
+        _isFrontCamera = nextIsFrontCamera;
+      });
     } catch (_) {
       if (!mounted) return;
+
       ShowSnack(context, 'Could not flip camera.').error();
+
+      try {
+        final fallbackTrack = await _createPreviewTrack(
+          frontCamera: _isFrontCamera,
+        );
+
+        if (!mounted) {
+          await fallbackTrack.stop();
+          return;
+        }
+
+        setState(() => _previewTrack = fallbackTrack);
+      } catch (_) {
+        if (!mounted) return;
+        setState(() => _previewTrack = null);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isFlippingCamera = false);
+      }
     }
   }
 
@@ -116,6 +174,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     );
 
     if (!mounted) return;
+
     setState(() {
       _isUploading = false;
       _uploadedImageUrl = uploaded?.url;
@@ -130,7 +189,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
       return;
     }
 
-    if (_isCountingDown || _isUploading) return;
+    if (_isCountingDown || _isUploading || _isFlippingCamera) return;
 
     setState(() {
       _isCountingDown = true;
@@ -144,6 +203,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     }
 
     if (!mounted) return;
+
     setState(() => _countdown = null);
 
     await _previewTrack?.stop();
@@ -180,10 +240,10 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
           Positioned.fill(
             child: LiveVideoStage(
               track: _previewTrack,
-              emptyLabel: _isStartingPreview
+              emptyLabel: _isStartingPreview || _isFlippingCamera
                   ? 'Starting camera...'
                   : 'Camera preview unavailable',
-              mirror: true,
+              mirror: _isFrontCamera,
             ),
           ),
           Positioned.fill(
@@ -218,8 +278,8 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                       const Spacer(),
                       _roundAction(
                         icon: Icons.cameraswitch_outlined,
-                        label: 'Flip',
-                        onTap: _flipPreviewCamera,
+                        label: _isFlippingCamera ? 'Flipping' : 'Flip',
+                        onTap: _isFlippingCamera ? null : _flipPreviewCamera,
                       ),
                       const SizedBox(width: 10),
                       _roundAction(
@@ -227,7 +287,9 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                             ? Icons.mic_off_outlined
                             : Icons.mic_none_outlined,
                         label: _isMicMuted ? 'Muted' : 'Mic',
-                        onTap: () => setState(() => _isMicMuted = !_isMicMuted),
+                        onTap: _isFlippingCamera
+                            ? null
+                            : () => setState(() => _isMicMuted = !_isMicMuted),
                       ),
                     ],
                   ),
@@ -278,7 +340,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
-                onTap: _pickAndUploadImage,
+                onTap: _isUploading ? null : _pickAndUploadImage,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(18),
                   child: Container(
@@ -349,7 +411,13 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              onPressed: _isUploading || _isCountingDown ? null : _startLive,
+              onPressed:
+                  _isUploading ||
+                      _isCountingDown ||
+                      _isFlippingCamera ||
+                      _isStartingPreview
+                  ? null
+                  : _startLive,
               child: Text(
                 _isCountingDown ? 'Starting...' : 'Go LIVE',
                 style: AppTextStylesX(context).button,
@@ -371,24 +439,29 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
   Widget _roundAction({
     required IconData icon,
     required String label,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
   }) {
+    final enabled = onTap != null;
+
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(.45),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: Colors.white.withOpacity(.16)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: Colors.white, size: 18),
-            const SizedBox(width: 6),
-            Text(label, style: const TextStyle(color: Colors.white)),
-          ],
+      child: Opacity(
+        opacity: enabled ? 1 : .55,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(.45),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Colors.white.withOpacity(.16)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: Colors.white, size: 18),
+              const SizedBox(width: 6),
+              Text(label, style: const TextStyle(color: Colors.white)),
+            ],
+          ),
         ),
       ),
     );

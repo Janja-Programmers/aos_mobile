@@ -86,7 +86,9 @@ class _PostShortMediaPickerScreenState
               ),
               child: Text(
                 "Next",
-                style: context.p.copyWith(color: colors.white),
+                style: hasSelection
+                    ? context.p.copyWith(color: colors.btnText)
+                    : context.p,
               ),
             ),
           ),

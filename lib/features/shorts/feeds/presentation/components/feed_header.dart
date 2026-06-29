@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/feed_search_controller.dart';
-import 'package:africaonlinestores/features/shorts/feeds/presentation/components/feed_filter_menu.dart';
 
 import 'package:africaonlinestores/features/notifications/navigation/notification_routes.dart';
 
@@ -45,10 +44,6 @@ class FeedHeader extends ConsumerWidget {
               ),
             ),
           ),
-
-          const SizedBox(width: 8),
-
-          const FeedFilterMenu(),
 
           const SizedBox(width: 8),
 

@@ -57,30 +57,35 @@ class _SuggestedSellersSectionState
       );
     }
 
-    return SectionCard(
-      title: 'Suggested for You',
-      child: Column(
-        children: [
-          SizedBox(
-            height: 220,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: state.sellers.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                final seller = state.sellers[index];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Suggested for You',
+          style: context.h6.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 12),
 
-                return FollowingSellerCard(
-                  seller: seller,
-                  onFollowTap: () => controller.toggleFollow(seller),
-                  onDismiss: () => controller.dismissSeller(seller.sellerId),
-                );
-              },
-            ),
+        SizedBox(
+          height: 220,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: state.sellers.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final seller = state.sellers[index];
+
+              return FollowingSellerCard(
+                seller: seller,
+                onFollowTap: () => controller.toggleFollow(seller),
+                onDismiss: () => controller.dismissSeller(seller.sellerId),
+              );
+            },
           ),
-          const SizedBox(height: 18),
-        ],
-      ),
+        ),
+
+        const SizedBox(height: 18),
+      ],
     );
   }
 }

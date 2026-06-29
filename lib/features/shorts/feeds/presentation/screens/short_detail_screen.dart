@@ -6,7 +6,7 @@ import 'package:africaonlinestores/features/shorts/feeds/application/state/short
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/video/short_video_page.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 
-import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
+import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 
 class ShortDetailScreen extends ConsumerStatefulWidget {
   final List<Short> initialShorts;
@@ -82,7 +82,7 @@ class _ShortDetailScreenState extends ConsumerState<ShortDetailScreen> {
 
             // Creator / seller
             onCreatorTap: () {
-              SellerNavigation.toSellerStore(context, short.sellerId);
+              SocialNavigation.toProfileScreen(context, user: short.sellerId);
             },
 
             // Follow

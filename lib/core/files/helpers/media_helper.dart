@@ -102,7 +102,7 @@ class MediaHelper {
   static Future<File?> recordVideoFromCamera() async {
     final x = await _picker.pickVideo(
       source: ImageSource.camera,
-      maxDuration: const Duration(minutes: 2),
+      maxDuration: const Duration(minutes: 10),
     );
 
     return x == null ? null : File(x.path);

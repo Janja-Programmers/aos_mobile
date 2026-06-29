@@ -34,9 +34,11 @@ class FollowingSectionController extends StateNotifier<FollowingSectionState> {
 
         state = state.copyWith(
           isLoading: false,
+          error: null,
           sellers: rawItems
               .whereType<Map<String, dynamic>>()
               .map(SellerSuggestion.fromJson)
+              .where((seller) => seller.canBeSuggested)
               .toList(),
         );
       },
@@ -44,50 +46,48 @@ class FollowingSectionController extends StateNotifier<FollowingSectionState> {
   }
 
   Future<void> toggleFollow(SellerSuggestion seller) async {
-    final sellers = [...state.sellers];
-    final index = sellers.indexWhere((e) => e.sellerId == seller.sellerId);
-    if (index == -1) return;
+    if (seller.isFollowing) {
+      dismissSeller(seller.sellerId);
+      return;
+    }
 
-    final oldValue = sellers[index].isFollowing;
+    final previousSellers = [...state.sellers];
 
-    /// 🔥 OPTIMISTIC UPDATE
-    sellers[index] = sellers[index].copyWith(
-      isFollowing: !oldValue,
-      totalFollowers: oldValue
-          ? (sellers[index].totalFollowers - 1).clamp(0, 999999999)
-          : sellers[index].totalFollowers + 1,
+    final index = previousSellers.indexWhere(
+      (e) => e.sellerId == seller.sellerId,
     );
 
-    state = state.copyWith(sellers: sellers);
+    if (index == -1) return;
+
+    state = state.copyWith(
+      sellers: previousSellers
+          .where((e) => e.sellerId != seller.sellerId)
+          .toList(),
+      error: null,
+    );
 
     final res = await ref
         .read(sellerControllerProvider)
         .toggleFollow(sellerId: seller.sellerId);
 
     res.fold(
-      /// ❌ ROLLBACK
-      (_) {
+      // Rollback if follow failed.
+      (failure) {
         final rollback = [...state.sellers];
-        final rollbackIndex = rollback.indexWhere(
+
+        final alreadyExists = rollback.any(
           (e) => e.sellerId == seller.sellerId,
         );
 
-        if (rollbackIndex == -1) return;
+        if (!alreadyExists) {
+          final safeIndex = index > rollback.length ? rollback.length : index;
+          rollback.insert(safeIndex, seller);
+        }
 
-        rollback[rollbackIndex] = rollback[rollbackIndex].copyWith(
-          isFollowing: oldValue,
-          totalFollowers: oldValue
-              ? rollback[rollbackIndex].totalFollowers + 1
-              : (rollback[rollbackIndex].totalFollowers - 1).clamp(
-                  0,
-                  999999999,
-                ),
-        );
-
-        state = state.copyWith(sellers: rollback);
+        state = state.copyWith(sellers: rollback, error: failure.message);
       },
 
-      /// ✅ SUCCESS → REFRESH FOLLOWING FEED
+      // Success: refresh following feed.
       (_) {
         ref.read(shortGridControllerProvider.notifier).refresh();
       },

@@ -15,6 +15,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
     this.onTapLocation,
     this.onTapConnect,
     this.onTapNotifications,
+    this.onTapMaps,
     this.search,
     this.toolbarHeight = 72,
     this.searchPadding = const EdgeInsets.all(12),
@@ -25,6 +26,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final VoidCallback? onTapLocation;
   final VoidCallback? onTapConnect;
   final VoidCallback? onTapNotifications;
+  final VoidCallback? onTapMaps;
   final Widget? search;
 
   /// Main AppBar height (title + actions + location row).
@@ -99,6 +101,9 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 ),
 
                 const Spacer(),
+
+                _CircleIconButton(icon: Icons.map_outlined, onTap: onTapMaps),
+                const SizedBox(width: 10),
 
                 NotificationBadge(
                   count: chatUnreadCount,

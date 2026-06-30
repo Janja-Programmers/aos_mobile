@@ -344,9 +344,12 @@ class ApiEndpoints {
 
   // Maps
   static const String searchPlaces = '/api/method/aos.api.maps.search_places';
+  static const String autocompletePlaces =
+      '/api/method/aos.api.maps.autocomplete_places';
   static const String reverseGeocode =
       '/api/method/aos.api.maps.reverse_geocode';
   static const String getRoute = '/api/method/aos.api.maps.get_route';
+  static const String refreshRoute = '/api/method/aos.api.maps.refresh_route';
 
   // Seller Location
   static const String setMySellerLocation =
@@ -355,6 +358,8 @@ class ApiEndpoints {
       '/api/method/aos.api.sellers.get_seller_location';
   static const String removeMySellerLocation =
       '/api/method/aos.api.sellers.remove_my_seller_location';
+  static const String listSellerMapPoints =
+      '/api/method/aos.api.sellers.list_seller_map_points';
 
   // Activity Center
   static const String hideActivity =

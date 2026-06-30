@@ -6,6 +6,7 @@ import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
+import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/seller_action_tiles.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
 import 'package:africaonlinestores/features/verifications/controllers/seller_status_provider.dart';
@@ -65,6 +66,16 @@ class StartSellingScreen extends ConsumerWidget {
                   subtitle:
                       "Stream live, engage your audience and sell instantly",
                   onTap: () => LiveNavigation.toGoLiveScreen(context),
+                ),
+                const SizedBox(height: 12),
+
+                ActionTile(
+                  leading: Icon(Icons.place_outlined, color: colors.primary),
+                  iconBackgroundColor: colors.primary.withOpacity(.15),
+                  title: "Store Location",
+                  subtitle:
+                      "Save your shop or pickup point so buyers can find you on the map.",
+                  onTap: () => SellerNavigation.toSellerLocation(context),
                 ),
                 const SizedBox(height: 12),
               ],

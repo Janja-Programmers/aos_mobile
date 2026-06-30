@@ -41,19 +41,45 @@ class MapsApi {
       final unwrapped = unwrapFrappe(res);
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
 
-      final data = unwrapped.rightOrNull?['data'];
-      final rawItems = data is Map ? data['items'] : null;
-      final items = rawItems is List
-          ? rawItems
-                .whereType<Map>()
-                .map((e) => AOSPlace.fromJson(Map<String, dynamic>.from(e)))
-                .toList()
-          : <AOSPlace>[];
-      return Either.right(items);
+      final data = _dataMap(unwrapped.rightOrNull);
+      final rawItems = data['items'] ?? data['places'] ?? data['results'];
+      return Either.right(_placeList(rawItems));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
       return Either.left(const Failure('Failed to search places.'));
+    }
+  }
+
+  Future<Either<Failure, List<AOSPlace>>> autocompletePlaces({
+    required String query,
+    int limit = 5,
+    double? latitude,
+    double? longitude,
+  }) async {
+    try {
+      final clean = query.trim();
+      if (clean.length < 2) return Either.right(const []);
+
+      final res = await _client.get(
+        ApiEndpoints.autocompletePlaces,
+        queryParameters: {
+          'query': clean,
+          'limit': limit,
+          'latitude': ?latitude,
+          'longitude': ?longitude,
+        },
+      );
+
+      final unwrapped = unwrapFrappe(res);
+      if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
+
+      final data = _dataMap(unwrapped.rightOrNull);
+      return Either.right(_placeList(data['items'] ?? data['places']));
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to autocomplete places.'));
     }
   }
 
@@ -70,9 +96,9 @@ class MapsApi {
       final unwrapped = unwrapFrappe(res);
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
 
-      final data = unwrapped.rightOrNull?['data'];
-      final rawLocation = data is Map ? data['location'] : null;
-      if (rawLocation is! Map) {
+      final data = _dataMap(unwrapped.rightOrNull);
+      final rawLocation = data['location'] ?? data['item'];
+      if (rawLocation is! Map && data.isEmpty) {
         return Either.left(
           const Failure(
             'Invalid reverse-geocode response.',
@@ -81,9 +107,11 @@ class MapsApi {
         );
       }
 
-      return Either.right(
-        AOSPlace.fromJson(Map<String, dynamic>.from(rawLocation)),
-      );
+      final map = rawLocation is Map
+          ? Map<String, dynamic>.from(rawLocation)
+          : Map<String, dynamic>.from(data);
+
+      return Either.right(AOSPlace.fromJson(map));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
@@ -98,24 +126,73 @@ class MapsApi {
     required double destinationLongitude,
     String costing = 'auto',
   }) async {
-    try {
-      final res = await _client.post(
-        ApiEndpoints.getRoute,
-        data: {
-          'origin_latitude': originLatitude,
-          'origin_longitude': originLongitude,
-          'destination_latitude': destinationLatitude,
-          'destination_longitude': destinationLongitude,
-          'costing': costing,
-          'units': 'kilometers',
-        },
-      );
+    return _routeRequest(
+      endpoint: ApiEndpoints.getRoute,
+      data: {
+        'origin_latitude': originLatitude,
+        'origin_longitude': originLongitude,
+        'destination_latitude': destinationLatitude,
+        'destination_longitude': destinationLongitude,
+        'costing': costing,
+        'units': 'kilometers',
+      },
+      fallbackMessage: 'Failed to calculate route.',
+    );
+  }
 
+  Future<Either<Failure, AOSRoute>> getRouteToSeller({
+    required double originLatitude,
+    required double originLongitude,
+    required String destinationSeller,
+    String costing = 'auto',
+    String units = 'kilometers',
+  }) async {
+    return _routeRequest(
+      endpoint: ApiEndpoints.getRoute,
+      data: {
+        'origin_latitude': originLatitude,
+        'origin_longitude': originLongitude,
+        'destination_seller': destinationSeller,
+        'costing': costing,
+        'units': units,
+      },
+      fallbackMessage: 'Failed to calculate route to seller.',
+    );
+  }
+
+  Future<Either<Failure, AOSRoute>> refreshRouteToSeller({
+    required double currentLatitude,
+    required double currentLongitude,
+    required String destinationSeller,
+    String costing = 'auto',
+    String units = 'kilometers',
+  }) async {
+    return _routeRequest(
+      endpoint: ApiEndpoints.refreshRoute,
+      data: {
+        'current_latitude': currentLatitude,
+        'current_longitude': currentLongitude,
+        'destination_seller': destinationSeller,
+        'costing': costing,
+        'units': units,
+      },
+      fallbackMessage: 'Failed to refresh route.',
+    );
+  }
+
+  Future<Either<Failure, AOSRoute>> _routeRequest({
+    required String endpoint,
+    required Map<String, dynamic> data,
+    required String fallbackMessage,
+  }) async {
+    try {
+      final res = await _client.post(endpoint, data: data);
       final unwrapped = unwrapFrappe(res);
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
 
-      final data = unwrapped.rightOrNull?['data'];
-      final rawRoute = data is Map ? data['route'] : null;
+      final payload = unwrapped.rightOrNull ?? const <String, dynamic>{};
+      final dataMap = _dataMap(payload);
+      final rawRoute = dataMap['route'] ?? payload['route'];
       if (rawRoute is! Map) {
         return Either.left(
           const Failure('Invalid route response.', type: FailureType.parse),
@@ -128,7 +205,23 @@ class MapsApi {
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure('Failed to calculate route.'));
+      return Either.left(Failure(fallbackMessage));
     }
+  }
+
+  static Map<String, dynamic> _dataMap(Map<String, dynamic>? payload) {
+    final data = payload?['data'];
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return payload == null
+        ? <String, dynamic>{}
+        : Map<String, dynamic>.from(payload);
+  }
+
+  static List<AOSPlace> _placeList(dynamic value) {
+    if (value is! List) return const [];
+    return value
+        .whereType<Map>()
+        .map((e) => AOSPlace.fromJson(Map<String, dynamic>.from(e)))
+        .toList(growable: false);
   }
 }

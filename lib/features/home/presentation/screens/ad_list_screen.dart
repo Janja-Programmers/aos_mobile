@@ -97,6 +97,9 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
           },
         );
       },
+      onTapMaps: () {
+        context.pushNamed(AppRoutes.nMaps);
+      },
       onTapNotifications: () {
         AppNavigation.requireAuth(
           context,

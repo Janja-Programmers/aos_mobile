@@ -35,6 +35,8 @@ class AppRoutes {
   static const search = '/search';
 
   // Maps
+  static const maps = '/maps';
+  static const nMaps = 'maps';
   static const mapPicker = '/maps/picker';
   static const nMapPicker = 'mapPicker';
 

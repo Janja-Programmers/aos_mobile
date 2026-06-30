@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:africaonlinestores/core/location/location_service.dart';
 
 import 'package:africaonlinestores/features/maps/data/maps_api.dart';
 import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
@@ -112,35 +112,13 @@ class MapPickerController extends StateNotifier<MapPickerState> {
     state = state.copyWith(resolving: true, clearError: true);
 
     try {
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        state = state.copyWith(
-          resolving: false,
-          error: 'Location permission is required to use current location.',
-        );
-        return;
-      }
-
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        state = state.copyWith(
-          resolving: false,
-          error: 'Turn on location services to use current location.',
-        );
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
+      final position = await LocationService.getCurrentPosition(
         timeLimit: const Duration(seconds: 12),
       );
 
       await selectCoordinates(position.latitude, position.longitude);
+    } on LocationServiceException catch (e) {
+      state = state.copyWith(resolving: false, error: e.message);
     } catch (_) {
       state = state.copyWith(
         resolving: false,

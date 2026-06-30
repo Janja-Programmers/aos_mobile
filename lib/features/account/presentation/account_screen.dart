@@ -154,6 +154,20 @@ class AccountScreen extends ConsumerWidget {
                 ),
               ),
 
+            AccountCard(
+              child: Column(
+                children: [
+                  AccountOptionTile(
+                    icon: Icons.map_outlined,
+                    title: 'Explore Sellers Nearby',
+                    showDivider: false,
+                    onTap: () => context.pushNamed(AppRoutes.nMaps),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+
             /// SETTINGS
             AccountSectionTitle(l10n.account_settings),
             const SizedBox(height: 8),

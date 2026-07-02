@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -135,7 +134,7 @@ class MediaHelper {
 
   /// Upload SINGLE file
   static Future<UploadedFile?> uploadSingle({
-    required WidgetRef ref,
+    required Object ref,
     required File file,
     required UploadFn uploadFn,
   }) async {
@@ -146,7 +145,7 @@ class MediaHelper {
 
   /// Upload MULTIPLE files
   static Future<List<UploadedFile>> uploadMultiple({
-    required WidgetRef ref,
+    required Object ref,
     required List<File> files,
     required UploadFn uploadFn,
   }) async {

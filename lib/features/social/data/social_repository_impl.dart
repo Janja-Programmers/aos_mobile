@@ -10,18 +10,21 @@ abstract class SocialRepository {
     int limit = 20,
     int start = 0,
     String? targetUser,
+    String? query,
   });
 
   Future<Either<Failure, SocialFriendsPage>> getFollowing({
     int limit = 20,
     int start = 0,
     String? targetUser,
+    String? query,
   });
 
   Future<Either<Failure, SocialFriendsPage>> getFriends({
     int limit = 20,
     int start = 0,
     String? targetUser,
+    String? query,
   });
 
   Future<Either<Failure, SocialRelationship>> toggleFollow({
@@ -43,8 +46,14 @@ class SocialRepositoryImpl implements SocialRepository {
     int limit = 20,
     int start = 0,
     String? targetUser,
+    String? query,
   }) {
-    return api.getFollowers(limit: limit, start: start, targetUser: targetUser);
+    return api.getFollowers(
+      limit: limit,
+      start: start,
+      targetUser: targetUser,
+      query: query,
+    );
   }
 
   @override
@@ -52,8 +61,14 @@ class SocialRepositoryImpl implements SocialRepository {
     int limit = 20,
     int start = 0,
     String? targetUser,
+    String? query,
   }) {
-    return api.getFollowing(limit: limit, start: start, targetUser: targetUser);
+    return api.getFollowing(
+      limit: limit,
+      start: start,
+      targetUser: targetUser,
+      query: query,
+    );
   }
 
   @override
@@ -61,8 +76,14 @@ class SocialRepositoryImpl implements SocialRepository {
     int limit = 20,
     int start = 0,
     String? targetUser,
+    String? query,
   }) {
-    return api.getFriends(limit: limit, start: start, targetUser: targetUser);
+    return api.getFriends(
+      limit: limit,
+      start: start,
+      targetUser: targetUser,
+      query: query,
+    );
   }
 
   @override

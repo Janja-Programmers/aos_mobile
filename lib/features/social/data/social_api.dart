@@ -24,12 +24,14 @@ class SocialApi {
     int limit = 20,
     int start = 0,
     String? targetUser,
+    String? query,
   }) {
     return _getPeoplePage(
       endpoint: ApiEndpoints.getFollowsEndpoint,
       limit: limit,
       start: start,
       targetUser: targetUser,
+      query: query,
       parseFailureMessage: 'Invalid followers response format',
       fallbackFailureMessage: 'Failed to load followers. Please try again.',
     );
@@ -42,12 +44,14 @@ class SocialApi {
     int limit = 20,
     int start = 0,
     String? targetUser,
+    String? query,
   }) {
     return _getPeoplePage(
       endpoint: ApiEndpoints.getFollowingEndpoint,
       limit: limit,
       start: start,
       targetUser: targetUser,
+      query: query,
       parseFailureMessage: 'Invalid following response format',
       fallbackFailureMessage: 'Failed to load following. Please try again.',
     );
@@ -60,12 +64,14 @@ class SocialApi {
     int limit = 20,
     int start = 0,
     String? targetUser,
+    String? query,
   }) {
     return _getPeoplePage(
       endpoint: ApiEndpoints.getFriendsEndpoint,
       limit: limit,
       start: start,
       targetUser: targetUser,
+      query: query,
       parseFailureMessage: 'Invalid friends response format',
       fallbackFailureMessage: 'Failed to load friends. Please try again.',
     );
@@ -187,6 +193,7 @@ class SocialApi {
     required int limit,
     required int start,
     String? targetUser,
+    String? query,
     required String parseFailureMessage,
     required String fallbackFailureMessage,
   }) async {
@@ -199,6 +206,10 @@ class SocialApi {
           if (targetUser?.trim().isNotEmpty == true) ...{
             'target_user': targetUser!.trim(),
             'user': targetUser.trim(),
+          },
+          if (query?.trim().isNotEmpty == true) ...{
+            'q': query!.trim(),
+            'search': query.trim(),
           },
         },
       );

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -24,6 +26,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   static const _limit = 20;
   int _offset = 0;
 
+  Timer? _wishlistSearchDebounce;
   bool _bootstrapped = false;
 
   bool get isWishlist => params.mode == AllAdsMode.wishlist;
@@ -41,8 +44,10 @@ class AllAdsController extends StateNotifier<AllAdsState> {
       selectedSort: params.sort,
     );
 
-    await _loadAllCategories();
-    _resolveChildren();
+    if (!isWishlist) {
+      await _loadAllCategories();
+      _resolveChildren();
+    }
 
     await load(initial: true);
   }
@@ -142,7 +147,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     state = state.copyWith(
       loading: initial,
       loadingMore: !initial,
-      error: null,
+      clearError: true,
     );
 
     final api = ref.read(adsApiProvider);
@@ -150,9 +155,20 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     final categoryId = state.selectedCategoryId;
     final dealType = state.selectedDealType.apiValue;
     final sort = state.selectedSort?.apiValue;
+    final wishlistQuery = state.wishlistQuery.trim();
 
     final res = isWishlist
-        ? await api.listWishlist(limit: _limit, offset: _offset)
+        ? await api.listWishlist(
+            limit: _limit,
+            offset: _offset,
+            sort: sort,
+            q: wishlistQuery.isEmpty ? null : wishlistQuery,
+            priceMin: state.wishlistMinPrice,
+            priceMax: state.wishlistMaxPrice,
+            ratingMin: state.wishlistMinRating,
+            verifiedSellers: state.wishlistVerifiedSellers ? true : null,
+            preferredStore: state.wishlistPreferredStore ? true : null,
+          )
         : await api.listAds(
             categoryId: categoryId,
             promotionType: dealType,
@@ -186,6 +202,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
           hasMore: list.length == _limit,
           loading: false,
           loadingMore: false,
+          clearError: true,
         );
       },
     );
@@ -194,7 +211,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   Future<void> refresh() async {
     _offset = 0;
 
-    state = state.copyWith(hasMore: true, items: [], error: null);
+    state = state.copyWith(hasMore: true, items: [], clearError: true);
 
     await load(initial: true);
   }
@@ -235,13 +252,69 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     load(initial: true);
   }
 
-  void setSortType(AdsSort sortType) {
-    if (isWishlist) return;
-
+  void setSortType(AdsSort? sortType) {
     _offset = 0;
 
     state = state.copyWith(selectedSort: sortType, items: [], hasMore: true);
 
     load(initial: true);
+  }
+
+  void setWishlistSearch(String query) {
+    if (!isWishlist) return;
+
+    final clean = query.trim();
+    if (clean == state.wishlistQuery) return;
+
+    _wishlistSearchDebounce?.cancel();
+    _offset = 0;
+
+    state = state.copyWith(
+      wishlistQuery: clean,
+      items: [],
+      hasMore: true,
+      loading: true,
+      clearError: true,
+    );
+
+    _wishlistSearchDebounce = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted) return;
+      state = state.copyWith(loading: false);
+      load(initial: true);
+    });
+  }
+
+  void applyWishlistFilters({
+    int? priceMin,
+    int? priceMax,
+    int? ratingMin,
+    bool verifiedSellers = false,
+    bool preferredStore = false,
+  }) {
+    if (!isWishlist) return;
+
+    _offset = 0;
+    state = state.copyWith(
+      wishlistMinPrice: priceMin,
+      wishlistMaxPrice: priceMax,
+      wishlistMinRating: ratingMin,
+      wishlistVerifiedSellers: verifiedSellers,
+      wishlistPreferredStore: preferredStore,
+      items: [],
+      hasMore: true,
+      clearError: true,
+    );
+
+    load(initial: true);
+  }
+
+  void clearWishlistFilters() {
+    applyWishlistFilters();
+  }
+
+  @override
+  void dispose() {
+    _wishlistSearchDebounce?.cancel();
+    super.dispose();
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:africaonlinestores/core/api/failure.dart';
@@ -14,6 +16,9 @@ class SocialConnectionsController
 
   final SocialRepository _repository;
   final String? _targetUser;
+
+  Timer? _searchDebounce;
+  int _requestSerial = 0;
 
   SocialConnectionsController(
     this._repository, {
@@ -34,6 +39,8 @@ class SocialConnectionsController
   Future<void> changeTab(SocialConnectionsTab tab) async {
     if (state.selectedTab == tab) return;
 
+    _searchDebounce?.cancel();
+
     state = state.copyWith(
       selectedTab: tab,
       query: '',
@@ -49,7 +56,25 @@ class SocialConnectionsController
   }
 
   void updateQuery(String query) {
-    state = state.copyWith(query: query);
+    final clean = query.trim();
+
+    if (clean == state.query) return;
+
+    _searchDebounce?.cancel();
+
+    state = state.copyWith(
+      query: clean,
+      isLoading: true,
+      isLoadingMore: false,
+      hasMore: true,
+      nextStart: 0,
+      clearError: true,
+      items: const [],
+    );
+
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      loadTab(state.selectedTab, refresh: true);
+    });
   }
 
   Future<void> refresh() async {
@@ -58,15 +83,20 @@ class SocialConnectionsController
   }
 
   Future<void> loadTab(SocialConnectionsTab tab, {bool refresh = false}) async {
+    final serial = ++_requestSerial;
+
     state = state.copyWith(
-      isLoading: !refresh,
+      isLoading: true,
       isLoadingMore: false,
       hasMore: true,
       nextStart: 0,
       clearError: true,
+      items: refresh ? const [] : state.items,
     );
 
     final result = await _fetchTab(tab: tab, start: 0);
+
+    if (!mounted || serial != _requestSerial) return;
 
     if (result.isLeft) {
       final failure = result.leftOrNull!;
@@ -108,6 +138,8 @@ class SocialConnectionsController
 
     final result = await _fetchTab(tab: tab, start: start);
 
+    if (!mounted) return;
+
     if (result.isLeft) {
       final failure = result.leftOrNull!;
       appLogger.w(
@@ -144,21 +176,26 @@ class SocialConnectionsController
     required SocialConnectionsTab tab,
     required int start,
   }) {
+    final query = state.query.trim().isEmpty ? null : state.query.trim();
+
     return switch (tab) {
       SocialConnectionsTab.following => _repository.getFollowing(
         limit: _pageSize,
         start: start,
         targetUser: _targetUser,
+        query: query,
       ),
       SocialConnectionsTab.followers => _repository.getFollowers(
         limit: _pageSize,
         start: start,
         targetUser: _targetUser,
+        query: query,
       ),
       SocialConnectionsTab.friends => _repository.getFriends(
         limit: _pageSize,
         start: start,
         targetUser: _targetUser,
+        query: query,
       ),
     };
   }
@@ -195,5 +232,11 @@ class SocialConnectionsController
       followersCount: followers,
       friendsCount: friends,
     );
+  }
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    super.dispose();
   }
 }

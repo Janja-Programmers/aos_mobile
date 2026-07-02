@@ -4,12 +4,14 @@ class AuthUser {
     required this.fullName,
     this.userImage = '',
     this.bio,
+    this.isVerified = false,
   });
 
   final String email;
   final String fullName;
   final String userImage;
   final String? bio;
+  final bool isVerified;
 
   factory AuthUser.fromMap(Map<String, dynamic> m) {
     return AuthUser(
@@ -17,7 +19,23 @@ class AuthUser {
       fullName: (m['full_name'] ?? '').toString(),
       userImage: (m['user_image'] ?? '').toString(),
       bio: (m['bio'] ?? '').toString(),
+      isVerified:
+          _bool(m['is_verified']) ||
+          _bool(m['identity_verified']) ||
+          _bool(m['is_identity_verified']) ||
+          _bool(m['verified']),
     );
+  }
+
+  static bool _bool(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is num) return value == 1;
+    final clean = value.toString().trim().toLowerCase();
+    return clean == '1' ||
+        clean == 'true' ||
+        clean == 'yes' ||
+        clean == 'approved';
   }
 }
 

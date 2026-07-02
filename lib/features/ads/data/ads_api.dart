@@ -410,11 +410,37 @@ class AdsApi {
   Future<Either<Failure, Map<String, dynamic>>> listWishlist({
     int limit = 200,
     int offset = 0,
+    String? sort,
+    String? q,
+    int? priceMin,
+    int? priceMax,
+    int? ratingMin,
+    bool? verifiedSellers,
+    bool? preferredStore,
   }) async {
     try {
+      if (sort != null && !_allowedSorts.contains(sort)) {
+        return Either.left(Failure('Invalid sort value: $sort'));
+      }
+
+      final cleanQuery = q?.trim();
       final res = await _dio.get(
         ApiEndpoints.listWishlistEndpoint,
-        queryParameters: {'limit': limit, 'offset': offset},
+        queryParameters: {
+          'limit': limit,
+          'offset': offset,
+          if (sort?.trim().isNotEmpty == true) 'sort': sort!.trim(),
+          if (cleanQuery?.isNotEmpty == true) ...{
+            'q': cleanQuery,
+            'search': cleanQuery,
+          },
+          'price_min': ?priceMin,
+          'price_max': ?priceMax,
+          'rating_min': ?ratingMin,
+          if (verifiedSellers != null)
+            'verified_sellers': verifiedSellers ? 1 : 0,
+          if (preferredStore != null) 'preferred_store': preferredStore ? 1 : 0,
+        },
       );
 
       return unwrapFrappe(res);

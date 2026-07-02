@@ -16,7 +16,12 @@ import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
 import 'package:africaonlinestores/features/verifications/controllers/seller_status_provider.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification_status.dart';
+import 'package:africaonlinestores/features/verifications/presentation/widgets/base_verification_banner.dart';
 import 'package:africaonlinestores/features/verifications/presentation/widgets/seller_verification_banner.dart';
+import 'package:africaonlinestores/features/verifications/user_verification/application/user_verification_provider.dart';
+import 'package:africaonlinestores/features/verifications/user_verification/domain/user_verification_models.dart';
+import 'package:africaonlinestores/features/verifications/user_verification/presentation/user_verification_banner.dart';
 
 import 'package:africaonlinestores/shared/components/account_option_tile.dart';
 import 'package:africaonlinestores/shared/components/app_confirm_sheet.dart';
@@ -45,6 +50,7 @@ class AccountScreen extends ConsumerWidget {
       initials: _initialsFromName(user.fullName),
       baseUrl: AppConfig.normalizedBaseUrl,
       imagePath: user.userImage.isNotEmpty ? user.userImage : null,
+      isVerified: user.isVerified,
       onEdit: () => context.pushNamed(AppRoutes.nProfile),
     );
   }
@@ -57,10 +63,12 @@ class AccountScreen extends ConsumerWidget {
     final auth = ref.watch(authControllerProvider);
     final isAuthenticated = auth is AuthAuthenticated;
 
-    /// ✅ ONLY watch seller status if authenticated
-    final AsyncValue? statusAsync = isAuthenticated
+    /// ✅ Only watch protected verification status when authenticated.
+    final AsyncValue<SellerVerificationStatus>? statusAsync = isAuthenticated
         ? ref.watch(sellerStatusProvider)
         : null;
+    final AsyncValue<UserVerificationStatus>? userVerificationAsync =
+        isAuthenticated ? ref.watch(userVerificationStatusProvider) : null;
 
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
@@ -84,7 +92,15 @@ class AccountScreen extends ConsumerWidget {
         onRefresh: () async {
           if (isAuthenticated) {
             ref.invalidate(sellerStatusProvider);
-            await ref.read(sellerStatusProvider.future);
+            ref.invalidate(userVerificationStatusProvider);
+            await Future.wait([
+              ref
+                  .read(sellerStatusProvider.future)
+                  .then((_) {}, onError: (_, _) {}),
+              ref
+                  .read(userVerificationStatusProvider.future)
+                  .then((_) {}, onError: (_, _) {}),
+            ]);
           }
         },
         child: ListView(
@@ -93,22 +109,59 @@ class AccountScreen extends ConsumerWidget {
             _buildAccountHeader(context, auth),
             const SizedBox(height: 14),
 
-            /// ✅ VERIFIED BANNER (SAFE)
-            if (statusAsync != null)
-              statusAsync.when(
-                data: (status) {
-                  if (!status.isSeller) return const SizedBox.shrink();
+            /// Business verification entry/status.
+            if (isAuthenticated)
+              statusAsync?.when(
+                    data: (status) {
+                      if (status.isSeller) {
+                        return AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 240),
+                          child: SellerVerificationBanner(
+                            key: ValueKey(status.status),
+                            state: status,
+                          ),
+                        );
+                      }
 
-                  return AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: SellerVerificationBanner(
-                      key: ValueKey(status.status),
-                      state: status,
+                      return BaseVerificationBanner(
+                        color: context.appColors.primary,
+                        icon: Icons.business_center_outlined,
+                        title: 'Verify Your Business',
+                        subtitle: 'Get verified as a registered business',
+                        onTap: () =>
+                            SellerNavigation.toSellerVerification(context),
+                      );
+                    },
+                    loading: () => BaseVerificationBanner(
+                      color: context.appColors.primary,
+                      icon: Icons.business_center_outlined,
+                      title: 'Verify Your Business',
+                      subtitle: 'Get verified as a registered business',
+                      onTap: () =>
+                          SellerNavigation.toSellerVerification(context),
                     ),
-                  );
-                },
+                    error: (_, _) => BaseVerificationBanner(
+                      color: context.appColors.primary,
+                      icon: Icons.business_center_outlined,
+                      title: 'Verify Your Business',
+                      subtitle: 'Get verified as a registered business',
+                      onTap: () =>
+                          SellerNavigation.toSellerVerification(context),
+                    ),
+                  ) ??
+                  const SizedBox.shrink(),
+
+            /// User identity verification entry/status.
+            if (userVerificationAsync != null)
+              userVerificationAsync.when(
+                data: (status) => UserVerificationBanner(status: status),
                 loading: () => const SizedBox.shrink(),
-                error: (_, _) => const SizedBox.shrink(),
+                error: (_, _) => const UserVerificationBanner(
+                  status: UserVerificationStatus(
+                    isVerified: false,
+                    status: VerificationStatus.notSubmitted,
+                  ),
+                ),
               ),
 
             /// AUTHENTICATED ACTIONS

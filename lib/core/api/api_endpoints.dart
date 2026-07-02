@@ -115,6 +115,14 @@ class ApiEndpoints {
       '/api/method/aos.api.verification.submit_verification';
   static final String getMyVerificationEndpoint =
       '/api/method/aos.api.verification.get_my_verification';
+  static final String getMyUserVerificationEndpoint =
+      '/api/method/aos.api.verification.get_my_user_verification';
+  static final String submitUserVerificationEndpoint =
+      '/api/method/aos.api.verification.submit_user_verification';
+  static final String sendUserVerificationOtpEndpoint =
+      '/api/method/aos.api.verification.send_user_phone_otp';
+  static final String verifyUserVerificationOtpEndpoint =
+      '/api/method/aos.api.verification.verify_user_phone_otp';
 
   // Localization Endpoints
   static final String getLocaleBundleEndpoint =

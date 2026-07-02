@@ -35,6 +35,7 @@ class AccountHeaderCard extends StatelessWidget {
     required this.initials,
     required this.baseUrl,
     this.imagePath,
+    this.isVerified = false,
     this.onEdit,
   });
 
@@ -43,6 +44,7 @@ class AccountHeaderCard extends StatelessWidget {
   final String initials;
   final String baseUrl;
   final String? imagePath;
+  final bool isVerified;
   final VoidCallback? onEdit;
 
   @override
@@ -74,11 +76,26 @@ class AccountHeaderCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        fullName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.h5,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              fullName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.h5,
+                            ),
+                          ),
+                          if (isVerified) ...[
+                            const SizedBox(width: 6),
+                            Icon(
+                              Icons.verified_rounded,
+                              color: Colors.lightBlueAccent.shade400,
+                              size: 20,
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(

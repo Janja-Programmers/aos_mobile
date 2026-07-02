@@ -6,16 +6,14 @@ import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
-import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
-import 'package:africaonlinestores/shared/components/locale_picker_page.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/pref_card.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
-import 'package:africaonlinestores/features/preferences/data/preferences_api_provider.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
-
-import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:africaonlinestores/features/preferences/data/preferences_api_provider.dart';
+import 'package:africaonlinestores/shared/components/locale_picker_page.dart';
 import 'package:africaonlinestores/shared/utils/flag_emoji.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class PreferenceScreen extends ConsumerStatefulWidget {
   const PreferenceScreen({super.key});
@@ -25,12 +23,6 @@ class PreferenceScreen extends ConsumerStatefulWidget {
 }
 
 class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
-  String? _country;
-  String? _language;
-  String? _currency;
-
-  bool _dirty = false;
-
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
@@ -38,14 +30,6 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
 
     final localization = ref.watch(localizationControllerProvider);
     final prefs = ref.watch(userPreferenceControllerProvider);
-
-    if (!_dirty) {
-      _country ??= prefs.countryCode;
-      _language ??= prefs.languageCode;
-      _currency ??= prefs.currencyCode;
-    }
-
-    final isSaving = prefs.isSaving;
 
     if (localization.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -62,13 +46,19 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
       );
     }
 
-    final countryLabel = _labelFor(localization.countries, _country);
-    final languageLabel = _labelFor(localization.languages, _language);
-    final currencyLabel = _labelFor(localization.currencies, _currency);
+    final countryLabel = _labelFor(localization.countries, prefs.countryCode);
+    final languageLabel = _labelFor(localization.languages, prefs.languageCode);
+    final currencyLabel = _labelFor(
+      localization.currencies,
+      prefs.currencyCode,
+    );
 
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: AppBar(
+        backgroundColor: colors.surface,
+        elevation: 0,
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -77,12 +67,12 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
         title: Text(l10n.settings_preferences, style: context.h3),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.settings_manage_app, style: context.p),
-            const SizedBox(height: 16),
+            Text(l10n.settings_manage_app, style: context.pMuted),
+            const SizedBox(height: 24),
 
             /// Language
             PrefCard(
@@ -94,13 +84,8 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
                 context,
                 title: l10n.settings_language,
                 items: localization.languages,
-                initialValue: _language,
-                onChanged: (v) {
-                  setState(() {
-                    _dirty = true;
-                    _language = v;
-                  });
-                },
+                initialValue: prefs.languageCode,
+                type: _PreferenceType.language,
               ),
             ),
 
@@ -114,13 +99,8 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
                 context,
                 title: l10n.settings_country,
                 items: localization.countries,
-                initialValue: _country,
-                onChanged: (v) {
-                  setState(() {
-                    _dirty = true;
-                    _country = v;
-                  });
-                },
+                initialValue: prefs.countryCode,
+                type: _PreferenceType.country,
               ),
             ),
 
@@ -134,22 +114,9 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
                 context,
                 title: l10n.settings_currency,
                 items: localization.currencies,
-                initialValue: _currency,
-                onChanged: (v) {
-                  setState(() {
-                    _dirty = true;
-                    _currency = v;
-                  });
-                },
+                initialValue: prefs.currencyCode,
+                type: _PreferenceType.currency,
               ),
-            ),
-
-            const SizedBox(height: 24),
-
-            PrimaryButton(
-              text: 'Update',
-              loading: isSaving,
-              onPressed: isSaving ? null : _onSavePressed,
             ),
           ],
         ),
@@ -162,20 +129,22 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
     required String title,
     required List<Map<String, dynamic>> items,
     required String? initialValue,
-    required ValueChanged<String> onChanged,
+    required _PreferenceType type,
   }) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => LocalePickerPage(
-          title: title,
+          title: 'Select $title',
           items: items,
           initialValue: initialValue,
           leadingBuilder: (it) => Text(
-            flagEmoji((it["code"] ?? "").toString().toUpperCase()),
-            style: const TextStyle(fontSize: 22),
+            flagEmoji((it['code'] ?? '').toString().toUpperCase()),
+            style: const TextStyle(fontSize: 24),
           ),
-          onChanged: onChanged,
+          onChanged: (_) {},
+          onSave: (value) => _savePreference(type, value),
+          saveButtonText: 'Save',
         ),
       ),
     );
@@ -195,48 +164,58 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
     }
   }
 
-  Future<void> _onSavePressed() async {
-    if (_country == null || _language == null || _currency == null) {
-      ShowSnack(
-        context,
-        'Please select country, language and currency.',
-      ).error();
-      return;
-    }
+  Future<void> _savePreference(_PreferenceType type, String value) async {
+    final clean = value.trim();
+    if (clean.isEmpty) return;
 
     final ctrl = ref.read(userPreferenceControllerProvider.notifier);
+    final current = ref.read(userPreferenceControllerProvider);
 
     try {
-      /// 1️⃣ Update local preferences
-      await ctrl.updatePreferences(
-        countryCode: _country,
-        languageCode: _language,
-        currencyCode: _currency,
-      );
-
-      /// 2️⃣ Update server if logged in
-      final auth = ref.read(authControllerProvider);
-
-      if (auth.isAuthenticated) {
-        final api = ref.read(userPreferenceApiProvider);
-
-        await api.updateMyPreferences({
-          "country": _country,
-          "language": _language,
-          "currency": _currency,
-        });
+      switch (type) {
+        case _PreferenceType.language:
+          await ctrl.updatePreferences(
+            countryCode: current.countryCode,
+            languageCode: clean,
+            currencyCode: current.currencyCode,
+          );
+          await _syncServer({'language': clean});
+          break;
+        case _PreferenceType.country:
+          await ctrl.updatePreferences(
+            countryCode: clean,
+            languageCode: current.languageCode,
+            currencyCode: current.currencyCode,
+          );
+          await _syncServer({'country': clean});
+          break;
+        case _PreferenceType.currency:
+          await ctrl.updatePreferences(
+            countryCode: current.countryCode,
+            languageCode: current.languageCode,
+            currencyCode: clean,
+          );
+          await _syncServer({'currency': clean});
+          break;
       }
 
       if (!mounted) return;
-
-      setState(() {
-        _dirty = false;
-      });
-
-      ShowSnack(context, 'Preferences updated.').success();
+      ShowSnack(context, 'Preference updated.').success();
     } catch (_) {
       if (!mounted) return;
-      ShowSnack(context, 'Failed to update preferences.').error();
+      ShowSnack(context, 'Failed to update preference.').error();
+      rethrow;
     }
   }
+
+  Future<void> _syncServer(Map<String, dynamic> payload) async {
+    final auth = ref.read(authControllerProvider);
+    if (!auth.isAuthenticated) return;
+
+    final api = ref.read(userPreferenceApiProvider);
+    final res = await api.updateMyPreferences(payload);
+    if (res.isLeft) throw Exception(res.leftOrNull?.message);
+  }
 }
+
+enum _PreferenceType { language, country, currency }

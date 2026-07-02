@@ -21,6 +21,7 @@ class AppRoutes {
   static const account = '/account';
   static const passwordSecurity = '/account/security';
   static const preference = '/account/preference';
+  static const userVerification = '/account/verification';
   static const activityCenter = '/account/activity';
   static const deleteAccount = '/account/delete';
   static const restoreAccount = '/account/restore';
@@ -95,6 +96,7 @@ class AppRoutes {
   static const nAccount = 'account';
   static const nPasswordSecurity = 'passwordSecurity';
   static const nPreference = 'preference';
+  static const nUserVerification = 'userVerification';
   static const nActivityCenter = 'activityCenter';
   static const nDeleteAccount = 'deleteAccount';
   static const nRestoreAccount = 'restoreAccount';

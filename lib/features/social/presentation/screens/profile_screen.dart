@@ -53,6 +53,7 @@ class ProfileScreen extends ConsumerWidget {
       currentDisplayName: currentUser.fullName,
       currentAvatar: currentUser.userImage,
       currentBio: currentUser.bio,
+      currentIsVerified: currentUser.isVerified,
       fallbackDisplayName: fallbackDisplayName,
       fallbackAvatar: fallbackAvatar,
     );
@@ -67,6 +68,7 @@ class ProfileScreen extends ConsumerWidget {
           currentDisplayName: currentUser.fullName,
           currentAvatar: currentUser.userImage,
           currentBio: currentUser.bio,
+          currentIsVerified: currentUser.isVerified,
           fallbackDisplayName: fallbackDisplayName,
           fallbackAvatar: fallbackAvatar,
         );
@@ -91,6 +93,7 @@ class ProfileScreen extends ConsumerWidget {
           currentDisplayName: currentUser.fullName,
           currentAvatar: currentUser.userImage,
           currentBio: currentUser.bio,
+          currentIsVerified: currentUser.isVerified,
           fallbackDisplayName: fallbackDisplayName,
           fallbackAvatar: fallbackAvatar,
         );
@@ -213,7 +216,33 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-class _ProfileScaffold extends StatelessWidget {
+enum _ProfilePanel { posts, saved, liked }
+
+extension _ProfilePanelX on _ProfilePanel {
+  String get label {
+    switch (this) {
+      case _ProfilePanel.posts:
+        return 'Posts';
+      case _ProfilePanel.saved:
+        return 'Saved';
+      case _ProfilePanel.liked:
+        return 'Liked';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case _ProfilePanel.posts:
+        return Icons.grid_view_rounded;
+      case _ProfilePanel.saved:
+        return Icons.bookmark_border_rounded;
+      case _ProfilePanel.liked:
+        return Icons.favorite_border_rounded;
+    }
+  }
+}
+
+class _ProfileScaffold extends StatefulWidget {
   final _ProfileViewData data;
   final bool isLoading;
   final Future<void> Function() onRefresh;
@@ -233,20 +262,29 @@ class _ProfileScaffold extends StatelessWidget {
   });
 
   @override
+  State<_ProfileScaffold> createState() => _ProfileScaffoldState();
+}
+
+class _ProfileScaffoldState extends State<_ProfileScaffold> {
+  _ProfilePanel _selectedPanel = _ProfilePanel.posts;
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final data = widget.data;
+    final selectedItems = _itemsForPanel(data, _selectedPanel);
 
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: _ProfileAppBar(
         title: data.isOwnProfile ? 'Me' : data.displayName,
-        onShareTap: onShareTap,
+        onShareTap: widget.onShareTap,
         onMoreTap: data.isOwnProfile
             ? null
             : () => ProfileScreen._showSafetySheet(context, data),
       ),
       body: RefreshIndicator(
-        onRefresh: onRefresh,
+        onRefresh: widget.onRefresh,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
@@ -256,10 +294,11 @@ class _ProfileScaffold extends StatelessWidget {
                 username: data.username,
                 imageUrl: data.avatarUrl,
                 bio: data.bio,
+                isVerified: data.isVerified,
                 isOwnProfile: data.isOwnProfile,
                 followingCount: _formatCount(data.followingCount),
                 followersCount: _formatCount(data.followersCount),
-                friendsCount: _formatCount(data.friendsCount),
+                likesCount: _formatCount(data.likesCount),
                 onFollowingTap: () {
                   SocialNavigation.toSocialConnectionsScreen(
                     context,
@@ -276,29 +315,24 @@ class _ProfileScaffold extends StatelessWidget {
                     user: data.user,
                   );
                 },
-                onFriendsTap: () {
-                  SocialNavigation.toSocialConnectionsScreen(
-                    context,
-                    tab: SocialConnectionsTab.friends,
-                    title: data.displayName,
-                    user: data.user,
-                  );
-                },
-                onEditTap: onEditTap,
-                onMessageTap: onMessageTap,
+                onEditTap: widget.onEditTap,
+                onMessageTap: widget.onMessageTap,
                 followActionLabel: data.followActionLabel,
                 isFollowing: data.isFollowing,
-                onFollowTap: onFollowTap,
+                onFollowTap: widget.onFollowTap,
               ),
             ),
             SliverPersistentHeader(
               pinned: true,
               delegate: _ProfileTabsHeaderDelegate(
-                child: const _ProfileTabs(),
+                child: _ProfileTabs(
+                  selected: _selectedPanel,
+                  onChanged: (panel) => setState(() => _selectedPanel = panel),
+                ),
                 backgroundColor: colors.surface,
               ),
             ),
-            if (isLoading)
+            if (widget.isLoading)
               SliverGrid(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) => _ProfileGridSkeleton(index: index),
@@ -311,16 +345,19 @@ class _ProfileScaffold extends StatelessWidget {
                   childAspectRatio: 0.72,
                 ),
               )
-            else if (data.posts.isEmpty)
+            else if (selectedItems.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
-                child: _EmptyPostsView(isOwnProfile: data.isOwnProfile),
+                child: _EmptyProfilePanelView(
+                  isOwnProfile: data.isOwnProfile,
+                  panel: _selectedPanel,
+                ),
               )
             else
               SliverGrid(
                 delegate: SliverChildBuilderDelegate((context, index) {
-                  return _ProfileGridItem(short: data.posts[index]);
-                }, childCount: data.posts.length),
+                  return _ProfileGridItem(short: selectedItems[index]);
+                }, childCount: selectedItems.length),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   mainAxisSpacing: 1.5,
@@ -332,6 +369,20 @@ class _ProfileScaffold extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static List<Short> _itemsForPanel(
+    _ProfileViewData data,
+    _ProfilePanel panel,
+  ) {
+    switch (panel) {
+      case _ProfilePanel.posts:
+        return data.posts;
+      case _ProfilePanel.saved:
+        return data.saved;
+      case _ProfilePanel.liked:
+        return data.liked;
+    }
   }
 
   static String _formatCount(int value) {
@@ -401,15 +452,15 @@ class _ProfileHeader extends StatelessWidget {
   final String username;
   final String? imageUrl;
   final String bio;
+  final bool isVerified;
   final bool isOwnProfile;
 
   final String followingCount;
   final String followersCount;
-  final String friendsCount;
+  final String likesCount;
 
   final VoidCallback onFollowingTap;
   final VoidCallback onFollowersTap;
-  final VoidCallback onFriendsTap;
   final VoidCallback onEditTap;
   final VoidCallback onMessageTap;
   final VoidCallback? onFollowTap;
@@ -421,13 +472,13 @@ class _ProfileHeader extends StatelessWidget {
     required this.username,
     required this.imageUrl,
     required this.bio,
+    required this.isVerified,
     required this.isOwnProfile,
     required this.followingCount,
     required this.followersCount,
-    required this.friendsCount,
+    required this.likesCount,
     required this.onFollowingTap,
     required this.onFollowersTap,
-    required this.onFriendsTap,
     required this.onEditTap,
     required this.onMessageTap,
     required this.onFollowTap,
@@ -441,41 +492,89 @@ class _ProfileHeader extends StatelessWidget {
 
     return Column(
       children: [
-        const SizedBox(height: 4),
-        CircleAvatar(
-          radius: 42,
-          backgroundColor: colors.border,
-          backgroundImage: imageUrl != null ? NetworkImage(imageUrl!) : null,
-          child: imageUrl == null
-              ? Icon(Icons.person_rounded, size: 42, color: colors.textMuted)
-              : null,
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
+        const SizedBox(height: 10),
+        Stack(
+          clipBehavior: Clip.none,
           children: [
-            Flexible(
-              child: Text(
-                displayName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.h5.copyWith(
-                  color: colors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                ),
+            CircleAvatar(
+              radius: 46,
+              backgroundColor: colors.primary.withOpacity(0.18),
+              child: CircleAvatar(
+                radius: 42,
+                backgroundColor: colors.border,
+                backgroundImage: imageUrl != null
+                    ? NetworkImage(imageUrl!)
+                    : null,
+                child: imageUrl == null
+                    ? Icon(
+                        Icons.person_rounded,
+                        size: 42,
+                        color: colors.primary,
+                      )
+                    : null,
               ),
             ),
+            if (isOwnProfile)
+              Positioned(
+                right: -3,
+                bottom: -3,
+                child: GestureDetector(
+                  onTap: onEditTap,
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: colors.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: colors.surface, width: 3),
+                    ),
+                    child: Icon(
+                      Icons.camera_alt_outlined,
+                      color: colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 14),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.h5.copyWith(
+                    color: colors.textPrimary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              if (isVerified) ...[
+                const SizedBox(width: 6),
+                Icon(
+                  Icons.verified_rounded,
+                  color: Colors.lightBlueAccent.shade400,
+                  size: 22,
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
         Text(
           '@$username',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: context.pMuted.copyWith(fontSize: 13, height: 1.1),
+          style: context.pMuted.copyWith(fontSize: 14, height: 1.1),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 18),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -484,54 +583,72 @@ class _ProfileHeader extends StatelessWidget {
               label: 'Following',
               onTap: onFollowingTap,
             ),
-            const SizedBox(width: 34),
+            Container(
+              width: 1,
+              height: 28,
+              margin: const EdgeInsets.symmetric(horizontal: 26),
+              color: colors.border,
+            ),
             _ProfileStat(
               value: followersCount,
               label: 'Followers',
               onTap: onFollowersTap,
             ),
-            const SizedBox(width: 34),
-            _ProfileStat(
-              value: friendsCount,
-              label: 'Friends',
-              onTap: onFriendsTap,
+            Container(
+              width: 1,
+              height: 28,
+              margin: const EdgeInsets.symmetric(horizontal: 26),
+              color: colors.border,
             ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _MainProfileActionButton(
-              label: isOwnProfile ? 'Edit profile' : 'Message',
-              icon: isOwnProfile ? Icons.edit_outlined : Icons.send_rounded,
-              onTap: isOwnProfile ? onEditTap : onMessageTap,
-            ),
-            if (!isOwnProfile) ...[
-              const SizedBox(width: 8),
-              _FollowProfileActionButton(
-                label: followActionLabel,
-                isFollowing: isFollowing,
-                onTap: onFollowTap,
-              ),
-            ],
+            _ProfileStat(value: likesCount, label: 'Likes', onTap: () {}),
           ],
         ),
         if (bio.trim().isNotEmpty) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 34),
             child: Text(
               bio,
               textAlign: TextAlign.center,
               style: context.p.copyWith(
                 color: colors.textPrimary,
-                height: 1.25,
+                height: 1.35,
               ),
             ),
           ),
         ],
-        const SizedBox(height: 14),
+        const SizedBox(height: 18),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: isOwnProfile
+              ? _MainProfileActionButton(
+                  label: 'Edit profile',
+                  icon: Icons.edit_outlined,
+                  onTap: onEditTap,
+                  expanded: true,
+                  outlined: true,
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: _MainProfileActionButton(
+                        label: 'Message',
+                        icon: Icons.send_rounded,
+                        onTap: onMessageTap,
+                        expanded: true,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    _FollowProfileActionButton(
+                      label: followActionLabel,
+                      isFollowing: isFollowing,
+                      onTap: onFollowTap,
+                    ),
+                  ],
+                ),
+        ),
+        const SizedBox(height: 22),
       ],
     );
   }
@@ -584,42 +701,53 @@ class _MainProfileActionButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final VoidCallback onTap;
+  final bool expanded;
+  final bool outlined;
 
   const _MainProfileActionButton({
     required this.label,
     required this.icon,
     required this.onTap,
+    this.expanded = false,
+    this.outlined = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
+    final child = Container(
+      height: 48,
+      width: expanded ? double.infinity : null,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: outlined ? Colors.transparent : colors.elevated,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: outlined ? colors.border : colors.elevated),
+      ),
+      child: Row(
+        mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (!outlined) ...[
+            Icon(icon, color: colors.textPrimary, size: 18),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            label,
+            style: context.pStrong.copyWith(
+              color: colors.textPrimary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        height: 44,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        decoration: BoxDecoration(
-          color: colors.elevated,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: colors.textPrimary, size: 18),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: context.p.copyWith(
-                color: colors.textPrimary,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: expanded ? SizedBox(width: double.infinity, child: child) : child,
     );
   }
 }
@@ -684,10 +812,10 @@ class _ProfileTabsHeaderDelegate extends SliverPersistentHeaderDelegate {
   });
 
   @override
-  double get minExtent => 44;
+  double get minExtent => 72;
 
   @override
-  double get maxExtent => 44;
+  double get maxExtent => 72;
 
   @override
   Widget build(
@@ -706,7 +834,10 @@ class _ProfileTabsHeaderDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class _ProfileTabs extends StatelessWidget {
-  const _ProfileTabs();
+  final _ProfilePanel selected;
+  final ValueChanged<_ProfilePanel> onChanged;
+
+  const _ProfileTabs({required this.selected, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -717,20 +848,18 @@ class _ProfileTabs extends StatelessWidget {
         Expanded(
           child: Row(
             children: [
-              Expanded(
-                child: _TabIcon(
-                  icon: Icons.grid_view_rounded,
-                  isSelected: true,
-                  color: colors.textPrimary,
+              for (final panel in _ProfilePanel.values)
+                Expanded(
+                  child: _TabIcon(
+                    icon: panel.icon,
+                    label: panel.label,
+                    isSelected: selected == panel,
+                    color: selected == panel
+                        ? colors.primary
+                        : colors.textMuted,
+                    onTap: () => onChanged(panel),
+                  ),
                 ),
-              ),
-              Expanded(
-                child: _TabIcon(
-                  icon: Icons.repeat_rounded,
-                  isSelected: false,
-                  color: colors.textMuted,
-                ),
-              ),
             ],
           ),
         ),
@@ -742,34 +871,51 @@ class _ProfileTabs extends StatelessWidget {
 
 class _TabIcon extends StatelessWidget {
   final IconData icon;
+  final String label;
   final bool isSelected;
   final Color color;
+  final VoidCallback onTap;
 
   const _TabIcon({
     required this.icon,
+    required this.label,
     required this.isSelected,
     required this.color,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: color, size: 24),
-        const SizedBox(height: 5),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          width: isSelected ? 28 : 0,
-          height: 2,
-          decoration: BoxDecoration(
-            color: isSelected ? colors.textPrimary : Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 25),
+          const SizedBox(height: 5),
+          Text(
+            label,
+            style: context.p.copyWith(
+              color: color,
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            width: isSelected ? 34 : 0,
+            height: 3,
+            decoration: BoxDecoration(
+              color: isSelected ? colors.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -906,34 +1052,59 @@ class _ProfileGridSkeleton extends StatelessWidget {
   }
 }
 
-class _EmptyPostsView extends StatelessWidget {
+class _EmptyProfilePanelView extends StatelessWidget {
   final bool isOwnProfile;
+  final _ProfilePanel panel;
 
-  const _EmptyPostsView({required this.isOwnProfile});
+  const _EmptyProfilePanelView({
+    required this.isOwnProfile,
+    required this.panel,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+
+    final icon = switch (panel) {
+      _ProfilePanel.posts => Icons.video_library_outlined,
+      _ProfilePanel.saved => Icons.bookmark_border_rounded,
+      _ProfilePanel.liked => Icons.favorite_border_rounded,
+    };
+    final title = switch (panel) {
+      _ProfilePanel.posts =>
+        isOwnProfile ? 'No posts yet' : 'No public posts yet',
+      _ProfilePanel.saved => 'No saved posts yet',
+      _ProfilePanel.liked => 'No liked posts yet',
+    };
+    final message = switch (panel) {
+      _ProfilePanel.posts =>
+        isOwnProfile
+            ? 'Your published shorts will appear here.'
+            : 'This user has no visible posts yet.',
+      _ProfilePanel.saved =>
+        isOwnProfile
+            ? 'Saved shorts and posts will appear here.'
+            : 'Saved posts are not public for this profile.',
+      _ProfilePanel.liked =>
+        isOwnProfile
+            ? 'Liked shorts and posts will appear here.'
+            : 'Liked posts are not public for this profile.',
+    };
 
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.video_library_outlined, size: 42, color: colors.textMuted),
+          Icon(icon, size: 42, color: colors.textMuted),
           const SizedBox(height: 12),
           Text(
-            isOwnProfile ? 'No posts yet' : 'No public posts yet',
+            title,
+            textAlign: TextAlign.center,
             style: context.pStrong.copyWith(color: colors.textPrimary),
           ),
           const SizedBox(height: 6),
-          Text(
-            isOwnProfile
-                ? 'Your published shorts will appear here.'
-                : 'This user has no visible posts yet.',
-            textAlign: TextAlign.center,
-            style: context.pMuted,
-          ),
+          Text(message, textAlign: TextAlign.center, style: context.pMuted),
         ],
       ),
     );
@@ -969,7 +1140,16 @@ class _ProfileLoader {
       ApiEndpoints.getFriendsEndpoint,
       request.targetUser,
     );
-    final postsFuture = _loadPosts(request.targetUser);
+    final postsFuture = _loadPosts(
+      request.targetUser,
+      isOwnProfile: isOwnProfile,
+    );
+    final savedFuture = isOwnProfile
+        ? _loadShortPanel(ApiEndpoints.savedShorts, request.targetUser)
+        : Future<List<Short>>.value(const <Short>[]);
+    final likedFuture = isOwnProfile
+        ? _loadShortPanel(ApiEndpoints.likedShorts, request.targetUser)
+        : Future<List<Short>>.value(const <Short>[]);
     final relationshipFuture = isOwnProfile
         ? Future<_RelationshipLite>.value(const _RelationshipLite.self())
         : _loadRelationship(request.targetUser);
@@ -980,6 +1160,8 @@ class _ProfileLoader {
       followersFuture,
       friendsFuture,
       postsFuture,
+      savedFuture,
+      likedFuture,
       relationshipFuture,
     ]);
 
@@ -988,7 +1170,9 @@ class _ProfileLoader {
     final followers = results[2] as int?;
     final friends = results[3] as int?;
     final posts = results[4] as List<Short>;
-    final relationship = results[5] as _RelationshipLite;
+    final saved = results[5] as List<Short>;
+    final liked = results[6] as List<Short>;
+    final relationship = results[7] as _RelationshipLite;
 
     final profileBelongsToTarget = _profileBelongsToTarget(
       profile,
@@ -1020,6 +1204,13 @@ class _ProfileLoader {
       isOwnProfile ? request.currentBio : null,
     ]);
 
+    final isVerified = profileBelongsToTarget
+        ? _bool(profile['is_verified']) ||
+              _bool(profile['verified']) ||
+              _bool(profile['identity_verified']) ||
+              _bool(profile['is_identity_verified'])
+        : false;
+
     return _ProfileViewData(
       user: request.targetUser,
       displayName: displayName,
@@ -1038,7 +1229,10 @@ class _ProfileLoader {
           _int(profile['total_likes']) ??
           _int(profile['like_count']) ??
           posts.fold<int>(0, (sum, short) => sum + short.metrics.likeCount),
+      isVerified: isVerified || (isOwnProfile && request.currentIsVerified),
       posts: posts,
+      saved: saved,
+      liked: liked,
       isFollowing: relationship.isFollowing,
       followActionLabel: relationship.actionLabel,
     );
@@ -1110,12 +1304,27 @@ class _ProfileLoader {
     );
   }
 
-  Future<List<Short>> _loadPosts(String targetUser) async {
+  Future<List<Short>> _loadPosts(
+    String targetUser, {
+    required bool isOwnProfile,
+  }) {
+    return _loadShortPanel(
+      isOwnProfile ? ApiEndpoints.myShorts : ApiEndpoints.userShorts,
+      targetUser,
+      onlyCreator: true,
+    );
+  }
+
+  Future<List<Short>> _loadShortPanel(
+    String endpoint,
+    String targetUser, {
+    bool onlyCreator = false,
+  }) async {
     try {
       final res = await ref
           .read(apiClientProvider)
           .get(
-            ApiEndpoints.myShorts,
+            endpoint,
             queryParameters: {
               ..._targetQuery(targetUser),
               'owner': targetUser,
@@ -1126,14 +1335,21 @@ class _ProfileLoader {
       if (unwrapped.isLeft) return const <Short>[];
 
       final data = _extractData(unwrapped.rightOrNull);
-      final rawItems = data is Map ? data['items'] : null;
+      final rawItems = data is Map
+          ? data['items'] ?? data['shorts'] ?? data['data']
+          : data;
 
       if (rawItems is! List) return const <Short>[];
 
-      return rawItems
+      final list = rawItems
           .whereType<Map>()
           .map((item) => ShortModel.fromJson(Map<String, dynamic>.from(item)))
           .map(ShortMapper.toDomain)
+          .toList(growable: false);
+
+      if (!onlyCreator) return list;
+
+      return list
           .where((short) {
             final creatorUser = short.creator.user.trim().toLowerCase();
             if (creatorUser.isEmpty) return true;
@@ -1191,6 +1407,17 @@ class _ProfileLoader {
     return '';
   }
 
+  static bool _bool(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is num) return value == 1;
+    final clean = value.toString().trim().toLowerCase();
+    return clean == '1' ||
+        clean == 'true' ||
+        clean == 'yes' ||
+        clean == 'approved';
+  }
+
   static int? _int(dynamic value) {
     if (value == null) return null;
     if (value is int) return value;
@@ -1207,6 +1434,7 @@ class _ProfileRequest {
   final String currentDisplayName;
   final String currentAvatar;
   final String? currentBio;
+  final bool currentIsVerified;
   final String? fallbackDisplayName;
   final String? fallbackAvatar;
 
@@ -1216,6 +1444,7 @@ class _ProfileRequest {
     required this.currentDisplayName,
     required this.currentAvatar,
     this.currentBio,
+    required this.currentIsVerified,
     this.fallbackDisplayName,
     this.fallbackAvatar,
   });
@@ -1228,6 +1457,7 @@ class _ProfileRequest {
         other.currentDisplayName == currentDisplayName &&
         other.currentAvatar == currentAvatar &&
         other.currentBio == currentBio &&
+        other.currentIsVerified == currentIsVerified &&
         other.fallbackDisplayName == fallbackDisplayName &&
         other.fallbackAvatar == fallbackAvatar;
   }
@@ -1239,6 +1469,7 @@ class _ProfileRequest {
     currentDisplayName,
     currentAvatar,
     currentBio,
+    currentIsVerified,
     fallbackDisplayName,
     fallbackAvatar,
   );
@@ -1256,7 +1487,10 @@ class _ProfileViewData {
   final int followersCount;
   final int friendsCount;
   final int likesCount;
+  final bool isVerified;
   final List<Short> posts;
+  final List<Short> saved;
+  final List<Short> liked;
   final bool isFollowing;
   final String followActionLabel;
 
@@ -1271,7 +1505,10 @@ class _ProfileViewData {
     required this.followersCount,
     required this.friendsCount,
     required this.likesCount,
+    required this.isVerified,
     required this.posts,
+    required this.saved,
+    required this.liked,
     required this.isFollowing,
     required this.followActionLabel,
   });
@@ -1282,6 +1519,7 @@ class _ProfileViewData {
     required String currentDisplayName,
     required String currentAvatar,
     required String? currentBio,
+    required bool currentIsVerified,
     String? fallbackDisplayName,
     String? fallbackAvatar,
   }) {
@@ -1306,7 +1544,10 @@ class _ProfileViewData {
       followersCount: 0,
       friendsCount: 0,
       likesCount: 0,
+      isVerified: isOwnProfile && currentIsVerified,
       posts: const <Short>[],
+      saved: const <Short>[],
+      liked: const <Short>[],
       isFollowing: false,
       followActionLabel: 'Follow',
     );

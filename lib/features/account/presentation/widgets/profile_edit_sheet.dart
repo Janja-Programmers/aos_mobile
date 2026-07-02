@@ -54,12 +54,22 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
   Future<void> _save() async {
     if (_saving) return;
 
+    final fullName = _nameCtrl.text.trim();
+    final bio = _bioCtrl.text.trim();
+
+    if (fullName.length < 2) {
+      showAppSnack(context, 'Please enter your name.');
+      return;
+    }
+
+    if (bio.length > 160) {
+      showAppSnack(context, 'Bio should be 160 characters or less.');
+      return;
+    }
+
     setState(() => _saving = true);
 
-    final res = await _api.updateProfile(
-      fullName: _nameCtrl.text.trim(),
-      bio: _bioCtrl.text.trim(),
-    );
+    final res = await _api.updateProfile(fullName: fullName, bio: bio);
 
     if (!mounted) return;
 
@@ -74,7 +84,10 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     }
 
     final payload = res.rightOrNull ?? {};
-    final data = Map<String, dynamic>.from(payload['data'] ?? {});
+    final rawData = payload['data'] ?? payload['message']?['data'] ?? payload;
+    final data = rawData is Map
+        ? Map<String, dynamic>.from(rawData)
+        : <String, dynamic>{};
 
     ref.read(authControllerProvider.notifier).setUserFromMap(data);
 
@@ -120,7 +133,10 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     }
 
     final payload = res.rightOrNull ?? {};
-    final data = Map<String, dynamic>.from(payload['data']);
+    final rawData = payload['data'] ?? payload['message']?['data'] ?? payload;
+    final data = rawData is Map
+        ? Map<String, dynamic>.from(rawData)
+        : <String, dynamic>{};
 
     ref.read(authControllerProvider.notifier).setUserFromMap(data);
 
@@ -192,8 +208,10 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
               controller: _bioCtrl,
               minLines: 3,
               maxLines: 5,
+              maxLength: 160,
               decoration: const InputDecoration(
                 labelText: 'Bio',
+                hintText: 'Tell buyers and sellers a little about you',
                 alignLabelWithHint: true,
               ),
             ),

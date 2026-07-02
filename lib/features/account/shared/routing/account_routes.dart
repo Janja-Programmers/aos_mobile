@@ -11,6 +11,7 @@ import 'package:africaonlinestores/features/account/presentation/screens/user_pr
 import 'package:africaonlinestores/features/account/presentation/screens/delete_account_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/restore_account_screen.dart';
 import 'package:africaonlinestores/features/activity/presentation/screens/activity_center_screen.dart';
+import 'package:africaonlinestores/features/verifications/user_verification/presentation/user_verification_screen.dart';
 
 class AccountRoutes {
   const AccountRoutes._();
@@ -46,6 +47,11 @@ class AccountRoutes {
         name: AppRoutes.nPreference,
         path: AppRoutes.preference,
         builder: (context, state) => const PreferenceScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.nUserVerification,
+        path: AppRoutes.userVerification,
+        builder: (context, state) => const UserVerificationScreen(),
       ),
       GoRoute(
         name: AppRoutes.nActivityCenter,

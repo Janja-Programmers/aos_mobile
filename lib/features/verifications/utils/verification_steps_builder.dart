@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/features/verifications/domain/verification.dart';
 import 'package:africaonlinestores/features/verifications/presentation/steps/basic_info_step.dart';
 import 'package:africaonlinestores/features/verifications/presentation/steps/document_step.dart';
 import 'package:africaonlinestores/features/verifications/presentation/steps/review_step.dart';
+import 'package:flutter/material.dart';
 
 typedef StepBuilder = Widget Function(BuildContext context);
 typedef StepValidator = bool Function(BusinessVerification data);
@@ -25,26 +24,26 @@ class VerificationStepDef {
 List<VerificationStepDef> buildVerificationSteps() {
   return [
     VerificationStepDef(
-      id: "basic",
-      title: "Business Info",
+      id: 'basic',
+      title: 'Business Info',
       builder: (context) => const BasicInfoStep(),
       validator: (data) {
-        return (data.businessName ?? "").isNotEmpty &&
-            (data.businessType ?? "").isNotEmpty &&
-            (data.businessCategory ?? "").isNotEmpty;
+        return (data.businessName ?? '').isNotEmpty &&
+            (data.businessType ?? '').isNotEmpty &&
+            (data.businessCategory ?? '').isNotEmpty;
       },
     ),
     VerificationStepDef(
-      id: "details",
-      title: "Documents",
+      id: 'details',
+      title: 'Documents',
       builder: (context) => const DocumentsStep(),
       validator: (data) {
         return data.documents.isNotEmpty;
       },
     ),
     VerificationStepDef(
-      id: "review",
-      title: "Review",
+      id: 'review',
+      title: 'Review',
       builder: (context) => const ReviewStep(),
       validator: (_) => true,
     ),

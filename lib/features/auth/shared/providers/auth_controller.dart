@@ -1,21 +1,19 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
-import 'package:africaonlinestores/core/api/session_storage.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/api/session_storage.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
-
+import 'package:africaonlinestores/features/auth/data/apple_auth_service.dart';
 import 'package:africaonlinestores/features/auth/data/auth_api.dart';
 import 'package:africaonlinestores/features/auth/data/google_auth_service.dart';
-import 'package:africaonlinestores/features/auth/data/apple_auth_service.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
-
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/preferences/data/preferences_api_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class AuthController extends StateNotifier<AuthState> {
   AuthController({
@@ -104,7 +102,8 @@ class AuthController extends StateNotifier<AuthState> {
       final payload = res.rightOrNull ?? {};
       if (payload['ok'] != true) return null;
 
-      return Map<String, dynamic>.from(payload['data']?['user'] ?? {});
+      final data = asJsonMap(payload['data']);
+      return asJsonMap(data['user']);
     } catch (e) {
       appLogger.e('[Auth] Fetch session error: $e');
       return null;
@@ -171,17 +170,14 @@ class AuthController extends StateNotifier<AuthState> {
       );
     }
 
-    final data = Map<String, dynamic>.from(payload['data'] ?? {});
+    final data = asJsonMap(payload['data'] ?? {});
     final sid = data['sid']?.toString() ?? '';
 
     if (sid.isEmpty) {
       return Either.left(const Failure('Login failed (no session).'));
     }
 
-    await _completeLogin(
-      sid: sid,
-      user: Map<String, dynamic>.from(data['user'] ?? {}),
-    );
+    await _completeLogin(sid: sid, user: asJsonMap(data['user'] ?? {}));
 
     return Either.right(null);
   }
@@ -272,17 +268,14 @@ class AuthController extends StateNotifier<AuthState> {
         );
       }
 
-      final data = Map<String, dynamic>.from(payload['data'] ?? {});
+      final data = asJsonMap(payload['data'] ?? {});
       final sid = (data['sid'] ?? '').toString();
 
       if (sid.isEmpty) {
         return Either.left(const Failure('No session returned.'));
       }
 
-      await _completeLogin(
-        sid: sid,
-        user: Map<String, dynamic>.from(data['user'] ?? {}),
-      );
+      await _completeLogin(sid: sid, user: asJsonMap(data['user'] ?? {}));
 
       return Either.right(null);
     } catch (e) {
@@ -319,17 +312,14 @@ class AuthController extends StateNotifier<AuthState> {
         );
       }
 
-      final data = Map<String, dynamic>.from(payload['data'] ?? {});
+      final data = asJsonMap(payload['data'] ?? {});
       final sid = (data['sid'] ?? '').toString();
 
       if (sid.isEmpty) {
         return Either.left(const Failure('No session returned.'));
       }
 
-      await _completeLogin(
-        sid: sid,
-        user: Map<String, dynamic>.from(data['user'] ?? {}),
-      );
+      await _completeLogin(sid: sid, user: asJsonMap(data['user'] ?? {}));
 
       return Either.right(null);
     } catch (e) {
@@ -363,12 +353,16 @@ class AuthController extends StateNotifier<AuthState> {
           return;
         }
 
-        final data = Map<String, dynamic>.from(payload['data'] ?? {});
+        final data = asJsonMap(payload['data'] ?? {});
+
+        final country = asJsonMap(data['country']);
+        final language = asJsonMap(data['language']);
+        final currency = asJsonMap(data['currency']);
 
         await prefCtrl.syncFromServer(
-          countryCode: (data['country']?['code'] ?? '').toString(),
-          languageCode: (data['language']?['code'] ?? '').toString(),
-          currencyCode: (data['currency']?['name'] ?? '').toString(),
+          countryCode: asString(country['code']),
+          languageCode: asString(language['code']),
+          currencyCode: asString(currency['name']),
         );
 
         return;
@@ -377,7 +371,7 @@ class AuthController extends StateNotifier<AuthState> {
 
         if (attempt == maxAttempts) return;
 
-        await Future.delayed(const Duration(milliseconds: 400));
+        await Future<void>.delayed(const Duration(milliseconds: 400));
       }
     }
   }
@@ -459,9 +453,7 @@ class AuthController extends StateNotifier<AuthState> {
       return Either.left(Failure(msg));
     }
 
-    final data = (payload['data'] is Map)
-        ? Map<String, dynamic>.from(payload['data'] as Map)
-        : <String, dynamic>{};
+    final data = asJsonMap(payload['data']);
     final token = (data['reset_token'] ?? '').toString();
     if (token.isEmpty) {
       return Either.left(
@@ -523,7 +515,7 @@ class AuthController extends StateNotifier<AuthState> {
   // ---------------------------------------------------------------------------
   @override
   void dispose() {
-    _sessionSub?.cancel();
+    unawaited(_sessionSub?.cancel());
     _refreshingSession = null;
     super.dispose();
   }

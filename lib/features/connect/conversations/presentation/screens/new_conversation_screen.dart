@@ -1,7 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
@@ -17,6 +13,9 @@ import 'package:africaonlinestores/features/social/application/state/social_conn
 import 'package:africaonlinestores/features/social/domain/social_friend.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum _NewConversationTab { sellers, friends }
 
@@ -77,7 +76,9 @@ class _NewConversationScreenState extends ConsumerState<NewConversationScreen> {
 
     final position = _friendScrollController.position;
     if (position.pixels >= position.maxScrollExtent - 280) {
-      ref.read(socialConnectionsControllerProvider(_friendsArgs).notifier).loadMore();
+      ref
+          .read(socialConnectionsControllerProvider(_friendsArgs).notifier)
+          .loadMore();
     }
   }
 
@@ -95,7 +96,9 @@ class _NewConversationScreenState extends ConsumerState<NewConversationScreen> {
         ref.read(sellerListControllerProvider.notifier).updateSearch(value);
         break;
       case _NewConversationTab.friends:
-        ref.read(socialConnectionsControllerProvider(_friendsArgs).notifier).updateQuery(value);
+        ref
+            .read(socialConnectionsControllerProvider(_friendsArgs).notifier)
+            .updateQuery(value);
         break;
     }
   }
@@ -208,10 +211,7 @@ class _NewConversationScreenState extends ConsumerState<NewConversationScreen> {
         child: Column(
           children: [
             _Header(onBack: () => Navigator.of(context).maybePop()),
-            _SegmentedTabs(
-              selectedTab: _selectedTab,
-              onChanged: _changeTab,
-            ),
+            _SegmentedTabs(selectedTab: _selectedTab, onChanged: _changeTab),
             Padding(
               padding: const EdgeInsets.fromLTRB(28, 16, 28, 16),
               child: AppSearchBar(
@@ -277,7 +277,11 @@ class _Header extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: colors.border),
                 ),
-                child: Icon(Icons.arrow_back_rounded, color: colors.textPrimary, size: 30),
+                child: Icon(
+                  Icons.arrow_back_rounded,
+                  color: colors.textPrimary,
+                  size: 30,
+                ),
               ),
             ),
           ),
@@ -419,7 +423,9 @@ class _SellerResults extends ConsumerWidget {
     if (state.items.isEmpty) {
       return _CenteredState(
         icon: Icons.search_off_rounded,
-        title: state.search.isEmpty ? 'No verified sellers' : 'No sellers found',
+        title: state.search.isEmpty
+            ? 'No verified sellers'
+            : 'No sellers found',
         message: state.search.isEmpty
             ? 'Verified sellers will appear here when available.'
             : 'Try another seller name, category, or location.',
@@ -477,7 +483,9 @@ class _FriendResults extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(socialConnectionsControllerProvider(args));
-    final controller = ref.read(socialConnectionsControllerProvider(args).notifier);
+    final controller = ref.read(
+      socialConnectionsControllerProvider(args).notifier,
+    );
     final items = state.items;
 
     if (state.isLoading && items.isEmpty) {
@@ -576,99 +584,107 @@ class _ContactCard extends StatelessWidget {
     final colors = context.appColors;
     final imageUrl = buildFileUrl(avatarUrl);
 
-    return Container(
-      minHeight: 92,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: colors.elevated,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              CircleAvatar(
-                radius: 32,
-                backgroundColor: colors.primary.withValues(alpha: 0.16),
-                backgroundImage: imageUrl == null ? null : NetworkImage(imageUrl),
-                child: imageUrl == null
-                    ? Text(
-                        initial,
-                        style: context.h5.copyWith(
-                          color: colors.primary,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      )
-                    : null,
-              ),
-              if (online)
-                Positioned(
-                  right: 1,
-                  bottom: 1,
-                  child: Container(
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: colors.success,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: colors.elevated, width: 2),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 18),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 92),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: colors.elevated,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.h5.copyWith(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                        ),
+                CircleAvatar(
+                  radius: 32,
+                  backgroundColor: colors.primary.withValues(alpha: 0.16),
+                  backgroundImage: imageUrl == null
+                      ? null
+                      : NetworkImage(imageUrl),
+                  child: imageUrl == null
+                      ? Text(
+                          initial,
+                          style: context.h5.copyWith(
+                            color: colors.primary,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        )
+                      : null,
+                ),
+                if (online)
+                  Positioned(
+                    right: 1,
+                    bottom: 1,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: colors.success,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: colors.elevated, width: 2),
                       ),
                     ),
-                    if (verified) ...[
-                      const SizedBox(width: 7),
-                      Icon(Icons.verified_rounded, color: colors.blue, size: 22),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.pMuted.copyWith(fontSize: 15),
-                ),
+                  ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          _RoundActionButton(
-            icon: Icons.chat_bubble_rounded,
-            iconColor: colors.primary,
-            backgroundColor: colors.primary.withValues(alpha: 0.13),
-            onTap: onMessage,
-          ),
-          const SizedBox(width: 12),
-          _RoundActionButton(
-            icon: Icons.call_rounded,
-            iconColor: colors.success,
-            backgroundColor: colors.success.withValues(alpha: 0.13),
-            onTap: onCall,
-          ),
-        ],
+            const SizedBox(width: 18),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.h5.copyWith(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      if (verified) ...[
+                        const SizedBox(width: 7),
+                        Icon(
+                          Icons.verified_rounded,
+                          color: colors.blue,
+                          size: 22,
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.pMuted.copyWith(fontSize: 15),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            _RoundActionButton(
+              icon: Icons.chat_bubble_rounded,
+              iconColor: colors.primary,
+              backgroundColor: colors.primary.withValues(alpha: 0.13),
+              onTap: onMessage,
+            ),
+            const SizedBox(width: 12),
+            _RoundActionButton(
+              icon: Icons.call_rounded,
+              iconColor: colors.success,
+              backgroundColor: colors.success.withValues(alpha: 0.13),
+              onTap: onCall,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -696,7 +712,10 @@ class _RoundActionButton extends StatelessWidget {
         width: 54,
         height: 54,
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: backgroundColor, shape: BoxShape.circle),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          shape: BoxShape.circle,
+        ),
         child: Icon(icon, color: iconColor, size: 27),
       ),
     );
@@ -741,11 +760,7 @@ class _CenteredState extends StatelessWidget {
               style: context.h5.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: context.pMuted,
-            ),
+            Text(message, textAlign: TextAlign.center, style: context.pMuted),
             if (actionText != null && onAction != null) ...[
               const SizedBox(height: 18),
               FilledButton(onPressed: onAction, child: Text(actionText!)),

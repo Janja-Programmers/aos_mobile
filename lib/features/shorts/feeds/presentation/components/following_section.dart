@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/features/shorts/feeds/presentation/components/following/following_shorts_section.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/components/following/suggested_sellers_section.dart';
+import 'package:flutter/material.dart';
 
 class FollowingSection extends StatelessWidget {
   const FollowingSection({super.key});
@@ -10,12 +9,12 @@ class FollowingSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(16),
-      children: [
-        const SuggestedSellersSection(),
+      children: const [
+        SuggestedSellersSection(),
 
-        const SizedBox(height: 22),
+        SizedBox(height: 22),
 
-        const FollowingShortsSection(),
+        FollowingShortsSection(),
       ],
     );
   }

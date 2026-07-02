@@ -6,7 +6,7 @@ const homeAdsSections = <HomeAdsSection>[
   HomeAdsSection(key: 'new_products', sort: 'recent'),
   HomeAdsSection(
     key: 'electronic_deal',
-    preferredCategoryNames: ["Electronics"],
+    preferredCategoryNames: ['Electronics'],
     promotionType: 'deal',
   ),
   HomeAdsSection(key: 'deal', promotionType: 'deal'),
@@ -14,7 +14,7 @@ const homeAdsSections = <HomeAdsSection>[
     key: 'furniture',
     preferredCategoryNames: ['Home, Furniture & Appliances'],
   ),
-  HomeAdsSection(key: 'electronics', preferredCategoryNames: ["Electronics"]),
+  HomeAdsSection(key: 'electronics', preferredCategoryNames: ['Electronics']),
   HomeAdsSection(key: 'fashion', preferredCategoryNames: ['Men\'s Fashion']),
   HomeAdsSection(key: 'kids', preferredCategoryNames: ['Babies & Kids']),
   HomeAdsSection(

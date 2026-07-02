@@ -1,9 +1,8 @@
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:keyboard_actions/keyboard_actions.dart';
-
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 
 class PriceAmountField extends ConsumerStatefulWidget {
   const PriceAmountField({
@@ -78,7 +77,7 @@ class _PriceAmountFieldState extends ConsumerState<PriceAmountField> {
             decoration: InputDecoration(
               hintText: 'Enter price',
               hintStyle: context.pMuted,
-              prefixIconConstraints: const BoxConstraints(minWidth: 0),
+              prefixIconConstraints: const BoxConstraints(),
               prefixIcon: Padding(
                 padding: const EdgeInsets.only(left: 12, right: 6),
                 child: Text(currency, style: context.pStrong),

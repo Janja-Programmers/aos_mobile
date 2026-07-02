@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class ChatBackground extends StatelessWidget {
   final Widget child;
@@ -27,8 +27,8 @@ class ChatBackground extends StatelessWidget {
               child: ColorFiltered(
                 colorFilter: ColorFilter.mode(
                   isDark
-                      ? colors.white.withOpacity(0.45)
-                      : colors.black.withOpacity(0.35),
+                      ? colors.white.withValues(alpha: 0.45)
+                      : colors.black.withValues(alpha: 0.35),
                   BlendMode.srcIn,
                 ),
                 child: DecoratedBox(
@@ -49,7 +49,7 @@ class ChatBackground extends StatelessWidget {
           child: IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: colors.surface.withOpacity(isDark ? 0.45 : 0.25),
+                color: colors.surface.withValues(alpha: isDark ? 0.45 : 0.25),
               ),
             ),
           ),

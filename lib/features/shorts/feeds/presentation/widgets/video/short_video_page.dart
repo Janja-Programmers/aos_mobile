@@ -314,7 +314,7 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
       _showDoubleTapHeart = true;
     });
 
-    Future.delayed(const Duration(milliseconds: 650), () {
+    Future<void>.delayed(const Duration(milliseconds: 650), () {
       if (!mounted) return;
 
       setState(() {

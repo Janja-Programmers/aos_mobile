@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:flutter/material.dart';
 
 class OperatingHoursForm {
@@ -28,13 +29,13 @@ class OperatingHoursForm {
         .toList(growable: false);
   }
 
-  void hydrate(List<dynamic> hours) {
+  void hydrate(List<Object?> hours) {
     if (hours.isEmpty) return;
 
     for (final raw in hours) {
       if (raw is! Map) continue;
 
-      final item = Map<String, dynamic>.from(raw);
+      final item = asJsonMap(raw);
       final day = _fullDayName(item['day_of_week']?.toString());
 
       if (day == null) continue;

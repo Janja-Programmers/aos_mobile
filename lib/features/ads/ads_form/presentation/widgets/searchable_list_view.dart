@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+import 'package:flutter/material.dart';
 
 typedef SearchTextOf<T> = String Function(T item);
 typedef SearchItemBuilder<T> = Widget Function(BuildContext context, T item);

@@ -1,13 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/ads/ads_form/controllers/ad_form_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_form/utils/ad_form_validator.dart';
-
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DescriptionStep extends ConsumerStatefulWidget {
   const DescriptionStep({super.key});

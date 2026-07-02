@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:africaonlinestores/core/core.dart';
+import 'package:flutter/material.dart';
 
 class VoiceListeningIndicator extends StatefulWidget {
   const VoiceListeningIndicator({super.key});
@@ -37,7 +37,7 @@ class _VoiceListeningIndicatorState extends State<VoiceListeningIndicator>
       width: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: colors.primary.withOpacity(opacity),
+        color: colors.primary.withValues(alpha: opacity),
       ),
     );
   }

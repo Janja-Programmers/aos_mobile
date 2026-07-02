@@ -12,23 +12,23 @@ mixin ChatMessagesRealtime on ChatMessagesControllerBase {
     await _cancelRealtimeSubscriptions();
 
     _messageSub = realtime.messages.listen((data) {
-      _handleRealtimeMessage(Map<String, dynamic>.from(data));
+      _handleRealtimeMessage(asJsonMap(data));
     });
 
     _messageStatusSub = realtime.messageStatus.listen((data) {
-      _handleRealtimeMessageStatus(Map<String, dynamic>.from(data));
+      _handleRealtimeMessageStatus(asJsonMap(data));
     });
 
     _messageEditedSub = realtime.messageEdited.listen((data) {
-      _handleRealtimeMessageEdited(Map<String, dynamic>.from(data));
+      _handleRealtimeMessageEdited(asJsonMap(data));
     });
 
     _messagesDeletedSub = realtime.messagesDeleted.listen((data) async {
-      await _handleRealtimeMessagesDeleted(Map<String, dynamic>.from(data));
+      await _handleRealtimeMessagesDeleted(asJsonMap(data));
     });
 
     _messageReactionSub = realtime.messageReactionUpdated.listen((data) {
-      _handleRealtimeReactionUpdated(Map<String, dynamic>.from(data));
+      _handleRealtimeReactionUpdated(asJsonMap(data));
     });
   }
 
@@ -55,7 +55,7 @@ mixin ChatMessagesRealtime on ChatMessagesControllerBase {
 
     if (msgData is! Map) return;
 
-    final newMsg = ChatMessage.fromJson(Map<String, dynamic>.from(msgData));
+    final newMsg = ChatMessage.fromJson(asJsonMap(msgData));
 
     _upsertMessage(newMsg);
 
@@ -81,7 +81,7 @@ mixin ChatMessagesRealtime on ChatMessagesControllerBase {
 
     if (msgData is! Map) return;
 
-    final message = ChatMessage.fromJson(Map<String, dynamic>.from(msgData));
+    final message = ChatMessage.fromJson(asJsonMap(msgData));
 
     _applyEditedMessage(message);
   }
@@ -113,13 +113,13 @@ mixin ChatMessagesRealtime on ChatMessagesControllerBase {
 
   void _applyMessageStatus(Map<String, dynamic> data) {
     final status = data['status']?.toString();
-    final rawMessageIds = data['message_ids'];
+    final messageIds = asJsonList(
+      data['message_ids'],
+    ).map((Object? id) => id.toString()).toSet();
 
-    if (status == null || rawMessageIds is! List || rawMessageIds.isEmpty) {
+    if (status == null || messageIds.isEmpty) {
       return;
     }
-
-    final messageIds = rawMessageIds.map((id) => id.toString()).toSet();
 
     final deliveredAt = DateTime.tryParse(
       data['delivered_at']?.toString() ?? '',
@@ -173,21 +173,15 @@ mixin ChatMessagesRealtime on ChatMessagesControllerBase {
 
     final rawReactions = data['reactions'];
 
-    final reactions = (rawReactions is List ? rawReactions : const [])
-        .whereType<Map>()
-        .map(
-          (reaction) =>
-              ChatMessageReaction.fromJson(Map<String, dynamic>.from(reaction)),
-        )
+    final reactions = asJsonMapList(rawReactions)
+        .map(ChatMessageReaction.fromJson)
         .where((reaction) => reaction.emoji.trim().isNotEmpty)
         .toList();
 
     final rawViewerState = data['viewer_state'];
 
     final viewerState = rawViewerState is Map
-        ? ChatMessageViewerState.fromJson(
-            Map<String, dynamic>.from(rawViewerState),
-          )
+        ? ChatMessageViewerState.fromJson(asJsonMap(rawViewerState))
         : current.viewerState.copyWith(myReaction: data['emoji']?.toString());
 
     _messages[index] = current.copyWith(

@@ -1,11 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:flutter/material.dart';
 
 class ShopNowCard extends StatelessWidget {
   final Short short;
@@ -30,7 +27,7 @@ class ShopNowCard extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: colors.surface.withOpacity(0.95),
+            color: colors.surface.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -106,7 +103,7 @@ class _AdThumbnail extends StatelessWidget {
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color: colors.primary.withOpacity(0.1),
+        color: colors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       clipBehavior: Clip.antiAlias,

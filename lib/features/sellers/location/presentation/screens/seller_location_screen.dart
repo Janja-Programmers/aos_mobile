@@ -1,13 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
 import 'package:africaonlinestores/features/sellers/location/application/seller_location_controller.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class SellerLocationScreen extends ConsumerStatefulWidget {
   const SellerLocationScreen({super.key});
@@ -151,7 +150,7 @@ class _SellerLocationScreenState extends ConsumerState<SellerLocationScreen> {
                   : const Icon(Icons.check_circle_outline_rounded),
               label: const Text('Save location'),
             ),
-            if ((state.location != null || _selected != null)) ...[
+            if (state.location != null || _selected != null) ...[
               const SizedBox(height: 10),
               OutlinedButton.icon(
                 onPressed: state.saving ? null : _remove,
@@ -190,7 +189,7 @@ class _LocationPreview extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 25,
-              backgroundColor: colors.primary.withOpacity(.12),
+              backgroundColor: colors.primary.withValues(alpha: .12),
               child: Icon(Icons.map_outlined, color: colors.primary),
             ),
             const SizedBox(width: 12),

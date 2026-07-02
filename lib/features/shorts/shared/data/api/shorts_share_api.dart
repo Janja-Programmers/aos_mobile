@@ -1,12 +1,12 @@
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_share_result.dart';
+import 'package:dio/dio.dart';
 
 class ShortsShareApi {
   final ApiClient _client;
@@ -31,7 +31,7 @@ class ShortsShareApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final data = _payload(json);
         final shareUrl = data['share_url']?.toString() ?? '';
 
@@ -40,7 +40,7 @@ class ShortsShareApi {
         }
 
         final metrics = data['metrics'];
-        final shareCount = metrics is Map<String, dynamic>
+        final shareCount = metrics is Map
             ? _toNullableInt(metrics['share_count'])
             : null;
 
@@ -61,13 +61,13 @@ class ShortsShareApi {
   }
 
   static Map<String, dynamic> _payload(Map<String, dynamic> json) {
-    if (json['data'] is Map<String, dynamic>) {
-      return json['data'] as Map<String, dynamic>;
-    }
-    if (json['message'] is Map<String, dynamic> &&
-        json['message']['data'] is Map<String, dynamic>) {
-      return json['message']['data'] as Map<String, dynamic>;
-    }
+    final data = asJsonMap(json['data']);
+    if (data.isNotEmpty) return data;
+
+    final message = asJsonMap(json['message']);
+    final nestedData = asJsonMap(message['data']);
+    if (nestedData.isNotEmpty) return nestedData;
+
     return json;
   }
 

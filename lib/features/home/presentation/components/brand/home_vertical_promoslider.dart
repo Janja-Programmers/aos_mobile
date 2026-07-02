@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_models.dart';
+import 'package:flutter/material.dart';
 
 class VerticalPromoSlider extends StatelessWidget {
   const VerticalPromoSlider({super.key, required this.items});
@@ -24,7 +22,7 @@ class VerticalPromoSlider extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [promo.color, promo.color.withOpacity(0.7)],
+          colors: [promo.color, promo.color.withValues(alpha: 0.7)],
         ),
       ),
       padding: const EdgeInsets.all(16),
@@ -36,7 +34,7 @@ class VerticalPromoSlider extends StatelessWidget {
             child: Icon(
               promo.icon,
               size: 120,
-              color: colors.white.withOpacity(0.1),
+              color: colors.white.withValues(alpha: 0.1),
             ),
           ),
           Column(
@@ -51,7 +49,7 @@ class VerticalPromoSlider extends StatelessWidget {
                 promo.subtitle,
                 style: AppTextStylesX(
                   context,
-                ).caption.copyWith(color: colors.white.withOpacity(0.9)),
+                ).caption.copyWith(color: colors.white.withValues(alpha: 0.9)),
               ),
               const Spacer(),
               Container(

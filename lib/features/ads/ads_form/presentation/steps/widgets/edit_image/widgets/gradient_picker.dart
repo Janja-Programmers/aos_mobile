@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class GradientPicker extends StatelessWidget {
   const GradientPicker({
@@ -29,8 +28,8 @@ class GradientPicker extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeader(
-          title: "Gradients",
-          trailing: isApplying ? "Applying..." : null,
+          title: 'Gradients',
+          trailing: isApplying ? 'Applying...' : null,
         ),
 
         const SizedBox(height: 12),
@@ -63,7 +62,7 @@ class GradientPicker extends StatelessWidget {
     if (a == null || a.length != b.length) return false;
 
     for (var i = 0; i < a.length; i++) {
-      if (a[i].value != b[i].value) return false;
+      if (a[i].toARGB32() != b[i].toARGB32()) return false;
     }
 
     return true;
@@ -105,16 +104,16 @@ class _GradientChip extends StatelessWidget {
               width: 2,
             ),
           ),
-          child: Container(
+          child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               gradient: LinearGradient(colors: gradient),
-              border: Border.all(color: colors.border, width: 1),
+              border: Border.all(color: colors.border),
               boxShadow: [
                 BoxShadow(
                   blurRadius: selected ? 8 : 3,
                   offset: const Offset(0, 2),
-                  color: Colors.black.withOpacity(selected ? 0.18 : 0.08),
+                  color: Colors.black.withValues(alpha: selected ? 0.18 : 0.08),
                 ),
               ],
             ),
@@ -123,7 +122,7 @@ class _GradientChip extends StatelessWidget {
                 duration: const Duration(milliseconds: 160),
                 child: loading
                     ? SizedBox(
-                        key: const ValueKey("gradient_loader"),
+                        key: const ValueKey('gradient_loader'),
                         height: 18,
                         width: 18,
                         child: CircularProgressIndicator(
@@ -134,12 +133,12 @@ class _GradientChip extends StatelessWidget {
                     : selected
                     ? Icon(
                         Icons.check_rounded,
-                        key: const ValueKey("gradient_check"),
+                        key: const ValueKey('gradient_check'),
                         color: colors.primary,
                         size: 20,
                       )
                     : const SizedBox(
-                        key: ValueKey("gradient_empty"),
+                        key: ValueKey('gradient_empty'),
                         height: 20,
                         width: 20,
                       ),

@@ -1,16 +1,13 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/managers/call_manager.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
-
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/active/call_main_info.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/active/top_bar.dart';
-import 'package:africaonlinestores/features/connect/calls/presentation/widgets/session/call_control_dock.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/active/video_call_view.dart';
+import 'package:africaonlinestores/features/connect/calls/presentation/widgets/session/call_control_dock.dart';
+import 'package:flutter/material.dart';
 
 class ActiveCallLayout extends StatelessWidget {
   final CallState callState;
@@ -113,12 +110,11 @@ class _VideoUpgradePanel extends StatelessWidget {
     if (callState.videoUpgradeErrorMessage != null) {
       return _VideoUpgradeCard(
         title: 'Video upgrade failed',
-        message: callState.videoUpgradeErrorMessage!,
+        message: callState.videoUpgradeErrorMessage,
         primaryLabel: null,
         secondaryLabel: null,
         onPrimary: null,
         onSecondary: null,
-        errorMessage: null,
       );
     }
 
@@ -150,7 +146,6 @@ class _VideoUpgradeCard extends StatelessWidget {
     final colors = context.appColors;
 
     return Align(
-      alignment: Alignment.center,
       child: Container(
         width: double.infinity,
         constraints: const BoxConstraints(maxWidth: 330),

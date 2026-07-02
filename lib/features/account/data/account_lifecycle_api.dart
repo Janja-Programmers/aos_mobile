@@ -1,6 +1,3 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
@@ -8,6 +5,8 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final accountLifecycleApiProvider = Provider<AccountLifecycleApi>((ref) {
   return AccountLifecycleApi(ref.read(apiClientProvider));

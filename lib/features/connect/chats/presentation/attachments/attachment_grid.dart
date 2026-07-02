@@ -1,11 +1,10 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_attachment.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/attachment_opener.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/viewers/inline_audio_player.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 
 class AttachmentGrid extends StatelessWidget {
   final List<ChatAttachment> attachments;
@@ -163,7 +162,7 @@ class _MediaTile extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: colors.black.withOpacity(0.46),
+                  color: colors.black.withValues(alpha: 0.46),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -175,7 +174,7 @@ class _MediaTile extends StatelessWidget {
             if (overlayText != null)
               Positioned.fill(
                 child: Container(
-                  color: colors.black.withOpacity(0.58),
+                  color: colors.black.withValues(alpha: 0.58),
                   alignment: Alignment.center,
                   child: Text(
                     overlayText!,
@@ -212,14 +211,14 @@ class _VideoPlaceholder extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            colors.black.withOpacity(0.70),
-            colors.black.withOpacity(0.40),
+            colors.black.withValues(alpha: 0.70),
+            colors.black.withValues(alpha: 0.40),
           ],
         ),
       ),
       child: Icon(
         Icons.videocam_rounded,
-        color: colors.white.withOpacity(0.80),
+        color: colors.white.withValues(alpha: 0.80),
         size: 30,
       ),
     );
@@ -251,7 +250,7 @@ class _DocumentAttachment extends StatelessWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: colors.primary.withOpacity(0.12),
+              color: colors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(

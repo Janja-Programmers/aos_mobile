@@ -1,18 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/routing/app_nav.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
-
 import 'package:africaonlinestores/shared/utils/helpers.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AdListItem extends ConsumerWidget {
   const AdListItem({super.key, required this.ad, required this.onTap});
@@ -40,7 +36,7 @@ class AdListItem extends ConsumerWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: onTap,
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: colors.surface,
           borderRadius: BorderRadius.circular(14),
@@ -59,7 +55,7 @@ class AdListItem extends ConsumerWidget {
                     height: 90,
                     width: double.infinity,
                     child: imageUrl == null || imageUrl.isEmpty
-                        ? Container(
+                        ? ColoredBox(
                             color: colors.elevated,
                             child: Icon(
                               Icons.image_outlined,
@@ -69,7 +65,7 @@ class AdListItem extends ConsumerWidget {
                         : Image.network(
                             imageUrl,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Container(
+                            errorBuilder: (_, _, _) => ColoredBox(
                               color: colors.elevated,
                               child: Icon(
                                 Icons.image_outlined,
@@ -153,7 +149,7 @@ class AdListItem extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        "-${ad.offerPercent}%",
+                        '-${ad.offerPercent}%',
                         style: TextStyle(
                           color: colors.white,
                           fontSize: 10,
@@ -186,7 +182,7 @@ class AdListItem extends ConsumerWidget {
 
                   /// LOCATION
                   Text(
-                    "${ad.locationName}, ${ad.country}",
+                    '${ad.locationName}, ${ad.country}',
                     style: context.pMuted.copyWith(fontSize: 11),
                   ),
 
@@ -236,7 +232,7 @@ class AdListItem extends ConsumerWidget {
                         Icon(Icons.star, size: 14, color: colors.amber),
                         const SizedBox(width: 4),
                         Text(
-                          "${ad.averageRating} (${humanizeCount(ad.totalReviews)})",
+                          '${ad.averageRating} (${humanizeCount(ad.totalReviews)})',
                           style: context.pMuted.copyWith(fontSize: 11),
                         ),
                       ],

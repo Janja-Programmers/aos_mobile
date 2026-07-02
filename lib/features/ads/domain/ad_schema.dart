@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_attribute.dart';
 import 'package:africaonlinestores/features/ads/domain/category.dart';
 import 'package:africaonlinestores/features/ads/domain/pricing_schema.dart';
@@ -22,26 +23,22 @@ class AdCategorySchemaModel extends AdCategorySchema {
   });
 
   factory AdCategorySchemaModel.fromPayload(Map<String, dynamic> payload) {
-    final data = payload['data'] ?? {};
+    final data = asJsonMap(payload['data']);
 
     /// CATEGORY
-    final categoryMap = Map<String, dynamic>.from(data['category'] ?? {});
+    final categoryMap = asJsonMap(data['category']);
 
     final category = AdCategoryModel.fromMap(categoryMap);
 
     /// ATTRIBUTES
     final attrs = <AdAttribute>[];
 
-    if (data['attributes'] is List) {
-      for (final item in data['attributes']) {
-        final attrMap = Map<String, dynamic>.from(item);
-
-        attrs.add(AdAttributeModel.fromMap(attrMap));
-      }
+    for (final item in asJsonMapList(data['attributes'])) {
+      attrs.add(AdAttributeModel.fromMap(item));
     }
 
     /// PRICING
-    final pricingMap = Map<String, dynamic>.from(data['pricing'] ?? {});
+    final pricingMap = asJsonMap(data['pricing']);
 
     final pricing = PricingSchemaModel.fromMap(pricingMap);
 

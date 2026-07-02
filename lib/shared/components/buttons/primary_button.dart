@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
@@ -45,7 +44,7 @@ class PrimaryButton extends StatelessWidget {
     final fgColor = isDisabled ? disFg : activeFg;
 
     // If disabled but we want a tap action, we can't rely on ElevatedButton's disabled state.
-    final effectiveOnPressed = isDisabled ? (onDisabledTap) : onPressed;
+    final effectiveOnPressed = isDisabled ? onDisabledTap : onPressed;
 
     return SizedBox(
       height: 56,

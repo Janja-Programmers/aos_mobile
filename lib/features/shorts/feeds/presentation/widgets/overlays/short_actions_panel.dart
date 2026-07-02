@@ -1,14 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_session_controller.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/components/feed_avatar_image.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/comment_sheet.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/report_short_sheet.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ShortActionsPanel extends ConsumerWidget {
   final Short short;
@@ -79,7 +80,9 @@ class ShortActionsPanel extends ConsumerWidget {
           label: _formatCount(metrics.likeCount),
           isDisabled: isLikedPending,
           semanticLabel: isLiked ? 'Unlike' : 'Like',
-          onTap: isLikedPending ? null : () => onToggleLike(short.id.value),
+          onTap: isLikedPending
+              ? null
+              : () => unawaited(onToggleLike(short.id.value)),
         ),
         const SizedBox(height: 18),
         _iconWithLabel(
@@ -92,18 +95,22 @@ class ShortActionsPanel extends ConsumerWidget {
               ? () {
                   ref.read(shortSessionControllerProvider.notifier).pause();
 
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    useSafeArea: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (_) => CommentsSheet(
-                      short: short,
-                      onCommentAdded: () => onCommentAdded(short.id.value),
-                    ),
-                  ).whenComplete(() {
-                    ref.read(shortSessionControllerProvider.notifier).resume();
-                  });
+                  unawaited(
+                    showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => CommentsSheet(
+                        short: short,
+                        onCommentAdded: () => onCommentAdded(short.id.value),
+                      ),
+                    ).whenComplete(() {
+                      ref
+                          .read(shortSessionControllerProvider.notifier)
+                          .resume();
+                    }),
+                  );
                 }
               : null,
         ),
@@ -117,20 +124,20 @@ class ShortActionsPanel extends ConsumerWidget {
           label: _formatCount(metrics.saveCount),
           isDisabled: isSavePending,
           semanticLabel: isSaved ? 'Unsave short' : 'Save short',
-          onTap: isSavePending ? null : onSave,
+          onTap: isSavePending ? null : () => unawaited(onSave()),
         ),
         const SizedBox(height: 18),
         _iconWithLabel(
           context,
           iconWidget: Transform(
             alignment: Alignment.center,
-            transform: Matrix4.identity()..scale(-1.0, 1.0),
+            transform: Matrix4.diagonal3Values(-1.0, 1.0, 1.0),
             child: Icon(Icons.reply_outlined, color: colors.white, size: 34),
           ),
           label: _formatCount(metrics.shareCount),
           isDisabled: isSharePending,
           semanticLabel: 'Share short',
-          onTap: isSharePending ? null : onShare,
+          onTap: isSharePending ? null : () => unawaited(onShare()),
         ),
         const SizedBox(height: 18),
         _iconWithLabel(
@@ -148,59 +155,63 @@ class ShortActionsPanel extends ConsumerWidget {
   void _showMoreActions(BuildContext context, {required bool canDownload}) {
     final colors = context.appColors;
 
-    showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: colors.surface,
-      builder: (_) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _sheetAction(
-                  context,
-                  icon: Icons.file_download_outlined,
-                  title: canDownload
-                      ? 'Download / export short'
-                      : 'Downloads disabled',
-                  subtitle: canDownload
-                      ? 'Save or share the video through your system sheet'
-                      : 'The creator has disabled downloads for this short',
-                  enabled: canDownload && !isDownloadPending,
-                  trailing: isDownloadPending
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : null,
-                  onTap: () {
-                    Navigator.pop(context);
-                    onDownload();
-                  },
-                ),
-                _sheetAction(
-                  context,
-                  icon: Icons.flag_outlined,
-                  title: 'Report short',
-                  subtitle: 'Tell us what is wrong with this video',
-                  enabled: short.canReport,
-                  onTap: () {
-                    Navigator.pop(context);
-                    showReportShortSheet(
-                      context: context,
-                      shortId: short.id.value,
-                      onSubmit: onReport,
-                    );
-                  },
-                ),
-              ],
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        backgroundColor: colors.surface,
+        builder: (_) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _sheetAction(
+                    context,
+                    icon: Icons.file_download_outlined,
+                    title: canDownload
+                        ? 'Download / export short'
+                        : 'Downloads disabled',
+                    subtitle: canDownload
+                        ? 'Save or share the video through your system sheet'
+                        : 'The creator has disabled downloads for this short',
+                    enabled: canDownload && !isDownloadPending,
+                    trailing: isDownloadPending
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : null,
+                    onTap: () {
+                      Navigator.pop(context);
+                      unawaited(onDownload());
+                    },
+                  ),
+                  _sheetAction(
+                    context,
+                    icon: Icons.flag_outlined,
+                    title: 'Report short',
+                    subtitle: 'Tell us what is wrong with this video',
+                    enabled: short.canReport,
+                    onTap: () {
+                      Navigator.pop(context);
+                      unawaited(
+                        showReportShortSheet(
+                          context: context,
+                          shortId: short.id.value,
+                          onSubmit: onReport,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -219,7 +230,7 @@ class ShortActionsPanel extends ConsumerWidget {
       enabled: enabled,
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(
-        backgroundColor: colors.primary.withOpacity(.10),
+        backgroundColor: colors.primary.withValues(alpha: .10),
         child: Icon(icon, color: colors.primary),
       ),
       title: Text(title, style: context.pStrong),
@@ -341,7 +352,7 @@ class _CreatorAvatarAction extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 onTap: isFollowPending || onToggleFollow == null
                     ? null
-                    : () => onToggleFollow!(targetUser),
+                    : () => unawaited(onToggleFollow!(targetUser)),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   width: 24,
@@ -349,7 +360,7 @@ class _CreatorAvatarAction extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isFollowing ? colors.primary : colors.white,
-                    border: Border.all(color: Colors.black, width: 2),
+                    border: Border.all(width: 2),
                   ),
                   child: isFollowPending
                       ? Padding(
@@ -376,7 +387,7 @@ class _CreatorAvatarAction extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: colors.primary,
-                  border: Border.all(color: Colors.black, width: 2),
+                  border: Border.all(width: 2),
                 ),
                 child: Icon(
                   Icons.person_rounded,

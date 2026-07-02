@@ -1,12 +1,9 @@
+import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/connect/chats/data/chat_api.dart';
+import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:africaonlinestores/core/utils/logger.dart';
-
-import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
-import 'package:africaonlinestores/features/connect/chats/data/chat_api.dart';
-
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ChatActions {
   const ChatActions._();

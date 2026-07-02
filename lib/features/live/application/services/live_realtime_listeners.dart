@@ -4,7 +4,6 @@ import 'package:africaonlinestores/core/realtime/realtime_event.dart';
 import 'package:africaonlinestores/core/realtime/realtime_event_type.dart';
 import 'package:africaonlinestores/core/realtime/realtime_service.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
-
 import 'package:africaonlinestores/features/live/application/managers/live_manager.dart';
 
 class LiveRealtimeListener {
@@ -19,7 +18,7 @@ class LiveRealtimeListener {
   // INIT
   // -----------------------------
   void init() {
-    _sub?.cancel();
+    unawaited(_sub?.cancel());
 
     _sub = _realtime.events.listen(_handleEvent);
 
@@ -30,7 +29,7 @@ class LiveRealtimeListener {
   // DISPOSE
   // -----------------------------
   void dispose() {
-    _sub?.cancel();
+    unawaited(_sub?.cancel());
     _sub = null;
 
     appLogger.i('[LiveRealtime] ❌ Listener disposed');

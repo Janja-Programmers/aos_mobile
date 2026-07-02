@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// ------------------------------------------------------------
 /// CATEGORY SCHEMA
@@ -16,13 +15,9 @@ final adCategorySchemaProvider =
       // Keep provider alive during flow
       final link = ref.keepAlive();
 
-      final timer = Timer(const Duration(minutes: 10), () {
-        link.close();
-      });
+      final timer = Timer(const Duration(minutes: 10), link.close);
 
-      ref.onDispose(() {
-        timer.cancel();
-      });
+      ref.onDispose(timer.cancel);
 
       final api = ref.read(adsApiProvider);
 

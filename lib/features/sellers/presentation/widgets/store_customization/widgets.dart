@@ -31,7 +31,7 @@ class OperatingHoursSection extends StatelessWidget {
     final days = dayEnabled.keys.toList();
     final colors = context.appColors;
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(14),

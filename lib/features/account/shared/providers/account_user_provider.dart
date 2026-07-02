@@ -1,6 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/features/account/shared/providers/accounts_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final currentUserProvider = Provider<String?>((ref) {
   final accountState = ref.watch(accountsControllerProvider);

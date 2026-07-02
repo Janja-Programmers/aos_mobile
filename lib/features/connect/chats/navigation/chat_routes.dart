@@ -1,11 +1,10 @@
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_list_screen.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_screen.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/screens/new_message_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
-import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_screen.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_list_screen.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/screens/new_message_screen.dart';
 
 class ChatRoutes {
   const ChatRoutes._();
@@ -33,22 +32,22 @@ class ChatRoutes {
       name: AppRoutes.nMessages,
       path: AppRoutes.messages,
       pageBuilder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
+        final extra = asJsonMap(state.extra);
         final conversationId = state.pathParameters['conversationId'] ?? '';
 
         return MaterialPage(
           key: ValueKey('chat_$conversationId'),
           child: ChatScreen(
             conversationId: conversationId,
-            otherUser: extra?['otherUser'] ?? '',
-            displayName: extra?['displayName'] ?? '',
-            otherUserAvatar: extra?['otherUserAvatar'],
-            initialMessage: extra?['initialMessage'],
-            adId: extra?['adId'],
-            adTitle: extra?['adTitle'],
-            adPrice: extra?['adPrice'],
-            adImage: extra?['adImage'],
-            adImageFileId: extra?['adImageFileId'],
+            otherUser: asString(extra['otherUser']),
+            displayName: asString(extra['displayName']),
+            otherUserAvatar: asNullableString(extra['otherUserAvatar']),
+            initialMessage: asNullableString(extra['initialMessage']),
+            adId: asNullableString(extra['adId']),
+            adTitle: asNullableString(extra['adTitle']),
+            adPrice: asNullableString(extra['adPrice']),
+            adImage: asNullableString(extra['adImage']),
+            adImageFileId: asNullableString(extra['adImageFileId']),
           ),
         );
       },

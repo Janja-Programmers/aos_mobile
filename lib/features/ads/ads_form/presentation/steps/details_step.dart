@@ -1,16 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_option_sheet.dart';
-import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_attribute.dart';
+import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
-
 import 'package:africaonlinestores/shared/components/app_date_picker.dart';
 import 'package:africaonlinestores/shared/components/picker_field.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DetailsStep extends ConsumerWidget {
   const DetailsStep({super.key, required this.schema});
@@ -67,7 +64,7 @@ class DetailsStep extends ConsumerWidget {
           child: _AttributeField(
             attribute: attr,
             value: value,
-            onChanged: (v) => ctrl.setAttribute(attr.key, v),
+            onChanged: (Object? v) => ctrl.setAttribute(attr.key, v),
           ),
         );
       },
@@ -83,8 +80,8 @@ class _AttributeField extends ConsumerWidget {
   });
 
   final AdAttribute attribute;
-  final dynamic value;
-  final Function(dynamic) onChanged;
+  final Object? value;
+  final ValueChanged<Object?> onChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -104,7 +101,7 @@ class _AttributeField extends ConsumerWidget {
               builder: (_) => SelectOptionSheet(
                 title: attribute.label,
                 options: attribute.options,
-                selected: value,
+                selected: value?.toString(),
               ),
             );
 
@@ -113,8 +110,9 @@ class _AttributeField extends ConsumerWidget {
         );
 
       case AdAttributeType.multiselect:
-        final selected = (value is List)
-            ? value.map((e) => e.toString()).toList()
+        final currentValue = value;
+        final selected = currentValue is Iterable<Object?>
+            ? currentValue.map((Object? item) => item.toString()).toList()
             : <String>[];
 
         return PickerField(
@@ -123,7 +121,7 @@ class _AttributeField extends ConsumerWidget {
           value: selected.isEmpty ? null : selected.join(', '),
           onTap: () async {
             final picked = await Navigator.of(context).push<List<String>>(
-              MaterialPageRoute(
+              MaterialPageRoute<List<String>>(
                 builder: (_) => SelectOptionSheet(
                   title: attribute.label,
                   options: attribute.options,

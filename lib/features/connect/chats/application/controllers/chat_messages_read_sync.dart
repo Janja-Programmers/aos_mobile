@@ -21,9 +21,10 @@ mixin ChatMessagesReadSync on ChatMessagesControllerBase {
   void _scheduleIncomingReadSync() {
     _readSyncDebounce?.cancel();
 
-    _readSyncDebounce = Timer(const Duration(milliseconds: 250), () {
-      _syncIncomingReadState();
-    });
+    _readSyncDebounce = Timer(
+      const Duration(milliseconds: 250),
+      _syncIncomingReadState,
+    );
   }
 
   @override

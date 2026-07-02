@@ -1,7 +1,6 @@
+import 'package:africaonlinestores/features/live/presentation/widgets/live_video_stage.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
-
-import 'package:africaonlinestores/features/live/presentation/widgets/live_video_stage.dart';
 
 class HostLiveView extends StatelessWidget {
   final lk.VideoTrack? localVideoTrack;

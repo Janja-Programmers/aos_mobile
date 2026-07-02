@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
+import 'package:flutter/material.dart';
 
 class SubcategoriesGrid extends StatelessWidget {
   const SubcategoriesGrid({
@@ -27,7 +25,7 @@ class SubcategoriesGrid extends StatelessWidget {
         const crossSpacing = 12.0;
         const mainSpacing = 12.0;
 
-        final totalSpacing = crossSpacing * (columns - 1);
+        const totalSpacing = crossSpacing * (columns - 1);
         final tileWidth = (constraints.maxWidth - totalSpacing) / columns;
 
         // Slightly more premium proportions

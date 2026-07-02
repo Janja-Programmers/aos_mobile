@@ -15,7 +15,7 @@ class ServiceUnitPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      value: selected,
+      initialValue: selected,
       decoration: const InputDecoration(labelText: 'Price Unit'),
       items: units
           .map((u) => DropdownMenuItem(value: u, child: Text(u)))

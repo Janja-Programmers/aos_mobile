@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 
 class ShortAvatar extends StatelessWidget {
   final String? avatarUrl;
@@ -34,7 +33,7 @@ class ShortAvatar extends StatelessWidget {
     final initials = _getInitials(name);
 
     final fallbackBackground =
-        backgroundColor ?? colors.primary.withOpacity(.12);
+        backgroundColor ?? colors.primary.withValues(alpha: .12);
     final fallbackTextColor = textColor ?? colors.primary;
 
     return Container(

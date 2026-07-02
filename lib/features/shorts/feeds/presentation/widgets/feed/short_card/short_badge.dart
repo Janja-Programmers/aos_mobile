@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
+import 'package:flutter/material.dart';
 
 class ShortBadge extends StatelessWidget {
   final String? contentMode;
@@ -19,7 +20,7 @@ class ShortBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: config.color,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: colors.white.withOpacity(.12)),
+        border: Border.all(color: colors.white.withValues(alpha: .12)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -51,7 +52,10 @@ class _ShortBadgeConfig {
     required this.color,
   });
 
-  factory _ShortBadgeConfig.fromContentMode(String? mode, dynamic colors) {
+  factory _ShortBadgeConfig.fromContentMode(
+    String? mode,
+    AppColorTokens colors,
+  ) {
     final normalized = mode?.trim().toLowerCase();
 
     switch (normalized) {

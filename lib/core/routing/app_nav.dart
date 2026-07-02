@@ -1,13 +1,11 @@
+import 'package:africaonlinestores/core/routing/app_nav_config.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+import 'package:africaonlinestores/shared/components/app_confirm_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/core/routing/app_nav_config.dart';
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
-import 'package:africaonlinestores/shared/components/app_confirm_sheet.dart';
-import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
-import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 
 class AppNavigation {
   static Future<void> goTo(

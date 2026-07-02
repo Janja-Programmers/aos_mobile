@@ -1,7 +1,3 @@
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
@@ -9,6 +5,10 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 @immutable
 class ActivityTarget {
@@ -69,9 +69,7 @@ class ActivityItem {
       id: json['id']?.toString() ?? json['name']?.toString() ?? '',
       group: json['activity_group']?.toString() ?? 'Other',
       type: json['activity_type']?.toString() ?? '',
-      target: ActivityTarget.fromJson(
-        target is Map ? Map<String, dynamic>.from(target) : null,
-      ),
+      target: ActivityTarget.fromJson(asJsonMap(target)),
       count: int.tryParse(json['count']?.toString() ?? '0') ?? 0,
       occurredAt: DateTime.tryParse(json['occurred_at']?.toString() ?? ''),
       lastOccurrenceAt: DateTime.tryParse(
@@ -100,12 +98,7 @@ class ActivityPage {
   factory ActivityPage.fromJson(Map<String, dynamic> json) {
     final rawItems = json['items'];
     return ActivityPage(
-      items: rawItems is List
-          ? rawItems
-                .whereType<Map>()
-                .map((e) => ActivityItem.fromJson(Map<String, dynamic>.from(e)))
-                .toList()
-          : const [],
+      items: asJsonMapList(rawItems).map(ActivityItem.fromJson).toList(),
       total: int.tryParse(json['total']?.toString() ?? '0') ?? 0,
       start: int.tryParse(json['start']?.toString() ?? '0') ?? 0,
       limit: int.tryParse(json['limit']?.toString() ?? '20') ?? 20,
@@ -143,9 +136,7 @@ class ActivityApi {
       if (data is! Map) {
         return Either.left(const Failure('Invalid activity response.'));
       }
-      return Either.right(
-        ActivityPage.fromJson(Map<String, dynamic>.from(data)),
-      );
+      return Either.right(ActivityPage.fromJson(asJsonMap(data)));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {

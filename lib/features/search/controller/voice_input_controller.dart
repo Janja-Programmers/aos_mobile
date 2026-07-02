@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class VoiceInputState {
@@ -77,7 +78,7 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
       }
 
       final available = await _speech.initialize(
-        onError: (error) {
+        onError: (SpeechRecognitionError error) {
           _clearAutoStopTimer();
 
           state = state.copyWith(isListening: false, error: error.errorMsg);
@@ -137,9 +138,10 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
 
     try {
       await _speech.listen(
-        listenMode: stt.ListenMode.dictation,
-        partialResults: true,
-        cancelOnError: true,
+        listenOptions: stt.SpeechListenOptions(
+          listenMode: stt.ListenMode.dictation,
+          cancelOnError: true,
+        ),
         onResult: (result) {
           final words = result.recognizedWords.trim();
 

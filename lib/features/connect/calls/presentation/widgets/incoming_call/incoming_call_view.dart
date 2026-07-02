@@ -1,10 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/incoming_call/call_avatar.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/incoming_call/call_decision_buttons.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/incoming_call/call_info.dart';
+import 'package:flutter/material.dart';
 
 class IncomingCallView extends StatelessWidget {
   final String name;

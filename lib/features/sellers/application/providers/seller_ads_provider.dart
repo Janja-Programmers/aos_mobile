@@ -1,31 +1,25 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final sellerAdsProvider = FutureProvider.family<List<AOSAdListItem>, String>((
   ref,
   sellerId,
 ) async {
-  final res = await ref
-      .read(adsApiProvider)
-      .listAds(sellerId: sellerId, limit: 20, offset: 0);
+  final res = await ref.read(adsApiProvider).listAds(sellerId: sellerId);
 
   return res.fold(
     (failure) {
       return const [];
     },
     (payload) {
-      /// 🔥 FIX: correct path
-      final raw = payload['data']?['items'];
+      final data = asJsonMap(payload['data']);
+      final raw = data['items'];
 
-      if (raw is! List) {
-        return const [];
-      }
-
-      return raw
-          .map((e) => AOSAdListItem.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      return asJsonMapList(
+        raw,
+      ).map(AOSAdListItem.fromJson).toList(growable: false);
     },
   );
 });

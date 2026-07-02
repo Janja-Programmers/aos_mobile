@@ -1,13 +1,12 @@
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/enums/short_status.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/caption.dart';
-
-import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/metrics_mapper.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_ad_mapper.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_creator_mapper.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_view_state_mapper.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/enums/short_status.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/caption.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
 
 class ShortMapper {
   static Short toDomain(ShortModel model) {

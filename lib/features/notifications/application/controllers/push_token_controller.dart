@@ -1,12 +1,10 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
-import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/notifications/data/notification_repository_impl.dart';
 import 'package:africaonlinestores/features/notifications/domain/push_token_device.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class PushTokenController extends StateNotifier<AsyncValue<void>> {
   final PushTokenRepository _repository;

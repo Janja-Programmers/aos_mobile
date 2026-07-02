@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_pending_attachment.dart';
+import 'package:flutter/material.dart';
 
 class AttachmentPreviewBar extends StatelessWidget {
   final List<ChatPendingAttachment> attachments;
@@ -50,7 +49,7 @@ class AttachmentPreviewBar extends StatelessWidget {
                     width: 22,
                     height: 22,
                     decoration: BoxDecoration(
-                      color: colors.black.withOpacity(0.65),
+                      color: colors.black.withValues(alpha: 0.65),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -119,7 +118,7 @@ class _IconPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return Container(
+    return ColoredBox(
       color: colors.elevated,
       child: Center(child: Icon(icon, color: color, size: 30)),
     );

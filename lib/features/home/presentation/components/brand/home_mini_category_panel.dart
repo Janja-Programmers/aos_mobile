@@ -1,11 +1,8 @@
-import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_models.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+import 'package:flutter/material.dart';
 
 class MiniCategoryPanel extends StatelessWidget {
   const MiniCategoryPanel({super.key, required this.items});
@@ -51,7 +48,9 @@ class MiniCategoryPanel extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: colors.elevated,
                       borderRadius: BorderRadius.circular(25),
-                      border: Border.all(color: colors.border.withOpacity(0.2)),
+                      border: Border.all(
+                        color: colors.border.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -59,7 +58,7 @@ class MiniCategoryPanel extends StatelessWidget {
                           width: 24,
                           height: 24,
                           decoration: BoxDecoration(
-                            color: colors.primary.withOpacity(0.10),
+                            color: colors.primary.withValues(alpha: 0.10),
                             shape: BoxShape.circle,
                           ),
                           alignment: Alignment.center,

@@ -1,11 +1,9 @@
-import 'package:africaonlinestores/core/utils/logger.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/routing/app_router.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class LiveNavigationListener extends ConsumerStatefulWidget {
   final Widget child;
@@ -25,7 +23,7 @@ class _LiveNavigationListenerState
   void initState() {
     super.initState();
 
-    appLogger.i("init socketLiveListenerProvider");
+    appLogger.i('init socketLiveListenerProvider');
 
     Future.microtask(() {
       ref.read(socketLiveListenerProvider);

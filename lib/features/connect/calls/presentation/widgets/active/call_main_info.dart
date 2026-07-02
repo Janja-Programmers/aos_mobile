@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/active/timer_badge.dart';
+import 'package:flutter/material.dart';
 
 class CallMainInfo extends StatelessWidget {
   final String participant;
@@ -52,7 +50,7 @@ class CallMainInfo extends StatelessWidget {
           if (callState.isUpgradePending) ...[
             const SizedBox(height: 12),
             Text(
-              "Waiting for video...",
+              'Waiting for video...',
               style: context.p.copyWith(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -109,7 +107,7 @@ class Avatar extends StatelessWidget {
         border: Border.all(color: colors.primary, width: 4),
         boxShadow: [
           BoxShadow(
-            color: colors.black.withOpacity(.6),
+            color: colors.black.withValues(alpha: .6),
             blurRadius: 18,
             spreadRadius: 4,
             offset: const Offset(0, 8),

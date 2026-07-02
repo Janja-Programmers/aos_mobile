@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:flutter/material.dart';
 
 class ChatAttachmentSheet extends StatelessWidget {
   const ChatAttachmentSheet({
@@ -109,7 +108,7 @@ class _Item extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 27,
-              backgroundColor: color.withOpacity(0.14),
+              backgroundColor: color.withValues(alpha: 0.14),
               child: Icon(icon, size: 25, color: color),
             ),
             const SizedBox(height: 7),

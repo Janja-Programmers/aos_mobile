@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:image/image.dart' as img;
 
 String applyBackgroundInIsolate(Map<String, dynamic> args) {

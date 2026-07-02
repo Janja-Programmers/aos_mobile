@@ -1,14 +1,13 @@
 import 'dart:async';
 
 import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/state/short_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_engagement_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_tracking_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:video_player/video_player.dart';
-
-import 'package:africaonlinestores/features/shorts/create_short/application/state/short_state.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_engagement_api.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_tracking_api.dart';
 
 class ShortsController extends StateNotifier<ShortsState> {
   final ShortsTrackingApi trackingApi;
@@ -64,7 +63,7 @@ class ShortsController extends StateNotifier<ShortsState> {
 
       _initFirstPlayer();
     } catch (e) {
-      appLogger.i("❌ API ERROR: $e");
+      appLogger.i('❌ API ERROR: $e');
 
       state = state.copyWith(isLoading: false);
     } finally {
@@ -95,7 +94,7 @@ class ShortsController extends StateNotifier<ShortsState> {
         hasMore: page.hasMore,
       );
     } catch (e) {
-      appLogger.i("❌ LOAD MORE ERROR: $e");
+      appLogger.i('❌ LOAD MORE ERROR: $e');
     } finally {
       _isLoadingMore = false;
     }

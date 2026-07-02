@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:flutter/material.dart';
 
 class SellerAboutSection extends StatefulWidget {
   const SellerAboutSection({super.key, required this.about});

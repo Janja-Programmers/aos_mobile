@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class StoryTemplateCreateScreen extends StatelessWidget {
   const StoryTemplateCreateScreen({super.key});
@@ -25,7 +24,11 @@ class StoryTemplateCreateScreen extends StatelessWidget {
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => Navigator.of(context).maybePop(),
-                    child: Icon(Icons.close_rounded, color: colors.white, size: 36),
+                    child: Icon(
+                      Icons.close_rounded,
+                      color: colors.white,
+                      size: 36,
+                    ),
                   ),
                   const SizedBox(width: 20),
                   Text(
@@ -43,15 +46,24 @@ class StoryTemplateCreateScreen extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: _StoryToolCard(icon: Icons.videocam_rounded, label: 'Video'),
+                    child: _StoryToolCard(
+                      icon: Icons.videocam_rounded,
+                      label: 'Video',
+                    ),
                   ),
                   SizedBox(width: 24),
                   Expanded(
-                    child: _StoryToolCard(icon: Icons.grid_view_rounded, label: 'Layout'),
+                    child: _StoryToolCard(
+                      icon: Icons.grid_view_rounded,
+                      label: 'Layout',
+                    ),
                   ),
                   SizedBox(width: 24),
                   Expanded(
-                    child: _StoryToolCard(icon: Icons.mic_rounded, label: 'Voice'),
+                    child: _StoryToolCard(
+                      icon: Icons.mic_rounded,
+                      label: 'Voice',
+                    ),
                   ),
                 ],
               ),
@@ -69,7 +81,10 @@ class StoryTemplateCreateScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Icon(Icons.arrow_drop_down_rounded, color: colors.white.withValues(alpha: 0.78)),
+                  Icon(
+                    Icons.arrow_drop_down_rounded,
+                    color: colors.white.withValues(alpha: 0.78),
+                  ),
                 ],
               ),
             ),
@@ -77,11 +92,13 @@ class StoryTemplateCreateScreen extends StatelessWidget {
             Row(
               children: [
                 _RecentCameraTile(
-                  onTap: () => context.pushNamed(AppRoutes.nConnectStoryConfirm),
+                  onTap: () =>
+                      context.pushNamed(AppRoutes.nConnectStoryConfirm),
                 ),
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => context.pushNamed(AppRoutes.nConnectStoryConfirm),
+                  onTap: () =>
+                      context.pushNamed(AppRoutes.nConnectStoryConfirm),
                   child: const _RecentTemplateTile(),
                 ),
               ],
@@ -93,7 +110,8 @@ class StoryTemplateCreateScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(0, 0, 38, 40),
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
-                  onTap: () => context.pushNamed(AppRoutes.nConnectStoryConfirm),
+                  onTap: () =>
+                      context.pushNamed(AppRoutes.nConnectStoryConfirm),
                   child: Container(
                     width: 72,
                     height: 72,
@@ -101,7 +119,11 @@ class StoryTemplateCreateScreen extends StatelessWidget {
                       color: const Color(0xFF1C2632),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Icon(Icons.folder_outlined, color: colors.white, size: 34),
+                    child: Icon(
+                      Icons.folder_outlined,
+                      color: colors.white,
+                      size: 34,
+                    ),
                   ),
                 ),
               ),

@@ -1,16 +1,15 @@
-import 'package:africaonlinestores/core/providers.dart';
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
-import 'package:africaonlinestores/features/live/comments/live_comment_model.dart';
-import 'package:africaonlinestores/features/live/comments/live_comment_mapper.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/live/comments/live_comment.dart';
+import 'package:africaonlinestores/features/live/comments/live_comment_mapper.dart';
+import 'package:africaonlinestores/features/live/comments/live_comment_model.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final liveCommentsApiProvider = Provider<LiveCommentsApi>((ref) {
@@ -41,15 +40,12 @@ class LiveCommentsApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
-        final data = json['data'] as Map<String, dynamic>? ?? {};
-        final rawItems = data['items'] as List? ?? [];
-
-        final items = rawItems
+      return unwrapped.fold(Either.left, (json) {
+        final data = asJsonMap(json['data']);
+        final items = asJsonMapList(data['items'])
             .map(
-              (e) => LiveCommentMapper.toDomain(
-                LiveCommentModel.fromJson(Map<String, dynamic>.from(e as Map)),
-              ),
+              (Map<String, dynamic> item) =>
+                  LiveCommentMapper.toDomain(LiveCommentModel.fromJson(item)),
             )
             .toList();
 
@@ -83,15 +79,12 @@ class LiveCommentsApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
-        final data = json['data'] as Map<String, dynamic>? ?? {};
-        final rawItems = data['items'] as List? ?? [];
-
-        final items = rawItems
+      return unwrapped.fold(Either.left, (json) {
+        final data = asJsonMap(json['data']);
+        final items = asJsonMapList(data['items'])
             .map(
-              (e) => LiveCommentMapper.toDomain(
-                LiveCommentModel.fromJson(Map<String, dynamic>.from(e as Map)),
-              ),
+              (Map<String, dynamic> item) =>
+                  LiveCommentMapper.toDomain(LiveCommentModel.fromJson(item)),
             )
             .toList();
 
@@ -120,7 +113,7 @@ class LiveCommentsApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final data = json['data'] as Map<String, dynamic>?;
 
         if (data == null) {
@@ -170,7 +163,7 @@ class LiveCommentsApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final data = json['data'] as Map<String, dynamic>? ?? {};
         final commentId = data['comment_id']?.toString();
 
@@ -204,10 +197,7 @@ class LiveCommentsApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold(
-        (failure) => Either.left(failure),
-        (_) => Either.right(null),
-      );
+      return unwrapped.fold(Either.left, (_) => Either.right(null));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {

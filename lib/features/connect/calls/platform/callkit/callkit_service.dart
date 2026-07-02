@@ -1,14 +1,16 @@
 import 'dart:async';
-import 'package:uuid/uuid.dart';
+
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_action_handler.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_params_mapper.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_pending_payload_store.dart';
 import 'package:flutter_callkit_incoming/entities/call_event.dart';
 import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
-import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_params_mapper.dart';
-import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_action_handler.dart';
-import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_pending_payload_store.dart';
+import 'package:uuid/uuid.dart';
 
 class CallKitService {
   final CallKitActionHandler actionHandler;
@@ -115,7 +117,7 @@ class CallKitService {
     );
 
     await pendingPayloadStore.save(
-      Map<String, dynamic>.from(
+      asJsonMap(
         params.extra ??
             <String, dynamic>{'call_id': callId, 'callkit_uuid': callkitUuid},
       ),
@@ -507,46 +509,42 @@ class CallKitService {
   }
 
   String _eventName(CallEvent event) {
-    final dynamic dynamicEvent = event;
-
-    try {
-      final value = dynamicEvent.eventName?.toString().trim();
-      if (value != null && value.isNotEmpty) return value;
-    } catch (_) {}
-
-    try {
-      final value = dynamicEvent.eventNames?.toString().trim();
-      if (value != null && value.isNotEmpty) return value;
-    } catch (_) {}
-
-    return event.runtimeType.toString();
+    final value = event.eventName.trim();
+    if (value.isEmpty) {
+      return event.runtimeType.toString();
+    }
+    return value.contains('.') ? value.split('.').last : value;
   }
 
   Object? _readCallKitObject(CallEvent event) {
-    final dynamic dynamicEvent = event;
-
-    try {
-      final value = dynamicEvent.callKit;
-      if (value != null) return value;
-    } catch (_) {}
-
-    try {
-      final value = dynamicEvent.callKitParams;
-      if (value != null) return value;
-    } catch (_) {}
-
-    return null;
+    final body = _readBodyObject(event);
+    if (body is Map) {
+      final data = asJsonMap(body);
+      return data['callKit'] ?? data['callKitParams'] ?? body;
+    }
+    return body;
   }
 
   Object? _readBodyObject(CallEvent event) {
-    final dynamic dynamicEvent = event;
-
-    try {
-      final value = dynamicEvent.body;
-      if (value != null) return value;
-    } catch (_) {}
-
-    return null;
+    return switch (event) {
+      CallEventActionCallIncoming(:final callKitParams) =>
+        callKitParams.toJson(),
+      CallEventActionCallStart(:final callKitParams) => callKitParams.toJson(),
+      CallEventActionCallAccept(:final callKitParams) => callKitParams.toJson(),
+      CallEventActionCallDecline(:final callKitParams) =>
+        callKitParams.toJson(),
+      CallEventActionCallEnded(:final callKitParams) => callKitParams.toJson(),
+      CallEventActionCallTimeout(:final id) => <String, dynamic>{'id': id},
+      CallEventActionCallConnected(:final id) => <String, dynamic>{'id': id},
+      CallEventActionCallCallback(:final id) => <String, dynamic>{'id': id},
+      CallEventActionCallToggleHold(:final id) => <String, dynamic>{'id': id},
+      CallEventActionCallToggleMute(:final id) => <String, dynamic>{'id': id},
+      CallEventActionCallToggleDmtf(:final id) => <String, dynamic>{'id': id},
+      CallEventActionCallToggleGroup(:final id) => <String, dynamic>{'id': id},
+      CallEventActionCallCustom(:final body) => asJsonMap(body),
+      CallEventActionCallToggleAudioSession() ||
+      CallEventActionDidUpdateDevicePushTokenVoip() => null,
+    };
   }
 
   String? _extractBackendCallIdFromCandidate(Object? candidate) {
@@ -574,21 +572,9 @@ class CallKitService {
     if (source == null) return null;
 
     if (source is Map) {
-      final extra = source['extra'] ?? source['extras'];
-      return extra ?? source;
+      final data = asJsonMap(source);
+      return data['extra'] ?? data['extras'] ?? source;
     }
-
-    final dynamic dynamicSource = source;
-
-    try {
-      final value = dynamicSource.extra;
-      if (value != null) return value;
-    } catch (_) {}
-
-    try {
-      final value = dynamicSource.extras;
-      if (value != null) return value;
-    } catch (_) {}
 
     return null;
   }
@@ -597,34 +583,13 @@ class CallKitService {
     if (source == null) return null;
 
     if (source is Map) {
-      return source['id'] ??
-          source['uuid'] ??
-          source['callkit_uuid'] ??
-          source['callkit_id'] ??
-          source['call_id'];
+      final data = asJsonMap(source);
+      return data['id'] ??
+          data['uuid'] ??
+          data['callkit_uuid'] ??
+          data['callkit_id'] ??
+          data['call_id'];
     }
-
-    final dynamic dynamicSource = source;
-
-    try {
-      final value = dynamicSource.id;
-      if (value != null) return value;
-    } catch (_) {}
-
-    try {
-      final value = dynamicSource.uuid;
-      if (value != null) return value;
-    } catch (_) {}
-
-    try {
-      final value = dynamicSource.callkitUuid;
-      if (value != null) return value;
-    } catch (_) {}
-
-    try {
-      final value = dynamicSource.callkitId;
-      if (value != null) return value;
-    } catch (_) {}
 
     return null;
   }
@@ -668,7 +633,7 @@ class CallKitService {
   }
 
   void dispose() {
-    _sub?.cancel();
+    unawaited(_sub?.cancel());
     _sub = null;
     _initialized = false;
   }

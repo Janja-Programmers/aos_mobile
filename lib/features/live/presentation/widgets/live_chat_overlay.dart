@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/live/domain/live_chat_message.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 class LiveChatOverlay extends StatefulWidget {
   final List<LiveChatMessage> messages;
@@ -45,9 +45,9 @@ class _LiveChatOverlayState extends State<LiveChatOverlay> {
       child: SizedBox(
         height: 260,
         child: ListView.builder(
+          scrollCacheExtent: const ScrollCacheExtent.pixels(120),
           controller: _scrollController,
           reverse: true,
-          cacheExtent: 120,
           padding: EdgeInsets.zero,
           itemCount: visibleMessages.length,
           itemBuilder: (_, i) {

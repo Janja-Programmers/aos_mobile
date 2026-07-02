@@ -1,7 +1,6 @@
+import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/core.dart';
 
 class CallAvatar extends StatelessWidget {
   final String? avatarUrl;
@@ -22,7 +21,7 @@ class CallAvatar extends StatelessWidget {
         border: Border.all(color: colors.primary, width: 5),
         boxShadow: [
           BoxShadow(
-            color: colors.black.withOpacity(.15),
+            color: colors.black.withValues(alpha: .15),
             blurRadius: 26,
             spreadRadius: 10,
             offset: const Offset(0, 12),

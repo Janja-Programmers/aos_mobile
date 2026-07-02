@@ -1,21 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
 import 'package:africaonlinestores/features/ads/ads_all/presentation/screens/all_ads_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/presentation/screens/ad_listing_screen.dart';
-
 import 'package:africaonlinestores/features/home/presentation/screens/ad_list_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/marketing_tips_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/photography_tips_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/ranking_tips_screen.dart';
 import 'package:africaonlinestores/features/sellers/presentation/selling_tips_screen.dart';
-
 import 'package:africaonlinestores/shared/enums/ads.dart';
 import 'package:africaonlinestores/shared/enums/ads_mode.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
 import 'package:africaonlinestores/shared/utils/parse_sort.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class AdsRoutes {
   const AdsRoutes._();

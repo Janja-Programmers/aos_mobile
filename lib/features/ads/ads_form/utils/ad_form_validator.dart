@@ -1,7 +1,6 @@
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/validators/validation_result.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
-
 import 'package:africaonlinestores/features/ads/shared/utils/pricing/pricing_policy_resolver.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
 

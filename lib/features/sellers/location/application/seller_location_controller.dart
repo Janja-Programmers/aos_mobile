@@ -1,7 +1,6 @@
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
 import 'package:africaonlinestores/features/sellers/location/data/seller_location_api.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class SellerLocationState {
   final bool loading;
@@ -73,7 +72,7 @@ class SellerLocationController extends StateNotifier<SellerLocationState> {
     final res = await api.setMySellerLocation(
       latitude: place.latitude,
       longitude: place.longitude,
-      locationName: locationName?.trim().isNotEmpty == true
+      locationName: locationName?.trim().isNotEmpty ?? false
           ? locationName!.trim()
           : place.shortLabel,
       locationInstructions: instructions,

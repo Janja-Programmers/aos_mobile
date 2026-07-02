@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+
 enum VerificationStatus { notSubmitted, pending, approved, rejected }
 
 class SellerVerificationStatus {
@@ -23,27 +25,27 @@ class SellerVerificationStatus {
   });
 
   bool get isSuspended {
-    return sellerStatus?.trim().toLowerCase() == "suspended";
+    return sellerStatus?.trim().toLowerCase() == 'suspended';
   }
 
   factory SellerVerificationStatus.fromSellerStatusJson(
     Map<String, dynamic> json,
   ) {
-    final message = json["message"] is Map
-        ? Map<String, dynamic>.from(json["message"] as Map)
+    final message = json['message'] is Map
+        ? asJsonMap(json['message'] as Map)
         : <String, dynamic>{};
 
-    final data = message["data"] is Map
-        ? Map<String, dynamic>.from(message["data"] as Map)
+    final data = message['data'] is Map
+        ? asJsonMap(message['data'] as Map)
         : <String, dynamic>{};
 
     return SellerVerificationStatus(
-      isSeller: data["is_seller"] == true,
+      isSeller: data['is_seller'] == true,
       isVerified: false,
       status: VerificationStatus.notSubmitted,
-      sellerStatus: data["status"]?.toString(),
-      sellerId: data["seller_id"]?.toString(),
-      sellerType: data["seller_type"]?.toString(),
+      sellerStatus: data['status']?.toString(),
+      sellerId: data['seller_id']?.toString(),
+      sellerType: data['seller_type']?.toString(),
     );
   }
 
@@ -53,28 +55,28 @@ class SellerVerificationStatus {
     String? sellerId,
     String? sellerType,
   }) {
-    final message = json["message"] is Map
-        ? Map<String, dynamic>.from(json["message"] as Map)
+    final message = json['message'] is Map
+        ? asJsonMap(json['message'] as Map)
         : <String, dynamic>{};
 
-    final data = message["data"] is Map
-        ? Map<String, dynamic>.from(message["data"] as Map)
+    final data = message['data'] is Map
+        ? asJsonMap(message['data'] as Map)
         : <String, dynamic>{};
 
-    final verification = data["verification"] is Map
-        ? Map<String, dynamic>.from(data["verification"] as Map)
+    final verification = data['verification'] is Map
+        ? asJsonMap(data['verification'] as Map)
         : <String, dynamic>{};
 
-    final rawStatus = data["verification_status"] ?? verification["status"];
+    final rawStatus = data['verification_status'] ?? verification['status'];
 
     return SellerVerificationStatus(
-      isSeller: data["is_seller"] == true,
-      isVerified: data["is_verified"] == true,
+      isSeller: data['is_seller'] == true,
+      isVerified: data['is_verified'] == true,
       status: mapStatus(rawStatus?.toString()),
       verifiedOn:
-          data["verified_on"]?.toString() ??
-          verification["verified_on"]?.toString(),
-      rejectionReason: verification["rejection_reason"]?.toString(),
+          data['verified_on']?.toString() ??
+          verification['verified_on']?.toString(),
+      rejectionReason: verification['rejection_reason']?.toString(),
       sellerStatus: sellerStatus,
       sellerId: sellerId,
       sellerType: sellerType,
@@ -105,12 +107,12 @@ class SellerVerificationStatus {
 
   static VerificationStatus mapStatus(String? status) {
     switch (status?.trim().toLowerCase()) {
-      case "pending":
-      case "reviewing":
+      case 'pending':
+      case 'reviewing':
         return VerificationStatus.pending;
-      case "approved":
+      case 'approved':
         return VerificationStatus.approved;
-      case "rejected":
+      case 'rejected':
         return VerificationStatus.rejected;
       default:
         return VerificationStatus.notSubmitted;

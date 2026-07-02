@@ -1,11 +1,10 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class NoAnswerCallScreen extends ConsumerWidget {
   const NoAnswerCallScreen({super.key});
@@ -68,9 +67,7 @@ class NoAnswerCallScreen extends ConsumerWidget {
                     onCancel: manager.resetToIdle,
                     onCallAgain: state.isBusy
                         ? null
-                        : () {
-                            manager.callAgainAfterNoAnswer();
-                          },
+                        : manager.callAgainAfterNoAnswer,
                   ),
                 ],
               ),
@@ -226,7 +223,7 @@ class _NoAnswerActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: onTap == null
-          ? backgroundColor.withOpacity(0.50)
+          ? backgroundColor.withValues(alpha: 0.50)
           : backgroundColor,
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
@@ -282,7 +279,7 @@ class _NoAnswerPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.026)
+      ..color = Colors.white.withValues(alpha: 0.026)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 

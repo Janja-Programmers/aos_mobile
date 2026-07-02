@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:flutter/material.dart';
 
 class OnboardingNetworkState extends StatelessWidget {
   final IconData icon;
@@ -56,7 +55,7 @@ class OnboardingNetworkState extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 56,
-                        backgroundColor: scheme.primary.withOpacity(0.1),
+                        backgroundColor: scheme.primary.withValues(alpha: 0.1),
                         child: Icon(icon, size: 56, color: scheme.primary),
                       ),
 

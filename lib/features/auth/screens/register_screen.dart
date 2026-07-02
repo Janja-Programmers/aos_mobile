@@ -1,23 +1,21 @@
+import 'dart:async';
+
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/validators.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_section.dart';
+import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+import 'package:africaonlinestores/shared/components/app_text_fields.dart';
+import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:africaonlinestores/shared/widgets/legal_docs_widgets.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-import 'package:africaonlinestores/core/utils/validators.dart';
-
-import 'package:africaonlinestores/shared/widgets/legal_docs_widgets.dart';
-import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
-import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_section.dart';
-import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
-
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
-
-import 'package:africaonlinestores/shared/components/app_text_fields.dart';
-import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -53,60 +51,62 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: scheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: DraggableScrollableSheet(
-            expand: false,
-            initialChildSize: 0.85,
-            minChildSize: 0.5,
-            maxChildSize: 0.95,
-            builder: (ctx, controller) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
-                child: Column(
-                  children: [
-                    Container(
-                      height: 4,
-                      width: 44,
-                      decoration: BoxDecoration(
-                        color: colors.border,
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(child: Text(title, style: context.h2)),
-                        IconButton(
-                          icon: Icon(
-                            Icons.close,
-                            color: context.appColors.border,
-                          ),
-                          onPressed: () => Navigator.of(sheetContext).pop(),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: scheme.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+        ),
+        builder: (sheetContext) {
+          return SafeArea(
+            child: DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.85,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              builder: (ctx, controller) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 4,
+                        width: 44,
+                        decoration: BoxDecoration(
+                          color: colors.border,
+                          borderRadius: BorderRadius.circular(99),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        controller: controller,
-                        child: child,
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-      },
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(child: Text(title, style: context.h2)),
+                          IconButton(
+                            icon: Icon(
+                              Icons.close,
+                              color: context.appColors.border,
+                            ),
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          controller: controller,
+                          child: child,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 

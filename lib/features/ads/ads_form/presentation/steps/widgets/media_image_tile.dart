@@ -1,12 +1,10 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:flutter/material.dart';
 
 class MediaImageTile extends StatelessWidget {
   final AdMediaImage image;
@@ -50,7 +48,7 @@ class MediaImageTile extends StatelessWidget {
                     height: 110,
                   )
                 : url == null
-                ? Container(
+                ? ColoredBox(
                     color: colors.border,
                     child: const Icon(Icons.image_not_supported),
                   )
@@ -61,7 +59,7 @@ class MediaImageTile extends StatelessWidget {
                     width: 110,
                     height: 110,
                     gaplessPlayback: true,
-                    errorBuilder: (_, _, _) => Container(
+                    errorBuilder: (_, _, _) => ColoredBox(
                       color: colors.border,
                       child: const Icon(Icons.broken_image),
                     ),
@@ -80,7 +78,7 @@ class MediaImageTile extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: colors.black.withOpacity(0.1),
+                    color: colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                   ),
                 ],

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:africaonlinestores/core/core.dart';
+import 'package:flutter/material.dart';
 
 class SearchBarSection extends StatelessWidget {
   const SearchBarSection({
@@ -48,7 +48,7 @@ class SearchBarSection extends StatelessWidget {
                 textInputAction: TextInputAction.search,
                 onSubmitted: onSubmitted,
                 decoration: InputDecoration(
-                  hintText: "Search here...",
+                  hintText: 'Search here...',
                   border: InputBorder.none,
                   hintStyle: TextStyle(color: colors.textMuted),
                   focusedBorder: OutlineInputBorder(
@@ -62,9 +62,7 @@ class SearchBarSection extends StatelessWidget {
             if (controller.text.isNotEmpty)
               IconButton(
                 icon: Icon(Icons.close, color: colors.textMuted),
-                onPressed: () {
-                  controller.clear();
-                },
+                onPressed: controller.clear,
               ),
 
             /// MIC BUTTON

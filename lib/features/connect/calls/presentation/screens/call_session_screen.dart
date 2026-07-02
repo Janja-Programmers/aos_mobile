@@ -1,16 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
-
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/active_call_screen.dart';
-import 'package:africaonlinestores/features/connect/calls/presentation/widgets/active/closing_call_view.dart';
+import 'package:africaonlinestores/features/connect/calls/presentation/screens/no_answer_call_screen.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/ringing_screen.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/video_call_ringing_screen.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/video_call_screen.dart';
-import 'package:africaonlinestores/features/connect/calls/presentation/screens/no_answer_call_screen.dart';
+import 'package:africaonlinestores/features/connect/calls/presentation/widgets/active/closing_call_view.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CallSessionScreen extends ConsumerWidget {
   final String? user;

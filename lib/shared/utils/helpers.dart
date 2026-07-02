@@ -1,8 +1,7 @@
-import 'package:flutter/widgets.dart';
-
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+import 'package:flutter/widgets.dart';
 
 class AdPriceView {
   const AdPriceView({required this.show, this.current, this.original});
@@ -21,7 +20,7 @@ AdPriceView resolveAdPrice(AOSAdListItem ad) {
   }
 
   final hasOffer =
-      ad.isOfferActive == true &&
+      ad.isOfferActive &&
       ad.originalPrice != null &&
       ad.originalPrice!.trim().isNotEmpty;
 

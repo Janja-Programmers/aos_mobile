@@ -1,16 +1,14 @@
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-
-import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_mapper.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:dio/dio.dart';
 
 class ShortsManagementApi {
   final ApiClient _client;
@@ -28,7 +26,7 @@ class ShortsManagementApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final data = json['data'] as Map<String, dynamic>? ?? {};
         final item = data['item'] as Map<String, dynamic>?;
 
@@ -63,18 +61,10 @@ class ShortsManagementApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
-        final data = json['data'] is Map<String, dynamic>
-            ? json['data'] as Map<String, dynamic>
-            : json['message'] is Map<String, dynamic> &&
-                  json['message']['data'] is Map<String, dynamic>
-            ? json['message']['data'] as Map<String, dynamic>
-            : json;
+      return unwrapped.fold(Either.left, (json) {
+        final data = _payload(json);
 
-        final rawItems = data['items'] as List? ?? [];
-
-        final shorts = rawItems
-            .whereType<Map<String, dynamic>>()
+        final shorts = asJsonMapList(data['items'])
             .map((item) {
               final model = ShortModel.fromJson(item);
               return ShortMapper.toDomain(model);
@@ -101,10 +91,7 @@ class ShortsManagementApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold(
-        (failure) => Either.left(failure),
-        (_) => Either.right(null),
-      );
+      return unwrapped.fold(Either.left, (_) => Either.right(null));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
@@ -125,14 +112,16 @@ class ShortsManagementApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold(
-        (failure) => Either.left(failure),
-        (_) => Either.right(null),
-      );
+      return unwrapped.fold(Either.left, (_) => Either.right(null));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
       return Either.left(const Failure('Unexpected error retrying processing'));
     }
+  }
+
+  Map<String, dynamic> _payload(Map<String, dynamic> json) {
+    final data = asJsonMap(json['data']);
+    return data.isNotEmpty ? data : json;
   }
 }

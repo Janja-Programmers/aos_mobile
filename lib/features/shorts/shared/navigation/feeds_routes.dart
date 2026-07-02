@@ -1,8 +1,7 @@
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/screens/short_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 
 class FeedsRoutes {
   const FeedsRoutes._();

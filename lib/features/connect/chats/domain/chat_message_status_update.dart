@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+
 class ChatMessageStatusUpdate {
   final int updatedCount;
   final List<String> messageIds;
@@ -19,7 +21,7 @@ class ChatMessageStatusUpdate {
 
   factory ChatMessageStatusUpdate.fromJson(Map<String, dynamic> json) {
     final rawIds = json['message_ids'];
-    final ids = (rawIds is List ? rawIds : const [])
+    final ids = asJsonList(rawIds)
         .map((value) => value.toString().trim())
         .where((value) => value.isNotEmpty)
         .toList(growable: false);
@@ -35,13 +37,13 @@ class ChatMessageStatusUpdate {
   bool get hasUpdates => updatedCount > 0 && messageIds.isNotEmpty;
 }
 
-int? _parseInt(dynamic value) {
+int? _parseInt(Object? value) {
   if (value == null) return null;
   if (value is int) return value;
   return int.tryParse(value.toString());
 }
 
-DateTime? _parseDate(dynamic value) {
+DateTime? _parseDate(Object? value) {
   if (value == null) return null;
   if (value is DateTime) return value;
 

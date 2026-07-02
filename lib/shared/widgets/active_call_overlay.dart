@@ -1,12 +1,10 @@
-import 'package:africaonlinestores/features/connect/calls/navigation/call_routes.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
+import 'package:africaonlinestores/features/connect/calls/navigation/call_routes.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ActiveCallOverlay extends ConsumerWidget {
   const ActiveCallOverlay({super.key});
@@ -63,7 +61,7 @@ class ActiveCallOverlay extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          "Tap to return to call",
+                          'Tap to return to call',
                           style: TextStyle(color: colors.white, fontSize: 12),
                         ),
                       ],

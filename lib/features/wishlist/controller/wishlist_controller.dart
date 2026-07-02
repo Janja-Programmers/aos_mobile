@@ -1,13 +1,14 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
 
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/ads/data/ads_api.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
-
-import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
-
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_state.dart';
 import 'package:africaonlinestores/features/wishlist/domain/wishlist_storage.dart';
 import 'package:africaonlinestores/features/wishlist/wishlist_storage_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final wishlistControllerProvider =
     AsyncNotifierProvider<WishlistController, WishlistState>(
@@ -16,7 +17,7 @@ final wishlistControllerProvider =
 
 class WishlistController extends AsyncNotifier<WishlistState> {
   late final WishlistStorage _storage;
-  late final dynamic _api;
+  late final AdsApi _api;
 
   @override
   Future<WishlistState> build() async {
@@ -41,28 +42,25 @@ class WishlistController extends AsyncNotifier<WishlistState> {
       WishlistState.initial().copyWith(ids: localIds, isReady: true),
     );
 
-    final res = await _api.listWishlist(limit: 100, offset: 0);
+    final res = await _api.listWishlist(limit: 100);
 
     return res.fold(
       (_) => WishlistState.initial().copyWith(ids: localIds, isReady: true),
       (payload) {
-        final raw = payload['data']?['items'];
+        final data = asJsonMap(payload['data']);
+        final raw = data['items'];
         final ids = <String>{};
 
-        if (raw is List) {
-          for (final it in raw) {
-            if (it is Map) {
-              final id = (it['ad_id'] ?? it['ad'] ?? it['name'])
-                  ?.toString()
-                  .trim();
-              if (id != null && id.isNotEmpty) {
-                ids.add(id);
-              }
-            }
+        for (final item in asJsonMapList(raw)) {
+          final id = asNullableString(
+            item['ad_id'] ?? item['ad'] ?? item['name'],
+          )?.trim();
+          if (id != null && id.isNotEmpty) {
+            ids.add(id);
           }
         }
 
-        _storage.writeIds(ids);
+        unawaited(_storage.writeIds(ids));
 
         return WishlistState.initial().copyWith(ids: ids, isReady: true);
       },
@@ -105,7 +103,7 @@ class WishlistController extends AsyncNotifier<WishlistState> {
 
       final res = await _api.toggleWishlist(adId: id);
 
-      return await res.fold(
+      return res.fold(
         (_) async {
           await _finishToggle(id: id, shouldBeWishlisted: wasWishlisted);
           return false;

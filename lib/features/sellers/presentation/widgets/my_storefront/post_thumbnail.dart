@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class PostThumbnail extends StatelessWidget {
   const PostThumbnail({
@@ -61,7 +60,7 @@ class PostThumbnail extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
             decoration: BoxDecoration(
-              color: colors.black.withOpacity(.65),
+              color: colors.black.withValues(alpha: .65),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(

@@ -1,9 +1,7 @@
-import 'package:flutter_riverpod/legacy.dart';
-
-import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage.dart';
-
+import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
 import 'package:africaonlinestores/features/preferences/state/user_preference_state.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final userPreferenceControllerProvider =
     StateNotifierProvider<UserPreferenceController, UserPreferenceState>((ref) {

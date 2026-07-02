@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
 
 class StoryTemplateConfirmScreen extends StatelessWidget {
   const StoryTemplateConfirmScreen({super.key});
@@ -30,7 +29,11 @@ class StoryTemplateConfirmScreen extends StatelessWidget {
                       CircleAvatar(
                         radius: 28,
                         backgroundColor: colors.primary.withValues(alpha: 0.16),
-                        child: Icon(Icons.person_rounded, color: colors.primary, size: 30),
+                        child: Icon(
+                          Icons.person_rounded,
+                          color: colors.primary,
+                          size: 30,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -59,7 +62,11 @@ class StoryTemplateConfirmScreen extends StatelessWidget {
                             color: colors.surfaceBright.withValues(alpha: 0.7),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.close_rounded, color: colors.textMuted, size: 30),
+                          child: Icon(
+                            Icons.close_rounded,
+                            color: colors.textMuted,
+                            size: 30,
+                          ),
                         ),
                       ),
                     ],
@@ -168,7 +175,11 @@ class StoryTemplateConfirmScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Icon(Icons.send_rounded, color: colors.white, size: 36),
+                  child: Icon(
+                    Icons.send_rounded,
+                    color: colors.white,
+                    size: 36,
+                  ),
                 ),
               ),
             ),

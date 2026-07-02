@@ -1,9 +1,9 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/sellers/application/controllers/seller_state_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/state/following/folllowing_section_state.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-
-import 'package:africaonlinestores/features/sellers/application/controllers/seller_state_controller.dart';
-import 'package:africaonlinestores/features/shorts/feeds/application/state/following/folllowing_section_state.dart';
 
 final followingSectionControllerProvider =
     StateNotifierProvider<FollowingSectionController, FollowingSectionState>((
@@ -18,25 +18,22 @@ class FollowingSectionController extends StateNotifier<FollowingSectionState> {
   final Ref ref;
 
   Future<void> loadSellers() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     final res = await ref
         .read(sellerControllerProvider)
-        .listSellers(isVerified: 1, limit: 20, offset: 0);
+        .listSellers(isVerified: 1);
 
     res.fold(
       (failure) {
         state = state.copyWith(isLoading: false, error: failure.message);
       },
       (json) {
-        final data = json['data'] as Map<String, dynamic>? ?? {};
-        final rawItems = data['items'] as List? ?? [];
+        final data = asJsonMap(json['data']);
 
         state = state.copyWith(
           isLoading: false,
-          error: null,
-          sellers: rawItems
-              .whereType<Map<String, dynamic>>()
+          sellers: asJsonMapList(data['items'])
               .map(SellerSuggestion.fromJson)
               .where((seller) => seller.canBeSuggested)
               .toList(),
@@ -63,7 +60,6 @@ class FollowingSectionController extends StateNotifier<FollowingSectionState> {
       sellers: previousSellers
           .where((e) => e.sellerId != seller.sellerId)
           .toList(),
-      error: null,
     );
 
     final res = await ref

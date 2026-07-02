@@ -1,13 +1,12 @@
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
+import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
+import 'package:africaonlinestores/features/catalog/shared/utils/category_icon_url.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
-import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
-import 'package:africaonlinestores/features/catalog/shared/utils/category_icon_url.dart';
-import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 class SelectCategoryScreen extends ConsumerWidget {
   const SelectCategoryScreen({super.key, this.parent});

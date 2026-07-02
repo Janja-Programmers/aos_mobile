@@ -1,7 +1,6 @@
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 class OtpInputController {
   OtpInputController({required this.length})
@@ -207,18 +206,18 @@ class _OtpInputState extends State<OtpInput> {
                   decoration: BoxDecoration(
                     color: widget.enabled
                         ? scheme.surface
-                        : scheme.surfaceVariant.withOpacity(0.6),
+                        : scheme.surfaceContainerHighest.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: focused
                           ? scheme.primary
-                          : colors.border.withOpacity(0.6),
+                          : colors.border.withValues(alpha: 0.6),
                       width: focused ? 2 : 1,
                     ),
                     boxShadow: focused
                         ? [
                             BoxShadow(
-                              color: scheme.primary.withOpacity(0.18),
+                              color: scheme.primary.withValues(alpha: 0.18),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -244,9 +243,7 @@ class _OtpInputState extends State<OtpInput> {
   }
 
   Widget _hiddenField() {
-    return SizedBox(
-      height: 0,
-      width: 0,
+    return SizedBox.shrink(
       child: TextField(
         controller: widget.controller._textController,
         focusNode: widget.controller._focusNode,
@@ -282,7 +279,7 @@ class _OtpInputState extends State<OtpInput> {
           child: Ink(
             height: 56,
             decoration: BoxDecoration(
-              color: scheme.surfaceVariant.withOpacity(0.5),
+              color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Center(
@@ -308,7 +305,7 @@ class _OtpInputState extends State<OtpInput> {
           child: Ink(
             height: 56,
             decoration: BoxDecoration(
-              color: scheme.surfaceVariant.withOpacity(0.35),
+              color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Center(

@@ -1,7 +1,7 @@
+import 'package:africaonlinestores/features/connect/calls/application/managers/call_manager.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_service.dart';
-import 'package:africaonlinestores/features/connect/calls/application/managers/call_manager.dart';
 
 class CallStarterService {
   final CallManager callManager;

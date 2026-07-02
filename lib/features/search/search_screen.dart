@@ -1,16 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/utils/logger.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
+import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
-import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
 import 'package:africaonlinestores/features/search/storage/search_recent_storage.dart';
 import 'package:africaonlinestores/features/search/voice/voice_search_sheet.dart';
 import 'package:africaonlinestores/features/search/widgets/image_search_sheet.dart';
@@ -18,6 +15,9 @@ import 'package:africaonlinestores/features/search/widgets/search_bar_section.da
 import 'package:africaonlinestores/features/search/widgets/search_header.dart';
 import 'package:africaonlinestores/features/search/widgets/search_recent_section.dart';
 import 'package:africaonlinestores/features/search/widgets/search_results_section.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 enum SearchStatus { idle, loading, empty, error, data }
 
@@ -112,7 +112,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Future<void> _openCameraSearch() async {
     appLogger.i('IMAGE SEARCH SHEET OPENING');
 
-    final file = await showModalBottomSheet(
+    final file = await showModalBottomSheet<File>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
@@ -147,14 +147,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         });
       },
       (body) {
-        final raw = body['data']?['items'];
-
-        final list = raw is List
-            ? raw
-                  .whereType<Map<String, dynamic>>()
-                  .map(AOSAdListItem.fromJson)
-                  .toList()
-            : <AOSAdListItem>[];
+        final data = asJsonMap(body['data']);
+        final list = asJsonMapList(
+          data['items'],
+        ).map(AOSAdListItem.fromJson).toList();
 
         setState(() {
           _results = list;
@@ -231,9 +227,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       _visualSearchSubtitle = null;
     });
 
-    final res = await ref
-        .read(adsApiProvider)
-        .listAds(q: q, limit: 20, offset: 0);
+    final res = await ref.read(adsApiProvider).listAds(q: q);
 
     if (!mounted) return;
 
@@ -246,14 +240,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         });
       },
       (data) {
-        final raw = data['data']?['items'];
-
-        final list = raw is List
-            ? raw
-                  .whereType<Map<String, dynamic>>()
-                  .map(AOSAdListItem.fromJson)
-                  .toList()
-            : <AOSAdListItem>[];
+        final payload = asJsonMap(data['data']);
+        final list = asJsonMapList(
+          payload['items'],
+        ).map(AOSAdListItem.fromJson).toList();
 
         setState(() {
           _results = list;

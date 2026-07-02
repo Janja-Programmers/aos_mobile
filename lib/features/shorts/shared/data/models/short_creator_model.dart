@@ -17,9 +17,7 @@ class ShortCreatorModel {
     return const ShortCreatorModel(
       user: '',
       displayName: '',
-      avatar: null,
       isVerified: false,
-      seller: null,
     );
   }
 

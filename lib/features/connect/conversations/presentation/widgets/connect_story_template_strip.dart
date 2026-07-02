@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 @immutable
 class ConnectStoryTemplateItem {
@@ -137,7 +136,11 @@ class _MyStoryItem extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: colors.surface, width: 3),
                     ),
-                    child: Icon(Icons.add_rounded, color: colors.white, size: 18),
+                    child: Icon(
+                      Icons.add_rounded,
+                      color: colors.white,
+                      size: 18,
+                    ),
                   ),
                 ),
               ],
@@ -148,7 +151,10 @@ class _MyStoryItem extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: context.p.copyWith(fontSize: 12.5, fontWeight: FontWeight.w800),
+              style: context.p.copyWith(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ],
         ),
@@ -200,7 +206,10 @@ class _StoryItem extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: context.p.copyWith(fontSize: 12.5, fontWeight: FontWeight.w800),
+              style: context.p.copyWith(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ],
         ),

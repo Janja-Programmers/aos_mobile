@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/search/search_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class SearchRoutes {
   const SearchRoutes._();
@@ -30,7 +29,7 @@ class SearchNavigation {
   }
 
   static void toTextSearch(BuildContext context) {
-    toSearchscreen(context, mode: 'text');
+    toSearchscreen(context);
   }
 
   static void toVoiceSearch(BuildContext context) {

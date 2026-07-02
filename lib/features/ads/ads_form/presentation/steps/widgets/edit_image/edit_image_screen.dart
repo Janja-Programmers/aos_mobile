@@ -1,22 +1,19 @@
 import 'dart:io';
 
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/utils/background_colors.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/background_removal_await_dialog.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/background_removal_confirm_dialog.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/editor_panel.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
+import 'package:africaonlinestores/shared/utils/url_to_file.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image/image.dart' as img;
+import 'package:image_cropper/image_cropper.dart';
 import 'package:path_provider/path_provider.dart';
-
-import 'package:africaonlinestores/core/core.dart';
-
-import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/background_removal_await_dialog.dart';
-import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/background_removal_confirm_dialog.dart';
-import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/utils/background_colors.dart';
-import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
-import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/editor_panel.dart';
-
-import 'package:africaonlinestores/shared/utils/url_to_file.dart';
 
 class EditImageScreen extends ConsumerStatefulWidget {
   const EditImageScreen({
@@ -68,7 +65,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
         sourcePath: _file.path,
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: "Crop",
+            toolbarTitle: 'Crop',
             toolbarColor: context.appColors.black,
             toolbarWidgetColor: context.appColors.white,
             initAspectRatio: CropAspectRatioPreset.original,
@@ -78,11 +75,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
             cropGridStrokeWidth: 2,
             activeControlsWidgetColor: context.appColors.red,
           ),
-          IOSUiSettings(
-            title: "Crop",
-            aspectRatioLockEnabled: false,
-            rotateButtonsHidden: false,
-          ),
+          IOSUiSettings(title: 'Crop'),
         ],
       );
 
@@ -122,7 +115,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
       final dir = await getTemporaryDirectory();
 
       final path =
-          "${dir.path}/rotated_${DateTime.now().millisecondsSinceEpoch}.png";
+          '${dir.path}/rotated_${DateTime.now().millisecondsSinceEpoch}.png';
 
       final file = File(path)..writeAsBytesSync(img.encodePng(rotated));
 
@@ -146,7 +139,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
     final dir = await getTemporaryDirectory();
 
     final target =
-        "${dir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg";
+        '${dir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
     final result = await FlutterImageCompress.compressAndGetFile(
       _file.path,
@@ -221,7 +214,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
 
     if (!mounted) return;
 
-    if (accepted == true) {
+    if (accepted ?? false) {
       setState(() {
         _file = removedFile;
         _transparentFile = removedFile;
@@ -258,12 +251,12 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
       final dir = await getTemporaryDirectory();
 
       final outputPath =
-          "${dir.path}/bg_${DateTime.now().millisecondsSinceEpoch}.png";
+          '${dir.path}/bg_${DateTime.now().millisecondsSinceEpoch}.png';
 
       final resultPath = await compute(applyBackgroundInIsolate, {
         'sourcePath': _transparentFile!.path,
         'outputPath': outputPath,
-        'color': color?.value,
+        'color': color?.toARGB32(),
       });
 
       final file = File(resultPath);
@@ -299,13 +292,13 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
       final dir = await getTemporaryDirectory();
 
       final outputPath =
-          "${dir.path}/gradient_${DateTime.now().millisecondsSinceEpoch}.png";
+          '${dir.path}/gradient_${DateTime.now().millisecondsSinceEpoch}.png';
 
       final resultPath = await compute(applyGradientInIsolate, {
         'sourcePath': _transparentFile!.path,
         'outputPath': outputPath,
-        'startColor': colors[0].value,
-        'endColor': colors[1].value,
+        'startColor': colors[0].toARGB32(),
+        'endColor': colors[1].toARGB32(),
       });
 
       final file = File(resultPath);
@@ -332,7 +325,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
     if (_bgRemoved && _selectedBgColor == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Select a background")));
+      ).showSnackBar(const SnackBar(content: Text('Select a background')));
       return;
     }
 
@@ -370,7 +363,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Edit Image"),
+          title: const Text('Edit Image'),
           leading: IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
@@ -385,7 +378,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                   )
-                : TextButton(onPressed: _done, child: const Text("Done")),
+                : TextButton(onPressed: _done, child: const Text('Done')),
           ],
         ),
         body: Column(

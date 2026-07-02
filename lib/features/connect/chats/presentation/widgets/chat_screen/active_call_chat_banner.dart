@@ -1,6 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
@@ -8,6 +5,8 @@ import 'package:africaonlinestores/features/connect/calls/application/state/call
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/navigation/call_routes.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ActiveCallChatBanner extends ConsumerWidget {
   final String conversationId;
@@ -63,7 +62,7 @@ class ActiveCallChatBanner extends ConsumerWidget {
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: colors.black.withOpacity(.14),
+                  color: colors.black.withValues(alpha: .14),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
@@ -76,9 +75,7 @@ class ActiveCallChatBanner extends ConsumerWidget {
                       ? Icons.mic_off_rounded
                       : Icons.mic_none_rounded,
                   tooltip: state.isMuted ? 'Unmute' : 'Mute',
-                  onTap: state.hasActiveRoom
-                      ? () => manager.toggleMute()
-                      : null,
+                  onTap: state.hasActiveRoom ? manager.toggleMute : null,
                 ),
                 const SizedBox(width: 10),
 
@@ -111,7 +108,7 @@ class ActiveCallChatBanner extends ConsumerWidget {
                             isVideo
                                 ? Icons.videocam_rounded
                                 : Icons.call_rounded,
-                            color: colors.white.withOpacity(.92),
+                            color: colors.white.withValues(alpha: .92),
                             size: 16,
                           ),
                           const SizedBox(width: 5),
@@ -121,7 +118,7 @@ class ActiveCallChatBanner extends ConsumerWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: colors.white.withOpacity(.92),
+                                color: colors.white.withValues(alpha: .92),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 height: 1.1,
@@ -140,7 +137,7 @@ class ActiveCallChatBanner extends ConsumerWidget {
                   tooltip: 'End call',
                   backgroundColor: colors.red,
                   foregroundColor: colors.white,
-                  onTap: () => manager.endCurrentCall(),
+                  onTap: manager.endCurrentCall,
                 ),
               ],
             ),
@@ -241,7 +238,7 @@ class _ParticipantAvatar extends StatelessWidget {
 
     return CircleAvatar(
       radius: 18,
-      backgroundColor: colors.white.withOpacity(.18),
+      backgroundColor: colors.white.withValues(alpha: .18),
       backgroundImage: hasAvatar ? NetworkImage(avatarUrl!.trim()) : null,
       child: hasAvatar
           ? null
@@ -289,14 +286,15 @@ class _BannerRoundButton extends StatelessWidget {
           decoration: BoxDecoration(
             color:
                 backgroundColor ??
-                colors.white.withOpacity(enabled ? .16 : .08),
+                colors.white.withValues(alpha: enabled ? .16 : .08),
             shape: BoxShape.circle,
           ),
           child: Icon(
             icon,
             size: 21,
             color:
-                foregroundColor ?? colors.white.withOpacity(enabled ? 1 : .46),
+                foregroundColor ??
+                colors.white.withValues(alpha: enabled ? 1 : .46),
           ),
         ),
       ),

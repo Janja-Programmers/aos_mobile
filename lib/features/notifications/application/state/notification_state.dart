@@ -23,7 +23,6 @@ class NotificationState {
       items: [],
       isLoading: false,
       isRefreshing: false,
-      errorMessage: null,
     );
   }
 
@@ -63,20 +62,15 @@ class NotificationState {
   // =====================================================
 
   NotificationState loading() {
-    return copyWith(isLoading: true, errorMessage: null);
+    return copyWith(isLoading: true);
   }
 
   NotificationState refreshing() {
-    return copyWith(isRefreshing: true, errorMessage: null);
+    return copyWith(isRefreshing: true);
   }
 
   NotificationState success(List<NotificationItem> newItems) {
-    return copyWith(
-      items: newItems,
-      isLoading: false,
-      isRefreshing: false,
-      errorMessage: null,
-    );
+    return copyWith(items: newItems, isLoading: false, isRefreshing: false);
   }
 
   NotificationState failure(String message) {

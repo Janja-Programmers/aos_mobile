@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
+import 'package:flutter/material.dart';
 
 class CategoryPills extends StatefulWidget {
   const CategoryPills({
@@ -123,7 +122,7 @@ class _CategoryPillsState extends State<CategoryPills> {
           final selected =
               (isAll && widget.selectedId == null) || id == widget.selectedId;
 
-          final key = _itemKeys.putIfAbsent(i, () => GlobalKey());
+          final key = _itemKeys.putIfAbsent(i, GlobalKey.new);
 
           return Padding(
             key: key,
@@ -132,17 +131,16 @@ class _CategoryPillsState extends State<CategoryPills> {
               selected: selected,
               onSelected: (_) => widget.onSelect(id),
               backgroundColor: colors.surface,
-              selectedColor: colors.primary.withOpacity(.15),
+              selectedColor: colors.primary.withValues(alpha: .15),
               showCheckmark: false,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(999),
-                side: BorderSide.none,
               ),
               label: Text(
                 label,
                 style: context.p.copyWith(
                   color: selected
-                      ? colors.primary.withOpacity(.85)
+                      ? colors.primary.withValues(alpha: .85)
                       : colors.textPrimary,
                   fontWeight: FontWeight.w500,
                 ),

@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
 
 class AdAttribute {
@@ -66,24 +67,11 @@ class AdAttributeModel extends AdAttribute {
     }
   }
 
-  static bool _parseBool(dynamic v) {
-    if (v == null) return false;
-    if (v is bool) return v;
-    if (v is num) return v == 1;
-    if (v is String) {
-      final val = v.toLowerCase();
-      return val == 'true' || val == '1';
-    }
-    return false;
-  }
-
   factory AdAttributeModel.fromMap(Map<String, dynamic> map) {
     final options = <String>[];
 
-    if (map['options'] is List) {
-      for (final o in map['options']) {
-        if (o != null) options.add(o.toString());
-      }
+    for (final o in asJsonList(map['options'])) {
+      if (o != null) options.add(o.toString());
     }
 
     return AdAttributeModel(
@@ -91,11 +79,11 @@ class AdAttributeModel extends AdAttribute {
       key: (map['key'] ?? '').toString(),
       label: (map['label'] ?? '').toString(),
       type: _parseType((map['type'] ?? '').toString()),
-      required: _parseBool(map['required']),
+      required: asBool(map['required']),
       unit: map['unit']?.toString(),
       helpText: map['help_text']?.toString(),
       options: options,
-      sortOrder: (map['sort_order'] ?? 0) as int,
+      sortOrder: asInt(map['sort_order']),
     );
   }
 }

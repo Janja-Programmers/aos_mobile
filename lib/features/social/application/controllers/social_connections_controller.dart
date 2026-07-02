@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
@@ -9,11 +7,10 @@ import 'package:africaonlinestores/features/social/application/state/social_conn
 import 'package:africaonlinestores/features/social/data/social_repository_impl.dart';
 import 'package:africaonlinestores/features/social/domain/social_friend.dart';
 import 'package:africaonlinestores/features/social/domain/social_friends_page.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class SocialConnectionsController
     extends StateNotifier<SocialConnectionsState> {
-  static const int _pageSize = 20;
-
   final SocialRepository _repository;
   final String? _targetUser;
 
@@ -24,7 +21,7 @@ class SocialConnectionsController
     this._repository, {
     SocialConnectionsTab initialTab = SocialConnectionsTab.followers,
     String? targetUser,
-  }) : _targetUser = targetUser?.trim().isNotEmpty == true
+  }) : _targetUser = targetUser?.trim().isNotEmpty ?? false
            ? targetUser!.trim()
            : null,
        super(SocialConnectionsState(selectedTab: initialTab)) {
@@ -180,19 +177,16 @@ class SocialConnectionsController
 
     return switch (tab) {
       SocialConnectionsTab.following => _repository.getFollowing(
-        limit: _pageSize,
         start: start,
         targetUser: _targetUser,
         query: query,
       ),
       SocialConnectionsTab.followers => _repository.getFollowers(
-        limit: _pageSize,
         start: start,
         targetUser: _targetUser,
         query: query,
       ),
       SocialConnectionsTab.friends => _repository.getFriends(
-        limit: _pageSize,
         start: start,
         targetUser: _targetUser,
         query: query,
@@ -202,9 +196,9 @@ class SocialConnectionsController
 
   Future<void> _loadCounts() async {
     final results = await Future.wait([
-      _repository.getFollowing(limit: 1, start: 0, targetUser: _targetUser),
-      _repository.getFollowers(limit: 1, start: 0, targetUser: _targetUser),
-      _repository.getFriends(limit: 1, start: 0, targetUser: _targetUser),
+      _repository.getFollowing(limit: 1, targetUser: _targetUser),
+      _repository.getFollowers(limit: 1, targetUser: _targetUser),
+      _repository.getFriends(limit: 1, targetUser: _targetUser),
     ]);
 
     int following = state.followingCount;

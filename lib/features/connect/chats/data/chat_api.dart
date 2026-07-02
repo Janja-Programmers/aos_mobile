@@ -1,16 +1,15 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message_status_update.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Provider
 final chatApiProvider = Provider<ChatApi>((ref) {
@@ -36,9 +35,10 @@ class ChatApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final payload = result.rightOrNull!;
+      final payload = asJsonMap(result.rightOrNull);
+      final data = asJsonMap(payload['data']);
 
-      final conversationId = payload['data']?['id'];
+      final conversationId = data['id'];
 
       if (conversationId == null) {
         return Either.left(const Failure('Invalid conversation response'));
@@ -64,12 +64,9 @@ class ChatApi {
 
       final rawData = result.rightOrNull!;
 
-      final dataList = rawData['data'] is List ? rawData['data'] as List : [];
-
-      final conversations = dataList
-          .whereType<Map<String, dynamic>>()
-          .map((e) => ChatConversation.fromJson(e))
-          .toList();
+      final conversations = asJsonMapList(
+        rawData['data'],
+      ).map(ChatConversation.fromJson).toList(growable: false);
 
       return Either.right(conversations);
     } catch (e) {
@@ -117,14 +114,13 @@ class ChatApi {
     if (result.isLeft) return Either.left(result.leftOrNull!);
 
     final data = _extractDataPayload(result.rightOrNull);
-    if (data is! List) {
+    final messages = asJsonMapList(
+      data,
+    ).map(ChatMessage.fromJson).toList(growable: false);
+
+    if (messages.isEmpty && data is! List) {
       return Either.left(const Failure('Empty response from chat API'));
     }
-
-    final messages = data
-        .whereType<Map>()
-        .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
-        .toList();
 
     return Either.right(messages);
   }
@@ -170,9 +166,7 @@ class ChatApi {
         );
       }
 
-      final message = ChatMessage.fromJson(
-        Map<String, dynamic>.from(messageData),
-      );
+      final message = ChatMessage.fromJson(asJsonMap(messageData));
 
       if (message.id.trim().isEmpty) {
         return Either.left(const Failure('Invalid message id from chat API'));
@@ -206,9 +200,7 @@ class ChatApi {
         return Either.left(const Failure('Invalid edit message response'));
       }
 
-      return Either.right(
-        ChatMessage.fromJson(Map<String, dynamic>.from(messageData)),
-      );
+      return Either.right(ChatMessage.fromJson(asJsonMap(messageData)));
     } catch (_) {
       return Either.left(const Failure('Failed to edit message'));
     }
@@ -228,9 +220,7 @@ class ChatApi {
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
       final data = _extractDataPayload(result.rightOrNull);
-      return Either.right(
-        data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{},
-      );
+      return Either.right(data is Map ? asJsonMap(data) : <String, dynamic>{});
     } catch (_) {
       return Either.left(const Failure('Failed to delete messages'));
     }
@@ -262,10 +252,8 @@ class ChatApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = _extractDataPayload(result.rightOrNull);
-      final isStarred =
-          data is Map &&
-          (data['is_starred'] == true || data['is_starred'] == 1);
+      final data = asJsonMap(_extractDataPayload(result.rightOrNull));
+      final isStarred = asBool(data['is_starred']);
 
       return Either.right(isStarred);
     } catch (_) {
@@ -296,10 +284,9 @@ class ChatApi {
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
       final data = _extractDataPayload(result.rightOrNull);
-      final messages = (data is List ? data : const [])
-          .whereType<Map>()
-          .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      final messages = asJsonMapList(
+        data,
+      ).map(ChatMessage.fromJson).toList(growable: false);
 
       return Either.right(messages);
     } catch (_) {
@@ -321,9 +308,7 @@ class ChatApi {
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
       final data = _extractDataPayload(result.rightOrNull);
-      return Either.right(
-        data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{},
-      );
+      return Either.right(data is Map ? asJsonMap(data) : <String, dynamic>{});
     } catch (_) {
       return Either.left(const Failure('Failed to update reaction'));
     }
@@ -345,15 +330,14 @@ class ChatApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = _extractDataPayload(result.rightOrNull);
-      final rows = data is Map ? data['messages'] : null;
+      final data = asJsonMap(_extractDataPayload(result.rightOrNull));
+      final rows = asJsonMapList(data['messages']);
 
-      final messages = (rows is List ? rows : const [])
-          .whereType<Map>()
-          .map((row) => row['message'])
-          .whereType<Map>()
-          .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      final messages = rows
+          .map((row) => asJsonMap(row['message']))
+          .where((message) => message.isNotEmpty)
+          .map(ChatMessage.fromJson)
+          .toList(growable: false);
 
       return Either.right(messages);
     } catch (_) {
@@ -375,9 +359,7 @@ class ChatApi {
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
       final data = _extractDataPayload(result.rightOrNull);
-      return Either.right(
-        data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{},
-      );
+      return Either.right(data is Map ? asJsonMap(data) : <String, dynamic>{});
     } catch (_) {
       return Either.left(
         const Failure('Message translation is not available yet'),
@@ -402,7 +384,7 @@ class ChatApi {
     final data = _extractDataPayload(result.rightOrNull);
     return Either.right(
       data is Map
-          ? ChatMessageStatusUpdate.fromJson(Map<String, dynamic>.from(data))
+          ? ChatMessageStatusUpdate.fromJson(asJsonMap(data))
           : const ChatMessageStatusUpdate.empty(),
     );
   }
@@ -421,7 +403,7 @@ class ChatApi {
     final data = _extractDataPayload(result.rightOrNull);
     return Either.right(
       data is Map
-          ? ChatMessageStatusUpdate.fromJson(Map<String, dynamic>.from(data))
+          ? ChatMessageStatusUpdate.fromJson(asJsonMap(data))
           : const ChatMessageStatusUpdate.empty(),
     );
   }
@@ -445,7 +427,7 @@ class ChatApi {
   }
 }
 
-dynamic _extractDataPayload(Map<String, dynamic>? raw) {
+Object? _extractDataPayload(Map<String, dynamic>? raw) {
   if (raw == null) return null;
 
   final data = raw['data'];

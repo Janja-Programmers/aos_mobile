@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:flutter/material.dart';
 
 class AdListingEmptyView extends StatelessWidget {
   const AdListingEmptyView({
@@ -39,8 +37,10 @@ class AdListingEmptyView extends StatelessWidget {
               height: 160,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: scheme.primary.withOpacity(0.06),
-                border: Border.all(color: scheme.primary.withOpacity(0.15)),
+                color: scheme.primary.withValues(alpha: 0.06),
+                border: Border.all(
+                  color: scheme.primary.withValues(alpha: 0.15),
+                ),
               ),
               child: Icon(
                 Icons.shopping_bag_outlined,

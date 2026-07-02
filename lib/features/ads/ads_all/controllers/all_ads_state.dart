@@ -1,8 +1,8 @@
+import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/shared/enums/ads_mode.dart';
 import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
-import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 
 const Object _unset = Object();
 

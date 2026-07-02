@@ -1,16 +1,13 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
 import 'package:africaonlinestores/features/ads/ads_form/utils/ad_form_payload.dart';
 import 'package:africaonlinestores/features/ads/ads_form/utils/cancel_action.dart';
 import 'package:africaonlinestores/features/ads/data/ads_api.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
-
 import 'package:africaonlinestores/shared/enums/ads.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final adActionsControllerProvider = Provider<AdActionsController>((ref) {
   final api = ref.read(adsApiProvider);
@@ -35,7 +32,7 @@ class AdActionsController {
       // NEW AD → CREATE DIRECTLY
       // -------------------------------
       case DraftSource.create:
-        return await api.createAd(payload: payload);
+        return api.createAd(payload: payload);
 
       // -------------------------------
       // EXISTING DRAFT → UPDATE + SUBMIT
@@ -54,7 +51,7 @@ class AdActionsController {
 
         if (saveRes.isLeft) return saveRes;
 
-        return await api.submitAdDraft(draftId: draft.draftId!);
+        return api.submitAdDraft(draftId: draft.draftId!);
 
       // -------------------------------
       // EDIT EXISTING AD
@@ -66,7 +63,7 @@ class AdActionsController {
           );
         }
 
-        return await api.updateAd(adId: draft.adId!, payload: payload);
+        return api.updateAd(adId: draft.adId!, payload: payload);
     }
   }
 
@@ -79,7 +76,7 @@ class AdActionsController {
   }) async {
     // 🔒 HARD LOCK (prevents race condition)
     if (_isSavingDraft) {
-      return Either.left(const Failure("Draft save in progress"));
+      return Either.left(const Failure('Draft save in progress'));
     }
 
     _isSavingDraft = true;

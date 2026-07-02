@@ -1,8 +1,7 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
+import 'package:flutter/material.dart';
 
 class PreviewArea extends StatelessWidget {
   const PreviewArea({super.key, required this.file});

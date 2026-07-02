@@ -16,7 +16,7 @@ class ImageEditService {
     final dir = await getTemporaryDirectory();
 
     final path =
-        "${dir.path}/rotated_${DateTime.now().millisecondsSinceEpoch}.png";
+        '${dir.path}/rotated_${DateTime.now().millisecondsSinceEpoch}.png';
 
     final newFile = File(path)..writeAsBytesSync(img.encodePng(rotated));
 
@@ -39,14 +39,18 @@ class ImageEditService {
 
     img.fill(
       background,
-      color: img.ColorRgb8(color.red, color.green, color.blue),
+      color: img.ColorRgb8(
+        (color.r * 255.0).round().clamp(0, 255),
+        (color.g * 255.0).round().clamp(0, 255),
+        (color.b * 255.0).round().clamp(0, 255),
+      ),
     );
 
     img.compositeImage(background, foreground);
 
     final dir = await getTemporaryDirectory();
 
-    final path = "${dir.path}/bg_${DateTime.now().millisecondsSinceEpoch}.png";
+    final path = '${dir.path}/bg_${DateTime.now().millisecondsSinceEpoch}.png';
 
     final file = File(path)..writeAsBytesSync(img.encodePng(background));
 

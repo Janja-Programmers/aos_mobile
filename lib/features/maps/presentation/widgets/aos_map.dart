@@ -1,7 +1,6 @@
+import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'package:africaonlinestores/core/config/app_config.dart';
 
 class AOSMap extends StatelessWidget {
   const AOSMap({
@@ -36,8 +35,6 @@ class AOSMap extends StatelessWidget {
       onCameraMove: onCameraMove,
       onCameraIdle: onCameraIdle,
       myLocationEnabled: myLocationEnabled,
-      myLocationTrackingMode: MyLocationTrackingMode.none,
-      compassEnabled: true,
       trackCameraPosition: true,
     );
   }

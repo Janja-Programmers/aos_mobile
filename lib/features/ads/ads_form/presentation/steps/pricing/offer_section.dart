@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/schedule_offer_card.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/pricing_rules.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class OfferSection extends StatefulWidget {
   const OfferSection({

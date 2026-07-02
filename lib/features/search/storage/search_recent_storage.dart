@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchRecentStorage {
-  static const key = "search_recent_v1";
+  static const key = 'search_recent_v1';
 
   static Future<List<String>> load() async {
     final sp = await SharedPreferences.getInstance();

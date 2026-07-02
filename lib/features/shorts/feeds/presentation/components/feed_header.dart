@@ -1,11 +1,8 @@
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/notifications/navigation/notification_routes.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/controllers/feed_search_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
-import 'package:africaonlinestores/features/shorts/feeds/application/controllers/feed_search_controller.dart';
-
-import 'package:africaonlinestores/features/notifications/navigation/notification_routes.dart';
 
 class FeedHeader extends ConsumerWidget {
   const FeedHeader({super.key});

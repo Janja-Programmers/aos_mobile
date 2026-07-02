@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
-
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
+import 'package:flutter/foundation.dart';
 
 @immutable
 class CallLog {
@@ -52,21 +51,21 @@ class CallLog {
 
   // ================= HELPERS =================
 
-  bool get isIncoming => direction == "incoming";
-  bool get isOutgoing => direction == "outgoing";
+  bool get isIncoming => direction == 'incoming';
+  bool get isOutgoing => direction == 'outgoing';
 
-  bool get isAnswered => status == "ended";
+  bool get isAnswered => status == 'ended';
 
   bool get isGrouped => groupCount > 1;
 
   String get detailLookupId =>
-      latestCallId?.trim().isNotEmpty == true ? latestCallId! : id;
+      latestCallId?.trim().isNotEmpty ?? false ? latestCallId! : id;
 
   String get effectiveLatestCallId =>
-      latestCallId?.trim().isNotEmpty == true ? latestCallId! : id;
+      latestCallId?.trim().isNotEmpty ?? false ? latestCallId! : id;
 
   String get effectiveOldestCallId =>
-      oldestCallId?.trim().isNotEmpty == true ? oldestCallId! : id;
+      oldestCallId?.trim().isNotEmpty ?? false ? oldestCallId! : id;
 
   String get formattedTime {
     final dt = startedAt ?? createdAt;

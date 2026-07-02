@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:flutter/material.dart';
 
 class AppCircularAvatar extends StatefulWidget {
   const AppCircularAvatar({
@@ -47,7 +45,8 @@ class _AppCircularAvatarState extends State<AppCircularAvatar> {
     final hasAvatar =
         avatarUrl != null && avatarUrl.isNotEmpty && !_imageFailed;
 
-    final bgColor = widget.backgroundColor ?? colors.primary.withOpacity(0.7);
+    final bgColor =
+        widget.backgroundColor ?? colors.primary.withValues(alpha: 0.7);
     final textColor = widget.textColor ?? colors.white;
 
     return CircleAvatar(

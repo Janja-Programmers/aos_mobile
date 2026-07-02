@@ -1,16 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
-import 'package:africaonlinestores/shared/components/locale_picker_page.dart';
 import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
 import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
-import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/onboarding/widgets/onboarding_network_state.dart';
-
+import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/components/locale_picker_page.dart';
 import 'package:africaonlinestores/shared/components/picker_field.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class LanguageStep extends ConsumerStatefulWidget {
   final VoidCallback? onContinue;
@@ -56,14 +53,14 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
     if (localization.isLoading) {
       return OnboardingNetworkState(
         icon: Icons.cloud_sync,
-        title: "Loading options",
+        title: 'Loading options',
         message:
-            "We’re loading your setup options. You can retry or skip for now.",
-        primaryText: "Try again",
+            'We’re loading your setup options. You can retry or skip for now.',
+        primaryText: 'Try again',
         onPrimary: () {
           ref.read(localizationControllerProvider.notifier).load();
         },
-        secondaryText: "Skip for now",
+        secondaryText: 'Skip for now',
         onSecondary: widget.onSkip,
       );
     }
@@ -71,14 +68,14 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
     if (localization.error != null) {
       return OnboardingNetworkState(
         icon: Icons.wifi_off,
-        title: "No internet connection",
+        title: 'No internet connection',
         message:
-            "We couldn’t load these options. You can retry or continue with default settings.",
-        primaryText: "Try again",
+            'We couldn’t load these options. You can retry or continue with default settings.',
+        primaryText: 'Try again',
         onPrimary: () {
           ref.read(localizationControllerProvider.notifier).load();
         },
-        secondaryText: "Skip for now",
+        secondaryText: 'Skip for now',
         onSecondary: widget.onSkip,
       );
     }
@@ -87,7 +84,7 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
 
     bool isValid(String? code) {
       if (code == null) return false;
-      return languages.any((l) => (l["code"] ?? "") == code);
+      return languages.any((l) => (l['code'] ?? '') == code);
     }
 
     /// Sync with onboarding defaults (safe)
@@ -97,7 +94,7 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
 
     /// Safe fallback
     if (!isValid(selectedLanguageCode) && languages.isNotEmpty) {
-      selectedLanguageCode = languages.first["code"] as String?;
+      selectedLanguageCode = languages.first['code'] as String?;
     }
 
     String? selectedName() {
@@ -105,8 +102,8 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
       if (code == null) return null;
 
       try {
-        final match = languages.firstWhere((l) => (l["code"] ?? "") == code);
-        return match["name"]?.toString();
+        final match = languages.firstWhere((l) => (l['code'] ?? '') == code);
+        return match['name']?.toString();
       } catch (_) {
         return null;
       }
@@ -123,14 +120,13 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: IntrinsicHeight(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(height: 24),
 
                     Center(
                       child: CircleAvatar(
                         radius: 56,
-                        backgroundColor: scheme.primary.withOpacity(0.1),
+                        backgroundColor: scheme.primary.withValues(alpha: 0.1),
                         child: Icon(
                           Icons.language,
                           size: 64,
@@ -141,12 +137,12 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
 
                     const SizedBox(height: 24),
 
-                    Text("Choose Your Language", style: context.h4),
+                    Text('Choose Your Language', style: context.h4),
 
                     const SizedBox(height: 8),
 
                     Text(
-                      "The app will display in your selected language",
+                      'The app will display in your selected language',
                       style: context.pMuted,
                       textAlign: TextAlign.center,
                     ),
@@ -156,17 +152,17 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
                     PickerField(
                       value: selectedName(),
                       placeholder: languages.isEmpty
-                          ? "No languages available"
-                          : "Select your language",
+                          ? 'No languages available'
+                          : 'Select your language',
                       leading: const Icon(Icons.language),
                       trailing: const Icon(Icons.arrow_drop_down),
                       onTap: languages.isEmpty
                           ? null
                           : () async {
                               await Navigator.of(context).push(
-                                MaterialPageRoute(
+                                MaterialPageRoute<void>(
                                   builder: (_) => LocalePickerPage(
-                                    title: "Select Language",
+                                    title: 'Select Language',
                                     items: languages,
                                     initialValue: selectedLanguageCode,
                                     onChanged: (code) {
@@ -190,7 +186,7 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
                     const Spacer(),
 
                     PrimaryButton(
-                      text: "Continue",
+                      text: 'Continue',
                       loading: isSaving,
                       onPressed: isSaving
                           ? null
@@ -212,7 +208,7 @@ class _LanguageStepState extends ConsumerState<LanguageStep> {
                     ),
                     TextButton(
                       onPressed: widget.onSkip,
-                      child: Text("Skip for now", style: context.p),
+                      child: Text('Skip for now', style: context.p),
                     ),
 
                     const SizedBox(height: 8),

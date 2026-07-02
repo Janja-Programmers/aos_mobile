@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
 
 class PricingSchema {
@@ -35,16 +36,12 @@ class PricingSchemaModel extends PricingSchema {
     final types = <String>[];
     final units = <String>[];
 
-    if (map['allowed_price_types'] is List) {
-      for (final t in map['allowed_price_types']) {
-        if (t != null) types.add(t.toString());
-      }
+    for (final t in asJsonList(map['allowed_price_types'])) {
+      if (t != null) types.add(t.toString());
     }
 
-    if (map['allowed_price_units'] is List) {
-      for (final u in map['allowed_price_units']) {
-        if (u != null) units.add(u.toString());
-      }
+    for (final u in asJsonList(map['allowed_price_units'])) {
+      if (u != null) units.add(u.toString());
     }
 
     return PricingSchemaModel(

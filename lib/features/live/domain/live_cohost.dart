@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
@@ -51,7 +52,7 @@ class LiveCohost {
           json['is_active'] == true ||
           json['is_active'] == 1 ||
           json['is_active']?.toString() == '1',
-      candidate: candidate is Map ? Map<String, dynamic>.from(candidate) : null,
+      candidate: candidate is Map ? asJsonMap(candidate) : null,
       expiresAt: DateTime.tryParse(json['expires_at']?.toString() ?? ''),
     );
   }

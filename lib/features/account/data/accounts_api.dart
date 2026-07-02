@@ -1,13 +1,13 @@
 import 'dart:io';
 
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:dio/dio.dart';
 
 /// Accounts/Profile APIs.
 ///
@@ -21,7 +21,9 @@ class AccountsApi {
 
   Future<Either<Failure, Map<String, dynamic>>> getProfile() async {
     try {
-      final res = await _client.dio.get(ApiEndpoints.getProfileEndpoint);
+      final res = await _client.dio.get<Map<String, dynamic>>(
+        ApiEndpoints.getProfileEndpoint,
+      );
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -41,7 +43,7 @@ class AccountsApi {
       if (userImage != null) data['user_image'] = userImage;
       if (bio != null) data['bio'] = bio;
 
-      final res = await _client.dio.post(
+      final res = await _client.dio.post<Map<String, dynamic>>(
         ApiEndpoints.updateProfileEndpoint,
         data: data,
       );
@@ -62,14 +64,14 @@ class AccountsApi {
   }) async {
     try {
       final filename = file.path.split(Platform.pathSeparator).last;
-      final form = FormData.fromMap({
+      final form = FormData.fromMap(<String, Object?>{
         'file': await MultipartFile.fromFile(file.path, filename: filename),
         'is_private': '0',
         'doctype': 'User',
         'docname': docname,
       });
 
-      final res = await _client.dio.post(
+      final res = await _client.dio.post<Map<String, dynamic>>(
         ApiEndpoints.uploadFileEndpoint,
         data: form,
         options: Options(
@@ -79,9 +81,10 @@ class AccountsApi {
       );
 
       // upload_file doesn't always follow our ok/data envelope, so parse directly.
-      final body = res.data;
-      if (body is Map && body['message'] is Map) {
-        final msg = Map<String, dynamic>.from(body['message'] as Map);
+      final body = res.data ?? <String, dynamic>{};
+      final message = body['message'];
+      if (message is Map) {
+        final msg = asJsonMap(message);
         final url = (msg['file_url'] ?? '').toString();
         if (url.isNotEmpty) return Either.right(url);
       }

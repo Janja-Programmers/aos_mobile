@@ -1,6 +1,6 @@
-import 'package:africaonlinestores/shared/enums/ads.dart';
-
 import 'package:africaonlinestores/core/files/domain/upload_file.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/shared/enums/ads.dart';
 
 class AdMediaImage {
   AdMediaImage({
@@ -16,15 +16,15 @@ class AdMediaImage {
   final int? sortOrder;
 
   factory AdMediaImage.fromUpload(UploadedFile file) {
-    return AdMediaImage(url: file.url, fileId: file.fileId, isPrimary: false);
+    return AdMediaImage(url: file.url, fileId: file.fileId);
   }
 
   Map<String, dynamic> toPayload() {
     return {
-      "image": url,
-      "name": fileId,
-      "is_primary": isPrimary ? 1 : 0,
-      "sort_order": sortOrder,
+      'image': url,
+      'name': fileId,
+      'is_primary': isPrimary ? 1 : 0,
+      'sort_order': sortOrder,
     };
   }
 
@@ -206,26 +206,26 @@ class AdDraft {
     final item = json;
 
     // -------- images ----------
-    final images = (item['images'] as List? ?? [])
+    final images = asJsonMapList(item['images'])
         .map(
-          (e) => AdMediaImage(
-            url: e['image'] ?? '',
-            fileId: e['name'] ?? '',
-            isPrimary: (e['is_primary'] ?? 0) == 1,
-            sortOrder: e['sort_order'],
+          (Map<String, dynamic> e) => AdMediaImage(
+            url: asString(e['image']),
+            fileId: asString(e['name']),
+            isPrimary: asInt(e['is_primary']) == 1,
+            sortOrder: asNullableInt(e['sort_order']),
           ),
         )
-        .toList();
+        .toList(growable: false);
 
     // -------- attributes ----------
     final attrs = <String, dynamic>{};
 
-    final details = item['details'] as List? ?? [];
+    final details = asJsonMapList(item['details']);
 
     for (final d in details) {
-      final attr = d['attribute'];
+      final attr = asNullableString(d['attribute']);
 
-      final dynamic value =
+      final Object? value =
           d['value_text'] ??
           d['value_number'] ??
           d['value_bool'] ??
@@ -239,38 +239,38 @@ class AdDraft {
 
     return AdDraft(
       source: DraftSource.edit,
-      adId: item['id'],
+      adId: asNullableString(item['id']),
 
       // BASIC
-      title: item['title'] ?? '',
-      countryId: item['country'],
-      locationId: item['location'],
-      locationLabel: item['location'],
-      categoryId: item['category'],
-      categoryLabel: item['category'],
+      title: asString(item['title']),
+      countryId: asNullableString(item['country']),
+      locationId: asNullableString(item['location']),
+      locationLabel: asNullableString(item['location']),
+      categoryId: asNullableString(item['category']),
+      categoryLabel: asNullableString(item['category']),
 
       // MEDIA
       images: images,
-      videoUrl: item['video'],
+      videoUrl: asNullableString(item['video']),
 
       // DETAILS
       attributes: attrs,
 
       // DESCRIPTION
-      description: item['description'] ?? '',
+      description: asString(item['description']),
 
       // PRICING
-      priceType: item['price_type'],
-      price: (item['price'] as num?)?.toDouble(),
-      priceUnit: item['price_unit'],
+      priceType: asNullableString(item['price_type']),
+      price: asNullableDouble(item['price']),
+      priceUnit: asNullableString(item['price_unit']),
 
       // OFFER
-      offerPrice: (item['offer_price'] as num?)?.toDouble(),
+      offerPrice: asNullableDouble(item['offer_price']),
       offerStart: item['offer_start'] != null
-          ? DateTime.tryParse(item['offer_start'])
+          ? DateTime.tryParse(asString(item['offer_start']))
           : null,
       offerEnd: item['offer_end'] != null
-          ? DateTime.tryParse(item['offer_end'])
+          ? DateTime.tryParse(asString(item['offer_end']))
           : null,
 
       scheduleOfferDates:
@@ -279,39 +279,39 @@ class AdDraft {
   }
 
   factory AdDraft.fromDraft(Map<String, dynamic> json) {
-    final data = (json['item'] ?? {}) as Map<String, dynamic>;
+    final data = asJsonMap(json['item']);
     // -------------------------------
     // BASIC (fallback to hint fields)
     // -------------------------------
-    final title = data['title'] ?? '';
-    final category = data['category'];
-    final location = data['location'];
-    final country = data['country'];
+    final title = asString(data['title']);
+    final category = asNullableString(data['category']);
+    final location = asNullableString(data['location']);
+    final country = asNullableString(data['country']);
 
     // -------------------------------
     // MEDIA
     // -------------------------------
-    final images = (data['images'] as List? ?? [])
+    final images = asJsonMapList(data['images'])
         .map(
-          (e) => AdMediaImage(
-            url: e['image'] ?? '',
-            fileId: e['name'] ?? '',
-            isPrimary: (e['is_primary'] ?? 0) == 1,
+          (Map<String, dynamic> e) => AdMediaImage(
+            url: asString(e['image']),
+            fileId: asString(e['name']),
+            isPrimary: asInt(e['is_primary']) == 1,
           ),
         )
-        .toList();
+        .toList(growable: false);
 
     // -------------------------------
     // ATTRIBUTES
     // -------------------------------
     final attrs = <String, dynamic>{};
 
-    final details = data['details'] as List? ?? [];
+    final details = asJsonMapList(data['details']);
 
     for (final d in details) {
-      final attr = d['attribute'];
+      final attr = asNullableString(d['attribute']);
 
-      final dynamic value =
+      final Object? value =
           d['value_text'] ??
           d['value_number'] ??
           d['value_bool'] ??
@@ -326,22 +326,22 @@ class AdDraft {
     // -------------------------------
     // DESCRIPTION
     // -------------------------------
-    final description = data['description'] ?? '';
+    final description = asString(data['description']);
 
     // -------------------------------
     // PRICING
     // -------------------------------
-    final priceType = data['price_type'];
-    final price = (data['price'] as num?)?.toDouble();
-    final priceUnit = data['price_unit'];
+    final priceType = asNullableString(data['price_type']);
+    final price = asNullableDouble(data['price']);
+    final priceUnit = asNullableString(data['price_unit']);
 
-    final offerPrice = (data['offer_price'] as num?)?.toDouble();
+    final offerPrice = asNullableDouble(data['offer_price']);
     final offerStart = data['offer_start'] != null
-        ? DateTime.tryParse(data['offer_start'])
+        ? DateTime.tryParse(asString(data['offer_start']))
         : null;
 
     final offerEnd = data['offer_end'] != null
-        ? DateTime.tryParse(data['offer_end'])
+        ? DateTime.tryParse(asString(data['offer_end']))
         : null;
 
     final scheduleOfferDates =
@@ -353,7 +353,7 @@ class AdDraft {
     // -------------------------------
     final draft = AdDraft(
       source: DraftSource.draft,
-      draftId: json['id'],
+      draftId: asNullableString(json['id']),
 
       // BASIC
       title: title,
@@ -365,7 +365,7 @@ class AdDraft {
 
       // MEDIA
       images: images,
-      videoUrl: data['video'],
+      videoUrl: asNullableString(data['video']),
 
       // DETAILS
       attributes: attrs,
@@ -381,7 +381,7 @@ class AdDraft {
       offerPrice: offerPrice,
       offerStart: offerStart,
       offerEnd: offerEnd,
-      scheduleOfferDates: scheduleOfferDates,
+      scheduleOfferDates: asBool(scheduleOfferDates),
     );
 
     return draft;

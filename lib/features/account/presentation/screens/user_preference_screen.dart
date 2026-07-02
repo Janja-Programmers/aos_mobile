@@ -1,19 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/pref_card.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/preferences/data/preferences_api_provider.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/locale_picker_page.dart';
 import 'package:africaonlinestores/shared/utils/flag_emoji.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class PreferenceScreen extends ConsumerStatefulWidget {
   const PreferenceScreen({super.key});
@@ -133,7 +130,7 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
   }) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => LocalePickerPage(
           title: 'Select $title',
           items: items,
@@ -144,7 +141,6 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
           ),
           onChanged: (_) {},
           onSave: (value) => _savePreference(type, value),
-          saveButtonText: 'Save',
         ),
       ),
     );

@@ -1,17 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
 import 'package:africaonlinestores/features/shorts/create_short/presentation/screens/post_short_details_screen.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/screens/post_short_media_picker_screen.dart';
-
 import 'package:africaonlinestores/features/shorts/feeds/presentation/screens/short_detail_screen.dart';
-
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// ─────────────────────────────────────────
 /// ARGUMENT MODEL
@@ -117,7 +113,7 @@ class ShortsRoutes {
           if (args == null) {
             return Scaffold(
               appBar: AppBar(leading: const BackButton()),
-              body: const Center(child: Text("Missing post data")),
+              body: const Center(child: Text('Missing post data')),
             );
           }
 

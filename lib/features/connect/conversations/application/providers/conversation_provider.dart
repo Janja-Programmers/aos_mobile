@@ -10,4 +10,4 @@ final conversationsControllerProvider =
     StateNotifierProvider<
       ConversationsController,
       AsyncValue<List<ChatConversation>>
-    >((ref) => ConversationsController(ref));
+    >(ConversationsController.new);

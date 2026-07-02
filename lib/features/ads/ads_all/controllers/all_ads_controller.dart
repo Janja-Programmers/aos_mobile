@@ -1,23 +1,21 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/ads/ads_all/controllers/all_ads_params.dart';
 import 'package:africaonlinestores/features/ads/ads_all/controllers/all_ads_state.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
-
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/category_ads_provider.dart';
-
 import 'package:africaonlinestores/shared/enums/ads_mode.dart';
 import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class AllAdsController extends StateNotifier<AllAdsState> {
   AllAdsController(this.ref, this.params) : super(const AllAdsState()) {
-    Future.microtask(_init);
+    unawaited(Future<void>.microtask(_init));
   }
 
   final Ref ref;
@@ -62,26 +60,22 @@ class AllAdsController extends StateNotifier<AllAdsState> {
       // 🔥 FIX: if parent is ALSO null → show root categories
       if (parentId == null) {
         state = state.copyWith(
-          children: _allCategories
-              .map((e) => CategoryNode.fromJson(e))
-              .toList(),
+          children: _allCategories.map(CategoryNode.fromJson).toList(),
         );
         return;
       }
 
       // Normal parent → show its children
       final parentNode = _allCategories.firstWhere(
-        (e) => e['id'] == parentId,
-        orElse: () => {},
+        (Map<String, dynamic> item) => item['id'] == parentId,
+        orElse: () => <String, dynamic>{},
       );
 
       if (parentNode.isNotEmpty) {
-        final childrenRaw = parentNode['children'] ?? [];
+        final children = asJsonMapList(parentNode['children']);
 
         state = state.copyWith(
-          children: (childrenRaw as List)
-              .map((e) => CategoryNode.fromJson(e))
-              .toList(),
+          children: children.map(CategoryNode.fromJson).toList(),
         );
       } else {
         state = state.copyWith(children: []);
@@ -92,33 +86,31 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     // ✅ CASE 2: Selected is a parent → show its children
     final parent = _allCategories.firstWhere(
-      (e) => e['id'] == selected,
-      orElse: () => {},
+      (Map<String, dynamic> item) => item['id'] == selected,
+      orElse: () => <String, dynamic>{},
     );
 
     if (parent.isNotEmpty) {
-      final childrenRaw = parent['children'] ?? [];
+      final children = asJsonMapList(parent['children']);
 
       state = state.copyWith(
-        children: (childrenRaw as List)
-            .map((e) => CategoryNode.fromJson(e))
-            .toList(),
+        children: children.map(CategoryNode.fromJson).toList(),
       );
       return;
     }
 
     // ✅ CASE 3: Selected is a child → show siblings
     for (final p in _allCategories) {
-      final children = p['children'] ?? [];
+      final children = asJsonMapList(p['children']);
 
-      final match = (children as List).firstWhere(
-        (c) => c['id'] == selected,
-        orElse: () => {},
+      final match = children.firstWhere(
+        (Map<String, dynamic> child) => child['id'] == selected,
+        orElse: () => <String, dynamic>{},
       );
 
       if (match.isNotEmpty) {
         state = state.copyWith(
-          children: (children).map((e) => CategoryNode.fromJson(e)).toList(),
+          children: children.map(CategoryNode.fromJson).toList(),
         );
         return;
       }
@@ -134,9 +126,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     final res = await api.getCategories();
 
     res.fold((_) {}, (data) {
-      final raw = data['data'] ?? [];
-
-      _allCategories = (raw as List).whereType<Map<String, dynamic>>().toList();
+      _allCategories = asJsonMapList(data['data']);
     });
   }
 
@@ -173,7 +163,6 @@ class AllAdsController extends StateNotifier<AllAdsState> {
             categoryId: categoryId,
             promotionType: dealType,
             sort: sort,
-            limit: _limit,
             offset: _offset,
           );
 
@@ -186,12 +175,10 @@ class AllAdsController extends StateNotifier<AllAdsState> {
         );
       },
       (data) {
-        final raw = data['data']?['items'] ?? [];
-
-        final list = (raw as List)
-            .whereType<Map<String, dynamic>>()
-            .map(AOSAdListItem.fromJson)
-            .toList();
+        final responseData = asJsonMap(data['data']);
+        final list = asJsonMapList(
+          responseData['items'],
+        ).map(AOSAdListItem.fromJson).toList();
 
         final merged = _offset == 0 ? list : [...state.items, ...list];
 
@@ -239,7 +226,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     _resolveChildren();
 
-    load(initial: true);
+    unawaited(load(initial: true));
   }
 
   void setDealType(DealType type) {
@@ -249,7 +236,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     state = state.copyWith(selectedDealType: type, items: [], hasMore: true);
 
-    load(initial: true);
+    unawaited(load(initial: true));
   }
 
   void setSortType(AdsSort? sortType) {
@@ -257,7 +244,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     state = state.copyWith(selectedSort: sortType, items: [], hasMore: true);
 
-    load(initial: true);
+    unawaited(load(initial: true));
   }
 
   void setWishlistSearch(String query) {
@@ -280,7 +267,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     _wishlistSearchDebounce = Timer(const Duration(milliseconds: 350), () {
       if (!mounted) return;
       state = state.copyWith(loading: false);
-      load(initial: true);
+      unawaited(load(initial: true));
     });
   }
 
@@ -305,7 +292,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
       clearError: true,
     );
 
-    load(initial: true);
+    unawaited(load(initial: true));
   }
 
   void clearWishlistFilters() {

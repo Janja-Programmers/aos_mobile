@@ -1,6 +1,5 @@
-import 'package:equatable/equatable.dart';
-
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:equatable/equatable.dart';
 
 const Object _unset = Object();
 

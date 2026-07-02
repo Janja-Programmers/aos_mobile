@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/core.dart';
-
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/notifications/application/providers/notification_badge_provider.dart';
 import 'package:africaonlinestores/features/notifications/presentation/widgets/notification_badge.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const HomeAppBar({
@@ -67,7 +65,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
               preferredSize: Size.fromHeight(
                 _searchHeight + searchPadding.vertical,
               ),
-              child: Padding(padding: searchPadding, child: search!),
+              child: Padding(padding: searchPadding, child: search),
             ),
       titleSpacing: 16,
       title: Padding(

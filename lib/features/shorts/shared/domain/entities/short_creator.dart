@@ -16,13 +16,7 @@ class ShortCreator extends Equatable {
   });
 
   factory ShortCreator.empty() {
-    return const ShortCreator(
-      user: '',
-      displayName: '',
-      avatar: null,
-      isVerified: false,
-      seller: null,
-    );
+    return const ShortCreator(user: '', displayName: '', isVerified: false);
   }
 
   String get sellerId => seller?.id ?? user;

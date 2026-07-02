@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 Future<int?> showReviewRatingFilterSheet(
   BuildContext context, {
@@ -86,7 +85,7 @@ class _RatingFilterOption extends StatelessWidget {
 
     return Material(
       color: selected
-          ? colors.primaryRedSoft.withOpacity(0.12)
+          ? colors.primaryRedSoft.withValues(alpha: 0.12)
           : colors.surface,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(

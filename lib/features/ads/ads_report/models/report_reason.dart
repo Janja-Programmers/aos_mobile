@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+
 class ReportReason {
   final String id;
   final String title;
@@ -7,9 +9,9 @@ class ReportReason {
 
   factory ReportReason.fromJson(Map<String, dynamic> json) {
     return ReportReason(
-      id: json['id'],
-      title: json['title'],
-      iconKey: json['icon_key'],
+      id: asString(json['id']),
+      title: asString(json['title']),
+      iconKey: asNullableString(json['icon_key']),
     );
   }
 }

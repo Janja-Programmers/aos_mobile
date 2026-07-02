@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/managers/call_manager.dart';
-import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
+import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
+import 'package:flutter/material.dart';
 
 class CallControls extends StatelessWidget {
   final CallState callState;
@@ -52,7 +50,7 @@ class CallControls extends StatelessWidget {
             active: isVideoCall && callState.isLocalVideoEnabled,
             onTap: isWaitingForUpgrade || hasIncomingUpgrade
                 ? () {}
-                : () => manager.toggleVideo(),
+                : manager.toggleVideo,
           ),
 
           ActionButton(

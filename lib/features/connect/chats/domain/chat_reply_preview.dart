@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 
 class ChatReplyPreview {
@@ -53,9 +54,7 @@ class ChatReplyPreview {
       ),
       originalMessageType: _cleanNullableString(json['original_message_type']),
       ad: _cleanNullableString(json['ad']),
-      adPreview: rawAdPreview is Map
-          ? Map<String, dynamic>.from(rawAdPreview)
-          : null,
+      adPreview: rawAdPreview is Map ? asJsonMap(rawAdPreview) : null,
       hasAttachments: _truthy(json['has_attachments']),
       isForwarded: _truthy(json['is_forwarded']),
       isEdited: _truthy(json['is_edited']),

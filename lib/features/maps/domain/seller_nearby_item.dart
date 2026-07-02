@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+
 class SellerNearbyItem {
   const SellerNearbyItem({
     required this.seller,
@@ -35,7 +37,7 @@ class SellerNearbyItem {
 
   factory SellerNearbyItem.fromJson(Map<String, dynamic> json) {
     final location = json['location'] is Map
-        ? Map<String, dynamic>.from(json['location'] as Map)
+        ? asJsonMap(json['location'] as Map)
         : const <String, dynamic>{};
     return SellerNearbyItem(
       seller: _string(json['seller']) ?? _string(json['name']) ?? '',

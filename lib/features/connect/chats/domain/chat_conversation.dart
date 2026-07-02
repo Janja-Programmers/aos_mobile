@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+
 class ChatConversation {
   final String id;
   final String user;
@@ -33,22 +35,22 @@ class ChatConversation {
 
   factory ChatConversation.fromJson(Map<String, dynamic> json) {
     return ChatConversation(
-      id: json['id'] as String,
-      user: json['user'] as String,
-      displayName: json['display_name'] as String,
-      avatar: json['avatar'] as String?,
+      id: asString(json['id']),
+      user: asString(json['user']),
+      displayName: asString(json['display_name']),
+      avatar: asNullableString(json['avatar']),
 
-      lastMessage: json['last_message'] as String?,
+      lastMessage: asNullableString(json['last_message']),
       lastMessageAt: _parseDateTime(json['last_message_at']),
 
-      lastSender: json['last_sender'] as String?,
-      lastSenderDisplayName: json['last_sender_display_name'] as String?,
-      lastSenderAvatar: json['last_sender_avatar'] as String?,
+      lastSender: asNullableString(json['last_sender']),
+      lastSenderDisplayName: asNullableString(json['last_sender_display_name']),
+      lastSenderAvatar: asNullableString(json['last_sender_avatar']),
 
       lastMessageDeliveredAt: _parseDateTime(json['last_message_delivered_at']),
       lastMessageReadAt: _parseDateTime(json['last_message_read_at']),
 
-      unreadCount: json['unread_count'] ?? 0,
+      unreadCount: asInt(json['unread_count']),
     );
   }
 

@@ -1,17 +1,16 @@
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/togggle_comment_like_result.dart';
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/mappers/comment_mapper.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_comment_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_comments_page.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/mappers/comment_mapper.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_comment.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/togggle_comment_like_result.dart';
+import 'package:dio/dio.dart';
 
 class ShortsCommentsApi {
   final ApiClient _client;
@@ -42,14 +41,12 @@ class ShortsCommentsApi {
           return Either.left(failure);
         },
         (json) {
-          final data = json['data'] as Map<String, dynamic>? ?? {};
+          final data = asJsonMap(json['data']);
 
-          final rawItems = data['items'] as List? ?? [];
-
-          final items = rawItems.map((e) {
+          final items = asJsonMapList(data['items']).map((e) {
             try {
               return CommentMapper.toDomain(ShortCommentModel.fromJson(e));
-            } catch (err) {
+            } catch (_) {
               rethrow;
             }
           }).toList();
@@ -89,10 +86,10 @@ class ShortsCommentsApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
-        final data = json['data'] as Map<String, dynamic>? ?? {};
+      return unwrapped.fold(Either.left, (json) {
+        final data = asJsonMap(json['data']);
 
-        final items = (data['items'] as List? ?? [])
+        final items = asJsonMapList(data['items'])
             .map((e) => CommentMapper.toDomain(ShortCommentModel.fromJson(e)))
             .toList();
 
@@ -125,15 +122,15 @@ class ShortsCommentsApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
-        final data = json['data'] as Map<String, dynamic>?;
+      return unwrapped.fold(Either.left, (json) {
+        final data = asJsonMap(json['data']);
 
-        if (data == null) {
+        if (data.isEmpty) {
           return Either.left(const Failure('Invalid comment response'));
         }
 
         // ⚠️ backend only returns comment_id
-        final commentId = data['comment_id'] as String?;
+        final commentId = asNullableString(data['comment_id']);
 
         if (commentId == null) {
           return Either.left(const Failure('Missing comment_id'));
@@ -145,10 +142,7 @@ class ShortsCommentsApi {
           shortId: shortId,
           userId: '',
           displayName: 'You',
-          avatar: null,
           comment: comment,
-          parentId: null,
-          rootId: null,
           replyCount: 0,
           likeCount: 0,
           isLiked: false,
@@ -181,10 +175,10 @@ class ShortsCommentsApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
-        final data = json['data'] as Map<String, dynamic>? ?? {};
+      return unwrapped.fold(Either.left, (json) {
+        final data = asJsonMap(json['data']);
 
-        final commentId = data['comment_id'] as String?;
+        final commentId = asNullableString(data['comment_id']);
 
         if (commentId == null) {
           return Either.left(
@@ -214,13 +208,8 @@ class ShortsCommentsApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
-        final data = json['data'] is Map<String, dynamic>
-            ? json['data'] as Map<String, dynamic>
-            : json['message'] is Map<String, dynamic> &&
-                  json['message']['data'] is Map<String, dynamic>
-            ? json['message']['data'] as Map<String, dynamic>
-            : json;
+      return unwrapped.fold(Either.left, (json) {
+        final data = _payload(json);
 
         final resultCommentId =
             data['comment_id']?.toString() ??
@@ -267,10 +256,7 @@ class ShortsCommentsApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold(
-        (failure) => Either.left(failure),
-        (_) => Either.right(null),
-      );
+      return unwrapped.fold(Either.left, (_) => Either.right(null));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
@@ -279,6 +265,17 @@ class ShortsCommentsApi {
   }
 
   // ───────────── HELPERS ─────────────
+
+  static Map<String, dynamic> _payload(Map<String, dynamic> json) {
+    final data = asJsonMap(json['data']);
+    if (data.isNotEmpty) return data;
+
+    final message = asJsonMap(json['message']);
+    final nestedData = asJsonMap(message['data']);
+    if (nestedData.isNotEmpty) return nestedData;
+
+    return json;
+  }
 
   static int _toInt(dynamic value) {
     if (value is int) return value;

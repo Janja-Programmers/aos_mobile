@@ -1,39 +1,34 @@
-import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/core/providers.dart';
-
+import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
+import 'package:africaonlinestores/features/shorts/analytics/data/shorts_analytics_api.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/controllers/post_short_controller.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/state/short_state.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
+// Controllers
+import 'package:africaonlinestores/features/shorts/feeds/application/controllers/comment_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/controllers/replies_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_detail_controller.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_grid_controller.dart';
+// State
+import 'package:africaonlinestores/features/shorts/feeds/application/state/comment_state.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/state/replies_state.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/state/short_detail_state.dart';
+import 'package:africaonlinestores/features/shorts/feeds/application/state/short_grid_state.dart';
+import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
+import 'package:africaonlinestores/features/shorts/music/data/shorts_sounds_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/application/controllers/short_controller.dart';
 // APIs
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_comments_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_engagement_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_feed_api.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_management_api.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_upload_api.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_tracking_api.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_share_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_library_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_management_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_report_api.dart';
-import 'package:africaonlinestores/features/shorts/analytics/data/shorts_analytics_api.dart';
-import 'package:africaonlinestores/features/shorts/music/data/shorts_sounds_api.dart';
-
-// Controllers
-import 'package:africaonlinestores/features/shorts/feeds/application/controllers/comment_controller.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/controllers/post_short_controller.dart';
-import 'package:africaonlinestores/features/shorts/shared/application/controllers/short_controller.dart';
-import 'package:africaonlinestores/features/shorts/feeds/application/controllers/replies_controller.dart';
-import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_detail_controller.dart';
-
-// State
-import 'package:africaonlinestores/features/shorts/feeds/application/state/comment_state.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/state/short_state.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
-import 'package:africaonlinestores/features/shorts/feeds/application/state/replies_state.dart';
-import 'package:africaonlinestores/features/shorts/feeds/application/state/short_detail_state.dart';
-
-import 'package:africaonlinestores/features/shorts/feeds/application/controllers/short_grid_controller.dart';
-import 'package:africaonlinestores/features/shorts/feeds/application/state/short_grid_state.dart';
-import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_share_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_tracking_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_upload_api.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 // ─────────────────────────────────────────────
 // API LAYER

@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
+import 'package:flutter/material.dart';
 
 class AppTheme {
   AppTheme._();
@@ -13,7 +12,6 @@ class AppTheme {
 
     final scheme = ColorScheme.fromSeed(
       seedColor: tokens.primary,
-      brightness: Brightness.light,
       surfaceBright: tokens.surfaceBright,
       surface: tokens.surface,
       primary: tokens.primary,
@@ -67,11 +65,11 @@ class AppTheme {
       popupMenuTheme: PopupMenuThemeData(
         color: tokens.elevated,
         surfaceTintColor: Colors.transparent,
-        shadowColor: tokens.black.withOpacity(0.12),
+        shadowColor: tokens.black.withValues(alpha: 0.12),
         elevation: 8,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: tokens.border, width: 1),
+          side: BorderSide(color: tokens.border),
         ),
       ),
 
@@ -186,11 +184,11 @@ class AppTheme {
       popupMenuTheme: PopupMenuThemeData(
         color: tokens.elevated,
         surfaceTintColor: Colors.transparent,
-        shadowColor: tokens.black.withOpacity(0.12),
+        shadowColor: tokens.black.withValues(alpha: 0.12),
         elevation: 8,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: tokens.border, width: 1),
+          side: BorderSide(color: tokens.border),
         ),
       ),
     );

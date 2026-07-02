@@ -1,12 +1,10 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
 import 'package:africaonlinestores/features/connect/chats/data/chat_api.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message_status_update.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Provider
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {

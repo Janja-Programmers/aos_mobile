@@ -1,7 +1,6 @@
-import 'package:equatable/equatable.dart';
-
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/features/sellers/domain/seller_list_item.dart';
+import 'package:equatable/equatable.dart';
 
 class SellerListState extends Equatable {
   const SellerListState({

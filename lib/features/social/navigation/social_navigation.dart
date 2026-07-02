@@ -1,13 +1,11 @@
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/features/social/application/state/social_connections_state.dart';
+import 'package:africaonlinestores/features/social/presentation/screens/profile_screen.dart';
+import 'package:africaonlinestores/features/social/presentation/screens/social_connections_screen.dart';
+import 'package:africaonlinestores/features/social/safety/presentation/screens/blocked_users_screen.dart';
+import 'package:africaonlinestores/features/social/safety/presentation/screens/social_user_search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
-import 'package:africaonlinestores/features/social/presentation/screens/profile_screen.dart';
-import 'package:africaonlinestores/features/social/application/state/social_connections_state.dart';
-import 'package:africaonlinestores/features/social/presentation/screens/social_connections_screen.dart';
-import 'package:africaonlinestores/features/social/safety/presentation/screens/social_user_search_screen.dart';
-import 'package:africaonlinestores/features/social/safety/presentation/screens/blocked_users_screen.dart';
 
 class SocialRoutes {
   const SocialRoutes._();
@@ -84,9 +82,9 @@ class SocialNavigation {
       AppRoutes.nProfile,
       queryParameters: {
         'user': cleanUser,
-        if (displayName?.trim().isNotEmpty == true)
+        if (displayName?.trim().isNotEmpty ?? false)
           'display_name': displayName!.trim(),
-        if (avatar?.trim().isNotEmpty == true) 'avatar': avatar!.trim(),
+        if (avatar?.trim().isNotEmpty ?? false) 'avatar': avatar!.trim(),
       },
     );
   }
@@ -108,11 +106,7 @@ class SocialNavigation {
   }
 
   static void toFollowersScreen(BuildContext context, {String? title}) {
-    toSocialConnectionsScreen(
-      context,
-      tab: SocialConnectionsTab.followers,
-      title: title,
-    );
+    toSocialConnectionsScreen(context, title: title);
   }
 
   static void toFollowingScreen(BuildContext context, {String? title}) {

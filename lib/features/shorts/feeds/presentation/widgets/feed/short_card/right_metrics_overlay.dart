@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/mini_metric.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/short_avator.dart';
+import 'package:flutter/material.dart';
 
 class RightMetricsOverlay extends StatelessWidget {
   final String? avatarUrl;
@@ -36,7 +34,7 @@ class RightMetricsOverlay extends StatelessWidget {
           avatarUrl: avatarUrl,
           name: sellerName,
           size: 32,
-          borderColor: colors.white.withOpacity(.9),
+          borderColor: colors.white.withValues(alpha: .9),
           borderWidth: 1.4,
         ),
 
@@ -49,7 +47,6 @@ class RightMetricsOverlay extends StatelessWidget {
           textColor: colors.white,
           direction: Axis.vertical,
           iconSize: 22,
-          fontSize: 11,
           spacing: 4,
           fontWeight: FontWeight.w800,
           shadows: shadow,
@@ -64,7 +61,6 @@ class RightMetricsOverlay extends StatelessWidget {
           textColor: colors.white,
           direction: Axis.vertical,
           iconSize: 22,
-          fontSize: 11,
           spacing: 4,
           fontWeight: FontWeight.w800,
           shadows: shadow,

@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/shared/shimmer/app_shimmer.dart';
+import 'package:flutter/material.dart';
 
 class AdCardShimmer extends StatelessWidget {
   const AdCardShimmer({super.key});

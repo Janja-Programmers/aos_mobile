@@ -1,17 +1,15 @@
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
-
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:dio/dio.dart';
 
 Future<Either<Failure, T>> unwrapAndParse<T>(
-  Response res,
+  Response<Object?> res,
   T Function(Map<String, dynamic>) parser,
 ) async {
   final unwrapped = unwrapFrappe(res);
 
-  return unwrapped.fold((failure) => Either.left(failure), (json) {
+  return unwrapped.fold(Either.left, (json) {
     try {
       return Either.right(parser(json));
     } catch (_) {

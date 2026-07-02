@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-
-import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 
 class ChatPresenceState {
   final bool isOnline;
@@ -23,7 +23,7 @@ final chatPresenceControllerProvider =
     StateNotifierProvider<
       ChatPresenceController,
       Map<String, ChatPresenceState>
-    >((ref) => ChatPresenceController(ref));
+    >(ChatPresenceController.new);
 
 class ChatPresenceController
     extends StateNotifier<Map<String, ChatPresenceState>> {
@@ -34,7 +34,7 @@ class ChatPresenceController
     _startCleanupTimer();
   }
 
-  StreamSubscription? _presenceSub;
+  StreamSubscription<Object?>? _presenceSub;
 
   // fallback cleanup timer (handles silent disconnects)
   Timer? _cleanupTimer;
@@ -45,11 +45,12 @@ class ChatPresenceController
   void _listenRealtime() {
     final realtime = ref.read(chatRealtimeServiceProvider);
 
-    _presenceSub = realtime.presence.listen((data) {
-      final user = data['user'];
+    _presenceSub = realtime.presence.listen((payload) {
+      final data = asJsonMap(payload);
+      final user = asNullableString(data['user']);
       if (user == null) return;
 
-      final isOnline = _parseBool(data['is_online']);
+      final isOnline = asBool(data['is_online']);
       final lastSeen = _parseDate(data['last_seen']);
 
       state = {
@@ -62,16 +63,10 @@ class ChatPresenceController
   // -----------------------------
   // Helpers
   // -----------------------------
-  bool _parseBool(dynamic value) {
-    if (value == true) return true;
-    if (value == 1) return true;
-    return false;
-  }
-
-  DateTime? _parseDate(dynamic value) {
+  DateTime? _parseDate(Object? value) {
     if (value == null) return null;
     try {
-      return DateTime.parse(value);
+      return DateTime.parse(value.toString());
     } catch (_) {
       return null;
     }
@@ -138,7 +133,7 @@ class ChatPresenceController
   // -----------------------------
   @override
   void dispose() {
-    _presenceSub?.cancel();
+    unawaited(_presenceSub?.cancel());
     _cleanupTimer?.cancel();
     super.dispose();
   }

@@ -1,23 +1,22 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'dart:async';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
-import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
+import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
+import 'package:africaonlinestores/features/live/domain/live_stream.dart';
+import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_type.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/components/following/suggested_sellers_section.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/empty_shorts_view.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/live_card.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card.dart';
 import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
-
+import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
-
-import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
-import 'package:africaonlinestores/features/live/domain/live_stream.dart';
-import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class ShortsFeedTab extends ConsumerStatefulWidget {
   final ShortsFeedType feedType;
@@ -51,7 +50,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     return !_isLoading &&
         !_isLoadingMore &&
         _hasMore &&
-        _nextCursor?.trim().isNotEmpty == true;
+        (_nextCursor?.trim().isNotEmpty ?? false);
   }
 
   @override
@@ -86,22 +85,39 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     }
   }
 
-  Future<dynamic> _fetchPage({String? cursor}) {
+  Future<({List<Object> items, String? nextCursor, bool hasMore})> _fetchPage({
+    String? cursor,
+  }) async {
     switch (widget.feedType) {
       case ShortsFeedType.forYou:
-        return _repository.fetchForYou(
+        final page = await _repository.fetchForYou(
           cursor: cursor,
           contentMode: widget.contentMode,
+        );
+        return (
+          items: <Object>[...page.items],
+          nextCursor: page.nextCursor,
+          hasMore: page.hasMore,
         );
 
       case ShortsFeedType.following:
-        return _repository.fetchFollowing(
+        final page = await _repository.fetchFollowing(
           cursor: cursor,
           contentMode: widget.contentMode,
         );
+        return (
+          items: <Object>[...page.items],
+          nextCursor: page.nextCursor,
+          hasMore: page.hasMore,
+        );
 
       case ShortsFeedType.live:
-        return _repository.fetchLive(cursor: cursor);
+        final page = await _repository.fetchLive(cursor: cursor);
+        return (
+          items: <Object>[...page.items],
+          nextCursor: page.nextCursor,
+          hasMore: page.hasMore,
+        );
     }
   }
 
@@ -177,7 +193,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     final extentAfter = _scrollController.position.extentAfter;
 
     if (extentAfter < 700) {
-      _loadMore();
+      unawaited(_loadMore());
     }
   }
 
@@ -243,8 +259,8 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
 
     if (widget.feedType == ShortsFeedType.following) {
       return ListView(
+        scrollCacheExtent: const ScrollCacheExtent.pixels(900),
         controller: _scrollController,
-        cacheExtent: 900,
         padding: const EdgeInsets.all(16),
         children: [
           const SuggestedSellersSection(),
@@ -279,7 +295,6 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
 
     return MasonryGridView.count(
       controller: _scrollController,
-      cacheExtent: 900,
       padding: const EdgeInsets.all(8),
       crossAxisCount: 2,
       mainAxisSpacing: 8,

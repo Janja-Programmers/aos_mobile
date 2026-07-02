@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/routing/app_nav_item.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
+import 'package:flutter/material.dart';
 
 class AppNavConfig {
   static List<AppNavItem> items(BuildContext context) {
@@ -16,7 +15,7 @@ class AppNavConfig {
         routeName: AppRoutes.nHome,
       ),
       const AppNavItem(
-        label: "Shop",
+        label: 'Shop',
         icon: Icons.grid_view_outlined,
         activeIcon: Icons.grid_view_rounded,
         routeName: AppRoutes.nCategories,
@@ -29,7 +28,7 @@ class AppNavConfig {
         requiresAuth: true,
       ),
       const AppNavItem(
-        label: "Feed",
+        label: 'Feed',
         icon: Icons.play_circle_outlined,
         activeIcon: Icons.play_circle_outlined,
         routeName: AppRoutes.nFeeds,

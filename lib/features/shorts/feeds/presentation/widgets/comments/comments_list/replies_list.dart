@@ -1,9 +1,8 @@
+import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/comments/comments_list/comment_main_row.dart';
+import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_comment.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
-import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/comments/comments_list/comment_main_row.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_comment.dart';
 
 class RepliesList extends ConsumerWidget {
   final String rootCommentId;

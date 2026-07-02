@@ -1,13 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/call_list_screen.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
@@ -15,6 +9,10 @@ import 'package:africaonlinestores/features/connect/chats/presentation/screens/c
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_story_template_strip.dart';
 import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class ConnectScreen extends ConsumerStatefulWidget {
   const ConnectScreen({super.key});
@@ -67,7 +65,9 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
     final isChats = _selectedTab == _ConnectTab.chats;
     final unreadChats = ref.watch(chatUnreadCountProvider);
     final callState = ref.watch(callManagerProvider);
-    final missedCalls = callState.callLogs.where((call) => call.isMissed).length;
+    final missedCalls = callState.callLogs
+        .where((call) => call.isMissed)
+        .length;
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -86,13 +86,10 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
               ),
             ),
             ConnectStoryTemplateStrip(
-              onCreateStory: () => ConnectScreenNavigation.toCreateStory(
-                context,
-              ),
-              onStoryTap: (story) => ConnectScreenNavigation.toStoryViewer(
-                context,
-                story.id,
-              ),
+              onCreateStory: () =>
+                  ConnectScreenNavigation.toCreateStory(context),
+              onStoryTap: (story) =>
+                  ConnectScreenNavigation.toStoryViewer(context, story.id),
             ),
             Expanded(
               child: AnimatedSwitcher(
@@ -171,7 +168,9 @@ class _ConnectHeader extends ConsumerWidget {
               return List.generate(items.length, (i) {
                 final item = items[i];
                 final isActive = location.contains(item.routeName);
-                final itemColor = isActive ? colors.primary : colors.textPrimary;
+                final itemColor = isActive
+                    ? colors.primary
+                    : colors.textPrimary;
 
                 return PopupMenuItem<int>(
                   value: i,

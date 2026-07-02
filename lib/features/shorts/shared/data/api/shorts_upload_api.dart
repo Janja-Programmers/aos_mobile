@@ -1,15 +1,13 @@
-import 'package:africaonlinestores/core/utils/logger.dart';
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
-import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/init_short_upload_result.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
+import 'package:dio/dio.dart';
 
 class ShortsUploadApi {
   final ApiClient _client;
@@ -27,11 +25,11 @@ class ShortsUploadApi {
         data: {'filename': filename},
       );
 
-      appLogger.w("ShortsUploadApi | res: ${res.statusMessage}");
+      appLogger.w('ShortsUploadApi | res: ${res.statusMessage}');
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final data = json['data'] as Map<String, dynamic>? ?? {};
 
         return Either.right(
@@ -60,7 +58,7 @@ class ShortsUploadApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (_) {
+      return unwrapped.fold(Either.left, (_) {
         return Either.right(null);
       });
     } on DioException catch (e) {
@@ -112,10 +110,7 @@ class ShortsUploadApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold(
-        (failure) => Either.left(failure),
-        (_) => Either.right(null),
-      );
+      return unwrapped.fold(Either.left, (_) => Either.right(null));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {

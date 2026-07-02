@@ -1,25 +1,24 @@
-import 'package:africaonlinestores/features/verifications/presentation/widgets/verification_submit_success_dialog.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
 import 'package:africaonlinestores/features/verifications/controllers/seller_status_provider.dart';
+import 'package:africaonlinestores/features/verifications/controllers/verification_controller.dart';
 import 'package:africaonlinestores/features/verifications/controllers/verification_form_state.dart';
+import 'package:africaonlinestores/features/verifications/data/verification_api.dart';
+import 'package:africaonlinestores/features/verifications/presentation/widgets/verification_submit_success_dialog.dart';
 import 'package:africaonlinestores/features/verifications/utils/verification_steps_builder.dart';
-
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Widget buildVerificationBottomBar({
   required BuildContext context,
   required WidgetRef ref,
   required SellerVerificationState state,
   required List<VerificationStepDef> steps,
-  required dynamic controller,
-  required dynamic api,
+  required SellerVerificationController controller,
+  required VerificationApi api,
   required VoidCallback onNext,
   required VoidCallback onBack,
 }) {
@@ -28,7 +27,7 @@ Widget buildVerificationBottomBar({
   final currentStep = steps[index];
   final isLast = index == steps.length - 1;
 
-  final missingFields = controller.missingCurrentStepFields() as List<String>;
+  final missingFields = controller.missingCurrentStepFields();
   final canContinue =
       missingFields.isEmpty && currentStep.validator(state.data);
 
@@ -43,7 +42,7 @@ Widget buildVerificationBottomBar({
             Expanded(
               child: OutlinedButton(
                 onPressed: state.isSubmitting ? null : onBack,
-                child: const Text("Back"),
+                child: const Text('Back'),
               ),
             ),
 
@@ -96,7 +95,7 @@ Widget buildVerificationBottomBar({
                                         const VerificationSubmitSuccessDialog(),
                                   );
 
-                                  if (result == true && context.mounted) {
+                                  if ((result ?? false) && context.mounted) {
                                     Navigator.pop(context, true);
                                   }
                                 },
@@ -115,9 +114,9 @@ Widget buildVerificationBottomBar({
                       : Text(
                           isLast
                               ? (state.mode == VerificationMode.update
-                                    ? "Update"
-                                    : "Submit")
-                              : "Continue",
+                                    ? 'Update'
+                                    : 'Submit')
+                              : 'Continue',
                           style: context.body.copyWith(color: colors.white),
                         ),
                 ),
@@ -132,7 +131,7 @@ Widget buildVerificationBottomBar({
 
 void _showMissingFieldsSnack(BuildContext context, List<String> missingFields) {
   if (missingFields.isEmpty) {
-    ShowSnack(context, "Please complete required fields").error();
+    ShowSnack(context, 'Please complete required fields').error();
     return;
   }
 
@@ -140,7 +139,7 @@ void _showMissingFieldsSnack(BuildContext context, List<String> missingFields) {
 }
 
 Future<Either<Failure, Map<String, dynamic>>> _resolveCall(
-  dynamic api,
+  VerificationApi api,
   Map<String, dynamic> payload,
   VerificationMode mode,
 ) {

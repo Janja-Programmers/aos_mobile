@@ -1,8 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_attachment.dart';
@@ -15,16 +13,17 @@ import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_in
 import 'package:africaonlinestores/features/connect/chats/domain/pending_send_payload.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
 import 'package:africaonlinestores/features/connect/conversations/application/providers/conversation_provider.dart';
-
-part 'chat_messages_state.dart';
-part 'chat_messages_lifecycle.dart';
-part 'chat_messages_sending.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 part 'chat_messages_actions.dart';
-part 'chat_messages_translation.dart';
-part 'chat_messages_realtime.dart';
-part 'chat_messages_store.dart';
-part 'chat_messages_read_sync.dart';
 part 'chat_messages_helpers.dart';
+part 'chat_messages_lifecycle.dart';
+part 'chat_messages_read_sync.dart';
+part 'chat_messages_realtime.dart';
+part 'chat_messages_sending.dart';
+part 'chat_messages_state.dart';
+part 'chat_messages_store.dart';
+part 'chat_messages_translation.dart';
 
 abstract class ChatMessagesControllerBase
     extends StateNotifier<ChatMessagesState> {
@@ -47,14 +46,25 @@ abstract class ChatMessagesControllerBase
   bool _isLoadingMore = false;
   bool _hasMoreMessages = true;
 
-  StreamSubscription? _messageSub;
-  StreamSubscription? _messageStatusSub;
-  StreamSubscription? _messageEditedSub;
-  StreamSubscription? _messagesDeletedSub;
-  StreamSubscription? _messageReactionSub;
+  StreamSubscription<Object?>? _messageSub;
+  StreamSubscription<Object?>? _messageStatusSub;
+  StreamSubscription<Object?>? _messageEditedSub;
+  StreamSubscription<Object?>? _messagesDeletedSub;
+  StreamSubscription<Object?>? _messageReactionSub;
 
   Timer? _readSyncDebounce;
   bool _isSyncingReadState = false;
+
+  @override
+  void dispose() {
+    _readSyncDebounce?.cancel();
+    unawaited(_messageSub?.cancel());
+    unawaited(_messageStatusSub?.cancel());
+    unawaited(_messageEditedSub?.cancel());
+    unawaited(_messagesDeletedSub?.cancel());
+    unawaited(_messageReactionSub?.cancel());
+    super.dispose();
+  }
 
   // ---------------------------------------------------------------------------
   // Cross-part private API used by controller mixins.
@@ -81,7 +91,7 @@ abstract class ChatMessagesControllerBase
   bool _isIncomingMessage(ChatMessage message);
   void _scheduleIncomingReadSync();
 
-  List<String> _readMessageIds(dynamic value);
+  List<String> _readMessageIds(Object? value);
   bool _isSameTemp(ChatMessage temp, ChatMessage real);
   void _applyEditedMessage(ChatMessage updated);
   void _applyReactionPayload(Map<String, dynamic> data);
@@ -105,6 +115,6 @@ class ChatMessagesController extends ChatMessagesControllerBase
         ChatMessagesReadSync,
         ChatMessagesHelpers {
   ChatMessagesController(super.ref, super.conversationId) {
-    _init();
+    unawaited(_init());
   }
 }

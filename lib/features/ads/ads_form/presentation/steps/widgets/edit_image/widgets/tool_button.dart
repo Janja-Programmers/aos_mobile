@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:flutter/material.dart';
 
 class ToolButton extends StatelessWidget {
   const ToolButton({
@@ -39,7 +38,9 @@ class ToolButton extends StatelessWidget {
               height: 56,
               width: 56,
               decoration: BoxDecoration(
-                color: active ? colors.red.withOpacity(0.08) : colors.surface,
+                color: active
+                    ? colors.red.withValues(alpha: 0.08)
+                    : colors.surface,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: active ? colors.red : colors.border,
@@ -48,7 +49,7 @@ class ToolButton extends StatelessWidget {
                 boxShadow: loading
                     ? [
                         BoxShadow(
-                          color: colors.black.withOpacity(0.08),
+                          color: colors.black.withValues(alpha: 0.08),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -77,8 +78,8 @@ class ToolButton extends StatelessWidget {
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 160),
               child: Text(
-                loading ? "Working..." : label,
-                key: ValueKey(loading ? "loading_$label" : label),
+                loading ? 'Working...' : label,
+                key: ValueKey(loading ? 'loading_$label' : label),
                 style: context.p.copyWith(
                   color: active ? colors.red : colors.textPrimary,
                   fontWeight: active ? FontWeight.w600 : FontWeight.w400,

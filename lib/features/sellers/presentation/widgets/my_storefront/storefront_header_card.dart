@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
+import 'package:flutter/material.dart';
 
 class MyStorefrontHeaderCard extends StatelessWidget {
   const MyStorefrontHeaderCard({
@@ -39,7 +38,7 @@ class MyStorefrontHeaderCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: colors.black.withOpacity(.04),
+            color: colors.black.withValues(alpha: .04),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),

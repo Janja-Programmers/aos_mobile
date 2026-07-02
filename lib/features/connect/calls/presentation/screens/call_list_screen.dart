@@ -1,15 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
-import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_filter_utils.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/show_call_details_sheet.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_state_view.dart';
-
 import 'package:africaonlinestores/shared/utils/format_time.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CallListScreen extends ConsumerStatefulWidget {
   final String? searchQuery;
@@ -22,7 +21,7 @@ class CallListScreen extends ConsumerStatefulWidget {
 }
 
 class _CallListScreenState extends ConsumerState<CallListScreen> {
-  String selectedFilter = "all";
+  String selectedFilter = 'all';
   String _query = '';
 
   @override
@@ -186,10 +185,10 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _chip("All", "all"),
-                  _chip("Missed", "missed"),
-                  _chip("Incoming", "incoming"),
-                  _chip("Outgoing", "outgoing"),
+                  _chip('All', 'all'),
+                  _chip('Missed', 'missed'),
+                  _chip('Incoming', 'incoming'),
+                  _chip('Outgoing', 'outgoing'),
                   if (state.callLogs.isNotEmpty) ...[
                     const SizedBox(width: 2),
                     IconButton(
@@ -233,7 +232,7 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
             color: isSelected
-                ? colors.primary.withOpacity(0.1)
+                ? colors.primary.withValues(alpha: 0.1)
                 : colors.surface,
             borderRadius: BorderRadius.circular(20),
           ),
@@ -293,7 +292,7 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: colors.border,
-        child: Text(call.displayName.isNotEmpty ? call.displayName[0] : "?"),
+        child: Text(call.displayName.isNotEmpty ? call.displayName[0] : '?'),
       ),
 
       title: Row(
@@ -314,7 +313,7 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: colors.primary.withOpacity(0.1),
+                color: colors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
@@ -335,13 +334,13 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
           Icon(
             isMissed
                 ? Icons.phone_missed
-                : call.direction == "incoming"
+                : call.direction == 'incoming'
                 ? Icons.call_received
                 : Icons.call_made,
             size: 16,
             color: isMissed
                 ? colors.red
-                : call.direction == "incoming"
+                : call.direction == 'incoming'
                 ? colors.success
                 : colors.blue,
           ),

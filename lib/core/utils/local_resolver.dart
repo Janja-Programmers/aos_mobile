@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:africaonlinestores/features/preferences/state/user_preference_state.dart';
-
 import 'package:flutter/widgets.dart';
 
 const List<Locale> kSupportedLocales = <Locale>[
@@ -20,7 +19,7 @@ Locale? resolveLocale(UserPreferenceState? prefs) {
   if (code.isEmpty) return null;
 
   // Example: if someone accidentally saves "en-US", normalize to "en"
-  final normalized = code.split(RegExp(r'[-_]')).first;
+  final normalized = code.split(RegExp('[-_]')).first;
 
   // Validate against supported locales
   for (final loc in kSupportedLocales) {

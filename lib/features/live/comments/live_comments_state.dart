@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
-
 import 'package:africaonlinestores/features/live/comments/live_comment.dart';
+import 'package:flutter/foundation.dart';
 
 @immutable
 class LiveCommentsState {

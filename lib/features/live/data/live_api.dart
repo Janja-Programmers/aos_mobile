@@ -1,18 +1,17 @@
-import 'package:dio/dio.dart';
-import 'package:uuid/uuid.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
-
 import 'package:africaonlinestores/features/live/data/live_mapper.dart';
-import 'package:africaonlinestores/features/live/domain/live_stream.dart';
 import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
 import 'package:africaonlinestores/features/live/domain/live_role.dart';
+import 'package:africaonlinestores/features/live/domain/live_stream.dart';
+import 'package:dio/dio.dart';
+import 'package:uuid/uuid.dart';
 
 class LiveApi {
   final ApiClient _client;
@@ -39,13 +38,13 @@ class LiveApi {
         return Either.left(result.leftOrNull!);
       }
 
-      final payload = result.rightOrNull;
+      final payload = asJsonMap(result.rightOrNull);
 
-      final data = payload?['data'];
+      final data = payload['data'];
 
       if (data == null || data is! Map) {
         return Either.left(
-          const Failure("Invalid start live response: missing data"),
+          const Failure('Invalid start live response: missing data'),
         );
       }
 
@@ -53,11 +52,11 @@ class LiveApi {
 
       if (sessionJson == null || sessionJson is! Map) {
         return Either.left(
-          const Failure("Invalid start live response: missing session"),
+          const Failure('Invalid start live response: missing session'),
         );
       }
 
-      final sessionMap = Map<String, dynamic>.from(sessionJson);
+      final sessionMap = asJsonMap(sessionJson);
 
       final role = sessionMap['role'] == 'host'
           ? AOSLiveRole.host
@@ -91,27 +90,26 @@ class LiveApi {
         return Either.left(result.leftOrNull!);
       }
 
-      final payload = result.rightOrNull;
+      final payload = asJsonMap(result.rightOrNull);
 
-      final data = payload?['data'];
+      final data = payload['data'];
       if (data == null || data is! Map) {
         return Either.left(
-          const Failure("Invalid join live response: missing data"),
+          const Failure('Invalid join live response: missing data'),
         );
       }
 
       final sessionJson = data['session'];
       if (sessionJson == null || sessionJson is! Map) {
         return Either.left(
-          const Failure("Invalid join live response: missing session"),
+          const Failure('Invalid join live response: missing session'),
         );
       }
 
-      final role = sessionJson['role'] == 'host'
+      final sessionMap = asJsonMap(sessionJson);
+      final role = sessionMap['role'] == 'host'
           ? AOSLiveRole.host
           : AOSLiveRole.viewer;
-
-      final sessionMap = Map<String, dynamic>.from(sessionJson);
       sessionMap['session_id'] ??= clientSessionId;
 
       final session = mapJoinSession(sessionMap, role: role);
@@ -125,7 +123,7 @@ class LiveApi {
   // ================= END LIVE =================
 
   Future<Either<Failure, void>> endLive({required String liveId}) async {
-    appLogger.i("endLive API");
+    appLogger.i('endLive API');
 
     try {
       final res = await _client.post(
@@ -145,7 +143,7 @@ class LiveApi {
   // ================= GET LIVE =================
 
   Future<Either<Failure, LiveStream>> getLive({required String liveId}) async {
-    appLogger.i("getLive API");
+    appLogger.i('getLive API');
 
     final res = await _client.get(
       ApiEndpoints.getLiveEndpoint,
@@ -155,12 +153,12 @@ class LiveApi {
     final result = unwrapFrappe(res);
     if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    final data = result.rightOrNull?['data'];
+    final data = asJsonMap(result.rightOrNull)['data'];
     if (data == null) {
-      return Either.left(const Failure("Invalid live response"));
+      return Either.left(const Failure('Invalid live response'));
     }
 
-    return Either.right(mapLiveStream(data));
+    return Either.right(mapLiveStream(asJsonMap(data)));
   }
 
   // ================= LIST LIVE STREAMS =================
@@ -178,31 +176,16 @@ class LiveApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
+      final data = asJsonMap(asJsonMap(result.rightOrNull)['data']);
+      final items = asJsonMapList(data['items']);
 
-      if (data == null || data is! Map) {
-        return Either.left(
-          const Failure("Invalid list lives response: missing data"),
-        );
-      }
-
-      final items = data['items'];
-
-      if (items == null || items is! List) {
-        return Either.left(
-          const Failure("Invalid list lives response: missing items"),
-        );
-      }
-
-      final lives = items
-          .map((item) => mapLiveStream(Map<String, dynamic>.from(item)))
-          .toList();
+      final lives = items.map(mapLiveStream).toList(growable: false);
 
       return Either.right(lives);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (e, s) {
-      appLogger.e("listLives failed", error: e, stackTrace: s);
+      appLogger.e('listLives failed', error: e, stackTrace: s);
 
       return Either.left(
         const Failure(
@@ -226,23 +209,21 @@ class LiveApi {
         ApiEndpoints.trackLiveJoinEndpoint,
         data: {
           'live_id': liveId,
-          if (sessionId?.isNotEmpty == true) 'session_id': sessionId,
+          if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
         },
       );
 
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
-      final viewId = data is Map<String, dynamic>
-          ? data['view_id']?.toString()
-          : null;
+      final data = asJsonMap(asJsonMap(result.rightOrNull)['data']);
+      final viewId = asNullableString(data['view_id']);
 
       return Either.right(viewId);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (e, s) {
-      appLogger.e("trackJoin failed", error: e, stackTrace: s);
+      appLogger.e('trackJoin failed', error: e, stackTrace: s);
       return Either.left(
         const Failure('Failed to track live join.', type: FailureType.unknown),
       );
@@ -260,7 +241,7 @@ class LiveApi {
         ApiEndpoints.trackLiveLeaveEndpoint,
         data: {
           'live_id': liveId,
-          if (sessionId?.isNotEmpty == true) 'session_id': sessionId,
+          if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
         },
       );
 
@@ -271,7 +252,7 @@ class LiveApi {
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (e, s) {
-      appLogger.e("trackLeave failed", error: e, stackTrace: s);
+      appLogger.e('trackLeave failed', error: e, stackTrace: s);
       return Either.left(
         const Failure('Failed to track live leave.', type: FailureType.unknown),
       );
@@ -298,7 +279,7 @@ class LiveApi {
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (e, s) {
-      appLogger.e("sendReaction failed", error: e, stackTrace: s);
+      appLogger.e('sendReaction failed', error: e, stackTrace: s);
 
       return Either.left(
         const Failure('Failed to send reaction.', type: FailureType.unknown),

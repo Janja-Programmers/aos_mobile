@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
+import 'package:flutter/material.dart';
 
 class VerificationStepper extends StatelessWidget {
   const VerificationStepper({
@@ -77,7 +76,7 @@ class VerificationStepper extends StatelessWidget {
       child: isDone
           ? Icon(Icons.check, size: 18, color: contentColor)
           : Text(
-              "${index + 1}",
+              '${index + 1}',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: contentColor,

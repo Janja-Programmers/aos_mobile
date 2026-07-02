@@ -1,12 +1,10 @@
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/core/utils/logger.dart';
-
 import 'package:africaonlinestores/features/shorts/feeds/application/state/replies_state.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_comments_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_comment.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/comment_id.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class RepliesController extends StateNotifier<RepliesState> {
   final ShortsCommentsApi api;
@@ -101,7 +99,6 @@ class RepliesController extends StateNotifier<RepliesState> {
       shortId: ShortId(shortId),
       userId: 'me',
       displayName: 'You',
-      avatar: null,
       comment: trimmed,
       parentId: parentCommentId,
       rootId: rootCommentId,

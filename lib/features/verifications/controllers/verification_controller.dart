@@ -1,8 +1,7 @@
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/features/verifications/controllers/verification_form_state.dart';
 import 'package:africaonlinestores/features/verifications/domain/verification.dart';
 import 'package:africaonlinestores/features/verifications/domain/verification_document.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class SellerVerificationController
     extends StateNotifier<SellerVerificationState> {
@@ -61,27 +60,27 @@ class SellerVerificationController
     bool empty(String? value) => value == null || value.trim().isEmpty;
 
     if (empty(data.businessName)) {
-      missing.add("Business Name");
+      missing.add('Business Name');
     }
 
     if (empty(data.businessType)) {
-      missing.add("Business Type");
+      missing.add('Business Type');
     }
 
     if (empty(data.businessCategory)) {
-      missing.add("What are you selling?");
+      missing.add('What are you selling?');
     }
 
     if (empty(data.businessPhoneNumber)) {
-      missing.add("Business Phone Number");
+      missing.add('Business Phone Number');
     }
 
     if (empty(data.businessEmail)) {
-      missing.add("Email");
+      missing.add('Email');
     }
 
     if (empty(data.physicalAddress)) {
-      missing.add("Physical Location");
+      missing.add('Physical Location');
     }
 
     return missing;

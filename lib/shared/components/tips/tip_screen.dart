@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
+import 'package:flutter/material.dart';
 
 class TipsScreen extends StatelessWidget {
   const TipsScreen({

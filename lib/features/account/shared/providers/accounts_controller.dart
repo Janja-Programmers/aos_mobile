@@ -1,11 +1,12 @@
-import 'package:flutter_riverpod/legacy.dart';
+import 'dart:io';
 
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/account/data/accounts_api.dart';
 import 'package:africaonlinestores/features/account/domain/account_state.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_provider.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final accountsControllerProvider =
     StateNotifierProvider<AccountsController, AccountState>((ref) {
@@ -46,9 +47,7 @@ class AccountsController extends StateNotifier<AccountState> {
       return Either.left(f);
     }
 
-    final data = (payload['data'] is Map)
-        ? Map<String, dynamic>.from(payload['data'] as Map)
-        : <String, dynamic>{};
+    final data = asJsonMap(payload['data']);
 
     state = state.copyWith(loading: false, profile: data, clearError: true);
     return Either.right(data);
@@ -89,7 +88,7 @@ class AccountsController extends StateNotifier<AccountState> {
   }
 
   Future<Either<Failure, String>> uploadProfilePhoto({
-    required dynamic file, // File from dart:io
+    required File file,
     required String docname,
   }) async {
     final res = await _api.uploadProfilePhoto(file: file, docname: docname);

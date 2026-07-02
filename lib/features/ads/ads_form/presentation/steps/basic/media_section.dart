@@ -1,17 +1,15 @@
 import 'dart:io';
 
+import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/action_media_card.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/edit_image_screen.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/media_image_tile.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/media_video_tile.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/section_tile.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 import 'package:africaonlinestores/shared/utils/url_to_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-
-import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/action_media_card.dart';
-import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/media_image_tile.dart';
-import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/media_video_tile.dart';
-import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/section_tile.dart';
-
-import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 
 class MediaSection extends ConsumerStatefulWidget {
   const MediaSection({super.key});
@@ -139,7 +137,7 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ===================== PHOTOS =====================
-        const SectionTitle(title: "Photos *"),
+        const SectionTitle(title: 'Photos *'),
         const SizedBox(height: 12),
         if (draft.images.isEmpty)
           Row(
@@ -205,7 +203,7 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
 
                     final edited = await Navigator.push<File>(
                       context,
-                      MaterialPageRoute(
+                      MaterialPageRoute<File>(
                         builder: (_) => EditImageScreen(
                           file: file,
                           fileId: img.fileId,

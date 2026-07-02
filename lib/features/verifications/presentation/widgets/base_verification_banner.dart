@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class BaseVerificationBanner extends StatelessWidget {
   const BaseVerificationBanner({
@@ -29,7 +28,9 @@ class BaseVerificationBanner extends StatelessWidget {
         height: 84,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          gradient: LinearGradient(colors: [color.withOpacity(.85), color]),
+          gradient: LinearGradient(
+            colors: [color.withValues(alpha: .85), color],
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_model.dart';
 import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
+import 'package:flutter/material.dart';
 
 class ReviewCard extends StatelessWidget {
   const ReviewCard({
@@ -159,7 +158,6 @@ class _ReviewImages extends StatelessWidget {
             url: resolvedImages[index],
             width: 96,
             height: 96,
-            fit: BoxFit.cover,
             borderRadius: BorderRadius.circular(10),
           );
         },

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:africaonlinestores/core/core.dart';
+import 'package:flutter/material.dart';
 
 class VoiceMicButton extends StatelessWidget {
   const VoiceMicButton({
@@ -27,7 +27,7 @@ class VoiceMicButton extends StatelessWidget {
           border: Border.all(color: colors.border, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: colors.black.withOpacity(.08),
+              color: colors.black.withValues(alpha: .08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),

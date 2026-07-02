@@ -1,20 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/files/helpers/review_media_helper.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/sellers/application/controllers/operating_hours_form.dart';
 import 'package:africaonlinestores/features/sellers/application/providers/seller_state_controller_provider.dart';
+import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/store_customization/store_banner_picker.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/store_customization/store_description_field.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/store_customization/store_image_source_sheet.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/store_customization/widgets.dart';
-
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class StoreCustomizationScreen extends ConsumerStatefulWidget {
   const StoreCustomizationScreen({super.key, required this.sellerId});
@@ -74,7 +72,7 @@ class _StoreCustomizationScreenState
     _descCtrl.addListener(_markChanged);
   }
 
-  void _hydrateFromSeller(dynamic seller) {
+  void _hydrateFromSeller(AOSSellerProfile seller) {
     if (_initializedFromSeller) return;
 
     _setDescriptionSilently(seller.aboutBusiness ?? '');
@@ -174,7 +172,7 @@ class _StoreCustomizationScreenState
         _uploadedShopBanner = null;
       });
 
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future<void>.delayed(const Duration(milliseconds: 300));
 
       if (mounted) Navigator.pop(context, true);
     } finally {

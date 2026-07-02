@@ -1,6 +1,5 @@
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
 import 'package:africaonlinestores/features/social/data/social_api.dart';
 import 'package:africaonlinestores/features/social/domain/social_friends_page.dart';
 import 'package:africaonlinestores/features/social/domain/social_relationship.dart';

@@ -1,47 +1,39 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/app/splash/splash_screen.dart';
-
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/routing/app_shell.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/routing/helpers/route_guards.dart';
 import 'package:africaonlinestores/core/routing/helpers/route_observer.dart';
-
-import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
-import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
-import 'package:africaonlinestores/features/auth/shared/routing/auth_routes.dart';
-
 import 'package:africaonlinestores/features/account/shared/routing/account_routes.dart';
-
-import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_category_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_location_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/screens/ad_form_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_report/presentation/report_ad_screen.dart';
-
-import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+import 'package:africaonlinestores/features/auth/shared/routing/auth_routes.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
+import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
 import 'package:africaonlinestores/features/connect/calls/navigation/call_routes.dart';
 import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
 import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_details_screen.dart';
-import 'package:africaonlinestores/features/notifications/navigation/notification_routes.dart';
-
 import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 import 'package:africaonlinestores/features/maps/navigation/maps_routes.dart';
+import 'package:africaonlinestores/features/notifications/navigation/notification_routes.dart';
 import 'package:africaonlinestores/features/onboarding/screens/onboarding_screen.dart';
 import 'package:africaonlinestores/features/reviews/application/navigation/reviews_routes.dart';
 import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
 import 'package:africaonlinestores/features/sellers/presentation/start_selling_screen.dart';
-import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/feeds_routes.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
-
+import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final bootstrap = ref.watch(appBootstrapProvider);
@@ -125,7 +117,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.selectCategory,
         builder: (context, state) {
           final parent = state.extra is CategoryNode
-              ? state.extra as CategoryNode
+              ? state.extra! as CategoryNode
               : null;
 
           return SelectCategoryScreen(parent: parent);

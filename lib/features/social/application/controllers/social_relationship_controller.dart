@@ -1,9 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/social/data/social_repository_impl.dart';
 import 'package:africaonlinestores/features/social/domain/social_relationship.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class SocialRelationshipController
     extends StateNotifier<AsyncValue<Map<String, SocialRelationship>>> {
@@ -83,8 +82,7 @@ class SocialRelationshipController
 
   Map<String, SocialRelationship> _currentRelationships() {
     return state.maybeWhen(
-      data: (relationships) =>
-          Map<String, SocialRelationship>.from(relationships),
+      data: Map<String, SocialRelationship>.from,
       orElse: () => <String, SocialRelationship>{},
     );
   }

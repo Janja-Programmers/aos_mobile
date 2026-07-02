@@ -1,15 +1,13 @@
+import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/features/ads/ads_report/controllers/report_ad_state.dart';
+import 'package:africaonlinestores/features/ads/ads_report/data/report_ad_api_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:africaonlinestores/core/api/failure.dart';
-import 'package:africaonlinestores/core/utils/either.dart';
-
-import 'package:africaonlinestores/features/ads/ads_report/controllers/report_ad_state.dart';
-import 'package:africaonlinestores/features/ads/ads_report/data/report_ad_api_provider.dart';
-
 final reportAdControllerProvider =
     StateNotifierProvider<ReportAdController, ReportAdState>(
-      (ref) => ReportAdController(ref),
+      ReportAdController.new,
     );
 
 class ReportAdController extends StateNotifier<ReportAdState> {
@@ -19,17 +17,13 @@ class ReportAdController extends StateNotifier<ReportAdState> {
 
   /// 🔹 Load reasons
   Future<void> loadReasons() async {
-    state = state.copyWith(loading: true, errorMessage: null);
+    state = state.copyWith(loading: true);
 
     final res = await ref.read(reportAdApiProvider).listReportReasons();
 
     res.fold(
       (f) => state = state.copyWith(loading: false, errorMessage: f.message),
-      (data) => state = state.copyWith(
-        loading: false,
-        reasons: data,
-        errorMessage: null,
-      ),
+      (data) => state = state.copyWith(loading: false, reasons: data),
     );
   }
 

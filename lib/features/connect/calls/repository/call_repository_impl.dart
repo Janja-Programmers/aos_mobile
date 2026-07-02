@@ -1,5 +1,6 @@
-import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/connect/calls/data/call_api.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
 
 abstract class CallRepository {
@@ -206,11 +207,9 @@ class CallRepositoryImpl implements CallRepository {
         id: callId,
         conversationId: '',
         callType: AOSCallType.audio,
-        roomName: data['room_name'] ?? '',
-        token: data['token'] ?? '',
-        wsUrl: data['ws_url'] ?? '',
-        caller: null,
-        receiver: null,
+        roomName: asString(data['room_name']),
+        token: asString(data['token']),
+        wsUrl: asString(data['ws_url']),
       );
     });
   }

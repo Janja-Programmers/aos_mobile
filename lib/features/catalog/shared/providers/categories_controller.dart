@@ -1,16 +1,15 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/failure.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/catalog/data/categories_api.dart';
 import 'package:africaonlinestores/features/catalog/domain/categories_state.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/category_ads_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 final categoriesControllerProvider =
     StateNotifierProvider<CategoriesController, CategoriesState>(
-      (ref) => CategoriesController(ref),
+      CategoriesController.new,
     );
 
 class CategoriesController extends StateNotifier<CategoriesState> {
@@ -51,7 +50,7 @@ class CategoriesController extends StateNotifier<CategoriesState> {
     if (dataRaw is List) {
       for (final e in dataRaw) {
         if (e is Map) {
-          parents.add(CategoryNode.fromJson(Map<String, dynamic>.from(e)));
+          parents.add(CategoryNode.fromJson(asJsonMap(e)));
         }
       }
     }

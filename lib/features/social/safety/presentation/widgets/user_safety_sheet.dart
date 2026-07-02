@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
-import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
+import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/social/safety/data/social_safety_api.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class UserSafetySheet extends ConsumerStatefulWidget {
   const UserSafetySheet({
@@ -31,13 +31,14 @@ class _UserSafetySheetState extends ConsumerState<UserSafetySheet> {
         .read(apiClientProvider)
         .get(ApiEndpoints.listReportReasonsEndpoint);
     final unwrapped = unwrapFrappe(res);
-    final data = unwrapped.rightOrNull?['data'];
-    final reasons = data is Map ? data['reasons'] : null;
-    if (reasons is! List) return const ['Spam', 'Harassment', 'Scam', 'Other'];
+    final data = asJsonMap(unwrapped.rightOrNull?['data']);
+    final reasons = asJsonMapList(data['reasons']);
+    if (reasons.isEmpty) return const ['Spam', 'Harassment', 'Scam', 'Other'];
     return reasons
-        .whereType<Map>()
-        .map((e) => e['id']?.toString() ?? e['title']?.toString() ?? '')
-        .where((e) => e.isNotEmpty)
+        .map((Map<String, dynamic> reason) {
+          return reason['id']?.toString() ?? reason['title']?.toString() ?? '';
+        })
+        .where((String reason) => reason.isNotEmpty)
         .toList();
   }
 

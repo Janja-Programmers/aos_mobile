@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class ActionMediaCard extends StatelessWidget {
   final IconData icon;
@@ -109,9 +108,9 @@ class AddPhotoTile extends StatelessWidget {
                 if (selected == 'upload') onUpload();
                 if (selected == 'camera') onTakePhoto();
               },
-        child: Container(
+        child: DecoratedBox(
           decoration: BoxDecoration(
-            color: colors.black.withOpacity(.7),
+            color: colors.black.withValues(alpha: .7),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Center(
@@ -126,7 +125,7 @@ class AddPhotoTile extends StatelessWidget {
                         color: colors.white,
                       ),
                       Text(
-                        "Add",
+                        'Add',
                         style: context.p.copyWith(color: colors.white),
                       ),
                     ],

@@ -1,6 +1,5 @@
-import 'package:flutter/widgets.dart';
-
 import 'package:africaonlinestores/features/social/domain/social_friend.dart';
+import 'package:flutter/widgets.dart';
 
 @immutable
 class SocialFriendsPage {

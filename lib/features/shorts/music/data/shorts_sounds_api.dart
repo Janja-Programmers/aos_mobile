@@ -1,16 +1,16 @@
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_mapper.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_feed_page.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:dio/dio.dart';
 
 class SoundPage {
   final List<ShortSound> items;
@@ -79,11 +79,9 @@ class ShortsSoundsApi {
         data: {'filename': filename, 'size_bytes': ?sizeBytes},
       );
       final unwrapped = unwrapFrappe(res);
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final data = _data(json);
-        final headers = data['upload_headers'] is Map
-            ? Map<String, dynamic>.from(data['upload_headers'] as Map)
-            : const <String, dynamic>{};
+        final headers = asJsonMap(data['upload_headers']);
         return Either.right(
           InitSoundUploadResult(
             fileKey: data['file_key']?.toString() ?? '',
@@ -123,14 +121,12 @@ class ShortsSoundsApi {
         },
       );
       final unwrapped = unwrapFrappe(res);
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final soundJson = _data(json)['sound'];
         if (soundJson is! Map) {
           return Either.left(const Failure('Unexpected sound response'));
         }
-        return Either.right(
-          ShortSound.fromJson(Map<String, dynamic>.from(soundJson)),
-        );
+        return Either.right(ShortSound.fromJson(asJsonMap(soundJson)));
       });
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -151,7 +147,7 @@ class ShortsSoundsApi {
         ApiEndpoints.listShortSounds,
         queryParameters: {
           'limit': limit,
-          'cursor': ?cursor,
+          if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
           if (sourceType.trim().isNotEmpty) 'source_type': sourceType,
         },
       );
@@ -173,7 +169,7 @@ class ShortsSoundsApi {
         queryParameters: {'q': query, 'limit': limit},
       );
       final unwrapped = unwrapFrappe(res);
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final items = _parseSounds(_data(json)['items']);
         return Either.right(items);
       });
@@ -193,14 +189,12 @@ class ShortsSoundsApi {
         queryParameters: {'sound_id': soundId},
       );
       final unwrapped = unwrapFrappe(res);
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final soundJson = _data(json)['sound'];
         if (soundJson is! Map) {
           return Either.left(const Failure('Unexpected sound response'));
         }
-        return Either.right(
-          ShortSound.fromJson(Map<String, dynamic>.from(soundJson)),
-        );
+        return Either.right(ShortSound.fromJson(asJsonMap(soundJson)));
       });
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -218,11 +212,9 @@ class ShortsSoundsApi {
         data: {'sound_id': soundId},
       );
       final unwrapped = unwrapFrappe(res);
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final data = _data(json);
-        final metrics = data['metrics'] is Map
-            ? Map<String, dynamic>.from(data['metrics'] as Map)
-            : const <String, dynamic>{};
+        final metrics = asJsonMap(data['metrics']);
         return Either.right(
           FavoriteSoundResult(
             soundId: data['sound_id']?.toString() ?? soundId,
@@ -248,7 +240,10 @@ class ShortsSoundsApi {
     try {
       final res = await _client.get(
         ApiEndpoints.myFavoriteShortSounds,
-        queryParameters: {'limit': limit, 'cursor': ?cursor},
+        queryParameters: {
+          'limit': limit,
+          if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+        },
       );
       return _parseSoundPage(res);
     } on DioException catch (e) {
@@ -271,21 +266,15 @@ class ShortsSoundsApi {
         queryParameters: {
           'sound_id': soundId,
           'limit': limit,
-          'cursor': ?cursor,
+          if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
         },
       );
       final unwrapped = unwrapFrappe(res);
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final data = _data(json);
-        final items = data['items'] is List
-            ? (data['items'] as List)
-                  .whereType<Map>()
-                  .map(
-                    (item) =>
-                        ShortModel.fromJson(Map<String, dynamic>.from(item)),
-                  )
-                  .toList(growable: false)
-            : const <ShortModel>[];
+        final items = asJsonMapList(
+          data['items'],
+        ).map(ShortModel.fromJson).toList(growable: false);
         return Either.right(
           ShortFeedPage(
             items: items,
@@ -314,7 +303,7 @@ class ShortsSoundsApi {
       cursor: cursor,
     );
     return res.fold(
-      (failure) => Either.left(failure),
+      Either.left,
       (page) => Either.right(
         page.items.map(ShortMapper.toDomain).toList(growable: false),
       ),
@@ -367,9 +356,11 @@ class ShortsSoundsApi {
     }
   }
 
-  Either<Failure, SoundPage> _parseSoundPage(Response res) {
+  Either<Failure, SoundPage> _parseSoundPage(
+    Response<Map<String, dynamic>> res,
+  ) {
     final unwrapped = unwrapFrappe(res);
-    return unwrapped.fold((failure) => Either.left(failure), (json) {
+    return unwrapped.fold(Either.left, (json) {
       final data = _data(json);
       return Either.right(
         SoundPage(
@@ -382,19 +373,17 @@ class ShortsSoundsApi {
   }
 
   Either<Failure, ChangeShortSoundResult> _parseChangeShortSound(
-    Response res,
+    Response<Map<String, dynamic>> res,
     String fallbackShortId,
   ) {
     final unwrapped = unwrapFrappe(res);
-    return unwrapped.fold((failure) => Either.left(failure), (json) {
+    return unwrapped.fold(Either.left, (json) {
       final data = _data(json);
-      final soundJson = data['sound'];
+      final sound = asJsonMap(data['sound']);
       return Either.right(
         ChangeShortSoundResult(
           shortId: data['short_id']?.toString() ?? fallbackShortId,
-          sound: soundJson is Map
-              ? ShortSound.fromJson(Map<String, dynamic>.from(soundJson))
-              : null,
+          sound: sound.isEmpty ? null : ShortSound.fromJson(sound),
           audioMixStatus: data['audio_mix_status']?.toString(),
         ),
       );
@@ -402,27 +391,24 @@ class ShortsSoundsApi {
   }
 
   static Map<String, dynamic> _data(Map<String, dynamic> json) {
-    final data = json['data'];
-    if (data is Map) return Map<String, dynamic>.from(data);
-    return json;
+    final data = asJsonMap(json['data']);
+    return data.isNotEmpty ? data : json;
   }
 
-  static List<ShortSound> _parseSounds(dynamic raw) {
-    if (raw is! List) return const [];
-    return raw
-        .whereType<Map>()
-        .map((item) => ShortSound.fromJson(Map<String, dynamic>.from(item)))
+  static List<ShortSound> _parseSounds(Object? raw) {
+    return asJsonMapList(raw)
+        .map(ShortSound.fromJson)
         .where((sound) => sound.id.trim().isNotEmpty)
         .toList(growable: false);
   }
 
-  static int _toInt(dynamic value) {
+  static int _toInt(Object? value) {
     if (value is int) return value;
     if (value is num) return value.toInt();
     return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
-  static bool _toBool(dynamic value) {
+  static bool _toBool(Object? value) {
     if (value is bool) return value;
     if (value is num) return value != 0;
     final raw = value?.toString().trim().toLowerCase() ?? '';

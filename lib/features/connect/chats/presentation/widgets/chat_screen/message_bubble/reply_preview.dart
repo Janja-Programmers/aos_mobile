@@ -17,7 +17,7 @@ class ReplyPreview extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
       decoration: BoxDecoration(
-        color: isMe ? colors.white.withOpacity(0.12) : colors.elevated,
+        color: isMe ? colors.white.withValues(alpha: 0.12) : colors.elevated,
         borderRadius: BorderRadius.circular(9),
         border: Border(
           left: BorderSide(

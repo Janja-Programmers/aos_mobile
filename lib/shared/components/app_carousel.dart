@@ -1,8 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
+import 'package:flutter/material.dart';
 
 enum AppCarouselVariant { primary, secondary }
 
@@ -114,8 +113,8 @@ class _AppCarouselState extends State<AppCarousel> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              colors.black.withOpacity(0.15),
-                              colors.black.withOpacity(0.35),
+                              colors.black.withValues(alpha: 0.15),
+                              colors.black.withValues(alpha: 0.35),
                             ],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,

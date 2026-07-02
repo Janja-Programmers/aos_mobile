@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/social/domain/social_friend.dart';
+import 'package:flutter/material.dart';
 
 class SocialFriendsStrip extends StatelessWidget {
   final List<SocialFriend> friends;
@@ -123,7 +122,7 @@ class _SocialFriendItem extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: colors.primary.withOpacity(0.28),
+                      color: colors.primary.withValues(alpha: 0.28),
                       width: 1.5,
                     ),
                   ),

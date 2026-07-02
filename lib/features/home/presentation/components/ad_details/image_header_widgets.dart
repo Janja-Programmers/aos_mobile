@@ -1,9 +1,8 @@
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-
-import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 
 enum ImageHeaderMediaKind { image, video }
 
@@ -61,7 +60,7 @@ class ImageHeaderPageIndicators extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
         decoration: BoxDecoration(
-          color: colors.black.withOpacity(0.28),
+          color: colors.black.withValues(alpha: 0.28),
           borderRadius: BorderRadius.circular(99),
         ),
         child: Row(
@@ -76,10 +75,12 @@ class ImageHeaderPageIndicators extends StatelessWidget {
               height: 5,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(99),
-                color: active ? colors.primary : colors.white.withOpacity(0.88),
+                color: active
+                    ? colors.primary
+                    : colors.white.withValues(alpha: 0.88),
                 boxShadow: [
                   BoxShadow(
-                    color: colors.black.withOpacity(.8),
+                    color: colors.black.withValues(alpha: .8),
                     blurRadius: 2,
                     offset: const Offset(0, 1),
                   ),
@@ -288,7 +289,7 @@ class _VideoThumbnail extends StatelessWidget {
         else
           ColoredBox(color: colors.black),
 
-        ColoredBox(color: colors.black.withOpacity(0.45)),
+        ColoredBox(color: colors.black.withValues(alpha: 0.45)),
 
         const Center(child: _PlayBadge(size: 24)),
       ],
@@ -318,7 +319,6 @@ class _CircleActionButton extends StatelessWidget {
       child: Material(
         color: colors.white,
         shape: const CircleBorder(),
-        elevation: 0,
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onTap,

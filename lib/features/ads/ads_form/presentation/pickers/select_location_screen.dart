@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SelectLocationScreen extends ConsumerStatefulWidget {
   const SelectLocationScreen({
@@ -46,7 +45,7 @@ class _SelectLocationScreenState extends ConsumerState<SelectLocationScreen> {
           .toString();
 
   bool _matches(String text, String q) =>
-      q.isEmpty ? true : text.toLowerCase().contains(q.toLowerCase());
+      q.isEmpty || text.toLowerCase().contains(q.toLowerCase());
 
   @override
   Widget build(BuildContext context) {

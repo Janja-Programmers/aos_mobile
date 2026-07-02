@@ -1,13 +1,12 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
-import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
+import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final sellerApiProvider = Provider<SellerApi>((ref) {
   return SellerApi(ref.read(apiClientProvider));
@@ -24,7 +23,7 @@ class SellerApi {
     required String sellerId,
   }) async {
     try {
-      final res = await _dio.get(
+      final res = await _dio.get<Map<String, dynamic>>(
         ApiEndpoints.getSellerEndpoint,
         queryParameters: {'seller': sellerId},
       );
@@ -41,7 +40,7 @@ class SellerApi {
     required String sellerId,
   }) async {
     try {
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.toggleFollowEndpoint,
         data: {'target_user': sellerId},
       );
@@ -79,7 +78,7 @@ class SellerApi {
         'operating_hours': ?operatingHours,
       };
 
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.updateMySellerEndpoint,
         data: data,
       );
@@ -113,7 +112,10 @@ class SellerApi {
           'seller_type': sellerType.trim(),
       };
 
-      final res = await _dio.post(ApiEndpoints.listSellersEndpoint, data: data);
+      final res = await _dio.post<Map<String, dynamic>>(
+        ApiEndpoints.listSellersEndpoint,
+        data: data,
+      );
 
       return unwrapFrappe(res);
     } on DioException catch (e) {

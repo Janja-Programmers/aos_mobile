@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+
 class AOSSellerProfile {
   const AOSSellerProfile({
     required this.seller,
@@ -65,7 +67,7 @@ class AOSSellerProfile {
   final int responseSampleSize;
   final int responseRequests;
   final String? responseMetricsUpdatedAt;
-  final List<dynamic> operatingHours;
+  final List<Object?> operatingHours;
 
   factory AOSSellerProfile.fromJson(Map<String, dynamic> json) {
     double parseDouble(dynamic v) {
@@ -125,9 +127,7 @@ class AOSSellerProfile {
       responseMetricsUpdatedAt: parseNullableString(
         json['response_metrics_updated_at'],
       ),
-      operatingHours: json['operating_hours'] is List
-          ? List<dynamic>.from(json['operating_hours'] as List)
-          : const [],
+      operatingHours: asJsonList(json['operating_hours']),
     );
   }
 
@@ -163,7 +163,7 @@ class AOSSellerProfile {
     int? responseSampleSize,
     int? responseRequests,
     String? responseMetricsUpdatedAt,
-    List<dynamic>? operatingHours,
+    List<Object?>? operatingHours,
   }) {
     return AOSSellerProfile(
       seller: seller ?? this.seller,

@@ -1,13 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/features/social/safety/application/social_safety_controller.dart';
 import 'package:africaonlinestores/features/social/safety/data/social_safety_api.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SocialUserSearchScreen extends ConsumerStatefulWidget {
   const SocialUserSearchScreen({super.key});
@@ -94,10 +93,10 @@ class _UserSearchTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundImage: user.avatar?.isNotEmpty == true
+        backgroundImage: user.avatar?.isNotEmpty ?? false
             ? NetworkImage(user.avatar!)
             : null,
-        child: user.avatar?.isNotEmpty == true
+        child: user.avatar?.isNotEmpty ?? false
             ? null
             : const Icon(Icons.person_outline_rounded),
       ),

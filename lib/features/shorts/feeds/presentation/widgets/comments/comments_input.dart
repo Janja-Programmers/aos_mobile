@@ -1,12 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
-
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CommentInput extends ConsumerStatefulWidget {
   final String shortId;
@@ -79,9 +77,11 @@ class _CommentInputState extends ConsumerState<CommentInput> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: colors.surface.withOpacity(0.6),
+                  color: colors.surface.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: colors.border.withOpacity(0.4)),
+                  border: Border.all(
+                    color: colors.border.withValues(alpha: 0.4),
+                  ),
                 ),
                 child: TextField(
                   controller: _controller,
@@ -100,7 +100,7 @@ class _CommentInputState extends ConsumerState<CommentInput> {
 
             const SizedBox(width: 8),
 
-            Container(
+            DecoratedBox(
               decoration: BoxDecoration(
                 color: colors.primary,
                 shape: BoxShape.circle,

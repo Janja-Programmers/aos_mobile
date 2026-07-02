@@ -1,14 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AdCardImage extends ConsumerWidget {
   const AdCardImage({super.key, required this.ad, required this.height});
@@ -41,7 +38,7 @@ class AdCardImage extends ConsumerWidget {
             height: height,
             width: double.infinity,
             child: imageUrl == null || imageUrl.isEmpty
-                ? Container(
+                ? ColoredBox(
                     color: colors.elevated,
                     child: Icon(Icons.image_outlined, color: colors.textMuted),
                   )
@@ -73,7 +70,7 @@ class AdCardImage extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    "-${ad.offerPercent.round()}%",
+                    '-${ad.offerPercent.round()}%',
                     style: TextStyle(
                       color: colors.white,
                       fontSize: 10,
@@ -100,7 +97,7 @@ class AdCardImage extends ConsumerWidget {
                   height: 28,
                   width: 28,
                   decoration: BoxDecoration(
-                    color: colors.surface.withOpacity(0.9),
+                    color: colors.surface.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(

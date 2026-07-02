@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_attachment.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_local_message_status.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message_reaction.dart';
@@ -87,19 +88,15 @@ class ChatMessage {
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     final attachments =
-        (json['attachments'] as List? ?? [])
-            .whereType<Map>()
-            .map((e) => ChatAttachment.fromJson(Map<String, dynamic>.from(e)))
-            .toList()
+        asJsonMapList(json['attachments']).map(ChatAttachment.fromJson).toList()
           ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     final rawAdPreview = json['ad_preview'];
     final rawReplyTo = json['reply_to'];
     final rawViewerState = json['viewer_state'];
 
-    final reactions = (json['reactions'] as List? ?? [])
-        .whereType<Map>()
-        .map((e) => ChatMessageReaction.fromJson(Map<String, dynamic>.from(e)))
+    final reactions = asJsonMapList(json['reactions'])
+        .map(ChatMessageReaction.fromJson)
         .where((reaction) => reaction.emoji.trim().isNotEmpty)
         .toList();
 
@@ -116,12 +113,10 @@ class ChatMessage {
       messageType: normalizedType,
       originalMessageType: _cleanNullableString(json['original_message_type']),
       ad: _cleanNullableString(json['ad']),
-      adPreview: rawAdPreview is Map
-          ? Map<String, dynamic>.from(rawAdPreview)
-          : null,
+      adPreview: rawAdPreview is Map ? asJsonMap(rawAdPreview) : null,
       replyToMessage: _cleanNullableString(json['reply_to_message']),
       replyTo: rawReplyTo is Map
-          ? ChatReplyPreview.fromJson(Map<String, dynamic>.from(rawReplyTo))
+          ? ChatReplyPreview.fromJson(asJsonMap(rawReplyTo))
           : null,
       hasAttachments:
           _truthy(json['has_attachments']) || attachments.isNotEmpty,
@@ -145,12 +140,8 @@ class ChatMessage {
       deletedForEveryoneAt: _parseDate(json['deleted_for_everyone_at']),
       displayText: _cleanNullableString(json['display_text']),
       viewerState: rawViewerState is Map
-          ? ChatMessageViewerState.fromJson(
-              Map<String, dynamic>.from(rawViewerState),
-            )
+          ? ChatMessageViewerState.fromJson(asJsonMap(rawViewerState))
           : const ChatMessageViewerState(),
-      localStatus: ChatLocalMessageStatus.none,
-      localError: null,
 
       // Usually not present in normal message payloads.
       // Useful if you ever hydrate translated messages from cache/API.
@@ -176,8 +167,6 @@ class ChatMessage {
             json['call_duration'] ??
             json['duration'],
       ),
-      isTranslating: false,
-      translationError: null,
     );
   }
 
@@ -371,20 +360,13 @@ class ChatMessage {
       replyTo: replyTo,
       hasAttachments: hasFiles,
       createdAt: DateTime.now(),
-      deliveredAt: null,
-      readAt: null,
       attachments: attachments,
       localStatus: ChatLocalMessageStatus.sending,
-      localError: null,
-      translatedContent: null,
-      translationLanguage: null,
       callId: callId,
       callType: callType,
       callStatus: callStatus,
       callDirection: callDirection,
       callDurationSeconds: callDurationSeconds,
-      isTranslating: false,
-      translationError: null,
     );
   }
 
@@ -400,10 +382,7 @@ class ChatMessage {
       isDeletedForEveryone: true,
       deletedForEveryoneAt: DateTime.now(),
       displayText: displayText ?? 'This message was deleted',
-      viewerState: const ChatMessageViewerState(
-        isStarred: false,
-        myReaction: null,
-      ),
+      viewerState: const ChatMessageViewerState(),
       clearTranslation: true,
       clearTranslationError: true,
     );

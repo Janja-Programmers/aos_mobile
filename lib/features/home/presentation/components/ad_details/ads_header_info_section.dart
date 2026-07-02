@@ -1,9 +1,8 @@
 import 'package:africaonlinestores/core/core.dart';
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/shared/components/rating_display.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:africaonlinestores/shared/components/rating_display.dart';
+import 'package:flutter/material.dart';
 
 class AdHeaderInfoSection extends StatelessWidget {
   const AdHeaderInfoSection({
@@ -101,7 +100,7 @@ class AdHeaderInfoSection extends StatelessWidget {
             const SizedBox(width: 4),
 
             Text(
-              "Negotiable",
+              'Negotiable',
               style: context.pStrong.copyWith(
                 fontSize: 12,
                 color: colors.textPrimary,

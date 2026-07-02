@@ -1,23 +1,20 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
-import 'package:africaonlinestores/features/sellers/application/providers/seller_state_controller_provider.dart';
 import 'package:africaonlinestores/features/sellers/application/providers/seller_profile_provider.dart';
-
+import 'package:africaonlinestores/features/sellers/application/providers/seller_state_controller_provider.dart';
+import 'package:africaonlinestores/features/sellers/domain/storefront_post.dart';
+import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/my_storefront/analytics_section.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/my_storefront/owner_tabs.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/my_storefront/post_actions_bottom_sheet.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/my_storefront/post_section.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/my_storefront/storefront_header_card.dart';
-import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
-import 'package:africaonlinestores/features/sellers/domain/storefront_post.dart';
-import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/music/presentation/music_picker_sheet.dart';
+import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class MyStorefrontScreen extends ConsumerStatefulWidget {
   const MyStorefrontScreen({super.key, required this.sellerId});
@@ -34,7 +31,7 @@ class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
   Future<void> _showPostActions({required StorefrontPost post}) async {
     final postId = post.id;
     final title = post.title;
-    await showModalBottomSheet(
+    await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) {
@@ -264,8 +261,8 @@ class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
                         curve: Curves.easeOut,
                         decoration: BoxDecoration(
                           color: allowComments
-                              ? colors.primary.withOpacity(0.08)
-                              : colors.surface.withOpacity(0.45),
+                              ? colors.primary.withValues(alpha: 0.08)
+                              : colors.surface.withValues(alpha: 0.45),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: SwitchListTile.adaptive(
@@ -471,7 +468,7 @@ class _EditAudienceChip extends StatelessWidget {
       selected: selected,
       label: Text(label),
       onSelected: (_) => onSelected(value),
-      selectedColor: colors.primary.withOpacity(.16),
+      selectedColor: colors.primary.withValues(alpha: .16),
       side: BorderSide(color: selected ? colors.primary : colors.border),
     );
   }

@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_type.dart';
+import 'package:flutter/material.dart';
 
 class EmptyShortsView extends StatelessWidget {
   final ShortsFeedType feedType;
@@ -36,7 +35,7 @@ class EmptyShortsView extends StatelessWidget {
             height: 82,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: colors.primary.withOpacity(.08),
+              color: colors.primary.withValues(alpha: .08),
             ),
             child: Icon(_icon, size: 36, color: colors.primary),
           ),

@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class LiveRightActions extends StatelessWidget {
   final VoidCallback onLike;
@@ -52,7 +51,7 @@ class LiveRightActions extends StatelessWidget {
       onTap: onTap,
       child: CircleAvatar(
         radius: 22,
-        backgroundColor: colors.black.withOpacity(.6),
+        backgroundColor: colors.black.withValues(alpha: .6),
         child: Icon(icon, color: colors.white),
       ),
     );

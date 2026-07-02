@@ -1,14 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/social/application/providers/social_connections_provider.dart';
 import 'package:africaonlinestores/features/social/application/state/social_connections_state.dart';
+import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/features/social/presentation/widgets/social_connections_app_bar.dart';
 import 'package:africaonlinestores/features/social/presentation/widgets/social_connections_list.dart';
 import 'package:africaonlinestores/features/social/presentation/widgets/social_connections_search.dart';
 import 'package:africaonlinestores/features/social/presentation/widgets/social_connections_tabs.dart';
-import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SocialConnectionsScreen extends ConsumerStatefulWidget {
   final String title;

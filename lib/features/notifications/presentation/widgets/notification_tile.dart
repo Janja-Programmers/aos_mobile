@@ -1,13 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
 import 'package:africaonlinestores/features/notifications/presentation/utils/helpers.dart';
-
 import 'package:africaonlinestores/shared/utils/format_time.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class NotificationTile extends StatefulWidget {
   final NotificationItem notification;
@@ -116,10 +113,14 @@ class _NotificationTileState extends State<NotificationTile>
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isUnread ? colors.primary.withOpacity(.05) : colors.surface,
+            color: isUnread
+                ? colors.primary.withValues(alpha: .05)
+                : colors.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isUnread ? colors.primary.withOpacity(.2) : colors.border,
+              color: isUnread
+                  ? colors.primary.withValues(alpha: .2)
+                  : colors.border,
             ),
           ),
           child: Row(
@@ -208,7 +209,7 @@ class _NotificationTileState extends State<NotificationTile>
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: bgColor.withOpacity(.15),
+        color: bgColor.withValues(alpha: .15),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Icon(iconData, color: bgColor),

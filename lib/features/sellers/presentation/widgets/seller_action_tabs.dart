@@ -1,10 +1,8 @@
-import 'package:africaonlinestores/features/sellers/application/providers/seller_state_controller_provider.dart';
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
+import 'package:africaonlinestores/features/sellers/application/providers/seller_state_controller_provider.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SellerActionTabs extends ConsumerWidget {
@@ -33,7 +31,7 @@ class SellerActionTabs extends ConsumerWidget {
               sellerId,
             );
 
-            if (updated == true && context.mounted) {
+            if ((updated ?? false) && context.mounted) {
               await ref.read(sellerStateProvider(sellerId).notifier).load();
             }
           },

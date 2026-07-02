@@ -66,162 +66,162 @@ RealtimeEventType mapRealtimeEvent(String event) {
     // =========================
     // CHAT
     // =========================
-    case "aos_new_message":
+    case 'aos_new_message':
       return RealtimeEventType.chatNewMessage;
 
-    case "aos_typing":
+    case 'aos_typing':
       return RealtimeEventType.chatTyping;
 
-    case "aos_message_status":
+    case 'aos_message_status':
       return RealtimeEventType.aosMessageStatus;
 
-    case "aos_message_edited":
+    case 'aos_message_edited':
       return RealtimeEventType.aosMessageEdited;
 
-    case "aos_messages_deleted":
+    case 'aos_messages_deleted':
       return RealtimeEventType.aosMessagesDeleted;
 
-    case "aos_message_reaction_updated":
+    case 'aos_message_reaction_updated':
       return RealtimeEventType.aosMessageReactionUpdated;
 
     // =========================
     // PRESENCE
     // =========================
-    case "aos_presence_update":
+    case 'aos_presence_update':
       return RealtimeEventType.presenceUpdate;
 
     // =========================
     // CALLS
     // =========================
-    case "aos_incoming_call":
+    case 'aos_incoming_call':
       return RealtimeEventType.aosIncomingCall;
 
-    case "aos_call_ringing":
+    case 'aos_call_ringing':
       return RealtimeEventType.aosCallRinging;
 
-    case "aos_call_accepted":
+    case 'aos_call_accepted':
       return RealtimeEventType.aosCallAccepted;
 
-    case "aos_call_cancelled":
+    case 'aos_call_cancelled':
       return RealtimeEventType.aosCallCancelled;
 
-    case "aos_call_rejected":
+    case 'aos_call_rejected':
       return RealtimeEventType.aosCallRejected;
 
-    case "aos_call_ended":
+    case 'aos_call_ended':
       return RealtimeEventType.aosCallEnded;
 
-    case "aos_call_not_answered":
+    case 'aos_call_not_answered':
       return RealtimeEventType.aosCallNotAnswered;
 
-    case "aos_call_video_upgrade_request":
-    case "aos_call_video_upgrade_requested":
+    case 'aos_call_video_upgrade_request':
+    case 'aos_call_video_upgrade_requested':
       return RealtimeEventType.aosCallVideoUpgradeRequested;
 
-    case "aos_call_video_upgrade_accepted":
+    case 'aos_call_video_upgrade_accepted':
       return RealtimeEventType.aosCallVideoUpgradeAccepted;
 
-    case "aos_call_video_upgrade_declined":
+    case 'aos_call_video_upgrade_declined':
       return RealtimeEventType.aosCallVideoUpgradeDeclined;
 
-    case "aos_call_video_upgrade_cancelled":
-    case "aos_call_video_upgrade_canceled":
+    case 'aos_call_video_upgrade_cancelled':
+    case 'aos_call_video_upgrade_canceled':
       return RealtimeEventType.aosCallVideoUpgradeCancelled;
 
     // =========================
     // LIVE
     // =========================
-    case "aos_live_started":
+    case 'aos_live_started':
       return RealtimeEventType.aosLiveStarted;
 
-    case "aos_live_ended":
+    case 'aos_live_ended':
       return RealtimeEventType.aosLiveEnded;
 
-    case "aos_live_viewer_count":
+    case 'aos_live_viewer_count':
       return RealtimeEventType.aosLiveViewerCount;
 
-    case "aos_live_viewer_joined":
+    case 'aos_live_viewer_joined':
       return RealtimeEventType.aosLiveViewerJoined;
 
-    case "aos_live_viewer_left":
+    case 'aos_live_viewer_left':
       return RealtimeEventType.aosLiveViewerLeft;
 
-    case "aos_live_comment":
-    case "aos_live_message":
+    case 'aos_live_comment':
+    case 'aos_live_message':
       return RealtimeEventType.aosLiveComment;
 
-    case "aos_live_comment_deleted":
-    case "aos_live_message_deleted":
+    case 'aos_live_comment_deleted':
+    case 'aos_live_message_deleted':
       return RealtimeEventType.aosLiveCommentDeleted;
 
-    case "aos_live_reaction":
+    case 'aos_live_reaction':
       return RealtimeEventType.aosLiveReaction;
 
-    case "aos_live_cohost_invited":
+    case 'aos_live_cohost_invited':
       return RealtimeEventType.aosLiveCohostInvited;
 
-    case "aos_live_cohost_request_received":
+    case 'aos_live_cohost_request_received':
       return RealtimeEventType.aosLiveCohostRequestReceived;
 
-    case "aos_live_cohost_accepted":
+    case 'aos_live_cohost_accepted':
       return RealtimeEventType.aosLiveCohostAccepted;
 
-    case "aos_live_cohost_rejected":
+    case 'aos_live_cohost_rejected':
       return RealtimeEventType.aosLiveCohostRejected;
 
-    case "aos_live_cohost_cancelled":
-    case "aos_live_cohost_canceled":
+    case 'aos_live_cohost_cancelled':
+    case 'aos_live_cohost_canceled':
       return RealtimeEventType.aosLiveCohostCancelled;
 
-    case "aos_live_cohost_activated":
+    case 'aos_live_cohost_activated':
       return RealtimeEventType.aosLiveCohostActivated;
 
-    case "aos_live_cohost_started":
+    case 'aos_live_cohost_started':
       return RealtimeEventType.aosLiveCohostStarted;
 
-    case "aos_live_cohost_ended":
+    case 'aos_live_cohost_ended':
       return RealtimeEventType.aosLiveCohostEnded;
 
     // =========================
     // NOTIFICATIONS
     // =========================
-    case "aos_follow":
+    case 'aos_follow':
       return RealtimeEventType.aosFollow;
 
-    case "aos_missed_call":
+    case 'aos_missed_call':
       return RealtimeEventType.aosMissedCall;
 
-    case "aos_ad_approved":
+    case 'aos_ad_approved':
       return RealtimeEventType.aosAdApproved;
 
-    case "aos_ad_rejected":
+    case 'aos_ad_rejected':
       return RealtimeEventType.aosAdRejected;
 
-    case "aos_ad_expired":
+    case 'aos_ad_expired':
       return RealtimeEventType.aosAdExpired;
 
-    case "aos_verification_approved":
+    case 'aos_verification_approved':
       return RealtimeEventType.aosVerificationApproved;
 
-    case "aos_verification_rejected":
+    case 'aos_verification_rejected':
       return RealtimeEventType.aosVerificationRejected;
 
-    case "aos_new_short":
+    case 'aos_new_short':
       return RealtimeEventType.aosNewShort;
 
-    case "aos_short_like":
+    case 'aos_short_like':
       return RealtimeEventType.aosShortLike;
 
-    case "aos_short_comment":
+    case 'aos_short_comment':
       return RealtimeEventType.aosShortComment;
 
-    case "aos_comment_reply":
+    case 'aos_comment_reply':
       return RealtimeEventType.aosCommentReply;
 
     // =========================
     // PUSH
     // =========================
-    case "push_notification":
+    case 'push_notification':
       return RealtimeEventType.pushNotification;
 
     default:

@@ -1,18 +1,14 @@
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+import 'package:africaonlinestores/shared/components/app_text_fields.dart';
+import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
-
-import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
-import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
-import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
-
-import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
-import 'package:africaonlinestores/shared/components/app_text_fields.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});

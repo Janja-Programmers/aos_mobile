@@ -1,21 +1,21 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:africaonlinestores/core/core.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/routing/app_nav.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/routing/app_nav_config.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
-import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
-import 'package:africaonlinestores/features/connect/chats/utils/chat_actions.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
-import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';
-import 'package:africaonlinestores/features/sellers/application/providers/seller_ads_provider.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
+import 'package:africaonlinestores/features/connect/chats/utils/chat_actions.dart';
+import 'package:africaonlinestores/features/sellers/application/providers/seller_ads_provider.dart';
+import 'package:africaonlinestores/features/sellers/application/providers/seller_state_controller_provider.dart';
+import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/sellers/presentation/sections/seller_about_section.dart';
 import 'package:africaonlinestores/features/sellers/presentation/sections/seller_header_section.dart';
 import 'package:africaonlinestores/features/sellers/presentation/sections/seller_products_section.dart';
-import 'package:africaonlinestores/features/sellers/application/providers/seller_state_controller_provider.dart';
+import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class SellerStorefrontScreen extends ConsumerStatefulWidget {
   const SellerStorefrontScreen({

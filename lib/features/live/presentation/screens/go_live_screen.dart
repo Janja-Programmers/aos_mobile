@@ -1,20 +1,17 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:livekit_client/livekit_client.dart' as lk;
-import 'package:permission_handler/permission_handler.dart';
-
 import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
 import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_video_stage.dart';
-
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:livekit_client/livekit_client.dart' as lk;
+import 'package:permission_handler/permission_handler.dart';
 
 class GoLiveScreen extends ConsumerStatefulWidget {
   const GoLiveScreen({super.key});
@@ -61,8 +58,8 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     setState(() => _isStartingPreview = true);
 
     final statuses = await [Permission.camera, Permission.microphone].request();
-    final cameraAllowed = statuses[Permission.camera]?.isGranted == true;
-    final micAllowed = statuses[Permission.microphone]?.isGranted == true;
+    final cameraAllowed = statuses[Permission.camera]?.isGranted ?? false;
+    final micAllowed = statuses[Permission.microphone]?.isGranted ?? false;
 
     if (!cameraAllowed || !micAllowed) {
       if (mounted) {
@@ -253,9 +250,9 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    colors.black.withOpacity(.50),
+                    colors.black.withValues(alpha: .50),
                     Colors.transparent,
-                    colors.black.withOpacity(.85),
+                    colors.black.withValues(alpha: .85),
                   ],
                 ),
               ),
@@ -270,7 +267,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                     children: [
                       IconButton.filled(
                         style: IconButton.styleFrom(
-                          backgroundColor: colors.black.withOpacity(.45),
+                          backgroundColor: colors.black.withValues(alpha: .45),
                         ),
                         onPressed: () => Navigator.of(context).maybePop(),
                         icon: const Icon(Icons.close, color: Colors.white),
@@ -302,7 +299,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
           if (_countdown != null)
             Positioned.fill(
               child: Container(
-                color: colors.black.withOpacity(.42),
+                color: colors.black.withValues(alpha: .42),
                 alignment: Alignment.center,
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 220),
@@ -329,9 +326,9 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: colors.black.withOpacity(.48),
+        color: colors.black.withValues(alpha: .48),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(.16)),
+        border: Border.all(color: Colors.white.withValues(alpha: .16)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -346,7 +343,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                   child: Container(
                     width: 86,
                     height: 112,
-                    color: Colors.white.withOpacity(.12),
+                    color: Colors.white.withValues(alpha: .12),
                     child: _selectedImage == null
                         ? const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -390,7 +387,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                     hintText: 'Add a live title...',
                     hintStyle: context.p.copyWith(color: colors.white),
                     filled: true,
-                    fillColor: colors.white.withOpacity(.10),
+                    fillColor: colors.white.withValues(alpha: .10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(18),
                       borderSide: BorderSide.none,
@@ -450,9 +447,9 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(.45),
+            color: Colors.black.withValues(alpha: .45),
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Colors.white.withOpacity(.16)),
+            border: Border.all(color: Colors.white.withValues(alpha: .16)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

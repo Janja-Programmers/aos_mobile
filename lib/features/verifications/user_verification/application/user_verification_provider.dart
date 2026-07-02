@@ -1,8 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
 import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
@@ -11,6 +8,8 @@ import 'package:africaonlinestores/features/auth/shared/providers/auth_controlle
 import 'package:africaonlinestores/features/verifications/domain/verification_status.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/data/user_verification_api.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/domain/user_verification_models.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final userVerificationStatusProvider = FutureProvider<UserVerificationStatus>((
   ref,
@@ -20,8 +19,8 @@ final userVerificationStatusProvider = FutureProvider<UserVerificationStatus>((
 
   return res.fold((_) {
     final auth = ref.read(authControllerProvider);
-    final dynamic user = auth.asAuthenticated?.user;
-    final verified = user?.isVerified == true;
+    final user = auth.asAuthenticated?.user;
+    final verified = user?.isVerified ?? false;
     return verified
         ? const UserVerificationStatus(
             isVerified: true,
@@ -109,7 +108,7 @@ class UserVerificationController extends StateNotifier<UserVerificationState> {
         .sendPhoneOtp(phoneNumber: draft.fullPhoneNumber);
     state = state.copyWith(isSendingOtp: false);
 
-    return res.fold((failure) => Either.left(failure), (_) {
+    return res.fold(Either.left, (_) {
       state = state.copyWith(draft: state.draft.copyWith(phoneOtpSent: true));
       return Either.right(null);
     });
@@ -133,7 +132,7 @@ class UserVerificationController extends StateNotifier<UserVerificationState> {
         );
     state = state.copyWith(isVerifyingOtp: false);
 
-    return res.fold((failure) => Either.left(failure), (_) {
+    return res.fold(Either.left, (_) {
       state = state.copyWith(
         draft: state.draft.copyWith(phoneVerified: true),
         completedSteps: {...state.completedSteps, 0},
@@ -210,7 +209,7 @@ class UserVerificationController extends StateNotifier<UserVerificationState> {
         .submitUserVerification(payload: state.draft.toPayload());
     state = state.copyWith(isSubmitting: false);
 
-    return res.fold((failure) => Either.left(failure), (_) {
+    return res.fold(Either.left, (_) {
       ref.invalidate(userVerificationStatusProvider);
       return Either.right(null);
     });

@@ -1,16 +1,13 @@
 // features/live/presentation/widgets/live_card.dart
 
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
-
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/live/domain/live_stream.dart';
-
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/bottom_caption_overlay.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/right_metrics_overlay.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/short_thumbnail.dart';
+import 'package:flutter/material.dart';
 
 class LiveCard extends StatelessWidget {
   final LiveStream live;
@@ -38,12 +35,11 @@ class LiveCard extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: Container(
+        child: DecoratedBox(
           decoration: BoxDecoration(
             color: colors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.border.withOpacity(.55)),
+            border: Border.all(color: colors.border.withValues(alpha: .55)),
           ),
           child: Stack(
             children: [
@@ -57,9 +53,9 @@ class LiveCard extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          colors.black.withOpacity(.04),
-                          colors.black.withOpacity(.08),
-                          colors.black.withOpacity(.68),
+                          colors.black.withValues(alpha: .04),
+                          colors.black.withValues(alpha: .08),
+                          colors.black.withValues(alpha: .68),
                         ],
                       ),
                     ),

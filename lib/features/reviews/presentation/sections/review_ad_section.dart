@@ -1,16 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/reviews/application/controllers/review_controller.dart';
-import 'package:africaonlinestores/features/reviews/domain/review_model.dart';
 import 'package:africaonlinestores/features/reviews/application/navigation/reviews_routes.dart';
+import 'package:africaonlinestores/features/reviews/domain/review_model.dart';
 import 'package:africaonlinestores/features/reviews/presentation/widgets/review_card.dart';
 import 'package:africaonlinestores/features/reviews/presentation/widgets/section_outlined_button.dart';
-
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ReviewAdSection extends ConsumerWidget {
   const ReviewAdSection({
@@ -65,7 +62,7 @@ class ReviewAdSection extends ConsumerWidget {
             ...visibleReviews.map(
               (review) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: Container(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: colors.border,
                     borderRadius: BorderRadius.circular(16),
@@ -113,7 +110,7 @@ class ReviewAdSection extends ConsumerWidget {
         if (totalReviews > 4) ...[
           const SizedBox(height: 8),
           SectionOutlineButton(
-            text: "See all reviews",
+            text: 'See all reviews',
             onTap: () => ReviewNavigation.toAllReviews(context, adId),
           ),
         ],

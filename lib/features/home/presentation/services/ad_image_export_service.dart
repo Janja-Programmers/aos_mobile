@@ -1,15 +1,13 @@
 import 'dart:io';
 
+import 'package:africaonlinestores/core/api/api_client.dart';
+import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
-
-import 'package:africaonlinestores/core/api/api_client.dart';
-import 'package:africaonlinestores/core/providers.dart';
-import 'package:africaonlinestores/core/utils/logger.dart';
-
-import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 
 final adImageExportServiceProvider = Provider<AdImageExportService>((ref) {
   final apiClient = ref.watch(apiClientProvider);
@@ -83,7 +81,6 @@ class AdImageExportService {
       await _apiClient.dio.download(
         resolvedUrl,
         temporaryFile.path,
-        deleteOnError: true,
         options: Options(
           followRedirects: true,
           receiveTimeout: const Duration(seconds: 45),
@@ -92,7 +89,7 @@ class AdImageExportService {
         ),
       );
 
-      if (!await temporaryFile.exists()) {
+      if (!temporaryFile.existsSync()) {
         throw const AdImageExportException(
           'The image was downloaded, but the temporary file was not created.',
         );
@@ -211,7 +208,7 @@ class AdImageExportService {
     final directory = Directory.systemTemp;
 
     try {
-      if (!await directory.exists()) {
+      if (!directory.existsSync()) {
         return;
       }
 
@@ -245,7 +242,7 @@ class AdImageExportService {
 
   static Future<void> _deleteTemporaryFile(File file) async {
     try {
-      if (await file.exists()) {
+      if (file.existsSync()) {
         await file.delete();
       }
     } catch (error, stackTrace) {

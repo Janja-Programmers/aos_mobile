@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/shared/shimmer/app_shimmer.dart';
+import 'package:flutter/material.dart';
 
 /// Centralized network image widget used across the app
 ///

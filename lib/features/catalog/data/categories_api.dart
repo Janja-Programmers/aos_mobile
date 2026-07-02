@@ -1,11 +1,10 @@
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:dio/dio.dart';
 
 class CategoriesApi {
   CategoriesApi(this._client);
@@ -15,7 +14,7 @@ class CategoriesApi {
     bool includeInactive = false,
   }) async {
     try {
-      final res = await _client.dio.get(
+      final res = await _client.dio.get<Map<String, dynamic>>(
         ApiEndpoints.getCategoriesEndpoint,
         queryParameters: {if (includeInactive) 'include_inactive': 1},
       );

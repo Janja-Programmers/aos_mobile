@@ -1,10 +1,9 @@
 import 'dart:async';
 
-import 'package:africaonlinestores/features/connect/voice/voice_sound_feedback_service.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/features/connect/voice/audio_recorder_service.dart';
 import 'package:africaonlinestores/features/connect/voice/voice_record_state.dart';
+import 'package:africaonlinestores/features/connect/voice/voice_sound_feedback_service.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class VoiceRecordController extends StateNotifier<VoiceRecordState> {
   VoiceRecordController(this._service, this._soundService)

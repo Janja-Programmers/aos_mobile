@@ -1,14 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
-import 'package:africaonlinestores/features/onboarding/steps/welcome_step.dart';
-import 'package:africaonlinestores/features/onboarding/steps/language_step.dart';
 import 'package:africaonlinestores/features/onboarding/steps/country_step.dart';
 import 'package:africaonlinestores/features/onboarding/steps/currency_step.dart';
+import 'package:africaonlinestores/features/onboarding/steps/language_step.dart';
+import 'package:africaonlinestores/features/onboarding/steps/welcome_step.dart';
 import 'package:africaonlinestores/features/onboarding/widgets/progress_indicator.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});

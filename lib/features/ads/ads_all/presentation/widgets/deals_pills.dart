@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
+import 'package:flutter/material.dart';
 
 class DealsPills extends StatefulWidget {
   const DealsPills({super.key, required this.selected, required this.onSelect});
@@ -125,7 +124,7 @@ class _DealsPillsState extends State<DealsPills> {
 
           final icon = _icon(type);
 
-          final key = _itemKeys.putIfAbsent(i, () => GlobalKey());
+          final key = _itemKeys.putIfAbsent(i, GlobalKey.new);
 
           return Padding(
             key: key,
@@ -138,7 +137,6 @@ class _DealsPillsState extends State<DealsPills> {
               showCheckmark: false,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(999),
-                side: BorderSide.none,
               ),
               label: Row(
                 mainAxisSize: MainAxisSize.min,

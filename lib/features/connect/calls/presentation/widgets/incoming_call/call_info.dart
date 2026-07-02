@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:flutter/material.dart';
 
 class CallInfo extends StatelessWidget {
   final String name;

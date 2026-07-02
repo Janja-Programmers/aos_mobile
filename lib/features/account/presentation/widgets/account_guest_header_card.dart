@@ -1,9 +1,7 @@
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/core.dart';
-
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:go_router/go_router.dart';
 
 class AccountGuestHeaderCard extends StatelessWidget {
@@ -26,11 +24,13 @@ class AccountGuestHeaderCard extends StatelessWidget {
     final colors = context.appColors;
     final l10n = context.l10n;
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outlineVariant.withOpacity(0.25)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.25),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
@@ -41,12 +41,12 @@ class AccountGuestHeaderCard extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: scheme.error.withOpacity(0.12),
+                color: scheme.error.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
                 Icons.person_outline,
-                color: scheme.error.withOpacity(0.85),
+                color: scheme.error.withValues(alpha: 0.85),
                 size: 26,
               ),
             ),
@@ -80,7 +80,7 @@ class AccountGuestHeaderCard extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         shape: const StadiumBorder(),
                         side: BorderSide(
-                          color: scheme.onSurface.withOpacity(0.30),
+                          color: scheme.onSurface.withValues(alpha: 0.30),
                         ),
                         foregroundColor: scheme.primary,
                       ),

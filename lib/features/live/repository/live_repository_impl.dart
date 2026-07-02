@@ -1,6 +1,6 @@
 import 'package:africaonlinestores/features/live/data/live_api.dart';
-import 'package:africaonlinestores/features/live/domain/live_stream.dart';
 import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
+import 'package:africaonlinestores/features/live/domain/live_stream.dart';
 
 // ================= ABSTRACT =================
 abstract class LiveRepository {

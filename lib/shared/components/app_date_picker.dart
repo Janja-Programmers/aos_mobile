@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 Future<DateTime?> showAppDatePicker({
   required BuildContext context,
@@ -16,7 +15,6 @@ Future<DateTime?> showAppDatePicker({
     initialDate: initialDate ?? DateTime.now(),
     firstDate: firstDate ?? DateTime.now(),
     lastDate: lastDate ?? DateTime(2100),
-    initialEntryMode: DatePickerEntryMode.calendar,
 
     builder: (context, child) {
       return Theme(

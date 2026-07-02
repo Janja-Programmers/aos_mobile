@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:flutter/material.dart';
 
 class AdSubmitSuccessDialog extends StatelessWidget {
   const AdSubmitSuccessDialog({super.key});
@@ -25,7 +24,7 @@ class AdSubmitSuccessDialog extends StatelessWidget {
               width: 70,
               height: 70,
               decoration: BoxDecoration(
-                color: colors.success.withOpacity(0.15),
+                color: colors.success.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(

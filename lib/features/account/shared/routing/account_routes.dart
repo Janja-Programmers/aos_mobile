@@ -1,17 +1,15 @@
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
 import 'package:africaonlinestores/features/account/presentation/account_screen.dart';
+import 'package:africaonlinestores/features/account/presentation/screens/delete_account_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/notification_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/password_security_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/privacy_policy_screen.dart';
+import 'package:africaonlinestores/features/account/presentation/screens/restore_account_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/terms_conditions_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/user_preference_screen.dart';
-import 'package:africaonlinestores/features/account/presentation/screens/delete_account_screen.dart';
-import 'package:africaonlinestores/features/account/presentation/screens/restore_account_screen.dart';
 import 'package:africaonlinestores/features/activity/presentation/screens/activity_center_screen.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/presentation/user_verification_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class AccountRoutes {
   const AccountRoutes._();

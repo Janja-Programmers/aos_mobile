@@ -22,7 +22,7 @@ class ReactionChips extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
           decoration: BoxDecoration(
             color: reaction.reactedByMe
-                ? colors.primary.withOpacity(0.16)
+                ? colors.primary.withValues(alpha: 0.16)
                 : colors.elevated,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(

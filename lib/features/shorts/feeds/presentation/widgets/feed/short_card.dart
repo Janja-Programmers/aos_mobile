@@ -1,14 +1,11 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
-
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/bottom_caption_overlay.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/right_metrics_overlay.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/short_badge.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/short_thumbnail.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:flutter/material.dart';
 
 class ShortCard extends StatelessWidget {
   final Short short;
@@ -23,7 +20,7 @@ class ShortCard extends StatelessWidget {
     final caption = short.caption.toString().trim();
     final imageUrl = short.thumbnailUrl ?? '';
 
-    final sellerName = short.sellerShopName.trim().isNotEmpty == true
+    final sellerName = short.sellerShopName.trim().isNotEmpty
         ? short.sellerShopName.trim()
         : 'Shop';
 
@@ -34,12 +31,11 @@ class ShortCard extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: Container(
+        child: DecoratedBox(
           decoration: BoxDecoration(
             color: colors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.border.withOpacity(.55)),
+            border: Border.all(color: colors.border.withValues(alpha: .55)),
           ),
           child: Stack(
             children: [
@@ -53,9 +49,9 @@ class ShortCard extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          colors.black.withOpacity(.04),
-                          colors.black.withOpacity(.08),
-                          colors.black.withOpacity(.68),
+                          colors.black.withValues(alpha: .04),
+                          colors.black.withValues(alpha: .08),
+                          colors.black.withValues(alpha: .68),
                         ],
                       ),
                     ),
@@ -153,9 +149,9 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: colors.black.withOpacity(.58),
+        color: colors.black.withValues(alpha: .58),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: colors.white.withOpacity(.26)),
+        border: Border.all(color: colors.white.withValues(alpha: .26)),
       ),
       child: Text(
         label,

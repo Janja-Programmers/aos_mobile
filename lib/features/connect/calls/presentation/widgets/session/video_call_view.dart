@@ -1,14 +1,13 @@
 import 'dart:ui' as ui;
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:flutter/material.dart';
-import 'package:livekit_client/livekit_client.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/managers/call_manager.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/session/call_control_dock.dart';
+import 'package:flutter/material.dart';
+import 'package:livekit_client/livekit_client.dart';
 
 class VideoCallView extends StatefulWidget {
   final CallState callState;
@@ -345,7 +344,7 @@ class _PictureInPictureCanvas extends StatelessWidget {
             bottom: 8,
             child: Icon(
               slot.isLocal ? Icons.person : Icons.person_outline,
-              color: colors.white.withOpacity(0.82),
+              color: colors.white.withValues(alpha: 0.82),
               size: 16,
             ),
           ),
@@ -395,7 +394,7 @@ class _VideoPlaceholder extends StatelessWidget {
     final avatarSize = large ? 112.0 : 48.0;
     final colors = context.appColors;
 
-    return Container(
+    return ColoredBox(
       color: const Color(0xFF0B141A),
       child: Center(
         child: Column(
@@ -423,7 +422,7 @@ class _VideoPlaceholder extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: colors.white.withOpacity(0.72),
+                    color: colors.white.withValues(alpha: 0.72),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -453,7 +452,7 @@ class _ParticipantAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: const Color(0xFF263238),
-        border: Border.all(color: const Color(0x26FFFFFF), width: 1),
+        border: Border.all(color: const Color(0x26FFFFFF)),
       ),
       clipBehavior: Clip.antiAlias,
       child: avatarUrl != null && avatarUrl.isNotEmpty
@@ -521,12 +520,10 @@ class _VideoCallTopBar extends StatelessWidget {
               ),
             ),
             Align(
-              alignment: Alignment.center,
               child: Padding(
                 padding: const EdgeInsets.only(left: 58),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       name,
@@ -537,8 +534,8 @@ class _VideoCallTopBar extends StatelessWidget {
                         color: colors.white,
                         fontSize: 19,
                         fontWeight: FontWeight.w700,
-                        shadows: [
-                          const Shadow(
+                        shadows: const [
+                          Shadow(
                             color: Colors.black87,
                             blurRadius: 8,
                             offset: Offset(0, 1),
@@ -553,7 +550,7 @@ class _VideoCallTopBar extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: colors.white.withOpacity(0.82),
+                        color: colors.white.withValues(alpha: 0.82),
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         shadows: const [
@@ -700,8 +697,8 @@ class _VideoScrim extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.center,
             colors: [
-              colors.black.withOpacity(0.48),
-              colors.black.withOpacity(0.08),
+              colors.black.withValues(alpha: 0.48),
+              colors.black.withValues(alpha: 0.08),
               Colors.transparent,
             ],
             stops: const [0, 0.56, 1],

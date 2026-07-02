@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
+import 'package:flutter/material.dart';
 
 class ParentsRail extends StatelessWidget {
   const ParentsRail({
@@ -47,7 +45,7 @@ class ParentsRail extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               decoration: BoxDecoration(
                 color: selected
-                    ? scheme.primary.withOpacity(0.08)
+                    ? scheme.primary.withValues(alpha: 0.08)
                     : context.appColors.surface,
                 border: Border(
                   left: BorderSide(

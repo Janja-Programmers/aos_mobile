@@ -356,7 +356,7 @@ class _OrbitWheel extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(.96),
+                  color: Colors.white.withValues(alpha: .96),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
@@ -428,7 +428,6 @@ class _KenyanAccentPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(0, h * .265, w, h * .022), paint);
 
     paint.shader = RadialGradient(
-      center: Alignment.center,
       radius: .82,
       colors: [
         const Color(0xFFC1121F).withAlpha(70),

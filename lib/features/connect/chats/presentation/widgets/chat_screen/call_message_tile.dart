@@ -1,14 +1,13 @@
-import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
+import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 import 'package:africaonlinestores/features/connect/calls/navigation/call_routes.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CallMessageTile extends ConsumerWidget {
   final ChatMessage message;
@@ -85,8 +84,8 @@ class CallMessageTile extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: failedLike
-                      ? colors.red.withOpacity(.18)
-                      : colors.border.withOpacity(.75),
+                      ? colors.red.withValues(alpha: .18)
+                      : colors.border.withValues(alpha: .75),
                 ),
               ),
               child: Row(
@@ -96,7 +95,7 @@ class CallMessageTile extends ConsumerWidget {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: iconColor.withOpacity(.14),
+                      color: iconColor.withValues(alpha: .14),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(icon, color: iconColor, size: 20),
@@ -124,7 +123,7 @@ class CallMessageTile extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: isMe
-                                ? colors.white.withOpacity(.78)
+                                ? colors.white.withValues(alpha: .78)
                                 : failedLike
                                 ? colors.red
                                 : colors.textMuted,

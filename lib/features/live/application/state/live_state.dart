@@ -1,11 +1,9 @@
-import 'package:flutter/foundation.dart';
-
-import 'package:africaonlinestores/features/live/domain/live_stream.dart';
-import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
-import 'package:africaonlinestores/features/live/domain/live_role.dart';
-
 import 'package:africaonlinestores/features/live/application/state/live_status_enum.dart';
 import 'package:africaonlinestores/features/live/application/state/room_state_enum.dart';
+import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
+import 'package:africaonlinestores/features/live/domain/live_role.dart';
+import 'package:africaonlinestores/features/live/domain/live_stream.dart';
+import 'package:flutter/foundation.dart';
 
 @immutable
 class LiveState {

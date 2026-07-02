@@ -1,12 +1,11 @@
-import 'package:flutter_riverpod/legacy.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
-
-import 'package:africaonlinestores/features/live/comments/live_comments_state.dart';
-import 'package:africaonlinestores/features/live/comments/live_comments_api.dart';
 import 'package:africaonlinestores/features/live/comments/live_comment.dart';
 import 'package:africaonlinestores/features/live/comments/live_comment_mapper.dart';
 import 'package:africaonlinestores/features/live/comments/live_comment_model.dart';
+import 'package:africaonlinestores/features/live/comments/live_comments_api.dart';
+import 'package:africaonlinestores/features/live/comments/live_comments_state.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final liveCommentsControllerProvider =
     StateNotifierProvider<LiveCommentsController, LiveCommentsState>((ref) {
@@ -138,11 +137,11 @@ class LiveCommentsController extends StateNotifier<LiveCommentsState> {
   void insertFromRealtime(Map<String, dynamic> json) {
     final raw = json['message'] ?? json['comment'] ?? json;
     if (raw is! Map) return;
-    final model = LiveCommentModel.fromJson(Map<String, dynamic>.from(raw));
+    final model = LiveCommentModel.fromJson(asJsonMap(raw));
     if (model.id.isEmpty) return;
     final comment = LiveCommentMapper.toDomain(model);
     if (state.comments.any((item) => item.id == comment.id)) return;
-    _insertComment(comment, limit: 50);
+    _insertComment(comment);
   }
 
   void removeFromRealtime(String commentId) {

@@ -1,15 +1,14 @@
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_follow_result.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_like_result.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_save_result.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_follow_result.dart';
+import 'package:dio/dio.dart';
 
 class ShortsEngagementApi {
   final ApiClient _client;
@@ -27,10 +26,11 @@ class ShortsEngagementApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final data = _payload(json);
         final resultShortId = data['short_id']?.toString() ?? shortId;
-        final likedRaw = data['liked'] ?? data['viewer_state']?['is_liked'];
+        final viewerState = asJsonMap(data['viewer_state']);
+        final likedRaw = data['liked'] ?? viewerState['is_liked'];
 
         if (likedRaw == null) {
           return Either.left(const Failure('Invalid toggle like response'));
@@ -58,7 +58,7 @@ class ShortsEngagementApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final data = _payload(json);
 
         final resultTargetUser =
@@ -110,10 +110,11 @@ class ShortsEngagementApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold((failure) => Either.left(failure), (json) {
+      return unwrapped.fold(Either.left, (json) {
         final data = _payload(json);
         final resultShortId = data['short_id']?.toString() ?? shortId;
-        final savedRaw = data['saved'] ?? data['viewer_state']?['is_saved'];
+        final viewerState = asJsonMap(data['viewer_state']);
+        final savedRaw = data['saved'] ?? viewerState['is_saved'];
 
         if (savedRaw == null) {
           return Either.left(const Failure('Invalid toggle save response'));
@@ -140,14 +141,12 @@ class ShortsEngagementApi {
   }
 
   static Map<String, dynamic> _payload(Map<String, dynamic> json) {
-    if (json['data'] is Map<String, dynamic>) {
-      return json['data'] as Map<String, dynamic>;
-    }
+    final data = asJsonMap(json['data']);
+    if (data.isNotEmpty) return data;
 
-    if (json['message'] is Map<String, dynamic> &&
-        json['message']['data'] is Map<String, dynamic>) {
-      return json['message']['data'] as Map<String, dynamic>;
-    }
+    final message = asJsonMap(json['message']);
+    final nestedData = asJsonMap(message['data']);
+    if (nestedData.isNotEmpty) return nestedData;
 
     return json;
   }

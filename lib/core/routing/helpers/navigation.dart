@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/shared/enums/ads_mode.dart';
 import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
-import 'package:africaonlinestores/shared/enums/ads_mode.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 void openAllAds(
   BuildContext context, {
@@ -19,7 +18,7 @@ void openAllAds(
       if (categoryId != null && categoryId.isNotEmpty) 'category': categoryId,
 
       if (dealType != null && dealType.apiValue != null)
-        'promotion_type': dealType.apiValue!,
+        'promotion_type': dealType.apiValue,
 
       if (sort != null) 'sort': sort.apiValue,
 

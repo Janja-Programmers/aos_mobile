@@ -1,22 +1,21 @@
 import 'dart:io';
 
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_pending_attachment.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/attachment_preview.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/chat_attachment_sheet.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/chat_input_attachment_helper.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/input_icon_button.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/voice_record_button.dart';
+import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
-
-import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
-import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
-import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_pending_attachment.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/chat_attachment_sheet.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/chat_input_attachment_helper.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/attachment_preview.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/input_icon_button.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/voice_record_button.dart';
 
 class ChatAttachmentUploadException implements Exception {
   final String message;
@@ -35,7 +34,7 @@ class ChatInputBar extends ConsumerStatefulWidget {
   })
   onSend;
 
-  final Function(bool isTyping) onTyping;
+  final ValueChanged<bool> onTyping;
   final String? adId;
 
   const ChatInputBar({
@@ -212,7 +211,7 @@ https://maps.google.com/?q=${picked.latitude},${picked.longitude}''';
 
     final file = File(path);
 
-    if (!await file.exists()) return;
+    if (!file.existsSync()) return;
 
     final filename = file.path.split(Platform.pathSeparator).last;
     final extension = filename.contains('.')
@@ -222,7 +221,7 @@ https://maps.google.com/?q=${picked.latitude},${picked.longitude}''';
     appLogger.i('Audio path: ${file.path}');
     appLogger.i('Audio filename: $filename');
     appLogger.i('Audio extension: $extension');
-    appLogger.i('Audio size: ${await file.length()} bytes');
+    appLogger.i('Audio size: ${file.lengthSync()} bytes');
 
     setState(() {
       _attachments.add(ChatPendingAttachment(file: file, type: 'audio'));
@@ -232,7 +231,7 @@ https://maps.google.com/?q=${picked.latitude},${picked.longitude}''';
   }
 
   Widget _buildInputRow(
-    dynamic colors,
+    AppColorTokens colors,
     InputDecorationThemeData inputDecorationTheme,
   ) {
     return Padding(
@@ -250,7 +249,7 @@ https://maps.google.com/?q=${picked.latitude},${picked.longitude}''';
                 border: Border.all(color: colors.border),
                 boxShadow: [
                   BoxShadow(
-                    color: colors.black.withOpacity(0.06),
+                    color: colors.black.withValues(alpha: 0.06),
                     blurRadius: 10,
                     offset: const Offset(0, 3),
                   ),
@@ -319,7 +318,7 @@ https://maps.google.com/?q=${picked.latitude},${picked.longitude}''';
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: colors.black.withOpacity(0.08),
+                      color: colors.black.withValues(alpha: 0.08),
                       blurRadius: 10,
                       offset: const Offset(0, 3),
                     ),
@@ -358,7 +357,7 @@ https://maps.google.com/?q=${picked.latitude},${picked.longitude}''';
     final colors = context.appColors;
     final inputDecorationTheme = Theme.of(context).inputDecorationTheme;
 
-    return Container(
+    return ColoredBox(
       color: colors.surface,
       child: Column(
         mainAxisSize: MainAxisSize.min,

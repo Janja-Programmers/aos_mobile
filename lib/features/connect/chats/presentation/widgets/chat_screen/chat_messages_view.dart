@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_messages_controller.dart';
@@ -7,8 +6,8 @@ import 'package:africaonlinestores/features/connect/chats/domain/chat_message.da
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_background.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_date_separator.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble.dart';
-
 import 'package:africaonlinestores/shared/utils/format_time.dart';
+import 'package:flutter/material.dart';
 
 class ChatMessagesView extends StatelessWidget {
   final ChatMessagesState messagesState;
@@ -66,7 +65,7 @@ class ChatMessagesView extends StatelessWidget {
         first.day == second.day;
   }
 
-  Widget _buildContent(BuildContext context, dynamic colors) {
+  Widget _buildContent(BuildContext context, AppColorTokens colors) {
     if (messagesState.isInitialLoading && messagesState.messages.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }

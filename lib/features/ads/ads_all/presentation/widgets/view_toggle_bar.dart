@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/enums/ads_mode.dart';
+import 'package:flutter/material.dart';
 
 class ViewToggleBar extends StatelessWidget {
   const ViewToggleBar({

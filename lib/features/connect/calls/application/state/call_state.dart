@@ -1,10 +1,9 @@
-import 'package:flutter/foundation.dart';
-import 'package:livekit_client/livekit_client.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
+import 'package:flutter/foundation.dart';
+import 'package:livekit_client/livekit_client.dart';
 
 @immutable
 class CallState {
@@ -73,32 +72,20 @@ class CallState {
     return const CallState(
       uiPhase: UiCallPhase.idle,
       backendStatus: null,
-      room: null,
-      activeCall: null,
-      caller: null,
-      receiver: null,
       callMediaMode: CallMediaMode.audio,
       isUpgradePending: false,
       videoUpgradeStatus: 'none',
-      videoUpgradeRequestedBy: null,
       hasIncomingVideoUpgradeRequest: false,
-      videoUpgradeErrorMessage: null,
       isMuted: false,
       isSpeakerOn: false,
       isRemoteVideoEnabled: true,
       isLocalVideoEnabled: true,
       duration: Duration.zero,
-      errorMessage: null,
       isBusy: false,
       hasIncomingCallUi: false,
       hasActiveRoom: false,
-      direction: null,
-      roomName: null,
-      token: null,
-      wsUrl: null,
       callLogs: [],
       isLoadingHistory: false,
-      historyErrorMessage: null,
     );
   }
 

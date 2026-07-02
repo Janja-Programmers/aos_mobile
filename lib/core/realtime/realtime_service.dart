@@ -1,11 +1,10 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/realtime/realtime_event.dart';
+import 'package:africaonlinestores/core/realtime/realtime_event_type.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 // ignore: library_prefixes
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-
-import 'package:africaonlinestores/core/realtime/realtime_event.dart';
-import 'package:africaonlinestores/core/realtime/realtime_event_type.dart';
 
 class RealtimeService {
   RealtimeService(/* deps */);
@@ -38,7 +37,7 @@ class RealtimeService {
       return;
     }
 
-    final url = "$baseUrl/$siteName";
+    final url = '$baseUrl/$siteName';
 
     _socket = IO.io(
       url,
@@ -92,7 +91,7 @@ class RealtimeService {
   // -----------------------------
   // Emit
   // -----------------------------
-  void emit(String event, dynamic data) {
+  void emit(String event, Object? data) {
     if (!_isConnected) return;
     _socket?.emit(event, data);
   }
@@ -125,6 +124,6 @@ class RealtimeService {
   // -----------------------------
   void dispose() {
     disconnect();
-    _controller.close();
+    unawaited(_controller.close());
   }
 }

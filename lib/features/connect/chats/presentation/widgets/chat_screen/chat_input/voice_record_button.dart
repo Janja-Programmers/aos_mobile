@@ -1,11 +1,10 @@
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/connect/voice/voice_record_overlay.dart';
+import 'package:africaonlinestores/features/connect/voice/voice_record_provider.dart';
+import 'package:africaonlinestores/features/connect/voice/voice_record_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/features/connect/voice/voice_record_provider.dart';
-import 'package:africaonlinestores/features/connect/voice/voice_record_overlay.dart';
-import 'package:africaonlinestores/features/connect/voice/voice_record_state.dart';
 
 class VoiceRecordButton extends ConsumerWidget {
   const VoiceRecordButton({

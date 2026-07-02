@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:flutter/material.dart';
 
 /// Promo carousel shown at the top of the home feed.
 class HomeHeroCarouselSection extends StatelessWidget {
@@ -136,7 +135,7 @@ class _PromoCard extends StatelessWidget {
             child: Icon(
               model.icon,
               size: 120,
-              color: colors.white.withOpacity(0.1),
+              color: colors.white.withValues(alpha: 0.1),
             ),
           ),
 
@@ -185,7 +184,7 @@ class _PromoCard extends StatelessWidget {
                   style: context.subtitle.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: colors.white.withOpacity(0.9),
+                    color: colors.white.withValues(alpha: 0.9),
                   ),
                 ),
 
@@ -196,7 +195,7 @@ class _PromoCard extends StatelessWidget {
                   model.description,
                   style: context.body.copyWith(
                     fontSize: 12,
-                    color: colors.white.withOpacity(0.7),
+                    color: colors.white.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -211,7 +210,7 @@ class _PromoCard extends StatelessWidget {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: colors.white.withOpacity(0.2),
+                color: colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               alignment: Alignment.center,

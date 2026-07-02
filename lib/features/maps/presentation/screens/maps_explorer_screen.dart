@@ -1,12 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_tts/flutter_tts.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:go_router/go_router.dart';
-import 'package:maplibre_gl/maplibre_gl.dart';
-
 import 'package:africaonlinestores/core/location/location_service.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
@@ -23,6 +16,12 @@ import 'package:africaonlinestores/features/maps/presentation/widgets/floating_m
 import 'package:africaonlinestores/features/maps/presentation/widgets/status_bottom_sheet.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 
 class MapsExplorerScreen extends ConsumerStatefulWidget {
   const MapsExplorerScreen({super.key, this.initialSellerId});
@@ -94,7 +93,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
   void dispose() {
     _sellerController.dispose();
     _radiusController.dispose();
-    _positionSubscription?.cancel();
+    unawaited(_positionSubscription?.cancel());
     _navigationRefreshTimer?.cancel();
     _mapPointDebounce?.cancel();
     _tts.stop();
@@ -352,13 +351,11 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
             currentLatitude: origin.latitude,
             currentLongitude: origin.longitude,
             destinationSeller: seller,
-            costing: 'auto',
           )
         : await _mapsApi.getRouteToSeller(
             originLatitude: origin.latitude,
             originLongitude: origin.longitude,
             destinationSeller: seller,
-            costing: 'auto',
           );
 
     if (!mounted) return;
@@ -488,7 +485,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
             await _map?.animateCamera(CameraUpdate.newLatLng(current));
             await _updateNavigationProgress(current);
           },
-          onError: (error) {
+          onError: (Object error) {
             if (mounted) _snack(error.toString(), error: true);
           },
         );
@@ -500,7 +497,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
   }
 
   void _stopNavigation({bool keepRoute = true}) {
-    _positionSubscription?.cancel();
+    unawaited(_positionSubscription?.cancel());
     _navigationRefreshTimer?.cancel();
     _positionSubscription = null;
     _navigationRefreshTimer = null;
@@ -659,7 +656,6 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
       currentLatitude: user.latitude,
       currentLongitude: user.longitude,
       destinationSeller: seller,
-      costing: 'auto',
     );
 
     if (!mounted) return;
@@ -856,7 +852,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
       maxHeightFactor: 0.30,
       actions: [
         FilledButton.icon(
-          onPressed: _loading ? null : () => _loadMapPoints(),
+          onPressed: _loading ? null : _loadMapPoints,
           icon: const Icon(Icons.refresh_rounded),
           label: const Text('Refresh'),
         ),
@@ -923,9 +919,9 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
             label: const Text('Load seller'),
           ),
         ],
-        if (loc?.hasLocation == true && route == null)
+        if ((loc?.hasLocation ?? false) && route == null)
           FilledButton.icon(
-            onPressed: () => _routeToSelectedSeller(),
+            onPressed: _routeToSelectedSeller,
             icon: const Icon(Icons.directions_rounded),
             label: const Text('Directions'),
           ),
@@ -965,7 +961,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
             padding: EdgeInsets.only(top: 8),
             child: LinearProgressIndicator(),
           ),
-        if (loc?.hasLocation == true) ...[
+        if (loc?.hasLocation ?? false) ...[
           const SizedBox(height: 6),
           Text(
             loc!.shortLabel.isNotEmpty
@@ -989,7 +985,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
           TextButton.icon(
             onPressed: () {
               final seller = _storefrontLocation?.seller;
-              if (seller?.isNotEmpty == true) {
+              if (seller?.isNotEmpty ?? false) {
                 SellerNavigation.toSellerStore(context, seller!);
               }
             },
@@ -1097,7 +1093,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
               ),
               IconButton(
                 tooltip: 'Stop navigation',
-                onPressed: () => _stopNavigation(keepRoute: true),
+                onPressed: _stopNavigation,
                 icon: const Icon(Icons.close_rounded, color: Colors.white),
               ),
             ],
@@ -1262,7 +1258,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
 }
 
 String _hexColor(Color color) {
-  final rgb = color.value & 0x00FFFFFF;
+  final rgb = color.toARGB32() & 0x00FFFFFF;
   return '#${rgb.toRadixString(16).padLeft(6, '0').toUpperCase()}';
 }
 

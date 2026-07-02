@@ -1,203 +1,203 @@
 class ApiEndpoints {
   // Authentication Endpoints
-  static final String loginEndpoint = '/api/method/aos.api.auth.login';
-  static final String registerEndpoint = '/api/method/aos.api.auth.register';
-  static final String verifyOtpEndpoint =
+  static const String loginEndpoint = '/api/method/aos.api.auth.login';
+  static const String registerEndpoint = '/api/method/aos.api.auth.register';
+  static const String verifyOtpEndpoint =
       '/api/method/aos.api.auth.verify_email_otp';
-  static final String resendOtpEndpoint =
+  static const String resendOtpEndpoint =
       '/api/method/aos.api.auth.resend_email_otp';
-  static final String forgotPasswordRequestEndpoint =
+  static const String forgotPasswordRequestEndpoint =
       '/api/method/aos.api.auth.forgot_password_request';
-  static final String forgotPasswordVerifyOtpEndpoint =
+  static const String forgotPasswordVerifyOtpEndpoint =
       '/api/method/aos.api.auth.forgot_password_verify_otp';
-  static final String forgotPasswordResetEndpoint =
+  static const String forgotPasswordResetEndpoint =
       '/api/method/aos.api.auth.forgot_password_reset';
-  static final String meEndpoint = '/api/method/aos.api.auth.me';
-  static final String logoutEndpoint = '/api/method/aos.api.auth.logout';
-  static final String changePasswordEndpoint =
+  static const String meEndpoint = '/api/method/aos.api.auth.me';
+  static const String logoutEndpoint = '/api/method/aos.api.auth.logout';
+  static const String changePasswordEndpoint =
       '/api/method/aos.api.auth.change_password';
-  static final String googleLoginEndpoint =
+  static const String googleLoginEndpoint =
       '/api/method/aos.api.auth.google_login';
-  static final String appleLoginEndpoint =
+  static const String appleLoginEndpoint =
       '/api/method/aos.api.auth.apple_login';
 
   // Accounts Endpoints
-  static final String getProfileEndpoint =
+  static const String getProfileEndpoint =
       '/api/method/aos.api.accounts.get_profile';
-  static final String updateProfileEndpoint =
+  static const String updateProfileEndpoint =
       '/api/method/aos.api.accounts.update_profile';
-  static final String uploadFileEndpoint = '/api/method/upload_file';
-  static final String deleteFileEndpoint =
+  static const String uploadFileEndpoint = '/api/method/upload_file';
+  static const String deleteFileEndpoint =
       '/api/method/aos.api.files.delete_file';
-  static final String removeBackgroundEndpoint =
+  static const String removeBackgroundEndpoint =
       '/api/method/aos.api.files.remove_background';
 
   // Catalog Endpoints
-  static final String getCategoriesEndpoint =
+  static const String getCategoriesEndpoint =
       '/api/method/aos.api.catalog.get_categories';
-  static final String getCategorySchemaEndpoint =
+  static const String getCategorySchemaEndpoint =
       '/api/method/aos.api.catalog.get_category_schema';
 
   // Ads / Listings Endpoints
-  static final String getLocationsEndpoint =
+  static const String getLocationsEndpoint =
       '/api/method/aos.api.localization.get_locations';
-  static final String createAdEndpoint = '/api/method/aos.api.ads.create_ad';
-  static final String upsertAdDraftEndpoint =
+  static const String createAdEndpoint = '/api/method/aos.api.ads.create_ad';
+  static const String upsertAdDraftEndpoint =
       '/api/method/aos.api.ads.upsert_ad_draft';
-  static final String getAdDraftEndpoint =
+  static const String getAdDraftEndpoint =
       '/api/method/aos.api.ads.get_ad_draft';
-  static final String listAdDraftsEndpoint =
+  static const String listAdDraftsEndpoint =
       '/api/method/aos.api.ads.list_my_ad_drafts';
-  static final String submitAdDraftEndpoint =
+  static const String submitAdDraftEndpoint =
       '/api/method/aos.api.ads.submit_ad_draft';
-  static final String searchAdByImageEndpoint =
+  static const String searchAdByImageEndpoint =
       '/api/method/aos.api.ads.search_ads_by_image';
-  static final String setAdStatusEndpoint =
+  static const String setAdStatusEndpoint =
       '/api/method/aos.api.ads.set_ad_status';
-  static final String updateAdEndpoint = '/api/method/aos.api.ads.update_ad';
-  static final String abandonAdDraftEndpoint =
+  static const String updateAdEndpoint = '/api/method/aos.api.ads.update_ad';
+  static const String abandonAdDraftEndpoint =
       '/api/method/aos.api.ads.abandon_ad_draft';
 
   // Report Endpoints
-  static final String listReportReasonsEndpoint =
+  static const String listReportReasonsEndpoint =
       '/api/method/aos.api.reports.list_report_reasons';
-  static final String reportAdEndpoint =
+  static const String reportAdEndpoint =
       '/api/method/aos.api.reports.report_ad';
-  static final String reportShortEndpoint =
+  static const String reportShortEndpoint =
       '/api/method/aos.api.reports.report_short';
 
   // Reviews Endpoints
-  static final String createAdReviewEndpoint =
+  static const String createAdReviewEndpoint =
       '/api/method/aos.api.reviews.create_review';
-  static final String getAdReviewsEndpoint =
+  static const String getAdReviewsEndpoint =
       '/api/method/aos.api.reviews.list_reviews';
-  static final String toggleAdReviewEndpoint =
+  static const String toggleAdReviewEndpoint =
       '/api/method/aos.api.reviews.toggle_reaction';
-  static final String getReviewViewerState =
+  static const String getReviewViewerState =
       '/api/method/aos.api.reviews.get_review_viewer_state';
 
   // Wishlist Endpoints
-  static final String listWishlistEndpoint =
+  static const String listWishlistEndpoint =
       '/api/method/aos.api.wishlist.list_wishlist';
-  static final String toggleWishlistEndpoint =
+  static const String toggleWishlistEndpoint =
       '/api/method/aos.api.wishlist.toggle_wishlist';
 
   // Read Ads
-  static final String listAdsEndpoint = '/api/method/aos.api.ads.list_ads';
-  static final String myAdsEndpoint = '/api/method/aos.api.ads.list_my_ads';
-  static final String getAdEndpoint = '/api/method/aos.api.ads.get_ad';
-  static final String getMyAdEndpoint = '/api/method/aos.api.ads.get_my_ad';
+  static const String listAdsEndpoint = '/api/method/aos.api.ads.list_ads';
+  static const String myAdsEndpoint = '/api/method/aos.api.ads.list_my_ads';
+  static const String getAdEndpoint = '/api/method/aos.api.ads.get_ad';
+  static const String getMyAdEndpoint = '/api/method/aos.api.ads.get_my_ad';
 
   // Seller Endpoints
-  static final String getSellerEndpoint =
+  static const String getSellerEndpoint =
       '/api/method/aos.api.sellers.get_seller';
-  static final String listSellersEndpoint =
+  static const String listSellersEndpoint =
       '/api/method/aos.api.sellers.list_sellers';
-  static final String getMySellerStatusEndpoint =
+  static const String getMySellerStatusEndpoint =
       '/api/method/aos.api.sellers.get_my_seller_status';
-  static final String updateMySellerEndpoint =
+  static const String updateMySellerEndpoint =
       '/api/method/aos.api.sellers.update_my_seller';
 
   // Social Endpoints
-  static final String toggleFollowEndpoint =
+  static const String toggleFollowEndpoint =
       '/api/method/aos.api.social.toggle_follow';
-  static final String getFollowsEndpoint =
+  static const String getFollowsEndpoint =
       '/api/method/aos.api.social.get_followers';
-  static final String getFollowingEndpoint =
+  static const String getFollowingEndpoint =
       '/api/method/aos.api.social.get_following';
-  static final String getFriendsEndpoint =
+  static const String getFriendsEndpoint =
       '/api/method/aos.api.social.get_friends';
-  static final String getRelationshipStatusEndpoint =
+  static const String getRelationshipStatusEndpoint =
       '/api/method/aos.api.social.get_relationship_status';
 
   // Verification Endpoints
-  static final String submitVerificationEndpoint =
+  static const String submitVerificationEndpoint =
       '/api/method/aos.api.verification.submit_verification';
-  static final String getMyVerificationEndpoint =
+  static const String getMyVerificationEndpoint =
       '/api/method/aos.api.verification.get_my_verification';
-  static final String getMyUserVerificationEndpoint =
+  static const String getMyUserVerificationEndpoint =
       '/api/method/aos.api.verification.get_my_user_verification';
-  static final String submitUserVerificationEndpoint =
+  static const String submitUserVerificationEndpoint =
       '/api/method/aos.api.verification.submit_user_verification';
-  static final String sendUserVerificationOtpEndpoint =
+  static const String sendUserVerificationOtpEndpoint =
       '/api/method/aos.api.verification.send_user_phone_otp';
-  static final String verifyUserVerificationOtpEndpoint =
+  static const String verifyUserVerificationOtpEndpoint =
       '/api/method/aos.api.verification.verify_user_phone_otp';
 
   // Localization Endpoints
-  static final String getLocaleBundleEndpoint =
+  static const String getLocaleBundleEndpoint =
       '/api/method/aos.api.localization.get_locale_bundle';
-  static final String getMyPreferencesEndpoint =
+  static const String getMyPreferencesEndpoint =
       '/api/method/aos.api.accounts.get_my_preference';
-  static final String updatePreferencesEndpoint =
+  static const String updatePreferencesEndpoint =
       '/api/method/aos.api.accounts.update_my_preference';
 
   // Chat Endpoints
-  static final String openConversationEndpoint =
+  static const String openConversationEndpoint =
       '/api/method/aos.api.chat.open_conversation';
-  static final String listConversationsEndpoint =
+  static const String listConversationsEndpoint =
       '/api/method/aos.api.chat.list_conversations';
-  static final String deleteConversationEndpoint =
+  static const String deleteConversationEndpoint =
       '/api/method/aos.api.chat.delete_conversation';
-  static final String sendMessageEndpoint =
+  static const String sendMessageEndpoint =
       '/api/method/aos.api.chat.send_message';
-  static final String listMessagesEndpoint =
+  static const String listMessagesEndpoint =
       '/api/method/aos.api.chat.list_messages';
-  static final String editMessageEndpoint =
+  static const String editMessageEndpoint =
       '/api/method/aos.api.chat.edit_message';
-  static final String deleteMessagesEndpoint =
+  static const String deleteMessagesEndpoint =
       '/api/method/aos.api.chat.delete_messages';
-  static final String clearChatEndpoint = '/api/method/aos.api.chat.clear_chat';
-  static final String toggleMessageStarEndpoint =
+  static const String clearChatEndpoint = '/api/method/aos.api.chat.clear_chat';
+  static const String toggleMessageStarEndpoint =
       '/api/method/aos.api.chat.toggle_message_star';
-  static final String listStarredMessagesEndpoint =
+  static const String listStarredMessagesEndpoint =
       '/api/method/aos.api.chat.list_starred_messages';
-  static final String toggleMessageReactionEndpoint =
+  static const String toggleMessageReactionEndpoint =
       '/api/method/aos.api.chat.toggle_message_reaction';
-  static final String forwardMessageEndpoint =
+  static const String forwardMessageEndpoint =
       '/api/method/aos.api.chat.forward_message';
-  static final String translateMessageEndpoint =
+  static const String translateMessageEndpoint =
       '/api/method/aos.api.chat.translate_message';
-  static final String markDeliveredEndpoint =
+  static const String markDeliveredEndpoint =
       '/api/method/aos.api.chat.mark_delivered';
-  static final String markReadEndpoint = '/api/method/aos.api.chat.mark_read';
-  static final String typingEndpoint =
+  static const String markReadEndpoint = '/api/method/aos.api.chat.mark_read';
+  static const String typingEndpoint =
       '/api/method/aos.api.chat.send_typing_event';
 
   // CALL Endpoints
-  static final String initiateCallEndpoint =
+  static const String initiateCallEndpoint =
       '/api/method/aos.api.calls.initiate_call';
-  static final String rejectCallEndpoint =
+  static const String rejectCallEndpoint =
       '/api/method/aos.api.calls.reject_call';
-  static final String acceptCallEndpoint =
+  static const String acceptCallEndpoint =
       '/api/method/aos.api.calls.accept_call';
-  static final String getCallTokenEndpoint =
+  static const String getCallTokenEndpoint =
       '/api/method/aos.api.calls.get_call_token';
-  static final String endCallEndpoint = '/api/method/aos.api.calls.end_call';
-  static final String listCallsEndpoint =
+  static const String endCallEndpoint = '/api/method/aos.api.calls.end_call';
+  static const String listCallsEndpoint =
       '/api/method/aos.api.calls.list_calls';
-  static final String markCallRingingEndpoint =
+  static const String markCallRingingEndpoint =
       '/api/method/aos.api.calls.mark_call_ringing';
-  static final String cancelCallEndpoint =
+  static const String cancelCallEndpoint =
       '/api/method/aos.api.calls.cancel_call';
-  static final String getCallStatusEndpoint =
+  static const String getCallStatusEndpoint =
       '/api/method/aos.api.calls.get_call_status';
-  static final String getCallGroupDetailsEndpoint =
+  static const String getCallGroupDetailsEndpoint =
       '/api/method/aos.api.calls.get_call_group_details';
-  static final String deleteCallLogsEndpoint =
+  static const String deleteCallLogsEndpoint =
       '/api/method/aos.api.calls.delete_call_logs';
-  static final String clearCallHistoryEndpoint =
+  static const String clearCallHistoryEndpoint =
       '/api/method/aos.api.calls.clear_call_history';
-  static final String requestVideoUpgradeEndpoint =
+  static const String requestVideoUpgradeEndpoint =
       '/api/method/aos.api.calls.request_video_upgrade';
-  static final String respondVideoUpgradeEndpoint =
+  static const String respondVideoUpgradeEndpoint =
       '/api/method/aos.api.calls.respond_video_upgrade';
 
   // LIVE Endpoints
-  static final String startLiveEndpoint = '/api/method/aos.api.live.start_live';
-  static final String joinLiveEndpoint = '/api/method/aos.api.live.join_live';
-  static final String endLiveEndpoint = '/api/method/aos.api.live.end_live';
-  static final String getLiveEndpoint = '/api/method/aos.api.live.get_live';
+  static const String startLiveEndpoint = '/api/method/aos.api.live.start_live';
+  static const String joinLiveEndpoint = '/api/method/aos.api.live.join_live';
+  static const String endLiveEndpoint = '/api/method/aos.api.live.end_live';
+  static const String getLiveEndpoint = '/api/method/aos.api.live.get_live';
   static const String trackLiveJoinEndpoint =
       '/api/method/aos.api.live.track_join';
   static const String trackLiveLeaveEndpoint =
@@ -220,114 +220,114 @@ class ApiEndpoints {
   // ───────────── SHORTS ─────────────
 
   // FEED
-  static final String shortsFeedForYou =
+  static const String shortsFeedForYou =
       '/api/method/aos.api.shorts.feed_for_you';
-  static final String shortsFeedFollowing =
+  static const String shortsFeedFollowing =
       '/api/method/aos.api.shorts.feed_following';
-  static final String shortsFeedByAd = '/api/method/aos.api.shorts.feed_by_ad';
+  static const String shortsFeedByAd = '/api/method/aos.api.shorts.feed_by_ad';
 
   // MANAGEMENT
-  static final String getShort = '/api/method/aos.api.shorts.get_short';
-  static final String myShorts = '/api/method/aos.api.shorts.my_shorts';
-  static final String userShorts = '/api/method/aos.api.shorts.user_shorts';
-  static final String savedShorts = '/api/method/aos.api.shorts.saved_shorts';
-  static final String likedShorts = '/api/method/aos.api.shorts.liked_shorts';
-  static final String repostedShorts =
+  static const String getShort = '/api/method/aos.api.shorts.get_short';
+  static const String myShorts = '/api/method/aos.api.shorts.my_shorts';
+  static const String userShorts = '/api/method/aos.api.shorts.user_shorts';
+  static const String savedShorts = '/api/method/aos.api.shorts.saved_shorts';
+  static const String likedShorts = '/api/method/aos.api.shorts.liked_shorts';
+  static const String repostedShorts =
       '/api/method/aos.api.shorts.reposted_shorts';
-  static final String deleteShort = '/api/method/aos.api.shorts.delete_short';
-  static final String retryProcessing =
+  static const String deleteShort = '/api/method/aos.api.shorts.delete_short';
+  static const String retryProcessing =
       '/api/method/aos.api.shorts.retry_processing';
 
   // UPLOAD
-  static final String initShortUpload =
+  static const String initShortUpload =
       '/api/method/aos.api.shorts.init_upload';
-  static final String confirmShortUpload =
+  static const String confirmShortUpload =
       '/api/method/aos.api.shorts.confirm_upload';
-  static final String updateShortMetadata =
+  static const String updateShortMetadata =
       '/api/method/aos.api.shorts.update_short_metadata';
 
   // ENGAGEMENT
-  static final String toggleShortLike =
+  static const String toggleShortLike =
       '/api/method/aos.api.shorts.toggle_like';
-  static final String toggleShortSave =
+  static const String toggleShortSave =
       '/api/method/aos.api.shorts.toggle_save_short';
-  static final String toggleShortRepost =
+  static const String toggleShortRepost =
       '/api/method/aos.api.shorts.toggle_repost';
 
   // COMMENTS
-  static final String addShortComment =
+  static const String addShortComment =
       '/api/method/aos.api.shorts.add_comment';
-  static final String replyShortComment =
+  static const String replyShortComment =
       '/api/method/aos.api.shorts.reply_comment';
-  static final String listShortComments =
+  static const String listShortComments =
       '/api/method/aos.api.shorts.list_comments';
-  static final String listShortReplies =
+  static const String listShortReplies =
       '/api/method/aos.api.shorts.list_replies';
   static const String toggleShortCommentLike =
       '/api/method/aos.api.shorts.toggle_comment_like';
-  static final String deleteShortComment =
+  static const String deleteShortComment =
       '/api/method/aos.api.shorts.delete_comment';
 
   // SHARING / DOWNLOAD
-  static final String createShortShareLink =
+  static const String createShortShareLink =
       '/api/method/aos.api.shorts.create_short_share_link';
-  static final String shareShortToChat =
+  static const String shareShortToChat =
       '/api/method/aos.api.shorts.share_short_to_chat';
-  static final String downloadShort =
+  static const String downloadShort =
       '/api/method/aos.api.shorts.download_short';
 
   // ANALYTICS
-  static final String getShortAnalytics =
+  static const String getShortAnalytics =
       '/api/method/aos.api.shorts.get_short_analytics';
-  static final String myShortsAnalytics =
+  static const String myShortsAnalytics =
       '/api/method/aos.api.shorts.my_shorts_analytics';
-  static final String userShortAnalytics =
+  static const String userShortAnalytics =
       '/api/method/aos.api.shorts.user_short_analytics';
-  static final String generalShortAnalytics =
+  static const String generalShortAnalytics =
       '/api/method/aos.api.shorts.general_short_analytics';
-  static final String listActivity =
+  static const String listActivity =
       '/api/method/aos.api.activity.list_activity';
 
   // MUSIC / SOUNDS
-  static final String initShortSoundUpload =
+  static const String initShortSoundUpload =
       '/api/method/aos.api.shorts.init_sound_upload';
-  static final String confirmShortSoundUpload =
+  static const String confirmShortSoundUpload =
       '/api/method/aos.api.shorts.confirm_sound_upload';
-  static final String listShortSounds =
+  static const String listShortSounds =
       '/api/method/aos.api.shorts.list_sounds';
-  static final String searchShortSounds =
+  static const String searchShortSounds =
       '/api/method/aos.api.shorts.search_sounds';
-  static final String getShortSound = '/api/method/aos.api.shorts.get_sound';
-  static final String favoriteShortSound =
+  static const String getShortSound = '/api/method/aos.api.shorts.get_sound';
+  static const String favoriteShortSound =
       '/api/method/aos.api.shorts.favorite_sound';
-  static final String myFavoriteShortSounds =
+  static const String myFavoriteShortSounds =
       '/api/method/aos.api.shorts.my_favorite_sounds';
-  static final String soundShorts = '/api/method/aos.api.shorts.sound_shorts';
-  static final String changeShortSound =
+  static const String soundShorts = '/api/method/aos.api.shorts.sound_shorts';
+  static const String changeShortSound =
       '/api/method/aos.api.shorts.change_short_sound';
-  static final String removeShortSound =
+  static const String removeShortSound =
       '/api/method/aos.api.shorts.remove_short_sound';
 
   // TRACKING
-  static final String trackShortImpression =
+  static const String trackShortImpression =
       '/api/method/aos.api.shorts.track_impression';
-  static final String trackShortView = '/api/method/aos.api.shorts.track_view';
+  static const String trackShortView = '/api/method/aos.api.shorts.track_view';
 
   // ───────────── NOTIFICATIONS ─────────────
 
-  static final String markAllNotificationsRead =
+  static const String markAllNotificationsRead =
       '/api/method/aos.api.notifications.mark_all_notifications_read';
-  static final String markNotificationRead =
+  static const String markNotificationRead =
       '/api/method/aos.api.notifications.mark_notification_read';
-  static final String listNotifications =
+  static const String listNotifications =
       '/api/method/aos.api.notifications.list_notifications';
   static const String deleteNotification =
       '/api/method/aos.api.notifications.delete_notification';
   static const String clearNotifications =
       '/api/method/aos.api.notifications.clear_notifications';
-  static final String deactivatePushToken =
+  static const String deactivatePushToken =
       '/api/method/aos.api.notifications.deactivate_push_token';
-  static final String registerPushToken =
+  static const String registerPushToken =
       '/api/method/aos.api.notifications.register_push_token';
 
   // Live Co-host

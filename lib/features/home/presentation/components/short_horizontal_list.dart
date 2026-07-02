@@ -1,10 +1,8 @@
-import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
+import 'package:flutter/material.dart';
 
 class ShortsHorizontalList extends StatelessWidget {
   const ShortsHorizontalList({super.key, required this.shorts});
@@ -83,7 +81,7 @@ class _ShortPreviewCard extends StatelessWidget {
                         thumbnailUrl ?? '',
                         fit: BoxFit.cover,
                         errorBuilder: (_, _, _) {
-                          return Container(
+                          return ColoredBox(
                             color: colors.black,
                             child: const Icon(Icons.play_arrow),
                           );

@@ -1,12 +1,12 @@
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/auth/screens/forgot_password_screen.dart';
 import 'package:africaonlinestores/features/auth/screens/login_screen.dart';
 import 'package:africaonlinestores/features/auth/screens/register_screen.dart';
 import 'package:africaonlinestores/features/auth/screens/reset_password_screen.dart';
-import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 import 'package:africaonlinestores/features/auth/screens/verify_otp_screen.dart';
+import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
+import 'package:go_router/go_router.dart';
 
 class AuthRoutes {
   const AuthRoutes._();
@@ -34,9 +34,9 @@ class AuthRoutes {
           OtpPurpose purpose = OtpPurpose.emailVerification;
 
           if (state.extra is String) {
-            email = state.extra as String;
+            email = state.extra! as String;
           } else if (state.extra is Map) {
-            final m = Map<String, dynamic>.from(state.extra as Map);
+            final m = asJsonMap(state.extra! as Map);
             email = (m['email'] ?? '').toString();
             final p = m['purpose'];
             if (p is OtpPurpose) purpose = p;
@@ -55,7 +55,7 @@ class AuthRoutes {
         path: AppRoutes.resetPassword,
         builder: (context, state) {
           if (state.extra is Map) {
-            final m = Map<String, dynamic>.from(state.extra as Map);
+            final m = asJsonMap(state.extra! as Map);
             final email = (m['email'] ?? '').toString();
             final token = (m['reset_token'] ?? '').toString();
             return ResetPasswordScreen(email: email, resetToken: token);

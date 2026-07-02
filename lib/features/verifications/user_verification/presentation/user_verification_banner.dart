@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/verifications/domain/verification_status.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/domain/user_verification_models.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class UserVerificationBanner extends StatelessWidget {
   const UserVerificationBanner({super.key, required this.status});
@@ -20,7 +19,7 @@ class UserVerificationBanner extends StatelessWidget {
           iconColor: context.appColors.blue,
           title: 'Verified Account',
           subtitle: 'Your identity has been verified',
-          borderColor: context.appColors.blue.withOpacity(.4),
+          borderColor: context.appColors.blue.withValues(alpha: .4),
         );
       case VerificationStatus.pending:
         return _VerificationStatusCard(
@@ -28,17 +27,17 @@ class UserVerificationBanner extends StatelessWidget {
           iconColor: context.appColors.amber,
           title: 'Verification in Review',
           subtitle: "We're reviewing your identity documents",
-          borderColor: context.appColors.amber.withOpacity(.45),
+          borderColor: context.appColors.amber.withValues(alpha: .45),
         );
       case VerificationStatus.rejected:
         return _VerificationStatusCard(
           icon: Icons.error_outline_rounded,
           iconColor: context.appColors.primary,
           title: 'Verification Needs Update',
-          subtitle: status.rejectionReason?.trim().isNotEmpty == true
+          subtitle: status.rejectionReason?.trim().isNotEmpty ?? false
               ? status.rejectionReason!.trim()
               : 'Please update your details and submit again',
-          borderColor: context.appColors.primary.withOpacity(.35),
+          borderColor: context.appColors.primary.withValues(alpha: .35),
           onTap: () => context.pushNamed(AppRoutes.nUserVerification),
         );
       case VerificationStatus.notSubmitted:
@@ -93,7 +92,7 @@ class _VerificationStatusCard extends StatelessWidget {
                 width: 58,
                 height: 58,
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(.12),
+                  color: iconColor.withValues(alpha: .12),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(icon, color: iconColor, size: 30),

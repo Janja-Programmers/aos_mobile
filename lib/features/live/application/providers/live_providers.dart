@@ -1,28 +1,21 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
-import 'package:africaonlinestores/core/providers.dart';
-import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
-
 // ✅ CORE
 import 'package:africaonlinestores/core/media/livekit_service.dart';
-
-// DATA
-import 'package:africaonlinestores/features/live/data/live_api.dart';
-import 'package:africaonlinestores/features/live/repository/live_repository_impl.dart';
-
-// STATE
-import 'package:africaonlinestores/features/live/application/state/live_state.dart';
-
-// SERVICES
-import 'package:africaonlinestores/features/live/application/services/live_signaling_handler.dart';
-import 'package:africaonlinestores/features/live/application/services/live_media_service.dart';
-
+import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 // MANAGER
 import 'package:africaonlinestores/features/live/application/managers/live_manager.dart';
-
+import 'package:africaonlinestores/features/live/application/services/live_media_service.dart';
+// SERVICES
+import 'package:africaonlinestores/features/live/application/services/live_signaling_handler.dart';
+// STATE
+import 'package:africaonlinestores/features/live/application/state/live_state.dart';
+// DATA
+import 'package:africaonlinestores/features/live/data/live_api.dart';
 // INTEGRATIONS
 import 'package:africaonlinestores/features/live/integrations/socket_live_listener.dart';
+import 'package:africaonlinestores/features/live/repository/live_repository_impl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 // ================= API =================
 final liveApiProvider = Provider<LiveApi>((ref) {

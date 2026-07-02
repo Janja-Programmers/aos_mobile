@@ -1,6 +1,5 @@
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/features/social/safety/data/social_safety_api.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class SocialUserSearchState {
   final List<SocialUserSummary> items;

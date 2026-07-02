@@ -1,12 +1,11 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/managers/call_manager.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/session/call_control_dock.dart';
+import 'package:flutter/material.dart';
 
 class AudioCallView extends StatelessWidget {
   final CallState callState;
@@ -171,7 +170,6 @@ class _AudioCallTopBar extends StatelessWidget {
               ),
             ),
             Align(
-              alignment: Alignment.center,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 68),
                 child: Column(
@@ -196,7 +194,7 @@ class _AudioCallTopBar extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.74),
+                        color: Colors.white.withValues(alpha: 0.74),
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         height: 1.1,
@@ -297,7 +295,9 @@ class _AudioAvatar extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF25D366).withOpacity(pulse ? 0.22 : 0.10),
+                color: const Color(
+                  0xFF25D366,
+                ).withValues(alpha: pulse ? 0.22 : 0.10),
                 blurRadius: 28 + spread,
                 spreadRadius: spread,
               ),
@@ -434,7 +434,6 @@ class _UpgradeCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
       child: Align(
-        alignment: Alignment.center,
         child: Container(
           width: double.infinity,
           constraints: const BoxConstraints(maxWidth: 330),
@@ -645,7 +644,7 @@ class _WallpaperPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.025)
+      ..color = Colors.white.withValues(alpha: 0.025)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 

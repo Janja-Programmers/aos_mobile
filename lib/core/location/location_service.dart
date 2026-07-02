@@ -51,8 +51,10 @@ class LocationService {
   }) async {
     await ensurePermission();
     return Geolocator.getCurrentPosition(
-      desiredAccuracy: accuracy,
-      timeLimit: timeLimit,
+      locationSettings: LocationSettings(
+        accuracy: accuracy,
+        timeLimit: timeLimit,
+      ),
     );
   }
 

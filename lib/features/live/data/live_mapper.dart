@@ -1,8 +1,9 @@
-import 'package:africaonlinestores/features/live/domain/live_stream.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/live/domain/live_host.dart';
-import 'package:africaonlinestores/features/live/domain/live_status.dart';
 import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
 import 'package:africaonlinestores/features/live/domain/live_role.dart';
+import 'package:africaonlinestores/features/live/domain/live_status.dart';
+import 'package:africaonlinestores/features/live/domain/live_stream.dart';
 import 'package:africaonlinestores/features/live/domain/live_viewer_state.dart';
 
 AOSLiveStatus _parseStatus(String? status) {
@@ -38,7 +39,7 @@ LiveHost _parseHost(dynamic json) {
   }
 
   if (json is Map) {
-    final map = Map<String, dynamic>.from(json);
+    final map = asJsonMap(json);
 
     return LiveHost(
       userId:
@@ -106,9 +107,7 @@ LiveStream mapLiveStream(Map<String, dynamic> json) {
     hostAvatar: json['host_avatar']?.toString(),
 
     viewerState: LiveViewerState.fromJson(
-      json['viewer_state'] is Map
-          ? Map<String, dynamic>.from(json['viewer_state'])
-          : null,
+      json['viewer_state'] is Map ? asJsonMap(json['viewer_state']) : null,
     ),
   );
 }

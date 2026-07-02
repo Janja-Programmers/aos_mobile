@@ -1,6 +1,3 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
@@ -8,6 +5,8 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final userVerificationApiProvider = Provider<UserVerificationApi>((ref) {
   return UserVerificationApi(ref.read(apiClientProvider));
@@ -22,7 +21,9 @@ class UserVerificationApi {
 
   Future<Either<Failure, Map<String, dynamic>>> getMyUserVerification() async {
     try {
-      final res = await _dio.get(ApiEndpoints.getMyUserVerificationEndpoint);
+      final res = await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.getMyUserVerificationEndpoint,
+      );
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -37,7 +38,7 @@ class UserVerificationApi {
     required String phoneNumber,
   }) async {
     try {
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.sendUserVerificationOtpEndpoint,
         data: {'phone_number': phoneNumber},
       );
@@ -54,7 +55,7 @@ class UserVerificationApi {
     required String otp,
   }) async {
     try {
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.verifyUserVerificationOtpEndpoint,
         data: {'phone_number': phoneNumber, 'otp': otp},
       );
@@ -70,7 +71,7 @@ class UserVerificationApi {
     required Map<String, dynamic> payload,
   }) async {
     try {
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.submitUserVerificationEndpoint,
         data: payload,
       );

@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:flutter/material.dart';
 
 enum SnackState { error, success, info, warning }
 
@@ -116,7 +115,6 @@ class ShowSnack {
     showAppSnack(
       _context,
       _message,
-      state: SnackState.info,
       icon: icon,
       color: color,
       action: action,

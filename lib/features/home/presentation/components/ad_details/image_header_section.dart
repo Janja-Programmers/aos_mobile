@@ -1,5 +1,12 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/routing/helpers/route_observer.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:africaonlinestores/features/home/presentation/components/ad_details/image_header_widgets.dart';
+import 'package:africaonlinestores/features/home/presentation/services/ad_image_export_service.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,16 +14,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:video_player/video_player.dart';
-
-import 'package:africaonlinestores/core/routing/helpers/route_observer.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/core/utils/logger.dart';
-
-import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-import 'package:africaonlinestores/features/home/presentation/components/ad_details/image_header_widgets.dart';
-import 'package:africaonlinestores/features/home/presentation/services/ad_image_export_service.dart';
-
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ImageHeaderSection extends StatefulWidget {
   const ImageHeaderSection({
@@ -403,10 +400,7 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection>
       final chewieController = ChewieController(
         videoPlayerController: controller,
         autoPlay: true,
-        looping: false,
-        allowFullScreen: true,
         allowPlaybackSpeedChanging: false,
-        showControls: true,
       );
 
       if (!_isCurrentVideoController(controller, generation)) {
@@ -637,7 +631,9 @@ class _ImageHeaderSectionState extends State<ImageHeaderSection>
               children: [
                 DecoratedBox(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).dividerColor.withOpacity(0.08),
+                    color: Theme.of(
+                      context,
+                    ).dividerColor.withValues(alpha: 0.08),
                   ),
                   child: media.isEmpty
                       ? const Center(
@@ -942,7 +938,7 @@ class _FullScreenImageViewerState extends ConsumerState<FullScreenImageViewer> {
                       vertical: 7,
                     ),
                     decoration: BoxDecoration(
-                      color: colors.black.withOpacity(0.55),
+                      color: colors.black.withValues(alpha: 0.55),
                       borderRadius: BorderRadius.circular(99),
                     ),
                     child: Text(
@@ -983,7 +979,7 @@ class _FullScreenActionButton extends StatelessWidget {
     final colors = context.appColors;
 
     return Material(
-      color: colors.black.withOpacity(0.45),
+      color: colors.black.withValues(alpha: 0.45),
       shape: const CircleBorder(),
       child: Tooltip(
         message: tooltip,

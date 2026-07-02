@@ -1,6 +1,5 @@
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:africaonlinestores/features/preferences/state/user_preference_state.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingStorage {
   OnboardingStorage(this._prefs);
@@ -8,10 +7,10 @@ class OnboardingStorage {
   final SharedPreferences _prefs;
 
   /// Storage Keys
-  static const _keyCountryCode = "pref_country_code";
-  static const _keyLanguageCode = "pref_language_code";
-  static const _keyCurrencyCode = "pref_currency_code";
-  static const _keyOnboardingCompleted = "onboarding_completed";
+  static const _keyCountryCode = 'pref_country_code';
+  static const _keyLanguageCode = 'pref_language_code';
+  static const _keyCurrencyCode = 'pref_currency_code';
+  static const _keyOnboardingCompleted = 'onboarding_completed';
 
   /// -----------------------------
   /// Preferences

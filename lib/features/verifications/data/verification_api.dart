@@ -1,6 +1,3 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
@@ -8,6 +5,8 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final verificationApiProvider = Provider<VerificationApi>((ref) {
   return VerificationApi(ref.read(apiClientProvider));
@@ -25,7 +24,7 @@ class VerificationApi {
     required Map<String, dynamic> payload,
   }) async {
     try {
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.submitVerificationEndpoint,
         data: payload,
       );
@@ -33,7 +32,7 @@ class VerificationApi {
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure("Failed to submit verification."));
+      return Either.left(const Failure('Failed to submit verification.'));
     }
   }
 
@@ -42,7 +41,7 @@ class VerificationApi {
     required Map<String, dynamic> payload,
   }) async {
     try {
-      final res = await _dio.put(
+      final res = await _dio.put<Map<String, dynamic>>(
         ApiEndpoints.updateMySellerEndpoint,
         data: payload,
       );
@@ -50,31 +49,35 @@ class VerificationApi {
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure("Failed to update seller profile."));
+      return Either.left(const Failure('Failed to update seller profile.'));
     }
   }
 
   /// GET SELLER STATUS
   Future<Either<Failure, Map<String, dynamic>>> getMySellerStatus() async {
     try {
-      final res = await _dio.get(ApiEndpoints.getMySellerStatusEndpoint);
+      final res = await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.getMySellerStatusEndpoint,
+      );
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure("Failed to fetch seller status."));
+      return Either.left(const Failure('Failed to fetch seller status.'));
     }
   }
 
   /// GET MY VERIFICATION
   Future<Either<Failure, Map<String, dynamic>>> getMyVerification() async {
     try {
-      final res = await _dio.get(ApiEndpoints.getMyVerificationEndpoint);
+      final res = await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.getMyVerificationEndpoint,
+      );
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure("Failed to fetch verification status."));
+      return Either.left(const Failure('Failed to fetch verification status.'));
     }
   }
 }

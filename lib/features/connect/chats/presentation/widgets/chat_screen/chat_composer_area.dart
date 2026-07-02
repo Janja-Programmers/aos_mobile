@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_ad_preview.dart';
@@ -7,6 +5,7 @@ import 'package:africaonlinestores/features/connect/chats/presentation/widgets/c
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_quick_replies.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/reply_composer_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/typing_indicator.dart';
+import 'package:flutter/material.dart';
 
 class ChatComposerArea extends StatelessWidget {
   final bool isTyping;
@@ -20,7 +19,7 @@ class ChatComposerArea extends StatelessWidget {
   final ValueChanged<String> onQuickReplyTap;
   final VoidCallback onCloseAdPreview;
   final VoidCallback onCloseReplyPreview;
-  final Function(bool isTyping) onTyping;
+  final ValueChanged<bool> onTyping;
   final Future<void> Function({
     String? text,
     List<ChatInputAttachment> attachments,

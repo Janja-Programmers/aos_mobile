@@ -1,21 +1,18 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
 import 'package:africaonlinestores/features/ads/ads_form/controllers/ad_form_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/basic/media_section.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/section_tile.dart';
 import 'package:africaonlinestores/features/ads/ads_form/utils/ad_form_validator.dart';
-import 'package:africaonlinestores/shared/enums/ads.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
-
 import 'package:africaonlinestores/shared/components/picker_field.dart';
+import 'package:africaonlinestores/shared/enums/ads.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class BasicStep extends ConsumerStatefulWidget {
   const BasicStep({super.key});
@@ -96,7 +93,7 @@ class _BasicStepState extends ConsumerState<BasicStep> {
         PickerField(
           value: draft.locationLabel,
           leading: const Icon(Icons.place_outlined),
-          placeholder: "Select your location",
+          placeholder: 'Select your location',
           onTap: () async {
             final res = await context.pushNamed<Map<String, dynamic>>(
               AppRoutes.nSelectLocation,
@@ -130,7 +127,7 @@ class _BasicStepState extends ConsumerState<BasicStep> {
         PickerField(
           value: draft.categoryLabel,
           leading: const Icon(Icons.category_outlined),
-          placeholder: "Select a category",
+          placeholder: 'Select a category',
           onTap: () async {
             final categoriesState = ref.read(categoriesControllerProvider);
 
@@ -151,8 +148,8 @@ class _BasicStepState extends ConsumerState<BasicStep> {
             final res = await context.pushNamed<Map<String, dynamic>>(
               AppRoutes.nSelectCategory,
               extra: {
-                "initialParent": parentNode,
-                "openChildren": parentNode != null,
+                'initialParent': parentNode,
+                'openChildren': parentNode != null,
               },
             );
 

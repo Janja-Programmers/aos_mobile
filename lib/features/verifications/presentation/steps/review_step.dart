@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/verifications/controllers/verification_controller_provider.dart';
 import 'package:africaonlinestores/features/verifications/domain/verification.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ReviewStep extends ConsumerWidget {
   const ReviewStep({super.key});
@@ -26,7 +24,7 @@ class ReviewStep extends ConsumerWidget {
       }
     }
 
-    final registrationCertificate = getDoc("registration_certificate");
+    final registrationCertificate = getDoc('registration_certificate');
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -41,7 +39,7 @@ class ReviewStep extends ConsumerWidget {
                 width: 72,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: colors.primary.withOpacity(0.1),
+                  color: colors.primary.withValues(alpha: 0.1),
                 ),
                 child: Icon(
                   Icons.verified_outlined,
@@ -51,13 +49,13 @@ class ReviewStep extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                "Review & Submit",
+                'Review & Submit',
                 style: context.h5.copyWith(fontWeight: FontWeight.w700),
                 textAlign: TextAlign.start,
               ),
               const SizedBox(height: 6),
               Text(
-                "Review your business information before submitting for verification.",
+                'Review your business information before submitting for verification.',
                 style: context.p.copyWith(color: colors.textMuted),
                 textAlign: TextAlign.start,
               ),
@@ -107,7 +105,7 @@ class ReviewStep extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colors.primary.withOpacity(0.1),
+                  color: colors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(Icons.store_mall_directory, color: colors.primary),
@@ -117,11 +115,11 @@ class ReviewStep extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    data.businessName ?? "-",
+                    data.businessName ?? '-',
                     style: context.h6.copyWith(fontWeight: FontWeight.w700),
                   ),
                   Text(
-                    data.businessType ?? "-",
+                    data.businessType ?? '-',
                     style: context.p.copyWith(color: colors.textMuted),
                   ),
                 ],
@@ -132,9 +130,9 @@ class ReviewStep extends ConsumerWidget {
           Divider(color: colors.border),
 
           const SizedBox(height: 12),
-          _infoRow(context, "Category", data.businessCategory),
-          _infoRow(context, "Phone Number", data.businessPhoneNumber),
-          _infoRow(context, "Physical Location", data.physicalAddress),
+          _infoRow(context, 'Category', data.businessCategory),
+          _infoRow(context, 'Phone Number', data.businessPhoneNumber),
+          _infoRow(context, 'Physical Location', data.physicalAddress),
         ],
       ),
     );
@@ -150,27 +148,27 @@ class ReviewStep extends ConsumerWidget {
 
     final items = [
       (
-        "Business Name, Type & Category",
+        'Business Name, Type & Category',
         (data.businessName?.isNotEmpty ?? false) &&
             (data.businessType?.isNotEmpty ?? false) &&
             (data.businessCategory?.isNotEmpty ?? false),
       ),
       (
-        "Phone Number, Email & Physical Location",
+        'Phone Number, Email & Physical Location',
         (data.businessPhoneNumber?.isNotEmpty ?? false) &&
             (data.businessEmail?.isNotEmpty ?? false) &&
             (data.physicalAddress?.isNotEmpty ?? false),
       ),
 
       // Documents
-      ("Verification Documents", (registrationCertificate != null)),
+      ('Verification Documents', registrationCertificate != null),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Verification Checklist",
+          'Verification Checklist',
           style: context.h6.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 12),
@@ -205,18 +203,18 @@ class ReviewStep extends ConsumerWidget {
     final colors = context.appColors;
 
     final benefits = [
-      "Verified business badge",
-      "Higher visibility in search results",
-      "Priority customer support",
+      'Verified business badge',
+      'Higher visibility in search results',
+      'Priority customer support',
     ];
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colors.blue.withOpacity(0.08),
+        color: colors.blue.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.blue.withOpacity(0.2)),
+        border: Border.all(color: colors.blue.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,7 +224,7 @@ class ReviewStep extends ConsumerWidget {
               Icon(Icons.work, color: colors.blue),
               const SizedBox(width: 8),
               Text(
-                "Business Verification Benefits",
+                'Business Verification Benefits',
                 style: context.p.copyWith(fontWeight: FontWeight.w700),
               ),
             ],
@@ -255,8 +253,8 @@ class ReviewStep extends ConsumerWidget {
     final colors = context.appColors;
 
     return Text(
-      "By submitting, you confirm that all information provided is accurate. "
-      "Processing typically takes 2–5 business days.",
+      'By submitting, you confirm that all information provided is accurate. '
+      'Processing typically takes 2–5 business days.',
       style: context.p.copyWith(fontSize: 12, color: colors.textMuted),
     );
   }
@@ -274,7 +272,7 @@ class ReviewStep extends ConsumerWidget {
           Expanded(
             flex: 6,
             child: Text(
-              value?.isNotEmpty == true ? value! : "-",
+              value?.isNotEmpty ?? false ? value! : '-',
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.end,

@@ -1,7 +1,5 @@
 import 'dart:io';
 
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
@@ -9,6 +7,8 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/files/domain/upload_file.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:dio/dio.dart';
 
 class FilesApi {
   FilesApi(this._client);
@@ -22,17 +22,21 @@ class FilesApi {
     try {
       final filename = file.path.split(Platform.pathSeparator).last;
 
-      final form = FormData.fromMap({
+      final form = FormData.fromMap(<String, Object?>{
         'file': await MultipartFile.fromFile(file.path, filename: filename),
         'is_private': '0',
       });
 
-      final res = await _dio.post(ApiEndpoints.uploadFileEndpoint, data: form);
+      final res = await _dio.post<Map<String, dynamic>>(
+        ApiEndpoints.uploadFileEndpoint,
+        data: form,
+      );
 
-      final body = res.data;
+      final body = res.data ?? <String, dynamic>{};
+      final message = body['message'];
 
-      if (body is Map && body['message'] is Map) {
-        final msg = Map<String, dynamic>.from(body['message']);
+      if (message is Map) {
+        final msg = asJsonMap(message);
 
         final url = (msg['file_url'] ?? '').toString();
         final fileId = (msg['name'] ?? '').toString();
@@ -52,7 +56,7 @@ class FilesApi {
 
   Future<Either<Failure, bool>> deleteFile({required String fileId}) async {
     try {
-      await _dio.post(
+      await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.deleteFileEndpoint,
         queryParameters: {'file_id': fileId},
       );
@@ -68,18 +72,18 @@ class FilesApi {
     required File file,
   }) async {
     try {
-      if (!await file.exists()) {
+      if (!file.existsSync()) {
         return Either.left(const Failure('File does not exist.'));
       }
 
       final filename = file.path.split(Platform.pathSeparator).last;
 
-      final formData = FormData.fromMap({
+      final formData = FormData.fromMap(<String, Object?>{
         'image': await MultipartFile.fromFile(file.path, filename: filename),
         'is_private': '0',
       });
 
-      final response = await _dio.post(
+      final response = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.searchAdByImageEndpoint,
         data: formData,
       );
@@ -96,7 +100,7 @@ class FilesApi {
     required String fileId,
   }) async {
     try {
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.removeBackgroundEndpoint,
         queryParameters: {'file_id': fileId},
       );
@@ -108,7 +112,7 @@ class FilesApi {
       }
 
       final data = result.rightOrNull!;
-      final inner = data['data'] ?? {};
+      final inner = asJsonMap(data['data']);
 
       final url = (inner['file_url'] ?? '').toString();
       final newFileId = (inner['file_id'] ?? '').toString();

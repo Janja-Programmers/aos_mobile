@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+
 class VerificationDocument {
   final String? documentType;
   final String? documentNumber;
@@ -31,21 +33,21 @@ class VerificationDocument {
 
   Map<String, dynamic> toPayload() {
     return {
-      "document_type": documentType,
-      "document_number": documentNumber,
-      "issue_date": issueDate,
-      "expiry_date": expiryDate,
-      "attachment": attachment,
+      'document_type': documentType,
+      'document_number': documentNumber,
+      'issue_date': issueDate,
+      'expiry_date': expiryDate,
+      'attachment': attachment,
     };
   }
 
   factory VerificationDocument.fromJson(Map<String, dynamic> json) {
     return VerificationDocument(
-      documentType: json["document_type"],
-      documentNumber: json["document_number"],
-      issueDate: json["issue_date"],
-      expiryDate: json["expiry_date"],
-      attachment: json["attachment"],
+      documentType: asNullableString(json['document_type']),
+      documentNumber: asNullableString(json['document_number']),
+      issueDate: asNullableString(json['issue_date']),
+      expiryDate: asNullableString(json['expiry_date']),
+      attachment: asNullableString(json['attachment']),
     );
   }
 }

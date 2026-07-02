@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/social/data/social_friend_model.dart';
 import 'package:africaonlinestores/features/social/domain/social_friends_page.dart';
 
@@ -11,17 +12,9 @@ class SocialFriendsPageModel extends SocialFriendsPage {
   });
 
   factory SocialFriendsPageModel.fromJson(Map<String, dynamic> json) {
-    final rawItems = json['items'];
-
-    final items = rawItems is List
-        ? rawItems
-              .whereType<Map>()
-              .map(
-                (item) =>
-                    SocialFriendModel.fromJson(Map<String, dynamic>.from(item)),
-              )
-              .toList()
-        : <SocialFriendModel>[];
+    final items = asJsonMapList(
+      json['items'],
+    ).map(SocialFriendModel.fromJson).toList();
 
     return SocialFriendsPageModel(
       items: items,
@@ -32,7 +25,7 @@ class SocialFriendsPageModel extends SocialFriendsPage {
     );
   }
 
-  static int _int(dynamic value, {int fallback = 0}) {
+  static int _int(Object? value, {int fallback = 0}) {
     if (value == null) return fallback;
     if (value is int) return value;
     if (value is double) return value.toInt();
@@ -40,7 +33,7 @@ class SocialFriendsPageModel extends SocialFriendsPage {
     return int.tryParse(value.toString()) ?? fallback;
   }
 
-  static bool _bool(dynamic value) {
+  static bool _bool(Object? value) {
     if (value == true || value == 1) return true;
     if (value == false || value == 0 || value == null) return false;
 

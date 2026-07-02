@@ -70,9 +70,6 @@ linter:
     strict_top_level_inference: true
     type_annotate_public_apis: true
 
-    # I am not enabling always_specify_types because it becomes noisy in Flutter UI.
-    # strict-inference + type_annotate_public_apis is a better balance.
-
     # ─────────────────────────────────────────────
     # Riverpod & State Discipline
     # ─────────────────────────────────────────────
@@ -120,8 +117,6 @@ linter:
     avoid_empty_else: true
     avoid_print: true
     avoid_redundant_argument_values: true
-    avoid_returning_null_for_future: true
-    avoid_returning_null_for_void: true
     avoid_returning_this: true
     avoid_shadowing_type_parameters: true
     avoid_single_cascade_in_expression_statements: true

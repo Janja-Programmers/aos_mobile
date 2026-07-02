@@ -1,19 +1,16 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/core/api/failure.dart';
-import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/core/realtime/realtime_service.dart';
-
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/live/application/services/live_media_service.dart';
 import 'package:africaonlinestores/features/live/application/state/live_state.dart';
 import 'package:africaonlinestores/features/live/application/state/live_status_enum.dart';
 import 'package:africaonlinestores/features/live/application/state/room_state_enum.dart';
-import 'package:africaonlinestores/features/live/repository/live_repository_impl.dart';
-
 import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
 import 'package:africaonlinestores/features/live/domain/live_role.dart';
+import 'package:africaonlinestores/features/live/repository/live_repository_impl.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class LiveManager extends StateNotifier<LiveState> {
   final LiveRepository repository;
@@ -237,7 +234,7 @@ class LiveManager extends StateNotifier<LiveState> {
 
   Future<void> onLiveReactionEvent({
     required String liveId,
-    required List<dynamic> reactions,
+    required List<Object?> reactions,
   }) async {
     if (!_isCurrentLive(liveId)) return;
 

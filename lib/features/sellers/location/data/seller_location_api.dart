@@ -1,6 +1,3 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
@@ -8,7 +5,10 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final sellerLocationApiProvider = Provider<SellerLocationApi>((ref) {
   return SellerLocationApi(ref.read(apiClientProvider));
@@ -24,18 +24,18 @@ class SellerLocationApi {
       final res = await _client.get(
         ApiEndpoints.getSellerLocation,
         queryParameters: {
-          if (seller?.trim().isNotEmpty == true) 'seller': seller!.trim(),
+          if (seller?.trim().isNotEmpty ?? false) 'seller': seller!.trim(),
         },
       );
 
       final unwrapped = unwrapFrappe(res);
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
 
-      final data = unwrapped.rightOrNull?['data'];
-      final location = data is Map ? data['location'] : null;
+      final data = asJsonMap(unwrapped.rightOrNull?['data']);
+      final location = data['location'];
       if (location is! Map) return Either.right(null);
 
-      final map = Map<String, dynamic>.from(location);
+      final map = asJsonMap(location);
       final hasLocation =
           map['has_location'] == true ||
           map['has_location'] == 1 ||
@@ -70,8 +70,8 @@ class SellerLocationApi {
       final unwrapped = unwrapFrappe(res);
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
 
-      final data = unwrapped.rightOrNull?['data'];
-      final location = data is Map ? data['location'] : null;
+      final data = asJsonMap(unwrapped.rightOrNull?['data']);
+      final location = data['location'];
       if (location is! Map) {
         return Either.left(
           const Failure(
@@ -81,9 +81,7 @@ class SellerLocationApi {
         );
       }
 
-      return Either.right(
-        AOSPlace.fromJson(Map<String, dynamic>.from(location)),
-      );
+      return Either.right(AOSPlace.fromJson(asJsonMap(location)));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {

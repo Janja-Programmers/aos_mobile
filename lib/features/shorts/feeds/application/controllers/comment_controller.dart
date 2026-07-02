@@ -1,12 +1,10 @@
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/core/utils/logger.dart';
-
 import 'package:africaonlinestores/features/shorts/feeds/application/state/comment_state.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_comments_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_comment.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/comment_id.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class CommentsController extends StateNotifier<CommentsState> {
   final ShortsCommentsApi api;
@@ -41,12 +39,9 @@ class CommentsController extends StateNotifier<CommentsState> {
     final optimistic = ShortComment(
       id: CommentId(tempId),
       shortId: ShortId(shortId),
-      userId: "me",
-      displayName: "You",
-      avatar: null,
+      userId: 'me',
+      displayName: 'You',
       comment: comment,
-      parentId: null,
-      rootId: null,
       replyCount: 0,
       likeCount: 0,
       isLiked: false,

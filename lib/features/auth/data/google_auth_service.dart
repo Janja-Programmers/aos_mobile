@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:africaonlinestores/core/config/app_config.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class GoogleAuthService {
   static final GoogleSignIn _signIn = GoogleSignIn.instance;
@@ -22,7 +22,7 @@ class GoogleAuthService {
 
     final completer = Completer<String?>();
 
-    late StreamSubscription sub;
+    late StreamSubscription<GoogleSignInAuthenticationEvent> sub;
     sub = _signIn.authenticationEvents.listen(
       (event) async {
         try {

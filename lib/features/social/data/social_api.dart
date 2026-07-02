@@ -1,16 +1,15 @@
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/social/data/social_friends_page_model.dart';
 import 'package:africaonlinestores/features/social/data/social_relationship_model.dart';
 import 'package:africaonlinestores/features/social/domain/social_friends_page.dart';
 import 'package:africaonlinestores/features/social/domain/social_relationship.dart';
+import 'package:dio/dio.dart';
 
 class SocialApi {
   final ApiClient _apiClient;
@@ -117,9 +116,7 @@ class SocialApi {
         );
       }
 
-      final relationship = SocialRelationshipModel.fromJson(
-        Map<String, dynamic>.from(rawData),
-      );
+      final relationship = SocialRelationshipModel.fromJson(asJsonMap(rawData));
 
       return Either.right(relationship);
     } on DioException catch (e) {
@@ -171,9 +168,7 @@ class SocialApi {
         );
       }
 
-      final relationship = SocialRelationshipModel.fromJson(
-        Map<String, dynamic>.from(rawData),
-      );
+      final relationship = SocialRelationshipModel.fromJson(asJsonMap(rawData));
 
       return Either.right(relationship);
     } on DioException catch (e) {
@@ -203,11 +198,11 @@ class SocialApi {
         queryParameters: {
           'limit': limit,
           'start': start,
-          if (targetUser?.trim().isNotEmpty == true) ...{
+          if (targetUser?.trim().isNotEmpty ?? false) ...{
             'target_user': targetUser!.trim(),
             'user': targetUser.trim(),
           },
-          if (query?.trim().isNotEmpty == true) ...{
+          if (query?.trim().isNotEmpty ?? false) ...{
             'q': query!.trim(),
             'search': query.trim(),
           },
@@ -228,9 +223,7 @@ class SocialApi {
         );
       }
 
-      final page = SocialFriendsPageModel.fromJson(
-        Map<String, dynamic>.from(rawData),
-      );
+      final page = SocialFriendsPageModel.fromJson(asJsonMap(rawData));
 
       return Either.right(page);
     } on DioException catch (e) {
@@ -240,11 +233,8 @@ class SocialApi {
     }
   }
 
-  dynamic _extractData(dynamic payload) {
-    if (payload is Map && payload.containsKey('data')) {
-      return payload['data'];
-    }
-
-    return null;
+  Object? _extractData(Object? payload) {
+    final data = asJsonMap(payload);
+    return data['data'];
   }
 }

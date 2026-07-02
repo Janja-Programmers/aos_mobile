@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
-import 'package:africaonlinestores/shared/components/cards/ad_card_horizontal.dart';
 import 'package:africaonlinestores/features/home/presentation/components/section_header.dart';
+import 'package:africaonlinestores/shared/components/cards/ad_card_horizontal.dart';
+import 'package:flutter/material.dart';
 
 class HomeHorizontalAdsSection extends StatelessWidget {
   const HomeHorizontalAdsSection({

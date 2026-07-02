@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
+import 'package:flutter/material.dart';
 
 class MediaAddTile extends StatelessWidget {
   final VoidCallback onTap;
@@ -22,7 +21,7 @@ class MediaAddTile extends StatelessWidget {
 
     return GestureDetector(
       onTap: loading ? null : onTap,
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: colors.surface,
           borderRadius: BorderRadius.circular(16),

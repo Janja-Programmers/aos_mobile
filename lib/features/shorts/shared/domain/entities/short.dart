@@ -1,13 +1,12 @@
-import 'package:equatable/equatable.dart';
-
-import 'package:africaonlinestores/features/shorts/shared/domain/enums/short_status.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_metrics.dart';
+import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_ad.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_creator.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_metrics.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_viewer_state.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/enums/short_status.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/caption.dart';
-import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
+import 'package:equatable/equatable.dart';
 
 class Short extends Equatable {
   final ShortId id;

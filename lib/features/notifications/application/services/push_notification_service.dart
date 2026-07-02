@@ -1,17 +1,18 @@
-import 'dart:io';
 import 'dart:async';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:africaonlinestores/core/utils/logger.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:io';
+
 import 'package:africaonlinestores/core/device/device_id.dart';
-import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
-import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
-import 'package:africaonlinestores/features/notifications/domain/push_token_device.dart';
-import 'package:africaonlinestores/features/notifications/data/notification_repository_impl.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/incoming_call_bootstrapper.dart';
 import 'package:africaonlinestores/features/notifications/application/controllers/notification_controller.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_notification_service.dart';
 import 'package:africaonlinestores/features/notifications/application/services/notification_navigation_handler.dart';
+import 'package:africaonlinestores/features/notifications/data/notification_repository_impl.dart';
+import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
+import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
+import 'package:africaonlinestores/features/notifications/domain/push_token_device.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class PushNotificationService {
   final FirebaseMessaging _messaging;
@@ -93,11 +94,7 @@ class PushNotificationService {
   // PERMISSION
   // =====================================================
   Future<bool> _requestPermission() async {
-    final settings = await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    final settings = await _messaging.requestPermission();
 
     final status = settings.authorizationStatus;
 
@@ -207,7 +204,7 @@ class PushNotificationService {
         );
       }
 
-      await Future.delayed(_apnsPollInterval);
+      await Future<void>.delayed(_apnsPollInterval);
     }
 
     return null;
@@ -235,9 +232,7 @@ class PushNotificationService {
       '🔔 Scheduling push token retry attempt $_tokenRetryAttempt in ${delaySeconds}s',
     );
 
-    _tokenRetryTimer = Timer(Duration(seconds: delaySeconds), () {
-      _setupToken();
-    });
+    _tokenRetryTimer = Timer(Duration(seconds: delaySeconds), _setupToken);
   }
 
   Future<void> _registerToken(String token) async {
@@ -253,7 +248,7 @@ class PushNotificationService {
   }
 
   void _listenTokenRefresh() {
-    _tokenRefreshSub?.cancel();
+    unawaited(_tokenRefreshSub?.cancel());
 
     _tokenRefreshSub = _messaging.onTokenRefresh.listen((newToken) async {
       if (newToken.trim().isEmpty) {
@@ -284,7 +279,7 @@ class PushNotificationService {
   // FOREGROUND
   // =====================================================
   void _listenForeground() {
-    _foregroundSub?.cancel();
+    unawaited(_foregroundSub?.cancel());
 
     _foregroundSub = FirebaseMessaging.onMessage.listen((message) async {
       try {
@@ -318,7 +313,7 @@ class PushNotificationService {
   // TAP (BACKGROUND)
   // =====================================================
   void _listenNotificationTap() {
-    _tapSub?.cancel();
+    unawaited(_tapSub?.cancel());
 
     _tapSub = FirebaseMessaging.onMessageOpenedApp.listen((message) async {
       try {
@@ -426,9 +421,9 @@ class PushNotificationService {
     _tokenRetryAttempt = 0;
 
     _tokenRetryTimer?.cancel();
-    _foregroundSub?.cancel();
-    _tapSub?.cancel();
-    _tokenRefreshSub?.cancel();
+    unawaited(_foregroundSub?.cancel());
+    unawaited(_tapSub?.cancel());
+    unawaited(_tokenRefreshSub?.cancel());
 
     _tokenRetryTimer = null;
     _foregroundSub = null;
@@ -441,9 +436,9 @@ class PushNotificationService {
   // =====================================================
   void dispose() {
     _tokenRetryTimer?.cancel();
-    _foregroundSub?.cancel();
-    _tapSub?.cancel();
-    _tokenRefreshSub?.cancel();
+    unawaited(_foregroundSub?.cancel());
+    unawaited(_tapSub?.cancel());
+    unawaited(_tokenRefreshSub?.cancel());
 
     _tokenRetryTimer = null;
     _foregroundSub = null;

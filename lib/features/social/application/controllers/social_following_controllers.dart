@@ -1,9 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/social/data/social_repository_impl.dart';
 import 'package:africaonlinestores/features/social/domain/social_friends_page.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class SocialFollowingController
     extends StateNotifier<AsyncValue<SocialFriendsPage>> {
@@ -36,7 +35,7 @@ class SocialFollowingController
   Future<void> refreshFollowing({int limit = 20}) async {
     final previous = state;
 
-    final result = await _repository.getFollowing(limit: limit, start: 0);
+    final result = await _repository.getFollowing(limit: limit);
 
     if (result.isLeft) {
       final failure = result.leftOrNull!;

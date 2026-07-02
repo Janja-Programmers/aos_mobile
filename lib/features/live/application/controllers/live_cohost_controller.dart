@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/live/data/live_cohost_api.dart';
 import 'package:africaonlinestores/features/live/domain/live_cohost.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 @immutable
 class LiveCohostState {
@@ -146,7 +146,7 @@ class LiveCohostController extends StateNotifier<LiveCohostState> {
   void applyRealtime(Map<String, dynamic> data) {
     final raw = data['cohost'] ?? data;
     if (raw is! Map) return;
-    final cohost = LiveCohost.fromJson(Map<String, dynamic>.from(raw));
+    final cohost = LiveCohost.fromJson(asJsonMap(raw));
     if (cohost.id.isEmpty) return;
     state = state.copyWith(items: _upsert(cohost));
   }

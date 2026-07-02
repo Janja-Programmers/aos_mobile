@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class BackgroundPicker extends StatelessWidget {
   const BackgroundPicker({
@@ -32,8 +31,8 @@ class BackgroundPicker extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeader(
-          title: "Background Color",
-          trailing: isApplying ? "Applying..." : null,
+          title: 'Background Color',
+          trailing: isApplying ? 'Applying...' : null,
         ),
 
         const SizedBox(height: 12),
@@ -45,7 +44,7 @@ class BackgroundPicker extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             itemBuilder: (_, i) {
               final color = colors[i];
-              final selected = selectedColor?.value == color.value;
+              final selected = selectedColor?.toARGB32() == color.toARGB32();
 
               return _ColorChip(
                 color: color,
@@ -106,16 +105,16 @@ class _ColorChip extends StatelessWidget {
               width: 2,
             ),
           ),
-          child: Container(
+          child: DecoratedBox(
             decoration: BoxDecoration(
               color: color,
               shape: BoxShape.circle,
-              border: Border.all(color: themeColors.border, width: 1),
+              border: Border.all(color: themeColors.border),
               boxShadow: [
                 BoxShadow(
                   blurRadius: selected ? 8 : 3,
                   offset: const Offset(0, 2),
-                  color: Colors.black.withOpacity(selected ? 0.18 : 0.08),
+                  color: Colors.black.withValues(alpha: selected ? 0.18 : 0.08),
                 ),
               ],
             ),
@@ -124,7 +123,7 @@ class _ColorChip extends StatelessWidget {
                 duration: const Duration(milliseconds: 160),
                 child: loading
                     ? SizedBox(
-                        key: const ValueKey("loader"),
+                        key: const ValueKey('loader'),
                         height: 17,
                         width: 17,
                         child: CircularProgressIndicator(
@@ -135,12 +134,12 @@ class _ColorChip extends StatelessWidget {
                     : selected
                     ? Icon(
                         Icons.check_rounded,
-                        key: const ValueKey("check"),
+                        key: const ValueKey('check'),
                         size: 18,
                         color: _indicatorColorFor(color),
                       )
                     : const SizedBox(
-                        key: ValueKey("empty"),
+                        key: ValueKey('empty'),
                         height: 18,
                         width: 18,
                       ),
@@ -174,7 +173,9 @@ class _TransparentChip extends StatelessWidget {
     final colors = context.appColors;
 
     return Material(
-      color: selected ? Colors.black.withOpacity(0.06) : Colors.transparent,
+      color: selected
+          ? Colors.black.withValues(alpha: 0.06)
+          : Colors.transparent,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -193,7 +194,7 @@ class _TransparentChip extends StatelessWidget {
                 duration: const Duration(milliseconds: 160),
                 child: loading
                     ? SizedBox(
-                        key: const ValueKey("transparent_loader"),
+                        key: const ValueKey('transparent_loader'),
                         height: 18,
                         width: 18,
                         child: CircularProgressIndicator(
@@ -212,7 +213,7 @@ class _TransparentChip extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               const Text(
-                "Transparent",
+                'Transparent',
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ],

@@ -1,8 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
 import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/files/helpers/review_media_helper.dart';
@@ -12,6 +9,8 @@ import 'package:africaonlinestores/features/reviews/application/controllers/revi
 import 'package:africaonlinestores/features/reviews/presentation/widgets/image_picker_bottom_sheet.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ReviewCreateScreen extends ConsumerStatefulWidget {
   const ReviewCreateScreen({super.key, required this.adId});
@@ -226,7 +225,7 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
               right: 2,
               top: 2,
               child: Material(
-                color: colors.black.withOpacity(0.6),
+                color: colors.black.withValues(alpha: 0.6),
                 shape: const CircleBorder(),
                 child: InkWell(
                   customBorder: const CircleBorder(),

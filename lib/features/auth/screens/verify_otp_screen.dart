@@ -1,19 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/otp_resend_row.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/otp_section.dart';
-
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/app_success_sheet.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class VerifyOTPScreen extends ConsumerStatefulWidget {
   const VerifyOTPScreen({
@@ -69,9 +65,8 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
         // email verification success
         ShowSnack(context, right).success();
 
-        await showModalBottomSheet(
+        await showModalBottomSheet<void>(
           context: context,
-          isScrollControlled: false,
           backgroundColor: Colors.transparent,
           builder: (_) => AppSuccessSheet(
             title: l10n.auth_email_verified_title,
@@ -158,7 +153,6 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
               enabled: !_loading,
               onChanged: (v) => setState(() => _otp = v),
               onCompleted: (_) => _verify(),
-              showCustomKeypad: true,
             ),
             const SizedBox(height: 18),
             OtpResendRow(onResend: _resend),

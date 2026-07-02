@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:africaonlinestores/shared/widgets/in_app_notification_banner.dart';
+
 import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_notification_service.dart';
+import 'package:africaonlinestores/shared/widgets/in_app_notification_banner.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class InAppBannerListener extends ConsumerStatefulWidget {
   const InAppBannerListener({super.key});
@@ -36,7 +37,7 @@ class _InAppBannerListenerState extends ConsumerState<InAppBannerListener> {
 
   @override
   void dispose() {
-    _sub?.cancel();
+    unawaited(_sub?.cancel());
     _sub = null;
     super.dispose();
   }

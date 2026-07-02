@@ -1,24 +1,26 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
+import 'dart:async';
 
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/profile_edit_sheet.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_mapper.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/social/application/providers/social_providers.dart';
 import 'package:africaonlinestores/features/social/application/state/social_connections_state.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/features/social/safety/presentation/widgets/user_safety_sheet.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_mapper.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ProfileScreen extends ConsumerWidget {
   final String? user;
@@ -184,11 +186,13 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   static void _showEditSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const ProfileEditSheet(),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => const ProfileEditSheet(),
+      ),
     );
   }
 
@@ -199,19 +203,25 @@ class ProfileScreen extends ConsumerWidget {
         ? data.displayName.trim()
         : 'AOS profile';
 
-    await Share.share('View $title on AOS\n$url', subject: title);
+    await SharePlus.instance.share(
+      ShareParams(text: 'View $title on AOS\n$url', subject: title),
+    );
   }
 
   static void _showSafetySheet(BuildContext context, _ProfileViewData data) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (_) => UserSafetySheet(
+          targetUser: data.user,
+          displayName: data.displayName,
+        ),
       ),
-      builder: (_) =>
-          UserSafetySheet(targetUser: data.user, displayName: data.displayName),
     );
   }
 }
@@ -310,7 +320,6 @@ class _ProfileScaffoldState extends State<_ProfileScaffold> {
                 onFollowersTap: () {
                   SocialNavigation.toSocialConnectionsScreen(
                     context,
-                    tab: SocialConnectionsTab.followers,
                     title: data.displayName,
                     user: data.user,
                   );
@@ -498,7 +507,7 @@ class _ProfileHeader extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 46,
-              backgroundColor: colors.primary.withOpacity(0.18),
+              backgroundColor: colors.primary.withValues(alpha: 0.18),
               child: CircleAvatar(
                 radius: 42,
                 backgroundColor: colors.border,
@@ -823,7 +832,7 @@ class _ProfileTabsHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(color: backgroundColor, child: child);
+    return ColoredBox(color: backgroundColor, child: child);
   }
 
   @override
@@ -935,7 +944,7 @@ class _ProfileGridItem extends StatelessWidget {
         short.playbackUrl;
     final viewCount = _formatCompact(short.metrics.viewCount);
 
-    return Container(
+    return ColoredBox(
       color: colors.border,
       child: Stack(
         fit: StackFit.expand,
@@ -959,8 +968,8 @@ class _ProfileGridItem extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    colors.black.withOpacity(0.02),
-                    colors.black.withOpacity(0.32),
+                    colors.black.withValues(alpha: 0.02),
+                    colors.black.withValues(alpha: 0.32),
                   ],
                 ),
               ),
@@ -981,7 +990,7 @@ class _ProfileGridItem extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     shadows: [
                       Shadow(
-                        color: colors.black.withOpacity(0.55),
+                        color: colors.black.withValues(alpha: 0.55),
                         blurRadius: 4,
                       ),
                     ],
@@ -1017,12 +1026,12 @@ class _PostFallbackIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return Container(
+    return ColoredBox(
       color: colors.elevated,
       child: Center(
         child: Icon(
           Icons.play_circle_outline_rounded,
-          color: colors.white.withOpacity(0.72),
+          color: colors.white.withValues(alpha: 0.72),
           size: 34,
         ),
       ),
@@ -1039,12 +1048,12 @@ class _ProfileGridSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return Container(
+    return ColoredBox(
       color: index.isEven ? colors.elevated : colors.border,
       child: Center(
         child: Icon(
           Icons.grid_view_rounded,
-          color: colors.textMuted.withOpacity(0.3),
+          color: colors.textMuted.withValues(alpha: 0.3),
           size: 24,
         ),
       ),
@@ -1204,12 +1213,12 @@ class _ProfileLoader {
       isOwnProfile ? request.currentBio : null,
     ]);
 
-    final isVerified = profileBelongsToTarget
-        ? _bool(profile['is_verified']) ||
-              _bool(profile['verified']) ||
-              _bool(profile['identity_verified']) ||
-              _bool(profile['is_identity_verified'])
-        : false;
+    final isVerified =
+        profileBelongsToTarget &&
+        (_bool(profile['is_verified']) ||
+            _bool(profile['verified']) ||
+            _bool(profile['identity_verified']) ||
+            _bool(profile['is_identity_verified']));
 
     return _ProfileViewData(
       user: request.targetUser,
@@ -1253,7 +1262,7 @@ class _ProfileLoader {
       if (unwrapped.isLeft) return <String, dynamic>{};
 
       final raw = _extractData(unwrapped.rightOrNull);
-      if (raw is Map) return Map<String, dynamic>.from(raw);
+      return asJsonMap(raw);
     } catch (_) {}
 
     return <String, dynamic>{};
@@ -1275,7 +1284,7 @@ class _ProfileLoader {
       if (unwrapped.isLeft) return null;
 
       final raw = _extractData(unwrapped.rightOrNull);
-      if (raw is Map) return _int(raw['total']);
+      return _int(raw['total']);
     } catch (_) {}
 
     return null;
@@ -1335,15 +1344,10 @@ class _ProfileLoader {
       if (unwrapped.isLeft) return const <Short>[];
 
       final data = _extractData(unwrapped.rightOrNull);
-      final rawItems = data is Map
-          ? data['items'] ?? data['shorts'] ?? data['data']
-          : data;
+      final rawItems = data['items'] ?? data['shorts'] ?? data['data'];
 
-      if (rawItems is! List) return const <Short>[];
-
-      final list = rawItems
-          .whereType<Map>()
-          .map((item) => ShortModel.fromJson(Map<String, dynamic>.from(item)))
+      final list = asJsonMapList(rawItems)
+          .map(ShortModel.fromJson)
           .map(ShortMapper.toDomain)
           .toList(growable: false);
 
@@ -1365,14 +1369,18 @@ class _ProfileLoader {
     return {'user': targetUser, 'target_user': targetUser};
   }
 
-  static dynamic _extractData(dynamic payload) {
-    if (payload is Map && payload['data'] is Map) return payload['data'];
-    if (payload is Map && payload['message'] is Map) {
-      final message = payload['message'] as Map;
-      if (message['data'] is Map) return message['data'];
-      return message;
+  static Map<String, dynamic> _extractData(Object? payload) {
+    final data = asJsonMap(payload);
+    final innerData = asJsonMap(data['data']);
+    if (innerData.isNotEmpty) return innerData;
+
+    final message = asJsonMap(data['message']);
+    if (message.isNotEmpty) {
+      final messageData = asJsonMap(message['data']);
+      return messageData.isNotEmpty ? messageData : message;
     }
-    return payload;
+
+    return data;
   }
 
   static bool _profileBelongsToTarget(
@@ -1397,7 +1405,7 @@ class _ProfileLoader {
     return a.trim().toLowerCase() == b.trim().toLowerCase();
   }
 
-  static String _firstNonEmpty(List<dynamic> values) {
+  static String _firstNonEmpty(List<Object?> values) {
     for (final value in values) {
       final clean = value?.toString().trim();
       if (clean != null && clean.isNotEmpty && clean.toLowerCase() != 'null') {

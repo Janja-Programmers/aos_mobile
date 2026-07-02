@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad_image.dart';
 
 class AOSAdListItem {
@@ -38,17 +39,14 @@ class AOSAdListItem {
   final int totalReviews;
 
   factory AOSAdListItem.fromJson(Map<String, dynamic> json) {
-    final images = (json['images'] is List)
-        ? (json['images'] as List)
-        : const [];
+    final images = asJsonList(json['images']);
 
     String primary = (json['primary_image'] ?? json['image'] ?? '').toString();
 
     if (primary.isEmpty && images.isNotEmpty) {
       final first = images.first;
-      if (first is Map) {
-        primary = (first['image'] ?? '').toString();
-      }
+      final firstMap = asJsonMap(first);
+      primary = asString(firstMap['image']);
     }
 
     return AOSAdListItem(
@@ -98,8 +96,8 @@ class AOSAdListItem {
           ? null
           : json['original_price'].toString(),
 
-      offerPercent: json['offer_percent'] ?? 0,
-      isOfferActive: json['is_offer_active'] ?? false,
+      offerPercent: asDouble(json['offer_percent']),
+      isOfferActive: asBool(json['is_offer_active']),
       priceType: (json['price_type'] ?? '').toString(),
       priceUnit: (json['price_unit'] ?? '').toString(),
 
@@ -200,14 +198,12 @@ class AOSAdDetails {
     final imageItems = <AOSAdImage>[];
     final images = <String>[];
 
-    if (json['images'] is List) {
-      for (final e in (json['images'] as List)) {
-        final item = AOSAdImage.fromJson(e);
+    for (final e in asJsonMapList(json['images'])) {
+      final item = AOSAdImage.fromJson(e);
 
-        if (item.image.isNotEmpty) {
-          imageItems.add(item);
-          images.add(item.image);
-        }
+      if (item.image.isNotEmpty) {
+        imageItems.add(item);
+        images.add(item.image);
       }
     }
 

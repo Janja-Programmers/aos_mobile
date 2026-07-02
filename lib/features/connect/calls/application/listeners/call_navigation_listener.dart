@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/routing/app_router.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CallNavigationListener extends ConsumerStatefulWidget {
   final Widget child;
@@ -125,7 +124,7 @@ class _CallNavigationListenerState
   }
 
   void _releaseLock() {
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future<void>.delayed(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       _isNavigating = false;
     });

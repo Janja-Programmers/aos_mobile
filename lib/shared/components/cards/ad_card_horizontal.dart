@@ -1,11 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-
 import 'package:africaonlinestores/shared/components/cards/widgets/ad_card_body.dart';
 import 'package:africaonlinestores/shared/components/cards/widgets/ad_card_image.dart';
+import 'package:flutter/material.dart';
 
 class AdHorizontalCard extends StatelessWidget {
   const AdHorizontalCard({super.key, required this.ad, required this.onTap});

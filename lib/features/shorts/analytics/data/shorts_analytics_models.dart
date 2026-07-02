@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+
 class ShortsAnalyticsSummary {
   final int impressions;
   final int views;
@@ -137,29 +139,17 @@ class ShortsAnalyticsResult {
   });
 
   factory ShortsAnalyticsResult.fromJson(Map<String, dynamic> json) {
-    final rawTop = json['top_shorts'];
-    final topShorts = rawTop is List
-        ? rawTop
-              .whereType<Map<String, dynamic>>()
-              .map(ShortsTopItem.fromJson)
-              .toList(growable: false)
-        : const <ShortsTopItem>[];
+    final topShorts = asJsonMapList(
+      json['top_shorts'],
+    ).map(ShortsTopItem.fromJson).toList(growable: false);
 
     return ShortsAnalyticsResult(
       dateFrom: DateTime.tryParse(json['date_from']?.toString() ?? ''),
       dateTo: DateTime.tryParse(json['date_to']?.toString() ?? ''),
-      totals: ShortsAnalyticsSummary.fromJson(
-        json['totals'] is Map<String, dynamic>
-            ? json['totals'] as Map<String, dynamic>
-            : null,
-      ),
-      daily: json['daily'] is List
-          ? (json['daily'] as List).whereType<Map<String, dynamic>>().toList()
-          : const [],
+      totals: ShortsAnalyticsSummary.fromJson(asJsonMap(json['totals'])),
+      daily: asJsonMapList(json['daily']),
       topShorts: topShorts,
-      overview: json['overview'] is Map<String, dynamic>
-          ? json['overview'] as Map<String, dynamic>
-          : const {},
+      overview: asJsonMap(json['overview']),
     );
   }
 }

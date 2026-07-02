@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/services/call_media_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
@@ -10,6 +8,7 @@ import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 import 'package:africaonlinestores/features/connect/calls/repository/call_repository_impl.dart';
 import 'package:africaonlinestores/features/connect/calls/utils/call_timer.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class CallManager extends StateNotifier<CallState> {
   final CallRepository repository;
@@ -241,11 +240,7 @@ class CallManager extends StateNotifier<CallState> {
       final safeReceiver =
           initiatedCall.receiver ??
           receiver ??
-          CallParticipant(
-            userId: trimmedUserId,
-            displayName: trimmedUserId,
-            avatarUrl: null,
-          );
+          CallParticipant(userId: trimmedUserId, displayName: trimmedUserId);
 
       _applyBackendState(
         BackendCallStatus.initiated,
@@ -470,12 +465,12 @@ class CallManager extends StateNotifier<CallState> {
       state = state.copyWith(isBusy: false);
 
       final failedCallId = state.activeCall?.id;
-      final synced = failedCallId == null
-          ? false
-          : await _applyBackendStatusIfTerminal(
-              callId: failedCallId,
-              hasIncomingCallUi: false,
-            );
+      final synced =
+          !(failedCallId == null) &&
+          await _applyBackendStatusIfTerminal(
+            callId: failedCallId,
+            hasIncomingCallUi: false,
+          );
 
       if (!synced) {
         await _failCall(e);
@@ -770,7 +765,6 @@ class CallManager extends StateNotifier<CallState> {
 
       state = state.copyWith(
         hasActiveRoom: false,
-        room: null,
         isRemoteVideoEnabled: false,
         isLocalVideoEnabled: false,
         isUpgradePending: false,
@@ -944,7 +938,7 @@ class CallManager extends StateNotifier<CallState> {
     }
   }
 
-  AOSCallType _parseCallType(dynamic value) {
+  AOSCallType _parseCallType(Object? value) {
     switch (_cleanString(value)?.toLowerCase()) {
       case 'video':
         return AOSCallType.video;
@@ -954,9 +948,9 @@ class CallManager extends StateNotifier<CallState> {
   }
 
   CallParticipant? _parseParticipant({
-    required dynamic user,
-    dynamic displayName,
-    dynamic avatar,
+    required Object? user,
+    Object? displayName,
+    Object? avatar,
   }) {
     final userId = _cleanString(user);
     if (userId == null) return null;
@@ -968,7 +962,7 @@ class CallManager extends StateNotifier<CallState> {
     );
   }
 
-  String? _cleanString(dynamic value) {
+  String? _cleanString(Object? value) {
     final text = value?.toString().trim();
 
     if (text == null || text.isEmpty || text.toLowerCase() == 'null') {
@@ -1401,8 +1395,6 @@ class CallManager extends StateNotifier<CallState> {
 
     state = state.copyWith(
       uiPhase: UiCallPhase.idle,
-      backendStatus: null,
-      room: null,
       activeCallBuilder: () => null,
       callerBuilder: () => null,
       receiverBuilder: () => null,
@@ -1431,7 +1423,7 @@ class CallManager extends StateNotifier<CallState> {
   @override
   void dispose() {
     _resetTimer?.cancel();
-    _durationSub?.cancel();
+    unawaited(_durationSub?.cancel());
     callTimer.dispose();
     super.dispose();
   }

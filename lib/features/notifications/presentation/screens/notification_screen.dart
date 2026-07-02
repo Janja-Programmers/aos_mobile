@@ -1,18 +1,21 @@
-import 'package:africaonlinestores/features/notifications/presentation/widgets/notification_action_sheet.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
-
+import 'package:africaonlinestores/features/notifications/application/controllers/notification_controller.dart';
 import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
+import 'package:africaonlinestores/features/notifications/application/services/notification_navigation_handler.dart';
 import 'package:africaonlinestores/features/notifications/application/state/notification_state.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
 import 'package:africaonlinestores/features/notifications/presentation/utils/helpers.dart';
 import 'package:africaonlinestores/features/notifications/presentation/widgets/empty_view.dart';
 import 'package:africaonlinestores/features/notifications/presentation/widgets/error_view.dart';
+import 'package:africaonlinestores/features/notifications/presentation/widgets/notification_action_sheet.dart';
 import 'package:africaonlinestores/features/notifications/presentation/widgets/notification_tabs.dart';
 import 'package:africaonlinestores/features/notifications/presentation/widgets/notification_tile.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
@@ -29,19 +32,22 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   void initState() {
     super.initState();
 
-    Future.microtask(() {
-      appLogger.i('🔔 NotificationsScreen → loadNotifications');
-      ref.read(notificationControllerProvider.notifier).loadNotifications();
-    });
+    unawaited(
+      Future<void>.microtask(() {
+        appLogger.i('🔔 NotificationsScreen → loadNotifications');
+        unawaited(
+          ref.read(notificationControllerProvider.notifier).loadNotifications(),
+        );
+      }),
+    );
   }
 
   void _showNotificationBottomSheet({
     required BuildContext context,
     required NotificationItem notification,
-    required dynamic controller,
-    required dynamic handler,
+    required NotificationNavigationHandler handler,
   }) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -76,7 +82,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         actions: [
           if (state.unreadCount > 0)
             TextButton(
-              onPressed: controller.markAllAsRead,
+              onPressed: () => unawaited(controller.markAllAsRead()),
               child: const Text('Read all'),
             ),
         ],
@@ -117,8 +123,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Widget _buildBody({
     required NotificationState state,
     required List<NotificationItem> items,
-    required dynamic controller,
-    required dynamic handler,
+    required NotificationController controller,
+    required NotificationNavigationHandler handler,
   }) {
     // 🔄 Loading
     if (state.isLoading && state.items.isEmpty) {
@@ -155,8 +161,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     return RefreshIndicator(
       onRefresh: controller.refreshNotifications,
       child: ListView.separated(
+        scrollCacheExtent: const ScrollCacheExtent.pixels(600),
         physics: const AlwaysScrollableScrollPhysics(),
-        cacheExtent: 600,
         itemCount: rows.length,
         separatorBuilder: (_, _) => const SizedBox(height: 2),
         itemBuilder: (context, index) {
@@ -182,17 +188,16 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             child: NotificationTile(
               notification: n,
               onTap: () {
-                controller.markNotificationRead(n.id);
+                unawaited(controller.markNotificationRead(n.id));
 
                 _showNotificationBottomSheet(
                   context: context,
                   notification: n,
-                  controller: controller,
                   handler: handler,
                 );
               },
               onDelete: () {
-                controller.deleteNotification(n.id);
+                unawaited(controller.deleteNotification(n.id));
 
                 ScaffoldMessenger.of(context).clearSnackBars();
                 ScaffoldMessenger.of(context).showSnackBar(

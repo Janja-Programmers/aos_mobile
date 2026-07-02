@@ -1,13 +1,11 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:dio/dio.dart';
 
 /// Convert Dio exceptions into a user-friendly [Failure].
 Failure mapDioException(DioException e) {
-  // Network / connection layer
   switch (e.type) {
     case DioExceptionType.connectionTimeout:
     case DioExceptionType.sendTimeout:
@@ -16,26 +14,21 @@ Failure mapDioException(DioException e) {
         'Request timed out. Please try again.',
         type: FailureType.timeout,
       );
-
     case DioExceptionType.badCertificate:
     case DioExceptionType.connectionError:
       return const Failure(
         'Network error. Check your internet connection.',
         type: FailureType.network,
       );
-
     case DioExceptionType.cancel:
       return const Failure('Request cancelled.', type: FailureType.unknown);
-
     case DioExceptionType.unknown:
-      // Can be SocketException etc.
       return const Failure(
         'Network error. Please try again.',
         type: FailureType.network,
       );
-
     case DioExceptionType.badResponse:
-      break; // handled below using status code
+      break;
   }
 
   final status = e.response?.statusCode;
@@ -100,57 +93,64 @@ Failure mapDioException(DioException e) {
   );
 }
 
-String? _extractServerMessage(dynamic data) {
-  // Expecting one of:
-  // 1) {message: {ok: false, message: "..."}}
-  // 2) {message: "..."}
-  // 3) {ok: false, message: "..."}
+String? _extractServerMessage(Object? data) {
   try {
-    if (data is Map) {
-      // 🔥 Handle Frappe errors
-      if (data['_server_messages'] != null) {
-        final messages = data['_server_messages'];
-        if (messages is List && messages.isNotEmpty) {
-          final parsed = messages.first;
-          if (parsed is String) {
-            final decoded = parsed;
-            return decoded;
-          }
-        }
-      }
+    if (data is! Map) {
+      return null;
+    }
 
-      final msg = data['message'];
-      if (msg is Map && msg['message'] != null) {
-        return msg['message'].toString();
-      }
-      if (msg != null && msg is! Map) {
-        return msg.toString();
+    final serverMessages = data['_server_messages'];
+    final serverMessage = _extractFrappeServerMessage(serverMessages);
+    if (serverMessage != null) {
+      return serverMessage;
+    }
+
+    final msg = data['message'];
+    if (msg is Map) {
+      final nested = msg['message'];
+      if (nested != null) {
+        return nested.toString();
       }
     }
 
-    if (data['_server_messages'] != null) {
-      final raw = data['_server_messages'];
-
-      try {
-        // Frappe sends this as a STRINGIFIED LIST
-        final List decodedList = raw is String
-            ? jsonDecode(raw)
-            : List.from(raw);
-
-        if (decodedList.isNotEmpty) {
-          final first = decodedList.first;
-
-          if (first is String) {
-            final inner = jsonDecode(first);
-            if (inner is Map && inner['message'] != null) {
-              return inner['message'].toString();
-            }
-          }
-        }
-      } catch (_) {
-        // fallback silently
-      }
+    if (msg != null) {
+      return msg.toString();
     }
-  } catch (_) {}
+  } catch (_) {
+    // Keep failure mapping defensive; malformed server errors should not crash.
+  }
   return null;
+}
+
+String? _extractFrappeServerMessage(Object? raw) {
+  if (raw == null) {
+    return null;
+  }
+
+  try {
+    final Object? decoded = raw is String ? jsonDecode(raw) : raw;
+    final List<Object?> messages = decoded is Iterable<Object?>
+        ? decoded.toList(growable: false)
+        : decoded is Iterable
+        ? decoded.cast<Object?>().toList(growable: false)
+        : <Object?>[];
+
+    if (messages.isEmpty) {
+      return null;
+    }
+
+    final first = messages.first;
+    if (first is! String) {
+      return first?.toString();
+    }
+
+    final inner = jsonDecode(first);
+    if (inner is Map && inner['message'] != null) {
+      return inner['message'].toString();
+    }
+
+    return first;
+  } catch (_) {
+    return raw.toString();
+  }
 }

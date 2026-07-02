@@ -1,14 +1,12 @@
 import 'dart:io' show Platform;
 
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/auth/shared/widgets/google_button.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/features/auth/shared/widgets/google_button.dart';
 
 class PlatformSocialSection extends StatelessWidget {
   const PlatformSocialSection({
@@ -60,7 +58,7 @@ class PlatformSocialSection extends StatelessWidget {
             width: 22,
             height: 22,
           ),
-          label: isIOS ? "Sign in with Google" : l10n.auth_continue_google,
+          label: isIOS ? 'Sign in with Google' : l10n.auth_continue_google,
           loading: googleLoading,
           onPressed: loading ? null : onGoogle,
         ),

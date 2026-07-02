@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class TimerBadge extends StatelessWidget {
   final String text;
@@ -125,7 +124,7 @@ class _LiveDotState extends State<_LiveDot>
             decoration: BoxDecoration(
               color: widget.isLive
                   ? colors.success
-                  : colors.primary.withOpacity(0.6),
+                  : colors.primary.withValues(alpha: 0.6),
               shape: BoxShape.circle,
             ),
           ),

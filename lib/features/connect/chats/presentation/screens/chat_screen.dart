@@ -1,8 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
@@ -26,6 +23,8 @@ import 'package:africaonlinestores/features/connect/chats/repository/chat_reposi
 import 'package:africaonlinestores/features/connect/conversations/application/providers/conversation_provider.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String conversationId;
@@ -283,57 +282,59 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _openMessageActions(ChatMessage message, bool isMe) {
     if (message.isSystemMessage) return;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (sheetContext) {
-        return MessageActionsSheet(
-          message: message,
-          isMe: isMe,
-          canEdit: _canEdit(message),
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (sheetContext) {
+          return MessageActionsSheet(
+            message: message,
+            isMe: isMe,
+            canEdit: _canEdit(message),
 
-          onReply: () {
-            Navigator.pop(sheetContext);
-            _startReply(message);
-          },
+            onReply: () {
+              Navigator.pop(sheetContext);
+              _startReply(message);
+            },
 
-          onEdit: () {
-            Navigator.pop(sheetContext);
-            _showEditDialog(message);
-          },
+            onEdit: () {
+              Navigator.pop(sheetContext);
+              _showEditDialog(message);
+            },
 
-          onToggleStar: () async {
-            Navigator.pop(sheetContext);
-            await _toggleStar(message);
-          },
+            onToggleStar: () async {
+              Navigator.pop(sheetContext);
+              await _toggleStar(message);
+            },
 
-          onToggleReaction: (emoji) {
-            Navigator.pop(sheetContext);
-            _toggleReaction(message, emoji);
-          },
+            onToggleReaction: (emoji) {
+              Navigator.pop(sheetContext);
+              _toggleReaction(message, emoji);
+            },
 
-          onTranslate: () async {
-            Navigator.pop(sheetContext);
-            await _translateMessageWithPicker(message);
-          },
+            onTranslate: () async {
+              Navigator.pop(sheetContext);
+              await _translateMessageWithPicker(message);
+            },
 
-          onForward: () {
-            Navigator.pop(sheetContext);
-            _forwardMessage(message);
-          },
+            onForward: () {
+              Navigator.pop(sheetContext);
+              _forwardMessage(message);
+            },
 
-          onDeleteForMe: () {
-            Navigator.pop(sheetContext);
-            _deleteMessage(message, deleteScope: 'me');
-          },
+            onDeleteForMe: () {
+              Navigator.pop(sheetContext);
+              _deleteMessage(message, deleteScope: 'me');
+            },
 
-          onDeleteForEveryone: () {
-            Navigator.pop(sheetContext);
-            _deleteMessage(message, deleteScope: 'everyone');
-          },
-        );
-      },
+            onDeleteForEveryone: () {
+              Navigator.pop(sheetContext);
+              _deleteMessage(message, deleteScope: 'everyone');
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -475,7 +476,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final colors = context.appColors;
 
     return Scaffold(
-      backgroundColor: colors.surface.withOpacity(.55),
+      backgroundColor: colors.surface.withValues(alpha: .55),
       appBar: ChatAppBar(
         conversationId: widget.conversationId,
         displayName: widget.displayName,
@@ -575,7 +576,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _scrollToBottom() {
-    Future.delayed(const Duration(milliseconds: 100), () {
+    Future<void>.delayed(const Duration(milliseconds: 100), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           0,

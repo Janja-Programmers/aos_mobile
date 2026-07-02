@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
-
 import 'package:africaonlinestores/features/live/domain/live_role.dart';
+import 'package:flutter/foundation.dart';
 
 @immutable
 class LiveJoinSession {

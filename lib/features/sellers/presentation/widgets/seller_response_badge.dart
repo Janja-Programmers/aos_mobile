@@ -23,7 +23,7 @@ class SellerResponseBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: colors.success.withOpacity(.15),
+        color: colors.success.withValues(alpha: .15),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(

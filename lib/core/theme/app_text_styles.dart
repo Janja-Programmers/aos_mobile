@@ -1,8 +1,7 @@
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/typography.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 TextStyle _base({
   required double size,
@@ -197,13 +196,13 @@ extension AppTextStylesY on BuildContext {
   TextStyle get carouselSubtitle => _base(
     size: 14,
     weight: FontWeight.w600,
-    color: appColors.white.withOpacity(0.9),
+    color: appColors.white.withValues(alpha: 0.9),
   );
 
   TextStyle get carouselDescription => _base(
     size: 12,
     weight: FontWeight.w400,
-    color: appColors.white.withOpacity(0.7),
+    color: appColors.white.withValues(alpha: 0.7),
   );
 }
 

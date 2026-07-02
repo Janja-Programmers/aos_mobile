@@ -1,13 +1,12 @@
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
+import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
-import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
+import 'package:dio/dio.dart';
 
 class NotificationApi {
   final ApiClient _apiClient;
@@ -27,23 +26,13 @@ class NotificationApi {
         return Either.left(result.leftOrNull!);
       }
 
-      final data = result.rightOrNull;
+      final data = asJsonMap(result.rightOrNull);
+      final payload = asJsonMap(data['data']);
+      final raw = payload['items'];
 
-      // 🔥 FIX HERE
-      final raw = data?['data']?['items'];
-
-      if (raw is! List) {
-        return Either.left(
-          const Failure(
-            'Invalid notifications format',
-            type: FailureType.parse,
-          ),
-        );
-      }
-
-      final items = raw
-          .map((e) => NotificationItem.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      final items = asJsonMapList(
+        raw,
+      ).map(NotificationItem.fromJson).toList(growable: false);
 
       return Either.right(items);
     } on DioException catch (e) {

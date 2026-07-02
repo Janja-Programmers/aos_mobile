@@ -1,8 +1,8 @@
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:flutter/material.dart';
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/presentation/widgets/subcategories_grid.dart';
+import 'package:flutter/material.dart';
 
 class SubcategoryPanel extends StatelessWidget {
   const SubcategoryPanel({

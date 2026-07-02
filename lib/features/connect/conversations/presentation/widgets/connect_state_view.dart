@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 enum ConnectStateType { loading, empty, error }
 
@@ -83,7 +82,7 @@ class ConnectStateView extends StatelessWidget {
               border: Border.all(color: colors.border),
               boxShadow: [
                 BoxShadow(
-                  color: colors.black.withOpacity(0.04),
+                  color: colors.black.withValues(alpha: 0.04),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
@@ -176,7 +175,7 @@ class _StateIcon extends StatelessWidget {
       width: 64,
       height: 64,
       decoration: BoxDecoration(
-        color: accentColor.withOpacity(0.10),
+        color: accentColor.withValues(alpha: 0.10),
         shape: BoxShape.circle,
       ),
       child: Icon(icon, color: accentColor, size: 32),

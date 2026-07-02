@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:flutter/material.dart';
 
 enum AdActionType { primary, secondary, destructive, disabled }
 

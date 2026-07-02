@@ -1,24 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
-
 import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 import 'package:africaonlinestores/features/connect/chats/utils/chat_actions.dart';
-
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_seller_store_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ads_header_info_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/grid_ads_section.dart';
@@ -26,24 +18,23 @@ import 'package:africaonlinestores/features/home/presentation/components/ad_deta
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/product_detail_section.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/ad_detail_controller.dart';
 import 'package:africaonlinestores/features/home/shared/providers/similar_ads_provider.dart';
-
 import 'package:africaonlinestores/features/reviews/application/controllers/review_controller.dart';
 import 'package:africaonlinestores/features/reviews/application/navigation/reviews_routes.dart';
 import 'package:africaonlinestores/features/reviews/application/state/review_state.dart';
 import 'package:africaonlinestores/features/reviews/presentation/sections/review_ad_section.dart';
-
 import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
-
 import 'package:africaonlinestores/features/sellers/application/providers/seller_profile_provider.dart';
 import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
-
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
-
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 class AdDetailsScreen extends ConsumerStatefulWidget {
   const AdDetailsScreen({super.key, required this.id});
@@ -98,7 +89,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
 
     final text = [
       'Check out $title on AOS.',
-      if (ad.currentPrice?.trim().isNotEmpty == true)
+      if (ad.currentPrice?.trim().isNotEmpty ?? false)
         'Price: ${ad.currentPrice!.trim()}',
       if (location.isNotEmpty) 'Location: $location',
       url,
@@ -326,11 +317,11 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
               ? ref.watch(wishlistControllerProvider).value
               : null;
 
-          final isFavorite = isAuthenticated
-              ? wishlistState?.isReady == true
-                    ? wishlistState!.ids.contains(ad.id)
-                    : ad.isWishlisted
-              : false;
+          final isFavorite =
+              isAuthenticated &&
+              (wishlistState?.isReady ?? false
+                  ? wishlistState!.ids.contains(ad.id)
+                  : ad.isWishlisted);
 
           final isFavoritePending =
               wishlistState?.pending.contains(ad.id) ?? false;

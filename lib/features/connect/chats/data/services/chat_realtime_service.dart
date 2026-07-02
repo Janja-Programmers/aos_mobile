@@ -9,31 +9,31 @@ class ChatRealtimeService {
   // -----------------------------
   // Streams (Filtered from core)
   // -----------------------------
-  Stream<dynamic> get messages => realtime.events
+  Stream<Object?> get messages => realtime.events
       .where((e) => e.type == RealtimeEventType.chatNewMessage)
       .map((e) => e.data);
 
-  Stream<dynamic> get typing => realtime.events
+  Stream<Object?> get typing => realtime.events
       .where((e) => e.type == RealtimeEventType.chatTyping)
       .map((e) => e.data);
 
-  Stream<dynamic> get presence => realtime.events
+  Stream<Object?> get presence => realtime.events
       .where((e) => e.type == RealtimeEventType.presenceUpdate)
       .map((e) => e.data);
 
-  Stream<dynamic> get messageStatus => realtime.events
+  Stream<Object?> get messageStatus => realtime.events
       .where((e) => e.type == RealtimeEventType.aosMessageStatus)
       .map((e) => e.data);
 
-  Stream<dynamic> get messageEdited => realtime.events
+  Stream<Object?> get messageEdited => realtime.events
       .where((e) => e.type == RealtimeEventType.aosMessageEdited)
       .map((e) => e.data);
 
-  Stream<dynamic> get messagesDeleted => realtime.events
+  Stream<Object?> get messagesDeleted => realtime.events
       .where((e) => e.type == RealtimeEventType.aosMessagesDeleted)
       .map((e) => e.data);
 
-  Stream<dynamic> get messageReactionUpdated => realtime.events
+  Stream<Object?> get messageReactionUpdated => realtime.events
       .where((e) => e.type == RealtimeEventType.aosMessageReactionUpdated)
       .map((e) => e.data);
 }

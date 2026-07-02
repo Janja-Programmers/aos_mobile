@@ -22,7 +22,7 @@ class UserPreferenceApi {
     Map<String, dynamic> data,
   ) async {
     try {
-      final res = await _client.dio.post(
+      final res = await _client.dio.post<Map<String, dynamic>>(
         ApiEndpoints.updatePreferencesEndpoint,
         data: data,
       );

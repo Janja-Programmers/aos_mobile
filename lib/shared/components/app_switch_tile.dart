@@ -1,7 +1,5 @@
-import 'package:africaonlinestores/core/core.dart';
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:flutter/material.dart';
 
 class AppSwitchTile extends StatelessWidget {
   const AppSwitchTile({
@@ -37,7 +35,6 @@ class AppSwitchTile extends StatelessWidget {
               Switch(
                 value: value,
                 onChanged: onChanged,
-                activeColor: context.appColors.border,
                 activeThumbColor: scheme.primary,
               ),
             ],
@@ -47,7 +44,7 @@ class AppSwitchTile extends StatelessWidget {
           Divider(
             height: 1,
             thickness: 1,
-            color: scheme.outlineVariant.withOpacity(0.22),
+            color: scheme.outlineVariant.withValues(alpha: 0.22),
           ),
       ],
     );
@@ -66,10 +63,14 @@ class _LeadingIcon extends StatelessWidget {
       width: 38,
       height: 38,
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withOpacity(0.55),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(icon, size: 20, color: scheme.onSurface.withOpacity(0.75)),
+      child: Icon(
+        icon,
+        size: 20,
+        color: scheme.onSurface.withValues(alpha: 0.75),
+      ),
     );
   }
 }

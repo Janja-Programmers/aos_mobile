@@ -1,14 +1,12 @@
 import 'dart:async';
 
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
-
 import 'package:africaonlinestores/features/live/application/managers/live_manager.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_payload.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
+import 'package:go_router/go_router.dart';
 
 class NotificationNavigationHandler {
   final GoRouter router;

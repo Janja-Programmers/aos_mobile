@@ -1,9 +1,10 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_ad_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_creator_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_metrics_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_viewer_state_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
-import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 
 class ShortModel {
   final String id;
@@ -150,7 +151,7 @@ class ShortModel {
   static ShortSound? _parseSound(dynamic value) {
     if (value is! Map<String, dynamic>) {
       if (value is Map) {
-        return ShortSound.fromJson(Map<String, dynamic>.from(value));
+        return ShortSound.fromJson(asJsonMap(value));
       }
       return null;
     }

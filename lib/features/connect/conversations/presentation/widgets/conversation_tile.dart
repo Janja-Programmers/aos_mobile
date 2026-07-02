@@ -1,13 +1,9 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
-
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
-
 import 'package:africaonlinestores/shared/utils/format_time.dart';
+import 'package:flutter/material.dart';
 
 class ConversationTile extends StatelessWidget {
   final ChatConversation conversation;
@@ -57,7 +53,6 @@ class ConversationTile extends StatelessWidget {
     final isMine =
         conversation.lastSender != conversation.user &&
         conversation.lastSender != 'Administrator';
-
 
     if (!isMine) {
       return Text(

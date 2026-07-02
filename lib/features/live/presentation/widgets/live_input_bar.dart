@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class LiveInputBar extends StatelessWidget {
   final TextEditingController controller;
@@ -29,14 +28,14 @@ class LiveInputBar extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(.2),
+                  color: Colors.white.withValues(alpha: .2),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: TextField(
                   controller: controller,
                   style: context.p.copyWith(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: "Say something...",
+                    hintText: 'Say something...',
                     hintStyle: context.p.copyWith(color: Colors.white70),
                     border: InputBorder.none,
                   ),

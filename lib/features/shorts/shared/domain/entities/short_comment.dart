@@ -1,7 +1,6 @@
-import 'package:equatable/equatable.dart';
-
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/comment_id.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
+import 'package:equatable/equatable.dart';
 
 class ShortComment extends Equatable {
   final CommentId id;

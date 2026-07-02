@@ -1,11 +1,9 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/features/sellers/application/state/storefront_dashboard_state.dart';
 import 'package:africaonlinestores/features/sellers/domain/storefront_analytics.dart';
 import 'package:africaonlinestores/features/sellers/domain/storefront_post.dart';
-
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_management_api.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class StorefrontDashboardController
     extends StateNotifier<StorefrontDashboardState> {
@@ -19,7 +17,7 @@ class StorefrontDashboardController
   }
 
   Future<void> load() async {
-    state = state.copyWith(loading: true, error: null);
+    state = state.copyWith(loading: true);
 
     try {
       final res = await _shortsManagementApi.myShorts();
@@ -33,7 +31,6 @@ class StorefrontDashboardController
 
           state = state.copyWith(
             loading: false,
-            error: null,
             posts: posts,
             analytics: StorefrontAnalytics.fromShorts(shorts),
           );

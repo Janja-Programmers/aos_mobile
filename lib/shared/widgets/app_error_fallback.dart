@@ -18,7 +18,7 @@ class AppErrorFallback extends StatelessWidget {
           decoration: BoxDecoration(
             color: colors.surface,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: colors.error, width: 1),
+            border: Border.all(color: colors.error),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,

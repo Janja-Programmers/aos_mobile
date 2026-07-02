@@ -1,11 +1,11 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
-import 'package:path_provider/path_provider.dart';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 class MediaVideoTile extends StatefulWidget {
   final String videoUrl;
@@ -73,7 +73,7 @@ class _MediaVideoTileState extends State<MediaVideoTile> {
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: _thumbnail == null
-                ? Container(
+                ? ColoredBox(
                     color: colors.black,
                     child: const Center(child: CircularProgressIndicator()),
                   )
@@ -108,7 +108,7 @@ class _MediaVideoTileState extends State<MediaVideoTile> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: colors.black.withOpacity(0.1),
+                    color: colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                   ),
                 ],

@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/features/home/domain/home_ads_sections.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_state.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final homePageControllerProvider =
     AsyncNotifierProvider<HomePageController, HomePageState>(
@@ -39,12 +39,12 @@ class HomePageController extends AsyncNotifier<HomePageState> {
   }
 
   List<AOSAdListItem> _parseItems(Map<String, dynamic> payload) {
-    final raw = payload['data']?['items'];
-    if (raw is! List) return const [];
+    final data = asJsonMap(payload['data']);
+    final raw = data['items'];
 
-    return raw
-        .map((e) => AOSAdListItem.fromJson(Map<String, dynamic>.from(e)))
-        .toList();
+    return asJsonMapList(
+      raw,
+    ).map(AOSAdListItem.fromJson).toList(growable: false);
   }
 
   Future<HomePageState> _loadInitial({
@@ -75,12 +75,11 @@ class HomePageController extends AsyncNotifier<HomePageState> {
                 sort: section.sort,
                 promotionType: section.promotionType,
                 limit: section.limit,
-                offset: 0,
               );
 
           final items = res.fold<List<AOSAdListItem>>(
             (_) => const [],
-            (payload) => _parseItems(Map<String, dynamic>.from(payload)),
+            (payload) => _parseItems(asJsonMap(payload)),
           );
 
           sectionResults[section.key] = items;
@@ -89,11 +88,11 @@ class HomePageController extends AsyncNotifier<HomePageState> {
 
       final discoverRes = await ref
           .read(adsApiProvider)
-          .listAds(locationId: locationId, limit: _discoverLimit, offset: 0);
+          .listAds(locationId: locationId);
 
       final discoverItems = discoverRes.fold<List<AOSAdListItem>>(
         (_) => const [],
-        (payload) => _parseItems(Map<String, dynamic>.from(payload)),
+        (payload) => _parseItems(asJsonMap(payload)),
       );
 
       return initialState.copyWith(
@@ -139,15 +138,11 @@ class HomePageController extends AsyncNotifier<HomePageState> {
 
     final res = await ref
         .read(adsApiProvider)
-        .listAds(
-          locationId: locationId,
-          limit: _discoverLimit,
-          offset: _offset,
-        );
+        .listAds(locationId: locationId, offset: _offset);
 
     final parsed = res.fold<List<AOSAdListItem>>(
       (_) => const [],
-      (payload) => _parseItems(Map<String, dynamic>.from(payload)),
+      (payload) => _parseItems(asJsonMap(payload)),
     );
 
     final latest = state.value ?? current;

@@ -1,10 +1,9 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/search/controller/voice_input_controller.dart';
 import 'package:africaonlinestores/features/search/voice/voice_listening_indicator.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class VoiceSearchSheet extends ConsumerStatefulWidget {
   const VoiceSearchSheet({super.key});

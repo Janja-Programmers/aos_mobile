@@ -1,6 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
@@ -8,6 +5,8 @@ import 'package:africaonlinestores/features/connect/calls/application/state/call
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/ringing/avator.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ClosingCallView extends ConsumerWidget {
   final CallState state;
@@ -22,7 +21,6 @@ class ClosingCallView extends ConsumerWidget {
     final participant = CallParticipantResolver.otherParticipant(
       state,
       currentUserId: currentUserId,
-      fallbackName: 'AOS Call',
     );
     final status = _statusText(state);
 

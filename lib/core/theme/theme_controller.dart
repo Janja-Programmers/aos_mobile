@@ -1,7 +1,6 @@
+import 'package:africaonlinestores/core/theme/theme_prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
-
-import 'package:africaonlinestores/core/theme/theme_prefs.dart';
 
 class ThemeController extends StateNotifier<ThemeMode> {
   ThemeController(super.initialState);

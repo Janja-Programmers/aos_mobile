@@ -1,5 +1,5 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
-
 import 'package:africaonlinestores/features/live/application/managers/live_manager.dart';
 
 class LiveSignalingHandler {
@@ -111,7 +111,7 @@ class LiveSignalingHandler {
 
       await liveManager.onLiveCommentEvent(
         liveId: liveId,
-        comment: Map<String, dynamic>.from(comment),
+        comment: asJsonMap(comment),
       );
     } catch (_) {}
   }

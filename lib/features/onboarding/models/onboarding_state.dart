@@ -16,13 +16,7 @@ class OnboardingState {
   });
 
   factory OnboardingState.initial() {
-    return const OnboardingState(
-      step: 0,
-      languageCode: null,
-      countryCode: null,
-      currencyCode: null,
-      didInitDefaults: false,
-    );
+    return const OnboardingState(step: 0, didInitDefaults: false);
   }
 
   OnboardingState copyWith({

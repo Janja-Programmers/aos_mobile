@@ -1,23 +1,20 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
 import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/normalize_image.dart';
-
 import 'package:africaonlinestores/features/account/data/accounts_api.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/editable_avator.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_provider.dart';
-
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
-
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ProfileEditSheet extends ConsumerStatefulWidget {
   const ProfileEditSheet({super.key});
@@ -83,11 +80,9 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       return;
     }
 
-    final payload = res.rightOrNull ?? {};
-    final rawData = payload['data'] ?? payload['message']?['data'] ?? payload;
-    final data = rawData is Map
-        ? Map<String, dynamic>.from(rawData)
-        : <String, dynamic>{};
+    final payload = res.rightOrNull ?? <String, dynamic>{};
+    final message = asJsonMap(payload['message']);
+    final data = asJsonMap(payload['data'] ?? message['data'] ?? payload);
 
     ref.read(authControllerProvider.notifier).setUserFromMap(data);
 
@@ -114,6 +109,8 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       uploadFn: (f) => ref.read(filesApiProvider).uploadMedia(file: f),
     );
 
+    if (!mounted) return;
+
     if (uploaded == null) {
       setState(() => _uploadingPhoto = false);
 
@@ -132,11 +129,9 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       return;
     }
 
-    final payload = res.rightOrNull ?? {};
-    final rawData = payload['data'] ?? payload['message']?['data'] ?? payload;
-    final data = rawData is Map
-        ? Map<String, dynamic>.from(rawData)
-        : <String, dynamic>{};
+    final payload = res.rightOrNull ?? <String, dynamic>{};
+    final message = asJsonMap(payload['message']);
+    final data = asJsonMap(payload['data'] ?? message['data'] ?? payload);
 
     ref.read(authControllerProvider.notifier).setUserFromMap(data);
 

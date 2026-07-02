@@ -1,10 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/viewers/image_viewer.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/viewers/video_viewer.dart';
-
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AttachmentOpener {
   static Future<void> open({
@@ -16,14 +14,14 @@ class AttachmentOpener {
       case 'image':
         await Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => ImageViewer(url: url)),
+          MaterialPageRoute<void>(builder: (_) => ImageViewer(url: url)),
         );
         break;
 
       case 'video':
         await Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => VideoViewer(url: url)),
+          MaterialPageRoute<void>(builder: (_) => VideoViewer(url: url)),
         );
         break;
 
@@ -43,7 +41,7 @@ class AttachmentOpener {
 
     if (!await canLaunchUrl(uri)) {
       if (ctx.mounted) {
-        ShowSnack(ctx, "Cannot open this type of document").warning();
+        ShowSnack(ctx, 'Cannot open this type of document').warning();
       }
       return;
     }

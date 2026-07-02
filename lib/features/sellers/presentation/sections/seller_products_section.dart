@@ -1,14 +1,13 @@
-import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/sellers/application/providers/seller_ads_provider.dart';
-
 import 'package:africaonlinestores/shared/components/cards/ad_card_grid.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SellerProductsSection extends ConsumerWidget {
   const SellerProductsSection({super.key, required this.sellerId});
@@ -23,7 +22,7 @@ class SellerProductsSection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Products", style: context.h6),
+          Text('Products', style: context.h6),
 
           const SizedBox(height: 16),
 
@@ -62,7 +61,7 @@ class SellerProductsSection extends ConsumerWidget {
               if (items.isEmpty) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Center(child: Text("No products yet")),
+                  child: Center(child: Text('No products yet')),
                 );
               }
 
@@ -151,42 +150,44 @@ class _FilterChip extends StatelessWidget {
 void _showSortSheet(BuildContext context) {
   final colors = context.appColors;
 
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: colors.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-    ),
-    builder: (_) {
-      return SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 42,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: colors.border,
-                    borderRadius: BorderRadius.circular(100),
+  unawaited(
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 22),
-              Text('Sort By', style: context.h6),
-              const SizedBox(height: 22),
-              const _SortOption(label: 'Latest Saved'),
-              const _SortOption(label: 'Most Reviewed'),
-              const _SortOption(label: 'Highest Price'),
-              const _SortOption(label: 'Lowest Price'),
-            ],
+                const SizedBox(height: 22),
+                Text('Sort By', style: context.h6),
+                const SizedBox(height: 22),
+                const _SortOption(label: 'Latest Saved'),
+                const _SortOption(label: 'Most Reviewed'),
+                const _SortOption(label: 'Highest Price'),
+                const _SortOption(label: 'Lowest Price'),
+              ],
+            ),
           ),
-        ),
-      );
-    },
+        );
+      },
+    ),
   );
 }
 

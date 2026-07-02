@@ -1,13 +1,14 @@
-import 'package:dio/dio.dart';
+import 'package:africaonlinestores/core/api/api_client.dart';
+import 'package:africaonlinestores/core/api/api_endpoints.dart';
+import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
-import 'package:africaonlinestores/core/api/api_client.dart';
-import 'package:africaonlinestores/core/api/api_response.dart';
-import 'package:africaonlinestores/core/api/api_endpoints.dart';
+import 'package:africaonlinestores/features/connect/calls/data/call_mapper.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
-import 'package:africaonlinestores/features/connect/calls/data/call_mapper.dart';
+import 'package:dio/dio.dart';
 
 class CallApi {
   final ApiClient _client;
@@ -18,7 +19,7 @@ class CallApi {
   // Conversation
   // -----------------------------
   Future<Either<Failure, String>> openConversation(String user) async {
-    appLogger.i("openConversation (Call)");
+    appLogger.i('openConversation (Call)');
 
     final res = await _client.post(
       ApiEndpoints.openConversationEndpoint,
@@ -28,11 +29,12 @@ class CallApi {
     final result = unwrapFrappe(res);
     if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    final payload = result.rightOrNull!;
-    final id = payload['data']?['id'];
+    final payload = asJsonMap(result.rightOrNull);
+    final data = asJsonMap(payload['data']);
+    final id = data['id'];
 
     if (id == null) {
-      return Either.left(const Failure("Invalid conversation response"));
+      return Either.left(const Failure('Invalid conversation response'));
     }
 
     return Either.right(id.toString());
@@ -45,7 +47,7 @@ class CallApi {
     required String conversationId,
     required String callType,
   }) async {
-    appLogger.i("initiateCall API");
+    appLogger.i('initiateCall API');
 
     try {
       final res = await _client.post(
@@ -56,21 +58,21 @@ class CallApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
+      final data = asJsonMap(result.rightOrNull)['data'];
       if (data == null) {
-        return Either.left(const Failure("Invalid initiate call response"));
+        return Either.left(const Failure('Invalid initiate call response'));
       }
 
-      return Either.right(mapCall(data));
+      return Either.right(mapCall(asJsonMap(data)));
     } catch (e) {
       if (e is DioException && e.response != null) {
         final res = e.response!;
 
         final result = unwrapFrappe(res);
         if (result.isRight) {
-          final data = result.rightOrNull?['data'];
+          final data = asJsonMap(result.rightOrNull)['data'];
           if (data != null) {
-            return Either.right(mapCall(data));
+            return Either.right(mapCall(asJsonMap(data)));
           }
         }
 
@@ -87,7 +89,7 @@ class CallApi {
   Future<Either<Failure, void>> markCallRinging({
     required String callId,
   }) async {
-    appLogger.i("markCallRinging API");
+    appLogger.i('markCallRinging API');
 
     try {
       final res = await _client.post(
@@ -115,7 +117,7 @@ class CallApi {
   // Cancel Call
   // -----------------------------
   Future<Either<Failure, void>> cancelCall({required String callId}) async {
-    appLogger.i("cancelCall API");
+    appLogger.i('cancelCall API');
 
     try {
       final res = await _client.post(
@@ -143,7 +145,7 @@ class CallApi {
   // Accept Call
   // -----------------------------
   Future<Either<Failure, Call>> acceptCall({required String callId}) async {
-    appLogger.i("acceptCall API");
+    appLogger.i('acceptCall API');
 
     try {
       final res = await _client.post(
@@ -154,21 +156,21 @@ class CallApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
+      final data = asJsonMap(result.rightOrNull)['data'];
       if (data == null) {
-        return Either.left(const Failure("Invalid accept call response"));
+        return Either.left(const Failure('Invalid accept call response'));
       }
 
-      return Either.right(mapCall(data));
+      return Either.right(mapCall(asJsonMap(data)));
     } catch (e) {
       if (e is DioException && e.response != null) {
         final res = e.response!;
 
         final result = unwrapFrappe(res);
         if (result.isRight) {
-          final data = result.rightOrNull?['data'];
+          final data = asJsonMap(result.rightOrNull)['data'];
           if (data != null) {
-            return Either.right(mapCall(data));
+            return Either.right(mapCall(asJsonMap(data)));
           }
         }
 
@@ -183,7 +185,7 @@ class CallApi {
   // Reject Call
   // -----------------------------
   Future<Either<Failure, void>> rejectCall({required String callId}) async {
-    appLogger.i("rejectCall API");
+    appLogger.i('rejectCall API');
 
     try {
       final res = await _client.post(
@@ -211,7 +213,7 @@ class CallApi {
   // End Call
   // -----------------------------
   Future<Either<Failure, void>> endCall({required String callId}) async {
-    appLogger.i("endCall API");
+    appLogger.i('endCall API');
 
     try {
       final res = await _client.post(
@@ -248,15 +250,15 @@ class CallApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final raw = result.rightOrNull;
-      final calls = mapCallLogList(raw?['data']);
+      final raw = asJsonMap(result.rightOrNull);
+      final calls = mapCallLogList(raw['data']);
 
       calls.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       return Either.right(calls);
     } catch (e, s) {
-      appLogger.e("listCalls failed", error: e, stackTrace: s);
-      return Either.left(const Failure("Failed to load calls"));
+      appLogger.e('listCalls failed', error: e, stackTrace: s);
+      return Either.left(const Failure('Failed to load calls'));
     }
   }
 
@@ -266,14 +268,14 @@ class CallApi {
   Future<Either<Failure, List<CallLog>>> getCallGroupDetail({
     required CallLog call,
   }) async {
-    appLogger.i("getCallGroupDetail API");
+    appLogger.i('getCallGroupDetail API');
 
     try {
       final latestCallId = call.effectiveLatestCallId.trim();
       final oldestCallId = call.effectiveOldestCallId.trim();
 
       if (latestCallId.isEmpty || oldestCallId.isEmpty) {
-        return Either.left(const Failure("Invalid call group boundary"));
+        return Either.left(const Failure('Invalid call group boundary'));
       }
 
       final query = <String, dynamic>{
@@ -289,15 +291,15 @@ class CallApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
+      final data = asJsonMap(result.rightOrNull)['data'];
       final calls = mapCallLogList(data);
 
       calls.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       return Either.right(calls);
     } catch (e, s) {
-      appLogger.e("getCallGroupDetail failed", error: e, stackTrace: s);
-      return Either.left(const Failure("Failed to load call details"));
+      appLogger.e('getCallGroupDetail failed', error: e, stackTrace: s);
+      return Either.left(const Failure('Failed to load call details'));
     }
   }
 
@@ -307,7 +309,7 @@ class CallApi {
   Future<Either<Failure, void>> deleteCallLogs({
     required List<String> callIds,
   }) async {
-    appLogger.i("deleteCallLogs API");
+    appLogger.i('deleteCallLogs API');
 
     final ids = callIds
         .map((id) => id.trim())
@@ -316,7 +318,7 @@ class CallApi {
         .toList();
 
     if (ids.isEmpty) {
-      return Either.left(const Failure("No call logs selected"));
+      return Either.left(const Failure('No call logs selected'));
     }
 
     try {
@@ -330,7 +332,7 @@ class CallApi {
 
       return Either.right(null);
     } catch (e, s) {
-      appLogger.e("deleteCallLogs failed", error: e, stackTrace: s);
+      appLogger.e('deleteCallLogs failed', error: e, stackTrace: s);
 
       if (e is DioException && e.response != null) {
         final res = e.response!;
@@ -348,7 +350,7 @@ class CallApi {
   // Clear Call History
   // -----------------------------
   Future<Either<Failure, int>> clearCallHistory() async {
-    appLogger.i("clearCallHistory API");
+    appLogger.i('clearCallHistory API');
 
     try {
       final res = await _client.post(ApiEndpoints.clearCallHistoryEndpoint);
@@ -356,12 +358,12 @@ class CallApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
-      final deletedCount = data is Map ? data['deleted_count'] : null;
+      final data = asJsonMap(result.rightOrNull)['data'];
+      final deletedCount = asJsonMap(data)['deleted_count'];
 
       return Either.right(int.tryParse('${deletedCount ?? 0}') ?? 0);
     } catch (e, s) {
-      appLogger.e("clearCallHistory failed", error: e, stackTrace: s);
+      appLogger.e('clearCallHistory failed', error: e, stackTrace: s);
 
       if (e is DioException && e.response != null) {
         final res = e.response!;
@@ -381,7 +383,7 @@ class CallApi {
   Future<Either<Failure, Call>> requestVideoUpgrade({
     required String callId,
   }) async {
-    appLogger.i("requestVideoUpgrade API");
+    appLogger.i('requestVideoUpgrade API');
 
     try {
       final res = await _client.post(
@@ -392,16 +394,16 @@ class CallApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
+      final data = asJsonMap(result.rightOrNull)['data'];
       if (data == null) {
         return Either.left(
-          const Failure("Invalid request video upgrade response"),
+          const Failure('Invalid request video upgrade response'),
         );
       }
 
-      return Either.right(mapCall(Map<String, dynamic>.from(data as Map)));
+      return Either.right(mapCall(asJsonMap(data)));
     } catch (e, s) {
-      appLogger.e("requestVideoUpgrade failed", error: e, stackTrace: s);
+      appLogger.e('requestVideoUpgrade failed', error: e, stackTrace: s);
 
       if (e is DioException && e.response != null) {
         final res = e.response!;
@@ -422,7 +424,7 @@ class CallApi {
     required String callId,
     required String action,
   }) async {
-    appLogger.i("respondVideoUpgrade API");
+    appLogger.i('respondVideoUpgrade API');
 
     final normalizedAction = action.trim().toLowerCase();
 
@@ -435,16 +437,16 @@ class CallApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
+      final data = asJsonMap(result.rightOrNull)['data'];
       if (data == null) {
         return Either.left(
-          const Failure("Invalid respond video upgrade response"),
+          const Failure('Invalid respond video upgrade response'),
         );
       }
 
-      return Either.right(mapCall(Map<String, dynamic>.from(data as Map)));
+      return Either.right(mapCall(asJsonMap(data)));
     } catch (e, s) {
-      appLogger.e("respondVideoUpgrade failed", error: e, stackTrace: s);
+      appLogger.e('respondVideoUpgrade failed', error: e, stackTrace: s);
 
       if (e is DioException && e.response != null) {
         final res = e.response!;
@@ -464,7 +466,7 @@ class CallApi {
   Future<Either<Failure, Map<String, dynamic>>> getCallStatus({
     required String callId,
   }) async {
-    appLogger.i("getCallStatus API");
+    appLogger.i('getCallStatus API');
 
     try {
       final res = await _client.post(
@@ -475,19 +477,14 @@ class CallApi {
       final result = unwrapFrappe(res);
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
-      final data = result.rightOrNull?['data'];
+      final data = asJsonMap(result.rightOrNull)['data'];
 
-      if (data is Map<String, dynamic>) {
-        return Either.right(data);
+      final map = asJsonMap(data);
+      if (map.isNotEmpty) {
+        return Either.right(map);
       }
 
-      if (data is Map) {
-        return Either.right(
-          data.map((key, value) => MapEntry(key.toString(), value)),
-        );
-      }
-
-      return Either.left(const Failure("Invalid call status response"));
+      return Either.left(const Failure('Invalid call status response'));
     } catch (e) {
       if (e is DioException && e.response != null) {
         final res = e.response!;
@@ -507,7 +504,7 @@ class CallApi {
   Future<Either<Failure, Map<String, dynamic>>> getCallToken({
     required String callId,
   }) async {
-    appLogger.i("getCallToken API");
+    appLogger.i('getCallToken API');
 
     final res = await _client.post(
       ApiEndpoints.getCallTokenEndpoint,
@@ -517,12 +514,12 @@ class CallApi {
     final result = unwrapFrappe(res);
     if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    final data = result.rightOrNull?['data'];
+    final data = asJsonMap(result.rightOrNull)['data'];
 
     if (data == null) {
-      return Either.left(const Failure("Invalid token response"));
+      return Either.left(const Failure('Invalid token response'));
     }
 
-    return Either.right(Map<String, dynamic>.from(data as Map));
+    return Either.right(asJsonMap(data));
   }
 }

@@ -66,8 +66,8 @@ class ReviewState {
   bool get hasRatingFilter => ratingFilter != null;
 
   bool get isViewerStateLoading => viewerStateLoading;
-  bool get canReview => viewerState?.canReview == true;
-  bool get hasReviewed => viewerState?.hasReviewed == true;
-  bool get hasCommunicated => viewerState?.hasCommunicated == true;
+  bool get canReview => viewerState?.canReview ?? false;
+  bool get hasReviewed => viewerState?.hasReviewed ?? false;
+  bool get hasCommunicated => viewerState?.hasCommunicated ?? false;
   String? get reviewBlockReason => viewerState?.reason;
 }

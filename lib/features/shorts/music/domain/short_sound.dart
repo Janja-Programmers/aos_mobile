@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:equatable/equatable.dart';
 
 class ShortSound extends Equatable {
@@ -67,7 +68,7 @@ class ShortSound extends Equatable {
 
   factory ShortSound.fromJson(Map<String, dynamic> json) {
     final viewerState = json['viewer_state'] is Map
-        ? Map<String, dynamic>.from(json['viewer_state'] as Map)
+        ? asJsonMap(json['viewer_state'] as Map)
         : const <String, dynamic>{};
 
     return ShortSound(

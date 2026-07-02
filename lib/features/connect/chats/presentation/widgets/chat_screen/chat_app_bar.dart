@@ -1,16 +1,16 @@
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
+import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_presence_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/presence_label.dart';
+import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
-import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/presence_label.dart';
-import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
-import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
-import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_presence_controller.dart';
 
 enum ChatMenuAction { deleteAllMessages }
 
@@ -99,7 +99,7 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
 
     final isTyping = ref.watch(
       chatTypingControllerProvider.select(
-        (map) => map[widget.conversationId] == true,
+        (map) => map[widget.conversationId] ?? false,
       ),
     );
 
@@ -180,12 +180,12 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
           enabled: !_isCalling,
           color: colors.surface,
           surfaceTintColor: Colors.transparent,
-          shadowColor: colors.black.withOpacity(0.12),
+          shadowColor: colors.black.withValues(alpha: 0.12),
           elevation: 8,
           offset: const Offset(0, 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: colors.border, width: 1),
+            side: BorderSide(color: colors.border),
           ),
           icon: _isCalling
               ? const SizedBox(
@@ -231,11 +231,11 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
         PopupMenuButton<ChatMenuAction>(
           color: colors.surface,
           surfaceTintColor: Colors.transparent,
-          shadowColor: colors.black.withOpacity(0.12),
+          shadowColor: colors.black.withValues(alpha: 0.12),
           elevation: 8,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: colors.border, width: 1),
+            side: BorderSide(color: colors.border),
           ),
           icon: Icon(Icons.more_vert, color: fg),
           onSelected: (action) {

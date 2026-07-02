@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+
 class NotificationPayload {
   final String? conversationId;
   final String? callId;
@@ -36,7 +38,7 @@ class NotificationPayload {
   factory NotificationPayload.fromJson(Map<String, dynamic>? json) {
     if (json == null) return const NotificationPayload();
 
-    final data = Map<String, dynamic>.from(json);
+    final data = asJsonMap(json);
 
     String? read(String key) {
       final value = data[key];

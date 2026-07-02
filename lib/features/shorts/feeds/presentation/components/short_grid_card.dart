@@ -1,12 +1,9 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
-
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/feeds_routes.dart';
+import 'package:flutter/material.dart';
 
 class ShortGridCard extends StatelessWidget {
   final ShortModel short;
@@ -115,7 +112,7 @@ class _SellerAvatar extends StatelessWidget {
 
     return CircleAvatar(
       radius: 12,
-      backgroundColor: colors.colorScheme.primary.withOpacity(.2),
+      backgroundColor: colors.colorScheme.primary.withValues(alpha: .2),
       backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
       child: avatarUrl == null
           ? Text(

@@ -1,13 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
-import 'package:africaonlinestores/features/catalog/shared/utils/category_icon_url.dart';
 import 'package:africaonlinestores/features/catalog/presentation/widgets/parent_rail.dart';
 import 'package:africaonlinestores/features/catalog/presentation/widgets/right_pane.dart';
+import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
+import 'package:africaonlinestores/features/catalog/shared/utils/category_icon_url.dart';
 import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
-
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum NavContext { root, pushed }
 

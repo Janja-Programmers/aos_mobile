@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// Ready-to-use bottom actions for Ad Details:
 /// Home (icon-only), Call (filled), Message (outlined).
@@ -23,7 +22,6 @@ class AdDetailActionBar extends StatelessWidget {
             _AdDetailActionButton(
               icon: Icons.home_outlined,
               filled: false,
-              label: null,
               onTap: () => context.goNamed(AppRoutes.nHome),
             ),
             const SizedBox(width: 10),

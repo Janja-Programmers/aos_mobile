@@ -1,7 +1,7 @@
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
 import 'package:flutter/material.dart';
-
 // =====================================================
 // GROUPING (Today / Yesterday / Earlier)
 // =====================================================
@@ -79,7 +79,7 @@ IconData iconForType(NotificationType type) {
   }
 }
 
-Color colorForType(NotificationType type, dynamic colors) {
+Color colorForType(NotificationType type, AppColorTokens colors) {
   switch (type) {
     case NotificationType.liveStarted:
       return colors.primary;

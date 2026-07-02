@@ -3,7 +3,6 @@ import 'package:africaonlinestores/features/live/domain/live_stream.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_feed_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_mapper.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-
 import 'package:equatable/equatable.dart';
 
 class ShortsFeedPage extends Equatable {
@@ -61,7 +60,7 @@ class ShortsRepository {
     return result.fold(
       (failure) => throw Exception(failure.message),
       (page) => ShortsFeedPage(
-        items: page.items.map((model) => ShortMapper.toDomain(model)).toList(),
+        items: page.items.map(ShortMapper.toDomain).toList(),
         nextCursor: page.nextCursor,
         hasMore: page.hasMore,
       ),
@@ -83,7 +82,7 @@ class ShortsRepository {
     return result.fold(
       (failure) => throw Exception(failure.message),
       (page) => ShortsFeedPage(
-        items: page.items.map((model) => ShortMapper.toDomain(model)).toList(),
+        items: page.items.map(ShortMapper.toDomain).toList(),
         nextCursor: page.nextCursor,
         hasMore: page.hasMore,
       ),

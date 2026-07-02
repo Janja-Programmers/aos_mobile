@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/activity/application/activity_center_controller.dart';
 import 'package:africaonlinestores/features/activity/data/activity_api.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ActivityCenterScreen extends ConsumerStatefulWidget {
   const ActivityCenterScreen({super.key});
@@ -117,8 +117,8 @@ class _ActivityCenterScreenState extends ConsumerState<ActivityCenterScreen> {
                       ],
                     )
                   : ListView.separated(
+                      scrollCacheExtent: const ScrollCacheExtent.pixels(700),
                       controller: _scrollController,
-                      cacheExtent: 700,
                       padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
                       itemCount:
                           state.items.length + (state.loadingMore ? 1 : 0),
@@ -170,7 +170,7 @@ class _ActivityTile extends StatelessWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 18),
         decoration: BoxDecoration(
-          color: colors.red.withOpacity(.12),
+          color: colors.red.withValues(alpha: .12),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Icon(Icons.visibility_off_outlined, color: colors.red),
@@ -185,7 +185,7 @@ class _ActivityTile extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: colors.primary.withOpacity(.12),
+              backgroundColor: colors.primary.withValues(alpha: .12),
               child: Icon(_iconForGroup(item.group), color: colors.primary),
             ),
             const SizedBox(width: 12),

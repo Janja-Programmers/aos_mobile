@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+
 class ChatUserStatus {
   final String user;
   final bool isOnline;
@@ -7,10 +9,10 @@ class ChatUserStatus {
 
   factory ChatUserStatus.fromJson(Map<String, dynamic> json) {
     return ChatUserStatus(
-      user: json['user'],
-      isOnline: json['is_online'] ?? false,
+      user: asString(json['user']),
+      isOnline: asBool(json['is_online']),
       lastSeen: json['last_seen'] != null
-          ? DateTime.parse(json['last_seen'])
+          ? DateTime.parse(asString(json['last_seen']))
           : null,
     );
   }

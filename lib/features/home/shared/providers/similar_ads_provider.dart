@@ -1,7 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final similarAdsProvider = FutureProvider.family<List<AOSAdListItem>, String>((
   ref,
@@ -9,14 +9,14 @@ final similarAdsProvider = FutureProvider.family<List<AOSAdListItem>, String>((
 ) async {
   final res = await ref
       .read(adsApiProvider)
-      .listAds(categoryId: categoryId, limit: 8, offset: 0);
+      .listAds(categoryId: categoryId, limit: 8);
 
   return res.fold((_) => const [], (payload) {
-    final raw = payload['data']?['items'];
-    if (raw is! List) return const [];
+    final data = asJsonMap(payload['data']);
+    final raw = data['items'];
 
-    return raw
-        .map((e) => AOSAdListItem.fromJson(Map<String, dynamic>.from(e)))
-        .toList();
+    return asJsonMapList(
+      raw,
+    ).map(AOSAdListItem.fromJson).toList(growable: false);
   });
 });

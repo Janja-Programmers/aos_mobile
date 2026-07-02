@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:africaonlinestores/core/realtime/realtime_event.dart';
 import 'package:africaonlinestores/core/realtime/realtime_event_type.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
-
 import 'package:africaonlinestores/features/notifications/application/controllers/notification_controller.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_payload.dart';
@@ -27,7 +27,7 @@ class NotificationRealtimeListener {
   void attach() {
     _sub = _eventStream.listen(
       _onEvent,
-      onError: (e, s) {
+      onError: (Object e, StackTrace s) {
         appLogger.e(
           'NotificationRealtimeListener stream error',
           error: e,
@@ -41,7 +41,7 @@ class NotificationRealtimeListener {
   // DISPOSE
   // =====================================================
   void dispose() {
-    _sub?.cancel();
+    unawaited(_sub?.cancel());
   }
 
   // =====================================================
@@ -51,7 +51,7 @@ class NotificationRealtimeListener {
     try {
       if (!_isNotificationEvent(event.type)) return;
 
-      _handleNotificationEvent(event.type, event.data);
+      _handleNotificationEvent(event.type, asJsonMap(event.data));
     } catch (e, s) {
       appLogger.e(
         'NotificationRealtimeListener event handling failed',

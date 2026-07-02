@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:flutter/foundation.dart';
 
 class ChatTypingThrottle {
   final String conversationId;

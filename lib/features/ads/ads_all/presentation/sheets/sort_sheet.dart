@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 Future<void> showSortSheet(BuildContext context) {
-  return showModalBottomSheet(
+  return showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
     builder: (_) {

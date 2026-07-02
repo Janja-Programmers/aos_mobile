@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class ReplyInput extends StatefulWidget {
   final TextEditingController controller;
@@ -44,9 +43,9 @@ class _ReplyInputState extends State<ReplyInput> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              color: colors.surface.withOpacity(0.7),
+              color: colors.surface.withValues(alpha: 0.7),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: colors.border.withOpacity(0.5)),
+              border: Border.all(color: colors.border.withValues(alpha: 0.5)),
             ),
             child: TextField(
               controller: widget.controller,

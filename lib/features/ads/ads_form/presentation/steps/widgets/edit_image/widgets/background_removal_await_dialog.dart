@@ -53,12 +53,12 @@ class _BackgroundRemovalAwaitDialogState
               children: [
                 const Expanded(
                   child: Text(
-                    "Background Removal",
+                    'Background Removal',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                   ),
                 ),
                 IconButton(
-                  onPressed: () => Navigator.pop(context, null),
+                  onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.close),
                 ),
               ],
@@ -79,7 +79,7 @@ class _BackgroundRemovalAwaitDialogState
                           CircularProgressIndicator(strokeWidth: 2.5),
                           SizedBox(height: 28),
                           Text(
-                            "Processing on device...",
+                            'Processing on device...',
                             style: TextStyle(color: Colors.grey),
                           ),
                         ],

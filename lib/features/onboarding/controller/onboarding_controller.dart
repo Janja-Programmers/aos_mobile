@@ -1,13 +1,10 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
-
+import 'package:africaonlinestores/core/utils/device_locale.dart';
 import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
 import 'package:africaonlinestores/features/onboarding/models/onboarding_state.dart';
-import 'package:africaonlinestores/core/utils/device_locale.dart';
-
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final onboardingControllerProvider =
     StateNotifierProvider<OnboardingController, OnboardingState>((ref) {

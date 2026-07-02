@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 Future<void> showFilterSheet(BuildContext context) {
-  return showModalBottomSheet(
+  return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,

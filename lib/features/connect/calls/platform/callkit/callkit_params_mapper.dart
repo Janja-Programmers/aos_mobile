@@ -1,8 +1,8 @@
-import 'package:flutter_callkit_incoming/entities/ios_params.dart';
-import 'package:flutter_callkit_incoming/entities/android_params.dart';
-import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
+import 'package:flutter_callkit_incoming/entities/android_params.dart';
+import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
+import 'package:flutter_callkit_incoming/entities/ios_params.dart';
 
 class CallKitParamsMapper {
   const CallKitParamsMapper();
@@ -33,7 +33,6 @@ class CallKitParamsMapper {
       avatar: callerAvatar,
       type: isVideo ? 1 : 0,
       duration: 30000,
-      missedCallNotification: null,
       extra: {
         'call_id': callId,
         'callkit_uuid': callkitUuid,

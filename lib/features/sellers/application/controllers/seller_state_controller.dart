@@ -1,10 +1,10 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/sellers/application/controllers/seller_controller.dart';
 import 'package:africaonlinestores/features/sellers/application/controllers/seller_state.dart';
 import 'package:africaonlinestores/features/sellers/data/seller_api.dart';
 import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 /// Controller provider (API wrapper)
 final sellerControllerProvider = Provider<SellerController>((ref) {
@@ -33,9 +33,7 @@ class SellerStateController extends StateNotifier<SellerState> {
     ) {
       final sellerJson = data['data'] ?? data;
 
-      final seller = AOSSellerProfile.fromJson(
-        Map<String, dynamic>.from(sellerJson),
-      );
+      final seller = AOSSellerProfile.fromJson(asJsonMap(sellerJson));
 
       state = state.copyWith(
         loading: false,

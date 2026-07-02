@@ -1,8 +1,3 @@
-import 'package:africaonlinestores/features/reviews/application/state/review_viewer_state.dart';
-import 'package:africaonlinestores/features/reviews/domain/review_sort.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
@@ -10,6 +5,11 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/reviews/application/state/review_viewer_state.dart';
+import 'package:africaonlinestores/features/reviews/domain/review_sort.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final reviewApiProvider = Provider<ReviewApi>((ref) {
   return ReviewApi(ref.read(apiClientProvider));
@@ -77,10 +77,7 @@ class ReviewApi {
 
       final parsed = unwrapFrappe(res);
 
-      return parsed.fold(
-        (failure) => Either.left(failure),
-        (_) => Either.right(null),
-      );
+      return parsed.fold(Either.left, (_) => Either.right(null));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
@@ -100,10 +97,7 @@ class ReviewApi {
 
       final parsed = unwrapFrappe(res);
 
-      return parsed.fold(
-        (failure) => Either.left(failure),
-        (_) => Either.right(null),
-      );
+      return parsed.fold(Either.left, (_) => Either.right(null));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
@@ -122,7 +116,7 @@ class ReviewApi {
 
       final parsed = unwrapFrappe(res);
 
-      return parsed.fold((failure) => Either.left(failure), (payload) {
+      return parsed.fold(Either.left, (payload) {
         final data = payload['data'];
 
         if (data is! Map) {
@@ -131,9 +125,7 @@ class ReviewApi {
           );
         }
 
-        return Either.right(
-          ReviewViewerState.fromJson(Map<String, dynamic>.from(data)),
-        );
+        return Either.right(ReviewViewerState.fromJson(asJsonMap(data)));
       });
     } on DioException catch (e) {
       return Either.left(mapDioException(e));

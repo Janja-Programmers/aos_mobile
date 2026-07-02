@@ -1,6 +1,8 @@
 import 'dart:convert';
-import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
+
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_payload.dart';
+import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
 
 class NotificationItem {
   final String id;
@@ -214,7 +216,7 @@ Map<String, dynamic>? _parsePayload(dynamic raw) {
     if (raw == null) return null;
 
     if (raw is Map<String, dynamic>) {
-      return Map<String, dynamic>.from(raw);
+      return asJsonMap(raw);
     }
 
     if (raw is Map) {
@@ -225,7 +227,7 @@ Map<String, dynamic>? _parsePayload(dynamic raw) {
       final decoded = jsonDecode(raw);
 
       if (decoded is Map<String, dynamic>) {
-        return Map<String, dynamic>.from(decoded);
+        return asJsonMap(decoded);
       }
 
       if (decoded is Map) {

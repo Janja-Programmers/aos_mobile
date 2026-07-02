@@ -1,6 +1,5 @@
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/features/activity/data/activity_api.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class ActivityCenterState {
   final List<ActivityItem> items;
@@ -68,8 +67,6 @@ class ActivityCenterController extends StateNotifier<ActivityCenterState> {
 
   ActivityCenterController(this.api) : super(ActivityCenterState.initial());
 
-  static const int _limit = 20;
-
   Future<void> load({String? group}) async {
     final nextGroup = group ?? state.group;
     state = state.copyWith(
@@ -79,11 +76,7 @@ class ActivityCenterController extends StateNotifier<ActivityCenterState> {
       hasMore: true,
       clearError: true,
     );
-    final res = await api.listActivity(
-      start: 0,
-      limit: _limit,
-      group: nextGroup,
-    );
+    final res = await api.listActivity(group: nextGroup);
     res.fold(
       (f) => state = state.copyWith(loading: false, error: f.message),
       (page) => state = state.copyWith(
@@ -98,11 +91,7 @@ class ActivityCenterController extends StateNotifier<ActivityCenterState> {
   Future<void> loadMore() async {
     if (state.loading || state.loadingMore || !state.hasMore) return;
     state = state.copyWith(loadingMore: true, clearError: true);
-    final res = await api.listActivity(
-      start: state.start,
-      limit: _limit,
-      group: state.group,
-    );
+    final res = await api.listActivity(start: state.start, group: state.group);
     res.fold(
       (f) => state = state.copyWith(loadingMore: false, error: f.message),
       (page) {

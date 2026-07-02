@@ -1,16 +1,16 @@
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:dio/dio.dart';
 
 /// Helpers for dealing with Frappe-style responses.
 ///
 /// Frappe often wraps responses like: {"message": {...}}
-Either<Failure, Map<String, dynamic>> unwrapFrappe(Response res) {
+Either<Failure, Map<String, dynamic>> unwrapFrappe(Response<Object?> res) {
   final data = res.data;
   try {
     if (data is Map && data['message'] is Map) {
-      return Either.right(Map<String, dynamic>.from(data['message'] as Map));
+      return Either.right(asJsonMap(data['message'] as Map));
     }
 
     if (data is Map && data.containsKey('message') && data['message'] is! Map) {
@@ -18,7 +18,7 @@ Either<Failure, Map<String, dynamic>> unwrapFrappe(Response res) {
     }
 
     if (data is Map) {
-      return Either.right(Map<String, dynamic>.from(data));
+      return Either.right(asJsonMap(data));
     }
   } catch (_) {
     // fall through to parse failure

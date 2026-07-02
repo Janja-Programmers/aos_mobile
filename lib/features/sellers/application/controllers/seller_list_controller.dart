@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/legacy.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/sellers/application/controllers/seller_controller.dart';
 import 'package:africaonlinestores/features/sellers/application/controllers/seller_state_controller.dart';
 import 'package:africaonlinestores/features/sellers/application/state/seller_list_state.dart';
 import 'package:africaonlinestores/features/sellers/domain/seller_list_item.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final sellerListControllerProvider =
     StateNotifierProvider.autoDispose<SellerListController, SellerListState>((
@@ -27,7 +27,6 @@ class SellerListController extends StateNotifier<SellerListState> {
     state = state.copyWith(
       isLoadingInitial: true,
       isLoadingMore: false,
-      error: null,
       clearError: true,
       offset: 0,
       hasMore: true,
@@ -36,8 +35,6 @@ class SellerListController extends StateNotifier<SellerListState> {
     final result = await _sellerController.listSellers(
       search: state.search,
       isVerified: 1,
-      limit: _limit,
-      offset: 0,
     );
 
     result.fold(
@@ -98,9 +95,7 @@ class SellerListController extends StateNotifier<SellerListState> {
     state = state.copyWith(search: normalized, clearError: true);
 
     _searchDebounce?.cancel();
-    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
-      loadInitial();
-    });
+    _searchDebounce = Timer(const Duration(milliseconds: 350), loadInitial);
   }
 
   Future<void> retry() {
@@ -108,23 +103,15 @@ class SellerListController extends StateNotifier<SellerListState> {
   }
 
   _ParsedSellerListResponse _parseResponse(Map<String, dynamic> data) {
-    final payload = data['data'];
+    final payload = asJsonMap(data['data']);
 
-    if (payload is! Map<String, dynamic>) {
+    if (payload.isEmpty) {
       return const _ParsedSellerListResponse(items: [], limit: _limit);
     }
 
-    final rawItems = payload['items'];
-
-    final items = rawItems is List
-        ? rawItems
-              .whereType<Map>()
-              .map(
-                (item) =>
-                    SellerListItem.fromJson(Map<String, dynamic>.from(item)),
-              )
-              .toList()
-        : <SellerListItem>[];
+    final items = asJsonMapList(
+      payload['items'],
+    ).map(SellerListItem.fromJson).toList();
 
     final limit = int.tryParse(payload['limit']?.toString() ?? '') ?? _limit;
 

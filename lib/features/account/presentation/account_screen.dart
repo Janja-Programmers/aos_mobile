@@ -1,14 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
-
 import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/theme_controller.dart';
-
 import 'package:africaonlinestores/features/account/presentation/widgets/account_guest_header_card.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/account_sections.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
@@ -22,10 +15,13 @@ import 'package:africaonlinestores/features/verifications/presentation/widgets/s
 import 'package:africaonlinestores/features/verifications/user_verification/application/user_verification_provider.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/domain/user_verification_models.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/presentation/user_verification_banner.dart';
-
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/account_option_tile.dart';
 import 'package:africaonlinestores/shared/components/app_confirm_sheet.dart';
 import 'package:africaonlinestores/shared/components/app_switch_tile.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -96,10 +92,10 @@ class AccountScreen extends ConsumerWidget {
             await Future.wait([
               ref
                   .read(sellerStatusProvider.future)
-                  .then((_) {}, onError: (_, _) {}),
+                  .then((_) {}, onError: (Object _, StackTrace _) {}),
               ref
                   .read(userVerificationStatusProvider.future)
-                  .then((_) {}, onError: (_, _) {}),
+                  .then((_) {}, onError: (Object _, StackTrace _) {}),
             ]);
           }
         },
@@ -171,13 +167,13 @@ class AccountScreen extends ConsumerWidget {
                   children: [
                     AccountOptionTile(
                       icon: Icons.list_alt_sharp,
-                      title: "My Listings",
+                      title: 'My Listings',
                       onTap: () => AdNavigation.toMyAds(context),
                     ),
 
                     AccountOptionTile(
                       icon: Icons.store_mall_directory_outlined,
-                      title: "My Storefront",
+                      title: 'My Storefront',
                       onTap: () {
                         final current = auth;
                         SellerNavigation.toMyStoreFront(
@@ -189,17 +185,17 @@ class AccountScreen extends ConsumerWidget {
 
                     AccountOptionTile(
                       icon: Icons.favorite_border,
-                      title: "My Wishlist",
+                      title: 'My Wishlist',
                       onTap: () => AdNavigation.toWishlist(context),
                     ),
                     AccountOptionTile(
                       icon: Icons.place_outlined,
-                      title: "Seller Location",
+                      title: 'Seller Location',
                       onTap: () => SellerNavigation.toSellerLocation(context),
                     ),
                     AccountOptionTile(
                       icon: Icons.history_rounded,
-                      title: "Activity Center",
+                      title: 'Activity Center',
                       onTap: () => context.pushNamed(AppRoutes.nActivityCenter),
                     ),
                     const SizedBox(height: 18),

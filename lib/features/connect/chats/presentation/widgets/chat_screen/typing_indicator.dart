@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class TypingIndicator extends StatelessWidget {
   final bool isTyping;
@@ -16,7 +15,7 @@ class TypingIndicator extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Text(
-        "Typing...",
+        'Typing...',
         style: context.p.copyWith(fontSize: 14, color: colors.success),
       ),
     );

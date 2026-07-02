@@ -37,7 +37,6 @@ class StorefrontPost {
       comments: _formatCount(short.metrics.commentCount),
       duration: _formatDuration(short.durationSeconds),
       imageUrl: short.thumbnailUrl,
-      isLive: false,
       short: short,
     );
   }

@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/widgets/short_upload_progress_banner.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_type.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/components/feed_header.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/feed_category_chips.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/shorts_feed_tab.dart';
+import 'package:flutter/material.dart';
 
 class ShortListScreen extends StatefulWidget {
   const ShortListScreen({super.key});
@@ -80,8 +79,6 @@ class _ShortListScreenState extends State<ShortListScreen> {
                               ),
                               const ShortsFeedTab(
                                 feedType: ShortsFeedType.live,
-                                contentMode: null,
-                                categoryLabel: null,
                               ),
                             ],
                           ),

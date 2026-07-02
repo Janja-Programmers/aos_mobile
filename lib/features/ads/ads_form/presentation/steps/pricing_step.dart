@@ -1,19 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
-import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
-
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/pricing/contact_info.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/pricing/offer_section.dart';
-import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/pricing/price_visibility_toggle.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/pricing/price_amount_field.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/pricing/price_type_picker.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/pricing/price_visibility_toggle.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/pricing/service_unit_picker.dart';
-
+import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class PricingStep extends ConsumerWidget {
   const PricingStep({super.key, required this.schema});
@@ -28,12 +24,12 @@ class PricingStep extends ConsumerWidget {
     final allowedUnits = pricing.allowedUnits;
 
     final visiblePriceTypes = allowedTypes
-        .where((t) => t != "Contact for price")
+        .where((t) => t != 'Contact for price')
         .toList();
 
     /// Schema capabilities
     final supportsServiceUnits = allowedUnits.isNotEmpty;
-    final supportsContactPrice = allowedTypes.contains("Contact for price");
+    final supportsContactPrice = allowedTypes.contains('Contact for price');
 
     if (pricing.requirement == PricingRequirement.hidden) {
       return const SizedBox.shrink();
@@ -47,8 +43,8 @@ class PricingStep extends ConsumerWidget {
     final ctrl = ref.read(adDraftControllerProvider.notifier);
 
     /// Draft state (user choice)
-    final isContactMode = draft.priceType == "Contact for price";
-    final isFixedPrice = draft.priceType == "Fixed";
+    final isContactMode = draft.priceType == 'Contact for price';
+    final isFixedPrice = draft.priceType == 'Fixed';
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 120),

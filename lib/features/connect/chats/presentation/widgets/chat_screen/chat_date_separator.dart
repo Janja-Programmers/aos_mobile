@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class ChatDateSeparator extends StatelessWidget {
   const ChatDateSeparator({super.key, required this.label});

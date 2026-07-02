@@ -20,7 +20,6 @@ class LocalizationState {
       languages: [],
       currencies: [],
       isLoading: true,
-      error: null,
     );
   }
 

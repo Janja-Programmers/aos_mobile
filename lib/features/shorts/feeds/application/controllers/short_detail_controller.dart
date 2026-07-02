@@ -1,11 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/legacy.dart';
-import 'package:share_plus/share_plus.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/short_detail_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/repository/short_feed_repository.dart';
@@ -15,6 +10,10 @@ import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_report
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_share_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_tracking_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ShortDetailController extends StateNotifier<ShortDetailState> {
   static const int _loadMoreThreshold = 2;
@@ -64,10 +63,7 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     state = state.copyWith(isLoadingMore: true, errorMessage: null);
 
     try {
-      final page = await _repository.fetchForYou(
-        limit: 10,
-        cursor: state.nextCursor,
-      );
+      final page = await _repository.fetchForYou(cursor: state.nextCursor);
 
       state = state.copyWith(
         items: List.unmodifiable([...state.items, ...page.items]),
@@ -347,7 +343,6 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
 
     final result = await _shareApi.createShareLink(
       shortId: shortId,
-      channel: 'system_share',
       sessionId: _sessionId,
     );
 
@@ -432,7 +427,6 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
           await _apiClient.dio.download(
             download.downloadUrl,
             tempFile.path,
-            deleteOnError: true,
             options: Options(
               followRedirects: true,
               receiveTimeout: const Duration(seconds: 90),
@@ -441,7 +435,7 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
             ),
           );
 
-          if (!await tempFile.exists()) {
+          if (!tempFile.existsSync()) {
             throw const FileSystemException(
               'Temporary short file was not created.',
             );

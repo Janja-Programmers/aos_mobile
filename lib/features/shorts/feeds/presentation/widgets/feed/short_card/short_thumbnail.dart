@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 
 class ShortThumbnail extends StatelessWidget {
   final String imageUrl;
@@ -44,9 +43,9 @@ class ShortThumbnail extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      colors.black.withOpacity(.04),
-                      colors.black.withOpacity(.10),
-                      colors.black.withOpacity(.70),
+                      colors.black.withValues(alpha: .04),
+                      colors.black.withValues(alpha: .10),
+                      colors.black.withValues(alpha: .70),
                     ],
                   ),
                 ),

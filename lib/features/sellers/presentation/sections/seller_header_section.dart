@@ -1,17 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
-import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/sellers/application/providers/seller_state_controller_provider.dart';
+import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/seller_response_badge.dart';
-
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SellerHeaderSection extends ConsumerWidget {
   const SellerHeaderSection({
@@ -58,7 +55,7 @@ class SellerHeaderSection extends ConsumerWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: colors.blue.withOpacity(.12),
+                    color: colors.blue.withValues(alpha: .12),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
@@ -87,7 +84,7 @@ class SellerHeaderSection extends ConsumerWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               color: colors.surface,
-              border: Border.all(color: colors.border.withOpacity(.6)),
+              border: Border.all(color: colors.border.withValues(alpha: .6)),
             ),
             child: Row(
               children: [
@@ -146,7 +143,7 @@ class SellerHeaderSection extends ConsumerWidget {
                         } else {
                           ShowSnack(
                             context,
-                            wasFollowing ? "Unfollowed" : "Following",
+                            wasFollowing ? 'Unfollowed' : 'Following',
                           ).success();
                         }
                       },

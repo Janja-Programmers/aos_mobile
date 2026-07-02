@@ -1,11 +1,10 @@
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:dio/dio.dart';
 
 class ShortsTrackingApi {
   final ApiClient _client;
@@ -28,10 +27,7 @@ class ShortsTrackingApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold(
-        (failure) => Either.left(failure),
-        (_) => Either.right(null),
-      );
+      return unwrapped.fold(Either.left, (_) => Either.right(null));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
@@ -57,10 +53,7 @@ class ShortsTrackingApi {
 
       final unwrapped = unwrapFrappe(res);
 
-      return unwrapped.fold(
-        (failure) => Either.left(failure),
-        (_) => Either.right(null),
-      );
+      return unwrapped.fold(Either.left, (_) => Either.right(null));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {

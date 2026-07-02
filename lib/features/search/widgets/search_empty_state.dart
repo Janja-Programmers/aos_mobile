@@ -16,7 +16,7 @@ class SearchEmptyState extends StatelessWidget {
             height: 90,
             width: 90,
             decoration: BoxDecoration(
-              color: colors.primary.withOpacity(.1),
+              color: colors.primary.withValues(alpha: .1),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.search_off, color: colors.primary, size: 40),
@@ -25,14 +25,14 @@ class SearchEmptyState extends StatelessWidget {
           const SizedBox(height: 16),
 
           const Text(
-            "No Results Found",
+            'No Results Found',
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
           ),
 
           const SizedBox(height: 8),
 
           Text(
-            "Try searching with different keywords",
+            'Try searching with different keywords',
             style: TextStyle(color: colors.textMuted),
           ),
         ],

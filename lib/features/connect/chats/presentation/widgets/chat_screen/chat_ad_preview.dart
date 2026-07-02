@@ -1,8 +1,7 @@
-import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:flutter/material.dart';
 
 class ChatAdPreview extends StatelessWidget {
   const ChatAdPreview({
@@ -29,10 +28,10 @@ class ChatAdPreview extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.border.withOpacity(0.6)),
+        border: Border.all(color: colors.border.withValues(alpha: 0.6)),
         boxShadow: [
           BoxShadow(
-            color: colors.black.withOpacity(0.04),
+            color: colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -46,7 +45,7 @@ class ChatAdPreview extends StatelessWidget {
             child: Container(
               width: 52,
               height: 52,
-              color: colors.border.withOpacity(0.3),
+              color: colors.border.withValues(alpha: 0.3),
               child: (imagePath == null || imagePath.isEmpty)
                   ? Icon(
                       Icons.image_outlined,
@@ -99,7 +98,7 @@ class ChatAdPreview extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: colors.border.withOpacity(0.3),
+                color: colors.border.withValues(alpha: 0.3),
                 shape: BoxShape.circle,
               ),
               child: Icon(Icons.close, size: 16, color: colors.textMuted),

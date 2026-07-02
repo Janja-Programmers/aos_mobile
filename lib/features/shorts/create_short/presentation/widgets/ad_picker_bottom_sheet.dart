@@ -1,17 +1,14 @@
+import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/providers/my_ads_provider.dart';
+import 'package:africaonlinestores/shared/components/cards/widgets/ad_card_body.dart';
+import 'package:africaonlinestores/shared/components/cards/widgets/ad_card_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
-import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/providers/my_ads_provider.dart';
-
-import 'package:africaonlinestores/shared/components/cards/widgets/ad_card_body.dart';
-import 'package:africaonlinestores/shared/components/cards/widgets/ad_card_image.dart';
-
 class AdPickerBottomSheet extends ConsumerStatefulWidget {
-  final Function(AOSAdListItem ad) onSelected;
+  final ValueChanged<AOSAdListItem> onSelected;
 
   const AdPickerBottomSheet({super.key, required this.onSelected});
 
@@ -22,7 +19,7 @@ class AdPickerBottomSheet extends ConsumerStatefulWidget {
 
 class _AdPickerBottomSheetState extends ConsumerState<AdPickerBottomSheet> {
   final searchController = TextEditingController();
-  String query = "";
+  String query = '';
 
   @override
   void dispose() {
@@ -36,7 +33,7 @@ class _AdPickerBottomSheetState extends ConsumerState<AdPickerBottomSheet> {
     final colors = context.appColors;
 
     return SafeArea(
-      child: Container(
+      child: ColoredBox(
         color: colors.surface,
         child: SizedBox(
           height: MediaQuery.of(context).size.height * 0.7,
@@ -109,7 +106,7 @@ class _AdPickerBottomSheetState extends ConsumerState<AdPickerBottomSheet> {
   Widget _header() {
     return Padding(
       padding: const EdgeInsets.all(12),
-      child: Text("Select or search an ad to tag", style: context.pStrong),
+      child: Text('Select or search an ad to tag', style: context.pStrong),
     );
   }
 
@@ -123,7 +120,7 @@ class _AdPickerBottomSheetState extends ConsumerState<AdPickerBottomSheet> {
         onChanged: (v) => setState(() => query = v),
         style: context.p,
         decoration: InputDecoration(
-          hintText: "Search your products...",
+          hintText: 'Search your products...',
           hintStyle: context.pMuted,
           prefixIcon: const Icon(Icons.search),
           filled: true,
@@ -146,9 +143,9 @@ class _AdPickerBottomSheetState extends ConsumerState<AdPickerBottomSheet> {
         children: [
           Icon(Icons.inventory_2_outlined, size: 60, color: colors.textMuted),
           const SizedBox(height: 12),
-          Text("No products yet", style: context.p),
+          Text('No products yet', style: context.p),
           const SizedBox(height: 6),
-          Text("Post a product listing first", style: context.pMuted),
+          Text('Post a product listing first', style: context.pMuted),
         ],
       ),
     );
@@ -174,7 +171,7 @@ class AdCard extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: colors.surface,
           borderRadius: BorderRadius.circular(14),

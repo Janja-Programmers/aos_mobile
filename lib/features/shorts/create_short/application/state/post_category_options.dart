@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
+import 'package:flutter/material.dart';
 
 class PostCategoryOption {
   final String id;

@@ -1,8 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/attachment_grid.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/call_message_tile.dart';
@@ -10,6 +7,7 @@ import 'package:africaonlinestores/features/connect/chats/presentation/widgets/c
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/reaction_chips.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/reply_preview.dart';
 import 'package:africaonlinestores/shared/utils/format_time.dart';
+import 'package:flutter/material.dart';
 
 class MessageBubble extends StatelessWidget {
   const MessageBubble({
@@ -74,7 +72,7 @@ class MessageBubble extends StatelessWidget {
     final bgColor = isMe ? colors.chatCardColor : colors.surface;
     final textColor = isMe ? colors.white : colors.textPrimary;
     final mutedTextColor = isMe
-        ? colors.white.withOpacity(0.78)
+        ? colors.white.withValues(alpha: 0.78)
         : colors.textMuted;
 
     final isDeleted = message.isDeletedType;
@@ -214,7 +212,7 @@ class MessageBubble extends StatelessWidget {
                         Icons.info_outline_rounded,
                         size: 14,
                         color: isMe
-                            ? colors.white.withOpacity(0.85)
+                            ? colors.white.withValues(alpha: 0.85)
                             : colors.red,
                       ),
                       const SizedBox(width: 5),
@@ -223,7 +221,7 @@ class MessageBubble extends StatelessWidget {
                           message.translationError!,
                           style: context.p.copyWith(
                             color: isMe
-                                ? colors.white.withOpacity(0.85)
+                                ? colors.white.withValues(alpha: 0.85)
                                 : colors.red,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,

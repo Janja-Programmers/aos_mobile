@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'dart:collection';
 
 import 'package:flutter/services.dart';
@@ -52,7 +51,7 @@ class InAppNotificationService {
   }
 
   void dispose() {
-    _controller.close();
+    unawaited(_controller.close());
   }
 }
 

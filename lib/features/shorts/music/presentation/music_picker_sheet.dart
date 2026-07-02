@@ -1,17 +1,17 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dio/dio.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:just_audio/just_audio.dart';
-
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/shorts/music/data/shorts_sounds_api.dart';
 import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
+import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio/just_audio.dart';
 
 Future<ShortSound?> showMusicPickerSheet(
   BuildContext context, {
@@ -82,8 +82,8 @@ class _MusicPickerSheetState extends ConsumerState<MusicPickerSheet> {
     });
 
     final res = _showFavorites
-        ? await _api.myFavoriteSounds(limit: 20)
-        : await _api.listSounds(limit: 20, sourceType: _sourceType);
+        ? await _api.myFavoriteSounds()
+        : await _api.listSounds(sourceType: _sourceType);
 
     if (!mounted) return;
 
@@ -112,12 +112,8 @@ class _MusicPickerSheetState extends ConsumerState<MusicPickerSheet> {
 
     setState(() => _loadingMore = true);
     final res = _showFavorites
-        ? await _api.myFavoriteSounds(limit: 20, cursor: _nextCursor)
-        : await _api.listSounds(
-            limit: 20,
-            cursor: _nextCursor,
-            sourceType: _sourceType,
-          );
+        ? await _api.myFavoriteSounds(cursor: _nextCursor)
+        : await _api.listSounds(cursor: _nextCursor, sourceType: _sourceType);
 
     if (!mounted) return;
 
@@ -251,10 +247,7 @@ class _MusicPickerSheetState extends ConsumerState<MusicPickerSheet> {
   }
 
   Future<void> _uploadSound() async {
-    final picked = await FilePicker.pickFiles(
-      type: FileType.audio,
-      allowMultiple: false,
-    );
+    final picked = await FilePicker.pickFiles(type: FileType.audio);
     final path = picked?.files.single.path;
     if (path == null || path.trim().isEmpty) return;
 
@@ -351,7 +344,7 @@ class _MusicPickerSheetState extends ConsumerState<MusicPickerSheet> {
       },
       (result) async {
         try {
-          await Dio().put(
+          await Dio().put<Object?>(
             result.uploadUrl,
             data: file.openRead(),
             options: Options(
@@ -370,7 +363,6 @@ class _MusicPickerSheetState extends ConsumerState<MusicPickerSheet> {
           fileKey: result.fileKey,
           title: title,
           artist: artist,
-          sourceType: 'uploaded',
           durationSeconds: duration?.inMilliseconds == null
               ? 0
               : duration!.inMilliseconds / 1000,
@@ -543,13 +535,13 @@ class _MusicPickerSheetState extends ConsumerState<MusicPickerSheet> {
         label: Text(label),
         selected: selected,
         onSelected: (_) => onTap(),
-        selectedColor: colors.primary.withOpacity(.14),
+        selectedColor: colors.primary.withValues(alpha: .14),
         side: BorderSide(color: selected ? colors.primary : colors.border),
       ),
     );
   }
 
-  Widget _body(dynamic colors) {
+  Widget _body(AppColorTokens colors) {
     if (_loading) return const Center(child: CircularProgressIndicator());
 
     if (_error != null) {
@@ -640,7 +632,7 @@ class _SoundTile extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: colors.primary.withOpacity(.10),
+              backgroundColor: colors.primary.withValues(alpha: .10),
               child: Icon(
                 isOriginal
                     ? Icons.graphic_eq_rounded

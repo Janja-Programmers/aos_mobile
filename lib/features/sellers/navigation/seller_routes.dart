@@ -1,16 +1,12 @@
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
+import 'package:africaonlinestores/features/sellers/location/presentation/screens/seller_location_screen.dart';
+import 'package:africaonlinestores/features/sellers/presentation/my_storefront_screen.dart';
+import 'package:africaonlinestores/features/sellers/presentation/seller_storefront_screen.dart';
+import 'package:africaonlinestores/features/sellers/presentation/store_customization_screen.dart';
+import 'package:africaonlinestores/features/verifications/presentation/verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
-import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
-
-import 'package:africaonlinestores/features/sellers/presentation/my_storefront_screen.dart';
-import 'package:africaonlinestores/features/sellers/presentation/store_customization_screen.dart';
-import 'package:africaonlinestores/features/sellers/presentation/seller_storefront_screen.dart';
-import 'package:africaonlinestores/features/sellers/location/presentation/screens/seller_location_screen.dart';
-
-import 'package:africaonlinestores/features/verifications/presentation/verification_screen.dart';
 
 class SellerRoutes {
   const SellerRoutes._();

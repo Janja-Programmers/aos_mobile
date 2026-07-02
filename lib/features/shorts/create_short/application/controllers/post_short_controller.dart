@@ -1,20 +1,19 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
+import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_management_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_upload_api.dart';
+import 'package:africaonlinestores/features/shorts/shared/data/models/init_short_upload_result.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
-
-import 'package:africaonlinestores/core/utils/logger.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/models/init_short_upload_result.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_management_api.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_upload_api.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
 
 class PostShortController extends StateNotifier<UploadState> {
   final ShortsUploadApi uploadApi;
@@ -108,7 +107,6 @@ class PostShortController extends StateNotifier<UploadState> {
 
     state = state.copyWith(
       status: UploadStatus.initializing,
-      short: null,
       progress: 0,
       clearError: true,
     );
@@ -158,7 +156,7 @@ class PostShortController extends StateNotifier<UploadState> {
     state = state.copyWith(status: UploadStatus.uploading);
 
     try {
-      await Dio().put(
+      await Dio().put<Object?>(
         url,
         data: file.openRead(),
         options: Options(headers: {'Content-Length': await file.length()}),
@@ -229,7 +227,7 @@ class PostShortController extends StateNotifier<UploadState> {
       if (state.status == UploadStatus.failed) return false;
       if (done) return true;
 
-      await Future.delayed(const Duration(seconds: 3));
+      await Future<void>.delayed(const Duration(seconds: 3));
     }
 
     state = state.copyWith(

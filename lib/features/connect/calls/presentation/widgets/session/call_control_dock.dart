@@ -182,14 +182,14 @@ class _DockButton extends StatelessWidget {
   Color _backgroundColor(bool enabled) {
     if (isDestructive) return const Color(0xFFE91E4D);
     if (isActive) return Colors.white;
-    if (!enabled) return const Color(0xFF263238).withOpacity(0.55);
+    if (!enabled) return const Color(0xFF263238).withValues(alpha: 0.55);
     return const Color(0xFF1E2A30);
   }
 
   Color _iconColor(bool enabled) {
     if (isDestructive) return Colors.white;
     if (isActive) return activeIconColor ?? Colors.black;
-    if (!enabled) return Colors.white.withOpacity(0.38);
+    if (!enabled) return Colors.white.withValues(alpha: 0.38);
     return Colors.white;
   }
 }

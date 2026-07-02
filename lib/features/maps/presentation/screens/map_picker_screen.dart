@@ -1,16 +1,15 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/config/app_config.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/maps/application/map_picker_controller.dart';
+import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
-
-import 'package:africaonlinestores/core/config/app_config.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/features/maps/application/map_picker_controller.dart';
-import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class MapPickerScreen extends ConsumerStatefulWidget {
   const MapPickerScreen({
@@ -109,7 +108,6 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
               styleString: AppConfig.mapStyleUrl,
               initialCameraPosition: CameraPosition(target: target, zoom: 13),
               myLocationEnabled: true,
-              myLocationTrackingMode: MyLocationTrackingMode.none,
               onMapCreated: (controller) => _mapController = controller,
               onMapClick: (_, point) {
                 ref
@@ -254,7 +252,7 @@ class _SelectedLocationCard extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: colors.primary.withOpacity(.12),
+                  backgroundColor: colors.primary.withValues(alpha: .12),
                   child: resolving
                       ? const SizedBox(
                           width: 16,

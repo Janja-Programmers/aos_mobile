@@ -1,24 +1,21 @@
-import 'package:africaonlinestores/features/ads/ads_all/presentation/widgets/ads_all_empty_screen.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/ads/ads_all/controllers/all_ads_controller_provider.dart';
 import 'package:africaonlinestores/features/ads/ads_all/controllers/all_ads_params.dart';
 import 'package:africaonlinestores/features/ads/ads_all/controllers/all_ads_state.dart';
+import 'package:africaonlinestores/features/ads/ads_all/presentation/widgets/ads_all_empty_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_all/presentation/widgets/category_pills.dart';
 import 'package:africaonlinestores/features/ads/ads_all/presentation/widgets/deals_pills.dart';
 import 'package:africaonlinestores/features/ads/ads_all/presentation/widgets/sticky_header_delegate.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
-
 import 'package:africaonlinestores/shared/components/cards/ad_card_grid.dart';
 import 'package:africaonlinestores/shared/components/cards/ad_card_list.dart';
 import 'package:africaonlinestores/shared/enums/ads_mode.dart';
 import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AllAdsScreen extends ConsumerWidget {
   const AllAdsScreen({
@@ -69,7 +66,6 @@ class AllAdsScreen extends ConsumerWidget {
               SliverAppBar(
                 backgroundColor: context.appColors.surface,
                 pinned: true,
-                floating: false,
                 centerTitle: false,
                 elevation: 0,
                 leading: IconButton(
@@ -88,7 +84,6 @@ class AllAdsScreen extends ConsumerWidget {
               SliverAppBar(
                 backgroundColor: context.appColors.surface,
                 pinned: true,
-                floating: false,
                 centerTitle: false,
                 elevation: 0,
                 title: Text(title, style: context.h5),
@@ -569,7 +564,7 @@ void _showWishlistFilterSheet(
                 ),
                 decoration: BoxDecoration(
                   color: selected
-                      ? colors.primary.withOpacity(0.16)
+                      ? colors.primary.withValues(alpha: 0.16)
                       : colors.surface,
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(

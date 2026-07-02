@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class PriceTypePicker extends StatelessWidget {
   const PriceTypePicker({
@@ -27,7 +26,7 @@ class PriceTypePicker extends StatelessWidget {
         Text('Price Type', style: context.pStrong),
         const SizedBox(height: 12),
 
-        Container(
+        DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: colors.border),
@@ -44,7 +43,7 @@ class PriceTypePicker extends StatelessWidget {
                   Divider(
                     height: 1,
                     thickness: 1,
-                    color: colors.border.withOpacity(0.6),
+                    color: colors.border.withValues(alpha: 0.6),
                   ),
               ],
             ],

@@ -1,21 +1,19 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
+import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:africaonlinestores/shared/enums/ads.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:africaonlinestores/core/api/failure.dart';
-import 'package:africaonlinestores/core/utils/either.dart';
-
-import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
-import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
-import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
-
-import 'package:africaonlinestores/shared/enums/ads.dart';
-
 final adDraftControllerProvider =
     StateNotifierProvider<AdDraftController, AsyncValue<AdDraft>>(
-      (ref) => AdDraftController(ref),
+      AdDraftController.new,
     );
 
 class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
@@ -51,13 +49,9 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     final raw = res.rightOrNull!;
     final draftData = raw['data'];
 
-    final draft = AdDraft.fromDraft(draftData);
+    final draft = AdDraft.fromDraft(asJsonMap(draftData));
 
-    _draft = draft.copyWith(
-      source: DraftSource.draft,
-      draftId: draftId,
-      adId: null,
-    );
+    _draft = draft.copyWith(source: DraftSource.draft, draftId: draftId);
 
     state = AsyncValue.data(_draft);
   }
@@ -76,11 +70,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
     final draft = AdDraft.fromAd(res.rightOrNull!);
 
-    _draft = draft.copyWith(
-      source: DraftSource.edit,
-      adId: adId,
-      draftId: null,
-    );
+    _draft = draft.copyWith(source: DraftSource.edit, adId: adId);
 
     state = AsyncValue.data(_draft);
   }
@@ -99,16 +89,12 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
     final response = res.rightOrNull!;
 
-    final data = (response['data'] ?? const {}) as Map;
-    final item = (data['item'] ?? const {}) as Map<String, dynamic>;
+    final data = asJsonMap(response['data']);
+    final item = asJsonMap(data['item']);
 
     final draft = AdDraft.fromAd(item);
 
-    _draft = draft.copyWith(
-      source: DraftSource.edit,
-      adId: adId,
-      draftId: null,
-    );
+    _draft = draft.copyWith(source: DraftSource.edit, adId: adId);
 
     state = AsyncValue.data(_draft);
   }
@@ -133,9 +119,6 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
         categoryId: id,
         categoryLabel: label,
         attributes: const <String, dynamic>{},
-        priceType: null,
-        price: null,
-        priceUnit: null,
       ),
     );
   }
@@ -146,8 +129,8 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
   // ================= DETAILS =================
 
-  void setAttribute(String key, dynamic value) {
-    final next = Map<String, dynamic>.from(_draft.attributes);
+  void setAttribute(String key, Object? value) {
+    final next = asJsonMap(_draft.attributes);
 
     if (value == null || (value is String && value.trim().isEmpty)) {
       next.remove(key);
@@ -171,13 +154,13 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   }
 
   void clearPricing() {
-    _setDraft(_draft.copyWith(priceType: null, price: null, priceUnit: null));
+    _setDraft(_draft.copyWith());
   }
 
   void setPriceType(String? v) {
     final type = (v == null || v.trim().isEmpty) ? null : v;
 
-    if (type != "Fixed") {
+    if (type != 'Fixed') {
       _setDraft(
         _draft.copyWith(
           priceType: type,
@@ -195,7 +178,6 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     if (value == null || value <= 0) {
       _setDraft(
         _draft.copyWith(
-          offerPrice: null,
           scheduleOfferDates: false,
           clearOfferStart: true,
           clearOfferEnd: true,
@@ -310,7 +292,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
   Future<Either<Failure, String>> removeImageBackground(int index) async {
     if (index < 0 || index >= _draft.images.length) {
-      return Either.left(const Failure("Invalid image index"));
+      return Either.left(const Failure('Invalid image index'));
     }
 
     final api = _ref.read(filesApiProvider);
@@ -318,7 +300,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     final image = _draft.images[index];
 
     if (image.fileId.isEmpty) {
-      return Either.left(const Failure("Image has no fileId"));
+      return Either.left(const Failure('Image has no fileId'));
     }
 
     final res = await api.removeBackground(fileId: image.fileId);
@@ -407,7 +389,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   Future<void> clearVideo() async {
     final fileId = _draft.videoFileId;
 
-    _setDraft(_draft.copyWith(videoUrl: null, videoFileId: null));
+    _setDraft(_draft.copyWith());
 
     if (fileId != null && fileId.isNotEmpty) {
       unawaited(deleteFileSilently(fileId));

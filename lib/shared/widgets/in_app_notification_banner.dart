@@ -125,11 +125,11 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
                         color: colors.surface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: colors.border.withOpacity(0.12),
+                          color: colors.border.withValues(alpha: 0.12),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: colors.black.withOpacity(0.14),
+                            color: colors.black.withValues(alpha: 0.14),
                             blurRadius: 18,
                             offset: const Offset(0, 8),
                           ),
@@ -141,7 +141,7 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: colors.primary.withOpacity(0.10),
+                              color: colors.primary.withValues(alpha: 0.10),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
@@ -179,8 +179,8 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: context.pMuted.copyWith(
-                                      color: colors.textPrimary.withOpacity(
-                                        0.68,
+                                      color: colors.textPrimary.withValues(
+                                        alpha: 0.68,
                                       ),
                                       height: 1.25,
                                     ),
@@ -199,7 +199,9 @@ class _InAppNotificationBannerState extends State<InAppNotificationBanner>
                               child: Icon(
                                 Icons.close_rounded,
                                 size: 20,
-                                color: colors.textPrimary.withOpacity(0.55),
+                                color: colors.textPrimary.withValues(
+                                  alpha: 0.55,
+                                ),
                               ),
                             ),
                           ),

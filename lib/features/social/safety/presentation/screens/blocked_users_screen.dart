@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/social/safety/data/social_safety_api.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final blockedUsersProvider =
     FutureProvider.autoDispose<List<SocialUserSummary>>((ref) async {
@@ -55,10 +54,10 @@ class BlockedUsersScreen extends ConsumerWidget {
               final user = users[index];
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundImage: user.avatar?.isNotEmpty == true
+                  backgroundImage: user.avatar?.isNotEmpty ?? false
                       ? NetworkImage(user.avatar!)
                       : null,
-                  child: user.avatar?.isNotEmpty == true
+                  child: user.avatar?.isNotEmpty ?? false
                       ? null
                       : const Icon(Icons.person_outline_rounded),
                 ),

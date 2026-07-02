@@ -1,20 +1,16 @@
-import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-
 import 'package:africaonlinestores/features/ads/ads_listing/configs/ad_listing_empty_config.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/controllers/ad_listing_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/presentation/sections/ad_listing_content.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/presentation/sections/ad_listing_empty.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/presentation/widgets/ad_listing_tabs.dart';
+import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-
 import 'package:africaonlinestores/features/home/presentation/sections/ads_error.dart';
-
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class AdListingScreen extends ConsumerWidget {
   const AdListingScreen({super.key});

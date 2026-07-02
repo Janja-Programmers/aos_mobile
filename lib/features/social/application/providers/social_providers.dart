@@ -1,18 +1,14 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/core/providers.dart';
-
 import 'package:africaonlinestores/features/social/application/controllers/social_followers_controller.dart';
 import 'package:africaonlinestores/features/social/application/controllers/social_following_controllers.dart';
 import 'package:africaonlinestores/features/social/application/controllers/social_friend_controllers.dart';
 import 'package:africaonlinestores/features/social/application/controllers/social_relationship_controller.dart';
-
 import 'package:africaonlinestores/features/social/data/social_api.dart';
 import 'package:africaonlinestores/features/social/data/social_repository_impl.dart';
-
 import 'package:africaonlinestores/features/social/domain/social_friends_page.dart';
 import 'package:africaonlinestores/features/social/domain/social_relationship.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final socialApiProvider = Provider<SocialApi>((ref) {
   return SocialApi(ref.read(apiClientProvider));

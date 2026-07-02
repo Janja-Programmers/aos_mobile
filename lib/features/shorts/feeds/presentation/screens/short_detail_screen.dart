@@ -1,12 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/short_detail_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/video/short_video_page.dart';
+import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ShortDetailScreen extends ConsumerStatefulWidget {
   final List<Short> initialShorts;

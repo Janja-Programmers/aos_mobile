@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/sellers/domain/storefront_post.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/my_storefront/post_metric.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/my_storefront/post_thumbnail.dart';
+import 'package:flutter/material.dart';
 
 class MyPostTile extends StatelessWidget {
   const MyPostTile({super.key, required this.post, required this.onMenuTap});
@@ -23,7 +22,7 @@ class MyPostTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.035),
+            color: Colors.black.withValues(alpha: .035),
             blurRadius: 14,
             offset: const Offset(0, 7),
           ),

@@ -1,8 +1,7 @@
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
+import 'package:flutter/material.dart';
 
 class AdListingTabs extends StatelessWidget {
   const AdListingTabs({
@@ -61,7 +60,7 @@ class AdListingTabs extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: colors.border.withOpacity(.5),
+                    color: colors.border.withValues(alpha: .5),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(

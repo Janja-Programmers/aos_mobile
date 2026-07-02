@@ -1,12 +1,11 @@
 import 'dart:async';
 
 import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
+import 'package:africaonlinestores/features/preferences/service/preference_api_sync.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:africaonlinestores/features/preferences/service/preference_api_sync.dart';
 
 /// Optional abstraction if you want external preference injection
 abstract class PreferenceReader {
@@ -74,7 +73,7 @@ class ApiClient {
     // session handling
     dio.interceptors.add(
       InterceptorsWrapper(
-        onError: (error, handler) {
+        onError: (DioException error, ErrorInterceptorHandler handler) {
           if (error.response?.statusCode == 401) {
             _sessionExpiredCtrl.add(null);
           }
@@ -109,13 +108,13 @@ class ApiClient {
   }) {
     _contextHeaders.clear();
 
-    if (countryCode?.isNotEmpty == true) {
+    if (countryCode?.isNotEmpty ?? false) {
       _contextHeaders['X-AOS-Country'] = countryCode!;
     }
-    if (languageCode?.isNotEmpty == true) {
+    if (languageCode?.isNotEmpty ?? false) {
       _contextHeaders['X-AOS-Language'] = languageCode!;
     }
-    if (currencyCode?.isNotEmpty == true) {
+    if (currencyCode?.isNotEmpty ?? false) {
       _contextHeaders['X-AOS-Currency'] = currencyCode!;
     }
   }
@@ -146,7 +145,7 @@ class ApiClient {
   // ----------------------------
   // GET
   // ----------------------------
-  Future<Response<T>> get<T>(
+  Future<Response<Map<String, dynamic>>> get(
     String path, {
     Map<String, dynamic>? queryParameters,
     bool marketContext = false,
@@ -160,13 +159,17 @@ class ApiClient {
         ? _injectMarketContext(queryParameters)
         : queryParameters;
 
-    return dio.get<T>(path, queryParameters: qp, options: options);
+    return dio.get<Map<String, dynamic>>(
+      path,
+      queryParameters: qp,
+      options: options,
+    );
   }
 
   // ----------------------------
   // POST
   // ----------------------------
-  Future<Response<T>> post<T>(
+  Future<Response<Map<String, dynamic>>> post(
     String path, {
     Map<String, dynamic>? data,
     Map<String, dynamic>? queryParameters,
@@ -188,14 +191,19 @@ class ApiClient {
         ? _injectCountryOnly(data)
         : data;
 
-    return dio.post<T>(path, data: body, queryParameters: qp, options: options);
+    return dio.post<Map<String, dynamic>>(
+      path,
+      data: body,
+      queryParameters: qp,
+      options: options,
+    );
   }
 
   // ----------------------------
   // DISPOSE
   // ----------------------------
   void dispose() {
-    _sessionExpiredCtrl.close();
+    unawaited(_sessionExpiredCtrl.close());
   }
 }
 

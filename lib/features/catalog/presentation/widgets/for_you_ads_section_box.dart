@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/home/presentation/components/section_header.dart';
-
 import 'package:africaonlinestores/shared/components/cards/ad_card_grid.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:flutter/material.dart';
 
 class ForYouAdsSectionBox extends StatelessWidget {
   const ForYouAdsSectionBox({
@@ -35,7 +33,7 @@ class ForYouAdsSectionBox extends StatelessWidget {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final width = (constraints.maxWidth - 12) / 2;
-              final height = 190.0;
+              const height = 190.0;
 
               return GridView.builder(
                 itemCount: displayItems.length,

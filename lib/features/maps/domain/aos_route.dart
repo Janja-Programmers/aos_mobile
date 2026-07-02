@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
@@ -34,7 +35,7 @@ class AOSRoute {
       distanceDisplay ?? '${distance.toStringAsFixed(1)} km';
 
   String get durationLabel {
-    if (durationDisplay?.trim().isNotEmpty == true) return durationDisplay!;
+    if (durationDisplay?.trim().isNotEmpty ?? false) return durationDisplay!;
     final minutes = (durationSeconds / 60).round();
     if (minutes < 60) return '$minutes min';
     final h = minutes ~/ 60;
@@ -67,23 +68,18 @@ class AOSRoute {
       durationDisplay: _string(json['duration_display']),
       trafficEnabled: _toBool(json['traffic_enabled']),
       trafficSource: _string(json['traffic_source']),
-      legs: rawLegs is List
-          ? rawLegs
-                .whereType<Map>()
-                .map((e) => AOSRouteLeg.fromJson(Map<String, dynamic>.from(e)))
-                .toList()
-          : const [],
+      legs: asJsonMapList(rawLegs).map(AOSRouteLeg.fromJson).toList(),
     );
   }
 
-  static double _toDouble(dynamic value) {
+  static double _toDouble(Object? value) {
     if (value is double) return value;
     if (value is int) return value.toDouble();
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 
-  static int? _toInt(dynamic value) {
+  static int? _toInt(Object? value) {
     if (value == null) return null;
     if (value is int) return value;
     if (value is num) return value.toInt();
@@ -144,15 +140,9 @@ class AOSRouteLeg {
       durationDisplay: AOSRoute._string(json['duration_display']),
       shape: AOSRoute._string(json['shape']),
       shapeFormat: AOSRoute._string(json['shape_format']),
-      maneuvers: rawManeuvers is List
-          ? rawManeuvers
-                .whereType<Map>()
-                .map(
-                  (e) =>
-                      AOSRouteManeuver.fromJson(Map<String, dynamic>.from(e)),
-                )
-                .toList()
-          : const [],
+      maneuvers: asJsonMapList(
+        rawManeuvers,
+      ).map(AOSRouteManeuver.fromJson).toList(),
     );
   }
 }

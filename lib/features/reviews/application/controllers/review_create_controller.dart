@@ -1,8 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/features/reviews/application/state/review_create_state.dart';
 import 'package:africaonlinestores/features/reviews/data/review_api.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final reviewCreateControllerProvider =
     StateNotifierProvider.family<
@@ -26,7 +25,7 @@ class ReviewCreateController extends StateNotifier<ReviewCreateState> {
     required String comment,
     required List<String> images,
   }) async {
-    state = state.copyWith(submitting: true, error: null);
+    state = state.copyWith(submitting: true);
 
     final res = await ref
         .read(reviewApiProvider)

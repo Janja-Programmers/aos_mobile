@@ -1,5 +1,5 @@
-import 'package:equatable/equatable.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
+import 'package:equatable/equatable.dart';
 
 class ShortFeedPage extends Equatable {
   final List<ShortModel> items;

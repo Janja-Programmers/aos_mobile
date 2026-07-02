@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/search/widgets/search_recent_tile.dart';
+import 'package:flutter/material.dart';
 
 class SearchRecentSection extends StatelessWidget {
   const SearchRecentSection({
@@ -22,7 +22,7 @@ class SearchRecentSection extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: colors.surface,
           borderRadius: BorderRadius.circular(18),
@@ -36,7 +36,7 @@ class SearchRecentSection extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    "Recent Searches",
+                    'Recent Searches',
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       color: colors.textPrimary,
@@ -57,7 +57,7 @@ class SearchRecentSection extends StatelessWidget {
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
-                      child: const Text("Delete"),
+                      child: const Text('Delete'),
                     ),
                 ],
               ),
@@ -70,7 +70,7 @@ class SearchRecentSection extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  "No recent searches yet.",
+                  'No recent searches yet.',
                   style: TextStyle(color: colors.textMuted),
                 ),
               )

@@ -1,6 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/social/application/providers/social_providers.dart';
@@ -10,6 +7,9 @@ import 'package:africaonlinestores/features/social/navigation/social_navigation.
 import 'package:africaonlinestores/features/social/presentation/widgets/social_connection_tile.dart';
 import 'package:africaonlinestores/features/social/presentation/widgets/social_connections_state_view.dart';
 import 'package:africaonlinestores/features/social/safety/presentation/widgets/user_safety_sheet.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SocialConnectionsList extends ConsumerWidget {
   final SocialConnectionsState state;
@@ -57,8 +57,8 @@ class SocialConnectionsList extends ConsumerWidget {
           return false;
         },
         child: ListView.separated(
+          scrollCacheExtent: const ScrollCacheExtent.pixels(700),
           physics: const AlwaysScrollableScrollPhysics(),
-          cacheExtent: 700,
           padding: const EdgeInsets.only(bottom: 18),
           itemCount: items.length + (state.isLoadingMore ? 1 : 0),
           separatorBuilder: (_, _) => const SizedBox(height: 2),

@@ -1,9 +1,5 @@
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/routing/app_nav.dart';
-
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_location_screen.dart';
 import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 import 'package:africaonlinestores/features/home/domain/location_picker.dart';
@@ -13,10 +9,10 @@ import 'package:africaonlinestores/features/home/presentation/screens/ad_list_sc
 import 'package:africaonlinestores/features/home/presentation/sections/ads_content.dart';
 import 'package:africaonlinestores/features/notifications/navigation/notification_routes.dart';
 import 'package:africaonlinestores/features/search/shared/routing/search_routes.dart';
-
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
-
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class AdListScreen extends ConsumerStatefulWidget {
@@ -45,7 +41,7 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
         ?.locationId;
 
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(
+      MaterialPageRoute<Object?>(
         builder: (_) => SelectLocationScreen(selectedId: currentLocation),
       ),
     );
@@ -57,7 +53,7 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
     /// Update location inside HomePageController
     await ref
         .read(homePageControllerProvider.notifier)
-        .changeLocation(picked.id!);
+        .changeLocation(picked.id);
   }
 
   /// =============================

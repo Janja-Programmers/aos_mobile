@@ -1,14 +1,11 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
-import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/utils/ad_listing_actions.dart';
-
+import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/shared/utils/helpers.dart';
+import 'package:flutter/material.dart';
 
 class AdListingContentView extends StatelessWidget {
   const AdListingContentView({
@@ -101,7 +98,7 @@ class _MyAdTile extends StatelessWidget {
       },
     );
 
-    if (confirmed == true) {
+    if (confirmed ?? false) {
       onDelete(ad);
     }
   }
@@ -136,7 +133,7 @@ class _MyAdTile extends StatelessWidget {
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.18),
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.18),
         ),
       ),
       child: Column(

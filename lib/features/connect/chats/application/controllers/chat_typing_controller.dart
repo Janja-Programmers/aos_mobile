@@ -1,28 +1,28 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
+import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
-import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
-
 final chatTypingControllerProvider =
     StateNotifierProvider<ChatTypingController, Map<String, bool>>(
-      (ref) => ChatTypingController(ref),
+      ChatTypingController.new,
     );
 
 class ChatTypingController extends StateNotifier<Map<String, bool>> {
   final Ref ref;
 
   ChatTypingController(this.ref) : super({}) {
-    _currentUser = ref.read(currentUserProvider) ?? "";
+    _currentUser = ref.read(currentUserProvider) ?? '';
     _listenRealtime();
   }
 
   late final String _currentUser;
 
   final Map<String, Timer> _timers = {};
-  StreamSubscription? _typingSub;
+  StreamSubscription<Object?>? _typingSub;
 
   // -----------------------------
   // Realtime listener (UPDATED)
@@ -30,29 +30,21 @@ class ChatTypingController extends StateNotifier<Map<String, bool>> {
   void _listenRealtime() {
     final realtime = ref.read(chatRealtimeServiceProvider);
 
-    _typingSub = realtime.typing.listen((data) {
-      final conversationId = data['conversation_id'];
+    _typingSub = realtime.typing.listen((payload) {
+      final data = asJsonMap(payload);
+      final conversationId = asNullableString(data['conversation_id']);
 
       // 🔥 ignore invalid payloads
       if (conversationId == null) return;
 
       // 🔥 ignore own typing (IMPORTANT)
-      final fromUser = data['from'];
+      final fromUser = asNullableString(data['from']);
       if (fromUser == _currentUser) return;
 
-      final isTyping = _parseTyping(data['is_typing']);
+      final isTyping = asBool(data['is_typing']);
 
       _setTyping(conversationId, isTyping);
     });
-  }
-
-  // -----------------------------
-  // Normalize typing value
-  // -----------------------------
-  bool _parseTyping(dynamic value) {
-    if (value == true) return true;
-    if (value == 1) return true;
-    return false;
   }
 
   // -----------------------------
@@ -80,7 +72,7 @@ class ChatTypingController extends StateNotifier<Map<String, bool>> {
   // Public helper
   // -----------------------------
   bool isTyping(String conversationId) {
-    return state[conversationId] == true;
+    return state[conversationId] ?? false;
   }
 
   // -----------------------------
@@ -88,7 +80,7 @@ class ChatTypingController extends StateNotifier<Map<String, bool>> {
   // -----------------------------
   @override
   void dispose() {
-    _typingSub?.cancel();
+    unawaited(_typingSub?.cancel());
 
     for (final t in _timers.values) {
       t.cancel();

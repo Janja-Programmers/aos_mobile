@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/shared/shimmer/app_shimmer.dart';
+import 'package:flutter/material.dart';
 
 class CategoriesPreviewShimmer extends StatelessWidget {
   const CategoriesPreviewShimmer({super.key});

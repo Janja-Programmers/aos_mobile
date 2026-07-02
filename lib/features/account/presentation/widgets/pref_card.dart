@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class PrefCard extends StatelessWidget {
   const PrefCard({
@@ -41,7 +41,7 @@ class PrefCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: colors.primary.withOpacity(.12),
+                  color: colors.primary.withValues(alpha: .12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(leading, color: colors.primary, size: 26),

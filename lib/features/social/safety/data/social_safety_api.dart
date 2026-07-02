@@ -1,7 +1,3 @@
-import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
@@ -9,6 +5,10 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 @immutable
 class SocialUserSummary {
@@ -77,15 +77,7 @@ class SocialUserSearchPage {
   factory SocialUserSearchPage.fromJson(Map<String, dynamic> json) {
     final rawItems = json['items'];
     return SocialUserSearchPage(
-      items: rawItems is List
-          ? rawItems
-                .whereType<Map>()
-                .map(
-                  (e) =>
-                      SocialUserSummary.fromJson(Map<String, dynamic>.from(e)),
-                )
-                .toList()
-          : const [],
+      items: asJsonMapList(rawItems).map(SocialUserSummary.fromJson).toList(),
       start: int.tryParse(json['start']?.toString() ?? '0') ?? 0,
       limit: int.tryParse(json['limit']?.toString() ?? '20') ?? 20,
       hasMore: json['has_more'] == true || json['has_more']?.toString() == '1',
@@ -122,9 +114,7 @@ class SocialSafetyApi {
       if (data is! Map) {
         return Either.left(const Failure('Invalid user search response.'));
       }
-      return Either.right(
-        SocialUserSearchPage.fromJson(Map<String, dynamic>.from(data)),
-      );
+      return Either.right(SocialUserSearchPage.fromJson(asJsonMap(data)));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
@@ -159,19 +149,9 @@ class SocialSafetyApi {
       );
       final unwrapped = unwrapFrappe(res);
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
-      final data = unwrapped.rightOrNull?['data'];
-      final rawItems = data is Map ? data['items'] : null;
+      final data = asJsonMap(unwrapped.rightOrNull?['data']);
       return Either.right(
-        rawItems is List
-            ? rawItems
-                  .whereType<Map>()
-                  .map(
-                    (e) => SocialUserSummary.fromJson(
-                      Map<String, dynamic>.from(e),
-                    ),
-                  )
-                  .toList()
-            : const [],
+        asJsonMapList(data['items']).map(SocialUserSummary.fromJson).toList(),
       );
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -217,9 +197,7 @@ class SocialSafetyApi {
       final unwrapped = unwrapFrappe(res);
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
       final payload = unwrapped.rightOrNull?['data'];
-      return Either.right(
-        payload is Map ? Map<String, dynamic>.from(payload) : const {},
-      );
+      return Either.right(payload is Map ? asJsonMap(payload) : const {});
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {

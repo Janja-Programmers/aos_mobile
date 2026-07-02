@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/shared/shimmer/app_shimmer.dart';
+import 'package:flutter/material.dart';
 
 class HorizontalAdsSectionShimmer extends StatelessWidget {
   const HorizontalAdsSectionShimmer({super.key, required this.title});
@@ -23,7 +22,7 @@ class HorizontalAdsSectionShimmer extends StatelessWidget {
                 children: [
                   Expanded(child: Text(title, style: context.h5)),
                   Text(
-                    "See all",
+                    'See all',
                     style: context.pStrong.copyWith(
                       color: context.appColors.primary,
                     ),

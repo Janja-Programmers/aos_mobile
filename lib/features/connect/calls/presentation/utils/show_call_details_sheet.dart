@@ -1,84 +1,92 @@
-import 'package:intl/intl.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
+
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
-import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
-import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 void showCallDetailsSheet(BuildContext context, WidgetRef ref, CallLog call) {
   final colors = context.appColors;
 
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: colors.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (sheetContext) {
-      final detailFuture = ref
-          .read(callManagerProvider.notifier)
-          .loadCallGroupDetail(call);
+  unawaited(
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        final detailFuture = ref
+            .read(callManagerProvider.notifier)
+            .loadCallGroupDetail(call);
 
-      return SafeArea(
-        top: false,
-        child: FutureBuilder<List<CallLog>>(
-          future: detailFuture,
-          builder: (context, snapshot) {
-            final calls = snapshot.data ?? <CallLog>[call];
-            final isLoading =
-                snapshot.connectionState == ConnectionState.waiting;
-            final hasError = snapshot.hasError;
+        return SafeArea(
+          top: false,
+          child: FutureBuilder<List<CallLog>>(
+            future: detailFuture,
+            builder: (context, snapshot) {
+              final calls = snapshot.data ?? <CallLog>[call];
+              final isLoading =
+                  snapshot.connectionState == ConnectionState.waiting;
+              final hasError = snapshot.hasError;
 
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 16,
-                bottom: 16 + MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _Header(call: call),
-                    const SizedBox(height: 16),
-                    SectionCard(
-                      child: Column(
-                        children: [
-                          _row("Date", DateFormat.yMMMd().format(call.date)),
-                          _row("Time", call.formattedTime),
-                          _row("Duration", _formatDuration(call.duration)),
-                          _row("Type", _type(call)),
-                          if (call.isGrouped)
-                            _row("Calls", '${call.groupCount}'),
-                        ],
-                      ),
-                    ),
-                    if (call.isGrouped) ...[
-                      const SizedBox(height: 16),
-                      _GroupDetails(
-                        calls: calls,
-                        isLoading: isLoading,
-                        hasError: hasError,
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    _Actions(sheetContext: sheetContext, ref: ref, call: call),
-                    const SizedBox(height: 8),
-                  ],
+              return Padding(
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 16,
+                  bottom: 16 + MediaQuery.of(context).viewInsets.bottom,
                 ),
-              ),
-            );
-          },
-        ),
-      );
-    },
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _Header(call: call),
+                      const SizedBox(height: 16),
+                      SectionCard(
+                        child: Column(
+                          children: [
+                            _row('Date', DateFormat.yMMMd().format(call.date)),
+                            _row('Time', call.formattedTime),
+                            _row('Duration', _formatDuration(call.duration)),
+                            _row('Type', _type(call)),
+                            if (call.isGrouped)
+                              _row('Calls', '${call.groupCount}'),
+                          ],
+                        ),
+                      ),
+                      if (call.isGrouped) ...[
+                        const SizedBox(height: 16),
+                        _GroupDetails(
+                          calls: calls,
+                          isLoading: isLoading,
+                          hasError: hasError,
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      _Actions(
+                        sheetContext: sheetContext,
+                        ref: ref,
+                        call: call,
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    ),
   );
 }
 
@@ -97,7 +105,7 @@ class _Header extends StatelessWidget {
           radius: 28,
           backgroundColor: colors.border,
           child: Text(
-            call.displayName.isNotEmpty ? call.displayName[0] : "?",
+            call.displayName.isNotEmpty ? call.displayName[0] : '?',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -245,7 +253,7 @@ class _Actions extends StatelessWidget {
                 },
                 icon: Icon(Icons.call, color: context.appColors.white),
                 label: Text(
-                  "Audio Call",
+                  'Audio Call',
                   style: AppTextStylesX(context).button,
                 ),
               ),
@@ -272,7 +280,7 @@ class _Actions extends StatelessWidget {
                 },
                 icon: Icon(Icons.video_call, color: context.appColors.white),
                 label: Text(
-                  "Video Call",
+                  'Video Call',
                   style: AppTextStylesX(context).button,
                 ),
               ),
@@ -376,8 +384,8 @@ Widget _row(String left, String right) {
 }
 
 String _type(CallLog call) {
-  if (call.isMissed || call.status == 'cancelled') return "Missed";
-  return call.direction == "incoming" ? "Incoming" : "Outgoing";
+  if (call.isMissed || call.status == 'cancelled') return 'Missed';
+  return call.direction == 'incoming' ? 'Incoming' : 'Outgoing';
 }
 
 String _formatDuration(int seconds) {

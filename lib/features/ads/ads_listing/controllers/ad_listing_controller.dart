@@ -1,10 +1,10 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/controllers/ad_listing_state.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final adListingControllerProvider =
     StateNotifierProvider<AdListingsController, AdListingsState>((ref) {
@@ -28,13 +28,9 @@ class AdListingsController extends StateNotifier<AdListingsState> {
   /// INIT
   /// -------------------------
   Future<void> init() async {
-    state = state.copyWith(
-      loading: true,
-      error: null,
-      selectedTab: AdTab.active,
-    );
+    state = state.copyWith(loading: true, selectedTab: AdTab.active);
 
-    await Future.wait([_loadCounts(), load(AdTab.active, showLoader: true)]);
+    await Future.wait([_loadCounts(), load(AdTab.active)]);
   }
 
   /// -------------------------
@@ -45,7 +41,6 @@ class AdListingsController extends StateNotifier<AdListingsState> {
 
     state = state.copyWith(
       selectedTab: tab,
-      error: null,
       loading: showLoader && state.items.isEmpty,
     );
 
@@ -65,20 +60,16 @@ class AdListingsController extends StateNotifier<AdListingsState> {
           );
         },
         (data) {
-          final dataMap = (data['data'] ?? {}) as Map;
+          final dataMap = asJsonMap(data['data']);
           final itemsRaw = dataMap['items'];
 
           final list = <AOSAdListItem>[];
 
-          if (itemsRaw is List) {
-            for (final e in itemsRaw) {
-              if (e is Map) {
-                list.add(AOSAdListItem.fromDraft(Map<String, dynamic>.from(e)));
-              }
-            }
+          for (final e in asJsonMapList(itemsRaw)) {
+            list.add(AOSAdListItem.fromDraft(e));
           }
 
-          state = state.copyWith(loading: false, error: null, items: list);
+          state = state.copyWith(loading: false, items: list);
         },
       );
 
@@ -90,7 +81,7 @@ class AdListingsController extends StateNotifier<AdListingsState> {
     if (status == null) {
       if (currentRequest != _requestId) return;
 
-      state = state.copyWith(loading: false, error: null, items: const []);
+      state = state.copyWith(loading: false, items: const []);
       return;
     }
 
@@ -107,18 +98,14 @@ class AdListingsController extends StateNotifier<AdListingsState> {
         );
       },
       (data) {
-        final dataMap = (data['data'] ?? {}) as Map;
+        final dataMap = asJsonMap(data['data']);
         final itemsRaw = dataMap['items'];
 
-        final list = itemsRaw is List
-            ? itemsRaw
-                  .map(
-                    (e) => AOSAdListItem.fromJson(Map<String, dynamic>.from(e)),
-                  )
-                  .toList()
-            : <AOSAdListItem>[];
+        final list = asJsonMapList(
+          itemsRaw,
+        ).map(AOSAdListItem.fromJson).toList(growable: false);
 
-        state = state.copyWith(loading: false, error: null, items: list);
+        state = state.copyWith(loading: false, items: list);
       },
     );
   }
@@ -155,8 +142,8 @@ class AdListingsController extends StateNotifier<AdListingsState> {
       if (currentCountsRequest != _countsRequestId) return;
 
       res.fold((_) => newCounts[tab] = 0, (data) {
-        final dataMap = (data['data'] ?? {}) as Map;
-        final pagination = (dataMap['pagination'] ?? {}) as Map;
+        final dataMap = asJsonMap(data['data']);
+        final pagination = asJsonMap(dataMap['pagination']);
 
         final totalRaw = pagination['total'];
         final total = totalRaw is int
@@ -173,7 +160,7 @@ class AdListingsController extends StateNotifier<AdListingsState> {
     if (currentCountsRequest != _countsRequestId) return;
 
     draftsRes.fold((_) => newCounts[AdTab.drafts] = 0, (data) {
-      final dataMap = (data['data'] ?? {}) as Map;
+      final dataMap = asJsonMap(data['data']);
       final items = dataMap['items'];
       newCounts[AdTab.drafts] = items is List ? items.length : 0;
     });

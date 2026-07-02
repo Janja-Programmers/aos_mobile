@@ -1,14 +1,11 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/search/widgets/search_empty_state.dart';
-
 import 'package:africaonlinestores/shared/components/cards/ad_card_grid.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:flutter/material.dart';
 
 class SearchResultsSection extends StatelessWidget {
   const SearchResultsSection({
@@ -44,7 +41,7 @@ class SearchResultsSection extends StatelessWidget {
             title: visualSearchTitle!,
             subtitle:
                 visualSearchSubtitle ??
-                (loading ? "Searching similar products..." : ""),
+                (loading ? 'Searching similar products...' : ''),
             onClear: onClearVisualSearch,
           ),
           const SizedBox(height: 8),
@@ -157,7 +154,7 @@ class _VisualSearchCard extends StatelessWidget {
               onPressed: onClear,
               icon: Icon(Icons.close, color: colors.error),
               style: IconButton.styleFrom(
-                backgroundColor: colors.error.withOpacity(0.10),
+                backgroundColor: colors.error.withValues(alpha: 0.10),
               ),
             ),
         ],

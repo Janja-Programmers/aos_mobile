@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 /// Shared, reusable legal document content widgets.
 /// These are used both in full pages and in bottom sheets (e.g. Register consent).

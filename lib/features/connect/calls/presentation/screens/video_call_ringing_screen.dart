@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:africaonlinestores/core/core.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/video_call_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class VideoRingingScreen extends ConsumerStatefulWidget {
   const VideoRingingScreen({super.key});

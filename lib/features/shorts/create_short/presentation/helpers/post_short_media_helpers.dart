@@ -8,7 +8,7 @@ class PostShortMediaHelpers {
 
   /// Generate thumbnail for video
   static Future<Uint8List?> generateVideoThumbnail(File file) async {
-    return await VideoThumbnail.thumbnailData(
+    return VideoThumbnail.thumbnailData(
       video: file.path,
       imageFormat: ImageFormat.JPEG,
       quality: 75,

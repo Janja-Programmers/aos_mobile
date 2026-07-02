@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:flutter/material.dart';
 
 class SectionCard extends StatelessWidget {
   const SectionCard({super.key, this.title, required this.child});
@@ -21,11 +20,11 @@ class SectionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         color: context.appColors.surface,
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.15),
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.15),
         ),
         boxShadow: [
           BoxShadow(
-            color: colors.black.withOpacity(0.03),
+            color: colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 6),
           ),

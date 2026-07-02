@@ -25,7 +25,6 @@ class LiveVideoStage extends StatelessWidget {
       child: track != null
           ? lk.VideoTrackRenderer(
               track!,
-              fit: lk.VideoViewFit.contain,
               mirrorMode: mirror
                   ? lk.VideoViewMirrorMode.mirror
                   : lk.VideoViewMirrorMode.off,

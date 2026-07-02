@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:africaonlinestores/core/realtime/realtime_event.dart';
 import 'package:africaonlinestores/core/realtime/realtime_event_type.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
-
 import 'package:africaonlinestores/features/live/application/services/live_signaling_handler.dart';
 
 class SocketLiveListener {
@@ -18,11 +18,11 @@ class SocketLiveListener {
   });
 
   void attach() {
-    _sub?.cancel();
+    unawaited(_sub?.cancel());
 
     _sub = eventStream.listen((event) async {
       try {
-        final data = Map<String, dynamic>.from(event.data);
+        final data = asJsonMap(event.data);
 
         switch (event.type) {
           case RealtimeEventType.aosLiveStarted:
@@ -91,7 +91,7 @@ class SocketLiveListener {
   }
 
   void detach() {
-    _sub?.cancel();
+    unawaited(_sub?.cancel());
     _sub = null;
   }
 

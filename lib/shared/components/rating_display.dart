@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/shared/utils/helpers.dart';
+import 'package:flutter/material.dart';
 
 class RatingDisplay extends StatelessWidget {
   final double rating;
@@ -35,7 +34,7 @@ class RatingDisplay extends StatelessWidget {
           const SizedBox(width: 4),
           Flexible(
             child: Text(
-              "$rating (${humanizeCount(reviewCount)} Reviews)",
+              '$rating (${humanizeCount(reviewCount)} Reviews)',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.pMuted.copyWith(fontSize: textSize),

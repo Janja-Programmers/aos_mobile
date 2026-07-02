@@ -1,7 +1,6 @@
+import 'package:africaonlinestores/features/connect/calls/presentation/widgets/active/video_call/local_view.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
-
-import 'package:africaonlinestores/features/connect/calls/presentation/widgets/active/video_call/local_view.dart';
 
 class VideoCallView extends StatelessWidget {
   final Room? room;
@@ -30,7 +29,7 @@ class VideoCallView extends StatelessWidget {
         if (pub.kind == TrackType.VIDEO &&
             pub.track != null &&
             pub.subscribed) {
-          remoteVideoTrack = pub.track as VideoTrack;
+          remoteVideoTrack = pub.track! as VideoTrack;
           break;
         }
       }
@@ -43,7 +42,7 @@ class VideoCallView extends StatelessWidget {
     if (localParticipant != null) {
       for (final pub in localParticipant.videoTrackPublications) {
         if (pub.track != null) {
-          localVideoTrack = pub.track as VideoTrack;
+          localVideoTrack = pub.track! as VideoTrack;
           break;
         }
       }
@@ -83,7 +82,7 @@ class _NoRemoteVideo extends StatelessWidget {
       color: Colors.black,
       alignment: Alignment.center,
       child: const Text(
-        "Waiting for video...",
+        'Waiting for video...',
         style: TextStyle(color: Colors.white),
       ),
     );

@@ -1,6 +1,3 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
@@ -8,9 +5,12 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/maps/domain/seller_location_response.dart';
 import 'package:africaonlinestores/features/maps/domain/seller_map_point.dart';
 import 'package:africaonlinestores/features/maps/domain/seller_nearby_item.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final sellerMapsApiProvider = Provider<SellerMapsApi>((ref) {
   return SellerMapsApi(ref.read(apiClientProvider));
@@ -67,16 +67,10 @@ class SellerMapsApi {
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
 
       final data = _dataMap(unwrapped.rightOrNull);
-      final rawItems = data['items'] ?? data['sellers'] ?? const [];
-      final items = rawItems is List
-          ? rawItems
-                .whereType<Map>()
-                .map(
-                  (e) =>
-                      SellerNearbyItem.fromJson(Map<String, dynamic>.from(e)),
-                )
-                .toList(growable: false)
-          : <SellerNearbyItem>[];
+      final rawItems = data['items'] ?? data['sellers'];
+      final items = asJsonMapList(
+        rawItems,
+      ).map(SellerNearbyItem.fromJson).toList(growable: false);
       return Either.right(items);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -110,15 +104,9 @@ class SellerMapsApi {
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
 
       final data = _dataMap(unwrapped.rightOrNull);
-      final rawItems = data['items'];
-      final items = rawItems is List
-          ? rawItems
-                .whereType<Map>()
-                .map(
-                  (e) => SellerMapPoint.fromJson(Map<String, dynamic>.from(e)),
-                )
-                .toList(growable: false)
-          : <SellerMapPoint>[];
+      final items = asJsonMapList(
+        data['items'],
+      ).map(SellerMapPoint.fromJson).toList(growable: false);
       return Either.right(items);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -128,10 +116,11 @@ class SellerMapsApi {
   }
 
   static Map<String, dynamic> _dataMap(Map<String, dynamic>? payload) {
-    final data = payload?['data'];
-    if (data is Map) return Map<String, dynamic>.from(data);
-    return payload == null
-        ? <String, dynamic>{}
-        : Map<String, dynamic>.from(payload);
+    if (payload == null) return <String, dynamic>{};
+
+    final data = asJsonMap(payload['data']);
+    if (data.isNotEmpty) return data;
+
+    return asJsonMap(payload);
   }
 }

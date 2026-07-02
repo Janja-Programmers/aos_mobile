@@ -1,8 +1,7 @@
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:africaonlinestores/core/location/location_service.dart';
-
 import 'package:africaonlinestores/features/maps/data/maps_api.dart';
 import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class MapPickerState {
   final bool loading;

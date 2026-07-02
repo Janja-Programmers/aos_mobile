@@ -1,6 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final adDetailsControllerProvider = FutureProvider.family<AOSAdDetails, String>(
   (ref, adId) async {
@@ -11,10 +12,10 @@ final adDetailsControllerProvider = FutureProvider.family<AOSAdDetails, String>(
       final adJson = (data is Map) ? (data['item'] ?? data) : null;
 
       if (adJson is! Map) {
-        throw Exception("Failed to load ad");
+        throw Exception('Failed to load ad');
       }
 
-      return AOSAdDetails.fromJson(Map<String, dynamic>.from(adJson));
+      return AOSAdDetails.fromJson(asJsonMap(adJson));
     });
   },
 );

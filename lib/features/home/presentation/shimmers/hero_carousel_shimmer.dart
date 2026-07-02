@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:africaonlinestores/shared/shimmer/app_shimmer.dart';
+import 'package:flutter/material.dart';
 
 class HeroCarouselShimmer extends StatelessWidget {
   const HeroCarouselShimmer({super.key});

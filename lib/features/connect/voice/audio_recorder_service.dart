@@ -15,14 +15,7 @@ class AudioRecorderService {
     final path =
         '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
-    await _recorder.start(
-      const RecordConfig(
-        encoder: AudioEncoder.aacLc,
-        bitRate: 128000,
-        sampleRate: 44100,
-      ),
-      path: path,
-    );
+    await _recorder.start(const RecordConfig(), path: path);
   }
 
   Future<String?> stop() async {

@@ -1,15 +1,16 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/normalize_image.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/application/user_verification_provider.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class UserVerificationScreen extends ConsumerStatefulWidget {
   const UserVerificationScreen({super.key});
@@ -134,7 +135,7 @@ class _UserVerificationScreenState
                 width: 86,
                 height: 86,
                 decoration: BoxDecoration(
-                  color: colors.amber.withOpacity(.16),
+                  color: colors.amber.withValues(alpha: .16),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -162,7 +163,7 @@ class _UserVerificationScreenState
       ),
     );
 
-    if (result == true && mounted) Navigator.pop(context, true);
+    if ((result ?? false) && mounted) Navigator.pop(context, true);
   }
 
   @override
@@ -323,7 +324,7 @@ class _StepHeader extends StatelessWidget {
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: colors.primary.withOpacity(.10),
+            color: colors.primary.withValues(alpha: .10),
             borderRadius: BorderRadius.circular(24),
           ),
           child: Icon(icon, color: colors.primary, size: 34),
@@ -577,7 +578,7 @@ class _UploadTile extends StatelessWidget {
               height: 58,
               decoration: BoxDecoration(
                 color: uploaded
-                    ? colors.success.withOpacity(.12)
+                    ? colors.success.withValues(alpha: .12)
                     : colors.surfaceBright,
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -618,7 +619,7 @@ class _UploadTile extends StatelessWidget {
 
 class _GuidelinesCard extends StatelessWidget {
   const _GuidelinesCard({required this.colors});
-  final dynamic colors;
+  final AppColorTokens colors;
 
   @override
   Widget build(BuildContext context) {
@@ -632,9 +633,9 @@ class _GuidelinesCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: colors.blue.withOpacity(.07),
+        color: colors.blue.withValues(alpha: .07),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colors.blue.withOpacity(.45)),
+        border: Border.all(color: colors.blue.withValues(alpha: .45)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -870,12 +871,12 @@ class _ReviewStep extends ConsumerWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  colors.primary.withOpacity(.12),
-                  colors.primary.withOpacity(.04),
+                  colors.primary.withValues(alpha: .12),
+                  colors.primary.withValues(alpha: .04),
                 ],
               ),
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: colors.primary.withOpacity(.25)),
+              border: Border.all(color: colors.primary.withValues(alpha: .25)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -956,7 +957,9 @@ class _ReviewTile extends StatelessWidget {
             width: 58,
             height: 58,
             decoration: BoxDecoration(
-              color: (ok ? colors.success : colors.amber).withOpacity(.12),
+              color: (ok ? colors.success : colors.amber).withValues(
+                alpha: .12,
+              ),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: ok ? colors.success : colors.textMuted),

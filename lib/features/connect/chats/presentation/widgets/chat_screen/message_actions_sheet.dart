@@ -1,10 +1,9 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/common/chat_action_tile.dart';
+import 'package:flutter/material.dart';
 
 class MessageActionsSheet extends StatelessWidget {
   const MessageActionsSheet({
@@ -96,7 +95,7 @@ class MessageActionsSheet extends StatelessWidget {
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: selected
-                                  ? colors.primary.withOpacity(0.14)
+                                  ? colors.primary.withValues(alpha: 0.14)
                                   : colors.elevated,
                               shape: BoxShape.circle,
                               border: Border.all(

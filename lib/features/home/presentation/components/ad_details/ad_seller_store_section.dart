@@ -1,12 +1,11 @@
 import 'package:africaonlinestores/core/config/app_config.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/account/shared/utils/avator_image.dart';
 import 'package:africaonlinestores/features/reviews/application/state/review_state.dart';
 import 'package:africaonlinestores/features/reviews/presentation/helpers/build_review_button.dart';
-import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:flutter/material.dart';
 
 class AdSellerInfoSection extends StatelessWidget {
   const AdSellerInfoSection({
@@ -98,7 +97,7 @@ class AdSellerInfoSection extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(6),
-                              color: colors.success.withOpacity(0.08),
+                              color: colors.success.withValues(alpha: 0.08),
                             ),
                             child: Text(
                               'Verified',
@@ -147,9 +146,9 @@ class AdSellerInfoSection extends StatelessWidget {
                   'Reviews',
                   totalReviews.toString(),
                 ),
-                _divider(colors.black.withOpacity(0.5)),
+                _divider(colors.black.withValues(alpha: 0.5)),
                 _info(context, Icons.calendar_month, 'Joined', joined),
-                _divider(colors.black.withOpacity(0.5)),
+                _divider(colors.black.withValues(alpha: 0.5)),
                 _info(
                   context,
                   Icons.inventory_2_outlined,

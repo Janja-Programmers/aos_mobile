@@ -1,7 +1,6 @@
+import 'package:africaonlinestores/core/media/livekit_service.dart';
 import 'package:livekit_client/livekit_client.dart';
 import 'package:permission_handler/permission_handler.dart';
-
-import 'package:africaonlinestores/core/media/livekit_service.dart';
 
 class CallMediaService {
   final LiveKitService liveKit;

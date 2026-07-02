@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+
 class CategoryNode {
   const CategoryNode({
     required this.id,
@@ -17,7 +19,7 @@ class CategoryNode {
     if (kidsRaw is List) {
       for (final e in kidsRaw) {
         if (e is Map) {
-          kids.add(CategoryNode.fromJson(Map<String, dynamic>.from(e)));
+          kids.add(CategoryNode.fromJson(asJsonMap(e)));
         }
       }
     }

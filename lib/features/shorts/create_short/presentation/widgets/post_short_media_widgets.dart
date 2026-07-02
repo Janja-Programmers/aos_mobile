@@ -1,6 +1,7 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
+
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
+import 'package:flutter/material.dart';
 
 class PostShortMediaWidgets {
   PostShortMediaWidgets._();
@@ -15,7 +16,7 @@ class PostShortMediaWidgets {
         height: 80,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.transparent, colors.black.withOpacity(.6)],
+            colors: [Colors.transparent, colors.black.withValues(alpha: .6)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -29,10 +30,10 @@ class PostShortMediaWidgets {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: colors.black.withOpacity(.7),
+        color: colors.black.withValues(alpha: .7),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text("$count", style: style),
+      child: Text('$count', style: style),
     );
   }
 
@@ -53,7 +54,7 @@ class PostShortMediaWidgets {
         if (isVideo)
           Positioned.fill(
             child: Container(
-              color: colors.black.withOpacity(.5),
+              color: colors.black.withValues(alpha: .5),
               alignment: Alignment.center,
               child: Icon(Icons.videocam, color: colors.white),
             ),
@@ -64,7 +65,7 @@ class PostShortMediaWidgets {
           right: -6,
           child: GestureDetector(
             onTap: onRemove,
-            child: Container(
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 color: colors.black,
                 shape: BoxShape.circle,

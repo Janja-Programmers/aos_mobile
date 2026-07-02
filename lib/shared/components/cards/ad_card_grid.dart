@@ -1,11 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-
 import 'package:africaonlinestores/shared/components/cards/widgets/ad_card_body.dart';
 import 'package:africaonlinestores/shared/components/cards/widgets/ad_card_image.dart';
+import 'package:flutter/material.dart';
 
 class AdGridCard extends StatelessWidget {
   const AdGridCard({super.key, required this.ad, required this.onTap});
@@ -20,7 +17,7 @@ class AdGridCard extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: colors.surface,
           border: BoxBorder.all(color: colors.border),

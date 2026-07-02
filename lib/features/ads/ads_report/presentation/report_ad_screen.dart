@@ -1,16 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
 import 'package:africaonlinestores/features/ads/ads_report/controllers/report_ad_controller.dart';
+import 'package:africaonlinestores/features/ads/ads_report/models/report_reason.dart';
 import 'package:africaonlinestores/features/ads/ads_report/presentation/widgets/report_info_card.dart';
 import 'package:africaonlinestores/features/ads/ads_report/presentation/widgets/report_reason_tile.dart';
-import 'package:africaonlinestores/features/ads/ads_report/models/report_reason.dart';
-
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ReportAdScreen extends ConsumerStatefulWidget {
   const ReportAdScreen({super.key, required this.adId});
@@ -118,7 +115,7 @@ class _ReportAdScreenState extends ConsumerState<ReportAdScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
+                        DecoratedBox(
                           decoration: BoxDecoration(
                             color: colors.surface,
                             borderRadius: BorderRadius.circular(16),

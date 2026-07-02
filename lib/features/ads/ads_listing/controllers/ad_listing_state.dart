@@ -1,5 +1,5 @@
-import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
+import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 
 class AdListingsState {
   final bool loading;

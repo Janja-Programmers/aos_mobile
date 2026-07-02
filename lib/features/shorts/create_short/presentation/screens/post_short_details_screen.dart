@@ -1,22 +1,24 @@
+import 'dart:async';
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
+
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
-import 'package:africaonlinestores/features/shorts/music/presentation/music_picker_sheet.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
-import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/state/post_category_options.dart';
-import 'package:africaonlinestores/features/shorts/create_short/presentation/widgets/ad_picker_bottom_sheet.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/controllers/post_short_controller.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/state/post_category_options.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/helpers/post_short_media_helpers.dart';
+import 'package:africaonlinestores/features/shorts/create_short/presentation/widgets/ad_picker_bottom_sheet.dart';
+import 'package:africaonlinestores/features/shorts/music/presentation/music_picker_sheet.dart';
+import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class PostShortDetailsScreen extends ConsumerStatefulWidget {
   final List<SelectedMedia> media;
@@ -81,7 +83,7 @@ class _PostShortDetailsScreenState
       if (next.status == UploadStatus.failed &&
           previous?.status != UploadStatus.failed) {
         if (mounted) {
-          ShowSnack(context, "Upload failed").error();
+          ShowSnack(context, 'Upload failed').error();
         }
       }
     });
@@ -136,7 +138,7 @@ class _PostShortDetailsScreenState
       appBar: AppBar(
         leading: const BackButton(),
         centerTitle: true,
-        title: Text("New Post", style: context.h5),
+        title: Text('New Post', style: context.h5),
       ),
       backgroundColor: colors.surface,
       body: Stack(
@@ -185,8 +187,7 @@ class _PostShortDetailsScreenState
           if (isBusy)
             Positioned.fill(
               child: AbsorbPointer(
-                absorbing: true,
-                child: Container(
+                child: ColoredBox(
                   color: Colors.black54,
                   child: Center(
                     child: Column(
@@ -195,7 +196,7 @@ class _PostShortDetailsScreenState
                         const CircularProgressIndicator(strokeWidth: 2),
                         const SizedBox(height: 12),
                         Text(
-                          "Uploading...",
+                          'Uploading...',
                           style: AppTextStylesX(
                             context,
                           ).button.copyWith(color: colors.white),
@@ -252,7 +253,7 @@ class _PostShortDetailsScreenState
                 Image.memory(_thumbnail!, fit: BoxFit.cover),
                 Container(
                   alignment: Alignment.center,
-                  color: colors.black.withOpacity(.35),
+                  color: colors.black.withValues(alpha: .35),
                   child: Icon(
                     Icons.play_circle_outline_rounded,
                     color: colors.white,
@@ -268,7 +269,6 @@ class _PostShortDetailsScreenState
     return TextField(
       controller: captionController,
       expands: true,
-      minLines: null,
       maxLines: null,
       maxLength: 512,
       textAlignVertical: TextAlignVertical.top,
@@ -386,9 +386,9 @@ class _PostShortDetailsScreenState
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colors.primary.withOpacity(.06),
+        color: colors.primary.withValues(alpha: .06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.primary.withOpacity(.24)),
+        border: Border.all(color: colors.primary.withValues(alpha: .24)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -419,7 +419,7 @@ class _PostShortDetailsScreenState
         controller.setHashtags(tags);
       },
       decoration: InputDecoration(
-        hintText: "#hashtags (e.g. #fashion #deals #trending)",
+        hintText: '#hashtags (e.g. #fashion #deals #trending)',
         hintStyle: context.pMuted,
         filled: true,
         fillColor: colors.surface,
@@ -476,7 +476,7 @@ class _PostShortDetailsScreenState
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                "Tag a product (required)",
+                'Tag a product (required)',
                 style: context.pStrong.copyWith(color: colors.primary),
               ),
             ),
@@ -510,7 +510,7 @@ class _PostShortDetailsScreenState
         border: Border.all(color: colors.border),
         boxShadow: [
           BoxShadow(
-            color: colors.black.withOpacity(.04),
+            color: colors.black.withValues(alpha: .04),
             blurRadius: 14,
             offset: const Offset(0, 8),
           ),
@@ -548,7 +548,7 @@ class _PostShortDetailsScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    selectedAd?.title ?? "Product tagged ✓",
+                    selectedAd?.title ?? 'Product tagged ✓',
                     style: context.pStrong,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -562,7 +562,7 @@ class _PostShortDetailsScreenState
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    "Tap to change product",
+                    'Tap to change product',
                     style: context.small.copyWith(
                       color: colors.primary,
                       fontWeight: FontWeight.w700,
@@ -685,7 +685,7 @@ class _PostShortDetailsScreenState
       selected: selected,
       label: Text(label),
       onSelected: (_) => controller.setAudience(value),
-      selectedColor: colors.primary.withOpacity(.16),
+      selectedColor: colors.primary.withValues(alpha: .16),
       side: BorderSide(color: selected ? colors.primary : colors.border),
     );
   }
@@ -700,22 +700,24 @@ class _PostShortDetailsScreenState
   }
 
   void _openAdPicker() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) {
-        return Material(
-          color: context.appColors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          clipBehavior: Clip.antiAlias,
-          child: AdPickerBottomSheet(
-            onSelected: (AOSAdListItem ad) {
-              controller.setAd(ad.id, preview: ad);
-            },
-          ),
-        );
-      },
+    unawaited(
+      showModalBottomSheet<void>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (_) {
+          return Material(
+            color: context.appColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            clipBehavior: Clip.antiAlias,
+            child: AdPickerBottomSheet(
+              onSelected: (AOSAdListItem ad) {
+                controller.setAd(ad.id, preview: ad);
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -735,14 +737,14 @@ class _PostShortDetailsScreenState
                     }
                   : null,
               child: Text(
-                "Post",
+                'Post',
                 style: canPost ? AppTextStylesX(context).button : context.p,
               ),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            "I confirm that there are no private messages in my content",
+            'I confirm that there are no private messages in my content',
             textAlign: TextAlign.center,
             style: context.small.copyWith(color: colors.textMuted),
           ),

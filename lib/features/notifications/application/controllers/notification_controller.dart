@@ -1,10 +1,8 @@
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/core/utils/logger.dart';
-
 import 'package:africaonlinestores/features/notifications/application/state/notification_state.dart';
 import 'package:africaonlinestores/features/notifications/data/notification_repository_impl.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class NotificationController extends StateNotifier<NotificationState> {
   final NotificationRepository _repository;

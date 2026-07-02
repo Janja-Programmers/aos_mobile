@@ -52,7 +52,7 @@ mixin ChatMessagesLifecycle on ChatMessagesControllerBase {
       if (res.isLeft) {
         state = state.copyWith(
           isLoadingMore: false,
-          error: res.leftOrNull!,
+          error: res.leftOrNull,
           stackTrace: StackTrace.current,
         );
         return;

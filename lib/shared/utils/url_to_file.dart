@@ -1,16 +1,15 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
-
-import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 
 Future<File> urlToFile(String url) async {
   final fullUrl = buildFileUrl(url);
 
   if (fullUrl == null) {
-    throw Exception("Invalid file url: $url");
+    throw Exception('Invalid file url: $url');
   }
 
   final dio = Dio();

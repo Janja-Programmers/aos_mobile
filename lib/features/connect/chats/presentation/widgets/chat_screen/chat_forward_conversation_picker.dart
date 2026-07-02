@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/conversations/application/providers/conversation_provider.dart';
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<List<ChatConversation>?> showChatForwardConversationPicker({
   required BuildContext context,
@@ -59,13 +58,13 @@ class _ChatForwardConversationPickerState
       minChildSize: 0.45,
       maxChildSize: 0.92,
       builder: (context, scrollController) {
-        return Container(
+        return DecoratedBox(
           decoration: BoxDecoration(
             color: colors.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(.16),
+                color: Colors.black.withValues(alpha: .16),
                 blurRadius: 18,
                 offset: const Offset(0, -4),
               ),
@@ -190,7 +189,7 @@ class _ChatForwardConversationPickerState
                         separatorBuilder: (_, _) => Divider(
                           height: 1,
                           indent: 74,
-                          color: colors.border.withOpacity(.65),
+                          color: colors.border.withValues(alpha: .65),
                         ),
                         itemBuilder: (context, index) {
                           final conversation = filtered[index];

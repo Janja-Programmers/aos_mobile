@@ -1,18 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/routing/helpers/navigation.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
 import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
-
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/shimmer/category_shimmer.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class HomeCategoriesPreviewSection extends ConsumerWidget {
   const HomeCategoriesPreviewSection({super.key, this.limit = 10});
@@ -124,7 +120,7 @@ class _CategoryTile extends StatelessWidget {
 
     final hasIcon = item.icon != null && item.icon!.trim().isNotEmpty;
 
-    final url = hasIcon ? buildFileUrl(item.icon!) : null;
+    final url = hasIcon ? buildFileUrl(item.icon) : null;
 
     return InkWell(
       onTap: onTap,

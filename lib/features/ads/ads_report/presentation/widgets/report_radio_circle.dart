@@ -12,7 +12,7 @@ class ReportRadioCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final border = color.withOpacity(.6);
+    final border = color.withValues(alpha: .6);
 
     return Container(
       width: 20,

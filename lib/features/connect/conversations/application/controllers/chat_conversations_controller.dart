@@ -1,8 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
@@ -11,6 +9,8 @@ import 'package:africaonlinestores/features/connect/chats/application/providers/
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class ConversationsController
     extends StateNotifier<AsyncValue<List<ChatConversation>>> {
@@ -21,9 +21,9 @@ class ConversationsController
   bool _isBootstrapping = false;
   int _loadSerial = 0;
 
-  StreamSubscription? _messageSub;
-  StreamSubscription? _messageEditedSub;
-  StreamSubscription? _messagesDeletedSub;
+  StreamSubscription<Object?>? _messageSub;
+  StreamSubscription<Object?>? _messageEditedSub;
+  StreamSubscription<Object?>? _messagesDeletedSub;
 
   ConversationsController(this.ref) : super(const AsyncLoading()) {
     ref.listen<AuthState>(
@@ -104,9 +104,7 @@ class ConversationsController
 
     if (res.isLeft) {
       final failure = res.leftOrNull!;
-      appLogger.w(
-        '[ConversationsController] load failed: ${failure.message}',
-      );
+      appLogger.w('[ConversationsController] load failed: ${failure.message}');
       state = AsyncError(failure, StackTrace.current);
       return;
     }
@@ -216,16 +214,15 @@ class ConversationsController
 
     await _cancelRealtimeSubscriptions();
 
-    _messageSub = realtime.messages.listen((data) {
-      final conversationId = data['conversation_id']?.toString();
-      final rawMessage = data['message'];
+    _messageSub = realtime.messages.listen((Object? data) {
+      final payload = asJsonMap(data);
+      final conversationId = payload['conversation_id']?.toString();
+      final rawMessage = payload['message'];
 
       if (conversationId == null || conversationId.trim().isEmpty) return;
       if (rawMessage is! Map) return;
 
-      final message = ChatMessage.fromJson(
-        Map<String, dynamic>.from(rawMessage),
-      );
+      final message = ChatMessage.fromJson(asJsonMap(rawMessage));
 
       final sender = _normalizeUser(message.sender);
       final shouldIncrement = sender.isNotEmpty && sender != _currentUser;
@@ -240,16 +237,15 @@ class ConversationsController
       );
     });
 
-    _messageEditedSub = realtime.messageEdited.listen((data) {
-      final conversationId = data['conversation_id']?.toString();
-      final rawMessage = data['message'];
+    _messageEditedSub = realtime.messageEdited.listen((Object? data) {
+      final payload = asJsonMap(data);
+      final conversationId = payload['conversation_id']?.toString();
+      final rawMessage = payload['message'];
 
       if (conversationId == null || conversationId.trim().isEmpty) return;
       if (rawMessage is! Map) return;
 
-      final message = ChatMessage.fromJson(
-        Map<String, dynamic>.from(rawMessage),
-      );
+      final message = ChatMessage.fromJson(asJsonMap(rawMessage));
 
       syncConversationWithMessage(
         conversationId: conversationId,
@@ -257,8 +253,8 @@ class ConversationsController
       );
     });
 
-    _messagesDeletedSub = realtime.messagesDeleted.listen((data) {
-      load();
+    _messagesDeletedSub = realtime.messagesDeleted.listen((Object? _) {
+      unawaited(load());
     });
   }
 

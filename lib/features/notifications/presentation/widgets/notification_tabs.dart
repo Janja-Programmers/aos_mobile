@@ -1,11 +1,10 @@
+import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
-import 'package:africaonlinestores/core/core.dart';
-
 class NotificationTabs extends StatelessWidget {
   final String selected;
-  final Function(String) onChanged;
+  final ValueChanged<String> onChanged;
 
   const NotificationTabs({
     super.key,

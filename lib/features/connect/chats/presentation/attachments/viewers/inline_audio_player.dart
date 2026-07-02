@@ -1,7 +1,6 @@
+import 'package:africaonlinestores/core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-
-import 'package:africaonlinestores/core/core.dart';
 
 class InlineAudioPlayer extends StatefulWidget {
   final String url;
@@ -66,7 +65,6 @@ class _InlineAudioPlayerState extends State<InlineAudioPlayer> {
           // 📊 PROGRESS BAR
           Expanded(
             child: Slider(
-              min: 0,
               max: duration.inSeconds.toDouble().clamp(1, double.infinity),
               value: position.inSeconds.toDouble().clamp(
                 0,
@@ -88,6 +86,6 @@ class _InlineAudioPlayerState extends State<InlineAudioPlayer> {
   String _format(Duration d) {
     final minutes = d.inMinutes.toString();
     final seconds = (d.inSeconds % 60).toString().padLeft(2, '0');
-    return "$minutes:$seconds";
+    return '$minutes:$seconds';
   }
 }

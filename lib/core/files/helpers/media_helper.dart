@@ -1,12 +1,11 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
-
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/files/domain/upload_file.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 typedef UploadFn = Future<Either<Failure, UploadedFile>> Function(File file);
 
@@ -156,9 +155,7 @@ class MediaHelper {
     final results = <UploadedFile>[];
 
     for (final res in responses) {
-      res.fold((_) {}, (data) {
-        results.add(data);
-      });
+      res.fold((_) {}, results.add);
     }
 
     return results;
@@ -171,11 +168,7 @@ class MediaHelper {
   static const maxFileSizeMB = 25;
 
   static Future<File?> pickAnyFile() async {
-    final result = await FilePicker.pickFiles(
-      type: FileType.any,
-      allowMultiple: false,
-      withData: false,
-    );
+    final result = await FilePicker.pickFiles();
 
     if (result == null || result.files.isEmpty) return null;
 
@@ -205,11 +198,7 @@ class MediaHelper {
   }
 
   static Future<File?> pickMediaFromGallery() async {
-    final result = await FilePicker.pickFiles(
-      type: FileType.media,
-      allowMultiple: false,
-      withData: false,
-    );
+    final result = await FilePicker.pickFiles(type: FileType.media);
 
     if (result == null || result.files.isEmpty) return null;
 

@@ -1,6 +1,3 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
@@ -8,10 +5,13 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/live/data/live_mapper.dart';
 import 'package:africaonlinestores/features/live/domain/live_cohost.dart';
 import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
 import 'package:africaonlinestores/features/live/domain/live_role.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final liveCohostApiProvider = Provider<LiveCohostApi>((ref) {
   return LiveCohostApi(ref.read(apiClientProvider));
@@ -28,7 +28,7 @@ class LiveCohostApi {
   }) {
     return _cohostPost(ApiEndpoints.requestLiveCohost, {
       'live_id': liveId,
-      if (sessionId?.isNotEmpty == true) 'session_id': sessionId,
+      if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
     });
   }
 
@@ -40,7 +40,7 @@ class LiveCohostApi {
     return _cohostPost(ApiEndpoints.inviteLiveCohost, {
       'live_id': liveId,
       'target_user': targetUser,
-      if (sessionId?.isNotEmpty == true) 'session_id': sessionId,
+      if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
     });
   }
 
@@ -52,7 +52,7 @@ class LiveCohostApi {
     return _cohostPost(ApiEndpoints.respondLiveCohost, {
       'cohost_id': cohostId,
       'action': accept ? 'accept' : 'reject',
-      if (reason?.trim().isNotEmpty == true) 'reason': reason!.trim(),
+      if (reason?.trim().isNotEmpty ?? false) 'reason': reason!.trim(),
     });
   }
 
@@ -62,7 +62,7 @@ class LiveCohostApi {
   }) {
     return _cohostPost(ApiEndpoints.activateLiveCohost, {
       'cohost_id': cohostId,
-      if (sessionId?.isNotEmpty == true) 'session_id': sessionId,
+      if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
     });
   }
 
@@ -91,20 +91,15 @@ class LiveCohostApi {
         ApiEndpoints.listLiveCohosts,
         queryParameters: {
           'live_id': liveId,
-          if (status?.isNotEmpty == true) 'status': status,
+          if (status?.isNotEmpty ?? false) 'status': status,
         },
       );
       final unwrapped = unwrapFrappe(res);
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
-      final data = unwrapped.rightOrNull?['data'];
-      final rawItems = data is Map ? data['items'] : null;
+      final data = asJsonMap(asJsonMap(unwrapped.rightOrNull)['data']);
+      final items = asJsonMapList(data['items']);
       return Either.right(
-        rawItems is List
-            ? rawItems
-                  .whereType<Map>()
-                  .map((e) => LiveCohost.fromJson(Map<String, dynamic>.from(e)))
-                  .toList()
-            : const [],
+        items.map(LiveCohost.fromJson).toList(growable: false),
       );
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -122,21 +117,18 @@ class LiveCohostApi {
         ApiEndpoints.getLiveCohostToken,
         data: {
           'cohost_id': cohostId,
-          if (sessionId?.isNotEmpty == true) 'session_id': sessionId,
+          if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
         },
       );
       final unwrapped = unwrapFrappe(res);
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
-      final data = unwrapped.rightOrNull?['data'];
-      final session = data is Map ? data['session'] ?? data : null;
+      final data = asJsonMap(asJsonMap(unwrapped.rightOrNull)['data']);
+      final session = data['session'] ?? data;
       if (session is! Map) {
         return Either.left(const Failure('Invalid co-host token response.'));
       }
       return Either.right(
-        mapJoinSession(
-          Map<String, dynamic>.from(session),
-          role: AOSLiveRole.host,
-        ),
+        mapJoinSession(asJsonMap(session), role: AOSLiveRole.host),
       );
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -153,12 +145,12 @@ class LiveCohostApi {
       final res = await _client.post(endpoint, data: data);
       final unwrapped = unwrapFrappe(res);
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
-      final payload = unwrapped.rightOrNull?['data'];
-      final raw = payload is Map ? payload['cohost'] : null;
+      final payload = asJsonMap(asJsonMap(unwrapped.rightOrNull)['data']);
+      final raw = payload['cohost'];
       if (raw is! Map) {
         return Either.left(const Failure('Invalid co-host response.'));
       }
-      return Either.right(LiveCohost.fromJson(Map<String, dynamic>.from(raw)));
+      return Either.right(LiveCohost.fromJson(asJsonMap(raw)));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {

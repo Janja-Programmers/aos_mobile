@@ -30,7 +30,7 @@ class _FloatingHeartsState extends State<FloatingHearts>
       hearts.add(_HeartItem(id));
     });
 
-    Future.delayed(const Duration(milliseconds: 1400), () {
+    Future<void>.delayed(const Duration(milliseconds: 1400), () {
       if (!mounted) return;
 
       setState(() {

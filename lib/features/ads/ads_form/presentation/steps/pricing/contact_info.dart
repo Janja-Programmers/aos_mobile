@@ -12,7 +12,7 @@ class ContactInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colors.primary.withOpacity(0.12),
+        color: colors.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

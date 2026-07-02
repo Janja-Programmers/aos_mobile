@@ -1,33 +1,29 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:livekit_client/livekit_client.dart' as lk;
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/media/livekit_track_events.dart';
+import 'package:africaonlinestores/core/realtime/realtime_event.dart';
 import 'package:africaonlinestores/core/realtime/realtime_event_type.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/live/application/controllers/live_cohost_controller.dart';
-import 'package:africaonlinestores/features/live/data/live_cohost_api.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
 import 'package:africaonlinestores/features/live/application/state/live_status_enum.dart';
-
 import 'package:africaonlinestores/features/live/comments/live_comments_controller.dart';
-
+import 'package:africaonlinestores/features/live/data/live_cohost_api.dart';
 import 'package:africaonlinestores/features/live/domain/live_chat_message.dart';
-
 import 'package:africaonlinestores/features/live/presentation/views/host_live_view.dart';
 import 'package:africaonlinestores/features/live/presentation/views/viewer_live_view.dart';
-
 import 'package:africaonlinestores/features/live/presentation/widgets/floating_hearts.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_chat_overlay.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_input_bar.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_right_actions.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_top_bar.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:livekit_client/livekit_client.dart' as lk;
 
 class LiveScreen extends ConsumerStatefulWidget {
   final String? liveId;
@@ -40,7 +36,7 @@ class LiveScreen extends ConsumerStatefulWidget {
 
 class _LiveScreenState extends ConsumerState<LiveScreen> {
   StreamSubscription<MediaTrackEvent>? _mediaSub;
-  StreamSubscription<dynamic>? _realtimeSub;
+  StreamSubscription<RealtimeEvent>? _realtimeSub;
 
   lk.LocalVideoTrack? _localVideoTrack;
   lk.RemoteVideoTrack? _remoteVideoTrack;
@@ -53,43 +49,43 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
   void initState() {
     super.initState();
 
-    Future.microtask(() async {
-      final liveKit = ref.read(liveKitCoreProvider);
-      _mediaSub = liveKit.events.listen(_onMediaEvent);
-      _realtimeSub = ref.read(realtimeServiceProvider).events.listen((event) {
-        final data = event.data is Map
-            ? Map<String, dynamic>.from(event.data)
-            : <String, dynamic>{};
-        if (event.type == RealtimeEventType.aosLiveComment) {
-          ref
-              .read(liveCommentsControllerProvider.notifier)
-              .insertFromRealtime(data);
-        } else if (event.type == RealtimeEventType.aosLiveCommentDeleted) {
-          final id =
-              data['message_id']?.toString() ??
-              data['comment_id']?.toString() ??
-              '';
-          if (id.isNotEmpty) {
+    unawaited(
+      Future<void>.microtask(() async {
+        final liveKit = ref.read(liveKitCoreProvider);
+        _mediaSub = liveKit.events.listen(_onMediaEvent);
+        _realtimeSub = ref.read(realtimeServiceProvider).events.listen((event) {
+          final data = asJsonMap(event.data);
+          if (event.type == RealtimeEventType.aosLiveComment) {
             ref
                 .read(liveCommentsControllerProvider.notifier)
-                .removeFromRealtime(id);
+                .insertFromRealtime(data);
+          } else if (event.type == RealtimeEventType.aosLiveCommentDeleted) {
+            final id =
+                data['message_id']?.toString() ??
+                data['comment_id']?.toString() ??
+                '';
+            if (id.isNotEmpty) {
+              ref
+                  .read(liveCommentsControllerProvider.notifier)
+                  .removeFromRealtime(id);
+            }
+          } else if (_isCohostEvent(event.type)) {
+            ref.read(liveCohostControllerProvider.notifier).applyRealtime(data);
           }
-        } else if (_isCohostEvent(event.type)) {
-          ref.read(liveCohostControllerProvider.notifier).applyRealtime(data);
+        });
+
+        final manager = ref.read(liveManagerProvider.notifier);
+
+        if (widget.liveId != null && widget.liveId!.trim().isNotEmpty) {
+          await manager.joinLive(liveId: widget.liveId!.trim());
         }
-      });
 
-      final manager = ref.read(liveManagerProvider.notifier);
-
-      if (widget.liveId != null && widget.liveId!.trim().isNotEmpty) {
-        await manager.joinLive(liveId: widget.liveId!.trim());
-      }
-
-      final liveId = ref.read(liveManagerProvider).session?.liveId;
-      if (liveId != null) {
-        await ref.read(liveCommentsControllerProvider.notifier).init(liveId);
-      }
-    });
+        final liveId = ref.read(liveManagerProvider).session?.liveId;
+        if (liveId != null) {
+          await ref.read(liveCommentsControllerProvider.notifier).init(liveId);
+        }
+      }),
+    );
   }
 
   void _onMediaEvent(MediaTrackEvent event) {
@@ -125,7 +121,6 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
   ) {
     return showDialog(
       context: context,
-      barrierDismissible: true,
       builder: (_) {
         return Dialog(
           shape: RoundedRectangleBorder(
@@ -136,12 +131,12 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text("End Live Stream?", style: context.h5),
+                Text('End Live Stream?', style: context.h5),
 
                 const SizedBox(height: 8),
 
                 Text(
-                  "Your live stream will end and viewers will be disconnected.",
+                  'Your live stream will end and viewers will be disconnected.',
                   style: context.p,
                   textAlign: TextAlign.center,
                 ),
@@ -163,7 +158,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
                       onConfirm();
                     },
                     child: Text(
-                      "End Stream",
+                      'End Stream',
                       style: AppTextStylesX(context).button,
                     ),
                   ),
@@ -181,7 +176,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
                       ),
                     ),
                     onPressed: () => Navigator.of(context).pop(),
-                    child: Text("Continue Streaming", style: context.p),
+                    child: Text('Continue Streaming', style: context.p),
                   ),
                 ),
               ],
@@ -198,7 +193,6 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
   ) {
     return showDialog(
       context: context,
-      barrierDismissible: true,
       builder: (_) {
         return Dialog(
           shape: RoundedRectangleBorder(
@@ -209,11 +203,11 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text("Leave Live?", style: context.h5),
+                Text('Leave Live?', style: context.h5),
                 const SizedBox(height: 8),
 
                 Text(
-                  "You will exit this live stream.",
+                  'You will exit this live stream.',
                   style: context.p,
                   textAlign: TextAlign.center,
                 ),
@@ -234,7 +228,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
                       Navigator.of(context).pop();
                       onConfirm();
                     },
-                    child: Text("Leave", style: AppTextStylesX(context).button),
+                    child: Text('Leave', style: AppTextStylesX(context).button),
                   ),
                 ),
 
@@ -245,7 +239,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: Text("Stay", style: context.p),
+                    child: Text('Stay', style: context.p),
                   ),
                 ),
               ],
@@ -492,8 +486,8 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
   @override
   void dispose() {
     _chatController.dispose();
-    _mediaSub?.cancel();
-    _realtimeSub?.cancel();
+    unawaited(_mediaSub?.cancel());
+    unawaited(_realtimeSub?.cancel());
     super.dispose();
   }
 
@@ -544,7 +538,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
                   _heartTrigger++;
                 });
 
-                manager.sendReaction(reactionType: 'like');
+                manager.sendReaction();
               },
               onFlip: state.isHost ? manager.flipCamera : () {},
               onMute: () async {

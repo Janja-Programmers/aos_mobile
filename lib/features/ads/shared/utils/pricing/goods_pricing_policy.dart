@@ -1,6 +1,6 @@
+import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/domain/pricing_schema.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/pricing/pricing_policy.dart';
-import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 
 class GoodsPricingPolicy implements PricingPolicy {
   @override
@@ -33,18 +33,11 @@ class GoodsPricingPolicy implements PricingPolicy {
   @override
   void normalizeDraft(AdDraft draft, void Function(AdDraft) apply) {
     if (draft.priceType == 'Negotiable') {
-      apply(draft.copyWith(offerPrice: null, offerStart: null, offerEnd: null));
+      apply(draft.copyWith());
     }
 
     if (draft.priceType == 'Contact for price') {
-      apply(
-        draft.copyWith(
-          price: null,
-          offerPrice: null,
-          offerStart: null,
-          offerEnd: null,
-        ),
-      );
+      apply(draft.copyWith());
     }
   }
 }

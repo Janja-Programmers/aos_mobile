@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/shared/components/app_bottom_nav.dart';
+import 'package:flutter/material.dart';
 
 /// ----------------------------------------------------------------------------
 /// APP SHELL

@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/verifications/domain/verification_status.dart';
 
 class UserVerificationStatus {
@@ -31,7 +32,7 @@ class UserVerificationStatus {
   factory UserVerificationStatus.fromJson(Map<String, dynamic> json) {
     final data = _extractData(json);
     final verification = data['verification'] is Map
-        ? Map<String, dynamic>.from(data['verification'] as Map)
+        ? asJsonMap(data['verification'] as Map)
         : data;
 
     final rawStatus =
@@ -68,12 +69,12 @@ class UserVerificationStatus {
 
   static Map<String, dynamic> _extractData(Map<String, dynamic> json) {
     if (json['data'] is Map) {
-      return Map<String, dynamic>.from(json['data'] as Map);
+      return asJsonMap(json['data'] as Map);
     }
     if (json['message'] is Map) {
-      final message = Map<String, dynamic>.from(json['message'] as Map);
+      final message = asJsonMap(json['message'] as Map);
       if (message['data'] is Map) {
-        return Map<String, dynamic>.from(message['data'] as Map);
+        return asJsonMap(message['data'] as Map);
       }
       return message;
     }
@@ -106,9 +107,9 @@ class UserVerificationDraft {
 
   bool get hasPhone => phoneNumber.trim().length >= 7;
   bool get hasOtp => otp.trim().length >= 4;
-  bool get hasFront => idFrontUrl?.trim().isNotEmpty == true;
-  bool get hasBack => idBackUrl?.trim().isNotEmpty == true;
-  bool get hasSelfie => selfieUrl?.trim().isNotEmpty == true;
+  bool get hasFront => idFrontUrl?.trim().isNotEmpty ?? false;
+  bool get hasBack => idBackUrl?.trim().isNotEmpty ?? false;
+  bool get hasSelfie => selfieUrl?.trim().isNotEmpty ?? false;
   String get fullPhoneNumber => '$countryCode ${phoneNumber.trim()}'.trim();
 
   UserVerificationDraft copyWith({

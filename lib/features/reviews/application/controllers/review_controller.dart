@@ -1,12 +1,12 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
-
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/reviews/application/state/review_state.dart';
 import 'package:africaonlinestores/features/reviews/data/review_api.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_model.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_sort.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_summary.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 final reviewControllerProvider =
     StateNotifierProvider.family<ReviewController, ReviewState, String>((
@@ -82,23 +82,15 @@ class ReviewController extends StateNotifier<ReviewState> {
         state = state.copyWith(loading: false, error: failure.message);
       },
       (payload) {
-        final data = payload['data'];
-        final summaryJson = data is Map ? data['summary'] : null;
-        final items = data is Map ? data['reviews'] : null;
-
+        final data = asJsonMap(payload['data']);
+        final summaryJson = data['summary'];
         final summary = summaryJson is Map
-            ? ReviewSummary.fromJson(Map<String, dynamic>.from(summaryJson))
+            ? ReviewSummary.fromJson(asJsonMap(summaryJson))
             : null;
 
-        final reviews = items is List
-            ? items
-                  .whereType<Map>()
-                  .map(
-                    (item) =>
-                        AdReview.fromJson(Map<String, dynamic>.from(item)),
-                  )
-                  .toList()
-            : <AdReview>[];
+        final reviews = asJsonMapList(
+          data['reviews'],
+        ).map(AdReview.fromJson).toList();
 
         state = state.copyWith(
           loading: false,

@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:flutter/material.dart';
 
 class TipCard extends StatelessWidget {
   const TipCard({
@@ -31,7 +30,7 @@ class TipCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: colors.black.withOpacity(0.05),
+            color: colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -43,7 +42,7 @@ class TipCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: iconBg.withOpacity(.15),
+              color: iconBg.withValues(alpha: .15),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(icon, color: iconColor, size: 24),

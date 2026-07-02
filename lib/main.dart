@@ -1,43 +1,45 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:africaonlinestores/firebase_options.dart';
-import 'package:africaonlinestores/core/utils/logger.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:africaonlinestores/core/theme/app_theme.dart';
+
+import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/core/config/app_config.dart';
-import 'package:africaonlinestores/core/theme/theme_prefs.dart';
-import 'package:africaonlinestores/core/routing/app_router.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:africaonlinestores/core/utils/local_resolver.dart';
-import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
-import 'package:africaonlinestores/core/theme/theme_controller.dart';
-import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:africaonlinestores/core/notifications/android_notification_channel.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
+import 'package:africaonlinestores/core/routing/app_router.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage.dart';
-import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
-import 'package:africaonlinestores/core/notifications/android_notification_channel.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
+import 'package:africaonlinestores/core/theme/app_theme.dart';
+import 'package:africaonlinestores/core/theme/theme_controller.dart';
+import 'package:africaonlinestores/core/theme/theme_prefs.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/core/utils/local_resolver.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
-import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/application/listeners/call_audio_feedback_listener.dart';
+import 'package:africaonlinestores/features/connect/calls/application/listeners/call_navigation_listener.dart';
 import 'package:africaonlinestores/features/connect/calls/application/listeners/callkit_state_listener.dart';
+import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_payload_mapper.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_pending_payload_store.dart';
-import 'package:africaonlinestores/features/connect/calls/application/listeners/call_navigation_listener.dart';
-import 'package:africaonlinestores/features/connect/calls/application/listeners/call_audio_feedback_listener.dart';
 import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
 import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_banner_listener.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/listeners/upload_short_listener.dart';
-import 'package:africaonlinestores/shared/widgets/app_error_fallback.dart';
+import 'package:africaonlinestores/firebase_options.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/widgets/active_call_overlay.dart';
+import 'package:africaonlinestores/shared/widgets/app_error_fallback.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -46,7 +48,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  final data = Map<String, dynamic>.from(message.data);
+  final data = asJsonMap(message.data);
 
   final isIncomingCall =
       data['event'] == 'aos_incoming_call' ||
@@ -61,7 +63,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 
   final params = const CallKitPayloadMapper().fromPushData(data);
-  final pendingPayload = Map<String, dynamic>.from(params.extra ?? data);
+  final pendingPayload = asJsonMap(params.extra ?? data);
 
   await const CallKitPendingPayloadStore().save(pendingPayload);
 
@@ -93,11 +95,7 @@ void main() {
 
       const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
 
-      const iosInit = DarwinInitializationSettings(
-        requestAlertPermission: true,
-        requestBadgePermission: true,
-        requestSoundPermission: true,
-      );
+      const iosInit = DarwinInitializationSettings();
 
       const initSettings = InitializationSettings(
         android: androidInit,
@@ -237,7 +235,7 @@ class AOSApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final uploadSessionId = "global_upload_session";
+    const uploadSessionId = 'global_upload_session';
 
     ref.watch(uploadRouterListenerProvider(uploadSessionId));
 

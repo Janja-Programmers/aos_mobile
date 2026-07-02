@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_story_template_strip.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class StoryTemplateViewerScreen extends StatefulWidget {
   const StoryTemplateViewerScreen({super.key, required this.storyId});
@@ -299,7 +298,10 @@ class _StoryMenuItem extends StatelessWidget {
             const SizedBox(width: 22),
             Text(
               label,
-              style: context.h5.copyWith(color: color, fontWeight: FontWeight.w800),
+              style: context.h5.copyWith(
+                color: color,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ],
         ),

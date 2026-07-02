@@ -1,9 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_presence_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
@@ -13,8 +9,9 @@ import 'package:africaonlinestores/features/connect/conversations/application/pr
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_state_view.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/conversation_tile.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/delete_conversation_sheet.dart';
-
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
   final String? searchQuery;
@@ -257,7 +254,11 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.filter_list_rounded, color: colors.primary, size: 24),
+                Icon(
+                  Icons.filter_list_rounded,
+                  color: colors.primary,
+                  size: 24,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Filter',

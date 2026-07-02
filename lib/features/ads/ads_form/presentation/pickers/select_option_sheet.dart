@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:flutter/material.dart';
 
 class SelectOptionSheet extends StatefulWidget {
   const SelectOptionSheet({
@@ -14,7 +14,7 @@ class SelectOptionSheet extends StatefulWidget {
 
   final String title;
   final List<String> options;
-  final dynamic selected;
+  final Object? selected;
   final bool multi;
 
   @override
@@ -28,11 +28,9 @@ class _SelectOptionSheetState extends State<SelectOptionSheet> {
   void initState() {
     super.initState();
     selectedSet = widget.multi
-        ? {
-            ...(widget.selected is List
-                ? (widget.selected as List).map((e) => e.toString())
-                : const <String>[]),
-          }
+        ? asJsonList(
+            widget.selected,
+          ).map((Object? item) => item.toString()).toSet()
         : {};
   }
 

@@ -25,7 +25,7 @@ class BackgroundRemovalConfirmDialog extends StatelessWidget {
               children: [
                 const Expanded(
                   child: Text(
-                    "Background Removal",
+                    'Background Removal',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -55,7 +55,7 @@ class BackgroundRemovalConfirmDialog extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.pop(context, false),
                     icon: const Icon(Icons.close),
-                    label: const Text("Decline"),
+                    label: const Text('Decline'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -64,7 +64,7 @@ class BackgroundRemovalConfirmDialog extends StatelessWidget {
                     onPressed: () => Navigator.pop(context, true),
                     icon: Icon(Icons.check, color: context.appColors.white),
                     label: Text(
-                      "Accept",
+                      'Accept',
                       style: AppTextStylesX(context).button,
                     ),
                   ),

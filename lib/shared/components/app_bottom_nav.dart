@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/layout/app_dimensions.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/routing/app_nav.dart';
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AppBottomNav extends ConsumerWidget {
   final int currentIndex;
@@ -96,7 +95,7 @@ class _NavItem extends StatelessWidget {
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: active
-                  ? context.appColors.primary.withOpacity(0.1)
+                  ? context.appColors.primary.withValues(alpha: 0.1)
                   : context.appColors.surface,
               borderRadius: BorderRadius.circular(12),
             ),

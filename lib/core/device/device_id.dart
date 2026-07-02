@@ -1,5 +1,5 @@
-import 'package:uuid/uuid.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:uuid/uuid.dart';
 
 class DeviceId {
   DeviceId._();
@@ -7,7 +7,6 @@ class DeviceId {
   static const _key = 'aos_device_id';
 
   static const FlutterSecureStorage _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),

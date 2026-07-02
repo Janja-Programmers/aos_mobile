@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-
+import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_models.dart';
 import 'package:africaonlinestores/features/home/presentation/components/brand/home_mini_category_panel.dart';
 import 'package:africaonlinestores/features/home/presentation/components/brand/home_vertical_promoslider.dart';
-import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_models.dart';
+import 'package:flutter/material.dart';
 
 class HomeBrandSection extends StatelessWidget {
   const HomeBrandSection({

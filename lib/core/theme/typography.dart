@@ -1,6 +1,6 @@
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 
 class DsTypography {
   static TextStyle _base({
@@ -61,7 +61,7 @@ class DsTypography {
   static TextStyle caption(BuildContext context) => _base(
     size: 12,
     weight: FontWeight.w500,
-    color: context.appColors.textPrimary.withOpacity(0.67),
+    color: context.appColors.textPrimary.withValues(alpha: 0.67),
   );
 
   /// 16 / w600

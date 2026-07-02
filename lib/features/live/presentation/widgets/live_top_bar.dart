@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class LiveTopBar extends StatefulWidget {
   final int viewerCount;
@@ -94,7 +93,7 @@ class _LiveTopBarState extends State<LiveTopBar> {
                     const SizedBox(width: 4),
 
                     Text(
-                      "LIVE",
+                      'LIVE',
                       style: context.p.copyWith(color: colors.white),
                     ),
                   ],
@@ -109,7 +108,7 @@ class _LiveTopBarState extends State<LiveTopBar> {
               const SizedBox(width: 6),
 
               /// VIEWERS (still reactive from state)
-              _blackBox(context, "$_viewerCount", icon: Icons.remove_red_eye),
+              _blackBox(context, '$_viewerCount', icon: Icons.remove_red_eye),
             ],
           ),
 
@@ -125,7 +124,7 @@ class _LiveTopBarState extends State<LiveTopBar> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                widget.isHost ? "End" : "Leave",
+                widget.isHost ? 'End' : 'Leave',
                 style: context.p.copyWith(color: colors.primary),
               ),
             ),
@@ -139,7 +138,7 @@ class _LiveTopBarState extends State<LiveTopBar> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(.6),
+        color: Colors.black.withValues(alpha: .6),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(

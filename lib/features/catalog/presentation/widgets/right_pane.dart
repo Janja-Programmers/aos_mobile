@@ -1,12 +1,9 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/routing/helpers/navigation.dart';
-
-import 'package:africaonlinestores/shared/components/app_carousel.dart';
-
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/presentation/widgets/for_you_section.dart';
 import 'package:africaonlinestores/features/catalog/presentation/widgets/subcategories_panel.dart';
+import 'package:africaonlinestores/shared/components/app_carousel.dart';
+import 'package:flutter/material.dart';
 
 class RightPane extends StatelessWidget {
   const RightPane({

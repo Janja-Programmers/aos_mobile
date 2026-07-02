@@ -17,7 +17,7 @@ class SearchHeader extends StatelessWidget implements PreferredSizeWidget {
         onPressed: () => Navigator.pop(context),
       ),
       title: const Text(
-        "Search",
+        'Search',
         style: TextStyle(fontWeight: FontWeight.w800),
       ),
     );

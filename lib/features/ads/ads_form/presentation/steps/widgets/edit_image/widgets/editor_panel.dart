@@ -1,10 +1,8 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-
-import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/tool_button.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/background_picker.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/gradient_picker.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/tool_button.dart';
+import 'package:flutter/material.dart';
 
 enum EditorToolAction { crop, rotate, removeBg }
 
@@ -64,7 +62,7 @@ class EditorPanel extends StatelessWidget {
             width: 42,
             height: 5,
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.12),
+              color: Colors.black.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(99),
             ),
           ),
@@ -105,25 +103,25 @@ class EditorPanel extends StatelessWidget {
       children: [
         ToolButton(
           icon: Icons.crop_rounded,
-          label: "Crop",
+          label: 'Crop',
           loading: activeTool == EditorToolAction.crop,
           disabled: toolBusy && activeTool != EditorToolAction.crop,
           onTap: busy ? null : onCrop,
         ),
         ToolButton(
           icon: Icons.rotate_right_rounded,
-          label: "Rotate",
+          label: 'Rotate',
           loading: activeTool == EditorToolAction.rotate,
           disabled: toolBusy && activeTool != EditorToolAction.rotate,
           onTap: busy ? null : onRotate,
         ),
         ToolButton(
           icon: Icons.auto_fix_high_rounded,
-          label: bgRemoved ? "BG Removed" : "Remove BG",
+          label: bgRemoved ? 'BG Removed' : 'Remove BG',
           active: bgRemoved,
           loading: activeTool == EditorToolAction.removeBg,
           disabled: toolBusy && activeTool != EditorToolAction.removeBg,
-          onTap: busy ? null : () => onRemoveBg(),
+          onTap: busy ? null : onRemoveBg,
         ),
       ],
     );

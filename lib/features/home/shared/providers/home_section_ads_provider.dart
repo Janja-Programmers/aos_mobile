@@ -1,12 +1,14 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
-import 'package:africaonlinestores/features/home/domain/market_place.dart';
 import 'package:africaonlinestores/features/home/domain/home_ads_section.dart';
+import 'package:africaonlinestores/features/home/domain/market_place.dart';
 import 'package:africaonlinestores/features/home/shared/utils/category_lookup.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+@immutable
 class HomeSectionAdsRequest {
   const HomeSectionAdsRequest({required this.section, required this.market});
 
@@ -55,18 +57,12 @@ final homeSectionAdsProvider = FutureProvider.autoDispose
             sort: req.section.sort,
             promotionType: req.section.promotionType,
             limit: req.section.limit,
-            offset: 0,
           );
 
       return res.fold((_) => const <AOSAdListItem>[], (payload) {
-        final data = payload['data'];
-        final rawItems = (data is Map) ? data['items'] : null;
-
-        if (rawItems is! List) return const <AOSAdListItem>[];
-
-        return rawItems
-            .whereType<Map>()
-            .map((e) => AOSAdListItem.fromJson(Map<String, dynamic>.from(e)))
-            .toList();
+        final data = asJsonMap(payload['data']);
+        return asJsonMapList(
+          data['items'],
+        ).map(AOSAdListItem.fromJson).toList();
       });
     });

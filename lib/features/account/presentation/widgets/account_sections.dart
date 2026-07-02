@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/account/shared/utils/avator_image.dart';
+import 'package:flutter/material.dart';
 
 class AccountCard extends StatelessWidget {
   const AccountCard({super.key, required this.child});
@@ -16,11 +14,13 @@ class AccountCard extends StatelessWidget {
 
     final colors = context.appColors;
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: scheme.outlineVariant.withOpacity(0.25)),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.25),
+        ),
       ),
       child: ClipRRect(borderRadius: BorderRadius.circular(14), child: child),
     );
@@ -64,8 +64,8 @@ class AccountHeaderCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: scheme.surfaceContainerHighest.withOpacity(
-                    0.7,
+                  backgroundColor: scheme.surfaceContainerHighest.withValues(
+                    alpha: 0.7,
                   ),
                   backgroundImage: img,
                   onBackgroundImageError: img != null ? (_, _) {} : null,
@@ -141,7 +141,7 @@ class _SquareIconButton extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withOpacity(0.55),
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(icon, size: 22, color: scheme.onSurface),

@@ -1,6 +1,5 @@
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
 import 'package:africaonlinestores/features/notifications/data/notification_api.dart';
 import 'package:africaonlinestores/features/notifications/data/push_token_api.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';

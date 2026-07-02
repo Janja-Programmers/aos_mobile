@@ -20,7 +20,6 @@ mixin ChatMessagesHelpers on ChatMessagesControllerBase {
           fallbackUser: fallbackUser,
           fallbackDisplayName: fallbackDisplayName,
           fallbackAvatar: fallbackAvatar,
-          incrementUnread: false,
         );
   }
 
@@ -29,15 +28,16 @@ mixin ChatMessagesHelpers on ChatMessagesControllerBase {
   // ---------------------------------------------------------------------------
 
   @override
-  List<String> _readMessageIds(dynamic value) {
+  List<String> _readMessageIds(Object? value) {
     if (value is String && value.trim().isNotEmpty) {
       return [value.trim()];
     }
 
-    if (value is List) {
-      return value
-          .map((item) => item.toString().trim())
-          .where((item) => item.isNotEmpty)
+    final list = asJsonList(value);
+    if (list.isNotEmpty) {
+      return list
+          .map((Object? item) => item.toString().trim())
+          .where((String item) => item.isNotEmpty)
           .toList();
     }
 
@@ -97,22 +97,5 @@ mixin ChatMessagesHelpers on ChatMessagesControllerBase {
     );
 
     _emitMessages();
-  }
-
-  // ---------------------------------------------------------------------------
-  // Dispose
-  // ---------------------------------------------------------------------------
-
-  @override
-  void dispose() {
-    _readSyncDebounce?.cancel();
-
-    _messageSub?.cancel();
-    _messageStatusSub?.cancel();
-    _messageEditedSub?.cancel();
-    _messagesDeletedSub?.cancel();
-    _messageReactionSub?.cancel();
-
-    super.dispose();
   }
 }

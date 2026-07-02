@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
-
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
+import 'package:flutter/foundation.dart';
 
 enum AOSCallType { audio, video }
 

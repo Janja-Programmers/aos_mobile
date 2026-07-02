@@ -1,5 +1,5 @@
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/shared/components/app_date_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -41,7 +41,7 @@ class ScheduleOfferCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: colors.primary.withOpacity(.05),
+                  color: colors.primary.withValues(alpha: .05),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(

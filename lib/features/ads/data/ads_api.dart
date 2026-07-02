@@ -1,13 +1,12 @@
-import 'package:dio/dio.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
+import 'package:dio/dio.dart';
 
 class AdsApi {
   AdsApi(this._client);
@@ -48,25 +47,16 @@ class AdsApi {
       final raw = payload['data'];
 
       if (raw is List) {
-        return Either.right(
-          raw
-              .whereType<Map>()
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList(),
-        );
+        return Either.right(asJsonMapList(raw));
       }
 
       if (raw is Map) {
+        final data = asJsonMap(raw);
         final list =
-            raw['locations'] ?? raw['items'] ?? raw['data'] ?? raw['list'];
+            data['locations'] ?? data['items'] ?? data['data'] ?? data['list'];
 
         if (list is List) {
-          return Either.right(
-            list
-                .whereType<Map>()
-                .map((e) => Map<String, dynamic>.from(e))
-                .toList(),
-          );
+          return Either.right(asJsonMapList(list));
         }
       }
 
@@ -82,7 +72,7 @@ class AdsApi {
     required String categoryId,
   }) async {
     try {
-      final res = await _dio.get(
+      final res = await _dio.get<Map<String, dynamic>>(
         ApiEndpoints.getCategorySchemaEndpoint,
         queryParameters: {'category': categoryId},
       );
@@ -99,7 +89,10 @@ class AdsApi {
     required Map<String, dynamic> payload,
   }) async {
     try {
-      final res = await _dio.post(ApiEndpoints.createAdEndpoint, data: payload);
+      final res = await _dio.post<Map<String, dynamic>>(
+        ApiEndpoints.createAdEndpoint,
+        data: payload,
+      );
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -113,7 +106,7 @@ class AdsApi {
     required Map<String, dynamic> payload,
   }) async {
     try {
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.updateAdEndpoint,
         data: {'ad_id': adId, ...payload},
       );
@@ -131,7 +124,7 @@ class AdsApi {
     required Map<String, dynamic> payload,
   }) async {
     try {
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.upsertAdDraftEndpoint,
         data: {'draft_id': draftId, 'payload': payload},
       );
@@ -147,7 +140,7 @@ class AdsApi {
     required String draftId,
   }) async {
     try {
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.submitAdDraftEndpoint,
         queryParameters: {'draft_id': draftId},
       );
@@ -163,7 +156,7 @@ class AdsApi {
     required Map<String, dynamic> payload,
   }) async {
     try {
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.upsertAdDraftEndpoint,
         data: {'payload': payload},
       );
@@ -181,9 +174,9 @@ class AdsApi {
     required String action,
   }) async {
     try {
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.setAdStatusEndpoint,
-        queryParameters: {'ad_id': adId, "action": action},
+        queryParameters: {'ad_id': adId, 'action': action},
       );
 
       return unwrapFrappe(res);
@@ -224,14 +217,14 @@ class AdsApi {
 
       final queryParams = <String, dynamic>{
         if (locationId != null) 'location': locationId.trim(),
-        if (categoryId?.trim().isNotEmpty == true)
+        if (categoryId?.trim().isNotEmpty ?? false)
           'category': categoryId!.trim(),
-        if (sellerId?.trim().isNotEmpty == true) 'seller': sellerId!.trim(),
-        if (q?.trim().isNotEmpty == true) 'q': q!.trim(),
-        if (sort?.trim().isNotEmpty == true) 'sort': sort!.trim(),
-        if (priceType?.trim().isNotEmpty == true)
+        if (sellerId?.trim().isNotEmpty ?? false) 'seller': sellerId!.trim(),
+        if (q?.trim().isNotEmpty ?? false) 'q': q!.trim(),
+        if (sort?.trim().isNotEmpty ?? false) 'sort': sort!.trim(),
+        if (priceType?.trim().isNotEmpty ?? false)
           'price_type': priceType!.trim(),
-        if (promotionType?.trim().isNotEmpty == true)
+        if (promotionType?.trim().isNotEmpty ?? false)
           'promotion_type': promotionType!.trim(),
 
         'price_min': ?priceMin,
@@ -284,15 +277,15 @@ class AdsApi {
       }
 
       final queryParams = <String, dynamic>{
-        if (locationId?.trim().isNotEmpty == true)
+        if (locationId?.trim().isNotEmpty ?? false)
           'location': locationId!.trim(),
-        if (categoryId?.trim().isNotEmpty == true)
+        if (categoryId?.trim().isNotEmpty ?? false)
           'category': categoryId!.trim(),
-        if (q?.trim().isNotEmpty == true) 'q': q!.trim(),
-        if (sort?.trim().isNotEmpty == true) 'sort': sort!.trim(),
-        if (promotionType?.trim().isNotEmpty == true)
+        if (q?.trim().isNotEmpty ?? false) 'q': q!.trim(),
+        if (sort?.trim().isNotEmpty ?? false) 'sort': sort!.trim(),
+        if (promotionType?.trim().isNotEmpty ?? false)
           'promotion_type': promotionType!.trim(),
-        if (priceType?.trim().isNotEmpty == true)
+        if (priceType?.trim().isNotEmpty ?? false)
           'price_type': priceType!.trim(),
 
         'price_min': ?priceMin,
@@ -325,7 +318,7 @@ class AdsApi {
     int offset = 0,
   }) async {
     try {
-      final res = await _dio.get(
+      final res = await _dio.get<Map<String, dynamic>>(
         ApiEndpoints.myAdsEndpoint,
         queryParameters: {
           'status': status.value,
@@ -346,7 +339,7 @@ class AdsApi {
     required String adId,
   }) async {
     try {
-      final res = await _dio.get(
+      final res = await _dio.get<Map<String, dynamic>>(
         ApiEndpoints.getAdEndpoint,
         queryParameters: {'ad_id': adId},
       );
@@ -362,7 +355,7 @@ class AdsApi {
     required String adId,
   }) async {
     try {
-      final res = await _dio.get(
+      final res = await _dio.get<Map<String, dynamic>>(
         ApiEndpoints.getMyAdEndpoint,
         queryParameters: {'ad_id': adId},
       );
@@ -378,7 +371,7 @@ class AdsApi {
     required String draftId,
   }) async {
     try {
-      final res = await _dio.get(
+      final res = await _dio.get<Map<String, dynamic>>(
         ApiEndpoints.getAdDraftEndpoint,
         queryParameters: {'draft_id': draftId},
       );
@@ -394,7 +387,7 @@ class AdsApi {
     required String draftId,
   }) async {
     try {
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.abandonAdDraftEndpoint,
         data: {'draft_id': draftId},
       );
@@ -424,13 +417,13 @@ class AdsApi {
       }
 
       final cleanQuery = q?.trim();
-      final res = await _dio.get(
+      final res = await _dio.get<Map<String, dynamic>>(
         ApiEndpoints.listWishlistEndpoint,
         queryParameters: {
           'limit': limit,
           'offset': offset,
-          if (sort?.trim().isNotEmpty == true) 'sort': sort!.trim(),
-          if (cleanQuery?.isNotEmpty == true) ...{
+          if (sort?.trim().isNotEmpty ?? false) 'sort': sort!.trim(),
+          if (cleanQuery?.isNotEmpty ?? false) ...{
             'q': cleanQuery,
             'search': cleanQuery,
           },
@@ -455,7 +448,7 @@ class AdsApi {
     required String adId,
   }) async {
     try {
-      final res = await _dio.post(
+      final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.toggleWishlistEndpoint,
         data: {'ad_id': adId},
       );

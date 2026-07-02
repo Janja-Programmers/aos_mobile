@@ -1,19 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
-import 'package:africaonlinestores/shared/components/locale_picker_page.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
 import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
 import 'package:africaonlinestores/features/onboarding/widgets/onboarding_network_state.dart';
-import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
-
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
-
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/components/locale_picker_page.dart';
 import 'package:africaonlinestores/shared/components/picker_field.dart';
 import 'package:africaonlinestores/shared/utils/flag_emoji.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CountryStep extends ConsumerWidget {
   final VoidCallback onContinue;
@@ -47,7 +43,7 @@ class CountryStep extends ConsumerWidget {
       try {
         return countries.firstWhere(
           (c) =>
-              (c["code"] ?? "").toString().toUpperCase() ==
+              (c['code'] ?? '').toString().toUpperCase() ==
               selectedCountryCode.toUpperCase(),
         );
       } catch (_) {
@@ -56,20 +52,20 @@ class CountryStep extends ConsumerWidget {
     }
 
     final selected = selectedItem();
-    final selectedName = selected?["name"] as String?;
-    final selectedCode = (selected?["code"] as String?)?.toUpperCase();
+    final selectedName = selected?['name'] as String?;
+    final selectedCode = (selected?['code'] as String?)?.toUpperCase();
 
     if (localization.isLoading) {
       return OnboardingNetworkState(
         icon: Icons.cloud_sync,
-        title: "Loading options",
+        title: 'Loading options',
         message:
-            "We’re loading your setup options. You can retry or skip for now.",
-        primaryText: "Try again",
+            'We’re loading your setup options. You can retry or skip for now.',
+        primaryText: 'Try again',
         onPrimary: () {
           ref.read(localizationControllerProvider.notifier).load();
         },
-        secondaryText: "Skip for now",
+        secondaryText: 'Skip for now',
         onSecondary: onSkip,
       );
     }
@@ -77,14 +73,14 @@ class CountryStep extends ConsumerWidget {
     if (localization.error != null) {
       return OnboardingNetworkState(
         icon: Icons.wifi_off,
-        title: "No internet connection",
+        title: 'No internet connection',
         message:
-            "We couldn’t load these options. You can retry or continue with default settings.",
-        primaryText: "Try again",
+            'We couldn’t load these options. You can retry or continue with default settings.',
+        primaryText: 'Try again',
         onPrimary: () {
           ref.read(localizationControllerProvider.notifier).load();
         },
-        secondaryText: "Skip for now",
+        secondaryText: 'Skip for now',
         onSecondary: onSkip,
       );
     }
@@ -114,7 +110,7 @@ class CountryStep extends ConsumerWidget {
                     Center(
                       child: CircleAvatar(
                         radius: 56,
-                        backgroundColor: colors.primary.withOpacity(0.1),
+                        backgroundColor: colors.primary.withValues(alpha: 0.1),
                         child: Icon(
                           Icons.location_on,
                           size: 64,
@@ -151,20 +147,18 @@ class CountryStep extends ConsumerWidget {
                           ? null
                           : () async {
                               await Navigator.of(context).push(
-                                MaterialPageRoute(
+                                MaterialPageRoute<void>(
                                   builder: (_) => LocalePickerPage(
                                     title: l10n.onboarding_country_picker,
                                     items: countries,
                                     initialValue: selectedCountryCode,
                                     leadingBuilder: (it) => Text(
                                       flagEmoji(
-                                        (it["code"] as String).toUpperCase(),
+                                        (it['code'] as String).toUpperCase(),
                                       ),
                                       style: const TextStyle(fontSize: 22),
                                     ),
-                                    onChanged: (code) {
-                                      controller.setCountryCode(code);
-                                    },
+                                    onChanged: controller.setCountryCode,
                                   ),
                                 ),
                               );

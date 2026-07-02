@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/following/following_section_controller.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/components/following/following_sellers_card.dart';
-
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SuggestedSellersSection extends ConsumerStatefulWidget {
   const SuggestedSellersSection({super.key});

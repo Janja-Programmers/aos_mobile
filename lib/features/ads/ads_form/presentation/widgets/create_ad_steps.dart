@@ -1,15 +1,12 @@
-import 'package:flutter/widgets.dart';
-
-import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
-import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
-
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/basic_step.dart';
-import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/details_step.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/description_step.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/details_step.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/pricing_step.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/validators/validation_result.dart';
-
 import 'package:africaonlinestores/features/ads/ads_form/utils/ad_form_validator.dart';
+import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
+import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
+import 'package:flutter/widgets.dart';
 
 typedef StepValidator =
     ValidationResult Function(AdDraft draft, AdCategorySchema schema);

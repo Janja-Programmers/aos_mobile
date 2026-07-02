@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/translation_language.dart';
+import 'package:flutter/material.dart';
 
 class TranslationLanguagePicker extends StatefulWidget {
   final TranslationLanguage initialLanguage;
@@ -69,7 +68,7 @@ class _TranslationLanguagePickerState extends State<TranslationLanguagePicker> {
                     itemCount: chatTranslationLanguages.length,
                     separatorBuilder: (_, _) => Divider(
                       height: 1,
-                      color: colors.border.withOpacity(0.55),
+                      color: colors.border.withValues(alpha: 0.55),
                     ),
                     itemBuilder: (context, index) {
                       final language = chatTranslationLanguages[index];

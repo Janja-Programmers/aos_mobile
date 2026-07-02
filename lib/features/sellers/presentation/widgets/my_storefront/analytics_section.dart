@@ -1,6 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/sellers/domain/storefront_analytics.dart';
@@ -8,6 +5,8 @@ import 'package:africaonlinestores/features/sellers/presentation/widgets/my_stor
 import 'package:africaonlinestores/features/sellers/presentation/widgets/my_storefront/top_performing_post_tile.dart';
 import 'package:africaonlinestores/features/shorts/analytics/data/shorts_analytics_models.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AnalyticsSection extends ConsumerWidget {
   const AnalyticsSection({super.key, required this.analytics});
@@ -48,9 +47,7 @@ class AnalyticsSection extends ConsumerWidget {
 }
 
 final _myShortsAnalyticsProvider = FutureProvider.autoDispose((ref) async {
-  final result = await ref
-      .read(shortsAnalyticsApiProvider)
-      .myAnalytics(limit: 5);
+  final result = await ref.read(shortsAnalyticsApiProvider).myAnalytics();
   return result.fold(
     (failure) => throw Exception(failure.message),
     (data) => data,
@@ -157,7 +154,9 @@ class _BackendAnalyticsView extends StatelessWidget {
               child: Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: context.appColors.primary.withOpacity(.10),
+                    backgroundColor: context.appColors.primary.withValues(
+                      alpha: .10,
+                    ),
                     child: Icon(
                       Icons.play_arrow_rounded,
                       color: context.appColors.primary,

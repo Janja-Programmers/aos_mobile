@@ -1,6 +1,5 @@
-import 'package:equatable/equatable.dart';
-
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
+import 'package:equatable/equatable.dart';
 
 class InitShortUploadResult extends Equatable {
   /// Short created in backend

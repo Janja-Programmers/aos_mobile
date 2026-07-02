@@ -1,6 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/reviews/application/controllers/review_controller.dart';
@@ -14,6 +11,8 @@ import 'package:africaonlinestores/features/reviews/presentation/widgets/summary
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ReviewScreen extends ConsumerWidget {
   const ReviewScreen({super.key, required this.adId});
@@ -73,7 +72,7 @@ class ReviewScreen extends ConsumerWidget {
 
       if (!context.mounted) return;
 
-      if (created == true) {
+      if (created ?? false) {
         ref.invalidate(reviewControllerProvider(adId));
         await controller.loadInitial();
       }

@@ -1,6 +1,3 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/api_endpoints.dart';
 import 'package:africaonlinestores/core/api/api_response.dart';
@@ -8,8 +5,11 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
 import 'package:africaonlinestores/features/maps/domain/aos_route.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final mapsApiProvider = Provider<MapsApi>((ref) {
   return MapsApi(ref.read(apiClientProvider));
@@ -107,9 +107,7 @@ class MapsApi {
         );
       }
 
-      final map = rawLocation is Map
-          ? Map<String, dynamic>.from(rawLocation)
-          : Map<String, dynamic>.from(data);
+      final map = rawLocation is Map ? asJsonMap(rawLocation) : asJsonMap(data);
 
       return Either.right(AOSPlace.fromJson(map));
     } on DioException catch (e) {
@@ -199,9 +197,7 @@ class MapsApi {
         );
       }
 
-      return Either.right(
-        AOSRoute.fromJson(Map<String, dynamic>.from(rawRoute)),
-      );
+      return Either.right(AOSRoute.fromJson(asJsonMap(rawRoute)));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
@@ -210,18 +206,15 @@ class MapsApi {
   }
 
   static Map<String, dynamic> _dataMap(Map<String, dynamic>? payload) {
-    final data = payload?['data'];
-    if (data is Map) return Map<String, dynamic>.from(data);
-    return payload == null
-        ? <String, dynamic>{}
-        : Map<String, dynamic>.from(payload);
+    if (payload == null) return <String, dynamic>{};
+
+    final data = asJsonMap(payload['data']);
+    if (data.isNotEmpty) return data;
+
+    return asJsonMap(payload);
   }
 
-  static List<AOSPlace> _placeList(dynamic value) {
-    if (value is! List) return const [];
-    return value
-        .whereType<Map>()
-        .map((e) => AOSPlace.fromJson(Map<String, dynamic>.from(e)))
-        .toList(growable: false);
+  static List<AOSPlace> _placeList(Object? value) {
+    return asJsonMapList(value).map(AOSPlace.fromJson).toList(growable: false);
   }
 }

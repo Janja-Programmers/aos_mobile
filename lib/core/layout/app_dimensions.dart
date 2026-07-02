@@ -13,15 +13,15 @@ class _DsSpacing {
   const _DsSpacing();
 
   // Base scale
-  final double xxs = 2;
-  final double xs = 4;
-  final double sm = 8;
-  final double md = 12;
-  final double lg = 16;
-  final double xl = 20;
-  final double xxl = 24;
-  final double xxxl = 32;
-  final double jumbo = 40;
+  double get xxs => 2;
+  double get xs => 4;
+  double get sm => 8;
+  double get md => 12;
+  double get lg => 16;
+  double get xl => 20;
+  double get xxl => 24;
+  double get xxxl => 32;
+  double get jumbo => 40;
 
   // Common paddings
   EdgeInsets get pageHorizontal => const EdgeInsets.symmetric(horizontal: 20);
@@ -42,14 +42,14 @@ class _DsRadii {
   const _DsRadii();
 
   // Radius values
-  final double xxs = 4;
-  final double xs = 6;
-  final double sm = 8;
-  final double md = 12;
-  final double lg = 16;
-  final double xl = 20;
-  final double xxl = 24;
-  final double pill = 999;
+  double get xxs => 4;
+  double get xs => 6;
+  double get sm => 8;
+  double get md => 12;
+  double get lg => 16;
+  double get xl => 20;
+  double get xxl => 24;
+  double get pill => 999;
 
   // Common BorderRadius
   BorderRadius get r8 => BorderRadius.circular(8);
@@ -73,7 +73,7 @@ class _DsRadii {
 class _DsShadows {
   const _DsShadows();
 
-  final List<BoxShadow> sm = const [
+  List<BoxShadow> get sm => const [
     BoxShadow(
       color: Color.fromRGBO(0, 0, 0, 0.05),
       blurRadius: 8,
@@ -81,7 +81,7 @@ class _DsShadows {
     ),
   ];
 
-  final List<BoxShadow> md = const [
+  List<BoxShadow> get md => const [
     BoxShadow(
       color: Color.fromRGBO(0, 0, 0, 0.06),
       blurRadius: 12,
@@ -89,7 +89,7 @@ class _DsShadows {
     ),
   ];
 
-  final List<BoxShadow> lg = const [
+  List<BoxShadow> get lg => const [
     BoxShadow(
       color: Color.fromRGBO(0, 0, 0, 0.08),
       blurRadius: 20,
@@ -100,7 +100,7 @@ class _DsShadows {
   // Inline variants
   List<BoxShadow> sellButton(Color primaryRed) => [
     BoxShadow(
-      color: primaryRed.withOpacity(0.23),
+      color: primaryRed.withValues(alpha: 0.23),
       blurRadius: 8,
       offset: const Offset(0, 3),
     ),
@@ -111,15 +111,15 @@ class _DsSizes {
   const _DsSizes();
 
   // Icons
-  final double iconSm = 16;
-  final double iconMd = 20;
-  final double iconLg = 24;
+  double get iconSm => 16;
+  double get iconMd => 20;
+  double get iconLg => 24;
 
   // Buttons
-  final double buttonHeightSm = 40;
-  final double buttonHeightMd = 48;
-  final double buttonHeightLg = 56;
+  double get buttonHeightSm => 40;
+  double get buttonHeightMd => 48;
+  double get buttonHeightLg => 56;
 
   // Inputs
-  final double inputHeight = 48;
+  double get inputHeight => 48;
 }

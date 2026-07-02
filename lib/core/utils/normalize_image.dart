@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:image/image.dart' as img;
 
 Future<File> normalizeImageOrientation(File file) async {

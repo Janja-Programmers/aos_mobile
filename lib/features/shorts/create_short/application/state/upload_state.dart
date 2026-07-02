@@ -1,11 +1,10 @@
-import 'package:equatable/equatable.dart';
-
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
+import 'package:equatable/equatable.dart';
 
 enum UploadStatus {
   idle,

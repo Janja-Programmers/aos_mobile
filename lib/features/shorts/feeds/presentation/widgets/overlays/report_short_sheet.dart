@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/ads_report/models/report_reason.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<void> showReportShortSheet({
   required BuildContext context,
@@ -17,7 +16,7 @@ Future<void> showReportShortSheet({
   })
   onSubmit,
 }) {
-  return showModalBottomSheet(
+  return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -194,7 +193,9 @@ class _ReportShortSheetState extends ConsumerState<_ReportShortSheet> {
                                       padding: const EdgeInsets.all(13),
                                       decoration: BoxDecoration(
                                         color: selected
-                                            ? colors.primary.withOpacity(.09)
+                                            ? colors.primary.withValues(
+                                                alpha: .09,
+                                              )
                                             : colors.surface,
                                         borderRadius: BorderRadius.circular(14),
                                         border: Border.all(

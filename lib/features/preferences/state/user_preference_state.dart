@@ -65,17 +65,17 @@ class UserPreferenceState {
   /// API payload format
   Map<String, dynamic> toJson() {
     return {
-      "country": countryCode,
-      "language": languageCode,
-      "currency": currencyCode,
+      'country': countryCode,
+      'language': languageCode,
+      'currency': currencyCode,
     };
   }
 
   factory UserPreferenceState.fromJson(Map<String, dynamic> json) {
     return UserPreferenceState(
-      countryCode: (json["country"] ?? '').toString().toUpperCase(),
-      languageCode: (json["language"] ?? 'en').toString().toLowerCase(),
-      currencyCode: (json["currency"] ?? 'USD').toString().toUpperCase(),
+      countryCode: (json['country'] ?? '').toString().toUpperCase(),
+      languageCode: (json['language'] ?? 'en').toString().toLowerCase(),
+      currencyCode: (json['currency'] ?? 'USD').toString().toUpperCase(),
     );
   }
 

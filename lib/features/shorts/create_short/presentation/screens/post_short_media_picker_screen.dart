@@ -1,19 +1,17 @@
 import 'dart:io';
-import 'package:uuid/uuid.dart';
-
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/helpers/enums.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/helpers/post_short_media_helpers.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/widgets/post_short_media_widgets.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 class PostShortMediaPickerScreen extends ConsumerStatefulWidget {
   const PostShortMediaPickerScreen({super.key});
@@ -80,12 +78,12 @@ class _PostShortMediaPickerScreenState
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
               decoration: BoxDecoration(
                 color: hasSelection
-                    ? colors.primary.withOpacity(.85)
+                    ? colors.primary.withValues(alpha: .85)
                     : colors.border,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                "Next",
+                'Next',
                 style: hasSelection
                     ? context.p.copyWith(color: colors.btnText)
                     : context.p,
@@ -117,15 +115,15 @@ class _PostShortMediaPickerScreenState
             Icon(
               Icons.add_photo_alternate_outlined,
               size: 54,
-              color: colors.white.withOpacity(.4),
+              color: colors.white.withValues(alpha: .4),
             ),
 
             const SizedBox(height: 12),
 
             Text(
-              "Tap to pick/upload video",
+              'Tap to pick/upload video',
               style: context.pStrong.copyWith(
-                color: colors.white.withOpacity(.6),
+                color: colors.white.withValues(alpha: .6),
               ),
             ),
           ],
@@ -172,7 +170,7 @@ class _PostShortMediaPickerScreenState
           future: PostShortMediaHelpers.generateVideoThumbnail(file),
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
-              return Container(
+              return ColoredBox(
                 color: colors.black,
                 child: const Center(child: CircularProgressIndicator()),
               );
@@ -186,7 +184,7 @@ class _PostShortMediaPickerScreenState
           child: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: colors.black.withOpacity(.6),
+              color: colors.black.withValues(alpha: .6),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.videocam, color: colors.white, size: 28),
@@ -208,13 +206,13 @@ class _PostShortMediaPickerScreenState
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _actionTabItem(
-            label: hasSelection ? "Change Video" : "Pick Video",
+            label: hasSelection ? 'Change Video' : 'Pick Video',
             icon: Icons.video_library_outlined,
             colors: colors,
             onTap: _pickVideoFromGallery,
           ),
           _actionTabItem(
-            label: "Take Video",
+            label: 'Take Video',
             icon: Icons.videocam_outlined,
             colors: colors,
             onTap: _recordVideoFromCamera,
@@ -233,7 +231,7 @@ class _PostShortMediaPickerScreenState
         height: 90,
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: colors.black.withOpacity(.95),
+          color: colors.black.withValues(alpha: .95),
           border: Border(top: BorderSide(color: colors.border)),
         ),
         child: Column(
@@ -244,9 +242,9 @@ class _PostShortMediaPickerScreenState
               child: Row(
                 children: [
                   Text(
-                    "Video selected",
+                    'Video selected',
                     style: context.p.copyWith(
-                      color: colors.white.withOpacity(.7),
+                      color: colors.white.withValues(alpha: .7),
                     ),
                   ),
                 ],
@@ -328,7 +326,7 @@ class _PostShortMediaPickerScreenState
                 height: 70,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: colors.black.withOpacity(.4),
+                  color: colors.black.withValues(alpha: .4),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(Icons.videocam, color: colors.white, size: 22),
@@ -379,12 +377,12 @@ class _PostShortMediaPickerScreenState
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: colors.white.withOpacity(.85), size: 22),
+          Icon(icon, color: colors.white.withValues(alpha: .85), size: 22),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              color: colors.white.withOpacity(.9),
+              color: colors.white.withValues(alpha: .9),
               fontWeight: FontWeight.w600,
             ),
           ),

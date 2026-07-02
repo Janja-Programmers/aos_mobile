@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
-
 import 'package:africaonlinestores/features/social/domain/social_friend.dart';
+import 'package:flutter/foundation.dart';
 
 enum SocialConnectionsTab { following, followers, friends }
 

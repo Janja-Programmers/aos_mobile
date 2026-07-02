@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/shared/components/rating_display.dart';
 import 'package:africaonlinestores/shared/utils/helpers.dart';
+import 'package:flutter/material.dart';
 
 class AdCardBody extends StatelessWidget {
   const AdCardBody({super.key, required this.ad});
@@ -32,7 +30,7 @@ class AdCardBody extends StatelessWidget {
         const SizedBox(height: 2),
 
         Text(
-          "${ad.locationName}, ${ad.country}",
+          '${ad.locationName}, ${ad.country}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: context.pMuted.copyWith(fontSize: 11.5, height: 1.2),

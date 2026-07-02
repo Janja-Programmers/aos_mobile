@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
 
 class SellerLocationResponse {
@@ -13,7 +14,7 @@ class SellerLocationResponse {
   final bool isOwner;
   final AOSPlace? location;
 
-  bool get hasLocation => location?.hasLocation == true;
+  bool get hasLocation => location?.hasLocation ?? false;
 
   factory SellerLocationResponse.fromJson(Map<String, dynamic> json) {
     final rawLocation = json['location'];
@@ -22,7 +23,7 @@ class SellerLocationResponse {
       user: _string(json['user']),
       isOwner: _bool(json['is_owner']),
       location: rawLocation is Map
-          ? AOSPlace.fromJson(Map<String, dynamic>.from(rawLocation))
+          ? AOSPlace.fromJson(asJsonMap(rawLocation))
           : null,
     );
   }

@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
@@ -12,9 +13,9 @@ AOSCallType _parseCallType(String? type) {
 }
 
 CallParticipant? _parseCallSide({
-  required dynamic user,
-  dynamic displayName,
-  dynamic avatar,
+  required Object? user,
+  Object? displayName,
+  Object? avatar,
 }) {
   final userId = _cleanString(user);
 
@@ -121,9 +122,7 @@ CallLog mapCallLog(Map<String, dynamic> json) {
         _cleanString(json['call_group_id']),
     latestCallId:
         _cleanString(json['latest_call_id']) ??
-        _cleanString(
-          json['latest_call'] is Map ? json['latest_call']['call_id'] : null,
-        ) ??
+        _cleanString(asJsonMap(json['latest_call'])['call_id']) ??
         _cleanString(json['id']) ??
         _cleanString(json['call_id']),
     oldestCallId:
@@ -141,30 +140,37 @@ CallLog mapCallLog(Map<String, dynamic> json) {
   );
 }
 
-List<CallLog> mapCallLogList(dynamic payload) {
+List<CallLog> mapCallLogList(Object? payload) {
   final data = _extractCallList(payload);
 
-  return data
-      .whereType<Map>()
-      .map((item) => item.map((key, value) => MapEntry(key.toString(), value)))
-      .map(mapCallLog)
-      .toList();
+  return data.map(mapCallLog).toList(growable: false);
 }
 
-List<dynamic> _extractCallList(dynamic payload) {
-  if (payload is List) return payload;
+List<Map<String, dynamic>> _extractCallList(Object? payload) {
+  if (payload is List) {
+    return asJsonMapList(payload);
+  }
 
   if (payload is Map) {
-    for (final key in const ['calls', 'logs', 'items', 'rows', 'data']) {
-      final value = payload[key];
-      if (value is List) return value;
+    final data = asJsonMap(payload);
+    for (final key in const <String>[
+      'calls',
+      'logs',
+      'items',
+      'rows',
+      'data',
+    ]) {
+      final value = data[key];
+      if (value is List) {
+        return asJsonMapList(value);
+      }
     }
   }
 
-  return const [];
+  return const <Map<String, dynamic>>[];
 }
 
-String? _cleanString(dynamic value) {
+String? _cleanString(Object? value) {
   if (value == null) return null;
 
   final text = value.toString().trim();
@@ -176,14 +182,14 @@ String? _cleanString(dynamic value) {
   return text;
 }
 
-DateTime? _parseDate(dynamic value) {
+DateTime? _parseDate(Object? value) {
   final text = _cleanString(value);
   if (text == null) return null;
 
   return DateTime.tryParse(text);
 }
 
-int _parseInt(dynamic value) {
+int _parseInt(Object? value) {
   if (value is int) return value;
   return int.tryParse(value?.toString() ?? '') ?? 0;
 }

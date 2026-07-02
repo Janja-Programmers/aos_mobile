@@ -1,7 +1,6 @@
-import 'package:permission_handler/permission_handler.dart';
-
 import 'package:africaonlinestores/core/media/livekit_service.dart';
 import 'package:africaonlinestores/features/live/domain/live_role.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class LiveMediaService {
   final LiveKitService liveKit;
@@ -52,8 +51,8 @@ class LiveMediaService {
   Future<bool> _requestHostPermissions() async {
     final statuses = await [Permission.microphone, Permission.camera].request();
 
-    final micAllowed = statuses[Permission.microphone]?.isGranted == true;
-    final cameraAllowed = statuses[Permission.camera]?.isGranted == true;
+    final micAllowed = statuses[Permission.microphone]?.isGranted ?? false;
+    final cameraAllowed = statuses[Permission.camera]?.isGranted ?? false;
 
     return micAllowed && cameraAllowed;
   }

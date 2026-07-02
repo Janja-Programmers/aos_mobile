@@ -1,7 +1,9 @@
 import 'package:africaonlinestores/shared/enums/ads_mode.dart';
 import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
+import 'package:flutter/foundation.dart';
 
+@immutable
 class AllAdsParams {
   final String? parentCategoryId;
   final String? initialCategoryId;

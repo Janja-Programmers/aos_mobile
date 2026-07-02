@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/l10n/l10n_extension.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:flutter/material.dart';
 
 class WelcomeStep extends StatelessWidget {
   final VoidCallback onContinue;
@@ -20,7 +19,7 @@ class WelcomeStep extends StatelessWidget {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset("assets/images/welcome.png", fit: BoxFit.cover),
+            child: Image.asset('assets/images/welcome.png', fit: BoxFit.cover),
           ),
 
           Align(
@@ -38,7 +37,10 @@ class WelcomeStep extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [colors.white.withOpacity(0.92), colors.white],
+                    colors: [
+                      colors.white.withValues(alpha: 0.92),
+                      colors.white,
+                    ],
                   ),
                 ),
                 child: Column(

@@ -1,13 +1,11 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/app/bootstrap/app_bootstrap_state.dart';
+import 'package:africaonlinestores/core/storage/onboarding_storage.dart';
+import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-
-import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
-import 'package:africaonlinestores/core/storage/onboarding_storage.dart';
-import 'package:africaonlinestores/core/utils/logger.dart';
-
-import 'package:africaonlinestores/app/bootstrap/app_bootstrap_state.dart';
 
 final appBootstrapControllerProvider =
     StateNotifierProvider<AppBootstrapController, AppBootstrapState>((ref) {

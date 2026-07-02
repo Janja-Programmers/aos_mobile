@@ -1,7 +1,6 @@
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:flutter/material.dart';
-
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
 class AccountOptionTile extends StatelessWidget {
   const AccountOptionTile({
@@ -47,7 +46,7 @@ class AccountOptionTile extends StatelessWidget {
                 ),
                 Icon(
                   Icons.chevron_right,
-                  color: scheme.onSurface.withOpacity(0.45),
+                  color: scheme.onSurface.withValues(alpha: 0.45),
                 ),
               ],
             ),
@@ -56,7 +55,7 @@ class AccountOptionTile extends StatelessWidget {
             Divider(
               height: 1,
               thickness: 1,
-              color: scheme.outlineVariant.withOpacity(0.22),
+              color: scheme.outlineVariant.withValues(alpha: 0.22),
             ),
         ],
       ),

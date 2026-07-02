@@ -1,8 +1,7 @@
-import 'package:flutter/foundation.dart';
-
 import 'package:africaonlinestores/features/live/domain/live_host.dart';
 import 'package:africaonlinestores/features/live/domain/live_status.dart';
 import 'package:africaonlinestores/features/live/domain/live_viewer_state.dart';
+import 'package:flutter/foundation.dart';
 
 @immutable
 class LiveStream {

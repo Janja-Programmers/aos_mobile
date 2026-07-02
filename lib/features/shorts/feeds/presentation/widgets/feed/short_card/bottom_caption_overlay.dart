@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:flutter/material.dart';
 
 class BottomCaptionOverlay extends StatelessWidget {
   final String caption;
@@ -27,7 +26,7 @@ class BottomCaptionOverlay extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: context.small.copyWith(
-              color: colors.white.withOpacity(.94),
+              color: colors.white.withValues(alpha: .94),
               fontSize: 11,
               height: 1.18,
               fontWeight: FontWeight.w600,

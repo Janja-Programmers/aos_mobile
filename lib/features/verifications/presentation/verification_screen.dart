@@ -1,13 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:africaonlinestores/features/verifications/controllers/verification_controller_provider.dart';
+import 'package:africaonlinestores/features/verifications/data/verification_api.dart';
+import 'package:africaonlinestores/features/verifications/presentation/widgets/seller_verification_shell.dart';
 import 'package:africaonlinestores/features/verifications/presentation/widgets/verification_bottom_bar.dart';
 import 'package:africaonlinestores/features/verifications/utils/verification_flow_helpers.dart';
 import 'package:africaonlinestores/features/verifications/utils/verification_steps_builder.dart';
-import 'package:africaonlinestores/features/verifications/controllers/verification_controller_provider.dart';
-import 'package:africaonlinestores/features/verifications/data/verification_api.dart';
-
-import 'package:africaonlinestores/features/verifications/presentation/widgets/seller_verification_shell.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class VerificationScreen extends ConsumerStatefulWidget {
   const VerificationScreen({super.key});
@@ -73,7 +71,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
     final index = state.currentStep.clamp(0, steps.length - 1);
 
     return SellerVerificationShell(
-      title: "Business Verification",
+      title: 'Business Verification',
 
       currentIndex: index,
       steps: steps.map((e) => e.title).toList(),
@@ -81,7 +79,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
 
       posting: state.isSubmitting,
 
-      onStepTapped: (i) => _goTo(i),
+      onStepTapped: _goTo,
       isStepAccessible: (i) => isStepAccessible(i, state),
 
       onBackPressed: () => _handleBack(index),

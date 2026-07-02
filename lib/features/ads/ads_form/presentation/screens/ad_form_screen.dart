@@ -1,32 +1,27 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-
 import 'package:africaonlinestores/features/ads/ads_form/controllers/ad_form_actions_controller.dart';
 import 'package:africaonlinestores/features/ads/ads_form/controllers/ad_form_controller.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/screens/scaffold_shell.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/widgets/ad_submit_success_dialog.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/widgets/create_ad_steps.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/widgets/save_draft_bottom_sheet.dart';
-import 'package:africaonlinestores/features/ads/ads_form/presentation/screens/scaffold_shell.dart';
 import 'package:africaonlinestores/features/ads/ads_form/utils/ad_dirty_checker.dart';
-import 'package:africaonlinestores/features/ads/ads_form/utils/cancel_action.dart';
 import 'package:africaonlinestores/features/ads/ads_form/utils/ad_form_payload.dart';
 import 'package:africaonlinestores/features/ads/ads_form/utils/ad_form_step_runner.dart';
-
-import 'package:africaonlinestores/features/ads/domain/category.dart';
+import 'package:africaonlinestores/features/ads/ads_form/utils/cancel_action.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
+import 'package:africaonlinestores/features/ads/domain/category.dart';
 import 'package:africaonlinestores/features/ads/domain/pricing_schema.dart';
-
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_schema_provider.dart';
-
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class AdFormScreen extends ConsumerStatefulWidget {
   final AdFormMode mode;
@@ -214,7 +209,7 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
         builder: (_) => const AdSubmitSuccessDialog(),
       );
 
-      if (result == true && mounted) {
+      if ((result ?? false) && mounted) {
         context.pop(true);
       }
     } catch (e) {
@@ -324,8 +319,8 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
         if (_isCancelling) return;
         _handleCancel(draft: draft, schema: schema);
       },
-      onStepTapped: (i) => _goTo(i),
-      isStepAccessible: (i) => flowCtrl.canNavigateTo(i),
+      onStepTapped: _goTo,
+      isStepAccessible: flowCtrl.canNavigateTo,
       child: PageView.builder(
         controller: _pageCtrl,
         physics: const NeverScrollableScrollPhysics(),

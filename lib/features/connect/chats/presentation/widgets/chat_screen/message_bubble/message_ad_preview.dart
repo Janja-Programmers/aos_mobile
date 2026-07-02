@@ -41,10 +41,10 @@ class MessageAdPreview extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: isMe ? colors.white.withOpacity(0.12) : colors.elevated,
+        color: isMe ? colors.white.withValues(alpha: 0.12) : colors.elevated,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isMe ? colors.white.withOpacity(0.18) : colors.border,
+          color: isMe ? colors.white.withValues(alpha: 0.18) : colors.border,
         ),
       ),
       child: Row(

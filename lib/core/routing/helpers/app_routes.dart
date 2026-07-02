@@ -122,6 +122,18 @@ class AppRoutes {
   static const connect = '/connect';
   static const nConnect = 'connect';
 
+  static const connectNewConversation = '/connect/new';
+  static const nConnectNewConversation = 'connectNewConversation';
+
+  static const connectStoryCreate = '/connect/story/create';
+  static const nConnectStoryCreate = 'connectStoryCreate';
+
+  static const connectStoryConfirm = '/connect/story/confirm';
+  static const nConnectStoryConfirm = 'connectStoryConfirm';
+
+  static const connectStoryViewer = '/connect/story/:storyId';
+  static const nConnectStoryViewer = 'connectStoryViewer';
+
   // CHATLIST routes
   static const chatsList = '/chats/list';
   static const nChatsList = 'chatsList';

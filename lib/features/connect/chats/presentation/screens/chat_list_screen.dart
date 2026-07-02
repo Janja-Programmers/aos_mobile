@@ -9,9 +9,9 @@ import 'package:africaonlinestores/features/connect/chats/application/controller
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
-import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/conversation_tile.dart';
 import 'package:africaonlinestores/features/connect/conversations/application/providers/conversation_provider.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_state_view.dart';
+import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/conversation_tile.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/delete_conversation_sheet.dart';
 
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
@@ -27,7 +27,7 @@ class ChatListScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatListScreenState extends ConsumerState<ChatListScreen> {
-  String selectedFilter = "all";
+  String selectedFilter = 'all';
   String _query = '';
 
   @override
@@ -40,7 +40,6 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
   void didUpdateWidget(covariant ChatListScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // 🔥 react to search changes
     if (oldWidget.searchQuery != widget.searchQuery) {
       setState(() {
         _query = widget.searchQuery ?? '';
@@ -75,6 +74,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     }
   }
 
+  Future<void> _refresh() {
+    return ref.read(conversationsControllerProvider.notifier).refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(conversationsControllerProvider);
@@ -87,22 +90,28 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
           alignment: Alignment.topCenter,
           child: widget.hideFilters ? const SizedBox.shrink() : _buildFilters(),
         ),
-
         Expanded(
           child: state.when(
             loading: () => const ConnectStateView.loading(
               title: 'Loading conversations',
               message: 'Please wait while we fetch your chats.',
             ),
-
-            error: (e, _) => ConnectStateView.error(
-              title: 'Could not load chats',
-              message: 'Check your internet connection and try again.',
-              onAction: () {
-                ref.read(conversationsControllerProvider.notifier).refresh();
-              },
+            error: (e, _) => RefreshIndicator(
+              onRefresh: _refresh,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.5,
+                    child: ConnectStateView.error(
+                      title: 'Could not load chats',
+                      message: 'Check your internet connection and try again.',
+                      onAction: _refresh,
+                    ),
+                  ),
+                ],
+              ),
             ),
-
             data: (conversations) {
               final query = _query.trim().toLowerCase();
 
@@ -112,78 +121,83 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                     conv.displayName.toLowerCase().contains(query) ||
                     (conv.lastMessage ?? '').toLowerCase().contains(query);
 
-                final matchesFilter = _applyFilter(conv);
-
-                return matchesSearch && matchesFilter;
+                return matchesSearch && _applyFilter(conv);
               }).toList();
 
               if (filtered.isEmpty) {
                 final hasSearch = query.isNotEmpty;
 
-                return ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.55,
-                      child: ConnectStateView.empty(
-                        icon: hasSearch
-                            ? Icons.search_off_rounded
-                            : Icons.chat_bubble_outline_rounded,
-                        title: hasSearch
-                            ? 'No chats found'
-                            : 'No conversations yet',
-                        message: hasSearch
-                            ? 'Try searching with another name or message.'
-                            : 'Your conversations will appear here once you start chatting.',
+                return RefreshIndicator(
+                  onRefresh: _refresh,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.5,
+                        child: ConnectStateView.empty(
+                          icon: hasSearch
+                              ? Icons.search_off_rounded
+                              : Icons.chat_bubble_outline_rounded,
+                          title: hasSearch
+                              ? 'No chats found'
+                              : _emptyTitleForFilter(),
+                          message: hasSearch
+                              ? 'Try searching with another name or message.'
+                              : _emptyMessageForFilter(),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               }
 
-              return ListView.builder(
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: filtered.length,
-                itemBuilder: (context, index) {
-                  final conv = filtered[index];
+              return RefreshIndicator(
+                onRefresh: _refresh,
+                child: ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.only(bottom: 12),
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final conv = filtered[index];
 
-                  final presence = ref.watch(
-                    chatPresenceControllerProvider.select(
-                      (map) => map[conv.user],
-                    ),
-                  );
+                    final presence = ref.watch(
+                      chatPresenceControllerProvider.select(
+                        (map) => map[conv.user],
+                      ),
+                    );
 
-                  final isTyping = ref.watch(
-                    chatTypingControllerProvider.select(
-                      (map) => map[conv.id] == true,
-                    ),
-                  );
+                    final isTyping = ref.watch(
+                      chatTypingControllerProvider.select(
+                        (map) => map[conv.id] ?? false,
+                      ),
+                    );
 
-                  final subtitle = isTyping ? 'Typing...' : conv.lastMessage;
+                    final subtitle = isTyping ? 'Typing...' : conv.lastMessage;
 
-                  final isOnline = ref
-                      .read(chatPresenceControllerProvider.notifier)
-                      .isUserOnline(conv.user);
+                    final isOnline = ref
+                        .read(chatPresenceControllerProvider.notifier)
+                        .isUserOnline(conv.user);
 
-                  return ConversationTile(
-                    conversation: conv.copyWith(lastMessage: subtitle),
-                    isOnline: isOnline,
-                    isTyping: isTyping,
-                    lastSeen: presence?.lastSeen,
-                    onTap: () {
-                      ChatNavigation.toMessage(
-                        context: context,
-                        conversationId: conv.id,
-                        user: conv.user,
-                        displayName: conv.displayName,
-                        otherUserAvatar: conv.avatar,
-                      );
-                    },
-                    onLongPress: () {
-                      _showDeleteConversationSheet(conv);
-                    },
-                  );
-                },
+                    return ConversationTile(
+                      conversation: conv.copyWith(lastMessage: subtitle),
+                      isOnline: isOnline,
+                      isTyping: isTyping,
+                      lastSeen: presence?.lastSeen,
+                      onTap: () {
+                        ChatNavigation.toMessage(
+                          context: context,
+                          conversationId: conv.id,
+                          user: conv.user,
+                          displayName: conv.displayName,
+                          otherUserAvatar: conv.avatar,
+                        );
+                      },
+                      onLongPress: () {
+                        _showDeleteConversationSheet(conv);
+                      },
+                    );
+                  },
+                ),
               );
             },
           ),
@@ -192,112 +206,125 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     );
   }
 
-  // 🔥 FILTER LOGIC
   bool _applyFilter(ChatConversation conv) {
     switch (selectedFilter) {
-      case "read":
+      case 'read':
         return conv.unreadCount == 0;
-
-      case "unread":
+      case 'unread':
         return conv.unreadCount > 0;
-
       default:
         return true;
     }
   }
 
-  // 🎯 FILTER UI WITH UNREAD BADGES
   Widget _buildFilters() {
+    final colors = context.appColors;
     final unreadCount = ref.watch(chatUnreadCountProvider);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _chip("All Chats", "all", badgeCount: unreadCount),
-            _chip("Read", "read"),
-            _chip("Unread", "unread", badgeCount: unreadCount),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _chip(String label, String value, {int badgeCount = 0}) {
-    final colors = context.appColors;
-    final isSelected = selectedFilter == value;
-    final showBadge = badgeCount > 0;
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            selectedFilter = value;
-          });
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colors.primary.withOpacity(0.1)
-                : colors.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isSelected
-                  ? colors.primary.withOpacity(0.35)
-                  : colors.border,
+      padding: const EdgeInsets.fromLTRB(28, 6, 28, 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              _filterTitle(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.h4.copyWith(
+                fontWeight: FontWeight.w900,
+                fontSize: 23,
+              ),
             ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? colors.primary : colors.textMuted,
-                  fontWeight: FontWeight.w600,
-                ),
+          PopupMenuButton<String>(
+            initialValue: selectedFilter,
+            color: colors.elevated,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: BorderSide(color: colors.border),
+            ),
+            offset: const Offset(0, 42),
+            onSelected: (value) => setState(() => selectedFilter = value),
+            itemBuilder: (context) => [
+              _filterMenuItem('All', 'all'),
+              _filterMenuItem('Read', 'read'),
+              _filterMenuItem(
+                unreadCount > 0 ? 'Unread ($unreadCount)' : 'Unread',
+                'unread',
               ),
-
-              if (showBadge) ...[
-                const SizedBox(width: 6),
-                _chipBadge(count: badgeCount, isSelected: isSelected),
-              ],
             ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.filter_list_rounded, color: colors.primary, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  'Filter',
+                  style: context.p.copyWith(
+                    color: colors.primary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _chipBadge({required int count, required bool isSelected}) {
+  PopupMenuItem<String> _filterMenuItem(String label, String value) {
     final colors = context.appColors;
+    final selected = selectedFilter == value;
 
-    final text = count > 99 ? '99+' : count.toString();
-
-    return Container(
-      constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: colors.primary,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        text,
-        style: context.p.copyWith(
-          color: colors.white,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          height: 1,
-        ),
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          Icon(
+            selected ? Icons.radio_button_checked : Icons.radio_button_off,
+            color: selected ? colors.primary : colors.textMuted,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Text(label, style: context.p),
+        ],
       ),
     );
+  }
+
+  String _filterTitle() {
+    switch (selectedFilter) {
+      case 'read':
+        return 'Read Chats';
+      case 'unread':
+        return 'Unread Chats';
+      default:
+        return 'All Chats';
+    }
+  }
+
+  String _emptyTitleForFilter() {
+    switch (selectedFilter) {
+      case 'read':
+        return 'No read chats';
+      case 'unread':
+        return 'No unread chats';
+      default:
+        return 'No conversations yet';
+    }
+  }
+
+  String _emptyMessageForFilter() {
+    switch (selectedFilter) {
+      case 'read':
+        return 'Chats you have already read will appear here.';
+      case 'unread':
+        return 'Unread chats will appear here as new messages arrive.';
+      default:
+        return 'Your conversations will appear here once you start chatting.';
+    }
   }
 }

@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 
 import 'package:africaonlinestores/core/core.dart';
@@ -59,9 +58,6 @@ class ConversationTile extends StatelessWidget {
         conversation.lastSender != conversation.user &&
         conversation.lastSender != 'Administrator';
 
-    appLogger.i("Last Sender: ${conversation.lastSender}");
-    appLogger.i("User: ${conversation.user}");
-    appLogger.i("I wonder why I see the text 'You: ' when isMine is false");
 
     if (!isMine) {
       return Text(
@@ -211,7 +207,7 @@ class ConversationTile extends StatelessWidget {
   }
 
   String _formatUnread(int count) {
-    if (count > 99) return "99+";
+    if (count > 99) return '99+';
     return count.toString();
   }
 }

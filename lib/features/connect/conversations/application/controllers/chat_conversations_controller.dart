@@ -1,10 +1,12 @@
 import 'dart:async';
 
-import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
@@ -15,35 +17,97 @@ class ConversationsController
   final Ref ref;
 
   String _currentUser = '';
+  String? _activeSid;
+  bool _isBootstrapping = false;
+  int _loadSerial = 0;
+
   StreamSubscription? _messageSub;
   StreamSubscription? _messageEditedSub;
   StreamSubscription? _messagesDeletedSub;
 
-  ConversationsController(this.ref) : super(const AsyncData([])) {
-    _init();
+  ConversationsController(this.ref) : super(const AsyncLoading()) {
+    ref.listen<AuthState>(
+      authControllerProvider,
+      _handleAuthChanged,
+      fireImmediately: true,
+    );
   }
 
   // -----------------------------
-  // Init
+  // Auth-aware bootstrap
   // -----------------------------
-  Future<void> _init() async {
-    _currentUser = _normalizeUser(ref.read(currentUserProvider));
+  void _handleAuthChanged(AuthState? previous, AuthState next) {
+    if (next is AuthAuthenticated) {
+      final sid = next.sid.trim();
+      final user = _normalizeUser(next.user.email);
 
-    await load();
-    await _subscribeToRealtime();
+      if (_activeSid == sid && _currentUser == user && state.hasValue) {
+        return;
+      }
+
+      _activeSid = sid;
+      _currentUser = user.isNotEmpty
+          ? user
+          : _normalizeUser(ref.read(currentUserProvider));
+
+      unawaited(_bootstrapForAuthenticatedUser());
+      return;
+    }
+
+    if (next is AuthGuest) {
+      _activeSid = null;
+      _currentUser = '';
+      _loadSerial++;
+      unawaited(_cancelRealtimeSubscriptions());
+      state = const AsyncData([]);
+      return;
+    }
+
+    if (next is AuthLoading && !state.hasValue) {
+      state = const AsyncLoading();
+    }
+  }
+
+  Future<void> _bootstrapForAuthenticatedUser() async {
+    if (_isBootstrapping) return;
+
+    _isBootstrapping = true;
+
+    try {
+      if (!state.hasValue) {
+        state = const AsyncLoading();
+      }
+
+      await load();
+      await _subscribeToRealtime();
+    } finally {
+      _isBootstrapping = false;
+    }
   }
 
   // -----------------------------
   // Load conversations
   // -----------------------------
   Future<void> load() async {
+    final auth = ref.read(authControllerProvider);
+
+    if (auth is! AuthAuthenticated) {
+      state = const AsyncData([]);
+      return;
+    }
+
+    final serial = ++_loadSerial;
     final repo = ref.read(chatRepositoryProvider);
     final res = await repo.getConversations();
 
-    if (!mounted) return;
+    if (!mounted || serial != _loadSerial) return;
 
     if (res.isLeft) {
-      state = AsyncError(res.leftOrNull!, StackTrace.current);
+      final failure = res.leftOrNull!;
+      appLogger.w(
+        '[ConversationsController] load failed: ${failure.message}',
+      );
+      state = AsyncError(failure, StackTrace.current);
       return;
     }
 
@@ -64,6 +128,13 @@ class ConversationsController
   }
 
   Future<void> refresh() async {
+    final auth = ref.read(authControllerProvider);
+
+    if (auth is! AuthAuthenticated) {
+      state = const AsyncData([]);
+      return;
+    }
+
     state = const AsyncLoading();
     await load();
   }
@@ -79,7 +150,6 @@ class ConversationsController
     }
 
     final repo = ref.read(chatRepositoryProvider);
-
     final previousState = state;
 
     state = state.whenData((conversations) {
@@ -144,9 +214,7 @@ class ConversationsController
   Future<void> _subscribeToRealtime() async {
     final realtime = ref.read(chatRealtimeServiceProvider);
 
-    await _messageSub?.cancel();
-    await _messageEditedSub?.cancel();
-    await _messagesDeletedSub?.cancel();
+    await _cancelRealtimeSubscriptions();
 
     _messageSub = realtime.messages.listen((data) {
       final conversationId = data['conversation_id']?.toString();
@@ -186,13 +254,22 @@ class ConversationsController
       syncConversationWithMessage(
         conversationId: conversationId,
         message: message,
-        incrementUnread: false,
       );
     });
 
     _messagesDeletedSub = realtime.messagesDeleted.listen((data) {
       load();
     });
+  }
+
+  Future<void> _cancelRealtimeSubscriptions() async {
+    await _messageSub?.cancel();
+    await _messageEditedSub?.cancel();
+    await _messagesDeletedSub?.cancel();
+
+    _messageSub = null;
+    _messageEditedSub = null;
+    _messagesDeletedSub = null;
   }
 
   // -----------------------------
@@ -208,7 +285,7 @@ class ConversationsController
     String? fallbackAvatar,
   }) {
     final List<ChatConversation> current = state.maybeWhen(
-      data: (conversations) => List<ChatConversation>.from(conversations),
+      data: List<ChatConversation>.from,
       orElse: () => <ChatConversation>[],
     );
 
@@ -296,9 +373,7 @@ class ConversationsController
   // -----------------------------
   @override
   void dispose() {
-    _messageSub?.cancel();
-    _messageEditedSub?.cancel();
-    _messagesDeletedSub?.cancel();
+    unawaited(_cancelRealtimeSubscriptions());
     super.dispose();
   }
 }

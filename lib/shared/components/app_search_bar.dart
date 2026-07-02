@@ -7,17 +7,19 @@ class AppSearchBar extends StatefulWidget {
     required this.controller,
     this.onTap,
     this.onSubmitted,
+    this.onChanged,
     this.onMicTap,
     this.onCameraTap,
     this.readOnly = false,
     this.autofocus = false,
-    this.hintText = "Search here...",
+    this.hintText = 'Search here...',
     this.margin = const EdgeInsets.symmetric(vertical: 4),
   });
 
   final TextEditingController controller;
   final VoidCallback? onTap;
   final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onChanged;
   final VoidCallback? onMicTap;
   final VoidCallback? onCameraTap;
   final bool readOnly;
@@ -105,9 +107,9 @@ class _AppSearchBarState extends State<AppSearchBar> {
                   : TextField(
                       controller: widget.controller,
                       autofocus: widget.autofocus,
-                      readOnly: false,
                       onTap: widget.onTap,
                       onSubmitted: widget.onSubmitted,
+                      onChanged: widget.onChanged,
                       textInputAction: TextInputAction.search,
                       style: TextStyle(
                         color: colors.textPrimary,
@@ -137,6 +139,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
                 icon: Icon(Icons.close, color: colors.textMuted),
                 onPressed: () {
                   widget.controller.clear();
+                  widget.onChanged?.call('');
                 },
               ),
 

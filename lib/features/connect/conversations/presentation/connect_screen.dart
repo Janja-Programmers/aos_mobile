@@ -8,25 +8,13 @@ import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 
-import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_list_screen.dart';
-import 'package:africaonlinestores/features/connect/chats/utils/chat_actions.dart';
-
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
-import 'package:africaonlinestores/features/connect/calls/navigation/call_routes.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/call_list_screen.dart';
-
+import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_list_screen.dart';
+import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_story_template_strip.dart';
 import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
-
-import 'package:africaonlinestores/features/social/application/providers/social_providers.dart';
-import 'package:africaonlinestores/features/social/domain/social_friend.dart';
-import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
-import 'package:africaonlinestores/features/social/presentation/widgets/social_friends_strip.dart';
-
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 
 class ConnectScreen extends ConsumerStatefulWidget {
   const ConnectScreen({super.key});
@@ -35,27 +23,22 @@ class ConnectScreen extends ConsumerStatefulWidget {
   ConsumerState<ConnectScreen> createState() => _ConnectScreenState();
 }
 
+enum _ConnectTab { chats, calls }
+
 class _ConnectScreenState extends ConsumerState<ConnectScreen> {
   final _searchCtrl = TextEditingController();
-
-  bool _headerCollapsed = false;
-  bool _isStartingFriendCall = false;
+  _ConnectTab _selectedTab = _ConnectTab.chats;
+  bool _didResolveInitialTab = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-    _searchCtrl.addListener(() {
-      if (!mounted) return;
+    if (_didResolveInitialTab) return;
 
-      final hasQuery = _searchCtrl.text.trim().isNotEmpty;
-
-      setState(() {
-        if (hasQuery) {
-          _headerCollapsed = true;
-        }
-      });
-    });
+    final tab = GoRouterState.of(context).uri.queryParameters['tab'];
+    _selectedTab = tab == 'calls' ? _ConnectTab.calls : _ConnectTab.chats;
+    _didResolveInitialTab = true;
   }
 
   @override
@@ -64,141 +47,122 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
     super.dispose();
   }
 
-  void _setHeaderCollapsed(bool collapsed) {
-    if (_headerCollapsed == collapsed) return;
+  Future<void> _openNewConversation() async {
+    await HapticFeedback.selectionClick();
 
-    setState(() {
-      _headerCollapsed = collapsed;
-    });
+    if (!mounted) return;
+    ConnectScreenNavigation.toNewConversation(context);
   }
 
-  bool _handleScrollNotification(ScrollNotification notification) {
-    if (notification.metrics.axis != Axis.vertical) {
-      return false;
-    }
+  void _selectTab(_ConnectTab tab) {
+    if (_selectedTab == tab) return;
 
-    if (notification.metrics.pixels <= 8) {
-      _setHeaderCollapsed(false);
-      return false;
-    }
-
-    if (notification is ScrollUpdateNotification) {
-      final delta = notification.scrollDelta ?? 0;
-
-      if (delta > 4 && notification.metrics.pixels > 24) {
-        _setHeaderCollapsed(true);
-      } else if (delta < -4) {
-        _setHeaderCollapsed(false);
-      }
-    }
-
-    return false;
-  }
-
-  Future<void> _startMessageWithFriend(SocialFriend friend) async {
-    final user = friend.user.trim();
-
-    if (user.isEmpty || friend.isSelf) {
-      return;
-    }
-
-    await ChatActions.startChat(
-      context: context,
-      ref: ref,
-      user: user,
-      displayName: friend.displayName,
-      avatar: friend.userImage,
-    );
-  }
-
-  Future<void> _startAudioCallWithFriend(SocialFriend friend) async {
-    if (_isStartingFriendCall) return;
-
-    final user = friend.user.trim();
-
-    if (user.isEmpty || friend.isSelf) {
-      return;
-    }
-
-    _isStartingFriendCall = true;
-
-    try {
-      await HapticFeedback.mediumImpact();
-
-      final started = await ref
-          .read(callStarterServiceProvider)
-          .startOutgoingCall(
-            userId: user,
-            callType: AOSCallType.audio,
-            receiver: CallParticipant(
-              userId: user,
-              displayName: friend.displayName,
-              avatarUrl: friend.userImage,
-            ),
-          );
-
-      if (!started && mounted) {
-        ShowSnack(context, 'Failed to start call').error();
-      }
-    } catch (_) {
-      if (mounted) {
-        ShowSnack(context, 'Failed to start call').error();
-      }
-    } finally {
-      _isStartingFriendCall = false;
-    }
-  }
-
-  Future<void> _handleFriendTap(SocialFriend friend) async {
-    final selectedTab = _resolveIndex(context);
-    final isMessages = selectedTab == 1;
-
-    if (isMessages) {
-      await _startMessageWithFriend(friend);
-    } else {
-      await _startAudioCallWithFriend(friend);
-    }
+    HapticFeedback.selectionClick();
+    setState(() => _selectedTab = tab);
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
-    final selectedTab = _resolveIndex(context);
-    final isMessages = selectedTab == 1;
-
-    final friendsState = ref.watch(socialFriendsControllerProvider);
-
-    final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
-    final shouldShowFriendsStrip = !_headerCollapsed && !keyboardVisible;
+    final isChats = _selectedTab == _ConnectTab.chats;
+    final unreadChats = ref.watch(chatUnreadCountProvider);
+    final callState = ref.watch(callManagerProvider);
+    final missedCalls = callState.callLogs.where((call) => call.isMissed).length;
 
     return Scaffold(
       backgroundColor: colors.surface,
-      appBar: AppBar(
-        backgroundColor: colors.surface,
-        elevation: 0,
-        centerTitle: true,
-        leading: BackButton(
-          onPressed: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            } else {
-              context.goNamed(AppRoutes.nHome);
-            }
-          },
+      body: SafeArea(
+        child: Column(
+          children: [
+            _ConnectHeader(onNewConversation: _openNewConversation),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
+              child: AppSearchBar(
+                controller: _searchCtrl,
+                readOnly: true,
+                hintText: 'Search...',
+                margin: EdgeInsets.zero,
+                onTap: _openNewConversation,
+              ),
+            ),
+            ConnectStoryTemplateStrip(
+              onCreateStory: () => ConnectScreenNavigation.toCreateStory(
+                context,
+              ),
+              onStoryTap: (story) => ConnectScreenNavigation.toStoryViewer(
+                context,
+                story.id,
+              ),
+            ),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 180),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                child: isChats
+                    ? const ChatListScreen(key: ValueKey('connect_chats'))
+                    : const CallListScreen(key: ValueKey('connect_calls')),
+              ),
+            ),
+          ],
         ),
-        title: Text("Connect", style: context.h4),
-        actions: [
+      ),
+      bottomNavigationBar: _ConnectBottomBar(
+        selectedTab: _selectedTab,
+        unreadChats: unreadChats,
+        missedCalls: missedCalls,
+        onTabSelected: _selectTab,
+        onPlusTap: _openNewConversation,
+      ),
+    );
+  }
+}
+
+class _ConnectHeader extends ConsumerWidget {
+  const _ConnectHeader({required this.onNewConversation});
+
+  final VoidCallback onNewConversation;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 10, 28, 4),
+      child: Row(
+        children: [
+          _HeaderIconButton(
+            icon: Icons.close_rounded,
+            onTap: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                context.goNamed(AppRoutes.nHome);
+              }
+            },
+          ),
+          Expanded(
+            child: Text(
+              'AOS Connect',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.h4.copyWith(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
           PopupMenuButton<int>(
             color: colors.elevated,
             surfaceTintColor: Colors.transparent,
-            shadowColor: colors.black.withOpacity(0.12),
-            elevation: 8,
+            shadowColor: colors.black.withValues(alpha: 0.18),
+            elevation: 10,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: colors.border, width: 1),
+              borderRadius: BorderRadius.circular(18),
+              side: BorderSide(color: colors.border),
             ),
-            icon: Icon(Icons.menu, color: colors.textPrimary),
+            offset: const Offset(0, 54),
             onSelected: (index) => AppNavigation.goTo(context, ref, index),
             itemBuilder: (context) {
               final items = AppNavConfig.items(context);
@@ -207,22 +171,19 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
               return List.generate(items.length, (i) {
                 final item = items[i];
                 final isActive = location.contains(item.routeName);
-
-                final itemColor = isActive
-                    ? colors.primary
-                    : colors.textPrimary;
+                final itemColor = isActive ? colors.primary : colors.textPrimary;
 
                 return PopupMenuItem<int>(
                   value: i,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
+                      horizontal: 10,
+                      vertical: 8,
                     ),
                     child: Row(
                       children: [
                         Icon(item.icon, color: itemColor),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         Text(
                           item.label,
                           style: context.p.copyWith(color: itemColor),
@@ -233,190 +194,222 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
                 );
               });
             },
+            child: const _HeaderIconButton(icon: Icons.menu_rounded),
           ),
         ],
       ),
-      body: NotificationListener<ScrollNotification>(
-        onNotification: _handleScrollNotification,
-        child: Column(
+    );
+  }
+}
+
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({required this.icon, this.onTap});
+
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Ink(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: colors.elevated,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: colors.border),
+          ),
+          child: Icon(icon, color: colors.textPrimary, size: 30),
+        ),
+      ),
+    );
+  }
+}
+
+class _ConnectBottomBar extends StatelessWidget {
+  const _ConnectBottomBar({
+    required this.selectedTab,
+    required this.unreadChats,
+    required this.missedCalls,
+    required this.onTabSelected,
+    required this.onPlusTap,
+  });
+
+  final _ConnectTab selectedTab;
+  final int unreadChats;
+  final int missedCalls;
+  final ValueChanged<_ConnectTab> onTabSelected;
+  final VoidCallback onPlusTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return SafeArea(
+      top: false,
+      child: SizedBox(
+        height: 104,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.topCenter,
           children: [
-            _buildToggleTabs(),
-
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOut,
-              height: _headerCollapsed ? 6 : 12,
-            ),
-
-            _buildSearchBar(
-              isMessages ? "Messages" : "Calls",
-              collapsed: _headerCollapsed,
-            ),
-
-            AnimatedSize(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: shouldShowFriendsStrip
-                  ? friendsState.maybeWhen(
-                      data: (page) {
-                        if (page.items.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-
-                        return SocialFriendsStrip(
-                          friends: page.items,
-                          limit: 10,
-                          title: isMessages
-                              ? 'Message Friends'
-                              : 'Call Friends',
-                          onSeeAll: () {
-                            SocialNavigation.toFriendsScreen(context);
-                          },
-                          onFriendTap: _handleFriendTap,
-                        );
-                      },
-                      orElse: () => const SizedBox.shrink(),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-
-            Expanded(
-              child: isMessages
-                  ? ChatListScreen(
-                      key: ValueKey('${selectedTab}_${_searchCtrl.text}'),
-                      searchQuery: _searchCtrl.text,
-                      hideFilters: _headerCollapsed,
-                    )
-                  : CallListScreen(
-                      key: ValueKey('${selectedTab}_${_searchCtrl.text}'),
-                      searchQuery: _searchCtrl.text,
-                      hideFilters: _headerCollapsed,
+            Positioned(
+              left: 24,
+              right: 24,
+              bottom: 14,
+              child: Container(
+                height: 72,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                decoration: BoxDecoration(
+                  color: colors.elevated,
+                  borderRadius: BorderRadius.circular(34),
+                  border: Border.all(color: colors.border),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors.black.withValues(alpha: 0.18),
+                      blurRadius: 28,
+                      offset: const Offset(0, 12),
                     ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _BottomBarItem(
+                        label: 'Chats',
+                        icon: Icons.chat_bubble_rounded,
+                        badgeCount: unreadChats,
+                        selected: selectedTab == _ConnectTab.chats,
+                        onTap: () => onTabSelected(_ConnectTab.chats),
+                      ),
+                    ),
+                    const SizedBox(width: 82),
+                    Expanded(
+                      child: _BottomBarItem(
+                        label: 'Calls',
+                        icon: Icons.call_rounded,
+                        badgeCount: missedCalls,
+                        selected: selectedTab == _ConnectTab.calls,
+                        onTap: () => onTabSelected(_ConnectTab.calls),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              top: 0,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onPlusTap,
+                child: Container(
+                  width: 76,
+                  height: 76,
+                  decoration: BoxDecoration(
+                    color: colors.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: colors.surface, width: 7),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.primary.withValues(alpha: 0.45),
+                        blurRadius: 28,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Icon(Icons.add_rounded, color: colors.white, size: 40),
+                ),
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButton: _buildFAB(),
     );
   }
+}
 
-  Widget _buildToggleTabs() {
+class _BottomBarItem extends StatelessWidget {
+  const _BottomBarItem({
+    required this.label,
+    required this.icon,
+    required this.badgeCount,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final int badgeCount;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.appColors;
+    final activeColor = colors.primary;
+    final inactiveColor = colors.textMuted;
+    final color = selected ? activeColor : inactiveColor;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: colors.border,
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _tabButton("Calls", 0, Icons.call),
-          _tabButton("Messages", 1, Icons.message),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(icon, color: color, size: 28),
+              if (badgeCount > 0)
+                Positioned(
+                  right: -10,
+                  top: -12,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 22,
+                      minHeight: 22,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: colors.primary,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      badgeCount > 99 ? '99+' : '$badgeCount',
+                      style: context.small.copyWith(
+                        color: colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.p.copyWith(
+                color: color,
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+              ),
+            ),
+          ),
         ],
       ),
     );
-  }
-
-  Widget _tabButton(String title, int index, IconData icon) {
-    final selectedTab = _resolveIndex(context);
-    final isSelected = selectedTab == index;
-    final colors = context.appColors;
-
-    final selectedColor = colors.white;
-    final unselectedColor = colors.textPrimary.withOpacity(.75);
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          _searchCtrl.clear();
-          _setHeaderCollapsed(false);
-
-          if (index == 0) {
-            ConnectScreenNavigation.toCallsTab(context);
-          } else {
-            ConnectScreenNavigation.toMessagesTab(context);
-          }
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected ? colors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: isSelected ? selectedColor : unselectedColor),
-              const SizedBox(width: 6),
-              Text(
-                title,
-                style: TextStyle(
-                  color: isSelected ? selectedColor : unselectedColor,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchBar(String title, {required bool collapsed}) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOut,
-      padding: EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: collapsed ? 2 : 6,
-      ),
-      child: AppSearchBar(
-        hintText: "Search $title...",
-        controller: _searchCtrl,
-        readOnly: false,
-      ),
-    );
-  }
-
-  Widget _buildFAB() {
-    final colors = context.appColors;
-    final selectedTab = _resolveIndex(context);
-    final isMessages = selectedTab == 1;
-
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
-      transitionBuilder: (child, anim) =>
-          ScaleTransition(scale: anim, child: child),
-      child: FloatingActionButton(
-        key: ValueKey(selectedTab),
-        backgroundColor: colors.primary,
-        onPressed: () {
-          if (isMessages) {
-            ChatNavigation.toNewMessage(context);
-          } else {
-            CallNavigation.toNewCall(ref);
-          }
-        },
-        child: Icon(
-          isMessages ? Icons.message : Icons.add_call,
-          color: colors.white,
-        ),
-      ),
-    );
-  }
-
-  int _resolveIndex(BuildContext context) {
-    final tab = GoRouterState.of(context).uri.queryParameters['tab'];
-
-    switch (tab) {
-      case 'calls':
-        return 0;
-      case 'messages':
-      default:
-        return 1;
-    }
   }
 }

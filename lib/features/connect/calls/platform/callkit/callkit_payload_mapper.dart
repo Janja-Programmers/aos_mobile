@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/media_url.dart';
 import 'package:flutter_callkit_incoming/entities/android_params.dart';
 import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/entities/ios_params.dart';
@@ -20,10 +21,11 @@ class CallKitPayloadMapper {
         _clean(data['caller']) ??
         'AOS User';
 
-    final callerAvatar =
-        _clean(data['caller_avatar']) ??
-        _clean(data['avatar']) ??
-        _clean(data['avatar_url']);
+    final callerAvatar = normalizeMediaUrl(
+      _clean(data['caller_avatar']) ??
+          _clean(data['avatar']) ??
+          _clean(data['avatar_url']),
+    );
 
     final callType = _clean(data['call_type'])?.toLowerCase();
     final isVideo = callType == 'video';

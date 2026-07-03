@@ -45,6 +45,15 @@ class CallMediaService {
   Future<void> _requestPermissions(bool isVideo) async {
     final permissions = [Permission.microphone, if (isVideo) Permission.camera];
 
-    await permissions.request();
+    final statuses = await permissions.request();
+    final denied = statuses.entries.where((entry) => !entry.value.isGranted);
+
+    if (denied.isNotEmpty) {
+      throw StateError(
+        isVideo
+            ? 'Microphone and camera permissions are required for video calls.'
+            : 'Microphone permission is required for calls.',
+      );
+    }
   }
 }

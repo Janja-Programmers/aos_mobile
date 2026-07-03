@@ -29,6 +29,7 @@ class VideoCallView extends StatefulWidget {
 
 class _VideoCallViewState extends State<VideoCallView> {
   bool _isLocalMain = false;
+  Offset? _pipOffset;
 
   @override
   Widget build(BuildContext context) {
@@ -77,25 +78,22 @@ class _VideoCallViewState extends State<VideoCallView> {
                   ),
                 ),
                 if (pipSlot != null)
-                  Positioned(
-                    right: 14,
-                    bottom: 108,
+                  _DraggablePictureInPicture(
+                    offset: _resolvePipOffset(context),
+                    onDragUpdate: (delta) => _movePip(context, delta),
                     child: _TappableCanvas(
                       enabled: canSwapCanvases,
                       onTap: _swapCanvases,
                       child: _PictureInPictureCanvas(slot: pipSlot),
                     ),
                   ),
-                if (widget.showActiveControls)
+                if (widget.showActiveControls && hasLocalVideo)
                   Positioned(
                     right: 14,
                     top: 86,
-                    child: _VideoFloatingActions(
-                      canSwitchCamera:
-                          widget.callState.isLocalVideoEnabled && hasLocalVideo,
-                      onAddParticipant: () {},
+                    child: _SwitchCameraButton(
+                      canSwitchCamera: widget.callState.isLocalVideoEnabled,
                       onSwitchCamera: widget.manager.switchCamera,
-                      onEffects: null,
                     ),
                   ),
                 if (widget.showActiveControls)
@@ -113,7 +111,7 @@ class _VideoCallViewState extends State<VideoCallView> {
                           widget.callState.isWaitingForVideoUpgradeResponse,
                       hasIncomingVideoUpgradeRequest:
                           widget.callState.hasIncomingVideoUpgradeRequest,
-                      onMore: () {},
+                      showMoreButton: false,
                       onVideo:
                           widget.callState.isWaitingForVideoUpgradeResponse ||
                               widget.callState.hasIncomingVideoUpgradeRequest
@@ -136,6 +134,41 @@ class _VideoCallViewState extends State<VideoCallView> {
     setState(() {
       _isLocalMain = !_isLocalMain;
     });
+  }
+
+  Offset _resolvePipOffset(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final defaultOffset = Offset(size.width - 130, size.height - 278);
+
+    return _clampPipOffset(_pipOffset ?? defaultOffset, size);
+  }
+
+  void _movePip(BuildContext context, Offset delta) {
+    final size = MediaQuery.of(context).size;
+
+    setState(() {
+      _pipOffset = _clampPipOffset(_resolvePipOffset(context) + delta, size);
+    });
+  }
+
+  Offset _clampPipOffset(Offset value, Size size) {
+    const pipWidth = 116.0;
+    const pipHeight = 158.0;
+    const margin = 12.0;
+    final topSafe = MediaQuery.maybeOf(context)?.padding.top ?? 0;
+    final bottomSafe = MediaQuery.maybeOf(context)?.padding.bottom ?? 0;
+
+    final maxX = (size.width - pipWidth - margin)
+        .clamp(margin, double.infinity)
+        .toDouble();
+    final maxY = (size.height - pipHeight - bottomSafe - 92)
+        .clamp(topSafe + 88, double.infinity)
+        .toDouble();
+
+    return Offset(
+      value.dx.clamp(margin, maxX).toDouble(),
+      value.dy.clamp(topSafe + 88, maxY).toDouble(),
+    );
   }
 
   _VideoCanvasSlot _mainSlot({
@@ -178,7 +211,8 @@ class _VideoCallViewState extends State<VideoCallView> {
   }) {
     if (hasRemoteVideo) return '';
     if (hasLocalVideo) return 'Waiting for video...';
-    if (widget.callState.isLocalVideoEnabled) return 'Starting camera...';
+    if (!widget.callState.hasActiveRoom) return 'Waiting for connection...';
+    if (widget.callState.isLocalVideoEnabled) return 'Camera is starting...';
     return 'Camera is off';
   }
 
@@ -573,44 +607,21 @@ class _VideoCallTopBar extends StatelessWidget {
   }
 }
 
-class _VideoFloatingActions extends StatelessWidget {
+class _SwitchCameraButton extends StatelessWidget {
   final bool canSwitchCamera;
-  final VoidCallback onAddParticipant;
   final VoidCallback onSwitchCamera;
-  final VoidCallback? onEffects;
 
-  const _VideoFloatingActions({
+  const _SwitchCameraButton({
     required this.canSwitchCamera,
-    required this.onAddParticipant,
     required this.onSwitchCamera,
-    required this.onEffects,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _RoundVideoButton(
-          icon: Icons.person_add_alt_1_rounded,
-          semanticLabel: 'Add participant',
-          onTap: onAddParticipant,
-        ),
-        const SizedBox(height: 12),
-
-        _RoundVideoButton(
-          icon: Icons.cameraswitch_rounded,
-          semanticLabel: 'Switch camera',
-          onTap: canSwitchCamera ? onSwitchCamera : null,
-        ),
-        const SizedBox(height: 12),
-
-        _RoundVideoButton(
-          icon: Icons.auto_fix_high_rounded,
-          semanticLabel: 'Effects',
-          onTap: onEffects,
-        ),
-      ],
+    return _RoundVideoButton(
+      icon: Icons.cameraswitch_rounded,
+      semanticLabel: 'Switch camera',
+      onTap: canSwitchCamera ? onSwitchCamera : null,
     );
   }
 }
@@ -655,6 +666,30 @@ class _RoundVideoButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _DraggablePictureInPicture extends StatelessWidget {
+  final Offset offset;
+  final ValueChanged<Offset> onDragUpdate;
+  final Widget child;
+
+  const _DraggablePictureInPicture({
+    required this.offset,
+    required this.onDragUpdate,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: offset.dx,
+      top: offset.dy,
+      child: GestureDetector(
+        onPanUpdate: (details) => onDragUpdate(details.delta),
+        child: child,
       ),
     );
   }

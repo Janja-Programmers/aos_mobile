@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/media_url.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 import 'package:flutter_callkit_incoming/entities/android_params.dart';
@@ -20,7 +21,7 @@ class CallKitParamsMapper {
     final callerName =
         _cleanString(caller?.displayName) ?? callerUserId ?? 'AOS User';
 
-    final callerAvatar = _cleanString(caller?.avatarUrl);
+    final callerAvatar = normalizeMediaUrl(_cleanString(caller?.avatarUrl));
     final cleanRoomName = _cleanString(roomName);
 
     final callLabel = isVideo ? 'Incoming video call' : 'Incoming voice call';

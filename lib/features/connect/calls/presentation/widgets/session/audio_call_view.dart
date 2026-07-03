@@ -41,7 +41,6 @@ class AudioCallView extends StatelessWidget {
                   name: participant.displayName,
                   statusText: _statusText(callState),
                   onMinimize: () => _minimize(context),
-                  onAddParticipant: () {},
                 ),
                 Expanded(
                   child: _AudioCallBody(
@@ -67,7 +66,7 @@ class AudioCallView extends StatelessWidget {
                         callState.isWaitingForVideoUpgradeResponse,
                     hasIncomingVideoUpgradeRequest:
                         callState.hasIncomingVideoUpgradeRequest,
-                    onMore: () {},
+                    showMoreButton: false,
                     onVideo:
                         isActuallyInCall &&
                             !callState.isWaitingForVideoUpgradeResponse &&
@@ -144,13 +143,11 @@ class _AudioCallTopBar extends StatelessWidget {
   final String name;
   final String statusText;
   final VoidCallback onMinimize;
-  final VoidCallback onAddParticipant;
 
   const _AudioCallTopBar({
     required this.name,
     required this.statusText,
     required this.onMinimize,
-    required this.onAddParticipant,
   });
 
   @override
@@ -202,14 +199,6 @@ class _AudioCallTopBar extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: _TopCircleButton(
-                icon: Icons.person_add_alt_1_rounded,
-                semanticLabel: 'Add participant',
-                onTap: onAddParticipant,
               ),
             ),
           ],

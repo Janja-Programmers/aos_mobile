@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/media_url.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
@@ -45,7 +46,9 @@ class ActiveCallChatBanner extends ConsumerWidget {
     final colors = context.appColors;
     final isVideo = state.callMediaMode == CallMediaMode.video;
     final statusText = _statusText(state);
-    final avatarUrl = participant.avatarUrl ?? fallbackAvatarUrl;
+    final avatarUrl = normalizeMediaUrl(
+      participant.avatarUrl ?? fallbackAvatarUrl,
+    );
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),

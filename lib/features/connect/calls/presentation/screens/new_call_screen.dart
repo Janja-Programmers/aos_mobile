@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/media_url.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
@@ -25,7 +26,7 @@ class _NewCallScreenState extends ConsumerState<NewCallScreen> {
     return CallParticipant(
       userId: seller.user,
       displayName: sellerName,
-      avatarUrl: seller.avatar,
+      avatarUrl: normalizeMediaUrl(seller.avatar),
     );
   }
 

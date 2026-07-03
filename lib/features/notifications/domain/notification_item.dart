@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/core/utils/media_url.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_payload.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
 
@@ -89,8 +90,9 @@ class NotificationItem {
           _read(json, 'actor_name') ??
           _read(payloadMap, 'actor_name') ??
           actorId,
-      actorAvatar:
-          _read(json, 'actor_avatar') ?? _read(payloadMap, 'actor_avatar'),
+      actorAvatar: normalizeMediaUrl(
+        _read(json, 'actor_avatar') ?? _read(payloadMap, 'actor_avatar'),
+      ),
       isRead: _parseBool(json['is_read']),
       createdAt: _parseDate(json['created_at']) ?? DateTime.now(),
       payload: payload,
@@ -141,10 +143,11 @@ class NotificationItem {
           _read(data, 'sender_display_name') ??
           _read(data, 'caller_display_name') ??
           actorId,
-      actorAvatar:
-          _read(data, 'actor_avatar') ??
-          _read(data, 'sender_avatar') ??
-          _read(data, 'caller_avatar'),
+      actorAvatar: normalizeMediaUrl(
+        _read(data, 'actor_avatar') ??
+            _read(data, 'sender_avatar') ??
+            _read(data, 'caller_avatar'),
+      ),
       isRead: false,
       createdAt: sentTime ?? now,
       payload: payload,

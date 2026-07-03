@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/media_url.dart';
 import 'package:africaonlinestores/features/connect/calls/application/managers/call_manager.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
@@ -15,6 +16,9 @@ class CallSignalingHandler {
       final callTypeRaw = _cleanString(data['call_type']);
       final token = _cleanString(data['token']);
       final wsUrl = _cleanString(data['ws_url']);
+      final conversationId =
+          _cleanString(data['conversation_id']) ??
+          _cleanString(data['conversation']);
 
       final callerUser = _cleanString(data['caller']);
       final callerDisplayName = _cleanString(data['caller_display_name']);
@@ -37,7 +41,7 @@ class CallSignalingHandler {
           : CallParticipant(
               userId: callerUser,
               displayName: callerDisplayName ?? callerUser,
-              avatarUrl: callerAvatar,
+              avatarUrl: normalizeMediaUrl(callerAvatar),
             );
 
       final receiver = receiverUser == null
@@ -45,12 +49,13 @@ class CallSignalingHandler {
           : CallParticipant(
               userId: receiverUser,
               displayName: receiverDisplayName ?? receiverUser,
-              avatarUrl: receiverAvatar,
+              avatarUrl: normalizeMediaUrl(receiverAvatar),
             );
 
       return callManager.onIncomingCallEvent(
         callId: callId,
         roomName: roomName,
+        conversationId: conversationId,
         callType: callType,
         token: token,
         wsUrl: wsUrl,

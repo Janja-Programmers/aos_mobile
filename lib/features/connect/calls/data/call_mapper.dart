@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/core/utils/media_url.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
@@ -24,7 +25,7 @@ CallParticipant? _parseCallSide({
   return CallParticipant(
     userId: userId,
     displayName: _cleanString(displayName) ?? userId,
-    avatarUrl: _cleanString(avatar),
+    avatarUrl: normalizeMediaUrl(_cleanString(avatar)),
   );
 }
 
@@ -94,10 +95,11 @@ CallLog mapCallLog(Map<String, dynamic> json) {
     // Backend already gives the display target for current user.
     user: user,
     displayName: displayName,
-    avatar:
-        _cleanString(json['other_avatar']) ??
-        _cleanString(json['avatar']) ??
-        _cleanString(json['user_avatar']),
+    avatar: normalizeMediaUrl(
+      _cleanString(json['other_avatar']) ??
+          _cleanString(json['avatar']) ??
+          _cleanString(json['user_avatar']),
+    ),
 
     direction: direction,
     status: status,

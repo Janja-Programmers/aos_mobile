@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/core/utils/media_url.dart';
 
 class NotificationPayload {
   final String? conversationId;
@@ -95,13 +96,14 @@ class NotificationPayload {
           read('caller_display_name') ??
           read('follower_display_name') ??
           read('display_name'),
-      actorAvatar:
-          read('actor_avatar') ??
-          read('actorAvatar') ??
-          read('sender_avatar') ??
-          read('caller_avatar') ??
-          read('follower_avatar') ??
-          read('avatar'),
+      actorAvatar: normalizeMediaUrl(
+        read('actor_avatar') ??
+            read('actorAvatar') ??
+            read('sender_avatar') ??
+            read('caller_avatar') ??
+            read('follower_avatar') ??
+            read('avatar'),
+      ),
       otherUserName:
           read('other_user_display_name') ??
           read('otherUserDisplayName') ??

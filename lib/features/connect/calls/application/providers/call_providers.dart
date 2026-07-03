@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/media/livekit_service.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
@@ -33,7 +35,13 @@ final callRepositoryProvider = Provider<CallRepository>((ref) {
 
 // ================= CORE =================
 final liveKitCoreProvider = Provider<LiveKitService>((ref) {
-  return LiveKitService();
+  final service = LiveKitService();
+
+  ref.onDispose(() {
+    unawaited(service.dispose());
+  });
+
+  return service;
 });
 
 // ================= MEDIA =================
@@ -100,7 +108,7 @@ final callKitServiceProvider = Provider<CallKitService>((ref) {
     paramsMapper: paramsMapper,
   );
 
-  service.init();
+  unawaited(service.init());
 
   ref.onDispose(service.dispose);
 

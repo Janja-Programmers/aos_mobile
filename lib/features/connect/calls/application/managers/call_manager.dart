@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/utils/media_url.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_media_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
@@ -25,6 +26,7 @@ class CallManager extends StateNotifier<CallState> {
 
   CallState get currentState => state;
   final Set<String> _localTerminalCallIds = <String>{};
+  final Set<String> _callActionLocks = <String>{};
 
   CallManager({
     required this.repository,
@@ -235,6 +237,7 @@ class CallManager extends StateNotifier<CallState> {
         callMediaMode: callType == AOSCallType.video
             ? CallMediaMode.video
             : CallMediaMode.audio,
+        isLocalVideoEnabled: false,
       );
 
       final safeReceiver =
@@ -268,6 +271,7 @@ class CallManager extends StateNotifier<CallState> {
     required AOSCallType callType,
     String? token,
     String? wsUrl,
+    String? conversationId,
     CallParticipant? caller,
     CallParticipant? receiver,
   }) async {
@@ -289,7 +293,7 @@ class CallManager extends StateNotifier<CallState> {
 
     final incomingCall = Call(
       id: callId,
-      conversationId: '',
+      conversationId: _cleanString(conversationId) ?? '',
       callType: callType,
       roomName: roomName,
       token: token ?? '',
@@ -309,6 +313,7 @@ class CallManager extends StateNotifier<CallState> {
         callMediaMode: callType == AOSCallType.video
             ? CallMediaMode.video
             : CallMediaMode.audio,
+        isLocalVideoEnabled: false,
       );
 
       try {
@@ -348,10 +353,6 @@ class CallManager extends StateNotifier<CallState> {
 
     if (normalizedCallId.isEmpty) {
       return false;
-    }
-
-    if (state.activeCall?.id == normalizedCallId) {
-      return true;
     }
 
     if (state.isCallInProgress && state.activeCall?.id != normalizedCallId) {
@@ -423,89 +424,199 @@ class CallManager extends StateNotifier<CallState> {
   }
 
   Future<void> acceptIncomingCall({String? expectedCallId}) async {
-    if (!_matchesActiveCall(expectedCallId)) {
-      return;
-    }
+    final callId = _resolveActionCallId(expectedCallId);
+    if (callId == null) return;
 
-    final call = state.activeCall;
-    if (call == null) {
-      return;
-    }
-
-    if (state.uiPhase != UiCallPhase.incomingRinging) {
-      return;
-    }
-
-    if (_isTerminalStatus(state.backendStatus)) {
-      return;
-    }
+    if (!_callActionLocks.add(callId)) return;
 
     try {
-      final callId = state.activeCall?.id;
+      state = state.copyWith(isBusy: true, clearErrorMessage: true);
 
-      if (callId == null) return;
-      if (state.backendStatus != BackendCallStatus.ringing) return;
-      if (state.isBusy) return;
+      final hydrated = await _syncIncomingCallForAction(callId: callId);
+      if (!hydrated) {
+        state = state.copyWith(isBusy: false);
+        return;
+      }
 
-      state = state.copyWith(isBusy: true);
+      final syncedStatus = state.backendStatus;
+      if (syncedStatus == BackendCallStatus.ongoing) {
+        await _joinAlreadyOngoingIncomingCall(callId);
+        state = state.copyWith(isBusy: false);
+        return;
+      }
+
+      if (!_isAnswerableStatus(syncedStatus)) {
+        state = state.copyWith(isBusy: false);
+        return;
+      }
 
       final ongoingCall = await repository.acceptCall(callId: callId);
+      final mergedCall = _mergeCallForAction(state.activeCall, ongoingCall);
 
       _applyBackendState(
         BackendCallStatus.ongoing,
-        activeCall: ongoingCall,
+        activeCall: mergedCall,
         direction: 'incoming',
+        caller: mergedCall.caller,
+        receiver: mergedCall.receiver,
         hasIncomingCallUi: false,
       );
 
-      await _joinRoomInternal(ongoingCall);
+      await _joinRoomInternal(mergedCall);
 
       state = state.copyWith(isBusy: false);
     } catch (e) {
+      final joinedExisting = await _joinAlreadyOngoingIncomingCall(callId);
+      if (joinedExisting) {
+        state = state.copyWith(isBusy: false);
+        return;
+      }
+
       state = state.copyWith(isBusy: false);
 
-      final failedCallId = state.activeCall?.id;
-      final synced =
-          !(failedCallId == null) &&
-          await _applyBackendStatusIfTerminal(
-            callId: failedCallId,
-            hasIncomingCallUi: false,
-          );
+      final synced = await _applyBackendStatusIfTerminal(
+        callId: callId,
+        hasIncomingCallUi: false,
+      );
 
       if (!synced) {
         await _failCall(e);
       }
+    } finally {
+      _callActionLocks.remove(callId);
     }
   }
 
   Future<void> rejectIncomingCall({String? expectedCallId}) async {
-    if (!_matchesActiveCall(expectedCallId)) {
-      return;
-    }
+    final callId = _resolveActionCallId(expectedCallId);
+    if (callId == null) return;
 
-    final call = state.activeCall;
-    if (call == null) {
-      return;
-    }
-
-    if (state.uiPhase != UiCallPhase.incomingRinging) {
-      return;
-    }
-
-    if (_isTerminalStatus(state.backendStatus)) {
-      return;
-    }
+    if (!_callActionLocks.add(callId)) return;
 
     try {
-      final callId = state.activeCall?.id;
-      if (callId == null) return;
+      state = state.copyWith(isBusy: true, clearErrorMessage: true);
+
+      final hydrated = await _syncIncomingCallForAction(callId: callId);
+      if (!hydrated) {
+        state = state.copyWith(isBusy: false);
+        return;
+      }
+
+      final syncedStatus = state.backendStatus;
+      if (!_isAnswerableStatus(syncedStatus)) {
+        state = state.copyWith(isBusy: false);
+        return;
+      }
 
       await repository.rejectCall(callId: callId);
       await _leaveRoomInternal();
 
       _applyBackendState(BackendCallStatus.rejected, hasIncomingCallUi: false);
     } catch (e) {
-      await _failCall(e);
+      state = state.copyWith(isBusy: false);
+
+      final synced = await _applyBackendStatusIfTerminal(
+        callId: callId,
+        hasIncomingCallUi: false,
+      );
+
+      if (!synced) {
+        await _failCall(e);
+      }
+    } finally {
+      _callActionLocks.remove(callId);
+    }
+  }
+
+  String? _resolveActionCallId(String? expectedCallId) {
+    final expected = _cleanString(expectedCallId);
+    if (expected != null) return expected;
+
+    return _cleanString(state.activeCall?.id);
+  }
+
+  Future<bool> _syncIncomingCallForAction({required String callId}) async {
+    final hydrated = await ensureIncomingCallHydrated(callId: callId);
+    if (!hydrated) return false;
+
+    if (!_matchesActiveCall(callId)) {
+      return false;
+    }
+
+    if (state.direction?.trim().toLowerCase() != 'incoming') {
+      return false;
+    }
+
+    final status = state.backendStatus;
+    if (_isTerminalStatus(status)) {
+      await _applyBackendStatusIfTerminal(
+        callId: callId,
+        hasIncomingCallUi: false,
+      );
+      return false;
+    }
+
+    return _isAnswerableStatus(status) || status == BackendCallStatus.ongoing;
+  }
+
+  bool _isAnswerableStatus(BackendCallStatus? status) {
+    return status == BackendCallStatus.initiated ||
+        status == BackendCallStatus.ringing;
+  }
+
+  Call _mergeCallForAction(Call? current, Call updated) {
+    if (current == null) return updated;
+
+    return current.copyWith(
+      id: updated.id.isNotEmpty ? updated.id : current.id,
+      conversationId: updated.conversationId.isNotEmpty
+          ? updated.conversationId
+          : current.conversationId,
+      callType: updated.callType,
+      roomName: updated.roomName.isNotEmpty
+          ? updated.roomName
+          : current.roomName,
+      token: updated.token.isNotEmpty ? updated.token : current.token,
+      wsUrl: updated.wsUrl.isNotEmpty ? updated.wsUrl : current.wsUrl,
+      caller: updated.caller ?? current.caller,
+      receiver: updated.receiver ?? current.receiver,
+      videoUpgradeStatus: updated.videoUpgradeStatus,
+      videoUpgradeRequestedBy: updated.videoUpgradeRequestedBy,
+    );
+  }
+
+  Future<bool> _joinAlreadyOngoingIncomingCall(String callId) async {
+    final backendStatus = await _readBackendStatus(callId);
+    if (backendStatus != BackendCallStatus.ongoing) {
+      return false;
+    }
+
+    try {
+      final tokenCall = await repository.getCallToken(callId: callId);
+      final current = state.activeCall;
+      final safeTokenCall = tokenCall.copyWith(
+        conversationId: current?.conversationId,
+        callType: current?.callType,
+        caller: current?.caller,
+        receiver: current?.receiver,
+        videoUpgradeStatus: current?.videoUpgradeStatus,
+        videoUpgradeRequestedBy: current?.videoUpgradeRequestedBy,
+      );
+      final mergedCall = _mergeCallForAction(current, safeTokenCall);
+
+      _applyBackendState(
+        BackendCallStatus.ongoing,
+        activeCall: mergedCall,
+        direction: 'incoming',
+        caller: mergedCall.caller,
+        receiver: mergedCall.receiver,
+        hasIncomingCallUi: false,
+      );
+
+      await _joinRoomInternal(mergedCall);
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -730,6 +841,7 @@ class CallManager extends StateNotifier<CallState> {
         hasActiveRoom: true,
         room: room,
         duration: Duration.zero,
+        isLocalVideoEnabled: call.callType == AOSCallType.video,
       );
 
       _refreshUiPhase(hasActiveRoom: true);
@@ -958,7 +1070,7 @@ class CallManager extends StateNotifier<CallState> {
     return CallParticipant(
       userId: userId,
       displayName: _cleanString(displayName) ?? userId,
-      avatarUrl: _cleanString(avatar),
+      avatarUrl: normalizeMediaUrl(_cleanString(avatar)),
     );
   }
 
@@ -1128,6 +1240,7 @@ class CallManager extends StateNotifier<CallState> {
 
   Future<void> startLocalVideoPreview() async {
     if (state.callMediaMode != CallMediaMode.video) return;
+    if (!state.hasActiveRoom) return;
     if (state.isLocalVideoEnabled) return;
 
     try {
@@ -1239,9 +1352,15 @@ class CallManager extends StateNotifier<CallState> {
     CallParticipant? receiver,
     bool? hasIncomingCallUi,
   }) {
-    // ✅ Optional duplicate guard
-    if (state.backendStatus == nextStatus &&
-        (activeCall == null || state.activeCall?.id == activeCall.id)) {
+    final isExactDuplicate =
+        state.backendStatus == nextStatus &&
+        activeCall == null &&
+        direction == null &&
+        caller == null &&
+        receiver == null &&
+        hasIncomingCallUi == null;
+
+    if (isExactDuplicate) {
       return;
     }
 
@@ -1391,6 +1510,7 @@ class CallManager extends StateNotifier<CallState> {
     callTimer.stop();
 
     _localTerminalCallIds.clear();
+    _callActionLocks.clear();
     _callCancelled = false;
 
     state = state.copyWith(
@@ -1406,7 +1526,7 @@ class CallManager extends StateNotifier<CallState> {
       hasIncomingVideoUpgradeRequest: false,
       clearVideoUpgradeErrorMessage: true,
       isRemoteVideoEnabled: true,
-      isLocalVideoEnabled: true,
+      isLocalVideoEnabled: false,
       duration: Duration.zero,
       clearErrorMessage: true,
       isBusy: false,

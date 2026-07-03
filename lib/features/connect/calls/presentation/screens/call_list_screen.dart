@@ -290,10 +290,7 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
         (direction == 'incoming' && status == 'cancelled');
 
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: colors.border,
-        child: Text(call.displayName.isNotEmpty ? call.displayName[0] : '?'),
-      ),
+      leading: _CallHistoryAvatar(call: call),
 
       title: Row(
         children: [
@@ -471,6 +468,37 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
               : 'Could not clear call history. Please try again.',
         ),
       ),
+    );
+  }
+}
+
+class _CallHistoryAvatar extends StatelessWidget {
+  final CallLog call;
+
+  const _CallHistoryAvatar({required this.call});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final avatar = call.avatar?.trim();
+    final initial = call.displayName.trim().isNotEmpty
+        ? call.displayName.trim().substring(0, 1).toUpperCase()
+        : '?';
+
+    return CircleAvatar(
+      backgroundColor: colors.border,
+      backgroundImage: avatar != null && avatar.isNotEmpty
+          ? NetworkImage(avatar)
+          : null,
+      child: avatar == null || avatar.isEmpty
+          ? Text(
+              initial,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            )
+          : null,
     );
   }
 }

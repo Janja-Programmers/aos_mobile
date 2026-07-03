@@ -79,7 +79,7 @@ class CallState {
       isMuted: false,
       isSpeakerOn: false,
       isRemoteVideoEnabled: true,
-      isLocalVideoEnabled: true,
+      isLocalVideoEnabled: false,
       duration: Duration.zero,
       isBusy: false,
       hasIncomingCallUi: false,

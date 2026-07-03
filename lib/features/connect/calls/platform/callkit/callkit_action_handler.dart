@@ -21,9 +21,9 @@ class CallKitActionHandler {
       return;
     }
 
-    if (!_canAccept(snapshot)) {
+    if (_isTerminal(snapshot.backendStatus)) {
       appLogger.i(
-        '📞 Ignoring CallKit accept for non-ringing/terminal call: '
+        '📞 Ignoring CallKit accept for terminal call: '
         'phase=${snapshot.uiPhase} status=${snapshot.backendStatus}',
       );
       return;
@@ -45,7 +45,7 @@ class CallKitActionHandler {
       return;
     }
 
-    if (!_isIncomingRinging(snapshot)) {
+    if (_isTerminal(snapshot.backendStatus)) {
       return;
     }
 
@@ -66,7 +66,9 @@ class CallKitActionHandler {
       return;
     }
 
-    if (_isIncomingRinging(snapshot)) {
+    if (snapshot.direction?.trim().toLowerCase() == 'incoming' &&
+        snapshot.uiPhase != UiCallPhase.joiningRoom &&
+        snapshot.uiPhase != UiCallPhase.inCall) {
       await callManager.rejectIncomingCall(expectedCallId: callId);
       return;
     }
@@ -88,7 +90,7 @@ class CallKitActionHandler {
       return;
     }
 
-    if (!_isIncomingRinging(snapshot)) {
+    if (_isTerminal(snapshot.backendStatus)) {
       return;
     }
 
@@ -118,19 +120,6 @@ class CallKitActionHandler {
     if (eventCallId == null || eventCallId.isEmpty) return true;
 
     return eventCallId == activeCallId;
-  }
-
-  bool _canAccept(CallState state) {
-    return _isIncomingRinging(state) &&
-        state.backendStatus == BackendCallStatus.ringing &&
-        !_isTerminal(state.backendStatus) &&
-        !state.isBusy;
-  }
-
-  bool _isIncomingRinging(CallState state) {
-    return state.uiPhase == UiCallPhase.incomingRinging &&
-        state.direction?.trim().toLowerCase() == 'incoming' &&
-        state.backendStatus == BackendCallStatus.ringing;
   }
 
   bool _canEndOrCancel(CallState state) {

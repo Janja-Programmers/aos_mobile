@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/media_url.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 
@@ -120,7 +121,7 @@ class CallParticipantResolver {
       participant: participant,
       displayName: displayName,
       userId: userId,
-      avatarUrl: _cleanDisplayText(participant.avatarUrl),
+      avatarUrl: normalizeMediaUrl(_cleanDisplayText(participant.avatarUrl)),
       initials: initialsFor(displayName, fallback: 'A'),
     );
   }

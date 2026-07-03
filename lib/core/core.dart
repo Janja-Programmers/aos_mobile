@@ -7,6 +7,7 @@ export 'routing/app_router.dart';
 export 'routing/helpers/app_routes.dart';
 // ───────────── Theme ─────────────
 export 'theme/app_theme_extensions.dart';
+export 'utils/media_url.dart';
 // ───────────── Utils ─────────────
 export 'utils/validators.dart';
 

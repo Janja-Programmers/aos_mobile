@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_local_preferences_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_ad_preview.dart';
@@ -16,6 +17,7 @@ class ChatComposerArea extends StatelessWidget {
   final String? adImage;
   final ChatMessage? replyingTo;
   final TextEditingController inputController;
+  final ChatLocalPreferencesState preferences;
   final ValueChanged<String> onQuickReplyTap;
   final VoidCallback onCloseAdPreview;
   final VoidCallback onCloseReplyPreview;
@@ -36,6 +38,7 @@ class ChatComposerArea extends StatelessWidget {
     required this.adImage,
     required this.replyingTo,
     required this.inputController,
+    required this.preferences,
     required this.onQuickReplyTap,
     required this.onCloseAdPreview,
     required this.onCloseReplyPreview,
@@ -74,6 +77,7 @@ class ChatComposerArea extends StatelessWidget {
           controller: inputController,
           onSend: onSend,
           onTyping: onTyping,
+          preferences: preferences,
           adId: showAdPreview ? adId : null,
         ),
       ],

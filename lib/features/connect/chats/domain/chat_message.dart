@@ -4,6 +4,7 @@ import 'package:africaonlinestores/features/connect/chats/domain/chat_local_mess
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message_reaction.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message_viewer_state.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_reply_preview.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/payloads/chat_shared_payload.dart';
 
 const Object _unset = Object();
 
@@ -180,6 +181,8 @@ class ChatMessage {
       case 'system':
       case 'call':
       case 'deleted':
+      case 'location':
+      case 'contact':
         return type!;
       default:
         return 'text';
@@ -337,15 +340,19 @@ class ChatMessage {
     final hasFiles = attachments.isNotEmpty;
     final hasAd = cleanAd != null && cleanAd.isNotEmpty;
 
-    final messageType = hasAd
-        ? hasText || hasFiles
-              ? 'mixed'
-              : 'ad'
-        : hasText && hasFiles
-        ? 'mixed'
-        : hasFiles
-        ? 'media'
-        : 'text';
+    final specialType = _specialPayloadType(cleanContent);
+    final String messageType;
+    if (specialType != null) {
+      messageType = specialType;
+    } else if (hasAd) {
+      messageType = hasText || hasFiles ? 'mixed' : 'ad';
+    } else if (hasText && hasFiles) {
+      messageType = 'mixed';
+    } else if (hasFiles) {
+      messageType = 'media';
+    } else {
+      messageType = 'text';
+    }
 
     return ChatMessage(
       id: id,
@@ -415,7 +422,14 @@ class ChatMessage {
   String get translatedText => translatedContent ?? '';
 
   String get visibleText {
-    if (isDeletedType) return displayText!;
+    if (isDeletedType) return displayText ?? 'This message was deleted';
+
+    final contact = ChatContactPayload.tryParse(content);
+    if (contact != null) return '[Contact] ${contact.title}';
+
+    final location = ChatLocationPayload.tryParse(content);
+    if (location != null) return '[Location] ${location.title}';
+
     return content ?? '';
   }
 
@@ -432,6 +446,12 @@ class ChatMessage {
   bool get isLocalSending => localStatus == ChatLocalMessageStatus.sending;
   bool get isLocalFailed => localStatus == ChatLocalMessageStatus.failed;
   bool get isLocalOnly => id.startsWith('temp-');
+}
+
+String? _specialPayloadType(String? value) {
+  if (ChatLocationPayload.tryParse(value) != null) return 'location';
+  if (ChatContactPayload.tryParse(value) != null) return 'contact';
+  return null;
 }
 
 bool _truthy(dynamic value) {

@@ -1,8 +1,13 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
+import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
+import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
+import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_local_preferences_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_throttle.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
@@ -17,6 +22,8 @@ import 'package:africaonlinestores/features/connect/chats/presentation/widgets/c
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_edit_message_dialog.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_forward_conversation_picker.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_messages_view.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_settings_sheet.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_wallpaper_sheet.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_actions_sheet.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/translation_language_picker.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
@@ -25,6 +32,7 @@ import 'package:africaonlinestores/features/social/navigation/social_navigation.
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String conversationId;
@@ -67,6 +75,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   late final ChatTypingThrottle _typingThrottle;
   bool _isSending = false;
   bool _isLoadingMoreMessages = false;
+  bool _isStartingCall = false;
   ChatMessage? _replyingTo;
   TranslationLanguage _selectedTranslationLanguage =
       chatTranslationLanguages.first;
@@ -81,12 +90,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       sendTyping: ref.read(chatRepositoryProvider).sendTyping,
     );
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _onChatOpened();
     });
   }
 
-  Future<void> _onChatOpened() async {
+  void _onChatOpened() {
     _loadInitialMessageIntoInput();
   }
 
@@ -257,14 +266,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ).error();
   }
 
-  void _showDeleteMessagesInfo() {
-    ShowSnack(context, 'Long-press a message to delete it.').info();
-  }
-
   Future<void> _confirmDeleteAllMessages() async {
     final shouldDelete = await showChatClearChatDialog(context);
 
-    if (shouldDelete != true) return;
+    if (!mounted || shouldDelete != true) return;
 
     final ok = await ref
         .read(chatMessagesControllerProvider(widget.conversationId).notifier)
@@ -300,37 +305,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
             onEdit: () {
               Navigator.pop(sheetContext);
-              _showEditDialog(message);
+              unawaited(_showEditDialog(message));
             },
 
-            onToggleStar: () async {
+            onToggleStar: () {
               Navigator.pop(sheetContext);
-              await _toggleStar(message);
+              unawaited(_toggleStar(message));
             },
 
             onToggleReaction: (emoji) {
               Navigator.pop(sheetContext);
-              _toggleReaction(message, emoji);
+              unawaited(_toggleReaction(message, emoji));
             },
 
-            onTranslate: () async {
+            onTranslate: () {
               Navigator.pop(sheetContext);
-              await _translateMessageWithPicker(message);
+              unawaited(_translateMessageWithPicker(message));
             },
 
             onForward: () {
               Navigator.pop(sheetContext);
-              _forwardMessage(message);
+              unawaited(_forwardMessage(message));
             },
 
             onDeleteForMe: () {
               Navigator.pop(sheetContext);
-              _deleteMessage(message, deleteScope: 'me');
+              unawaited(_deleteMessage(message, deleteScope: 'me'));
             },
 
             onDeleteForEveryone: () {
               Navigator.pop(sheetContext);
-              _deleteMessage(message, deleteScope: 'everyone');
+              unawaited(_deleteMessage(message, deleteScope: 'everyone'));
             },
           );
         },
@@ -408,7 +413,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => TranslationLanguagePicker(
+      builder: (sheetContext) => TranslationLanguagePicker(
         initialLanguage: _selectedTranslationLanguage,
       ),
     );
@@ -455,7 +460,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _showEditDialog(ChatMessage message) async {
     final updated = await showChatEditMessageDialog(context, message);
 
-    if (!_hasText(updated) || updated == message.content?.trim()) return;
+    if (!mounted || !_hasText(updated) || updated == message.content?.trim()) {
+      return;
+    }
 
     final ok = await ref
         .read(chatMessagesControllerProvider(widget.conversationId).notifier)
@@ -463,6 +470,75 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (!mounted) return;
     if (!ok) ShowSnack(context, 'Failed to edit message.').error();
+  }
+
+  void _closeToHome() {
+    context.goNamed(AppRoutes.nHome);
+  }
+
+  void _openWallpaperSheet() {
+    unawaited(
+      showChatWallpaperSheet(
+        context: context,
+        conversationId: widget.conversationId,
+      ),
+    );
+  }
+
+  void _openSettingsSheet() {
+    unawaited(
+      showChatSettingsSheet(
+        context: context,
+        conversationId: widget.conversationId,
+        onAudioCall: () {
+          Navigator.of(context).pop();
+          unawaited(_startCallFromSettings(AOSCallType.audio));
+        },
+        onVideoCall: () {
+          Navigator.of(context).pop();
+          unawaited(_startCallFromSettings(AOSCallType.video));
+        },
+        onChangeWallpaper: () {
+          Navigator.of(context).pop();
+          _openWallpaperSheet();
+        },
+        onClearChat: () {
+          Navigator.of(context).pop();
+          unawaited(_confirmDeleteAllMessages());
+        },
+      ),
+    );
+  }
+
+  Future<void> _startCallFromSettings(AOSCallType type) async {
+    if (_isStartingCall) return;
+
+    _isStartingCall = true;
+    try {
+      final success = await ref
+          .read(callStarterServiceProvider)
+          .startOutgoingCall(
+            userId: widget.otherUser,
+            callType: type,
+            receiver: CallParticipant(
+              userId: widget.otherUser,
+              displayName: widget.displayName,
+              avatarUrl: widget.otherUserAvatar,
+            ),
+          );
+
+      if (!mounted) return;
+      if (!success) {
+        ShowSnack(context, 'Failed to start call').error();
+      }
+    } catch (e) {
+      appLogger.e('Failed to start chat call: $e');
+      if (mounted) {
+        ShowSnack(context, 'Failed to start call').error();
+      }
+    } finally {
+      _isStartingCall = false;
+    }
   }
 
   @override
@@ -474,6 +550,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final currentUserId = _normalizeUser(ref.watch(currentUserProvider));
     final isTyping = typingMap[widget.conversationId] ?? false;
     final colors = context.appColors;
+    final preferences = ref.watch(
+      chatLocalPreferencesControllerProvider(widget.conversationId),
+    );
 
     return Scaffold(
       backgroundColor: colors.surface.withValues(alpha: .55),
@@ -491,8 +570,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             avatar: widget.otherUserAvatar,
           );
         },
-        onDeleteMessages: _showDeleteMessagesInfo,
         onDeleteAllMessages: _confirmDeleteAllMessages,
+        onChangeWallpaper: _openWallpaperSheet,
+        onOpenSettings: _openSettingsSheet,
+        onCloseToHome: _closeToHome,
       ),
       body: SafeArea(
         child: Column(
@@ -512,6 +593,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 otherUserId: widget.otherUser,
                 otherDisplayName: widget.displayName,
                 otherAvatarUrl: widget.otherUserAvatar,
+                preferences: preferences,
                 onReply: _startReply,
                 onLongPress: _openMessageActions,
                 onRetry: _retryMessage,
@@ -526,6 +608,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               adImage: widget.adImage,
               replyingTo: _replyingTo,
               inputController: _inputController,
+              preferences: preferences,
               onQuickReplyTap: _appendQuickReply,
               onCloseAdPreview: () => setState(() => _showAdPreview = false),
               onCloseReplyPreview: () => setState(() => _replyingTo = null),
@@ -576,15 +659,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _scrollToBottom() {
-    Future<void>.delayed(const Duration(milliseconds: 100), () {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          0,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+    unawaited(
+      Future<void>.delayed(const Duration(milliseconds: 100), () {
+        if (_scrollController.hasClients) {
+          unawaited(
+            _scrollController.animateTo(
+              0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+            ),
+          );
+        }
+      }),
+    );
   }
 
   void _startReply(ChatMessage message) {

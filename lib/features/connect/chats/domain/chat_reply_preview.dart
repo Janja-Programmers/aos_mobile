@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/payloads/chat_shared_payload.dart';
 
 class ChatReplyPreview {
   final String id;
@@ -72,6 +73,14 @@ class ChatReplyPreview {
   bool get isDeleted => isDeletedForEveryone || messageType == 'deleted';
 
   String get previewText {
+    if (isDeleted) return displayText ?? 'Deleted message';
+
+    final contact = ChatContactPayload.tryParse(content);
+    if (contact != null) return '[Contact] ${contact.title}';
+
+    final location = ChatLocationPayload.tryParse(content);
+    if (location != null) return '[Location] ${location.title}';
+
     if (hasText) return content!.trim();
 
     if (hasAdPreview) {

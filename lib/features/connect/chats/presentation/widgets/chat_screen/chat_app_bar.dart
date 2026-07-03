@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
@@ -12,7 +14,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum ChatMenuAction { deleteAllMessages }
+const double _chatAppBarHeight = 78;
+
+enum ChatMenuAction {
+  audioCall,
+  videoCall,
+  changeWallpaper,
+  settings,
+  clearChat,
+}
 
 class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
   const ChatAppBar({
@@ -24,8 +34,10 @@ class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
     this.lastSeen,
     this.textColor,
     this.onHeaderTap,
-    this.onDeleteMessages,
     this.onDeleteAllMessages,
+    this.onChangeWallpaper,
+    this.onOpenSettings,
+    this.onCloseToHome,
   });
 
   final String conversationId;
@@ -34,15 +46,17 @@ class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
   final String? imageUrl;
   final DateTime? lastSeen;
   final Color? textColor;
-  final VoidCallback? onDeleteMessages;
   final VoidCallback? onDeleteAllMessages;
+  final VoidCallback? onChangeWallpaper;
+  final VoidCallback? onOpenSettings;
+  final VoidCallback? onCloseToHome;
   final VoidCallback? onHeaderTap;
 
   @override
   ConsumerState<ChatAppBar> createState() => _ChatAppBarState();
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(_chatAppBarHeight);
 }
 
 class _ChatAppBarState extends ConsumerState<ChatAppBar> {
@@ -62,6 +76,7 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
 
     try {
       await HapticFeedback.mediumImpact();
+      if (!mounted) return;
 
       final success = await ref
           .read(callStarterServiceProvider)
@@ -75,10 +90,12 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
             ),
           );
 
-      if (!success && mounted) {
+      if (!mounted) return;
+
+      if (!success) {
         ShowSnack(context, 'Failed to start call').error();
       }
-    } catch (_) {
+    } on Object {
       if (mounted) {
         ShowSnack(context, 'Failed to start call').error();
       }
@@ -89,181 +106,224 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
     }
   }
 
+  void _handleMenuAction(ChatMenuAction action) {
+    switch (action) {
+      case ChatMenuAction.audioCall:
+        unawaited(_startCall(AOSCallType.audio));
+        break;
+      case ChatMenuAction.videoCall:
+        unawaited(_startCall(AOSCallType.video));
+        break;
+      case ChatMenuAction.changeWallpaper:
+        widget.onChangeWallpaper?.call();
+        break;
+      case ChatMenuAction.settings:
+        widget.onOpenSettings?.call();
+        break;
+      case ChatMenuAction.clearChat:
+        widget.onDeleteAllMessages?.call();
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
     final presence = ref.watch(
       chatPresenceControllerProvider.select((map) => map[widget.otherUserId]),
     );
-
     final isTyping = ref.watch(
       chatTypingControllerProvider.select(
         (map) => map[widget.conversationId] ?? false,
       ),
     );
-
     final isOnline = ref
         .read(chatPresenceControllerProvider.notifier)
         .isUserOnline(widget.otherUserId);
-
     final lastSeen = presence?.lastSeen ?? widget.lastSeen;
-
-    final fg = widget.textColor ?? colors.textPrimary;
-    final bg = colors.surface;
+    final foreground = widget.textColor ?? colors.textPrimary;
 
     return AppBar(
-      backgroundColor: bg,
+      toolbarHeight: _chatAppBarHeight,
+      backgroundColor: colors.surface,
       elevation: 0,
-      leading: BackButton(color: fg),
+      scrolledUnderElevation: 0,
+      leadingWidth: 64,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 14),
+        child: Center(
+          child: _RoundIconButton(
+            icon: Icons.close_rounded,
+            tooltip: 'Close chat',
+            color: foreground,
+            onTap: widget.onCloseToHome,
+          ),
+        ),
+      ),
       centerTitle: false,
-      titleSpacing: 0,
-
-      // -----------------------------
-      // TITLE
-      // -----------------------------
-      title: Row(
-        children: [
-          const SizedBox(width: 4),
-
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: widget.onHeaderTap,
-            child: Padding(
-              padding: const EdgeInsets.all(2),
-              child: AppCircularAvatar(
-                name: widget.displayName,
-                imageUrl: widget.imageUrl,
-                radius: 18,
-                backgroundColor: colors.border,
-                textColor: fg,
+      titleSpacing: 4,
+      title: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onHeaderTap,
+        child: Row(
+          children: [
+            AppCircularAvatar(
+              name: widget.displayName,
+              imageUrl: widget.imageUrl,
+              radius: 28,
+              backgroundColor: colors.primary.withValues(alpha: 0.18),
+              textColor: colors.primary,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    widget.displayName,
+                    style: context.h5.copyWith(
+                      color: foreground,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 1),
+                  PresenceLabel(
+                    isTyping: isTyping,
+                    isOnline: isOnline,
+                    lastSeen: lastSeen,
+                  ),
+                ],
               ),
             ),
-          ),
-
-          const SizedBox(width: 10),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: widget.onHeaderTap,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Text(
-                      widget.displayName,
-                      style: context.h5.copyWith(color: fg),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-
-                PresenceLabel(
-                  isTyping: isTyping,
-                  isOnline: isOnline,
-                  lastSeen: lastSeen,
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-      // -----------------------------
-      // ACTIONS
-      // -----------------------------
       actions: [
-        /// 📞 CALL MENU
-        PopupMenuButton<AOSCallType>(
+        PopupMenuButton<ChatMenuAction>(
           enabled: !_isCalling,
-          color: colors.surface,
+          color: colors.elevated,
           surfaceTintColor: Colors.transparent,
-          shadowColor: colors.black.withValues(alpha: 0.12),
-          elevation: 8,
-          offset: const Offset(0, 8),
+          shadowColor: colors.black.withValues(alpha: 0.20),
+          elevation: 12,
+          offset: const Offset(-8, 8),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(22),
             side: BorderSide(color: colors.border),
           ),
           icon: _isCalling
               ? const SizedBox(
-                  height: 18,
-                  width: 18,
+                  width: 20,
+                  height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Icon(Icons.call_outlined, color: fg),
-          onSelected: _startCall,
+              : Icon(Icons.more_vert_rounded, color: foreground, size: 30),
+          onSelected: _handleMenuAction,
           itemBuilder: (context) {
             return [
-              PopupMenuItem<AOSCallType>(
-                value: AOSCallType.audio,
-                child: Row(
-                  children: [
-                    Icon(Icons.call_outlined, color: colors.textPrimary),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Audio call',
-                      style: context.p.copyWith(color: colors.textPrimary),
-                    ),
-                  ],
-                ),
+              _menuItem(
+                context,
+                value: ChatMenuAction.audioCall,
+                icon: Icons.call_outlined,
+                label: 'Call',
               ),
-              PopupMenuItem<AOSCallType>(
-                value: AOSCallType.video,
-                child: Row(
-                  children: [
-                    Icon(Icons.videocam_outlined, color: colors.textPrimary),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Video call',
-                      style: context.p.copyWith(color: colors.textPrimary),
-                    ),
-                  ],
-                ),
+              _menuItem(
+                context,
+                value: ChatMenuAction.videoCall,
+                icon: Icons.videocam_outlined,
+                label: 'Video call',
+              ),
+              _menuItem(
+                context,
+                value: ChatMenuAction.changeWallpaper,
+                icon: Icons.wallpaper_rounded,
+                label: 'Change wallpaper',
+              ),
+              _menuItem(
+                context,
+                value: ChatMenuAction.settings,
+                icon: Icons.settings_outlined,
+                label: 'Chat settings',
+              ),
+              _menuItem(
+                context,
+                value: ChatMenuAction.clearChat,
+                icon: Icons.delete_sweep_outlined,
+                label: 'Clear chat',
+                destructive: true,
               ),
             ];
           },
         ),
-
-        /// ⋮ MENU
-        PopupMenuButton<ChatMenuAction>(
-          color: colors.surface,
-          surfaceTintColor: Colors.transparent,
-          shadowColor: colors.black.withValues(alpha: 0.12),
-          elevation: 8,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: colors.border),
-          ),
-          icon: Icon(Icons.more_vert, color: fg),
-          onSelected: (action) {
-            switch (action) {
-              case ChatMenuAction.deleteAllMessages:
-                widget.onDeleteAllMessages?.call();
-                break;
-            }
-          },
-          itemBuilder: (context) {
-            return [
-              PopupMenuItem<ChatMenuAction>(
-                value: ChatMenuAction.deleteAllMessages,
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_sweep_outlined, color: colors.red),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Clear chats',
-                      style: context.p.copyWith(color: colors.red),
-                    ),
-                  ],
-                ),
-              ),
-            ];
-          },
-        ),
+        const SizedBox(width: 8),
       ],
+    );
+  }
+
+  PopupMenuItem<ChatMenuAction> _menuItem(
+    BuildContext context, {
+    required ChatMenuAction value,
+    required IconData icon,
+    required String label,
+    bool destructive = false,
+  }) {
+    final colors = context.appColors;
+    final color = destructive ? colors.red : colors.textPrimary;
+
+    return PopupMenuItem<ChatMenuAction>(
+      value: value,
+      child: SizedBox(
+        width: 240,
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 26),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                label,
+                style: context.pStrong.copyWith(color: color, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RoundIconButton extends StatelessWidget {
+  const _RoundIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: colors.elevated,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Icon(icon, color: color, size: 26),
+          ),
+        ),
+      ),
     );
   }
 }

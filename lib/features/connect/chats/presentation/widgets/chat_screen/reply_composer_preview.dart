@@ -19,7 +19,7 @@ class ReplyComposerPreview extends StatelessWidget {
     final title = message.senderDisplayName ?? message.sender;
 
     final body = message.hasText
-        ? message.content!.trim()
+        ? message.visibleText
         : message.hasAd
         ? 'Ad preview'
         : message.hasAttachments

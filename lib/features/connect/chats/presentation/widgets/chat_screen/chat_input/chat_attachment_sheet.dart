@@ -9,72 +9,89 @@ class ChatAttachmentSheet extends StatelessWidget {
     required this.onCamera,
     required this.onDocument,
     required this.onLocation,
-    required this.onFolder,
+    required this.onContact,
   });
 
   final VoidCallback onGallery;
   final VoidCallback onCamera;
   final VoidCallback onDocument;
   final VoidCallback onLocation;
-  final VoidCallback onFolder;
+  final VoidCallback onContact;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
     return SafeArea(
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+      top: false,
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: colors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 42,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colors.border,
-                borderRadius: BorderRadius.circular(999),
-              ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: colors.border)),
+          boxShadow: [
+            BoxShadow(
+              color: colors.black.withValues(alpha: 0.18),
+              blurRadius: 24,
+              offset: const Offset(0, -8),
             ),
-
-            const SizedBox(height: 18),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _Item(
-                  icon: Icons.photo_library_outlined,
-                  label: 'Gallery',
-                  color: colors.purple,
-                  onTap: onGallery,
-                ),
-                _Item(
-                  icon: Icons.photo_camera_outlined,
-                  label: 'Camera',
-                  color: colors.primary,
-                  onTap: onCamera,
-                ),
-                _Item(
-                  icon: Icons.location_on_outlined,
-                  label: 'Location',
-                  color: colors.success,
-                  onTap: onLocation,
-                ),
-                _Item(
-                  icon: Icons.insert_drive_file_outlined,
-                  label: 'Document',
-                  color: colors.blue,
-                  onTap: onDocument,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 22),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: colors.border,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 28),
+              Wrap(
+                spacing: 24,
+                runSpacing: 26,
+                children: [
+                  _Item(
+                    icon: Icons.photo_library_outlined,
+                    label: 'Gallery',
+                    color: colors.purple,
+                    onTap: onGallery,
+                  ),
+                  _Item(
+                    icon: Icons.photo_camera_outlined,
+                    label: 'Camera',
+                    color: colors.primary,
+                    onTap: onCamera,
+                  ),
+                  _Item(
+                    icon: Icons.location_on_rounded,
+                    label: 'Location',
+                    color: colors.success,
+                    onTap: onLocation,
+                  ),
+                  _Item(
+                    icon: Icons.insert_drive_file_outlined,
+                    label: 'Document',
+                    color: colors.blue,
+                    onTap: onDocument,
+                  ),
+                  _Item(
+                    icon: Icons.person_rounded,
+                    label: 'Contact',
+                    color: colors.orange,
+                    onTap: onContact,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -102,24 +119,35 @@ class _Item extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: SizedBox(
-        width: 72,
+        width: 82,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircleAvatar(
-              radius: 27,
-              backgroundColor: color.withValues(alpha: 0.14),
-              child: Icon(icon, size: 25, color: color),
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.24),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Icon(icon, size: 30, color: colors.white),
             ),
-            const SizedBox(height: 7),
+            const SizedBox(height: 10),
             Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.p.copyWith(
-                fontSize: 12,
+                fontSize: 13,
                 color: colors.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],

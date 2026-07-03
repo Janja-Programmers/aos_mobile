@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
+import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_local_preferences_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_messages_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_background.dart';
@@ -17,6 +18,7 @@ class ChatMessagesView extends StatelessWidget {
   final String otherUserId;
   final String otherDisplayName;
   final String? otherAvatarUrl;
+  final ChatLocalPreferencesState preferences;
   final ValueChanged<ChatMessage> onReply;
   final void Function(ChatMessage message, bool isMe) onLongPress;
   final ValueChanged<ChatMessage> onRetry;
@@ -30,6 +32,7 @@ class ChatMessagesView extends StatelessWidget {
     required this.otherUserId,
     required this.otherDisplayName,
     required this.otherAvatarUrl,
+    required this.preferences,
     required this.onReply,
     required this.onLongPress,
     required this.onRetry,
@@ -41,6 +44,7 @@ class ChatMessagesView extends StatelessWidget {
 
     return ChatBackground(
       patternAssetPath: 'assets/images/chat_pattern.png',
+      preferences: preferences,
       child: _buildContent(context, colors),
     );
   }
@@ -112,7 +116,7 @@ class ChatMessagesView extends StatelessWidget {
                   direction: isSystem || message.isDeletedType
                       ? DismissDirection.none
                       : DismissDirection.startToEnd,
-                  confirmDismiss: (_) async {
+                  confirmDismiss: (direction) async {
                     onReply(message);
                     return false;
                   },

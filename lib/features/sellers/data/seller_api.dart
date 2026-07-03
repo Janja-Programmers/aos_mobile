@@ -73,7 +73,7 @@ class SellerApi {
           'business_address': businessAddress.trim(),
 
         if (shopBanner != null && shopBanner.trim().isNotEmpty)
-          'shop_banner': shopBanner.trim(),
+          'shop_banner_media': shopBanner.trim(),
 
         'operating_hours': ?operatingHours,
       };
@@ -120,7 +120,7 @@ class SellerApi {
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
-    } catch (e) {
+    } catch (_) {
       return Either.left(const Failure('Failed to fetch sellers.'));
     }
   }

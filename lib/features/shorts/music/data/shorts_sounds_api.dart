@@ -24,20 +24,6 @@ class SoundPage {
   });
 }
 
-class InitSoundUploadResult {
-  final String fileKey;
-  final String uploadUrl;
-  final String? publicUrl;
-  final Map<String, dynamic> uploadHeaders;
-
-  const InitSoundUploadResult({
-    required this.fileKey,
-    required this.uploadUrl,
-    this.publicUrl,
-    this.uploadHeaders = const {},
-  });
-}
-
 class FavoriteSoundResult {
   final String soundId;
   final bool favorited;
@@ -69,39 +55,8 @@ class ShortsSoundsApi {
 
   ShortsSoundsApi(this._client);
 
-  Future<Either<Failure, InitSoundUploadResult>> initSoundUpload({
-    required String filename,
-    int? sizeBytes,
-  }) async {
-    try {
-      final res = await _client.post(
-        ApiEndpoints.initShortSoundUpload,
-        data: {'filename': filename, 'size_bytes': ?sizeBytes},
-      );
-      final unwrapped = unwrapFrappe(res);
-      return unwrapped.fold(Either.left, (json) {
-        final data = _data(json);
-        final headers = asJsonMap(data['upload_headers']);
-        return Either.right(
-          InitSoundUploadResult(
-            fileKey: data['file_key']?.toString() ?? '',
-            uploadUrl: data['upload_url']?.toString() ?? '',
-            publicUrl: data['public_url']?.toString(),
-            uploadHeaders: headers,
-          ),
-        );
-      });
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(
-        const Failure('Unexpected error initializing sound upload'),
-      );
-    }
-  }
-
-  Future<Either<Failure, ShortSound>> confirmSoundUpload({
-    required String fileKey,
+  Future<Either<Failure, ShortSound>> createSoundFromMedia({
+    required String soundMedia,
     required String title,
     String artist = '',
     String sourceType = 'uploaded',
@@ -110,9 +65,10 @@ class ShortsSoundsApi {
   }) async {
     try {
       final res = await _client.post(
-        ApiEndpoints.confirmShortSoundUpload,
+        ApiEndpoints.createShortSound,
         data: {
-          'file_key': fileKey,
+          'sound_media': soundMedia,
+          'media_id': soundMedia,
           'title': title,
           'artist': artist,
           'source_type': sourceType,
@@ -131,9 +87,7 @@ class ShortsSoundsApi {
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(
-        const Failure('Unexpected error confirming sound upload'),
-      );
+      return Either.left(const Failure('Unexpected error creating sound'));
     }
   }
 

@@ -1,8 +1,9 @@
 import 'dart:io';
 
-import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
-import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
-import 'package:africaonlinestores/core/files/helpers/review_media_helper.dart';
+import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
+import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
+import 'package:africaonlinestores/core/media/helpers/review_media_helper.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/reviews/application/controllers/review_create_controller.dart';
@@ -105,18 +106,20 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
         ref: ref,
         files: _images,
         uploadFn: (file) {
-          return ref.read(filesApiProvider).uploadMedia(file: file);
+          return ref
+              .read(mediaUploadApiProvider)
+              .uploadMedia(file: file, purpose: MediaUploadPurpose.reviewImage);
         },
       );
 
       if (!mounted) return;
 
-      final imageUrls = uploadedFiles
-          .map((file) => file.url.trim())
-          .where((url) => url.isNotEmpty)
+      final imageMediaIds = uploadedFiles
+          .map((file) => file.mediaId.trim())
+          .where((mediaId) => mediaId.isNotEmpty)
           .toList();
 
-      if (imageUrls.length != _images.length) {
+      if (imageMediaIds.length != _images.length) {
         ShowSnack(
           context,
           'Some images could not be uploaded. Please try again.',
@@ -132,7 +135,7 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
         rating: _rating,
         title: _titleCtrl.text.trim(),
         comment: _commentCtrl.text.trim(),
-        images: imageUrls,
+        images: imageMediaIds,
       );
 
       if (!mounted) return;

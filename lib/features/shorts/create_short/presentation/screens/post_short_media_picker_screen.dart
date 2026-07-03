@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
+import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';

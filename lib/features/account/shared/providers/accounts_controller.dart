@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
@@ -85,17 +83,6 @@ class AccountsController extends StateNotifier<AccountState> {
     // Refresh local profile after update
     await loadProfile();
     return Either.right(msg);
-  }
-
-  Future<Either<Failure, String>> uploadProfilePhoto({
-    required File file,
-    required String docname,
-  }) async {
-    final res = await _api.uploadProfilePhoto(file: file, docname: docname);
-    if (res.isLeft) {
-      return Either.left(res.leftOrNull ?? const Failure('Upload failed.'));
-    }
-    return Either.right(res.rightOrNull ?? '');
   }
 
   void clearError() => state = state.copyWith(clearError: true);

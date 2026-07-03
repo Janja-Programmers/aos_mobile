@@ -26,11 +26,16 @@ class ApiEndpoints {
       '/api/method/aos.api.accounts.get_profile';
   static const String updateProfileEndpoint =
       '/api/method/aos.api.accounts.update_profile';
-  static const String uploadFileEndpoint = '/api/method/upload_file';
-  static const String deleteFileEndpoint =
-      '/api/method/aos.api.files.delete_file';
+
+  // Media Endpoints
+  static const String initMediaUploadEndpoint =
+      '/api/method/aos.api.media.init_upload';
+  static const String confirmMediaUploadEndpoint =
+      '/api/method/aos.api.media.confirm_upload';
+  static const String deleteMediaEndpoint =
+      '/api/method/aos.api.media.delete_media';
   static const String removeBackgroundEndpoint =
-      '/api/method/aos.api.files.remove_background';
+      '/api/method/aos.api.media.remove_background';
 
   // Catalog Endpoints
   static const String getCategoriesEndpoint =
@@ -239,10 +244,7 @@ class ApiEndpoints {
       '/api/method/aos.api.shorts.retry_processing';
 
   // UPLOAD
-  static const String initShortUpload =
-      '/api/method/aos.api.shorts.init_upload';
-  static const String confirmShortUpload =
-      '/api/method/aos.api.shorts.confirm_upload';
+  static const String createShort = '/api/method/aos.api.shorts.create_short';
   static const String updateShortMetadata =
       '/api/method/aos.api.shorts.update_short_metadata';
 
@@ -289,10 +291,8 @@ class ApiEndpoints {
       '/api/method/aos.api.activity.list_activity';
 
   // MUSIC / SOUNDS
-  static const String initShortSoundUpload =
-      '/api/method/aos.api.shorts.init_sound_upload';
-  static const String confirmShortSoundUpload =
-      '/api/method/aos.api.shorts.confirm_sound_upload';
+  static const String createShortSound =
+      '/api/method/aos.api.shorts.create_sound';
   static const String listShortSounds =
       '/api/method/aos.api.shorts.list_sounds';
   static const String searchShortSounds =

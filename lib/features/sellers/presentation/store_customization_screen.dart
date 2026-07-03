@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/files/helpers/review_media_helper.dart';
+import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/sellers/application/controllers/operating_hours_form.dart';
@@ -29,7 +30,8 @@ class _StoreCustomizationScreenState
   final _descCtrl = TextEditingController();
   late final OperatingHoursForm _hoursForm;
 
-  String? _uploadedShopBanner;
+  String? _uploadedShopBannerMediaId;
+  String? _uploadedShopBannerPreview;
 
   bool _changed = false;
   bool _saving = false;
@@ -90,21 +92,26 @@ class _StoreCustomizationScreenState
 
     setState(() => _uploading = true);
 
-    final urls = await ReviewMediaHelper.upload(ref: ref, files: [file]);
+    final uploaded = await ref
+        .read(mediaUploadApiProvider)
+        .uploadMedia(file: file, purpose: MediaUploadPurpose.sellerBanner);
 
     if (!mounted) return;
 
-    if (urls.isEmpty) {
-      setState(() => _uploading = false);
-      ShowSnack(context, 'Upload failed').error();
-      return;
-    }
-
-    setState(() {
-      _uploadedShopBanner = urls.first;
-      _changed = true;
-      _uploading = false;
-    });
+    uploaded.fold(
+      (failure) {
+        setState(() => _uploading = false);
+        ShowSnack(context, failure.message).error();
+      },
+      (media) {
+        setState(() {
+          _uploadedShopBannerMediaId = media.mediaId;
+          _uploadedShopBannerPreview = media.url;
+          _changed = true;
+          _uploading = false;
+        });
+      },
+    );
   }
 
   Future<void> _pickOpenTime(String day) async {
@@ -154,7 +161,7 @@ class _StoreCustomizationScreenState
           .read(sellerStateProvider(widget.sellerId).notifier)
           .updateSellerProfile(
             aboutBusiness: _descCtrl.text.trim(),
-            shopBanner: _uploadedShopBanner,
+            shopBanner: _uploadedShopBannerMediaId,
             operatingHours: _hoursForm.toApiPayload(),
           );
 
@@ -169,7 +176,8 @@ class _StoreCustomizationScreenState
 
       setState(() {
         _changed = false;
-        _uploadedShopBanner = null;
+        _uploadedShopBannerMediaId = null;
+        _uploadedShopBannerPreview = null;
       });
 
       await Future<void>.delayed(const Duration(milliseconds: 300));
@@ -193,7 +201,7 @@ class _StoreCustomizationScreenState
 
     _hydrateFromSeller(seller);
 
-    final bannerUri = _uploadedShopBanner ?? seller.shopBanner;
+    final bannerUri = _uploadedShopBannerPreview ?? seller.shopBanner;
     final banner = buildFileUrl(bannerUri);
 
     return Scaffold(

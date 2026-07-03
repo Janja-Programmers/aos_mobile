@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
-import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
+import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
+import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
@@ -25,6 +26,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
 
   File? _selectedImage;
   String? _uploadedImageUrl;
+  String? _uploadedCoverMediaId;
   lk.LocalVideoTrack? _previewTrack;
 
   bool _isUploading = false;
@@ -162,12 +164,15 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
       _isUploading = true;
     });
 
-    final filesApi = ref.read(filesApiProvider);
+    final mediaApi = ref.read(mediaUploadApiProvider);
 
     final uploaded = await MediaHelper.uploadSingle(
       ref: ref,
       file: file,
-      uploadFn: (file) => filesApi.uploadMedia(file: file),
+      uploadFn: (pickedFile) => mediaApi.uploadMedia(
+        file: pickedFile,
+        purpose: MediaUploadPurpose.liveCover,
+      ),
     );
 
     if (!mounted) return;
@@ -175,13 +180,14 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     setState(() {
       _isUploading = false;
       _uploadedImageUrl = uploaded?.url;
+      _uploadedCoverMediaId = uploaded?.mediaId;
     });
   }
 
   Future<void> _startLive() async {
     final title = _titleController.text.trim();
 
-    if (_uploadedImageUrl == null || title.isEmpty) {
+    if (_uploadedCoverMediaId == null || title.isEmpty) {
       ShowSnack(context, 'Add cover image and title').error();
       return;
     }
@@ -210,7 +216,8 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
         .read(liveManagerProvider.notifier)
         .startLive(
           title: title,
-          coverImage: _uploadedImageUrl!,
+          coverImage: _uploadedImageUrl ?? '',
+          coverMediaId: _uploadedCoverMediaId!,
           micEnabled: !_isMicMuted,
         );
 

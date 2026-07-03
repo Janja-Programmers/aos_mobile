@@ -7,6 +7,7 @@ abstract class LiveRepository {
   Future<LiveJoinSession> startLive({
     required String title,
     required String coverImage,
+    required String coverMediaId,
   });
 
   Future<LiveJoinSession> joinLive({required String liveId});
@@ -40,8 +41,13 @@ class LiveRepositoryImpl implements LiveRepository {
   Future<LiveJoinSession> startLive({
     required String title,
     required String coverImage,
+    required String coverMediaId,
   }) async {
-    final res = await api.startLive(title: title, coverImage: coverImage);
+    final res = await api.startLive(
+      title: title,
+      coverImage: coverImage,
+      coverMediaId: coverMediaId,
+    );
 
     return res.fold((e) => throw e, (data) => data);
   }

@@ -1,28 +1,30 @@
-import 'dart:async';
 import 'dart:io';
 
+import 'package:africaonlinestores/core/media/data/media_upload_api.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
 import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_management_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_upload_api.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/models/init_short_upload_result.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
-import 'package:dio/dio.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:image_picker/image_picker.dart';
 
 class PostShortController extends StateNotifier<UploadState> {
   final ShortsUploadApi uploadApi;
   final ShortsManagementApi managementApi;
+  final MediaUploadApi mediaUploadApi;
   final String sessionId;
 
   PostShortController({
     required this.uploadApi,
     required this.managementApi,
+    required this.mediaUploadApi,
     required this.sessionId,
   }) : super(UploadState.initial());
 
@@ -111,23 +113,19 @@ class PostShortController extends StateNotifier<UploadState> {
       clearError: true,
     );
 
-    // 1. INIT
-    final init = await _initUpload(filename);
-    if (init == null) return;
+    final mediaId = await _uploadRawVideo(file);
+    if (mediaId == null) return;
 
-    final shortId = init.shortId.value;
-    state = state.copyWith(shortId: init.shortId);
+    final shortId = await _createShort(mediaId);
+    if (shortId == null) return;
 
-    // 2. UPLOAD
-    if (!await _uploadFile(file, init.uploadUrl)) return;
+    state = state.copyWith(
+      shortId: ShortId(shortId),
+      status: UploadStatus.processing,
+    );
 
-    // 3. CONFIRM
-    if (!await _confirmUpload(shortId)) return;
-
-    // 4. WAIT (processing)
     if (!await _waitUntilReady(shortId)) return;
 
-    // 5. METADATA + FINAL FETCH
     final finalShort = await _updateMetadataAndFetch(shortId);
     if (finalShort == null) return;
 
@@ -136,70 +134,52 @@ class PostShortController extends StateNotifier<UploadState> {
     appLogger.i('🎉 FINAL SHORT READY');
   }
 
-  // ───────────── INIT ─────────────
-
-  Future<InitShortUploadResult?> _initUpload(String filename) async {
-    final res = await uploadApi.initUpload(filename: filename);
-
-    return res.fold((e) {
-      state = state.copyWith(
-        status: UploadStatus.failed,
-        errorMessage: e.message,
-      );
-      return null;
-    }, (r) => r);
-  }
-
-  // ───────────── UPLOAD FILE ─────────────
-
-  Future<bool> _uploadFile(File file, String url) async {
+  Future<String?> _uploadRawVideo(File file) async {
     state = state.copyWith(status: UploadStatus.uploading);
 
-    try {
-      await Dio().put<Object?>(
-        url,
-        data: file.openRead(),
-        options: Options(headers: {'Content-Length': await file.length()}),
-        onSendProgress: (sent, total) {
-          if (total == 0) return;
+    final res = await mediaUploadApi.uploadMedia(
+      file: file,
+      purpose: MediaUploadPurpose.shortVideoRaw,
+      onSendProgress: (sent, total) {
+        if (total <= 0) return;
 
-          state = state.copyWith(
-            progress: sent / total,
-            status: UploadStatus.uploading,
-          );
-        },
-      );
-
-      return true;
-    } catch (_) {
-      state = state.copyWith(
-        status: UploadStatus.failed,
-        errorMessage: 'Failed to upload video.',
-      );
-      return false;
-    }
-  }
-
-  // ───────────── CONFIRM ─────────────
-
-  Future<bool> _confirmUpload(String shortId) async {
-    state = state.copyWith(status: UploadStatus.confirming);
-
-    final res = await uploadApi.confirmUpload(shortId: shortId);
-
-    return res.fold(
-      (e) {
         state = state.copyWith(
-          status: UploadStatus.failed,
-          errorMessage: e.message,
+          progress: sent / total,
+          status: UploadStatus.uploading,
         );
-        return false;
-      },
-      (_) {
-        state = state.copyWith(status: UploadStatus.processing);
-        return true;
       },
     );
+
+    return res.fold(
+      (failure) {
+        state = state.copyWith(
+          status: UploadStatus.failed,
+          errorMessage: failure.message,
+        );
+        return null;
+      },
+      (uploaded) {
+        state = state.copyWith(progress: 1, status: UploadStatus.confirming);
+        return uploaded.mediaId;
+      },
+    );
+  }
+
+  Future<String?> _createShort(String mediaId) async {
+    final res = await uploadApi.createShort(
+      rawVideoMedia: mediaId,
+      audience: state.audience,
+      allowComments: state.allowComments,
+      allowDownloads: state.allowDownloads,
+    );
+
+    return res.fold((failure) {
+      state = state.copyWith(
+        status: UploadStatus.failed,
+        errorMessage: failure.message,
+      );
+      return null;
+    }, (shortId) => shortId);
   }
 
   // ───────────── POLLING ─────────────

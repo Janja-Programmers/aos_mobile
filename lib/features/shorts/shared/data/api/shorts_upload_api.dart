@@ -4,71 +4,55 @@ import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-import 'package:africaonlinestores/core/utils/logger.dart';
-import 'package:africaonlinestores/features/shorts/shared/data/models/init_short_upload_result.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:dio/dio.dart';
 
 class ShortsUploadApi {
-  final ApiClient _client;
-
   ShortsUploadApi(this._client);
 
-  // ───────────── INIT UPLOAD ─────────────
+  final ApiClient _client;
 
-  Future<Either<Failure, InitShortUploadResult>> initUpload({
-    required String filename,
+  Future<Either<Failure, String>> createShort({
+    required String rawVideoMedia,
+    String audience = 'everyone',
+    bool allowComments = true,
+    bool allowDownloads = false,
   }) async {
     try {
       final res = await _client.post(
-        ApiEndpoints.initShortUpload,
-        data: {'filename': filename},
+        ApiEndpoints.createShort,
+        data: {
+          'raw_video_media': rawVideoMedia,
+          'media_id': rawVideoMedia,
+          'audience': audience,
+          'allow_comments': allowComments,
+          'allow_downloads': allowDownloads,
+        },
       );
-
-      appLogger.w('ShortsUploadApi | res: ${res.statusMessage}');
 
       final unwrapped = unwrapFrappe(res);
 
       return unwrapped.fold(Either.left, (json) {
-        final data = json['data'] as Map<String, dynamic>? ?? {};
+        final data = asJsonMap(json['data']);
+        final shortId = asNullableString(data['short_id']);
 
-        return Either.right(
-          InitShortUploadResult(
-            shortId: ShortId(data['short_id'] as String),
-            uploadUrl: data['upload_url'] as String,
-            fileKey: data['file_key'] as String?,
-          ),
-        );
+        if (shortId == null || shortId.trim().isEmpty) {
+          return Either.left(
+            const Failure(
+              'Invalid create short response',
+              type: FailureType.parse,
+            ),
+          );
+        }
+
+        return Either.right(shortId);
       });
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure('Unexpected error initializing upload'));
+      return Either.left(const Failure('Unexpected error creating short'));
     }
   }
-
-  // ───────────── CONFIRM UPLOAD ─────────────
-
-  Future<Either<Failure, void>> confirmUpload({required String shortId}) async {
-    try {
-      final res = await _client.post(
-        ApiEndpoints.confirmShortUpload,
-        data: {'short_id': shortId},
-      );
-
-      final unwrapped = unwrapFrappe(res);
-
-      return unwrapped.fold(Either.left, (_) {
-        return Either.right(null);
-      });
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Unexpected error confirming upload'));
-    }
-  }
-
-  // ───────────── UPDATE METADATA ─────────────
 
   Future<Either<Failure, void>> updateMetadata({
     required String shortId,

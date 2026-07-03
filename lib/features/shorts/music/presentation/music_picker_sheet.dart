@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/shorts/music/data/shorts_sounds_api.dart';
 import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
-import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -332,35 +333,18 @@ class _MusicPickerSheetState extends ConsumerState<MusicPickerSheet> {
       await probe.dispose();
     }
 
-    final init = await _api.initSoundUpload(
-      filename: filename,
-      sizeBytes: await file.length(),
-    );
+    final mediaUpload = await ref
+        .read(mediaUploadApiProvider)
+        .uploadMedia(file: file, purpose: MediaUploadPurpose.soundUpload);
 
-    final uploadReady = await init.fold<Future<ShortSound?>>(
+    final uploadReady = await mediaUpload.fold<Future<ShortSound?>>(
       (failure) async {
         _showSnack(failure.message);
         return null;
       },
-      (result) async {
-        try {
-          await Dio().put<Object?>(
-            result.uploadUrl,
-            data: file.openRead(),
-            options: Options(
-              headers: {
-                'Content-Length': await file.length(),
-                ...result.uploadHeaders,
-              },
-            ),
-          );
-        } catch (_) {
-          _showSnack('Failed to upload sound file.');
-          return null;
-        }
-
-        final confirmedSound = await _api.confirmSoundUpload(
-          fileKey: result.fileKey,
+      (uploaded) async {
+        final confirmedSound = await _api.createSoundFromMedia(
+          soundMedia: uploaded.mediaId,
           title: title,
           artist: artist,
           durationSeconds: duration?.inMilliseconds == null

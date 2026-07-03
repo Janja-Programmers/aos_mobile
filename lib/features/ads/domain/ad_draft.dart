@@ -1,4 +1,4 @@
-import 'package:africaonlinestores/core/files/domain/upload_file.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_result.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
 
@@ -15,14 +15,15 @@ class AdMediaImage {
   final bool isPrimary;
   final int? sortOrder;
 
-  factory AdMediaImage.fromUpload(UploadedFile file) {
-    return AdMediaImage(url: file.url, fileId: file.fileId);
+  factory AdMediaImage.fromUpload(MediaUploadResult media) {
+    return AdMediaImage(url: media.url, fileId: media.mediaId);
   }
 
   Map<String, dynamic> toPayload() {
     return {
+      'media': fileId,
+      'media_id': fileId,
       'image': url,
-      'name': fileId,
       'is_primary': isPrimary ? 1 : 0,
       'sort_order': sortOrder,
     };
@@ -209,8 +210,14 @@ class AdDraft {
     final images = asJsonMapList(item['images'])
         .map(
           (Map<String, dynamic> e) => AdMediaImage(
-            url: asString(e['image']),
-            fileId: asString(e['name']),
+            url: asString(e['image'] ?? e['url']),
+            fileId: asString(
+              e['media_id'] ??
+                  e['media'] ??
+                  e['name'] ??
+                  e['file_id'] ??
+                  e['file'],
+            ),
             isPrimary: asInt(e['is_primary']) == 1,
             sortOrder: asNullableInt(e['sort_order']),
           ),
@@ -252,6 +259,9 @@ class AdDraft {
       // MEDIA
       images: images,
       videoUrl: asNullableString(item['video']),
+      videoFileId: asNullableString(
+        item['video_media'] ?? item['video_media_id'] ?? item['video_file_id'],
+      ),
 
       // DETAILS
       attributes: attrs,
@@ -294,8 +304,14 @@ class AdDraft {
     final images = asJsonMapList(data['images'])
         .map(
           (Map<String, dynamic> e) => AdMediaImage(
-            url: asString(e['image']),
-            fileId: asString(e['name']),
+            url: asString(e['image'] ?? e['url']),
+            fileId: asString(
+              e['media_id'] ??
+                  e['media'] ??
+                  e['name'] ??
+                  e['file_id'] ??
+                  e['file'],
+            ),
             isPrimary: asInt(e['is_primary']) == 1,
           ),
         )
@@ -366,6 +382,9 @@ class AdDraft {
       // MEDIA
       images: images,
       videoUrl: asNullableString(data['video']),
+      videoFileId: asNullableString(
+        data['video_media'] ?? data['video_media_id'] ?? data['video_file_id'],
+      ),
 
       // DETAILS
       attributes: attrs,

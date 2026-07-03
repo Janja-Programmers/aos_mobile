@@ -1,18 +1,19 @@
 import 'dart:io';
 
 import 'package:africaonlinestores/core/api/failure.dart';
-import 'package:africaonlinestores/core/files/domain/upload_file.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_result.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-typedef UploadFn = Future<Either<Failure, UploadedFile>> Function(File file);
+typedef UploadMediaFn =
+    Future<Either<Failure, MediaUploadResult>> Function(File file);
 
 class MediaHelper {
   MediaHelper._();
 
-  static final _picker = ImagePicker();
+  static final ImagePicker _picker = ImagePicker();
 
   // -------------------------
   // PICKERS
@@ -47,8 +48,8 @@ class MediaHelper {
 
     if (source == null) return null;
 
-    final x = await _picker.pickImage(source: source, imageQuality: 80);
-    return x == null ? null : File(x.path);
+    final image = await _picker.pickImage(source: source, imageQuality: 80);
+    return image == null ? null : File(image.path);
   }
 
   static Future<File?> pickVideoWithChoice(BuildContext context) async {
@@ -80,49 +81,48 @@ class MediaHelper {
 
     if (source == null) return null;
 
-    final x = await _picker.pickVideo(
+    final video = await _picker.pickVideo(
       source: source,
-      maxDuration: const Duration(minutes: 2), // optional limit
+      maxDuration: const Duration(minutes: 2),
     );
 
-    return x == null ? null : File(x.path);
+    return video == null ? null : File(video.path);
   }
 
   static Future<File?> pickVideoFromGallery() async {
-    final x = await _picker.pickVideo(
+    final video = await _picker.pickVideo(
       source: ImageSource.gallery,
       maxDuration: const Duration(minutes: 2),
     );
 
-    return x == null ? null : File(x.path);
+    return video == null ? null : File(video.path);
   }
 
   static Future<File?> recordVideoFromCamera() async {
-    final x = await _picker.pickVideo(
+    final video = await _picker.pickVideo(
       source: ImageSource.camera,
       maxDuration: const Duration(minutes: 10),
     );
 
-    return x == null ? null : File(x.path);
+    return video == null ? null : File(video.path);
   }
 
   static Future<File?> pickImageFromCamera() async {
-    final x = await _picker.pickImage(
+    final image = await _picker.pickImage(
       source: ImageSource.camera,
       imageQuality: 80,
     );
-    return x == null ? null : File(x.path);
+    return image == null ? null : File(image.path);
   }
 
   static Future<File?> pickImageFromGallery() async {
-    final x = await _picker.pickImage(
+    final image = await _picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 80,
     );
-    return x == null ? null : File(x.path);
+    return image == null ? null : File(image.path);
   }
 
-  /// Generic picker (can extend later for files/PDF)
   static Future<File?> pickImage({bool fromCamera = false}) {
     return fromCamera ? pickImageFromCamera() : pickImageFromGallery();
   }
@@ -131,28 +131,23 @@ class MediaHelper {
   // UPLOAD
   // -------------------------
 
-  /// Upload SINGLE file
-  static Future<UploadedFile?> uploadSingle({
+  static Future<MediaUploadResult?> uploadSingle({
     required Object ref,
     required File file,
-    required UploadFn uploadFn,
+    required UploadMediaFn uploadFn,
   }) async {
     final res = await uploadFn(file);
-
     return res.fold((_) => null, (data) => data);
   }
 
-  /// Upload MULTIPLE files
-  static Future<List<UploadedFile>> uploadMultiple({
+  static Future<List<MediaUploadResult>> uploadMultiple({
     required Object ref,
     required List<File> files,
-    required UploadFn uploadFn,
+    required UploadMediaFn uploadFn,
   }) async {
     final futures = files.map((file) => uploadFn(file)).toList();
-
     final responses = await Future.wait(futures);
-
-    final results = <UploadedFile>[];
+    final results = <MediaUploadResult>[];
 
     for (final res in responses) {
       res.fold((_) {}, results.add);
@@ -165,7 +160,7 @@ class MediaHelper {
   // PICK DOCUMENT / ANY FILE
   // -------------------------
 
-  static const maxFileSizeMB = 25;
+  static const int maxFileSizeMB = 25;
 
   static Future<File?> pickAnyFile() async {
     final result = await FilePicker.pickFiles();
@@ -177,7 +172,7 @@ class MediaHelper {
 
     final file = File(path);
 
-    final isValid = await _validateFileSize(file);
+    final isValid = _validateFileSize(file);
     if (!isValid) return null;
 
     return file;
@@ -194,7 +189,7 @@ class MediaHelper {
 
     if (files.isEmpty) return [];
 
-    return files.map((x) => File(x.path)).toList();
+    return files.map((xFile) => File(xFile.path)).toList();
   }
 
   static Future<File?> pickMediaFromGallery() async {
@@ -207,7 +202,7 @@ class MediaHelper {
 
     final file = File(path);
 
-    final isValid = await _validateFileSize(file);
+    final isValid = _validateFileSize(file);
     if (!isValid) return null;
 
     return file;
@@ -217,10 +212,12 @@ class MediaHelper {
   // VALIDATION
   // -------------------------
 
-  static Future<bool> _validateFileSize(File file) async {
-    final sizeInBytes = await file.length();
+  static bool _validateFileSize(File file) {
+    if (!file.existsSync()) return false;
+
+    final sizeInBytes = file.lengthSync();
     final sizeInMB = sizeInBytes / (1024 * 1024);
 
-    return sizeInMB <= maxFileSizeMB;
+    return sizeInBytes > 0 && sizeInMB <= maxFileSizeMB;
   }
 }

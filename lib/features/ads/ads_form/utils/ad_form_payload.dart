@@ -19,6 +19,8 @@ class AdFormPayloadBuilder {
           .entries
           .map(
             (e) => {
+              'media': e.value.fileId,
+              'media_id': e.value.fileId,
               'image': e.value.url,
               'is_primary': e.value.isPrimary ? 1 : 0,
               'sort_order': e.key,
@@ -27,7 +29,10 @@ class AdFormPayloadBuilder {
           .toList(),
     };
 
-    if (!isEmptyStr(d.videoUrl)) {
+    if (!isEmptyStr(d.videoFileId)) {
+      payload['video_media'] = d.videoFileId;
+      payload['video_media_id'] = d.videoFileId;
+    } else if (!isEmptyStr(d.videoUrl)) {
       payload['video'] = d.videoUrl;
     }
 

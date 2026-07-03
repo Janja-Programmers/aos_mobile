@@ -1,8 +1,9 @@
 import 'dart:io';
 
 import 'package:africaonlinestores/core/api/failure.dart';
-import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
-import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
+import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
+import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/verifications/domain/verification_status.dart';
@@ -153,7 +154,12 @@ class UserVerificationController extends StateNotifier<UserVerificationState> {
     final uploaded = await MediaHelper.uploadSingle(
       ref: ref,
       file: file,
-      uploadFn: (f) => ref.read(filesApiProvider).uploadMedia(file: f),
+      uploadFn: (f) => ref
+          .read(mediaUploadApiProvider)
+          .uploadMedia(
+            file: f,
+            purpose: MediaUploadPurpose.verificationDocument,
+          ),
     );
 
     state = state.copyWith(
@@ -167,8 +173,8 @@ class UserVerificationController extends StateNotifier<UserVerificationState> {
 
     state = state.copyWith(
       draft: front
-          ? state.draft.copyWith(idFrontUrl: uploaded.url)
-          : state.draft.copyWith(idBackUrl: uploaded.url),
+          ? state.draft.copyWith(idFrontUrl: uploaded.mediaId)
+          : state.draft.copyWith(idBackUrl: uploaded.mediaId),
     );
 
     if (state.draft.hasFront && state.draft.hasBack) {
@@ -183,7 +189,12 @@ class UserVerificationController extends StateNotifier<UserVerificationState> {
     final uploaded = await MediaHelper.uploadSingle(
       ref: ref,
       file: file,
-      uploadFn: (f) => ref.read(filesApiProvider).uploadMedia(file: f),
+      uploadFn: (f) => ref
+          .read(mediaUploadApiProvider)
+          .uploadMedia(
+            file: f,
+            purpose: MediaUploadPurpose.verificationDocument,
+          ),
     );
     state = state.copyWith(isUploadingSelfie: false);
 
@@ -192,7 +203,7 @@ class UserVerificationController extends StateNotifier<UserVerificationState> {
     }
 
     state = state.copyWith(
-      draft: state.draft.copyWith(selfieUrl: uploaded.url),
+      draft: state.draft.copyWith(selfieUrl: uploaded.mediaId),
       completedSteps: {...state.completedSteps, 2},
     );
 

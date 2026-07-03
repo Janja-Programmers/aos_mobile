@@ -145,9 +145,24 @@ class UserVerificationDraft {
       'id_back': idBackUrl,
       'selfie': selfieUrl,
       'verification_documents': [
-        if (hasFront) {'document_type': 'id_front', 'attachment': idFrontUrl},
-        if (hasBack) {'document_type': 'id_back', 'attachment': idBackUrl},
-        if (hasSelfie) {'document_type': 'selfie', 'attachment': selfieUrl},
+        if (hasFront)
+          {
+            'document_type': 'id_front',
+            'media': idFrontUrl,
+            'media_id': idFrontUrl,
+          },
+        if (hasBack)
+          {
+            'document_type': 'id_back',
+            'media': idBackUrl,
+            'media_id': idBackUrl,
+          },
+        if (hasSelfie)
+          {
+            'document_type': 'selfie',
+            'media': selfieUrl,
+            'media_id': selfieUrl,
+          },
       ],
     };
   }

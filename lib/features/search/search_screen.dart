@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
+import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
@@ -133,7 +133,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       _visualSearchSubtitle = 'Searching similar products...';
     });
 
-    final res = await ref.read(filesApiProvider).searchAdByImage(file: file);
+    final res = await ref
+        .read(mediaUploadApiProvider)
+        .searchAdByImage(file: file);
 
     if (!mounted) return;
 

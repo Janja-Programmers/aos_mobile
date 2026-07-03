@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
 import 'package:africaonlinestores/features/shorts/analytics/data/shorts_analytics_api.dart';
@@ -119,6 +120,7 @@ final postShortControllerProvider =
       return PostShortController(
         uploadApi: ref.read(shortsUploadApiProvider),
         managementApi: ref.read(shortsManagementApiProvider),
+        mediaUploadApi: ref.read(mediaUploadApiProvider),
         sessionId: sessionId,
       );
     });

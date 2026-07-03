@@ -54,7 +54,9 @@ class DetailsStep extends ConsumerWidget {
           );
         }
 
-        if (index == 1) return const SizedBox(height: 4);
+        if (index == 1) {
+          return const SizedBox(height: 4);
+        }
 
         final attr = schema.attributes[index - 2];
         final value = draft.attributes[attr.key];
@@ -64,7 +66,9 @@ class DetailsStep extends ConsumerWidget {
           child: _AttributeField(
             attribute: attr,
             value: value,
-            onChanged: (Object? v) => ctrl.setAttribute(attr.key, v),
+            onChanged: (Object? nextValue) {
+              ctrl.setAttribute(attr.key, nextValue);
+            },
           ),
         );
       },
@@ -91,10 +95,13 @@ class _AttributeField extends ConsumerWidget {
           label: attribute.label,
           required: attribute.required,
           value: value?.toString(),
+          helperText: _cleanText(attribute.helpText),
+          placeholder: 'Select ${attribute.label.toLowerCase()}',
           onTap: () async {
             final picked = await showModalBottomSheet<String>(
               context: context,
               isScrollControlled: true,
+              useSafeArea: true,
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
@@ -102,36 +109,45 @@ class _AttributeField extends ConsumerWidget {
                 title: attribute.label,
                 options: attribute.options,
                 selected: value?.toString(),
+                helperText: _cleanText(attribute.helpText),
               ),
             );
 
-            if (picked != null) onChanged(picked);
+            if (picked != null) {
+              onChanged(picked);
+            }
           },
         );
 
       case AdAttributeType.multiselect:
-        final currentValue = value;
-        final selected = currentValue is Iterable<Object?>
-            ? currentValue.map((Object? item) => item.toString()).toList()
-            : <String>[];
+        final selected = _selectedValues(value);
 
         return PickerField(
           label: attribute.label,
           required: attribute.required,
           value: selected.isEmpty ? null : selected.join(', '),
+          helperText: _cleanText(attribute.helpText),
+          placeholder: 'Select ${attribute.label.toLowerCase()}',
           onTap: () async {
-            final picked = await Navigator.of(context).push<List<String>>(
-              MaterialPageRoute<List<String>>(
-                builder: (_) => SelectOptionSheet(
-                  title: attribute.label,
-                  options: attribute.options,
-                  selected: selected,
-                  multi: true,
-                ),
+            final picked = await showModalBottomSheet<List<String>>(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              builder: (_) => SelectOptionSheet(
+                title: attribute.label,
+                options: attribute.options,
+                selected: selected,
+                multi: true,
+                helperText: _cleanText(attribute.helpText),
               ),
             );
 
-            if (picked != null) onChanged(picked);
+            if (picked != null) {
+              onChanged(picked);
+            }
           },
         );
 
@@ -144,6 +160,10 @@ class _AttributeField extends ConsumerWidget {
             attribute.required ? '${attribute.label} *' : attribute.label,
             style: context.p,
           ),
+          subtitle: _cleanText(attribute.helpText) == null
+              ? null
+              : Text(_cleanText(attribute.helpText)!, style: context.pMuted),
+          contentPadding: EdgeInsets.zero,
           onChanged: onChanged,
         );
 
@@ -159,11 +179,24 @@ class _AttributeField extends ConsumerWidget {
                 ? '${attribute.label} *'
                 : attribute.label,
             labelStyle: context.p,
+            helperText: _cleanText(attribute.helpText),
+            helperStyle: context.pMuted,
             hintStyle: context.pMuted,
           ),
-          onChanged: (v) {
-            final parsed = double.tryParse(v.trim());
-            onChanged(parsed);
+          onChanged: (String text) {
+            final trimmed = text.trim();
+
+            if (trimmed.isEmpty) {
+              onChanged(null);
+              return;
+            }
+
+            if (attribute.type == AdAttributeType.year) {
+              onChanged(int.tryParse(trimmed));
+              return;
+            }
+
+            onChanged(double.tryParse(trimmed));
           },
         );
 
@@ -177,6 +210,8 @@ class _AttributeField extends ConsumerWidget {
           value: parsed != null
               ? '${parsed.day}/${parsed.month}/${parsed.year}'
               : null,
+          helperText: _cleanText(attribute.helpText),
+          placeholder: 'Select ${attribute.label.toLowerCase()}',
           onTap: () async {
             final now = DateTime.now();
 
@@ -196,6 +231,7 @@ class _AttributeField extends ConsumerWidget {
       case AdAttributeType.text:
       case AdAttributeType.unknown:
         return TextFormField(
+          key: ValueKey(attribute.key),
           initialValue: value?.toString() ?? '',
           style: context.p,
           decoration: InputDecoration(
@@ -203,10 +239,45 @@ class _AttributeField extends ConsumerWidget {
                 ? '${attribute.label} *'
                 : attribute.label,
             labelStyle: context.p,
+            helperText: _cleanText(attribute.helpText),
+            helperStyle: context.pMuted,
             hintStyle: context.pMuted,
           ),
           onChanged: onChanged,
         );
     }
+  }
+
+  static String? _cleanText(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+
+    return trimmed;
+  }
+
+  static List<String> _selectedValues(Object? value) {
+    if (value == null) {
+      return <String>[];
+    }
+
+    if (value is Iterable<Object?>) {
+      return value
+          .map((Object? item) => item?.toString().trim() ?? '')
+          .where((String item) => item.isNotEmpty)
+          .toList();
+    }
+
+    final text = value.toString().trim();
+    if (text.isEmpty) {
+      return <String>[];
+    }
+
+    return text
+        .split(',')
+        .map((String item) => item.trim())
+        .where((String item) => item.isNotEmpty)
+        .toList();
   }
 }

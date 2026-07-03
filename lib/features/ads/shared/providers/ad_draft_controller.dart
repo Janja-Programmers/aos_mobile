@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:africaonlinestores/core/api/failure.dart';
-import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
+import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
@@ -26,7 +27,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   AdDraft _draft;
 
   AdDraft get draft => _draft;
-  final _deletingFiles = <String>{};
+  final _deletingMedia = <String>{};
 
   // ================= SETUP =================
 
@@ -118,19 +119,15 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
       _draft.copyWith(
         categoryId: id,
         categoryLabel: label,
-        attributes: const <String, dynamic>{},
+        attributes: <String, dynamic>{},
       ),
     );
-  }
-
-  void setDescription(String v) {
-    _setDraft(_draft.copyWith(description: v));
   }
 
   // ================= DETAILS =================
 
   void setAttribute(String key, Object? value) {
-    final next = asJsonMap(_draft.attributes);
+    final next = Map<String, dynamic>.of(_draft.attributes);
 
     if (value == null || (value is String && value.trim().isEmpty)) {
       next.remove(key);
@@ -139,6 +136,10 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     }
 
     _setDraft(_draft.copyWith(attributes: next));
+  }
+
+  void setDescription(String v) {
+    _setDraft(_draft.copyWith(description: v));
   }
 
   // ================= PRICING =================
@@ -274,20 +275,20 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     final next = List<AdMediaImage>.from(_draft.images)..removeAt(index);
     replaceImages(next);
     if (image.fileId.trim().isNotEmpty) {
-      unawaited(deleteFileSilently(image.fileId));
+      unawaited(deleteMediaSilently(image.fileId));
     }
   }
 
-  Future<void> deleteFileSilently(String fileId) async {
-    if (_deletingFiles.contains(fileId)) return;
+  Future<void> deleteMediaSilently(String mediaId) async {
+    if (_deletingMedia.contains(mediaId)) return;
 
-    _deletingFiles.add(fileId);
+    _deletingMedia.add(mediaId);
 
-    final api = _ref.read(filesApiProvider);
+    final api = _ref.read(mediaUploadApiProvider);
 
-    await api.deleteFile(fileId: fileId);
+    await api.deleteMedia(mediaId: mediaId);
 
-    _deletingFiles.remove(fileId);
+    _deletingMedia.remove(mediaId);
   }
 
   Future<Either<Failure, String>> removeImageBackground(int index) async {
@@ -295,23 +296,29 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
       return Either.left(const Failure('Invalid image index'));
     }
 
-    final api = _ref.read(filesApiProvider);
+    final api = _ref.read(mediaUploadApiProvider);
 
     final image = _draft.images[index];
 
     if (image.fileId.isEmpty) {
-      return Either.left(const Failure('Image has no fileId'));
+      return Either.left(const Failure('Image has no media ID'));
     }
 
-    final res = await api.removeBackground(fileId: image.fileId);
+    final res = await api.removeBackground(
+      mediaId: image.fileId,
+      resultPurpose: MediaUploadPurpose.adImage,
+    );
 
     if (res.isLeft) {
       return Either.left(res.leftOrNull!);
     }
 
-    final uploaded = res.rightOrNull!; // ✅ UploadedFile
+    final uploaded = res.rightOrNull!;
 
-    final newImage = image.copyWith(fileId: uploaded.fileId, url: uploaded.url);
+    final newImage = image.copyWith(
+      fileId: uploaded.mediaId,
+      url: uploaded.url,
+    );
 
     final images = List<AdMediaImage>.from(_draft.images);
 
@@ -319,21 +326,23 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
     replaceImages(images);
 
-    // delete previous image silently
-    unawaited(deleteFileSilently(image.fileId));
+    unawaited(deleteMediaSilently(image.fileId));
 
     return Either.right(uploaded.url);
   }
 
   // ----------------- EDIT IMAGE -----------------
   Future<void> replaceImageAt(int index, File file) async {
-    final api = _ref.read(filesApiProvider);
+    final api = _ref.read(mediaUploadApiProvider);
 
     if (index < 0 || index >= _draft.images.length) return;
 
     final old = _draft.images[index];
 
-    final res = await api.uploadMedia(file: file);
+    final res = await api.uploadMedia(
+      file: file,
+      purpose: MediaUploadPurpose.adImage,
+    );
     if (res.isLeft) return;
 
     final uploadedFile = res.rightOrNull!;
@@ -348,14 +357,17 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     replaceImages(images);
 
     if (old.fileId.isNotEmpty) {
-      unawaited(deleteFileSilently(old.fileId));
+      unawaited(deleteMediaSilently(old.fileId));
     }
   }
 
   Future<Either<Failure, String>> uploadAndAddImage(File file) async {
-    final api = _ref.read(filesApiProvider);
+    final api = _ref.read(mediaUploadApiProvider);
 
-    final res = await api.uploadMedia(file: file);
+    final res = await api.uploadMedia(
+      file: file,
+      purpose: MediaUploadPurpose.adImage,
+    );
     if (res.isLeft) return Either.left(res.leftOrNull!);
 
     final uploadedFile = res.rightOrNull!;
@@ -371,28 +383,31 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   }
 
   Future<Either<Failure, String>> uploadAndSetVideo(File file) async {
-    final api = _ref.read(filesApiProvider);
-    final res = await api.uploadMedia(file: file);
+    final api = _ref.read(mediaUploadApiProvider);
+    final res = await api.uploadMedia(
+      file: file,
+      purpose: MediaUploadPurpose.adVideo,
+    );
 
     if (res.isLeft) return Either.left(res.leftOrNull!);
 
     final media = res.rightOrNull!;
 
     final url = media.url;
-    final fileId = media.fileId;
+    final mediaId = media.mediaId;
 
-    _setDraft(_draft.copyWith(videoUrl: url, videoFileId: fileId));
+    _setDraft(_draft.copyWith(videoUrl: url, videoFileId: mediaId));
 
     return Either.right(url);
   }
 
   Future<void> clearVideo() async {
-    final fileId = _draft.videoFileId;
+    final mediaId = _draft.videoFileId;
 
     _setDraft(_draft.copyWith());
 
-    if (fileId != null && fileId.isNotEmpty) {
-      unawaited(deleteFileSilently(fileId));
+    if (mediaId != null && mediaId.isNotEmpty) {
+      unawaited(deleteMediaSilently(mediaId));
     }
   }
 

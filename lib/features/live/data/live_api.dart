@@ -25,11 +25,16 @@ class LiveApi {
   Future<Either<Failure, LiveJoinSession>> startLive({
     required String title,
     required String coverImage,
+    required String coverMediaId,
   }) async {
     try {
       final res = await _client.post(
         ApiEndpoints.startLiveEndpoint,
-        data: {'title': title, 'cover_image': coverImage},
+        data: {
+          'title': title,
+          'cover_image': coverImage,
+          'live_cover_media': coverMediaId,
+        },
       );
 
       final result = unwrapFrappe(res);

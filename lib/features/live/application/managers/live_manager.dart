@@ -31,6 +31,7 @@ class LiveManager extends StateNotifier<LiveState> {
   Future<void> startLive({
     required String title,
     required String coverImage,
+    required String coverMediaId,
     bool micEnabled = true,
   }) async {
     try {
@@ -48,6 +49,7 @@ class LiveManager extends StateNotifier<LiveState> {
       final session = await repository.startLive(
         title: title,
         coverImage: coverImage,
+        coverMediaId: coverMediaId,
       );
 
       state = state.copyWith(

@@ -10,7 +10,11 @@ class ChatInputAttachment {
   });
 
   Map<String, dynamic> toApi() {
-    return {'file': fileId.trim(), 'file_type': type.trim()};
+    return {
+      'media_id': fileId.trim(),
+      'media': fileId.trim(),
+      'file_type': type.trim(),
+    };
   }
 
   ChatInputAttachment copyWith({

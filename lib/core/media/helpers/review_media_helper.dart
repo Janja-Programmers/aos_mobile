@@ -1,7 +1,8 @@
 import 'dart:io';
 
-import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
-import 'package:africaonlinestores/core/files/domain/upload_file.dart';
+import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_result.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -29,18 +30,20 @@ class ReviewMediaHelper {
     required WidgetRef ref,
     required List<File> files,
   }) async {
-    final urls = <String>[];
+    final mediaIds = <String>[];
 
     for (final file in files) {
-      final result = await ref.read(filesApiProvider).uploadMedia(file: file);
+      final result = await ref
+          .read(mediaUploadApiProvider)
+          .uploadMedia(file: file, purpose: MediaUploadPurpose.reviewImage);
 
-      result.fold((_) {}, (UploadedFile data) {
-        if (data.url.isNotEmpty) {
-          urls.add(data.url);
+      result.fold((_) {}, (MediaUploadResult data) {
+        if (data.mediaId.isNotEmpty) {
+          mediaIds.add(data.mediaId);
         }
       });
     }
 
-    return urls;
+    return mediaIds;
   }
 }

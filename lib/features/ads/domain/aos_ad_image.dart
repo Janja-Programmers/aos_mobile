@@ -15,7 +15,14 @@ class AOSAdImage {
     if (json is Map) {
       return AOSAdImage(
         image: (json['image'] ?? '').toString(),
-        fileId: (json['file_id'] ?? json['file'] ?? '').toString(),
+        fileId:
+            (json['media_id'] ??
+                    json['media'] ??
+                    json['file_id'] ??
+                    json['file'] ??
+                    json['name'] ??
+                    '')
+                .toString(),
         isPrimary:
             json['is_primary'] == 1 ||
             json['is_primary'] == true ||

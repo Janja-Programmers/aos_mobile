@@ -1,8 +1,9 @@
 import 'dart:io';
 
 import 'package:africaonlinestores/core/config/app_config.dart';
-import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
-import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
+import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
+import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/normalize_image.dart';
@@ -106,7 +107,9 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     final uploaded = await MediaHelper.uploadSingle(
       ref: ref,
       file: fixedFile,
-      uploadFn: (f) => ref.read(filesApiProvider).uploadMedia(file: f),
+      uploadFn: (f) => ref
+          .read(mediaUploadApiProvider)
+          .uploadMedia(file: f, purpose: MediaUploadPurpose.profileImage),
     );
 
     if (!mounted) return;
@@ -119,7 +122,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       return;
     }
 
-    final res = await _api.updateProfile(userImage: uploaded.url);
+    final res = await _api.updateProfile(userImageMedia: uploaded.mediaId);
 
     if (res.isLeft) {
       setState(() => _uploadingPhoto = false);

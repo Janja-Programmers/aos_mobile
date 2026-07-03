@@ -1,5 +1,6 @@
-import 'package:africaonlinestores/core/files/data/files_api_provider.dart';
-import 'package:africaonlinestores/core/files/helpers/media_helper.dart';
+import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
+import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/verifications/controllers/verification_controller_provider.dart';
@@ -100,8 +101,12 @@ class DocumentsStep extends ConsumerWidget {
                 final uploaded = await MediaHelper.uploadSingle(
                   ref: ref,
                   file: file,
-                  uploadFn: (f) =>
-                      ref.read(filesApiProvider).uploadMedia(file: f),
+                  uploadFn: (f) => ref
+                      .read(mediaUploadApiProvider)
+                      .uploadMedia(
+                        file: f,
+                        purpose: MediaUploadPurpose.verificationDocument,
+                      ),
                 );
 
                 if (uploaded == null) {
@@ -111,13 +116,16 @@ class DocumentsStep extends ConsumerWidget {
                   return;
                 }
 
-                final url = uploaded.url;
+                final displayValue = uploaded.url.isNotEmpty
+                    ? uploaded.url
+                    : uploaded.mediaId;
 
                 final existing = getDoc(type);
 
                 final doc = VerificationDocument(
                   documentType: type,
-                  attachment: url,
+                  attachment: displayValue,
+                  mediaId: uploaded.mediaId,
                 );
 
                 if (existing == null) {
@@ -163,8 +171,12 @@ class DocumentsStep extends ConsumerWidget {
                 final uploaded = await MediaHelper.uploadSingle(
                   ref: ref,
                   file: file,
-                  uploadFn: (f) =>
-                      ref.read(filesApiProvider).uploadMedia(file: f),
+                  uploadFn: (f) => ref
+                      .read(mediaUploadApiProvider)
+                      .uploadMedia(
+                        file: f,
+                        purpose: MediaUploadPurpose.verificationDocument,
+                      ),
                 );
 
                 if (uploaded == null) {
@@ -174,13 +186,16 @@ class DocumentsStep extends ConsumerWidget {
                   return;
                 }
 
-                final url = uploaded.url;
+                final displayValue = uploaded.url.isNotEmpty
+                    ? uploaded.url
+                    : uploaded.mediaId;
 
                 final existing = getDoc(type);
 
                 final doc = VerificationDocument(
                   documentType: type,
-                  attachment: url,
+                  attachment: displayValue,
+                  mediaId: uploaded.mediaId,
                 );
 
                 if (existing == null) {

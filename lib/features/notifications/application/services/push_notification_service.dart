@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:africaonlinestores/core/device/device_id.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/incoming_call_bootstrapper.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_pending_payload_store.dart';
 import 'package:africaonlinestores/features/notifications/application/controllers/notification_controller.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_notification_service.dart';
 import 'package:africaonlinestores/features/notifications/application/services/notification_navigation_handler.dart';
@@ -65,12 +66,14 @@ class PushNotificationService {
 
     try {
       final permissionGranted = await _requestPermission();
+      await _configureForegroundPresentation();
 
       _listenTokenRefresh();
       _listenForeground();
       _listenNotificationTap();
 
       await _handleTerminatedLaunch();
+      await _handlePendingCallkitPayload();
 
       if (permissionGranted) {
         await _setupToken();
@@ -100,6 +103,22 @@ class PushNotificationService {
 
     return status == AuthorizationStatus.authorized ||
         status == AuthorizationStatus.provisional;
+  }
+
+  Future<void> _configureForegroundPresentation() async {
+    try {
+      await _messaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    } catch (e, s) {
+      appLogger.w(
+        '⚠️ Failed to configure foreground notification presentation',
+        error: e,
+        stackTrace: s,
+      );
+    }
   }
 
   // =====================================================
@@ -368,6 +387,31 @@ class PushNotificationService {
       _navigationHandler.handleNotificationTap(notification);
     } catch (e, s) {
       appLogger.e('Terminated push handling failed', error: e, stackTrace: s);
+    }
+  }
+
+  Future<void> _handlePendingCallkitPayload() async {
+    try {
+      const store = CallKitPendingPayloadStore();
+      final payload = await store.read();
+
+      if (payload == null || payload.isEmpty) {
+        return;
+      }
+
+      final handled = await _incomingCallBootstrapper.handlePushPayload(
+        payload,
+      );
+
+      if (!handled) {
+        await store.clear();
+      }
+    } catch (e, s) {
+      appLogger.w(
+        '⚠️ Pending CallKit payload recovery failed',
+        error: e,
+        stackTrace: s,
+      );
     }
   }
 

@@ -6,7 +6,7 @@ import 'package:africaonlinestores/features/connect/calls/application/providers/
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/call_list_screen.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_list_screen.dart';
-import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_story_template_strip.dart';
+// import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_story_template_strip.dart';
 import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +34,11 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
 
     if (_didResolveInitialTab) return;
 
-    final tab = GoRouterState.of(context).uri.queryParameters['tab'];
+    final tab = GoRouter.of(context)
+        .routerDelegate
+        .currentConfiguration
+        .uri
+        .queryParameters['tab'];
     _selectedTab = tab == 'calls' ? _ConnectTab.calls : _ConnectTab.chats;
     _didResolveInitialTab = true;
   }
@@ -85,12 +89,12 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
                 onTap: _openNewConversation,
               ),
             ),
-            ConnectStoryTemplateStrip(
-              onCreateStory: () =>
-                  ConnectScreenNavigation.toCreateStory(context),
-              onStoryTap: (story) =>
-                  ConnectScreenNavigation.toStoryViewer(context, story.id),
-            ),
+            // ConnectStoryTemplateStrip(
+            //   onCreateStory: () =>
+            //       ConnectScreenNavigation.toCreateStory(context),
+            //   onStoryTap: (story) =>
+            //       ConnectScreenNavigation.toStoryViewer(context, story.id),
+            // ),
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 180),
@@ -163,11 +167,15 @@ class _ConnectHeader extends ConsumerWidget {
             onSelected: (index) => AppNavigation.goTo(context, ref, index),
             itemBuilder: (context) {
               final items = AppNavConfig.items(context);
-              final location = GoRouterState.of(context).matchedLocation;
+              final location = GoRouter.of(context)
+                  .routerDelegate
+                  .currentConfiguration
+                  .uri
+                  .path;
 
               return List.generate(items.length, (i) {
                 final item = items[i];
-                final isActive = location.contains(item.routeName);
+                final isActive = _isActiveNavItem(location, item.routeName);
                 final itemColor = isActive
                     ? colors.primary
                     : colors.textPrimary;
@@ -411,4 +419,20 @@ class _BottomBarItem extends StatelessWidget {
       ),
     );
   }
+}
+
+bool _isActiveNavItem(String location, String routeName) {
+  final routePath = switch (routeName) {
+    AppRoutes.nHome => AppRoutes.home,
+    AppRoutes.nFeeds => AppRoutes.feeds,
+    AppRoutes.nStartSelling => AppRoutes.startSelling,
+    AppRoutes.nConnect => AppRoutes.connect,
+    AppRoutes.nAccount => AppRoutes.account,
+    _ => '',
+  };
+
+  if (routePath.isEmpty) return false;
+  if (routePath == AppRoutes.home) return location == routePath;
+
+  return location == routePath || location.startsWith('$routePath/');
 }

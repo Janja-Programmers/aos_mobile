@@ -13,8 +13,10 @@ class MapsRoutes {
         name: AppRoutes.nMaps,
         path: AppRoutes.maps,
         builder: (context, state) {
+          final extra = state.extra;
           return MapsExplorerScreen(
             initialSellerId: state.uri.queryParameters['seller'],
+            initialPlace: extra is AOSPlace ? extra : null,
           );
         },
       ),

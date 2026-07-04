@@ -7,6 +7,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/polyline6_decoder.dart';
 import 'package:africaonlinestores/features/maps/data/maps_api.dart';
 import 'package:africaonlinestores/features/maps/data/seller_maps_api.dart';
+import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
 import 'package:africaonlinestores/features/maps/domain/aos_route.dart';
 import 'package:africaonlinestores/features/maps/domain/seller_location_response.dart';
 import 'package:africaonlinestores/features/maps/domain/seller_map_point.dart';
@@ -24,15 +25,20 @@ import 'package:go_router/go_router.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 class MapsExplorerScreen extends ConsumerStatefulWidget {
-  const MapsExplorerScreen({super.key, this.initialSellerId});
+  const MapsExplorerScreen({
+    super.key,
+    this.initialSellerId,
+    this.initialPlace,
+  });
 
   final String? initialSellerId;
+  final AOSPlace? initialPlace;
 
   @override
   ConsumerState<MapsExplorerScreen> createState() => _MapsExplorerScreenState();
 }
 
-enum BuyerMapMode { nearby, explore, storefront }
+enum BuyerMapMode { nearby, explore, storefront, place }
 
 enum RouteUiState { idle, preview, navigating }
 
@@ -56,6 +62,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
   List<SellerMapPoint> _mapPoints = [];
   SellerPinPoint? _selectedPin;
   SellerLocationResponse? _storefrontLocation;
+  AOSPlace? _destinationPlace;
   AOSRoute? _route;
 
   bool _voiceEnabled = true;
@@ -78,14 +85,24 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
   @override
   void initState() {
     super.initState();
-    _tts.setSpeechRate(0.48);
-    _tts.setPitch(1.0);
+    unawaited(_configureTts());
+
+    final initialPlace = widget.initialPlace;
+    if (initialPlace != null && initialPlace.hasLocation) {
+      _destinationPlace = initialPlace;
+      _mode = BuyerMapMode.place;
+      _camera = CameraPosition(
+        target: LatLng(initialPlace.latitude, initialPlace.longitude),
+        zoom: 15,
+      );
+      return;
+    }
 
     final initialSeller = widget.initialSellerId?.trim();
     if (initialSeller != null && initialSeller.isNotEmpty) {
       _sellerController.text = initialSeller;
       _mode = BuyerMapMode.storefront;
-      Future.microtask(_loadStorefrontLocation);
+      unawaited(Future<void>.microtask(_loadStorefrontLocation));
     }
   }
 
@@ -96,8 +113,17 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
     unawaited(_positionSubscription?.cancel());
     _navigationRefreshTimer?.cancel();
     _mapPointDebounce?.cancel();
-    _tts.stop();
+    unawaited(_stopTts());
     super.dispose();
+  }
+
+  Future<void> _configureTts() async {
+    await _tts.setSpeechRate(0.48);
+    await _tts.setPitch(1.0);
+  }
+
+  Future<void> _stopTts() async {
+    await _tts.stop();
   }
 
   void _snack(String message, {bool error = false}) {
@@ -119,8 +145,10 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
         timeLimit: const Duration(seconds: 15),
       );
       final current = LatLng(pos.latitude, pos.longitude);
+      if (!mounted) return;
       setState(() => _buyerLocation = current);
       await _map?.animateCamera(CameraUpdate.newLatLngZoom(current, 15));
+      if (!mounted) return;
       _snack('Your location is set.');
     } catch (e) {
       _snack(e.toString(), error: true);
@@ -270,6 +298,30 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
     }
   }
 
+  Future<void> _showDestinationPlace() async {
+    final place = _destinationPlace;
+    final map = _map;
+    if (place == null || map == null || !place.hasLocation) return;
+
+    final target = LatLng(place.latitude, place.longitude);
+    await map.clearSymbols();
+    await map.clearCircles();
+    await map.animateCamera(CameraUpdate.newLatLngZoom(target, 16));
+    if (!mounted) return;
+
+    final pinColor = _hexColor(context.appColors.primary);
+    await map.addCircle(
+      CircleOptions(
+        geometry: target,
+        circleRadius: 13,
+        circleColor: pinColor,
+        circleOpacity: 0.96,
+        circleStrokeColor: '#FFFFFF',
+        circleStrokeWidth: 3,
+      ),
+    );
+  }
+
   Future<void> _loadStorefrontLocation() async {
     final seller = _sellerController.text.trim();
     if (seller.isEmpty) {
@@ -283,49 +335,52 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
     if (!mounted) return;
     setState(() => _loading = false);
 
-    result.fold((failure) => _snack(failure.message, error: true), (
-      response,
-    ) async {
-      final loc = response.location;
-      if (loc == null || !loc.hasLocation) {
-        _snack('Seller has no saved map location.', error: true);
-        return;
-      }
-      final pin = SellerPinPoint(
-        latitude: loc.latitude,
-        longitude: loc.longitude,
-        seller: response.seller ?? seller,
-        user: response.user,
-        displayName: loc.name.isNotEmpty ? loc.name : response.seller ?? seller,
-        locationName: loc.name,
-        locality: loc.locality,
-        region: loc.region,
-        countryCode: loc.countryCode,
-      );
-      setState(() {
-        _storefrontLocation = response;
-        _selectedPin = pin;
-        _mode = BuyerMapMode.storefront;
-        _route = null;
-        _routeUiState = RouteUiState.idle;
-      });
-      await _map?.clearSymbols();
-      await _map?.clearCircles();
-      final target = LatLng(loc.latitude, loc.longitude);
-      await _map?.animateCamera(CameraUpdate.newLatLngZoom(target, 17));
-      if (!mounted) return;
-      final pinColor = _hexColor(context.appColors.primary);
-      await _map?.addCircle(
-        CircleOptions(
-          geometry: target,
-          circleRadius: 13,
-          circleColor: pinColor,
-          circleOpacity: 0.96,
-          circleStrokeColor: '#FFFFFF',
-          circleStrokeWidth: 3,
-        ),
-      );
-    });
+    await result.fold<Future<void>>(
+      (failure) async => _snack(failure.message, error: true),
+      (response) async {
+        final loc = response.location;
+        if (loc == null || !loc.hasLocation) {
+          _snack('Seller has no saved map location.', error: true);
+          return;
+        }
+        final pin = SellerPinPoint(
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          seller: response.seller ?? seller,
+          user: response.user,
+          displayName: loc.name.isNotEmpty
+              ? loc.name
+              : response.seller ?? seller,
+          locationName: loc.name,
+          locality: loc.locality,
+          region: loc.region,
+          countryCode: loc.countryCode,
+        );
+        setState(() {
+          _storefrontLocation = response;
+          _selectedPin = pin;
+          _mode = BuyerMapMode.storefront;
+          _route = null;
+          _routeUiState = RouteUiState.idle;
+        });
+        await _map?.clearSymbols();
+        await _map?.clearCircles();
+        final target = LatLng(loc.latitude, loc.longitude);
+        await _map?.animateCamera(CameraUpdate.newLatLngZoom(target, 17));
+        if (!mounted) return;
+        final pinColor = _hexColor(context.appColors.primary);
+        await _map?.addCircle(
+          CircleOptions(
+            geometry: target,
+            circleRadius: 13,
+            circleColor: pinColor,
+            circleOpacity: 0.96,
+            circleStrokeColor: '#FFFFFF',
+            circleStrokeWidth: 3,
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _routeToSelectedSeller({
@@ -344,6 +399,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
     final origin = await _currentOriginForRouting(
       preferGps: refresh || _routeUiState == RouteUiState.navigating,
     );
+    if (!mounted) return;
     if (!silent) setState(() => _loading = true);
 
     final result = refresh
@@ -361,8 +417,8 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
     if (!mounted) return;
     if (!silent) setState(() => _loading = false);
 
-    await result.fold(
-      (failure) {
+    await result.fold<Future<void>>(
+      (failure) async {
         if (!silent) _snack(failure.message, error: true);
       },
       (route) async {
@@ -383,6 +439,68 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
         if (!silent) _snack(refresh ? 'Route refreshed.' : 'Route ready.');
       },
     );
+  }
+
+  Future<void> _routeToDestinationPlace({
+    bool refresh = false,
+    bool silent = false,
+  }) async {
+    final destination = _destinationPlace;
+    if (destination == null || !destination.hasLocation) {
+      if (!silent) _snack('No shared location is available.', error: true);
+      return;
+    }
+
+    final origin = await _currentOriginForRouting(
+      preferGps: refresh || _routeUiState == RouteUiState.navigating,
+    );
+    if (!mounted) return;
+    if (!silent) setState(() => _loading = true);
+
+    final result = await _mapsApi.getRoute(
+      originLatitude: origin.latitude,
+      originLongitude: origin.longitude,
+      destinationLatitude: destination.latitude,
+      destinationLongitude: destination.longitude,
+    );
+
+    if (!mounted) return;
+    if (!silent) setState(() => _loading = false);
+
+    await result.fold<Future<void>>(
+      (failure) async {
+        if (!silent) _snack(failure.message, error: true);
+      },
+      (route) async {
+        setState(() {
+          _route = route;
+          if (_routeUiState == RouteUiState.idle) {
+            _routeUiState = RouteUiState.preview;
+          }
+        });
+        await _drawRoute(route);
+        if (_routeUiState == RouteUiState.navigating &&
+            _liveUserLocation != null) {
+          await _updateNavigationProgress(
+            _liveUserLocation!,
+            forceSpeak: refresh,
+          );
+        }
+        if (!silent) _snack(refresh ? 'Route refreshed.' : 'Route ready.');
+      },
+    );
+  }
+
+  Future<void> _routeToActiveDestination({
+    bool refresh = false,
+    bool silent = false,
+  }) async {
+    if (_mode == BuyerMapMode.place) {
+      await _routeToDestinationPlace(refresh: refresh, silent: silent);
+      return;
+    }
+
+    await _routeToSelectedSeller(refresh: refresh, silent: silent);
   }
 
   Future<void> _drawRoute(AOSRoute route) async {
@@ -438,9 +556,20 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
     );
   }
 
+  Future<void> _handleNavigationPosition(Position position) async {
+    final current = LatLng(position.latitude, position.longitude);
+    if (!mounted || _routeUiState != RouteUiState.navigating) return;
+    setState(() {
+      _liveUserLocation = current;
+      _buyerLocation = current;
+    });
+    await _map?.animateCamera(CameraUpdate.newLatLng(current));
+    await _updateNavigationProgress(current);
+  }
+
   Future<void> _startNavigation() async {
     if (_route == null) {
-      await _routeToSelectedSeller();
+      await _routeToActiveDestination();
       if (_route == null) return;
     }
 
@@ -454,6 +583,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
       return;
     }
 
+    if (!mounted) return;
     final start = LatLng(startPosition.latitude, startPosition.longitude);
     setState(() {
       _routeUiState = RouteUiState.navigating;
@@ -470,21 +600,13 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
     await _updateNavigationProgress(start, forceSpeak: true);
     await _map?.animateCamera(CameraUpdate.newLatLngZoom(start, 17));
 
+    if (!mounted) return;
     await _positionSubscription?.cancel();
     _navigationRefreshTimer?.cancel();
 
     _positionSubscription = LocationService.getNavigationPositionStream()
         .listen(
-          (position) async {
-            final current = LatLng(position.latitude, position.longitude);
-            if (!mounted || _routeUiState != RouteUiState.navigating) return;
-            setState(() {
-              _liveUserLocation = current;
-              _buyerLocation = current;
-            });
-            await _map?.animateCamera(CameraUpdate.newLatLng(current));
-            await _updateNavigationProgress(current);
-          },
+          (position) => unawaited(_handleNavigationPosition(position)),
           onError: (Object error) {
             if (mounted) _snack(error.toString(), error: true);
           },
@@ -492,7 +614,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
 
     _navigationRefreshTimer = Timer.periodic(
       const Duration(seconds: 60),
-      (_) => _routeToSelectedSeller(refresh: true, silent: true),
+      (_) => unawaited(_routeToActiveDestination(refresh: true, silent: true)),
     );
   }
 
@@ -501,7 +623,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
     _navigationRefreshTimer?.cancel();
     _positionSubscription = null;
     _navigationRefreshTimer = null;
-    _tts.stop();
+    unawaited(_stopTts());
     if (!mounted) return;
     setState(() {
       _routeUiState = keepRoute && _route != null
@@ -517,6 +639,14 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
         _routePoints = const [];
       }
     });
+  }
+
+  Future<void> _clearRoute() async {
+    _stopNavigation(keepRoute: false);
+    await _map?.clearLines();
+    if (_mode == BuyerMapMode.place) {
+      await _showDestinationPlace();
+    }
   }
 
   Future<void> _updateNavigationProgress(
@@ -643,6 +773,39 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
 
     if (_voiceEnabled) await _speak('Rerouting');
 
+    if (_mode == BuyerMapMode.place) {
+      final destination = _destinationPlace;
+      if (destination == null || !destination.hasLocation) {
+        if (mounted) setState(() => _rerouting = false);
+        return;
+      }
+
+      final result = await _mapsApi.getRoute(
+        originLatitude: user.latitude,
+        originLongitude: user.longitude,
+        destinationLatitude: destination.latitude,
+        destinationLongitude: destination.longitude,
+      );
+
+      if (!mounted) return;
+      setState(() => _rerouting = false);
+
+      await result.fold<Future<void>>(
+        (failure) async => _snack(failure.message, error: true),
+        (route) async {
+          setState(() {
+            _route = route;
+            _navInstructionIndex = 0;
+            _spokenManeuverIndexes.clear();
+            _spokenAlertIndexes.clear();
+          });
+          await _drawRoute(route);
+          await _updateNavigationProgress(user, forceSpeak: true);
+        },
+      );
+      return;
+    }
+
     final seller =
         _selectedPin?.seller ??
         _storefrontLocation?.seller ??
@@ -661,18 +824,19 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
     if (!mounted) return;
     setState(() => _rerouting = false);
 
-    result.fold((failure) => _snack(failure.message, error: true), (
-      route,
-    ) async {
-      setState(() {
-        _route = route;
-        _navInstructionIndex = 0;
-        _spokenManeuverIndexes.clear();
-        _spokenAlertIndexes.clear();
-      });
-      await _drawRoute(route);
-      await _updateNavigationProgress(user, forceSpeak: true);
-    });
+    await result.fold<Future<void>>(
+      (failure) async => _snack(failure.message, error: true),
+      (route) async {
+        setState(() {
+          _route = route;
+          _navInstructionIndex = 0;
+          _spokenManeuverIndexes.clear();
+          _spokenAlertIndexes.clear();
+        });
+        await _drawRoute(route);
+        await _updateNavigationProgress(user, forceSpeak: true);
+      },
+    );
   }
 
   _NearestRoutePoint _nearestRoutePoint(LatLng user, List<LatLng> routePoints) {
@@ -699,18 +863,44 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
   void _toggleVoice() {
     setState(() => _voiceEnabled = !_voiceEnabled);
     if (!_voiceEnabled) {
-      _tts.stop();
+      unawaited(_stopTts());
     } else if (_routeUiState == RouteUiState.navigating) {
-      _speakForPosition(
-        maneuverIndex: _navInstructionIndex,
-        distanceToManeuverMeters: _distanceToNextManeuverMeters,
-        forceSpeak: true,
+      unawaited(
+        _speakForPosition(
+          maneuverIndex: _navInstructionIndex,
+          distanceToManeuverMeters: _distanceToNextManeuverMeters,
+          forceSpeak: true,
+        ),
       );
     }
   }
 
   Widget _modeSelector() {
     final colors = context.appColors;
+    final segments = <ButtonSegment<BuyerMapMode>>[
+      const ButtonSegment(
+        value: BuyerMapMode.nearby,
+        label: Text('Nearby'),
+        icon: Icon(Icons.near_me_rounded),
+      ),
+      const ButtonSegment(
+        value: BuyerMapMode.explore,
+        label: Text('Explore'),
+        icon: Icon(Icons.map_outlined),
+      ),
+      const ButtonSegment(
+        value: BuyerMapMode.storefront,
+        label: Text('Route'),
+        icon: Icon(Icons.storefront_outlined),
+      ),
+      if (_destinationPlace != null)
+        const ButtonSegment(
+          value: BuyerMapMode.place,
+          label: Text('Place'),
+          icon: Icon(Icons.location_on_outlined),
+        ),
+    ];
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
@@ -721,23 +911,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
           child: Padding(
             padding: const EdgeInsets.all(6),
             child: SegmentedButton<BuyerMapMode>(
-              segments: const [
-                ButtonSegment(
-                  value: BuyerMapMode.nearby,
-                  label: Text('Nearby'),
-                  icon: Icon(Icons.near_me_rounded),
-                ),
-                ButtonSegment(
-                  value: BuyerMapMode.explore,
-                  label: Text('Explore'),
-                  icon: Icon(Icons.map_outlined),
-                ),
-                ButtonSegment(
-                  value: BuyerMapMode.storefront,
-                  label: Text('Route'),
-                  icon: Icon(Icons.storefront_outlined),
-                ),
-              ],
+              segments: segments,
               selected: {_mode},
               onSelectionChanged: (value) => _setMode(value.first),
               showSelectedIcon: false,
@@ -759,6 +933,8 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
         return _exploreSheet();
       case BuyerMapMode.storefront:
         return _storefrontSheet();
+      case BuyerMapMode.place:
+        return _placeSheet();
     }
   }
 
@@ -769,7 +945,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
       maxHeightFactor: 0.36,
       actions: [
         OutlinedButton.icon(
-          onPressed: _useCurrentLocation,
+          onPressed: () => unawaited(_useCurrentLocation()),
           icon: const Icon(Icons.my_location_rounded),
           label: const Text('GPS'),
         ),
@@ -779,7 +955,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
           label: const Text('Use center'),
         ),
         FilledButton.icon(
-          onPressed: _loading ? null : _loadNearbySellers,
+          onPressed: _loading ? null : () => unawaited(_loadNearbySellers()),
           icon: const Icon(Icons.search_rounded),
           label: const Text('Find nearby'),
         ),
@@ -832,7 +1008,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
                   onTap: () {
                     _sellerController.text = seller.seller;
                     _setMode(BuyerMapMode.storefront);
-                    _loadStorefrontLocation();
+                    unawaited(_loadStorefrontLocation());
                   },
                 );
               },
@@ -852,7 +1028,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
       maxHeightFactor: 0.30,
       actions: [
         FilledButton.icon(
-          onPressed: _loading ? null : _loadMapPoints,
+          onPressed: _loading ? null : () => unawaited(_loadMapPoints()),
           icon: const Icon(Icons.refresh_rounded),
           label: const Text('Refresh'),
         ),
@@ -885,7 +1061,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
               onPressed: () {
                 _sellerController.text = _selectedPin!.seller;
                 _setMode(BuyerMapMode.storefront);
-                _loadStorefrontLocation();
+                unawaited(_loadStorefrontLocation());
               },
               child: const Text('Open'),
             ),
@@ -904,7 +1080,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
       actions: [
         if (route == null) ...[
           OutlinedButton.icon(
-            onPressed: _useCurrentLocation,
+            onPressed: () => unawaited(_useCurrentLocation()),
             icon: const Icon(Icons.my_location_rounded),
             label: const Text('GPS'),
           ),
@@ -914,33 +1090,32 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
             label: const Text('Use center'),
           ),
           FilledButton.icon(
-            onPressed: _loading ? null : _loadStorefrontLocation,
+            onPressed: _loading
+                ? null
+                : () => unawaited(_loadStorefrontLocation()),
             icon: const Icon(Icons.storefront_rounded),
             label: const Text('Load seller'),
           ),
         ],
         if ((loc?.hasLocation ?? false) && route == null)
           FilledButton.icon(
-            onPressed: _routeToSelectedSeller,
+            onPressed: () => unawaited(_routeToSelectedSeller()),
             icon: const Icon(Icons.directions_rounded),
             label: const Text('Directions'),
           ),
         if (route != null) ...[
           FilledButton.icon(
-            onPressed: _startNavigation,
+            onPressed: () => unawaited(_startNavigation()),
             icon: const Icon(Icons.navigation_rounded),
             label: const Text('Start'),
           ),
           OutlinedButton.icon(
-            onPressed: () => _routeToSelectedSeller(refresh: true),
+            onPressed: () => unawaited(_routeToSelectedSeller(refresh: true)),
             icon: const Icon(Icons.refresh_rounded),
             label: const Text('Refresh'),
           ),
           OutlinedButton.icon(
-            onPressed: () async {
-              _stopNavigation(keepRoute: false);
-              await _map?.clearLines();
-            },
+            onPressed: () => unawaited(_clearRoute()),
             icon: const Icon(Icons.close_rounded),
             label: const Text('Clear'),
           ),
@@ -1008,6 +1183,118 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
           ),
           const SizedBox(height: 4),
           Text('Driving route preview', style: context.smallMuted),
+          if (route.maneuvers.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              route.maneuvers.first.bestVoiceText,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: context.p,
+            ),
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _placeSheet() {
+    final place = _destinationPlace;
+    final route = _route;
+
+    return StatusBottomSheet(
+      title: route == null ? 'Shared location' : 'Route preview',
+      maxHeightFactor: route == null ? 0.32 : 0.30,
+      actions: [
+        if (route == null) ...[
+          OutlinedButton.icon(
+            onPressed: () => unawaited(_useCurrentLocation()),
+            icon: const Icon(Icons.my_location_rounded),
+            label: const Text('GPS'),
+          ),
+          OutlinedButton.icon(
+            onPressed: _useMapCenterAsBuyer,
+            icon: const Icon(Icons.add_location_alt_outlined),
+            label: const Text('Use center'),
+          ),
+          FilledButton.icon(
+            onPressed: _loading
+                ? null
+                : () => unawaited(_routeToDestinationPlace()),
+            icon: const Icon(Icons.directions_rounded),
+            label: const Text('Directions'),
+          ),
+        ],
+        if (route != null) ...[
+          FilledButton.icon(
+            onPressed: () => unawaited(_startNavigation()),
+            icon: const Icon(Icons.navigation_rounded),
+            label: const Text('Start'),
+          ),
+          OutlinedButton.icon(
+            onPressed: () => unawaited(_routeToDestinationPlace(refresh: true)),
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Refresh'),
+          ),
+          OutlinedButton.icon(
+            onPressed: () => unawaited(_clearRoute()),
+            icon: const Icon(Icons.close_rounded),
+            label: const Text('Clear'),
+          ),
+        ],
+      ],
+      children: [
+        if (_loading)
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: LinearProgressIndicator(),
+          ),
+        if (place != null) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.location_on_rounded, size: 24),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      place.shortLabel,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.pStrong,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      place.displayAddress.isNotEmpty
+                          ? place.displayAddress
+                          : '${place.latitude.toStringAsFixed(6)}, ${place.longitude.toStringAsFixed(6)}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.smallMuted,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+        if (route != null) ...[
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(Icons.directions_car_rounded, size: 22),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${route.durationLabel} · ${route.distanceLabel}',
+                  style: context.h5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text('AOS Maps route preview', style: context.smallMuted),
           if (route.maneuvers.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
@@ -1145,7 +1432,8 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
                 ),
               ),
               OutlinedButton.icon(
-                onPressed: () => _routeToSelectedSeller(refresh: true),
+                onPressed: () =>
+                    unawaited(_routeToActiveDestination(refresh: true)),
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Reroute'),
               ),
@@ -1194,34 +1482,53 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final destination = _destinationPlace;
+    final initialTarget = destination == null
+        ? const LatLng(-1.286389, 36.817223)
+        : LatLng(destination.latitude, destination.longitude);
 
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: _routeUiState == RouteUiState.navigating
           ? null
           : AppBar(
-              title: Text('Sellers map', style: context.h5),
+              title: Text(
+                _mode == BuyerMapMode.place ? 'AOS Maps' : 'Sellers map',
+                style: context.h5,
+              ),
               actions: [
-                TextButton.icon(
-                  onPressed: () => context.pushNamed(AppRoutes.nSellerLocation),
-                  icon: const Icon(Icons.add_location_alt_outlined),
-                  label: const Text('My store'),
-                ),
+                if (_mode != BuyerMapMode.place)
+                  TextButton.icon(
+                    onPressed: () => unawaited(
+                      context.pushNamed<void>(AppRoutes.nSellerLocation),
+                    ),
+                    icon: const Icon(Icons.add_location_alt_outlined),
+                    label: const Text('My store'),
+                  ),
               ],
             ),
       body: Stack(
         children: [
           AOSMap(
+            initialTarget: initialTarget,
+            initialZoom: destination == null ? 11 : 15,
             onMapCreated: (controller) {
               _map = controller;
-              controller.onSymbolTapped.add((symbol) async {
+              controller.onSymbolTapped.add((symbol) {
                 final geometry = symbol.options.geometry;
-                if (geometry != null) await _handleMapPointTap(geometry);
+                if (geometry != null) {
+                  unawaited(_handleMapPointTap(geometry));
+                }
               });
-              controller.onCircleTapped.add((circle) async {
+              controller.onCircleTapped.add((circle) {
                 final geometry = circle.options.geometry;
-                if (geometry != null) await _handleMapPointTap(geometry);
+                if (geometry != null) {
+                  unawaited(_handleMapPointTap(geometry));
+                }
               });
+              if (_destinationPlace != null) {
+                unawaited(_showDestinationPlace());
+              }
             },
             onCameraMove: (position) => _camera = position,
             onCameraIdle: () {
@@ -1237,7 +1544,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
                 FloatingMapButton(
                   icon: Icons.my_location_rounded,
                   tooltip: 'Use GPS',
-                  onTap: _useCurrentLocation,
+                  onTap: () => unawaited(_useCurrentLocation()),
                 ),
                 const SizedBox(height: 10),
                 FloatingMapButton(

@@ -107,8 +107,22 @@ class SocketCallListener {
   }
 
   Future<void> _endNativeCallFromPayload(Map<String, dynamic> data) async {
-    final callId = data['call_id']?.toString();
+    final callId =
+        _cleanString(data['call_id']) ??
+        _cleanString(data['id']) ??
+        _cleanString(data['callId']) ??
+        _cleanString(data['callID']);
     await callKitService.endCall(callId: callId);
+  }
+
+  String? _cleanString(Object? value) {
+    final text = value?.toString().trim();
+
+    if (text == null || text.isEmpty || text.toLowerCase() == 'null') {
+      return null;
+    }
+
+    return text;
   }
 
   void detach() {

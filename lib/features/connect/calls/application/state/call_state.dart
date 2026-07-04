@@ -109,6 +109,7 @@ class CallState {
   CallState copyWith({
     UiCallPhase? uiPhase,
     BackendCallStatus? backendStatus,
+    bool clearBackendStatus = false,
     Room? room,
     Call? activeCall,
     ValueGetter<Call?>? activeCallBuilder,
@@ -149,7 +150,9 @@ class CallState {
   }) {
     return CallState(
       uiPhase: uiPhase ?? this.uiPhase,
-      backendStatus: backendStatus ?? this.backendStatus,
+      backendStatus: clearBackendStatus
+          ? null
+          : backendStatus ?? this.backendStatus,
       room: room ?? this.room,
       activeCall: activeCallBuilder != null
           ? activeCallBuilder()

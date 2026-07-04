@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/payloads/chat_shared_payload.dart';
+import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 
 class SharedLocationBubble extends StatelessWidget {
   const SharedLocationBubble({
@@ -16,11 +18,21 @@ class SharedLocationBubble extends StatelessWidget {
   final ChatLocationPayload payload;
   final bool isMe;
 
-  Future<void> _openMaps() async {
-    final uri = payload.mapsUri;
-    if (uri == null) return;
+  void _openAosMaps(BuildContext context) {
+    if (!payload.hasCoordinates) return;
 
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final place = AOSPlace(
+      id: 'chat-location-${payload.latitude.toStringAsFixed(6)}-${payload.longitude.toStringAsFixed(6)}',
+      name: payload.title,
+      displayAddress: payload.address.trim().isEmpty
+          ? payload.subtitle
+          : payload.address.trim(),
+      latitude: payload.latitude,
+      longitude: payload.longitude,
+      source: 'chat',
+    );
+
+    unawaited(context.pushNamed<void>(AppRoutes.nMaps, extra: place));
   }
 
   @override
@@ -33,9 +45,7 @@ class SharedLocationBubble extends StatelessWidget {
     final accent = isMe ? colors.white : colors.primary;
 
     return InkWell(
-      onTap: () {
-        unawaited(_openMaps());
-      },
+      onTap: payload.hasCoordinates ? () => _openAosMaps(context) : null,
       borderRadius: BorderRadius.circular(20),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
@@ -121,9 +131,9 @@ class SharedLocationBubble extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            payload.mapsUri == null
-                                ? payload.subtitle
-                                : 'Tap to open in Maps',
+                            payload.hasCoordinates
+                                ? 'Tap to open in AOS Maps'
+                                : payload.subtitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: context.small.copyWith(color: muted),

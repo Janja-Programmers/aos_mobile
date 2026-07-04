@@ -23,6 +23,8 @@ class CallManager extends StateNotifier<CallState> {
 
   StreamSubscription<Duration>? _durationSub;
   Timer? _resetTimer;
+  Timer? _statusReconcileTimer;
+  bool _statusReconcileInFlight = false;
 
   CallState get currentState => state;
   final Set<String> _localTerminalCallIds = <String>{};
@@ -1041,13 +1043,19 @@ class CallManager extends StateNotifier<CallState> {
     return true;
   }
 
-  Future<BackendCallStatus?> _readBackendStatus(String callId) async {
+  Future<Map<String, dynamic>?> _readBackendPayload(String callId) async {
     try {
-      final status = await repository.getCallStatus(callId: callId);
-      return _parseBackendStatus(status['status']);
+      return await repository.getCallStatus(callId: callId);
     } catch (_) {
       return null;
     }
+  }
+
+  Future<BackendCallStatus?> _readBackendStatus(String callId) async {
+    final payload = await _readBackendPayload(callId);
+    if (payload == null) return null;
+
+    return _parseBackendStatus(payload['status']);
   }
 
   AOSCallType _parseCallType(Object? value) {
@@ -1110,6 +1118,167 @@ class CallManager extends StateNotifier<CallState> {
       default:
         return null;
     }
+  }
+
+  void _startStatusReconciliationIfNeeded() {
+    final call = state.activeCall;
+    final status = state.backendStatus;
+
+    if (call == null || call.id.trim().isEmpty || status == null) {
+      _stopStatusReconciliation();
+      return;
+    }
+
+    if (_isTerminalStatus(status)) {
+      _stopStatusReconciliation();
+      return;
+    }
+
+    if (_statusReconcileTimer != null) {
+      return;
+    }
+
+    _statusReconcileTimer = Timer.periodic(
+      const Duration(seconds: 8),
+      (_) => unawaited(_reconcileActiveCallWithBackend()),
+    );
+  }
+
+  void _stopStatusReconciliation() {
+    _statusReconcileTimer?.cancel();
+    _statusReconcileTimer = null;
+    _statusReconcileInFlight = false;
+  }
+
+  Future<void> _reconcileActiveCallWithBackend() async {
+    if (_statusReconcileInFlight) return;
+
+    final call = state.activeCall;
+    final callId = call?.id.trim();
+
+    if (callId == null || callId.isEmpty) {
+      _stopStatusReconciliation();
+      return;
+    }
+
+    if (_isTerminalStatus(state.backendStatus)) {
+      _stopStatusReconciliation();
+      return;
+    }
+
+    _statusReconcileInFlight = true;
+
+    try {
+      final payload = await _readBackendPayload(callId);
+      if (payload == null || !_matchesActiveCall(callId)) return;
+
+      final backendStatus = _parseBackendStatus(payload['status']);
+      if (backendStatus == null) return;
+
+      if (_isTerminalStatus(backendStatus)) {
+        await _leaveRoomInternal();
+        _applyBackendState(backendStatus, hasIncomingCallUi: false);
+        return;
+      }
+
+      if (backendStatus == BackendCallStatus.ongoing) {
+        await _recoverOngoingCallFromBackend(payload: payload);
+        return;
+      }
+
+      if (backendStatus == BackendCallStatus.ringing &&
+          state.backendStatus != BackendCallStatus.ringing) {
+        _applyBackendState(
+          BackendCallStatus.ringing,
+          activeCall: state.activeCall,
+        );
+      }
+    } finally {
+      _statusReconcileInFlight = false;
+    }
+  }
+
+  Future<void> _recoverOngoingCallFromBackend({
+    required Map<String, dynamic> payload,
+  }) async {
+    final call = state.activeCall;
+    if (call == null) return;
+
+    final payloadCall = _callFromStatusPayload(payload, fallback: call);
+    var mergedCall = _mergeCallForAction(call, payloadCall);
+
+    if (mergedCall.token.isEmpty || mergedCall.wsUrl.isEmpty) {
+      try {
+        final tokenCall = await repository.getCallToken(callId: mergedCall.id);
+        mergedCall = _mergeCallForAction(
+          mergedCall,
+          tokenCall.copyWith(
+            conversationId: mergedCall.conversationId,
+            callType: mergedCall.callType,
+            caller: mergedCall.caller,
+            receiver: mergedCall.receiver,
+            videoUpgradeStatus: mergedCall.videoUpgradeStatus,
+            videoUpgradeRequestedBy: mergedCall.videoUpgradeRequestedBy,
+          ),
+        );
+      } catch (_) {
+        // If token recovery fails, keep the backend status sync but do not join.
+      }
+    }
+
+    _applyBackendState(
+      BackendCallStatus.ongoing,
+      activeCall: mergedCall,
+      direction: state.direction,
+      caller: mergedCall.caller,
+      receiver: mergedCall.receiver,
+      hasIncomingCallUi: false,
+    );
+
+    if (!state.hasActiveRoom) {
+      await _joinRoomInternal(mergedCall);
+    }
+  }
+
+  Call _callFromStatusPayload(
+    Map<String, dynamic> payload, {
+    required Call fallback,
+  }) {
+    final caller = _parseParticipant(
+      user: payload['caller'],
+      displayName: payload['caller_display_name'],
+      avatar: payload['caller_avatar'],
+    );
+    final receiver = _parseParticipant(
+      user: payload['receiver'],
+      displayName: payload['receiver_display_name'],
+      avatar: payload['receiver_avatar'],
+    );
+
+    final payloadCallType = _cleanString(payload['call_type']) == null
+        ? fallback.callType
+        : _parseCallType(payload['call_type']);
+
+    return Call(
+      id:
+          _cleanString(payload['call_id']) ??
+          _cleanString(payload['id']) ??
+          fallback.id,
+      conversationId:
+          _cleanString(payload['conversation_id']) ?? fallback.conversationId,
+      callType: payloadCallType,
+      roomName: _cleanString(payload['room_name']) ?? fallback.roomName,
+      token: _cleanString(payload['token']) ?? fallback.token,
+      wsUrl: _cleanString(payload['ws_url']) ?? fallback.wsUrl,
+      caller: caller ?? fallback.caller,
+      receiver: receiver ?? fallback.receiver,
+      videoUpgradeStatus:
+          _cleanString(payload['video_upgrade_status']) ??
+          fallback.videoUpgradeStatus,
+      videoUpgradeRequestedBy:
+          _cleanString(payload['video_upgrade_requested_by']) ??
+          fallback.videoUpgradeRequestedBy,
+    );
   }
 
   // ================= CONTROLS =================
@@ -1394,7 +1563,10 @@ class CallManager extends StateNotifier<CallState> {
 
     if (_isTerminal(nextStatus)) {
       callTimer.stop();
+      _stopStatusReconciliation();
       _scheduleReset();
+    } else {
+      _startStatusReconciliationIfNeeded();
     }
   }
 
@@ -1452,6 +1624,7 @@ class CallManager extends StateNotifier<CallState> {
 
   Future<void> _failCall(Object error) async {
     await _leaveRoomInternal();
+    _stopStatusReconciliation();
 
     state = state.copyWith(
       backendStatus: BackendCallStatus.failed,
@@ -1508,6 +1681,7 @@ class CallManager extends StateNotifier<CallState> {
 
   void _resetToIdle() {
     callTimer.stop();
+    _stopStatusReconciliation();
 
     _localTerminalCallIds.clear();
     _callActionLocks.clear();
@@ -1515,6 +1689,7 @@ class CallManager extends StateNotifier<CallState> {
 
     state = state.copyWith(
       uiPhase: UiCallPhase.idle,
+      clearBackendStatus: true,
       activeCallBuilder: () => null,
       callerBuilder: () => null,
       receiverBuilder: () => null,
@@ -1543,6 +1718,7 @@ class CallManager extends StateNotifier<CallState> {
   @override
   void dispose() {
     _resetTimer?.cancel();
+    _stopStatusReconciliation();
     unawaited(_durationSub?.cancel());
     callTimer.dispose();
     super.dispose();

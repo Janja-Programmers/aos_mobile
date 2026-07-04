@@ -50,10 +50,21 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   final data = asJsonMap(message.data);
 
+  final event = _normalizePushType(data['event']);
+  final type = _normalizePushType(data['type']);
+  final notificationType = _normalizePushType(data['notification_type']);
+  final action = _normalizePushType(data['action']);
+
   final isIncomingCall =
-      data['event'] == 'aos_incoming_call' ||
-      data['type'] == 'incoming_call' ||
-      data['notification_type'] == 'incoming_call';
+      event == 'aos_incoming_call' ||
+      event == 'incoming_call' ||
+      event == 'call' ||
+      type == 'incoming_call' ||
+      type == 'call' ||
+      notificationType == 'incoming_call' ||
+      notificationType == 'call' ||
+      action == 'incoming_call' ||
+      action == 'call';
 
   if (!isIncomingCall) return;
 
@@ -68,6 +79,16 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await const CallKitPendingPayloadStore().save(pendingPayload);
 
   await FlutterCallkitIncoming.showCallkitIncoming(params);
+}
+
+String? _normalizePushType(Object? value) {
+  final text = value?.toString().trim().toLowerCase();
+
+  if (text == null || text.isEmpty || text == 'null') {
+    return null;
+  }
+
+  return text.replaceAll('-', '_').replaceAll(' ', '_');
 }
 
 void main() {

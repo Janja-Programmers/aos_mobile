@@ -44,12 +44,7 @@ class ChatLocationPayload {
       return '${latitude.toStringAsFixed(5)}, ${longitude.toStringAsFixed(5)}';
     }
 
-    return 'Tap to open in Maps';
-  }
-
-  Uri? get mapsUri {
-    if (!hasCoordinates) return null;
-    return Uri.parse('https://maps.google.com/?q=$latitude,$longitude');
+    return 'Tap to open in AOS Maps';
   }
 
   String toMessageContent() {

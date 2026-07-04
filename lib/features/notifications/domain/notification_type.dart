@@ -24,7 +24,11 @@ extension NotificationTypeX on NotificationType {
   }
 
   static NotificationType fromBackendValue(String? value) {
-    final normalized = value?.trim().toLowerCase();
+    final normalized = value
+        ?.trim()
+        .toLowerCase()
+        .replaceAll('-', '_')
+        .replaceAll(' ', '_');
 
     switch (normalized) {
       // CHAT

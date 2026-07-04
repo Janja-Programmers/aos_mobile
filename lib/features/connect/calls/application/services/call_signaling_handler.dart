@@ -11,7 +11,7 @@ class CallSignalingHandler {
   // ================= INCOMING =================
   Future<bool> handleIncomingCall(Map<String, dynamic> data) async {
     try {
-      final callId = _cleanString(data['call_id']) ?? _cleanString(data['id']);
+      final callId = _extractCallId(data);
       final roomName = _cleanString(data['room_name']);
       final callTypeRaw = _cleanString(data['call_type']);
       final token = _cleanString(data['token']);
@@ -70,7 +70,7 @@ class CallSignalingHandler {
   // ================= RINGING =================
   Future<void> handleCallRinging(Map<String, dynamic> data) async {
     try {
-      final callId = _cleanString(data['call_id']) ?? _cleanString(data['id']);
+      final callId = _extractCallId(data);
 
       if (callId == null) {
         return;
@@ -83,7 +83,7 @@ class CallSignalingHandler {
   // ================= ACCEPTED =================
   Future<void> handleCallAccepted(Map<String, dynamic> data) async {
     try {
-      final callId = data['call_id'] as String?;
+      final callId = _extractCallId(data);
       if (callId == null) {
         return;
       }
@@ -95,7 +95,7 @@ class CallSignalingHandler {
   // ================= REJECTED =================
   Future<void> handleCallRejected(Map<String, dynamic> data) async {
     try {
-      final callId = data['call_id'] as String?;
+      final callId = _extractCallId(data);
 
       if (callId == null) {
         return;
@@ -108,7 +108,7 @@ class CallSignalingHandler {
   // ================= ENDED =================
   Future<void> handleCallEnded(Map<String, dynamic> data) async {
     try {
-      final callId = data['call_id'] as String?;
+      final callId = _extractCallId(data);
 
       if (callId == null) {
         return;
@@ -121,7 +121,7 @@ class CallSignalingHandler {
   // ================= HANDLECALLNOTANSWERED =================
   Future<void> handleCallNotAnswered(Map<String, dynamic> data) async {
     try {
-      final callId = data['call_id'] as String?;
+      final callId = _extractCallId(data);
 
       if (callId == null) {
         return;
@@ -134,7 +134,7 @@ class CallSignalingHandler {
   // ================= CANCELLED =================
   Future<void> handleCallCancelled(Map<String, dynamic> data) async {
     try {
-      final callId = data['call_id'] as String?;
+      final callId = _extractCallId(data);
 
       if (callId == null) {
         return;
@@ -147,7 +147,7 @@ class CallSignalingHandler {
   // ================= VIDEO UPGRADE REQUESTED =================
   Future<void> handleVideoUpgradeRequested(Map<String, dynamic> data) async {
     try {
-      final callId = _cleanString(data['call_id']) ?? _cleanString(data['id']);
+      final callId = _extractCallId(data);
       final requestedBy =
           _cleanString(data['video_upgrade_requested_by']) ??
           _cleanString(data['requested_by']) ??
@@ -169,7 +169,7 @@ class CallSignalingHandler {
   // ================= VIDEO UPGRADE ACCEPTED =================
   Future<void> handleVideoUpgradeAccepted(Map<String, dynamic> data) async {
     try {
-      final callId = _cleanString(data['call_id']) ?? _cleanString(data['id']);
+      final callId = _extractCallId(data);
 
       if (callId == null) {
         return;
@@ -182,7 +182,7 @@ class CallSignalingHandler {
   // ================= VIDEO UPGRADE DECLINED =================
   Future<void> handleVideoUpgradeDeclined(Map<String, dynamic> data) async {
     try {
-      final callId = _cleanString(data['call_id']) ?? _cleanString(data['id']);
+      final callId = _extractCallId(data);
 
       if (callId == null) {
         return;
@@ -195,7 +195,7 @@ class CallSignalingHandler {
   // ================= VIDEO UPGRADE CANCELLED =================
   Future<void> handleVideoUpgradeCancelled(Map<String, dynamic> data) async {
     try {
-      final callId = _cleanString(data['call_id']) ?? _cleanString(data['id']);
+      final callId = _extractCallId(data);
 
       if (callId == null) {
         return;
@@ -206,6 +206,13 @@ class CallSignalingHandler {
   }
 
   // ================= HELPERS =================
+
+  String? _extractCallId(Map<String, dynamic> data) {
+    return _cleanString(data['call_id']) ??
+        _cleanString(data['id']) ??
+        _cleanString(data['callId']) ??
+        _cleanString(data['callID']);
+  }
 
   String? _cleanString(dynamic value) {
     if (value == null) return null;

@@ -6,79 +6,92 @@ import 'package:africaonlinestores/features/sellers/presentation/widgets/my_stor
 import 'package:flutter/material.dart';
 
 class MyPostTile extends StatelessWidget {
-  const MyPostTile({super.key, required this.post, required this.onMenuTap});
+  const MyPostTile({
+    super.key,
+    required this.post,
+    required this.onMenuTap,
+    this.onTap,
+  });
 
   final StorefrontPost post;
   final VoidCallback onMenuTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: colors.surface,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: .035),
-            blurRadius: 14,
-            offset: const Offset(0, 7),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: .035),
+                blurRadius: 14,
+                offset: const Offset(0, 7),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          PostThumbnail(
-            imageUrl: post.imageUrl,
-            duration: post.duration,
-            isLive: post.isLive,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  post.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.small.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(post.age, style: context.small),
-                const SizedBox(height: 6),
-                Row(
+          child: Row(
+            children: [
+              PostThumbnail(
+                imageUrl: post.imageUrl,
+                duration: post.duration,
+                isLive: post.isLive,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    PostMetric(
-                      icon: Icons.remove_red_eye_outlined,
-                      label: post.views,
+                    Text(
+                      post.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.small.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    PostMetric(
-                      icon: Icons.favorite_border_rounded,
-                      label: post.likes,
-                    ),
-                    const SizedBox(width: 8),
-                    PostMetric(
-                      icon: Icons.chat_bubble_outline,
-                      label: post.comments,
+                    const SizedBox(height: 5),
+                    Text(post.age, style: context.small),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        PostMetric(
+                          icon: Icons.remove_red_eye_outlined,
+                          label: post.views,
+                        ),
+                        const SizedBox(width: 8),
+                        PostMetric(
+                          icon: Icons.favorite_border_rounded,
+                          label: post.likes,
+                        ),
+                        const SizedBox(width: 8),
+                        PostMetric(
+                          icon: Icons.chat_bubble_outline,
+                          label: post.comments,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              IconButton(
+                onPressed: onMenuTap,
+                icon: const Icon(Icons.more_vert, size: 20),
+                color: Colors.grey,
+              ),
+            ],
           ),
-          IconButton(
-            onPressed: onMenuTap,
-            icon: const Icon(Icons.more_vert, size: 20),
-            color: Colors.grey,
-          ),
-        ],
+        ),
       ),
     );
   }

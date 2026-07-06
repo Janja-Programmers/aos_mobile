@@ -102,7 +102,13 @@ class MyPostsSection extends StatelessWidget {
         ...posts.map(
           (post) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: MyPostTile(post: post, onMenuTap: () => onPostMenuTap(post)),
+            child: MyPostTile(
+              post: post,
+              onMenuTap: () => onPostMenuTap(post),
+              onTap: () {
+                ShortsNavigation.toShortDetailById(context, shortId: post.id);
+              },
+            ),
           ),
         ),
       ],

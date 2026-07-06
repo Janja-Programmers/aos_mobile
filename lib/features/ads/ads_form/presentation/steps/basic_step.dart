@@ -147,10 +147,7 @@ class _BasicStepState extends ConsumerState<BasicStep> {
 
             final res = await context.pushNamed<Map<String, dynamic>>(
               AppRoutes.nSelectCategory,
-              extra: {
-                'initialParent': parentNode,
-                'openChildren': parentNode != null,
-              },
+              extra: parentNode,
             );
 
             if (res == null) return;

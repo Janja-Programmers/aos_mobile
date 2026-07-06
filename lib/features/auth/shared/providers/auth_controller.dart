@@ -15,6 +15,27 @@ import 'package:africaonlinestores/features/preferences/data/preferences_api_pro
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+class _SessionProbe {
+  const _SessionProbe._({
+    this.user,
+    required this.invalid,
+    required this.transient,
+  });
+
+  const _SessionProbe.valid(Map<String, dynamic> user)
+    : this._(user: user, invalid: false, transient: false);
+
+  const _SessionProbe.invalid() : this._(invalid: true, transient: false);
+
+  const _SessionProbe.transient() : this._(invalid: false, transient: true);
+
+  final Map<String, dynamic>? user;
+  final bool invalid;
+  final bool transient;
+
+  bool get isValid => user != null && !invalid && !transient;
+}
+
 class AuthController extends StateNotifier<AuthState> {
   AuthController({
     required Ref ref,
@@ -63,7 +84,7 @@ class AuthController extends StateNotifier<AuthState> {
 
         if (!refreshed) {
           appLogger.w('[Auth] Session expired → guest');
-          _setGuest();
+          await _clearSession();
         }
       });
 
@@ -74,14 +95,20 @@ class AuthController extends StateNotifier<AuthState> {
         return;
       }
 
-      final user = await _fetchValidSession(sid);
+      final probe = await _fetchValidSession(sid);
 
-      if (user == null) {
+      if (probe.isValid) {
+        await _completeLogin(sid: sid, user: probe.user!);
+        return;
+      }
+
+      if (probe.invalid) {
         await _clearSession();
         return;
       }
 
-      await _completeLogin(sid: sid, user: user);
+      appLogger.w('[Auth] Session validation temporarily failed');
+      state = const AuthGuest();
     } catch (e) {
       appLogger.e('[Auth] init error: $e');
       await _clearSession();
@@ -91,22 +118,35 @@ class AuthController extends StateNotifier<AuthState> {
   // ---------------------------------------------------------------------------
   // SESSION VALIDATION
   // ---------------------------------------------------------------------------
-  Future<Map<String, dynamic>?> _fetchValidSession(String sid) async {
+  Future<_SessionProbe> _fetchValidSession(String sid) async {
     try {
       await _apiClient.setSid(sid);
 
       final res = await _api.me();
 
-      if (res.isLeft) return null;
+      if (res.isLeft) {
+        final failure = res.leftOrNull;
+
+        if (failure?.type == FailureType.unauthorized ||
+            failure?.statusCode == 401) {
+          return const _SessionProbe.invalid();
+        }
+
+        return const _SessionProbe.transient();
+      }
 
       final payload = res.rightOrNull ?? {};
-      if (payload['ok'] != true) return null;
+      if (payload['ok'] != true) return const _SessionProbe.invalid();
 
       final data = asJsonMap(payload['data']);
-      return asJsonMap(data['user']);
+      final user = asJsonMap(data['user']);
+
+      if (user.isEmpty) return const _SessionProbe.invalid();
+
+      return _SessionProbe.valid(user);
     } catch (e) {
       appLogger.e('[Auth] Fetch session error: $e');
-      return null;
+      return const _SessionProbe.transient();
     }
   }
 
@@ -132,14 +172,19 @@ class AuthController extends StateNotifier<AuthState> {
       return false;
     }
 
-    final user = await _fetchValidSession(sid);
+    final probe = await _fetchValidSession(sid);
 
-    if (user == null) {
+    if (probe.transient) {
+      appLogger.w('[Auth] Refresh temporarily failed; keeping session');
+      return true;
+    }
+
+    if (!probe.isValid) {
       appLogger.w('[Auth] Refresh failed (invalid session)');
       return false;
     }
 
-    state = AuthAuthenticated(user: AuthUser.fromMap(user), sid: sid);
+    state = AuthAuthenticated(user: AuthUser.fromMap(probe.user!), sid: sid);
 
     /// ✅ DO NOT BLOCK AUTH
     unawaited(_syncUserPreferences());
@@ -191,10 +236,6 @@ class AuthController extends StateNotifier<AuthState> {
     } catch (_) {}
 
     await _clearSession();
-  }
-
-  void _setGuest() {
-    state = const AuthGuest();
   }
 
   Future<void> _clearSession() async {

@@ -116,9 +116,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: AppRoutes.nSelectCategory,
         path: AppRoutes.selectCategory,
         builder: (context, state) {
-          final parent = state.extra is CategoryNode
-              ? state.extra! as CategoryNode
-              : null;
+          final extra = state.extra;
+          CategoryNode? parent;
+
+          if (extra is CategoryNode) {
+            parent = extra;
+          } else if (extra is Map) {
+            final initialParent = extra['initialParent'];
+            final openChildren = extra['openChildren'] == true;
+            if (openChildren && initialParent is CategoryNode) {
+              parent = initialParent;
+            }
+          }
 
           return SelectCategoryScreen(parent: parent);
         },

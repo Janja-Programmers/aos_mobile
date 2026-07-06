@@ -96,17 +96,17 @@ class ShortUploadProgressBanner extends ConsumerWidget {
                             .retryProcessingCurrent();
                       },
                       child: const Text('Retry'),
-                    )
-                  else
-                    IconButton(
-                      onPressed: () {
-                        ref
-                                .read(activeShortUploadSessionProvider.notifier)
-                                .state =
-                            null;
-                      },
-                      icon: Icon(Icons.close_rounded, color: colors.textMuted),
                     ),
+                  IconButton(
+                    tooltip: 'Dismiss upload message',
+                    onPressed: () {
+                      ref
+                              .read(activeShortUploadSessionProvider.notifier)
+                              .state =
+                          null;
+                    },
+                    icon: Icon(Icons.close_rounded, color: colors.textMuted),
+                  ),
                 ],
               ),
             ),

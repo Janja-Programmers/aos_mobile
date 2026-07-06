@@ -91,7 +91,7 @@ class HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
                         style: TextStyle(color: colors.textPrimary),
                       ),
                       TextSpan(
-                        text: 'Stores',
+                        text: 'Space',
                         style: TextStyle(color: colors.success),
                       ),
                     ],

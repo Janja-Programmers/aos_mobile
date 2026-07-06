@@ -29,16 +29,21 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
   bool _didResolveInitialTab = false;
 
   @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      ref.read(callManagerProvider.notifier).loadCallLogs();
+    });
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
     if (_didResolveInitialTab) return;
 
-    final tab = GoRouter.of(context)
-        .routerDelegate
-        .currentConfiguration
-        .uri
-        .queryParameters['tab'];
+    final tab = GoRouterState.of(context).uri.queryParameters['tab'];
     _selectedTab = tab == 'calls' ? _ConnectTab.calls : _ConnectTab.chats;
     _didResolveInitialTab = true;
   }
@@ -61,6 +66,10 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
 
     HapticFeedback.selectionClick();
     setState(() => _selectedTab = tab);
+
+    if (tab == _ConnectTab.calls) {
+      ref.read(callManagerProvider.notifier).loadCallLogs();
+    }
   }
 
   @override
@@ -167,15 +176,11 @@ class _ConnectHeader extends ConsumerWidget {
             onSelected: (index) => AppNavigation.goTo(context, ref, index),
             itemBuilder: (context) {
               final items = AppNavConfig.items(context);
-              final location = GoRouter.of(context)
-                  .routerDelegate
-                  .currentConfiguration
-                  .uri
-                  .path;
+              final location = GoRouterState.of(context).matchedLocation;
 
               return List.generate(items.length, (i) {
                 final item = items[i];
-                final isActive = _isActiveNavItem(location, item.routeName);
+                final isActive = location.contains(item.routeName);
                 final itemColor = isActive
                     ? colors.primary
                     : colors.textPrimary;
@@ -419,20 +424,4 @@ class _BottomBarItem extends StatelessWidget {
       ),
     );
   }
-}
-
-bool _isActiveNavItem(String location, String routeName) {
-  final routePath = switch (routeName) {
-    AppRoutes.nHome => AppRoutes.home,
-    AppRoutes.nFeeds => AppRoutes.feeds,
-    AppRoutes.nStartSelling => AppRoutes.startSelling,
-    AppRoutes.nConnect => AppRoutes.connect,
-    AppRoutes.nAccount => AppRoutes.account,
-    _ => '',
-  };
-
-  if (routePath.isEmpty) return false;
-  if (routePath == AppRoutes.home) return location == routePath;
-
-  return location == routePath || location.startsWith('$routePath/');
 }

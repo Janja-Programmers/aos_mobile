@@ -13,6 +13,7 @@ import 'package:africaonlinestores/features/auth/shared/providers/auth_controlle
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_mapper.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
 import 'package:africaonlinestores/features/social/application/providers/social_providers.dart';
 import 'package:africaonlinestores/features/social/application/state/social_connections_state.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
@@ -944,62 +945,68 @@ class _ProfileGridItem extends StatelessWidget {
         short.playbackUrl;
     final viewCount = _formatCompact(short.metrics.viewCount);
 
-    return ColoredBox(
-      color: colors.border,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (thumbnail.trim().isNotEmpty)
-            Image.network(
-              thumbnail,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => _PostFallbackIcon(short: short),
-              loadingBuilder: (context, child, progress) {
-                if (progress == null) return child;
-                return _PostFallbackIcon(short: short);
-              },
-            )
-          else
-            _PostFallbackIcon(short: short),
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    colors.black.withValues(alpha: 0.02),
-                    colors.black.withValues(alpha: 0.32),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 5,
-            bottom: 5,
-            child: Row(
-              children: [
-                Icon(Icons.play_arrow_rounded, color: colors.white, size: 16),
-                const SizedBox(width: 2),
-                Text(
-                  viewCount,
-                  style: context.p.copyWith(
-                    color: colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    shadows: [
-                      Shadow(
-                        color: colors.black.withValues(alpha: 0.55),
-                        blurRadius: 4,
-                      ),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        ShortsNavigation.toShortDetailById(context, shortId: short.id.value);
+      },
+      child: ColoredBox(
+        color: colors.border,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (thumbnail.trim().isNotEmpty)
+              Image.network(
+                thumbnail,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => _PostFallbackIcon(short: short),
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return _PostFallbackIcon(short: short);
+                },
+              )
+            else
+              _PostFallbackIcon(short: short),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      colors.black.withValues(alpha: 0.02),
+                      colors.black.withValues(alpha: 0.32),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+            Positioned(
+              left: 5,
+              bottom: 5,
+              child: Row(
+                children: [
+                  Icon(Icons.play_arrow_rounded, color: colors.white, size: 16),
+                  const SizedBox(width: 2),
+                  Text(
+                    viewCount,
+                    style: context.p.copyWith(
+                      color: colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      shadows: [
+                        Shadow(
+                          color: colors.black.withValues(alpha: 0.55),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

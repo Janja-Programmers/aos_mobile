@@ -39,7 +39,7 @@ class ShortCard extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              ShortThumbnail(imageUrl: imageUrl),
+              ShortThumbnail(imageUrl: imageUrl, height: 260),
 
               Positioned.fill(
                 child: IgnorePointer(

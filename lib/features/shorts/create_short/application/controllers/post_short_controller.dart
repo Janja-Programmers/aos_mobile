@@ -124,14 +124,24 @@ class PostShortController extends StateNotifier<UploadState> {
       status: UploadStatus.processing,
     );
 
-    if (!await _waitUntilReady(shortId)) return;
+    final ready = await _waitUntilReady(shortId);
+    if (!ready && state.status != UploadStatus.processing) return;
 
     final finalShort = await _updateMetadataAndFetch(shortId);
     if (finalShort == null) return;
 
-    state = state.copyWith(status: UploadStatus.ready, short: finalShort);
+    state = state.copyWith(
+      status: finalShort.isPlayable
+          ? UploadStatus.ready
+          : UploadStatus.processing,
+      short: finalShort,
+    );
 
-    appLogger.i('🎉 FINAL SHORT READY');
+    appLogger.i(
+      finalShort.isPlayable
+          ? '🎉 FINAL SHORT READY'
+          : '⏳ SHORT CREATED; STILL PROCESSING',
+    );
   }
 
   Future<String?> _uploadRawVideo(File file) async {
@@ -185,17 +195,21 @@ class PostShortController extends StateNotifier<UploadState> {
   // ───────────── POLLING ─────────────
 
   Future<bool> _waitUntilReady(String shortId) async {
-    const maxAttempts = 30;
+    const maxAttempts = 60;
+    Short? latestShort;
 
     for (int i = 0; i < maxAttempts; i++) {
       final res = await managementApi.getShort(shortId: shortId);
 
       final done = res.fold((_) => false, (short) {
+        latestShort = short;
+
         if (short.isPlayable) return true;
 
         if (short.canRetry) {
           state = state.copyWith(
             status: UploadStatus.failed,
+            short: short,
             errorMessage: 'Video processing failed.',
           );
           return true;
@@ -210,9 +224,23 @@ class PostShortController extends StateNotifier<UploadState> {
       await Future<void>.delayed(const Duration(seconds: 3));
     }
 
+    final short = latestShort;
+
+    if (short != null && !short.canRetry) {
+      state = state.copyWith(
+        status: short.isPlayable ? UploadStatus.ready : UploadStatus.processing,
+        short: short,
+        shortId: ShortId(shortId),
+        clearError: true,
+      );
+
+      return short.isPlayable;
+    }
+
     state = state.copyWith(
-      status: UploadStatus.failed,
-      errorMessage: 'Video processing timed out.',
+      status: UploadStatus.processing,
+      shortId: ShortId(shortId),
+      clearError: true,
     );
 
     return false;
@@ -265,6 +293,41 @@ class PostShortController extends StateNotifier<UploadState> {
 
     state = state.copyWith(status: UploadStatus.processing, clearError: true);
 
+    final currentRes = await managementApi.getShort(shortId: currentShortId);
+
+    final handledCurrentState = currentRes.fold((_) => false, (short) {
+      state = state.copyWith(short: short, shortId: ShortId(currentShortId));
+
+      if (short.isPlayable) {
+        state = state.copyWith(status: UploadStatus.ready, short: short);
+        return true;
+      }
+
+      if (short.isProcessing && !short.canRetry) {
+        return true;
+      }
+
+      return false;
+    });
+
+    if (handledCurrentState) {
+      if (state.status == UploadStatus.ready) return;
+
+      final ready = await _waitUntilReady(currentShortId);
+      if (!ready && state.status != UploadStatus.processing) return;
+
+      final finalShort = await _updateMetadataAndFetch(currentShortId);
+      if (finalShort == null) return;
+
+      state = state.copyWith(
+        status: finalShort.isPlayable
+            ? UploadStatus.ready
+            : UploadStatus.processing,
+        short: finalShort,
+      );
+      return;
+    }
+
     final retryRes = await managementApi.retryProcessing(
       shortId: currentShortId,
     );
@@ -279,12 +342,18 @@ class PostShortController extends StateNotifier<UploadState> {
 
     if (!retryStarted) return;
 
-    if (!await _waitUntilReady(currentShortId)) return;
+    final ready = await _waitUntilReady(currentShortId);
+    if (!ready && state.status != UploadStatus.processing) return;
 
     final finalShort = await _updateMetadataAndFetch(currentShortId);
     if (finalShort == null) return;
 
-    state = state.copyWith(status: UploadStatus.ready, short: finalShort);
+    state = state.copyWith(
+      status: finalShort.isPlayable
+          ? UploadStatus.ready
+          : UploadStatus.processing,
+      short: finalShort,
+    );
   }
 
   // ───────────── RESET ─────────────

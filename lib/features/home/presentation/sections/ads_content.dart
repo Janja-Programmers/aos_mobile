@@ -1,7 +1,6 @@
 import 'package:africaonlinestores/core/routing/helpers/navigation.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
 import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_models.dart';
 import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_categories_preview_section.dart';
@@ -204,8 +203,6 @@ class AdListContentView extends ConsumerWidget {
                       sliver: GridAdsSection(
                         items: state.discoverItems,
                         title: l10n.common_discover_more,
-                        onSeeAll: () =>
-                            CatalogNavigation.toAllCategories(context),
                       ),
                     ),
 

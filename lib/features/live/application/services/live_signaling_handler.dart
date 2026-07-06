@@ -121,8 +121,13 @@ class LiveSignalingHandler {
   Future<void> handleLiveCommentDeleted(Map<String, dynamic> data) async {
     try {
       final liveId = data['live_id']?.toString();
-      final commentId =
-          data['message_id']?.toString() ?? data['comment_id']?.toString();
+      final commentIds = asJsonList(data['deleted_message_ids'])
+          .map((item) => item?.toString() ?? '')
+          .where((item) => item.isNotEmpty)
+          .toList(growable: false);
+      final commentId = commentIds.isNotEmpty
+          ? commentIds.first
+          : data['message_id']?.toString() ?? data['comment_id']?.toString();
 
       if (liveId == null ||
           liveId.isEmpty ||
@@ -146,21 +151,20 @@ class LiveSignalingHandler {
   Future<void> handleLiveReaction(Map<String, dynamic> data) async {
     try {
       final liveId = data['live_id']?.toString();
-      final reactions = data['reactions'];
+      final rawReaction = data['reaction'];
 
-      if (liveId == null || liveId.isEmpty || reactions is! List) {
+      if (liveId == null || liveId.isEmpty || rawReaction is! Map) {
         appLogger.e('❌ Invalid live-reaction payload: $data');
         return;
       }
 
+      final reaction = asJsonMap(rawReaction);
+
       appLogger.i(
-        '❤️ Live reactions received → liveId=$liveId, count=${reactions.length}',
+        '❤️ Live reaction received → liveId=$liveId, type=${reaction['reaction_type']}',
       );
 
-      await liveManager.onLiveReactionEvent(
-        liveId: liveId,
-        reactions: reactions,
-      );
+      await liveManager.onLiveReactionEvent(liveId: liveId, reaction: reaction);
     } catch (e, s) {
       appLogger.e('handleLiveReaction failed', error: e, stackTrace: s);
     }

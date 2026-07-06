@@ -9,6 +9,12 @@ Map<String, dynamic> asJsonMap(Object? value) {
   if (value is Map) {
     return Map<String, dynamic>.from(value);
   }
+  if (value is List<Object?> && value.isNotEmpty) {
+    return asJsonMap(value.first);
+  }
+  if (value is Iterable<Object?> && value.isNotEmpty) {
+    return asJsonMap(value.first);
+  }
   return <String, dynamic>{};
 }
 

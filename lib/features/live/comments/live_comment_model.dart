@@ -2,7 +2,10 @@ class LiveCommentModel {
   final String id;
   final String liveId;
   final String userId;
+  final String displayName;
   final String comment;
+  final String messageKind;
+  final String messageType;
   final String? parentId;
   final String? rootId;
   final int replyCount;
@@ -13,7 +16,10 @@ class LiveCommentModel {
     required this.id,
     required this.liveId,
     required this.userId,
+    required this.displayName,
     required this.comment,
+    required this.messageKind,
+    required this.messageType,
     required this.parentId,
     required this.rootId,
     required this.replyCount,
@@ -22,6 +28,9 @@ class LiveCommentModel {
   });
 
   factory LiveCommentModel.fromJson(Map<String, dynamic> json) {
+    final displayName =
+        json['display_name']?.toString() ?? json['full_name']?.toString() ?? '';
+
     return LiveCommentModel(
       id:
           json['message_id']?.toString() ??
@@ -31,11 +40,15 @@ class LiveCommentModel {
       liveId:
           json['live_id']?.toString() ?? json['live_stream']?.toString() ?? '',
       userId:
-          json['display_name']?.toString() ??
           json['user_id']?.toString() ??
           json['user']?.toString() ??
+          json['sender']?.toString() ??
           '',
+      displayName: displayName,
       comment: json['comment']?.toString() ?? json['content']?.toString() ?? '',
+      messageKind:
+          json['message_kind']?.toString() ?? json['kind']?.toString() ?? '',
+      messageType: json['message_type']?.toString() ?? '',
       parentId:
           json['parent_id']?.toString() ??
           json['parent_comment']?.toString() ??
@@ -62,7 +75,10 @@ class LiveCommentModel {
       'id': id,
       'live_id': liveId,
       'user_id': userId,
+      'display_name': displayName,
       'comment': comment,
+      'message_kind': messageKind,
+      'message_type': messageType,
       'parent_id': parentId,
       'root_id': rootId,
       'reply_count': replyCount,

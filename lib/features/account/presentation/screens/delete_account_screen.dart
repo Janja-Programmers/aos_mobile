@@ -101,11 +101,6 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   : const Icon(Icons.delete_forever_outlined),
               label: const Text('Delete my account'),
             ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () => context.pushNamed(AppRoutes.nRestoreAccount),
-              child: const Text('Restore a deleted account'),
-            ),
           ],
         ),
       ),

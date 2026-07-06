@@ -3,8 +3,13 @@ import 'package:flutter/material.dart';
 
 class FloatingHearts extends StatefulWidget {
   final int trigger;
+  final String reactionType;
 
-  const FloatingHearts({super.key, required this.trigger});
+  const FloatingHearts({
+    super.key,
+    required this.trigger,
+    this.reactionType = 'like',
+  });
 
   @override
   State<FloatingHearts> createState() => _FloatingHeartsState();
@@ -12,29 +17,29 @@ class FloatingHearts extends StatefulWidget {
 
 class _FloatingHeartsState extends State<FloatingHearts>
     with SingleTickerProviderStateMixin {
-  final List<_HeartItem> hearts = [];
+  final List<_ReactionItem> reactions = [];
 
   @override
   void didUpdateWidget(covariant FloatingHearts oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (widget.trigger != oldWidget.trigger) {
-      _addHeart();
+      _addReaction(widget.reactionType);
     }
   }
 
-  void _addHeart() {
+  void _addReaction(String reactionType) {
     final id = DateTime.now().microsecondsSinceEpoch.toString();
 
     setState(() {
-      hearts.add(_HeartItem(id));
+      reactions.add(_ReactionItem(id: id, reactionType: reactionType));
     });
 
-    Future<void>.delayed(const Duration(milliseconds: 1400), () {
+    Future<void>.delayed(const Duration(milliseconds: 1600), () {
       if (!mounted) return;
 
       setState(() {
-        hearts.removeWhere((h) => h.id == id);
+        reactions.removeWhere((item) => item.id == id);
       });
     });
   }
@@ -42,44 +47,92 @@ class _FloatingHeartsState extends State<FloatingHearts>
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      right: 30,
-      bottom: 180,
+      right: 28,
+      bottom: 190,
       child: IgnorePointer(
         child: Stack(
           clipBehavior: Clip.none,
-          children: hearts.map((heart) {
-            return TweenAnimationBuilder<double>(
-              key: ValueKey(heart.id),
-              tween: Tween(begin: 0, end: 1),
-              duration: const Duration(milliseconds: 1400),
-              curve: Curves.easeOut,
-              builder: (_, value, child) {
-                return Transform.translate(
-                  offset: Offset(heart.xOffset, -value * 180),
-                  child: Opacity(
-                    opacity: 1 - value,
-                    child: Transform.scale(
-                      scale: 0.7 + value,
-                      child: Icon(
-                        Icons.favorite,
-                        color: context.appColors.primary,
-                        size: 34,
+          children: reactions
+              .map((reaction) {
+                return TweenAnimationBuilder<double>(
+                  key: ValueKey(reaction.id),
+                  tween: Tween(begin: 0, end: 1),
+                  duration: const Duration(milliseconds: 1600),
+                  curve: Curves.easeOutCubic,
+                  builder: (_, value, child) {
+                    return Transform.translate(
+                      offset: Offset(reaction.xOffset, -value * 220),
+                      child: Opacity(
+                        opacity: 1 - value,
+                        child: Transform.scale(
+                          scale: 0.72 + value,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: .24),
+                              shape: BoxShape.circle,
+                              boxShadow: const [
+                                BoxShadow(
+                                  blurRadius: 16,
+                                  color: Colors.black54,
+                                ),
+                              ],
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(6),
+                              child: Icon(
+                                _iconFor(reaction.reactionType),
+                                color: _colorFor(
+                                  context,
+                                  reaction.reactionType,
+                                ),
+                                size: 36,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 );
-              },
-            );
-          }).toList(),
+              })
+              .toList(growable: false),
         ),
       ),
     );
   }
+
+  IconData _iconFor(String reactionType) {
+    switch (reactionType) {
+      case 'fire':
+        return Icons.local_fire_department_rounded;
+      case 'clap':
+        return Icons.front_hand_rounded;
+      case 'love':
+      case 'like':
+        return Icons.favorite_rounded;
+      case 'wow':
+        return Icons.emoji_emotions_rounded;
+      default:
+        return Icons.favorite_rounded;
+    }
+  }
+
+  Color _colorFor(BuildContext context, String reactionType) {
+    switch (reactionType) {
+      case 'fire':
+      case 'wow':
+        return context.appColors.amber;
+      default:
+        return context.appColors.primary;
+    }
+  }
 }
 
-class _HeartItem {
+class _ReactionItem {
   final String id;
+  final String reactionType;
   final double xOffset;
 
-  _HeartItem(this.id) : xOffset = (DateTime.now().millisecond % 40) - 20;
+  _ReactionItem({required this.id, required this.reactionType})
+    : xOffset = (DateTime.now().millisecond % 54) - 27;
 }

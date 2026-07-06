@@ -138,8 +138,10 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
       _controller = controller;
       controller.addListener(_onVideoTick);
 
-      await controller.initialize();
-      _usePortraitFrame = controller.value.aspectRatio <= 1;
+      await Future.wait<void>([
+        controller.initialize(),
+        _detectThumbnailOrientation(),
+      ]);
 
       await controller.setLooping(true);
 
@@ -169,6 +171,71 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
       });
 
       debugPrint('Video init error: $e');
+    }
+  }
+
+  Future<void> _detectThumbnailOrientation() async {
+    // Future backend-assisted orientation path, intentionally commented until
+    // the Shorts API exposes these fields:
+    //
+    // final orientation = widget.short.orientation?.trim().toLowerCase();
+    // if (orientation == 'portrait') {
+    //   _usePortraitFrame = true;
+    //   return;
+    // }
+    // if (orientation == 'landscape') {
+    //   _usePortraitFrame = false;
+    //   return;
+    // }
+    //
+    // final thumbnailWidth = widget.short.thumbnailWidth;
+    // final thumbnailHeight = widget.short.thumbnailHeight;
+    // if (thumbnailWidth != null &&
+    //     thumbnailHeight != null &&
+    //     thumbnailWidth > 0 &&
+    //     thumbnailHeight > 0) {
+    //   _usePortraitFrame = thumbnailHeight >= thumbnailWidth;
+    //   return;
+    // }
+
+    final thumbnailUrl = widget.short.thumbnailUrl;
+
+    if (thumbnailUrl == null || thumbnailUrl.trim().isEmpty) {
+      _usePortraitFrame = true;
+      return;
+    }
+
+    final image = NetworkImage(thumbnailUrl);
+    final stream = image.resolve(const ImageConfiguration());
+    final completer = Completer<ImageInfo>();
+
+    late final ImageStreamListener listener;
+
+    listener = ImageStreamListener(
+      (info, _) {
+        if (!completer.isCompleted) {
+          completer.complete(info);
+        }
+        stream.removeListener(listener);
+      },
+      onError: (Object error, StackTrace? stackTrace) {
+        if (!completer.isCompleted) {
+          completer.completeError(error, stackTrace);
+        }
+        stream.removeListener(listener);
+      },
+    );
+
+    stream.addListener(listener);
+
+    try {
+      final info = await completer.future;
+      final width = info.image.width;
+      final height = info.image.height;
+
+      _usePortraitFrame = height >= width;
+    } catch (_) {
+      _usePortraitFrame = true;
     }
   }
 

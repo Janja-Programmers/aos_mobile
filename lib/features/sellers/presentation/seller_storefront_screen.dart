@@ -181,6 +181,8 @@ class _SellerStorefrontScreenState
             return Center(child: Text('Seller not found', style: context.body));
           }
 
+          final hasAbout = seller.aboutBusiness?.trim().isNotEmpty ?? false;
+
           return RefreshIndicator(
             onRefresh: () async {
               await ref
@@ -194,8 +196,12 @@ class _SellerStorefrontScreenState
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
               children: [
                 SellerHeaderSection(seller: seller, sellerId: widget.sellerId),
-                const SizedBox(height: 14),
-                SellerAboutSection(about: seller.aboutBusiness),
+
+                if (hasAbout) ...[
+                  const SizedBox(height: 14),
+                  SellerAboutSection(about: seller.aboutBusiness!),
+                ],
+
                 const SizedBox(height: 14),
                 SellerProductsSection(sellerId: widget.sellerId),
               ],

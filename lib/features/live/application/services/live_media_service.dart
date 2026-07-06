@@ -12,9 +12,14 @@ class LiveMediaService {
     required String token,
     required AOSLiveRole role,
     bool micEnabled = true,
+    bool cameraEnabled = true,
+    bool frontCamera = true,
   }) async {
-    if (role == AOSLiveRole.host) {
-      final allowed = await _requestHostPermissions();
+    final shouldPublish =
+        role == AOSLiveRole.host || role == AOSLiveRole.cohost;
+
+    if (shouldPublish) {
+      final allowed = await _requestBroadcastPermissions();
 
       if (!allowed) {
         throw Exception('Camera and microphone permissions are required');
@@ -35,20 +40,21 @@ class LiveMediaService {
 
     await liveKit.connect(wsUrl: wsUrl, token: token);
 
-    if (role == AOSLiveRole.host) {
+    if (shouldPublish) {
       await liveKit.enableMicrophone(micEnabled);
-      await liveKit.enableCamera(true);
-    } else {
-      await liveKit.enableMicrophone(false);
-      await liveKit.enableCamera(false);
+      await liveKit.enableCamera(cameraEnabled, frontCamera: frontCamera);
+      return;
     }
+
+    await liveKit.enableMicrophone(false);
+    await liveKit.enableCamera(false);
   }
 
   Future<void> leaveLive() async {
     await liveKit.disconnect();
   }
 
-  Future<bool> _requestHostPermissions() async {
+  Future<bool> _requestBroadcastPermissions() async {
     final statuses = await [Permission.microphone, Permission.camera].request();
 
     final micAllowed = statuses[Permission.microphone]?.isGranted ?? false;
@@ -61,11 +67,18 @@ class LiveMediaService {
     await liveKit.enableMicrophone(enabled);
   }
 
-  Future<void> flipCamera() async {
-    try {
-      await liveKit.switchCamera();
-    } catch (_) {
-      return;
-    }
+  Future<void> setCameraEnabled({
+    required bool enabled,
+    required bool frontCamera,
+  }) async {
+    await liveKit.enableCamera(enabled, frontCamera: frontCamera);
+  }
+
+  Future<bool> flipCamera() async {
+    return liveKit.switchCamera();
+  }
+
+  List<LiveKitViewerParticipant> getViewerParticipants() {
+    return liveKit.getViewerParticipants();
   }
 }

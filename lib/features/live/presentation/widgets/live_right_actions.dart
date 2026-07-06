@@ -23,21 +23,21 @@ class LiveRightActions extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned(
       right: 12,
-      bottom: 128,
+      bottom: 132,
       child: Column(
         children: [
-          _btn(context, Icons.favorite_border, onLike),
+          _btn(context, Icons.favorite_border_rounded, onLike),
           const SizedBox(height: 12),
-          _btn(context, Icons.group_add_outlined, onCohost),
-          const SizedBox(height: 12),
-          _btn(
-            context,
-            isMuted ? Icons.mic_off_outlined : Icons.mic_none_outlined,
-            onMute,
-          ),
+          // _btn(context, Icons.group_add_outlined, onCohost),
           if (isHost) ...[
             const SizedBox(height: 12),
-            _btn(context, Icons.cameraswitch, onFlip),
+            _btn(
+              context,
+              isMuted ? Icons.mic_off_outlined : Icons.mic_none_outlined,
+              onMute,
+            ),
+            const SizedBox(height: 12),
+            _btn(context, Icons.cameraswitch_rounded, onFlip),
           ],
         ],
       ),
@@ -51,7 +51,7 @@ class LiveRightActions extends StatelessWidget {
       onTap: onTap,
       child: CircleAvatar(
         radius: 22,
-        backgroundColor: colors.black.withValues(alpha: .6),
+        backgroundColor: colors.black.withValues(alpha: .62),
         child: Icon(icon, color: colors.white),
       ),
     );

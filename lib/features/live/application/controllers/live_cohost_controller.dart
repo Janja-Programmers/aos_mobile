@@ -6,12 +6,14 @@ import 'package:flutter_riverpod/legacy.dart';
 
 @immutable
 class LiveCohostState {
+  final String? liveId;
   final bool isLoading;
   final bool isMutating;
   final String? errorMessage;
   final List<LiveCohost> items;
 
   const LiveCohostState({
+    this.liveId,
     this.isLoading = false,
     this.isMutating = false,
     this.errorMessage,
@@ -29,6 +31,8 @@ class LiveCohostState {
       items.where((item) => item.isPending).toList(growable: false);
 
   LiveCohostState copyWith({
+    String? liveId,
+    bool clearLiveId = false,
     bool? isLoading,
     bool? isMutating,
     String? errorMessage,
@@ -36,6 +40,7 @@ class LiveCohostState {
     List<LiveCohost>? items,
   }) {
     return LiveCohostState(
+      liveId: clearLiveId ? null : liveId ?? this.liveId,
       isLoading: isLoading ?? this.isLoading,
       isMutating: isMutating ?? this.isMutating,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
@@ -55,12 +60,20 @@ class LiveCohostController extends StateNotifier<LiveCohostState> {
   LiveCohostController(this._api) : super(const LiveCohostState());
 
   Future<void> load({required String liveId, String? status}) async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    if (state.liveId != liveId) {
+      state = LiveCohostState(liveId: liveId, isLoading: true);
+    } else {
+      state = state.copyWith(isLoading: true, clearError: true);
+    }
+
     final res = await _api.listCohosts(liveId: liveId, status: status);
     state = res.fold(
-      (failure) =>
-          state.copyWith(isLoading: false, errorMessage: failure.message),
-      (items) => state.copyWith(isLoading: false, items: items),
+      (failure) => state.copyWith(
+        liveId: liveId,
+        isLoading: false,
+        errorMessage: failure.message,
+      ),
+      (items) => state.copyWith(liveId: liveId, isLoading: false, items: items),
     );
   }
 
@@ -68,6 +81,7 @@ class LiveCohostController extends StateNotifier<LiveCohostState> {
     required String liveId,
     String? sessionId,
   }) async {
+    _ensureLive(liveId);
     state = state.copyWith(isMutating: true, clearError: true);
     final res = await _api.requestCohost(liveId: liveId, sessionId: sessionId);
     LiveCohost? created;
@@ -87,6 +101,7 @@ class LiveCohostController extends StateNotifier<LiveCohostState> {
     required String targetUser,
     String? sessionId,
   }) async {
+    _ensureLive(liveId);
     state = state.copyWith(isMutating: true, clearError: true);
     final res = await _api.inviteCohost(
       liveId: liveId,
@@ -128,6 +143,27 @@ class LiveCohostController extends StateNotifier<LiveCohostState> {
     return updated;
   }
 
+  Future<LiveCohost?> activate({
+    required String cohostId,
+    String? sessionId,
+  }) async {
+    state = state.copyWith(isMutating: true, clearError: true);
+    final res = await _api.activateCohost(
+      cohostId: cohostId,
+      sessionId: sessionId,
+    );
+    LiveCohost? updated;
+    state = res.fold(
+      (failure) =>
+          state.copyWith(isMutating: false, errorMessage: failure.message),
+      (cohost) {
+        updated = cohost;
+        return state.copyWith(isMutating: false, items: _upsert(cohost));
+      },
+    );
+    return updated;
+  }
+
   Future<void> end({required String cohostId}) async {
     state = state.copyWith(isMutating: true, clearError: true);
     final res = await _api.endCohost(cohostId: cohostId);
@@ -143,15 +179,34 @@ class LiveCohostController extends StateNotifier<LiveCohostState> {
     );
   }
 
-  void applyRealtime(Map<String, dynamic> data) {
+  LiveCohost? applyRealtime(Map<String, dynamic> data) {
     final raw = data['cohost'] ?? data;
-    if (raw is! Map) return;
+    if (raw is! Map) return null;
+
     final cohost = LiveCohost.fromJson(asJsonMap(raw));
-    if (cohost.id.isEmpty) return;
+    if (cohost.id.isEmpty) return null;
+    if (state.liveId != null && cohost.liveId != state.liveId) return null;
+
     state = state.copyWith(items: _upsert(cohost));
+    return cohost;
+  }
+
+  void _ensureLive(String liveId) {
+    if (state.liveId == liveId) return;
+    state = LiveCohostState(liveId: liveId);
   }
 
   List<LiveCohost> _upsert(LiveCohost cohost) {
+    if (state.liveId != null && cohost.liveId != state.liveId) {
+      return state.items;
+    }
+
+    if (cohost.isRejected || cohost.isCancelled || cohost.isEnded) {
+      return state.items
+          .where((item) => item.id != cohost.id)
+          .toList(growable: false);
+    }
+
     final items = [...state.items];
     final index = items.indexWhere((item) => item.id == cohost.id);
     if (index == -1) {

@@ -9,26 +9,24 @@ class GridAdsSection extends StatelessWidget {
     super.key,
     required this.title,
     required this.items,
-    required this.onSeeAll,
+    this.onSeeAll,
     this.isService = false,
   });
 
   final String title;
   final List<AOSAdListItem> items;
-  final VoidCallback onSeeAll;
+  final VoidCallback? onSeeAll;
   final bool isService;
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
-    double aspectRatio;
-
-    if (width < 360) {
-      aspectRatio = 0.58;
-    } else {
-      aspectRatio = isService ? 0.78 : 0.8;
-    }
+    final aspectRatio = width < 360
+        ? 0.58
+        : isService
+        ? 0.78
+        : 0.8;
 
     return SliverMainAxisGroup(
       slivers: [

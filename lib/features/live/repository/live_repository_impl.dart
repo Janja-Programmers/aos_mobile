@@ -25,6 +25,7 @@ abstract class LiveRepository {
   Future<void> sendReaction({
     required String liveId,
     required String reactionType,
+    String? sessionId,
   });
 }
 
@@ -119,10 +120,12 @@ class LiveRepositoryImpl implements LiveRepository {
   Future<void> sendReaction({
     required String liveId,
     required String reactionType,
+    String? sessionId,
   }) async {
     final res = await api.sendReaction(
       liveId: liveId,
       reactionType: reactionType,
+      sessionId: sessionId,
     );
 
     return res.fold((e) => throw e, (_) => null);

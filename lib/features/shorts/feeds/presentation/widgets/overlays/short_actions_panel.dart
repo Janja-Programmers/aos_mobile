@@ -61,6 +61,8 @@ class ShortActionsPanel extends ConsumerWidget {
     final metrics = short.metrics;
     final canDownload = short.allowDownloads || short.isOwner;
 
+    const double heightSeparator = 4;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -70,7 +72,8 @@ class ShortActionsPanel extends ConsumerWidget {
           onCreatorTap: onCreatorTap,
           onToggleFollow: onToggleFollow,
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: heightSeparator),
+
         _iconWithLabel(
           context,
           icon: isLiked
@@ -84,7 +87,8 @@ class ShortActionsPanel extends ConsumerWidget {
               ? null
               : () => unawaited(onToggleLike(short.id.value)),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: heightSeparator),
+
         _iconWithLabel(
           context,
           icon: Icons.mode_comment_outlined,
@@ -114,7 +118,7 @@ class ShortActionsPanel extends ConsumerWidget {
                 }
               : null,
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: heightSeparator),
         _iconWithLabel(
           context,
           icon: isSaved
@@ -126,7 +130,7 @@ class ShortActionsPanel extends ConsumerWidget {
           semanticLabel: isSaved ? 'Unsave short' : 'Save short',
           onTap: isSavePending ? null : () => unawaited(onSave()),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: heightSeparator),
         _iconWithLabel(
           context,
           iconWidget: Transform(
@@ -139,7 +143,7 @@ class ShortActionsPanel extends ConsumerWidget {
           semanticLabel: 'Share short',
           onTap: isSharePending ? null : () => unawaited(onShare()),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: heightSeparator),
         _iconWithLabel(
           context,
           icon: Icons.more_horiz_rounded,
@@ -270,10 +274,10 @@ class ShortActionsPanel extends ConsumerWidget {
                 padding: const EdgeInsets.all(4),
                 child:
                     iconWidget ??
-                    Icon(icon, color: color ?? colors.white, size: 34),
+                    Icon(icon, color: color ?? colors.white, size: 30),
               ),
             ),
-            const SizedBox(height: 6),
+
             Text(
               label,
               style: TextStyle(

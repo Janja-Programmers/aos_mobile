@@ -13,8 +13,8 @@ import 'package:africaonlinestores/features/verifications/domain/verification_st
 import 'package:africaonlinestores/features/verifications/presentation/widgets/base_verification_banner.dart';
 import 'package:africaonlinestores/features/verifications/presentation/widgets/seller_verification_banner.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/application/user_verification_provider.dart';
-import 'package:africaonlinestores/features/verifications/user_verification/domain/user_verification_models.dart';
-import 'package:africaonlinestores/features/verifications/user_verification/presentation/user_verification_banner.dart';
+// import 'package:africaonlinestores/features/verifications/user_verification/domain/user_verification_models.dart';
+// import 'package:africaonlinestores/features/verifications/user_verification/presentation/user_verification_banner.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/account_option_tile.dart';
 import 'package:africaonlinestores/shared/components/app_confirm_sheet.dart';
@@ -63,8 +63,8 @@ class AccountScreen extends ConsumerWidget {
     final AsyncValue<SellerVerificationStatus>? statusAsync = isAuthenticated
         ? ref.watch(sellerStatusProvider)
         : null;
-    final AsyncValue<UserVerificationStatus>? userVerificationAsync =
-        isAuthenticated ? ref.watch(userVerificationStatusProvider) : null;
+    // final AsyncValue<UserVerificationStatus>? userVerificationAsync =
+    //     isAuthenticated ? ref.watch(userVerificationStatusProvider) : null;
 
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
@@ -148,17 +148,17 @@ class AccountScreen extends ConsumerWidget {
                   const SizedBox.shrink(),
 
             /// User identity verification entry/status.
-            if (userVerificationAsync != null)
-              userVerificationAsync.when(
-                data: (status) => UserVerificationBanner(status: status),
-                loading: () => const SizedBox.shrink(),
-                error: (_, _) => const UserVerificationBanner(
-                  status: UserVerificationStatus(
-                    isVerified: false,
-                    status: VerificationStatus.notSubmitted,
-                  ),
-                ),
-              ),
+            // if (userVerificationAsync != null)
+            //   userVerificationAsync.when(
+            //     data: (status) => UserVerificationBanner(status: status),
+            //     loading: () => const SizedBox.shrink(),
+            //     error: (_, _) => const UserVerificationBanner(
+            //       status: UserVerificationStatus(
+            //         isVerified: false,
+            //         status: VerificationStatus.notSubmitted,
+            //       ),
+            //     ),
+            //   ),
 
             /// AUTHENTICATED ACTIONS
             if (isAuthenticated)
@@ -257,6 +257,11 @@ class AccountScreen extends ConsumerWidget {
                       icon: Icons.delete_forever_outlined,
                       title: 'Delete Account',
                       onTap: () => context.pushNamed(AppRoutes.nDeleteAccount),
+                    ),
+                    AccountOptionTile(
+                      icon: Icons.settings_backup_restore_sharp,
+                      title: 'Restore a deleted account',
+                      onTap: () => context.pushNamed(AppRoutes.nRestoreAccount),
                     ),
                   ],
                   AppSwitchTile(

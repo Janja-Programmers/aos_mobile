@@ -22,6 +22,11 @@ class LiveState {
   final bool isPublishing;
   final bool isSubscribed;
 
+  // Local media state
+  final bool isMicMuted;
+  final bool isCameraEnabled;
+  final bool isFrontCamera;
+
   // Metrics
   final int viewerCount;
 
@@ -40,12 +45,14 @@ class LiveState {
     required this.hasActiveRoom,
     required this.isPublishing,
     required this.isSubscribed,
+    required this.isMicMuted,
+    required this.isCameraEnabled,
+    required this.isFrontCamera,
     required this.viewerCount,
     required this.hasLiveUi,
     required this.errorMessage,
   });
 
-  // ================= INITIAL =================
   factory LiveState.initial() {
     return const LiveState(
       status: LiveStatus.idle,
@@ -56,16 +63,19 @@ class LiveState {
       hasActiveRoom: false,
       isPublishing: false,
       isSubscribed: false,
+      isMicMuted: false,
+      isCameraEnabled: true,
+      isFrontCamera: true,
       viewerCount: 0,
       hasLiveUi: false,
       errorMessage: null,
     );
   }
 
-  // ================= SAFE COPY =================
   LiveState copyWith({
     LiveStatus? status,
     LiveStream? live,
+    bool clearLive = false,
     LiveJoinSession? session,
     bool clearSession = false,
     AOSLiveRole? role,
@@ -74,6 +84,9 @@ class LiveState {
     bool? hasActiveRoom,
     bool? isPublishing,
     bool? isSubscribed,
+    bool? isMicMuted,
+    bool? isCameraEnabled,
+    bool? isFrontCamera,
     int? viewerCount,
     bool? hasLiveUi,
     String? errorMessage,
@@ -81,30 +94,35 @@ class LiveState {
   }) {
     return LiveState(
       status: status ?? this.status,
-      live: live ?? this.live,
-      session: clearSession ? null : (session ?? this.session),
-      role: clearRole ? null : (role ?? this.role),
+      live: clearLive ? null : live ?? this.live,
+      session: clearSession ? null : session ?? this.session,
+      role: clearRole ? null : role ?? this.role,
       roomState: roomState ?? this.roomState,
       hasActiveRoom: hasActiveRoom ?? this.hasActiveRoom,
       isPublishing: isPublishing ?? this.isPublishing,
       isSubscribed: isSubscribed ?? this.isSubscribed,
+      isMicMuted: isMicMuted ?? this.isMicMuted,
+      isCameraEnabled: isCameraEnabled ?? this.isCameraEnabled,
+      isFrontCamera: isFrontCamera ?? this.isFrontCamera,
       viewerCount: viewerCount ?? this.viewerCount,
       hasLiveUi: hasLiveUi ?? this.hasLiveUi,
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 
-  // ================= HARD RESET =================
   LiveState ended() {
     return LiveState(
       status: LiveStatus.ended,
-      live: live, // keep reference if needed for UI
+      live: live,
       session: null,
       role: null,
       roomState: RoomState.disconnected,
       hasActiveRoom: false,
       isPublishing: false,
       isSubscribed: false,
+      isMicMuted: false,
+      isCameraEnabled: true,
+      isFrontCamera: true,
       viewerCount: 0,
       hasLiveUi: false,
       errorMessage: null,
@@ -121,23 +139,19 @@ class LiveState {
       hasActiveRoom: false,
       isPublishing: false,
       isSubscribed: false,
+      isMicMuted: false,
+      isCameraEnabled: true,
+      isFrontCamera: true,
       viewerCount: 0,
       hasLiveUi: false,
       errorMessage: null,
     );
   }
 
-  // ================= DERIVED =================
-
-  Duration get duration {
-    final startedAt = live?.startedAt;
-    if (startedAt == null) return Duration.zero;
-
-    return DateTime.now().difference(startedAt);
-  }
-
   bool get isHost => role == AOSLiveRole.host;
   bool get isViewer => role == AOSLiveRole.viewer;
+  bool get isCohost => role == AOSLiveRole.cohost;
+  bool get isBroadcaster => isHost || isCohost;
 
   bool get isLoading => status == LiveStatus.loading;
   bool get isLive => status == LiveStatus.live;
@@ -154,12 +168,15 @@ class LiveState {
 LiveState(
   status: $status,
   role: $role,
-  liveId: ${live?.id},
+  liveId: ${live?.id ?? session?.liveId},
   roomState: $roomState,
   viewers: $viewerCount,
   publishing: $isPublishing,
   subscribed: $isSubscribed,
   hasRoom: $hasActiveRoom,
+  micMuted: $isMicMuted,
+  cameraEnabled: $isCameraEnabled,
+  frontCamera: $isFrontCamera,
   error: $errorMessage
 )
 ''';

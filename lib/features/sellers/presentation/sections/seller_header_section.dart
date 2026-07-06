@@ -3,8 +3,8 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/sellers/application/providers/seller_state_controller_provider.dart';
 import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
+import 'package:africaonlinestores/features/sellers/presentation/widgets/seller_banner_header.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/seller_response_badge.dart';
-import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
@@ -30,11 +30,9 @@ class SellerHeaderSection extends ConsumerWidget {
     return SectionCard(
       child: Column(
         children: [
-          const SizedBox(height: 10),
+          SellerBannerHeader(seller: seller),
 
-          AppCircularAvatar(name: seller.displayName, imageUrl: seller.avatar),
-
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -76,6 +74,16 @@ class SellerHeaderSection extends ConsumerWidget {
               ],
             ],
           ),
+
+          if (seller.businessCategory != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              seller.businessCategory!,
+              style: context.pMuted,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
 
           const SizedBox(height: 16),
 
@@ -216,7 +224,13 @@ class _StatItem extends StatelessWidget {
             children: [
               Icon(icon, size: 15, color: colors.textMuted),
               const SizedBox(width: 4),
-              Text(title, style: context.pStrong),
+              Flexible(
+                child: Text(
+                  title,
+                  style: context.pStrong,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),

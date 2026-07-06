@@ -209,6 +209,10 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
 
     setState(() => _countdown = null);
 
+    final hadPreviewCamera = _previewTrack != null;
+    final micEnabled = !_isMicMuted;
+    final frontCamera = _isFrontCamera;
+
     await _previewTrack?.stop();
     _previewTrack = null;
 
@@ -218,7 +222,9 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
           title: title,
           coverImage: _uploadedImageUrl ?? '',
           coverMediaId: _uploadedCoverMediaId!,
-          micEnabled: !_isMicMuted,
+          micEnabled: micEnabled,
+          cameraEnabled: hadPreviewCamera,
+          frontCamera: frontCamera,
         );
 
     if (mounted) {

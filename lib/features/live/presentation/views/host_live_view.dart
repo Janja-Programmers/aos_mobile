@@ -4,8 +4,13 @@ import 'package:livekit_client/livekit_client.dart' as lk;
 
 class HostLiveView extends StatelessWidget {
   final lk.VideoTrack? localVideoTrack;
+  final bool mirror;
 
-  const HostLiveView({super.key, required this.localVideoTrack});
+  const HostLiveView({
+    super.key,
+    required this.localVideoTrack,
+    this.mirror = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +18,7 @@ class HostLiveView extends StatelessWidget {
       child: LiveVideoStage(
         track: localVideoTrack,
         emptyLabel: 'Camera preview unavailable',
-        mirror: true,
+        mirror: mirror,
       ),
     );
   }

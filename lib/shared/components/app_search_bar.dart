@@ -144,20 +144,43 @@ class _AppSearchBarState extends State<AppSearchBar> {
               ),
 
             if (widget.onMicTap != null)
-              IconButton(
-                splashRadius: 20,
-                icon: Icon(Icons.mic, color: colors.textPrimary),
-                onPressed: widget.onMicTap,
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: IconButton(
+                  splashRadius: 20,
+                  constraints: const BoxConstraints(
+                    minWidth: 38,
+                    minHeight: 38,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: colors.border,
+                    shape: const CircleBorder(),
+                  ),
+                  icon: Icon(Icons.mic, size: 20, color: colors.textPrimary),
+                  onPressed: widget.onMicTap,
+                ),
               ),
 
             if (widget.onCameraTap != null)
-              IconButton(
-                splashRadius: 20,
-                icon: Icon(
-                  Icons.camera_alt_outlined,
-                  color: colors.textPrimary,
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: IconButton(
+                  splashRadius: 20,
+                  constraints: const BoxConstraints(
+                    minWidth: 38,
+                    minHeight: 38,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: colors.border,
+                    shape: const CircleBorder(),
+                  ),
+                  icon: Icon(
+                    Icons.camera_alt_outlined,
+                    size: 20,
+                    color: colors.textPrimary,
+                  ),
+                  onPressed: widget.onCameraTap,
                 ),
-                onPressed: widget.onCameraTap,
               ),
 
             const SizedBox(width: 6),

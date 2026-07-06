@@ -8,7 +8,6 @@ import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/live/data/live_mapper.dart';
 import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
-import 'package:africaonlinestores/features/live/domain/live_role.dart';
 import 'package:africaonlinestores/features/live/domain/live_stream.dart';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
@@ -62,12 +61,7 @@ class LiveApi {
       }
 
       final sessionMap = asJsonMap(sessionJson);
-
-      final role = sessionMap['role'] == 'host'
-          ? AOSLiveRole.host
-          : AOSLiveRole.viewer;
-
-      final session = mapJoinSession(sessionMap, role: role);
+      final session = mapJoinSession(sessionMap);
 
       return Either.right(session);
     } on DioException catch (e) {
@@ -112,12 +106,9 @@ class LiveApi {
       }
 
       final sessionMap = asJsonMap(sessionJson);
-      final role = sessionMap['role'] == 'host'
-          ? AOSLiveRole.host
-          : AOSLiveRole.viewer;
       sessionMap['session_id'] ??= clientSessionId;
 
-      final session = mapJoinSession(sessionMap, role: role);
+      final session = mapJoinSession(sessionMap);
 
       return Either.right(session);
     } catch (e) {
@@ -270,11 +261,16 @@ class LiveApi {
   Future<Either<Failure, void>> sendReaction({
     required String liveId,
     required String reactionType,
+    String? sessionId,
   }) async {
     try {
       final res = await _client.post(
         ApiEndpoints.sendLiveReaction,
-        data: {'live_id': liveId, 'reaction_type': reactionType},
+        data: {
+          'live_id': liveId,
+          'reaction_type': reactionType,
+          if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
+        },
       );
 
       final result = unwrapFrappe(res);

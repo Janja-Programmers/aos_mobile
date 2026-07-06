@@ -9,7 +9,6 @@ import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/live/data/live_mapper.dart';
 import 'package:africaonlinestores/features/live/domain/live_cohost.dart';
 import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
-import 'package:africaonlinestores/features/live/domain/live_role.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -127,9 +126,7 @@ class LiveCohostApi {
       if (session is! Map) {
         return Either.left(const Failure('Invalid co-host token response.'));
       }
-      return Either.right(
-        mapJoinSession(asJsonMap(session), role: AOSLiveRole.host),
-      );
+      return Either.right(mapJoinSession(asJsonMap(session)));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {

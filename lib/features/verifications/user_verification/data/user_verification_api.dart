@@ -22,7 +22,7 @@ class UserVerificationApi {
   Future<Either<Failure, Map<String, dynamic>>> getMyUserVerification() async {
     try {
       final res = await _dio.get<Map<String, dynamic>>(
-        ApiEndpoints.getMyUserVerificationEndpoint,
+        ApiEndpoints.getMyVerificationEndpoint,
       );
       return unwrapFrappe(res);
     } on DioException catch (e) {

@@ -120,8 +120,6 @@ class ApiEndpoints {
       '/api/method/aos.api.verification.submit_verification';
   static const String getMyVerificationEndpoint =
       '/api/method/aos.api.verification.get_my_verification';
-  static const String getMyUserVerificationEndpoint =
-      '/api/method/aos.api.verification.get_my_user_verification';
   static const String submitUserVerificationEndpoint =
       '/api/method/aos.api.verification.submit_user_verification';
   static const String sendUserVerificationOtpEndpoint =

@@ -21,21 +21,15 @@ class LiveCommentsApi {
 
   LiveCommentsApi(this._client);
 
-  // ───────────── LIST COMMENTS ─────────────
-
   Future<Either<Failure, List<LiveComment>>> listComments({
     required String liveId,
-    String? cursor,
+    int start = 0,
+    int limit = 80,
   }) async {
     try {
-      final query = {
-        'live_id': liveId,
-        if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
-      };
-
       final res = await _client.get(
         ApiEndpoints.listLiveComments,
-        queryParameters: query,
+        queryParameters: {'live_id': liveId, 'start': start, 'limit': limit},
       );
 
       final unwrapped = unwrapFrappe(res);
@@ -47,7 +41,8 @@ class LiveCommentsApi {
               (Map<String, dynamic> item) =>
                   LiveCommentMapper.toDomain(LiveCommentModel.fromJson(item)),
             )
-            .toList();
+            .where((LiveComment item) => !item.isDeleted)
+            .toList(growable: false);
 
         return Either.right(items);
       });
@@ -60,21 +55,19 @@ class LiveCommentsApi {
     }
   }
 
-  // ───────────── LIST REPLIES ─────────────
-
   Future<Either<Failure, List<LiveComment>>> listReplies({
-    required String rootCommentId,
-    String? cursor,
+    required String parentMessageId,
+    int start = 0,
+    int limit = 40,
   }) async {
     try {
-      final query = {
-        'root_comment_id': rootCommentId,
-        if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
-      };
-
       final res = await _client.get(
         ApiEndpoints.listLiveReplies,
-        queryParameters: query,
+        queryParameters: {
+          'parent_message': parentMessageId,
+          'start': start,
+          'limit': limit,
+        },
       );
 
       final unwrapped = unwrapFrappe(res);
@@ -86,7 +79,8 @@ class LiveCommentsApi {
               (Map<String, dynamic> item) =>
                   LiveCommentMapper.toDomain(LiveCommentModel.fromJson(item)),
             )
-            .toList();
+            .where((LiveComment item) => !item.isDeleted)
+            .toList(growable: false);
 
         return Either.right(items);
       });
@@ -99,46 +93,40 @@ class LiveCommentsApi {
     }
   }
 
-  // ───────────── ADD COMMENT ─────────────
-
   Future<Either<Failure, LiveComment>> addComment({
     required String liveId,
     required String comment,
+    String? sessionId,
   }) async {
     try {
       final res = await _client.post(
         ApiEndpoints.addLiveComment,
-        data: {'live_id': liveId, 'content': comment},
+        data: {
+          'live_id': liveId,
+          'content': comment,
+          if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
+        },
       );
 
       final unwrapped = unwrapFrappe(res);
 
       return unwrapped.fold(Either.left, (json) {
-        final data = json['data'] as Map<String, dynamic>?;
+        final data = asJsonMap(json['data']);
+        final raw = data['message'];
 
-        if (data == null) {
+        if (raw is! Map) {
           return Either.left(const Failure('Invalid live comment response'));
         }
 
-        final commentId = data['comment_id']?.toString();
-
-        if (commentId == null || commentId.isEmpty) {
+        final model = LiveCommentModel.fromJson(asJsonMap(raw));
+        if (model.id.isEmpty) {
           return Either.left(
-            const Failure('Missing comment_id', type: FailureType.parse),
+            const Failure(
+              'Invalid live comment response',
+              type: FailureType.parse,
+            ),
           );
         }
-
-        final model = LiveCommentModel(
-          id: commentId,
-          liveId: liveId,
-          userId: '',
-          comment: comment,
-          parentId: null,
-          rootId: null,
-          replyCount: 0,
-          isDeleted: false,
-          createdAt: DateTime.now().toIso8601String(),
-        );
 
         return Either.right(LiveCommentMapper.toDomain(model));
       });
@@ -149,31 +137,38 @@ class LiveCommentsApi {
     }
   }
 
-  // ───────────── REPLY COMMENT ─────────────
-
-  Future<Either<Failure, String>> replyComment({
-    required String parentCommentId,
+  Future<Either<Failure, LiveComment>> replyComment({
+    required String liveId,
+    required String parentMessageId,
     required String comment,
+    String? sessionId,
   }) async {
     try {
       final res = await _client.post(
         ApiEndpoints.replyLiveComment,
-        data: {'parent_comment_id': parentCommentId, 'content': comment},
+        data: {
+          'live_id': liveId,
+          'parent_message': parentMessageId,
+          'content': comment,
+          if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
+        },
       );
 
       final unwrapped = unwrapFrappe(res);
 
       return unwrapped.fold(Either.left, (json) {
-        final data = json['data'] as Map<String, dynamic>? ?? {};
-        final commentId = data['comment_id']?.toString();
+        final data = asJsonMap(json['data']);
+        final raw = data['message'];
 
-        if (commentId == null || commentId.isEmpty) {
+        if (raw is! Map) {
           return Either.left(
             const Failure('Invalid reply response', type: FailureType.parse),
           );
         }
 
-        return Either.right(commentId);
+        return Either.right(
+          LiveCommentMapper.toDomain(LiveCommentModel.fromJson(asJsonMap(raw))),
+        );
       });
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -184,15 +179,13 @@ class LiveCommentsApi {
     }
   }
 
-  // ───────────── DELETE COMMENT ─────────────
-
   Future<Either<Failure, void>> deleteComment({
     required String commentId,
   }) async {
     try {
       final res = await _client.post(
         ApiEndpoints.deleteLiveComment,
-        data: {'comment_id': commentId},
+        data: {'message_id': commentId},
       );
 
       final unwrapped = unwrapFrappe(res);

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 class SellerAboutSection extends StatefulWidget {
   const SellerAboutSection({super.key, required this.about});
 
-  final String? about;
+  final String about;
 
   @override
   State<SellerAboutSection> createState() => _SellerAboutSectionState();
@@ -19,18 +19,14 @@ class _SellerAboutSectionState extends State<SellerAboutSection> {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    final hasAbout = widget.about != null && widget.about!.trim().isNotEmpty;
-
     return SectionCard(
       child: Column(
         children: [
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: hasAbout
-                ? () {
-                    setState(() => expanded = !expanded);
-                  }
-                : null,
+            onTap: () {
+              setState(() => expanded = !expanded);
+            },
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 2),
               child: Row(
@@ -59,12 +55,12 @@ class _SellerAboutSectionState extends State<SellerAboutSection> {
             ),
           ),
 
-          if (hasAbout && expanded) ...[
+          if (expanded) ...[
             const SizedBox(height: 16),
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                widget.about!.trim(),
+                widget.about.trim(),
                 style: context.body.copyWith(
                   height: 1.45,
                   color: colors.textPrimary,

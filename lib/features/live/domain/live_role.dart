@@ -1,1 +1,1 @@
-enum AOSLiveRole { host, viewer }
+enum AOSLiveRole { host, viewer, cohost }

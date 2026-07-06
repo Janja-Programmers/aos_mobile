@@ -112,16 +112,27 @@ LiveStream mapLiveStream(Map<String, dynamic> json) {
   );
 }
 
-LiveJoinSession mapJoinSession(
-  Map<String, dynamic> json, {
-  required AOSLiveRole role,
-}) {
+AOSLiveRole parseLiveRole(String? role) {
+  switch (role?.trim().toLowerCase()) {
+    case 'host':
+      return AOSLiveRole.host;
+    case 'cohost':
+    case 'co_host':
+      return AOSLiveRole.cohost;
+    default:
+      return AOSLiveRole.viewer;
+  }
+}
+
+LiveJoinSession mapJoinSession(Map<String, dynamic> json, {AOSLiveRole? role}) {
+  final parsedRole = role ?? parseLiveRole(json['role']?.toString());
+
   return LiveJoinSession(
     liveId: json['live_id']?.toString() ?? '',
     roomName: json['room_name']?.toString() ?? '',
     token: json['token']?.toString() ?? '',
     wsUrl: json['ws_url']?.toString() ?? '',
-    role: role,
+    role: parsedRole,
     sessionId: json['session_id']?.toString(),
   );
 }

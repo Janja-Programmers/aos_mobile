@@ -47,12 +47,7 @@ class _SuggestedSellersSectionState
     }
 
     if (state.sellers.isEmpty) {
-      return SectionCard(
-        title: 'Suggested for You',
-        child: Center(
-          child: Text('No seller suggestions found', style: context.pMuted),
-        ),
-      );
+      return const SizedBox.shrink();
     }
 
     return Column(

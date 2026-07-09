@@ -28,6 +28,14 @@ class Validators {
     return null;
   }
 
+
+  static String? identifier(String? v) {
+    final t = (v ?? '').trim();
+    if (t.isEmpty) return 'Email or phone is required';
+    if (t.length > 254) return 'Email or phone is too long';
+    return null;
+  }
+
   static String? passwordRequired(String? v) {
     final t = (v ?? '').trim();
     if (t.isEmpty) return 'Password is required';

@@ -5,6 +5,7 @@ import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/routing/helpers/route_guards.dart';
 import 'package:africaonlinestores/core/routing/helpers/route_observer.dart';
 import 'package:africaonlinestores/features/account/shared/routing/account_routes.dart';
+import 'package:africaonlinestores/features/activity/navigation/activity_routes.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_category_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_location_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/screens/ad_form_screen.dart';
@@ -35,15 +36,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+final _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final bootstrap = ref.watch(appBootstrapProvider);
   final auth = ref.watch(authControllerProvider);
 
-  final rootNavigatorKey = GlobalKey<NavigatorState>();
-  final shellNavigatorKey = GlobalKey<NavigatorState>();
-
   return GoRouter(
-    navigatorKey: rootNavigatorKey,
+    navigatorKey: _rootNavigatorKey,
 
     initialLocation: AppRoutes.splash,
 
@@ -57,11 +58,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ...LiveRoutes.routes(),
       ...MapsRoutes.routes(),
       ...NotificationsRoutes.routes(),
+      ...ActivityRoutes.routes(),
       ...ReviewsRoutes.routes(),
       ...SearchRoutes.routes(),
       ...SellerRoutes.routes(),
       ...SocialRoutes.routes(),
-      ...ShortsRoutes.routes(rootNavigatorKey: rootNavigatorKey),
+      ...ShortsRoutes.routes(rootNavigatorKey: _rootNavigatorKey),
 
       GoRoute(
         name: AppRoutes.nOnboarding,
@@ -161,7 +163,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       /// MAIN SHELL
       ShellRoute(
-        navigatorKey: shellNavigatorKey,
+        navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) {
           return AppShell(location: state.matchedLocation, child: child);
         },

@@ -19,7 +19,7 @@ class StartSellingScreen extends ConsumerWidget {
     final sellerStatusAsync = ref.watch(sellerStatusProvider);
 
     final canPostAd = sellerStatusAsync.maybeWhen(
-      data: (status) => !status.isSuspended,
+      data: (status) => status.isSeller && !status.isSuspended,
       orElse: () => false,
     );
 

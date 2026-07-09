@@ -13,8 +13,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key, this.prefillEmail});
+  const LoginScreen({super.key, this.prefillEmail, this.redirectLocation});
+
   final String? prefillEmail;
+  final String? redirectLocation;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -64,8 +66,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _login() async {
-    final l10n = context.l10n;
-
     if (_busy) return;
     if (!_formKey.currentState!.validate()) return;
 
@@ -75,26 +75,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final result = await ref
           .read(authControllerProvider.notifier)
           .login(
-            email: _emailCtrl.text.trim().toLowerCase(),
+            identifier: _emailCtrl.text.trim().toLowerCase(),
             password: _passwordCtrl.text,
             rememberMe: _rememberMe,
           );
 
       if (!mounted) return;
 
-      result.fold((failure) {
-        ShowSnack(context, l10n.auth_unexpected_error(failure.message)).error();
+      result.fold(
+        (failure) {
+          ShowSnack(context, failure.message).error();
 
-        final msg = failure.message.toLowerCase();
-        final email = _emailCtrl.text.trim().toLowerCase();
+          final error = (failure.error ?? '').trim().toUpperCase();
+          final email = _emailCtrl.text.trim().toLowerCase();
 
-        if (msg.contains('verify your email')) {
-          context.pushNamed(
-            AppRoutes.nVerifyOtp,
-            extra: {'email': email, 'purpose': OtpPurpose.emailVerification},
+          if (error == 'EMAIL_NOT_VERIFIED') {
+            context.pushNamed(
+              AppRoutes.nVerifyOtp,
+              extra: {'email': email, 'purpose': OtpPurpose.emailVerification},
+            );
+          }
+        },
+        (_) {
+          final target = widget.redirectLocation?.trim();
+          context.go(
+            (target == null || target.isEmpty) ? AppRoutes.home : target,
           );
-        }
-      }, (_) {});
+        },
+      );
     } catch (_) {
       if (!mounted) return;
       ShowSnack(context, 'Error').error();
@@ -196,8 +204,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     AppFormField(
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
-                      label: l10n.auth_email_address,
-                      validator: Validators.email,
+                      label: 'Email or phone',
+                      validator: Validators.identifier,
                       textInputAction: TextInputAction.next,
                       autofillHints: const [
                         AutofillHints.username,

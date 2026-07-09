@@ -7,7 +7,6 @@ import 'package:africaonlinestores/features/account/presentation/screens/privacy
 import 'package:africaonlinestores/features/account/presentation/screens/restore_account_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/terms_conditions_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/user_preference_screen.dart';
-import 'package:africaonlinestores/features/activity/presentation/screens/activity_center_screen.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/presentation/user_verification_screen.dart';
 import 'package:go_router/go_router.dart';
 
@@ -50,11 +49,6 @@ class AccountRoutes {
         name: AppRoutes.nUserVerification,
         path: AppRoutes.userVerification,
         builder: (context, state) => const UserVerificationScreen(),
-      ),
-      GoRoute(
-        name: AppRoutes.nActivityCenter,
-        path: AppRoutes.activityCenter,
-        builder: (context, state) => const ActivityCenterScreen(),
       ),
       GoRoute(
         name: AppRoutes.nDeleteAccount,

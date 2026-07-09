@@ -80,7 +80,15 @@ class _ShortDetailScreenState extends ConsumerState<ShortDetailScreen> {
 
             // Creator / seller
             onCreatorTap: () {
-              SocialNavigation.toProfileScreen(context, user: short.sellerId);
+              final creatorUser = short.creator.user.trim();
+              if (creatorUser.isEmpty) return;
+
+              SocialNavigation.toProfileScreen(
+                context,
+                user: creatorUser,
+                displayName: short.creator.displayName,
+                avatar: short.creator.avatar,
+              );
             },
 
             // Follow

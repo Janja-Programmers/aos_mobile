@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 class SocialConnectionsAppBar extends StatelessWidget
     implements PreferredSizeWidget {
   final String title;
-  final VoidCallback? onAddTap;
+  final VoidCallback? onFindPeopleTap;
 
   const SocialConnectionsAppBar({
     super.key,
     required this.title,
-    this.onAddTap,
+    this.onFindPeopleTap,
   });
 
   @override
@@ -31,9 +31,10 @@ class SocialConnectionsAppBar extends StatelessWidget
       ),
       actions: [
         IconButton(
-          onPressed: onAddTap,
+          tooltip: 'Find people',
+          onPressed: onFindPeopleTap,
           icon: Icon(
-            Icons.person_add_alt_1_outlined,
+            Icons.person_search_outlined,
             color: colors.textPrimary,
           ),
         ),

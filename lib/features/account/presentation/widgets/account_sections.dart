@@ -27,7 +27,7 @@ class AccountCard extends StatelessWidget {
   }
 }
 
-class AccountHeaderCard extends StatelessWidget {
+class AccountHeaderCard extends StatefulWidget {
   const AccountHeaderCard({
     super.key,
     required this.fullName,
@@ -48,16 +48,34 @@ class AccountHeaderCard extends StatelessWidget {
   final VoidCallback? onEdit;
 
   @override
+  State<AccountHeaderCard> createState() => _AccountHeaderCardState();
+}
+
+class _AccountHeaderCardState extends State<AccountHeaderCard> {
+  bool _imageFailed = false;
+
+  @override
+  void didUpdateWidget(covariant AccountHeaderCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.imagePath != widget.imagePath) {
+      _imageFailed = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    final ImageProvider? img = resolveAvatarImage(imagePath, baseUrl);
+    final ImageProvider? img = _imageFailed
+        ? null
+        : resolveAvatarImage(widget.imagePath, widget.baseUrl);
 
     return AccountCard(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onEdit,
+          onTap: widget.onEdit,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
@@ -68,8 +86,16 @@ class AccountHeaderCard extends StatelessWidget {
                     alpha: 0.7,
                   ),
                   backgroundImage: img,
-                  onBackgroundImageError: img != null ? (_, _) {} : null,
-                  child: img == null ? Text(initials, style: context.h2) : null,
+                  onBackgroundImageError: img != null
+                      ? (_, _) {
+                          if (mounted) {
+                            setState(() => _imageFailed = true);
+                          }
+                        }
+                      : null,
+                  child: img == null
+                      ? Text(widget.initials, style: context.h2)
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -81,13 +107,13 @@ class AccountHeaderCard extends StatelessWidget {
                         children: [
                           Flexible(
                             child: Text(
-                              fullName,
+                              widget.fullName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: context.h5,
                             ),
                           ),
-                          if (isVerified) ...[
+                          if (widget.isVerified) ...[
                             const SizedBox(width: 6),
                             Icon(
                               Icons.verified_rounded,
@@ -99,7 +125,7 @@ class AccountHeaderCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        email,
+                        widget.email,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: context.pMuted.copyWith(fontSize: 12),

@@ -17,23 +17,23 @@ import 'package:flutter_riverpod/legacy.dart';
 
 class _SessionProbe {
   const _SessionProbe._({
-    this.user,
+    this.authData,
     required this.invalid,
     required this.transient,
   });
 
-  const _SessionProbe.valid(Map<String, dynamic> user)
-    : this._(user: user, invalid: false, transient: false);
+  const _SessionProbe.valid(Map<String, dynamic> authData)
+    : this._(authData: authData, invalid: false, transient: false);
 
   const _SessionProbe.invalid() : this._(invalid: true, transient: false);
 
   const _SessionProbe.transient() : this._(invalid: false, transient: true);
 
-  final Map<String, dynamic>? user;
+  final Map<String, dynamic>? authData;
   final bool invalid;
   final bool transient;
 
-  bool get isValid => user != null && !invalid && !transient;
+  bool get isValid => authData != null && !invalid && !transient;
 }
 
 class AuthController extends StateNotifier<AuthState> {
@@ -65,8 +65,6 @@ class AuthController extends StateNotifier<AuthState> {
   // ---------------------------------------------------------------------------
   Future<void> init() async {
     try {
-      // Listen for session expiry (401)
-
       _sessionSub ??= _apiClient.sessionExpiredStream.listen((_) async {
         if (state is! AuthAuthenticated) return;
 
@@ -98,7 +96,7 @@ class AuthController extends StateNotifier<AuthState> {
       final probe = await _fetchValidSession(sid);
 
       if (probe.isValid) {
-        await _completeLogin(sid: sid, user: probe.user!);
+        await _completeLogin(sid: sid, authData: probe.authData!);
         return;
       }
 
@@ -127,8 +125,7 @@ class AuthController extends StateNotifier<AuthState> {
       if (res.isLeft) {
         final failure = res.leftOrNull;
 
-        if (failure?.type == FailureType.unauthorized ||
-            failure?.statusCode == 401) {
+        if (_isInvalidSessionFailure(failure)) {
           return const _SessionProbe.invalid();
         }
 
@@ -136,14 +133,22 @@ class AuthController extends StateNotifier<AuthState> {
       }
 
       final payload = res.rightOrNull ?? {};
-      if (payload['ok'] != true) return const _SessionProbe.invalid();
+      if (payload['ok'] != true) {
+        final failure = _failureFromPayload(
+          payload,
+          fallbackMessage: 'Session invalid. Please login again.',
+        );
+        return _isInvalidSessionFailure(failure)
+            ? const _SessionProbe.invalid()
+            : const _SessionProbe.transient();
+      }
 
       final data = asJsonMap(payload['data']);
       final user = asJsonMap(data['user']);
 
       if (user.isEmpty) return const _SessionProbe.invalid();
 
-      return _SessionProbe.valid(user);
+      return _SessionProbe.valid(data);
     } catch (e) {
       appLogger.e('[Auth] Fetch session error: $e');
       return const _SessionProbe.transient();
@@ -156,7 +161,6 @@ class AuthController extends StateNotifier<AuthState> {
   Future<bool> _refreshSession() async {
     final now = DateTime.now();
 
-    /// ✅ debounce refresh
     if (_lastRefresh != null &&
         now.difference(_lastRefresh!) < _refreshCooldown) {
       appLogger.w('[Auth] Refresh skipped (cooldown)');
@@ -184,10 +188,7 @@ class AuthController extends StateNotifier<AuthState> {
       return false;
     }
 
-    state = AuthAuthenticated(user: AuthUser.fromMap(probe.user!), sid: sid);
-
-    /// ✅ DO NOT BLOCK AUTH
-    unawaited(_syncUserPreferences());
+    await _completeLogin(sid: sid, authData: probe.authData!);
 
     appLogger.i('[Auth] Session refreshed');
 
@@ -198,31 +199,34 @@ class AuthController extends StateNotifier<AuthState> {
   // LOGIN (FSM: Guest → Authenticated)
   // ---------------------------------------------------------------------------
   Future<Either<Failure, void>> login({
-    required String email,
+    required String identifier,
     required String password,
     required bool rememberMe,
   }) async {
-    final res = await _api.login(email: email, password: password);
+    final cleanIdentifier = identifier.trim().toLowerCase();
 
-    if (res.isLeft) {
-      return Either.left(res.leftOrNull ?? const Failure('Login failed.'));
+    await _storage.clearSid();
+    await _apiClient.clearSid();
+
+    final res = await _api.login(
+      identifier: cleanIdentifier,
+      password: password,
+    );
+    final finished = await _finishAuthResponse(
+      res,
+      fallbackMessage: 'Login failed.',
+    );
+
+    if (finished.isLeft) {
+      return finished;
     }
 
-    final payload = res.rightOrNull ?? {};
-    if (payload['ok'] != true) {
-      return Either.left(
-        Failure(payload['message']?.toString() ?? 'Login failed.'),
-      );
+    await _storage.setRememberMe(rememberMe);
+    if (rememberMe) {
+      await _storage.setRememberedEmail(cleanIdentifier);
+    } else {
+      await _storage.clearRememberedEmail();
     }
-
-    final data = asJsonMap(payload['data'] ?? {});
-    final sid = data['sid']?.toString() ?? '';
-
-    if (sid.isEmpty) {
-      return Either.left(const Failure('Login failed (no session).'));
-    }
-
-    await _completeLogin(sid: sid, user: asJsonMap(data['user'] ?? {}));
 
     return Either.right(null);
   }
@@ -233,7 +237,9 @@ class AuthController extends StateNotifier<AuthState> {
   Future<void> logout() async {
     try {
       await _api.logout();
-    } catch (_) {}
+    } catch (_) {
+      // Logout is idempotent server-side. Local cleanup must always happen.
+    }
 
     await _clearSession();
   }
@@ -243,28 +249,44 @@ class AuthController extends StateNotifier<AuthState> {
     await _apiClient.clearSid();
 
     _refreshingSession = null;
+    _isHydrating = false;
 
     state = const AuthGuest();
   }
 
   // ---------------------------------------------------------------------------
-  // COMPLETE LOGIN (single source of truth)
+  // COMPLETE LOGIN / HYDRATION (single source of truth)
   // ---------------------------------------------------------------------------
   Future<void> _completeLogin({
     required String sid,
-    required Map<String, dynamic> user,
+    required Map<String, dynamic> authData,
   }) async {
     _isHydrating = true;
 
-    await _apiClient.setSid(sid);
-    await _storage.setSid(sid);
+    try {
+      await _apiClient.setSid(sid);
+      await _storage.setSid(sid);
 
-    state = AuthAuthenticated(user: AuthUser.fromMap(user), sid: sid);
+      final user = asJsonMap(authData['user']);
+      final preferences = asJsonMap(authData['preferences']);
+      final seller = AuthSellerSummary.fromMap(asJsonMap(authData['seller']));
+      final roles = asJsonList(authData['roles'])
+          .map((role) => role.toString())
+          .where((role) => role.trim().isNotEmpty)
+          .toList(growable: false);
 
-    /// ✅ run in background
-    unawaited(_syncUserPreferences());
+      state = AuthAuthenticated(
+        user: AuthUser.fromMap(user),
+        sid: sid,
+        preferences: preferences,
+        roles: roles,
+        seller: seller,
+      );
 
-    _isHydrating = false;
+      unawaited(_syncUserPreferencesAfterLogin(authData));
+    } finally {
+      _isHydrating = false;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -293,6 +315,9 @@ class AuthController extends StateNotifier<AuthState> {
         return Either.left(const Failure('Google sign-in cancelled.'));
       }
 
+      await _storage.clearSid();
+      await _apiClient.clearSid();
+
       final res = await _api.googleLogin(
         idToken: idToken,
         country: country ?? '',
@@ -300,27 +325,12 @@ class AuthController extends StateNotifier<AuthState> {
         currency: currency ?? '',
       );
 
-      if (res.isLeft) return Either.left(res.leftOrNull!);
-
-      final payload = res.rightOrNull ?? {};
-      if (payload['ok'] != true) {
-        return Either.left(
-          Failure((payload['message'] ?? 'Google login failed').toString()),
-        );
-      }
-
-      final data = asJsonMap(payload['data'] ?? {});
-      final sid = (data['sid'] ?? '').toString();
-
-      if (sid.isEmpty) {
-        return Either.left(const Failure('No session returned.'));
-      }
-
-      await _completeLogin(sid: sid, user: asJsonMap(data['user'] ?? {}));
-
-      return Either.right(null);
+      return _finishAuthResponse(res, fallbackMessage: 'Google login failed.');
     } catch (e) {
-      return Either.left(Failure('Google sign-in failed: $e'));
+      appLogger.e('[Auth] Google sign-in failed: $e');
+      return Either.left(
+        const Failure('Google sign-in failed. Please try again.'),
+      );
     }
   }
 
@@ -337,6 +347,9 @@ class AuthController extends StateNotifier<AuthState> {
         return Either.left(const Failure('Apple sign-in cancelled.'));
       }
 
+      await _storage.clearSid();
+      await _apiClient.clearSid();
+
       final res = await _api.appleLogin(
         idToken: idToken,
         country: country ?? '',
@@ -344,33 +357,142 @@ class AuthController extends StateNotifier<AuthState> {
         currency: currency ?? '',
       );
 
-      if (res.isLeft) return Either.left(res.leftOrNull!);
-
-      final payload = res.rightOrNull ?? {};
-      if (payload['ok'] != true) {
-        return Either.left(
-          Failure((payload['message'] ?? 'Apple login failed').toString()),
-        );
-      }
-
-      final data = asJsonMap(payload['data'] ?? {});
-      final sid = (data['sid'] ?? '').toString();
-
-      if (sid.isEmpty) {
-        return Either.left(const Failure('No session returned.'));
-      }
-
-      await _completeLogin(sid: sid, user: asJsonMap(data['user'] ?? {}));
-
-      return Either.right(null);
+      return _finishAuthResponse(res, fallbackMessage: 'Apple login failed.');
     } catch (e) {
-      return Either.left(Failure('Apple sign-in failed: $e'));
+      appLogger.e('[Auth] Apple sign-in failed: $e');
+      return Either.left(
+        const Failure('Apple sign-in failed. Please try again.'),
+      );
     }
+  }
+
+  Future<Either<Failure, void>> _finishAuthResponse(
+    Either<Failure, Map<String, dynamic>> response, {
+    required String fallbackMessage,
+  }) async {
+    if (response.isLeft) {
+      return Either.left(
+        _normalizeFailure(response.leftOrNull, fallbackMessage),
+      );
+    }
+
+    final payload = response.rightOrNull ?? {};
+    if (payload['ok'] != true) {
+      return Either.left(
+        _failureFromPayload(payload, fallbackMessage: fallbackMessage),
+      );
+    }
+
+    final data = asJsonMap(payload['data']);
+    final sid = _sessionSid(data);
+
+    if (sid.isEmpty) {
+      return Either.left(
+        const Failure('Login failed. No session was returned.'),
+      );
+    }
+
+    final user = asJsonMap(data['user']);
+    if (user.isEmpty) {
+      return Either.left(const Failure('Login failed. User data was missing.'));
+    }
+
+    await _completeLogin(sid: sid, authData: data);
+
+    return Either.right(null);
+  }
+
+  String _sessionSid(Map<String, dynamic> authData) {
+    final session = asJsonMap(authData['session']);
+    return asString(session['sid']).trim();
+  }
+
+  Failure _failureFromPayload(
+    Map<String, dynamic> payload, {
+    required String fallbackMessage,
+  }) {
+    return Failure.fromServerPayload(payload, fallbackMessage: fallbackMessage);
+  }
+
+  Failure _normalizeFailure(Failure? failure, String fallbackMessage) {
+    if (failure == null) return Failure(fallbackMessage);
+
+    final error = (failure.error ?? '').trim().toUpperCase();
+    if (error.isEmpty) return failure;
+
+    return failure.copyWith(
+      message: authFriendlyMessage(error, fallback: failure.message),
+      type: failureTypeForAuthError(error, statusCode: failure.statusCode),
+      error: error,
+    );
+  }
+
+  bool _isInvalidSessionFailure(Failure? failure) {
+    final error = (failure?.error ?? '').trim().toUpperCase();
+
+    return (failure?.isAuthRequired ?? false) ||
+        failure?.statusCode == 401 ||
+        error == 'ACCOUNT_DISABLED' ||
+        error == 'ACCOUNT_DELETED' ||
+        error == 'ACCOUNT_DELETED_RESTORABLE' ||
+        error == 'ACCOUNT_SUSPENDED';
   }
 
   // ---------------------------------------------------------------------------
   // USER PREFERENCES SYNC
   // ---------------------------------------------------------------------------
+  Future<void> _syncUserPreferencesAfterLogin(
+    Map<String, dynamic> authData,
+  ) async {
+    final syncedFromAuthPayload = await _syncUserPreferencesFromAuthData(
+      authData,
+    );
+    if (!syncedFromAuthPayload) {
+      await _syncUserPreferences();
+    }
+  }
+
+  Future<bool> _syncUserPreferencesFromAuthData(
+    Map<String, dynamic> authData,
+  ) async {
+    final preferences = asJsonMap(authData['preferences']);
+    if (preferences.isEmpty) return false;
+
+    final countryCode = _preferenceValue(preferences['country']);
+    final languageCode = _preferenceValue(preferences['language']);
+    final currencyCode = _preferenceValue(preferences['currency']);
+
+    if (countryCode.isEmpty || languageCode.isEmpty || currencyCode.isEmpty) {
+      return false;
+    }
+
+    try {
+      final prefCtrl = _ref.read(userPreferenceControllerProvider.notifier);
+      await prefCtrl.syncFromServer(
+        countryCode: countryCode,
+        languageCode: languageCode,
+        currencyCode: currencyCode,
+      );
+      return true;
+    } catch (e) {
+      appLogger.e('[Auth] Prefs sync from auth payload failed: $e');
+      return false;
+    }
+  }
+
+  String _preferenceValue(Object? raw) {
+    if (raw is Map) {
+      final map = asJsonMap(raw);
+      final value = asString(map['code']).trim();
+      if (value.isNotEmpty) return value;
+      final name = asString(map['name']).trim();
+      if (name.isNotEmpty) return name;
+      return asString(map['id']).trim();
+    }
+
+    return asString(raw).trim();
+  }
+
   Future<void> _syncUserPreferences() async {
     final prefApi = _ref.read(userPreferenceApiProvider);
     final prefCtrl = _ref.read(userPreferenceControllerProvider.notifier);
@@ -401,9 +523,18 @@ class AuthController extends StateNotifier<AuthState> {
         final currency = asJsonMap(data['currency']);
 
         await prefCtrl.syncFromServer(
-          countryCode: asString(country['code']),
-          languageCode: asString(language['code']),
-          currencyCode: asString(currency['name']),
+          countryCode: asString(
+            country['code'],
+            fallback: asString(country['id']),
+          ),
+          languageCode: asString(
+            language['code'],
+            fallback: asString(language['id']),
+          ),
+          currencyCode: asString(
+            currency['code'],
+            fallback: asString(currency['name']),
+          ),
         );
 
         return;
@@ -433,12 +564,18 @@ class AuthController extends StateNotifier<AuthState> {
       language: language ?? '',
       currency: currency ?? '',
     );
-    if (res.isLeft) return Either.left(res.leftOrNull!);
+    if (res.isLeft) {
+      return Either.left(
+        _normalizeFailure(res.leftOrNull, 'Registration failed.'),
+      );
+    }
 
     final payload = res.rightOrNull ?? <String, dynamic>{};
     final ok = payload['ok'] == true;
     final msg = (payload['message'] ?? (ok ? 'Success' : 'Failed')).toString();
-    return ok ? Either.right(msg) : Either.left(Failure(msg));
+    return ok
+        ? Either.right(msg)
+        : Either.left(_failureFromPayload(payload, fallbackMessage: msg));
   }
 
   // OTP
@@ -447,24 +584,36 @@ class AuthController extends StateNotifier<AuthState> {
     required String otp,
   }) async {
     final res = await _api.verifyOtp(email: email, otp: otp);
-    if (res.isLeft) return Either.left(res.leftOrNull!);
+    if (res.isLeft) {
+      return Either.left(
+        _normalizeFailure(res.leftOrNull, 'Verification failed.'),
+      );
+    }
 
     final payload = res.rightOrNull ?? <String, dynamic>{};
     final ok = payload['ok'] == true;
     final msg =
         (payload['message'] ?? (ok ? 'Verified' : 'Verification failed'))
             .toString();
-    return ok ? Either.right(msg) : Either.left(Failure(msg));
+    return ok
+        ? Either.right(msg)
+        : Either.left(_failureFromPayload(payload, fallbackMessage: msg));
   }
 
   Future<Either<Failure, String>> resendOtp({required String email}) async {
     final res = await _api.resendOtp(email: email);
-    if (res.isLeft) return Either.left(res.leftOrNull!);
+    if (res.isLeft) {
+      return Either.left(
+        _normalizeFailure(res.leftOrNull, 'Failed to resend code.'),
+      );
+    }
 
     final payload = res.rightOrNull ?? <String, dynamic>{};
     final ok = payload['ok'] == true;
     final msg = (payload['message'] ?? 'Sent').toString();
-    return ok ? Either.right(msg) : Either.left(Failure(msg));
+    return ok
+        ? Either.right(msg)
+        : Either.left(_failureFromPayload(payload, fallbackMessage: msg));
   }
 
   // Forgot password
@@ -472,12 +621,18 @@ class AuthController extends StateNotifier<AuthState> {
     required String email,
   }) async {
     final res = await _api.forgotPasswordRequest(email: email);
-    if (res.isLeft) return Either.left(res.leftOrNull!);
+    if (res.isLeft) {
+      return Either.left(
+        _normalizeFailure(res.leftOrNull, 'Failed to request OTP.'),
+      );
+    }
 
     final payload = res.rightOrNull ?? <String, dynamic>{};
     final ok = payload['ok'] == true;
     final msg = (payload['message'] ?? (ok ? 'OTP sent' : 'Failed')).toString();
-    return ok ? Either.right(msg) : Either.left(Failure(msg));
+    return ok
+        ? Either.right(msg)
+        : Either.left(_failureFromPayload(payload, fallbackMessage: msg));
   }
 
   Future<Either<Failure, String>> forgotPasswordVerifyOtp({
@@ -485,13 +640,17 @@ class AuthController extends StateNotifier<AuthState> {
     required String otp,
   }) async {
     final res = await _api.forgotPasswordVerifyOtp(email: email, otp: otp);
-    if (res.isLeft) return Either.left(res.leftOrNull!);
+    if (res.isLeft) {
+      return Either.left(
+        _normalizeFailure(res.leftOrNull, 'Verification failed.'),
+      );
+    }
 
     final payload = res.rightOrNull ?? <String, dynamic>{};
     final ok = payload['ok'] == true;
     if (!ok) {
       final msg = (payload['message'] ?? 'Verification failed').toString();
-      return Either.left(Failure(msg));
+      return Either.left(_failureFromPayload(payload, fallbackMessage: msg));
     }
 
     final data = asJsonMap(payload['data']);
@@ -516,13 +675,19 @@ class AuthController extends StateNotifier<AuthState> {
       newPassword: newPassword,
       confirmPassword: confirmPassword,
     );
-    if (res.isLeft) return Either.left(res.leftOrNull!);
+    if (res.isLeft) {
+      return Either.left(
+        _normalizeFailure(res.leftOrNull, 'Password update failed.'),
+      );
+    }
 
     final payload = res.rightOrNull ?? <String, dynamic>{};
     final ok = payload['ok'] == true;
     final msg = (payload['message'] ?? (ok ? 'Password updated' : 'Failed'))
         .toString();
-    return ok ? Either.right(msg) : Either.left(Failure(msg));
+    return ok
+        ? Either.right(msg)
+        : Either.left(_failureFromPayload(payload, fallbackMessage: msg));
   }
 
   // Change password (logged-in)
@@ -536,13 +701,19 @@ class AuthController extends StateNotifier<AuthState> {
       newPassword: newPassword,
       confirmPassword: confirmPassword,
     );
-    if (res.isLeft) return Either.left(res.leftOrNull!);
+    if (res.isLeft) {
+      return Either.left(
+        _normalizeFailure(res.leftOrNull, 'Password change failed.'),
+      );
+    }
 
     final payload = res.rightOrNull ?? <String, dynamic>{};
     final ok = payload['ok'] == true;
     final msg = (payload['message'] ?? (ok ? 'Password changed' : 'Failed'))
         .toString();
-    return ok ? Either.right(msg) : Either.left(Failure(msg));
+    return ok
+        ? Either.right(msg)
+        : Either.left(_failureFromPayload(payload, fallbackMessage: msg));
   }
 
   Future<(bool remember, String email)> getRememberedLogin() async {

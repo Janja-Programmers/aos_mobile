@@ -1,14 +1,6 @@
-import 'dart:io';
-
-import 'package:africaonlinestores/core/config/app_config.dart';
-import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
-import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
-import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
-import 'package:africaonlinestores/core/utils/normalize_image.dart';
 import 'package:africaonlinestores/features/account/data/accounts_api.dart';
-import 'package:africaonlinestores/features/account/presentation/widgets/editable_avator.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_provider.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
@@ -18,7 +10,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ProfileEditSheet extends ConsumerStatefulWidget {
-  const ProfileEditSheet({super.key});
+  final String? initialFullName;
+  final String? initialBio;
+
+  const ProfileEditSheet({
+    super.key,
+    this.initialFullName,
+    this.initialBio,
+  });
 
   @override
   ConsumerState<ProfileEditSheet> createState() => _ProfileEditSheetState();
@@ -29,24 +28,39 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
   final _bioCtrl = TextEditingController();
 
   bool _saving = false;
-  bool _uploadingPhoto = false;
-
-  String _userImage = '';
-  File? _localPhoto;
+  bool _seededControllers = false;
 
   AccountsApi get _api => ref.read(accountsApiProvider);
 
   @override
   void initState() {
     super.initState();
+    _seedControllers(ref.read(authControllerProvider));
+  }
 
-    final auth = ref.read(authControllerProvider);
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _bioCtrl.dispose();
+    super.dispose();
+  }
 
-    if (auth is AuthAuthenticated) {
-      _nameCtrl.text = auth.user.fullName;
-      _bioCtrl.text = auth.user.bio ?? '';
-      _userImage = auth.user.userImage;
-    }
+  void _seedControllers(AuthState auth) {
+    if (_seededControllers) return;
+
+    final authenticated = auth is AuthAuthenticated ? auth : null;
+    final initialName = _firstNonEmpty([
+      widget.initialFullName,
+      authenticated?.user.fullName,
+    ]);
+    final initialBio = _firstNonEmpty([
+      widget.initialBio,
+      authenticated?.user.bio,
+    ]);
+
+    _nameCtrl.text = initialName;
+    _bioCtrl.text = initialBio;
+    _seededControllers = true;
   }
 
   Future<void> _save() async {
@@ -92,134 +106,88 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     Navigator.pop(context);
   }
 
-  Future<void> _pickPhoto() async {
-    final file = await MediaHelper.pickImageWithChoice(context);
-
-    if (file == null) return;
-
-    final fixedFile = await normalizeImageOrientation(file);
-
-    setState(() {
-      _uploadingPhoto = true;
-      _localPhoto = fixedFile;
-    });
-
-    final uploaded = await MediaHelper.uploadSingle(
-      ref: ref,
-      file: fixedFile,
-      uploadFn: (f) => ref
-          .read(mediaUploadApiProvider)
-          .uploadMedia(file: f, purpose: MediaUploadPurpose.profileImage),
-    );
-
-    if (!mounted) return;
-
-    if (uploaded == null) {
-      setState(() => _uploadingPhoto = false);
-
-      if (mounted) showAppSnack(context, 'Upload failed');
-
-      return;
-    }
-
-    final res = await _api.updateProfile(userImageMedia: uploaded.mediaId);
-
-    if (res.isLeft) {
-      setState(() => _uploadingPhoto = false);
-
-      if (mounted) showAppSnack(context, 'Failed to update image');
-
-      return;
-    }
-
-    final payload = res.rightOrNull ?? <String, dynamic>{};
-    final message = asJsonMap(payload['message']);
-    final data = asJsonMap(payload['data'] ?? message['data'] ?? payload);
-
-    ref.read(authControllerProvider.notifier).setUserFromMap(data);
-
-    setState(() {
-      _uploadingPhoto = false;
-      _userImage = uploaded.url;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final auth = ref.watch(authControllerProvider);
-    final authenticated = auth is AuthAuthenticated ? auth : null;
+    _seedControllers(ref.watch(authControllerProvider));
 
-    return Container(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 14,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 42,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(20),
-              ),
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.92;
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      padding: EdgeInsets.only(bottom: viewInsets.bottom),
+      child: Container(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 42,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+
+                const SizedBox(height: 22),
+
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('Edit profile', style: context.h2),
+                ),
+
+                const SizedBox(height: 24),
+
+                TextField(
+                  controller: _nameCtrl,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(labelText: 'Name'),
+                ),
+
+                const SizedBox(height: 20),
+
+                TextField(
+                  controller: _bioCtrl,
+                  minLines: 3,
+                  maxLines: 5,
+                  maxLength: 160,
+                  textInputAction: TextInputAction.newline,
+                  decoration: const InputDecoration(
+                    labelText: 'Bio',
+                    hintText: 'Tell buyers and sellers a little about you',
+                    alignLabelWithHint: true,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                PrimaryButton(text: 'Save', loading: _saving, onPressed: _save),
+              ],
             ),
-
-            const SizedBox(height: 22),
-
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text('Edit profile', style: context.h2),
-            ),
-
-            const SizedBox(height: 24),
-
-            EditableAvatar(
-              baseUrl: AppConfig.normalizedBaseUrl,
-              authFullName: authenticated?.user.fullName ?? '',
-              authUserImage: authenticated?.user.userImage ?? '',
-              apiUserImage: _userImage,
-              localPhoto: _localPhoto,
-              uploading: _uploadingPhoto,
-              onTapCamera: _pickPhoto,
-            ),
-
-            const SizedBox(height: 24),
-
-            TextField(
-              controller: _nameCtrl,
-              decoration: const InputDecoration(labelText: 'Name'),
-            ),
-
-            const SizedBox(height: 20),
-
-            TextField(
-              controller: _bioCtrl,
-              minLines: 3,
-              maxLines: 5,
-              maxLength: 160,
-              decoration: const InputDecoration(
-                labelText: 'Bio',
-                hintText: 'Tell buyers and sellers a little about you',
-                alignLabelWithHint: true,
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-            PrimaryButton(text: 'Save', loading: _saving, onPressed: _save),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  static String _firstNonEmpty(List<Object?> values) {
+    for (final value in values) {
+      final clean = value?.toString().trim();
+      if (clean != null && clean.isNotEmpty && clean.toLowerCase() != 'null') {
+        return clean;
+      }
+    }
+    return '';
   }
 }

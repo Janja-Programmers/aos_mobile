@@ -2,8 +2,10 @@ import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/theme_controller.dart';
+import 'package:africaonlinestores/features/account/domain/account_state.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/account_guest_header_card.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/account_sections.dart';
+import 'package:africaonlinestores/features/account/shared/providers/accounts_controller.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
@@ -13,8 +15,6 @@ import 'package:africaonlinestores/features/verifications/domain/verification_st
 import 'package:africaonlinestores/features/verifications/presentation/widgets/base_verification_banner.dart';
 import 'package:africaonlinestores/features/verifications/presentation/widgets/seller_verification_banner.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/application/user_verification_provider.dart';
-// import 'package:africaonlinestores/features/verifications/user_verification/domain/user_verification_models.dart';
-// import 'package:africaonlinestores/features/verifications/user_verification/presentation/user_verification_banner.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/account_option_tile.dart';
 import 'package:africaonlinestores/shared/components/app_confirm_sheet.dart';
@@ -26,7 +26,11 @@ import 'package:go_router/go_router.dart';
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
 
-  Widget _buildAccountHeader(BuildContext context, AuthState auth) {
+  Widget _buildAccountHeader(
+    BuildContext context,
+    AuthState auth,
+    AccountState accountState,
+  ) {
     final l10n = context.l10n;
 
     if (auth is! AuthAuthenticated) {
@@ -39,14 +43,31 @@ class AccountScreen extends ConsumerWidget {
     }
 
     final user = auth.user;
+    final fetched = accountState.profile;
+
+    final fetchedName = fetched['full_name']?.toString().trim() ?? '';
+    final fetchedEmail = fetched['email']?.toString().trim() ?? '';
+    final fetchedImage = _firstNonEmpty([
+      fetched['user_image'],
+      fetched['avatar'],
+      fetched['profile_image'],
+    ]);
+
+    final fullName = fetchedName.isNotEmpty
+        ? fetchedName
+        : user.fullName.isNotEmpty
+        ? user.fullName
+        : l10n.nav_account;
+    final email = fetchedEmail.isNotEmpty ? fetchedEmail : user.email;
+    final userImage = fetchedImage.isNotEmpty ? fetchedImage : user.userImage;
 
     return AccountHeaderCard(
-      fullName: user.fullName.isNotEmpty ? user.fullName : l10n.nav_account,
-      email: user.email,
-      initials: _initialsFromName(user.fullName),
+      fullName: fullName,
+      email: email,
+      initials: _initialsFromName(fullName),
       baseUrl: AppConfig.normalizedBaseUrl,
-      imagePath: user.userImage.isNotEmpty ? user.userImage : null,
-      isVerified: user.isVerified,
+      imagePath: userImage.isNotEmpty ? userImage : null,
+      isVerified: user.isVerified || _truthy(fetched['is_verified']),
       onEdit: () => context.pushNamed(AppRoutes.nProfile),
     );
   }
@@ -58,6 +79,9 @@ class AccountScreen extends ConsumerWidget {
 
     final auth = ref.watch(authControllerProvider);
     final isAuthenticated = auth is AuthAuthenticated;
+    final accountState = isAuthenticated
+        ? ref.watch(accountsControllerProvider)
+        : const AccountState();
 
     /// ✅ Only watch protected verification status when authenticated.
     final AsyncValue<SellerVerificationStatus>? statusAsync = isAuthenticated
@@ -91,6 +115,10 @@ class AccountScreen extends ConsumerWidget {
             ref.invalidate(userVerificationStatusProvider);
             await Future.wait([
               ref
+                  .read(accountsControllerProvider.notifier)
+                  .loadProfile()
+                  .then((_) {}, onError: (Object _, StackTrace _) {}),
+              ref
                   .read(sellerStatusProvider.future)
                   .then((_) {}, onError: (Object _, StackTrace _) {}),
               ref
@@ -102,7 +130,7 @@ class AccountScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
           children: [
-            _buildAccountHeader(context, auth),
+            _buildAccountHeader(context, auth, accountState),
             const SizedBox(height: 14),
 
             /// Business verification entry/status.
@@ -193,11 +221,7 @@ class AccountScreen extends ConsumerWidget {
                       title: 'Seller Location',
                       onTap: () => SellerNavigation.toSellerLocation(context),
                     ),
-                    AccountOptionTile(
-                      icon: Icons.history_rounded,
-                      title: 'Activity Center',
-                      onTap: () => context.pushNamed(AppRoutes.nActivityCenter),
-                    ),
+
                     const SizedBox(height: 18),
                   ],
                 ),
@@ -243,12 +267,6 @@ class AccountScreen extends ConsumerWidget {
                   ),
                   if (isAuthenticated) ...[
                     AccountOptionTile(
-                      icon: Icons.person_search_outlined,
-                      title: 'Find People',
-                      onTap: () =>
-                          context.pushNamed(AppRoutes.nSocialUserSearch),
-                    ),
-                    AccountOptionTile(
                       icon: Icons.block_outlined,
                       title: 'Blocked Users',
                       onTap: () => context.pushNamed(AppRoutes.nBlockedUsers),
@@ -260,7 +278,7 @@ class AccountScreen extends ConsumerWidget {
                     ),
                     AccountOptionTile(
                       icon: Icons.settings_backup_restore_sharp,
-                      title: 'Restore a deleted account',
+                      title: 'Restore account',
                       onTap: () => context.pushNamed(AppRoutes.nRestoreAccount),
                     ),
                   ],
@@ -366,6 +384,27 @@ class AccountScreen extends ConsumerWidget {
     final n = name?.trim() ?? '';
     if (n.isEmpty) return 'U';
     return n.substring(0, 1).toUpperCase();
+  }
+
+  static String _firstNonEmpty(List<Object?> values) {
+    for (final value in values) {
+      final clean = value?.toString().trim() ?? '';
+      if (clean.isNotEmpty) return clean;
+    }
+
+    return '';
+  }
+
+  static bool _truthy(Object? value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is num) return value == 1;
+
+    final clean = value.toString().trim().toLowerCase();
+    return clean == '1' ||
+        clean == 'true' ||
+        clean == 'yes' ||
+        clean == 'approved';
   }
 }
 

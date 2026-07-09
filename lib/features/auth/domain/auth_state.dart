@@ -1,3 +1,5 @@
+import 'package:africaonlinestores/core/utils/json_utils.dart';
+
 class AuthUser {
   AuthUser({
     required this.email,
@@ -15,7 +17,7 @@ class AuthUser {
 
   factory AuthUser.fromMap(Map<String, dynamic> m) {
     return AuthUser(
-      email: (m['email'] ?? '').toString(),
+      email: (m['email'] ?? m['id'] ?? '').toString(),
       fullName: (m['full_name'] ?? '').toString(),
       userImage: (m['user_image'] ?? '').toString(),
       bio: (m['bio'] ?? '').toString(),
@@ -37,6 +39,24 @@ class AuthUser {
         clean == 'yes' ||
         clean == 'approved';
   }
+}
+
+class AuthSellerSummary {
+  const AuthSellerSummary({required this.isSeller, this.sellerId, this.status});
+
+  final bool isSeller;
+  final String? sellerId;
+  final String? status;
+
+  factory AuthSellerSummary.fromMap(Map<String, dynamic> map) {
+    return AuthSellerSummary(
+      isSeller: asBool(map['is_seller']),
+      sellerId: asNullableString(map['seller_id']),
+      status: asNullableString(map['status']),
+    );
+  }
+
+  static const empty = AuthSellerSummary(isSeller: false);
 }
 
 sealed class AuthState {
@@ -61,10 +81,31 @@ class AuthGuest extends AuthState {
 class AuthAuthenticated extends AuthState {
   final AuthUser user;
   final String sid;
+  final Map<String, dynamic> preferences;
+  final List<String> roles;
+  final AuthSellerSummary seller;
 
-  const AuthAuthenticated({required this.user, required this.sid});
+  const AuthAuthenticated({
+    required this.user,
+    required this.sid,
+    this.preferences = const {},
+    this.roles = const [],
+    this.seller = AuthSellerSummary.empty,
+  });
 
-  AuthAuthenticated copyWith({AuthUser? user}) {
-    return AuthAuthenticated(user: user ?? this.user, sid: sid);
+  AuthAuthenticated copyWith({
+    AuthUser? user,
+    String? sid,
+    Map<String, dynamic>? preferences,
+    List<String>? roles,
+    AuthSellerSummary? seller,
+  }) {
+    return AuthAuthenticated(
+      user: user ?? this.user,
+      sid: sid ?? this.sid,
+      preferences: preferences ?? this.preferences,
+      roles: roles ?? this.roles,
+      seller: seller ?? this.seller,
+    );
   }
 }

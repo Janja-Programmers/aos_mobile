@@ -9,6 +9,7 @@ class SocialConnectionTile extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onActionTap;
   final VoidCallback onMoreTap;
+  final bool actionLoading;
 
   const SocialConnectionTile({
     super.key,
@@ -16,12 +17,18 @@ class SocialConnectionTile extends StatelessWidget {
     required this.onTap,
     required this.onActionTap,
     required this.onMoreTap,
+    this.actionLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final imageUrl = buildFileUrl(friend.userImage);
+    final actionLabel = friend.actionLabel.isNotEmpty
+        ? friend.actionLabel
+        : _fallbackAction(friend);
+    final primaryAction = _isPrimaryAction(actionLabel, friend);
+    final actionFg = primaryAction ? colors.white : colors.textPrimary;
 
     return InkWell(
       onTap: onTap,
@@ -95,27 +102,66 @@ class SocialConnectionTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onActionTap,
-              child: Container(
-                height: 32,
-                constraints: const BoxConstraints(minWidth: 76),
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: colors.elevated,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  friend.actionLabel.isNotEmpty
-                      ? friend.actionLabel
-                      : _fallbackAction(friend),
-                  style: context.p.copyWith(
-                    fontSize: 12,
-                    color: colors.textPrimary,
-                    fontWeight: FontWeight.w800,
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(999),
+                onTap: actionLoading ? null : onActionTap,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  height: 36,
+                  constraints: const BoxConstraints(minWidth: 88, maxWidth: 128),
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: primaryAction ? colors.primary : colors.elevated,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: primaryAction ? colors.primary : colors.border,
+                    ),
+                    boxShadow: primaryAction
+                        ? [
+                            BoxShadow(
+                              color: colors.primary.withValues(alpha: 0.18),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : const [],
                   ),
+                  child: actionLoading
+                      ? SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: actionFg,
+                          ),
+                        )
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _actionIcon(actionLabel, friend),
+                              color: actionFg,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 5),
+                            Flexible(
+                              child: Text(
+                                actionLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.p.copyWith(
+                                  fontSize: 12,
+                                  color: actionFg,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ),
@@ -160,5 +206,30 @@ class SocialConnectionTile extends StatelessWidget {
     if (friend.isFollowedBy) return 'Follow Back';
 
     return 'Follow';
+  }
+
+  static bool _isPrimaryAction(String label, SocialFriend friend) {
+    final clean = label.trim().toLowerCase();
+    return clean == 'follow' ||
+        clean == 'follow back' ||
+        (!friend.isFollowing && !friend.isFriend);
+  }
+
+  static IconData _actionIcon(String label, SocialFriend friend) {
+    final clean = label.trim().toLowerCase();
+
+    if (friend.isFriend || clean == 'friends') {
+      return Icons.people_alt_rounded;
+    }
+
+    if (friend.isFollowing || clean == 'following') {
+      return Icons.check_rounded;
+    }
+
+    if (friend.isFollowedBy || clean == 'follow back') {
+      return Icons.person_add_alt_1_rounded;
+    }
+
+    return Icons.person_add_alt_1_rounded;
   }
 }

@@ -7,11 +7,12 @@ import 'package:africaonlinestores/features/social/navigation/social_navigation.
 import 'package:africaonlinestores/features/social/presentation/widgets/social_connection_tile.dart';
 import 'package:africaonlinestores/features/social/presentation/widgets/social_connections_state_view.dart';
 import 'package:africaonlinestores/features/social/safety/presentation/widgets/user_safety_sheet.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SocialConnectionsList extends ConsumerWidget {
+class SocialConnectionsList extends ConsumerStatefulWidget {
   final SocialConnectionsState state;
   final Future<void> Function() onRefresh;
   final Future<void> Function() onLoadMore;
@@ -24,7 +25,17 @@ class SocialConnectionsList extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SocialConnectionsList> createState() =>
+      _SocialConnectionsListState();
+}
+
+class _SocialConnectionsListState extends ConsumerState<SocialConnectionsList> {
+  final Set<String> _pendingActionUsers = <String>{};
+
+  @override
+  Widget build(BuildContext context) {
+    final state = widget.state;
+
     if (state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -32,7 +43,7 @@ class SocialConnectionsList extends ConsumerWidget {
     if (state.hasError) {
       return SocialConnectionsStateView.error(
         message: state.errorMessage ?? 'Something went wrong.',
-        onRetry: onRefresh,
+        onRetry: widget.onRefresh,
       );
     }
 
@@ -46,13 +57,13 @@ class SocialConnectionsList extends ConsumerWidget {
     }
 
     return RefreshIndicator(
-      onRefresh: onRefresh,
+      onRefresh: widget.onRefresh,
       child: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
           if (notification.metrics.extentAfter < 360 &&
               state.hasMore &&
               !state.isLoadingMore) {
-            onLoadMore();
+            widget.onLoadMore();
           }
           return false;
         },
@@ -81,6 +92,7 @@ class SocialConnectionsList extends ConsumerWidget {
             return RepaintBoundary(
               child: SocialConnectionTile(
                 friend: friend,
+                actionLoading: _pendingActionUsers.contains(friend.user),
                 onTap: () {
                   SocialNavigation.toProfileScreen(
                     context,
@@ -89,17 +101,9 @@ class SocialConnectionsList extends ConsumerWidget {
                     avatar: friend.userImage,
                   );
                 },
-                onActionTap: () async {
-                  try {
-                    await ref
-                        .read(socialRelationshipControllerProvider.notifier)
-                        .toggleFollow(targetUser: friend.user);
-                  } finally {
-                    await onRefresh();
-                  }
-                },
+                onActionTap: () => _handleActionTap(friend),
                 onMoreTap: () {
-                  _showMoreActions(context, friend, onRefresh);
+                  _showMoreActions(context, friend, widget.onRefresh);
                 },
               ),
             );
@@ -107,6 +111,36 @@ class SocialConnectionsList extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _handleActionTap(SocialFriend friend) async {
+    final cleanUser = friend.user.trim();
+
+    if (cleanUser.isEmpty || _pendingActionUsers.contains(cleanUser)) return;
+
+    setState(() => _pendingActionUsers.add(cleanUser));
+
+    try {
+      final result = await ref
+          .read(socialRepositoryProvider)
+          .toggleFollow(targetUser: cleanUser);
+
+      if (!mounted) return;
+
+      if (result.isLeft) {
+        ShowSnack(
+          context,
+          result.leftOrNull?.message ?? 'Failed to update follow.',
+        ).error();
+        return;
+      }
+
+      await widget.onRefresh();
+    } finally {
+      if (mounted) {
+        setState(() => _pendingActionUsers.remove(cleanUser));
+      }
+    }
   }
 
   String _emptyTitleForTab(SocialConnectionsTab tab, String query) {

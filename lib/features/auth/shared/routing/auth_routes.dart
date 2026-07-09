@@ -18,7 +18,11 @@ class AuthRoutes {
         path: AppRoutes.login,
         builder: (context, state) {
           final prefillEmail = state.uri.queryParameters['email'];
-          return LoginScreen(prefillEmail: prefillEmail);
+          final redirectLocation = state.uri.queryParameters['redirect'];
+          return LoginScreen(
+            prefillEmail: prefillEmail,
+            redirectLocation: redirectLocation,
+          );
         },
       ),
       GoRoute(

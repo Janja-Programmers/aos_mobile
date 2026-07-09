@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:dio/dio.dart';
 
@@ -32,15 +33,27 @@ Failure mapDioException(DioException e) {
   }
 
   final status = e.response?.statusCode;
+  final payload = _extractServerPayload(e.response?.data);
+  final error = asString(payload['error']).trim().toUpperCase();
   final messageFromServer = _extractServerMessage(e.response?.data);
 
   appLogger.i('STATUS: $status');
   appLogger.i('RAW RESPONSE: ${e.response?.data}');
+  appLogger.i('EXTRACTED ERROR: $error');
   appLogger.i('EXTRACTED MESSAGE: $messageFromServer');
+
+  if (payload.isNotEmpty && (error.isNotEmpty || payload['message'] != null)) {
+    return Failure.fromServerPayload(
+      payload,
+      statusCode: status,
+      type: failureTypeForAuthError(error, statusCode: status),
+      fallbackMessage: messageFromServer ?? 'Something went wrong. Please try again.',
+    );
+  }
 
   if (status == 401) {
     return Failure(
-      messageFromServer ?? 'Unauthorized. Please log in again.',
+      messageFromServer ?? 'Please log in to continue.',
       statusCode: status,
       type: FailureType.unauthorized,
     );
@@ -93,10 +106,35 @@ Failure mapDioException(DioException e) {
   );
 }
 
+Map<String, dynamic> _extractServerPayload(Object? data) {
+  try {
+    if (data is! Map) return const {};
+
+    final direct = asJsonMap(data);
+    if (direct.containsKey('ok') || direct.containsKey('error')) {
+      return direct;
+    }
+
+    final msg = direct['message'];
+    if (msg is Map) {
+      return asJsonMap(msg);
+    }
+  } catch (_) {
+    // Keep failure mapping defensive; malformed server errors should not crash.
+  }
+  return const {};
+}
+
 String? _extractServerMessage(Object? data) {
   try {
     if (data is! Map) {
       return null;
+    }
+
+    final payload = _extractServerPayload(data);
+    final payloadMessage = asString(payload['message']).trim();
+    if (payloadMessage.isNotEmpty) {
+      return payloadMessage;
     }
 
     final serverMessages = data['_server_messages'];

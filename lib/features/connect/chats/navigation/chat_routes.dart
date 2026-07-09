@@ -80,19 +80,7 @@ class ChatNavigation {
     final String? adImage,
     final String? adImageFileId,
   }) {
-    final router = GoRouter.of(context);
-
-    final targetLocation = router.namedLocation(
-      AppRoutes.nMessages,
-      pathParameters: {'conversationId': conversationId},
-    );
-
-    final currentLocation = GoRouterState.of(context).uri.toString();
-
-    // 🚫 Already on same chat
-    if (currentLocation == targetLocation) return;
-
-    router.pushNamed(
+    context.pushNamed(
       AppRoutes.nMessages,
       pathParameters: {'conversationId': conversationId},
       extra: {

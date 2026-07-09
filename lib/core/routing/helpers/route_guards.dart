@@ -13,12 +13,20 @@ class RouteGuards {
     AppRoutes.reviewAdBase,
   ];
 
+  static const _authRoutes = [
+    AppRoutes.login,
+    AppRoutes.register,
+    AppRoutes.verifyOtp,
+    AppRoutes.forgotPassword,
+    AppRoutes.resetPassword,
+  ];
+
   static bool isOnboarding(String location) {
     return location.startsWith(AppRoutes.onboarding);
   }
 
   static bool isAuthRoute(String location) {
-    return location.startsWith('/auth');
+    return _authRoutes.any((route) => location == route);
   }
 
   /// Public routes

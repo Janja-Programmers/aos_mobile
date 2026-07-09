@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
@@ -61,7 +62,10 @@ class _OtpResendRowState extends State<OtpResendRow> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(l10n.auth_resend_code, style: context.p),
+        Text(
+          l10n.auth_resend_code,
+          style: context.p.copyWith(color: context.appColors.primary),
+        ),
 
         if (_canResend)
           GestureDetector(

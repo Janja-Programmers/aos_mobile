@@ -62,7 +62,9 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
           return;
         }
 
-        // email verification success
+        await ctrl.logout();
+
+        if (!mounted) return;
         ShowSnack(context, right).success();
 
         await showModalBottomSheet<void>(

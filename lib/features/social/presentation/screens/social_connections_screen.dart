@@ -55,7 +55,7 @@ class _SocialConnectionsScreenState
       backgroundColor: colors.surface,
       appBar: SocialConnectionsAppBar(
         title: widget.title,
-        onAddTap: () {
+        onFindPeopleTap: () {
           SocialNavigation.toUserSearch(context);
         },
       ),

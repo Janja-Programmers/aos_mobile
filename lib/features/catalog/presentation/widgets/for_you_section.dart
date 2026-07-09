@@ -1,9 +1,7 @@
 import 'package:africaonlinestores/core/routing/helpers/navigation.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/catalog/presentation/widgets/for_you_ads_section_box.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/category_ads_provider.dart';
-import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,11 +22,7 @@ class ForYouSection extends ConsumerWidget {
       error: (_, _) => const SizedBox.shrink(),
       data: (items) {
         if (items.isEmpty) {
-          return SectionCard(
-            child: Center(
-              child: Text('No ads in this category', style: context.body),
-            ),
-          );
+          return const SizedBox.shrink();
         }
 
         return _ForYouContent(categoryId: categoryId, items: items);

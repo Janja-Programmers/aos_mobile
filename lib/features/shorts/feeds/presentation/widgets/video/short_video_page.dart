@@ -18,6 +18,7 @@ class ShortVideoPage extends StatefulWidget {
   final bool isFollowPending;
   final bool isSaved;
   final bool isSavePending;
+  final bool isRepostPending;
   final bool isSharePending;
   final bool isDownloadPending;
 
@@ -25,6 +26,7 @@ class ShortVideoPage extends StatefulWidget {
   final void Function(String shortId) onCommentAdded;
   final Future<void> Function(String targetUser)? onToggleFollow;
   final VoidCallback onCreatorTap;
+  final Future<void> Function(String shortId) onRepost;
   final Future<void> Function(String shortId) onShare;
   final Future<void> Function(String shortId) onSave;
   final Future<void> Function(String shortId) onDownload;
@@ -50,6 +52,7 @@ class ShortVideoPage extends StatefulWidget {
     required this.onToggleLike,
     required this.onCommentAdded,
     required this.onCreatorTap,
+    required this.onRepost,
     required this.onShare,
     required this.onSave,
     required this.onDownload,
@@ -61,6 +64,7 @@ class ShortVideoPage extends StatefulWidget {
     this.isFollowPending = false,
     this.isSaved = false,
     this.isSavePending = false,
+    this.isRepostPending = false,
     this.isSharePending = false,
     this.isDownloadPending = false,
   });
@@ -82,6 +86,7 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
   int _maxWatchMs = 0;
   int _lastForceTrackedMs = 0;
   bool _impressionSent = false;
+  double _playbackSpeed = 1.0;
 
   @override
   void initState() {
@@ -144,6 +149,7 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
       ]);
 
       await controller.setLooping(true);
+      await controller.setPlaybackSpeed(_playbackSpeed);
 
       if (!mounted || !widget.shouldPrepare) {
         controller.removeListener(_onVideoTick);
@@ -394,6 +400,20 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
     await widget.onToggleLike(widget.short.id.value);
   }
 
+  Future<void> _setPlaybackSpeed(double speed) async {
+    final supported = <double>{0.5, 0.75, 1, 1.25, 1.5, 2};
+    if (!supported.contains(speed)) return;
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    try {
+      await controller.setPlaybackSpeed(speed);
+      if (!mounted || controller != _controller) return;
+      setState(() => _playbackSpeed = speed);
+    } catch (error) {
+      debugPrint('Unable to change playback speed: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
@@ -403,6 +423,22 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
       behavior: HitTestBehavior.opaque,
       onTap: _togglePlayPause,
       onDoubleTap: _handleDoubleTapLike,
+      onLongPress: () => showShortActionsSheet(
+        context: context,
+        short: widget.short,
+        isSaved: widget.isSaved,
+        isSavePending: widget.isSavePending,
+        isRepostPending: widget.isRepostPending,
+        isSharePending: widget.isSharePending,
+        isDownloadPending: widget.isDownloadPending,
+        onSave: () => widget.onSave(widget.short.id.value),
+        onRepost: () => widget.onRepost(widget.short.id.value),
+        onShare: () => widget.onShare(widget.short.id.value),
+        onDownload: () => widget.onDownload(widget.short.id.value),
+        onReport: widget.onReport,
+        playbackSpeed: _playbackSpeed,
+        onPlaybackSpeedChanged: (speed) => unawaited(_setPlaybackSpeed(speed)),
+      ),
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -449,6 +485,10 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
               isFollowPending: widget.isFollowPending,
               onToggleFollow: widget.onToggleFollow,
 
+              // Repost
+              isRepostPending: widget.isRepostPending,
+              onRepost: () => widget.onRepost(widget.short.id.value),
+
               // Share
               isSharePending: widget.isSharePending,
               onShare: () => widget.onShare(widget.short.id.value),
@@ -462,6 +502,9 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
               isDownloadPending: widget.isDownloadPending,
               onDownload: () => widget.onDownload(widget.short.id.value),
               onReport: widget.onReport,
+              playbackSpeed: _playbackSpeed,
+              onPlaybackSpeedChanged: (speed) =>
+                  unawaited(_setPlaybackSpeed(speed)),
             ),
           ),
 

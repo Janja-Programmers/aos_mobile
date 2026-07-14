@@ -12,6 +12,7 @@ class ShortDetailState extends Equatable {
   final Set<String> pendingLikeIds;
   final Set<String> pendingFollowUserIds;
   final Set<String> pendingSaveIds;
+  final Set<String> pendingRepostIds;
   final Set<String> pendingShareIds;
   final Set<String> pendingDownloadIds;
   final String? errorMessage;
@@ -25,6 +26,7 @@ class ShortDetailState extends Equatable {
     required this.pendingLikeIds,
     required this.pendingFollowUserIds,
     required this.pendingSaveIds,
+    required this.pendingRepostIds,
     required this.pendingShareIds,
     required this.pendingDownloadIds,
     required this.errorMessage,
@@ -45,6 +47,7 @@ class ShortDetailState extends Equatable {
       pendingLikeIds: const {},
       pendingFollowUserIds: const {},
       pendingSaveIds: const {},
+      pendingRepostIds: const {},
       pendingShareIds: const {},
       pendingDownloadIds: const {},
       errorMessage: null,
@@ -59,6 +62,7 @@ class ShortDetailState extends Equatable {
     int? currentIndex,
     Set<String>? pendingLikeIds,
     Set<String>? pendingSaveIds,
+    Set<String>? pendingRepostIds,
     Set<String>? pendingFollowUserIds,
     Set<String>? pendingShareIds,
     Set<String>? pendingDownloadIds,
@@ -74,6 +78,7 @@ class ShortDetailState extends Equatable {
       currentIndex: currentIndex ?? this.currentIndex,
       pendingLikeIds: pendingLikeIds ?? this.pendingLikeIds,
       pendingSaveIds: pendingSaveIds ?? this.pendingSaveIds,
+      pendingRepostIds: pendingRepostIds ?? this.pendingRepostIds,
       pendingFollowUserIds: pendingFollowUserIds ?? this.pendingFollowUserIds,
       pendingShareIds: pendingShareIds ?? this.pendingShareIds,
       pendingDownloadIds: pendingDownloadIds ?? this.pendingDownloadIds,
@@ -92,6 +97,7 @@ class ShortDetailState extends Equatable {
     currentIndex,
     pendingLikeIds,
     pendingSaveIds,
+    pendingRepostIds,
     pendingFollowUserIds,
     pendingShareIds,
     pendingDownloadIds,

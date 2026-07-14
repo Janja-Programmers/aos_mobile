@@ -34,8 +34,13 @@ class _ProfileTabsHeaderDelegate extends SliverPersistentHeaderDelegate {
 class _ProfileTabs extends StatelessWidget {
   final _ProfilePanel selected;
   final ValueChanged<_ProfilePanel> onChanged;
+  final bool isOwnProfile;
 
-  const _ProfileTabs({required this.selected, required this.onChanged});
+  const _ProfileTabs({
+    required this.selected,
+    required this.onChanged,
+    required this.isOwnProfile,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +51,13 @@ class _ProfileTabs extends StatelessWidget {
         Expanded(
           child: Row(
             children: [
-              for (final panel in _ProfilePanel.values)
+              for (final panel in _ProfilePanel.values.where(
+                (panel) =>
+                    isOwnProfile ||
+                    (panel != _ProfilePanel.privateShorts &&
+                        panel != _ProfilePanel.saved &&
+                        panel != _ProfilePanel.liked),
+              ))
                 Expanded(
                   child: _TabIcon(
                     icon: panel.icon,
@@ -117,4 +128,3 @@ class _TabIcon extends StatelessWidget {
     );
   }
 }
-

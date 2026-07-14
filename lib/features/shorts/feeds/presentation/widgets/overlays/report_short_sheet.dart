@@ -269,7 +269,10 @@ class _ReportShortSheetState extends ConsumerState<_ReportShortSheet> {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Submit report'),
+                        : Text(
+                            'Submit report',
+                            style: AppTextStylesX(context).button,
+                          ),
                   ),
                 ),
               ),

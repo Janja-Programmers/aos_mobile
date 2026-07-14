@@ -4,8 +4,10 @@ import 'package:africaonlinestores/features/ads/ads_listing/controllers/ad_listi
 import 'package:africaonlinestores/features/ads/ads_listing/presentation/sections/ad_listing_content.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/presentation/sections/ad_listing_empty.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/presentation/widgets/ad_listing_tabs.dart';
+import 'package:africaonlinestores/features/ads/ads_listing/presentation/widgets/fix_issue_sheet.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/ads_error.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
@@ -89,12 +91,30 @@ class AdListingScreen extends ConsumerWidget {
         tab: state.selectedTab,
         onDelete: controller.deleteListing,
         onEdit: (ad) async {
-          final isDraft = state.selectedTab == AdTab.drafts;
+          if (state.selectedTab == AdTab.drafts) {
+            await openCreateOrEdit(draftId: ad.id);
+            return;
+          }
 
-          await openCreateOrEdit(
-            draftId: isDraft ? ad.id : null,
-            adId: isDraft ? null : ad.id,
+          if (state.selectedTab == AdTab.declined) {
+            final changed = await showFixIssueSheet(
+              context: context,
+              ref: ref,
+              ad: ad,
+              onEdit: () => AdNavigation.toReducedEditListing(
+                context,
+                adId: ad.id,
+              ),
+            );
+            if (changed) await refreshAfterReturn();
+            return;
+          }
+
+          final changed = await AdNavigation.toReducedEditListing(
+            context,
+            adId: ad.id,
           );
+          if (changed ?? false) await refreshAfterReturn();
         },
         onMarkAvailable: controller.markAvailable,
         onRenew: controller.renew,

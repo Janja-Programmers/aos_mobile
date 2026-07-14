@@ -195,7 +195,7 @@ class _MyAdTile extends StatelessWidget {
                     onPressed: a.onPressed,
                     child: Text(
                       a.label,
-                      style: context.p.copyWith(color: colors.white),
+                      style: context.p.copyWith(color: colors.btnText),
                     ),
                   );
 

@@ -300,6 +300,20 @@ class AuthController extends StateNotifier<AuthState> {
     state = current.copyWith(user: AuthUser.fromMap(userMap));
   }
 
+  void setPreferencesFromMap(Map<String, dynamic> preferencesMap) {
+    if (state is! AuthAuthenticated) return;
+    if (preferencesMap.isEmpty) return;
+
+    final current = state as AuthAuthenticated;
+
+    state = current.copyWith(
+      preferences: <String, dynamic>{
+        ...current.preferences,
+        ...preferencesMap,
+      },
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // SOCIAL LOGINS
   // ---------------------------------------------------------------------------

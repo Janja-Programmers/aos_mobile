@@ -64,6 +64,7 @@ class AppRoutes {
   static const adList = '/ads/list';
   static const myAds = '/ads/my';
   static const createAd = '/ads/create';
+  static const editListing = '/ads/edit/:adId';
   static const selectCategory = '/ads/select-category';
   static const selectLocation = '/ads/select-location';
 
@@ -103,6 +104,7 @@ class AppRoutes {
 
   static const nMyAds = 'myAds';
   static const nCreateAd = 'createAd';
+  static const nEditListing = 'editListing';
   static const nSelectCategory = 'selectCategory';
   static const nSelectLocation = 'selectLocation';
 

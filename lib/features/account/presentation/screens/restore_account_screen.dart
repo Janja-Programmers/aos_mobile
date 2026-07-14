@@ -99,7 +99,10 @@ class _RestoreAccountScreenState extends ConsumerState<RestoreAccountScreen> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Text(_requested ? 'Restore account' : 'Send restore code'),
+                  : Text(
+                      _requested ? 'Restore account' : 'Send restore code',
+                      style: AppTextStylesX(context).button,
+                    ),
             ),
           ],
         ),

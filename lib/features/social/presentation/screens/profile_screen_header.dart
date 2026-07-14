@@ -223,11 +223,7 @@ class _ProfileHeader extends StatelessWidget {
               ),
               if (isVerified) ...[
                 const SizedBox(width: 6),
-                Icon(
-                  Icons.verified_rounded,
-                  color: Colors.lightBlueAccent.shade400,
-                  size: 22,
-                ),
+                const VerifiedBadge(size: 22),
               ],
             ],
           ),

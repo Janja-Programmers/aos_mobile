@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/ads/ads_all/presentation/screens/all_ads_screen.dart';
+import 'package:africaonlinestores/features/ads/ads_form/presentation/screens/reduced_edit_listing_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/presentation/screens/ad_listing_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/screens/ad_list_screen.dart';
 import 'package:africaonlinestores/features/home/presentation/sections/tips/marketing_tips_screen.dart';
@@ -88,6 +89,14 @@ class AdsRoutes {
     ),
 
     GoRoute(
+      name: AppRoutes.nEditListing,
+      path: AppRoutes.editListing,
+      builder: (context, state) => ReducedEditListingScreen(
+        adId: state.pathParameters['adId'] ?? '',
+      ),
+    ),
+
+    GoRoute(
       name: AppRoutes.nSellerTips,
       path: AppRoutes.sellerTips,
       builder: (context, state) => const SellingTipsScreen(),
@@ -124,6 +133,16 @@ class AdNavigation {
         if (draftId != null && draftId.isNotEmpty) 'draftId': draftId,
         if (status != null) 'status': status.name,
       },
+    );
+  }
+
+  static Future<bool?> toReducedEditListing(
+    BuildContext context, {
+    required String adId,
+  }) {
+    return context.pushNamed<bool>(
+      AppRoutes.nEditListing,
+      pathParameters: {'adId': adId},
     );
   }
 

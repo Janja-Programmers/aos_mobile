@@ -26,7 +26,8 @@ class RouteGuards {
   }
 
   static bool isAuthRoute(String location) {
-    return _authRoutes.any((route) => location == route);
+    final path = _pathOnly(location);
+    return _authRoutes.any((route) => path == route);
   }
 
   /// Public routes
@@ -36,6 +37,22 @@ class RouteGuards {
 
   /// Protected routes (require login)
   static bool isProtectedRoute(String location) {
-    return _protectedPrefixes.any(location.startsWith);
+    final path = _pathOnly(location);
+
+    return _protectedPrefixes.any((route) {
+      final base = _staticRouteBase(route);
+      return path == base || path.startsWith('$base/');
+    });
+  }
+
+  static String _pathOnly(String location) {
+    return Uri.tryParse(location)?.path ?? location.split('?').first;
+  }
+
+  static String _staticRouteBase(String route) {
+    final dynamicIndex = route.indexOf('/:');
+    if (dynamicIndex == -1) return route;
+
+    return route.substring(0, dynamicIndex);
   }
 }

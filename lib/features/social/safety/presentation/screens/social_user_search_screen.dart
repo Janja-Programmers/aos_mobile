@@ -5,6 +5,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/features/social/safety/application/social_safety_controller.dart';
 import 'package:africaonlinestores/features/social/safety/data/social_safety_api.dart';
+import 'package:africaonlinestores/shared/components/verified_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -111,7 +112,7 @@ class _UserSearchTile extends StatelessWidget {
           ),
           if (user.isVerified) ...[
             const SizedBox(width: 4),
-            const Icon(Icons.verified_rounded, size: 16),
+            const VerifiedBadge(size: 16),
           ],
           if (user.isLive) ...[const SizedBox(width: 6), const _LiveBadge()],
         ],

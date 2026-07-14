@@ -122,6 +122,7 @@ class _ProfileScaffoldState extends State<_ProfileScaffold> {
               delegate: _ProfileTabsHeaderDelegate(
                 child: _ProfileTabs(
                   selected: _selectedPanel,
+                  isOwnProfile: data.isOwnProfile,
                   onChanged: (panel) => setState(() => _selectedPanel = panel),
                 ),
                 backgroundColor: colors.surface,
@@ -181,6 +182,10 @@ class _ProfileScaffoldState extends State<_ProfileScaffold> {
         return data.reposted;
       case _ProfilePanel.privateShorts:
         return data.privateShorts;
+      case _ProfilePanel.saved:
+        return data.saved;
+      case _ProfilePanel.liked:
+        return data.liked;
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
+import 'package:africaonlinestores/app/bootstrap/app_bootstrap_state.dart';
 import 'package:africaonlinestores/app/splash/splash_screen.dart';
 import 'package:africaonlinestores/core/routing/app_shell.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
@@ -39,12 +40,26 @@ import 'package:go_router/go_router.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
 
+final _routerRefreshNotifierProvider = Provider<_RouterRefreshNotifier>((ref) {
+  final notifier = _RouterRefreshNotifier();
+
+  ref.listen<AppBootstrapState>(appBootstrapProvider, (_, _) {
+    notifier.refresh();
+  });
+  ref.listen<AuthState>(authControllerProvider, (_, _) {
+    notifier.refresh();
+  });
+  ref.onDispose(notifier.dispose);
+
+  return notifier;
+});
+
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final bootstrap = ref.watch(appBootstrapProvider);
-  final auth = ref.watch(authControllerProvider);
+  final routerRefreshNotifier = ref.watch(_routerRefreshNotifierProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
+    refreshListenable: routerRefreshNotifier,
 
     initialLocation: AppRoutes.splash,
 
@@ -183,7 +198,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
 
     redirect: (context, state) {
-      final location = state.matchedLocation;
+      final bootstrap = ref.read(appBootstrapProvider);
+      final auth = ref.read(authControllerProvider);
+      final matchedLocation = state.matchedLocation;
+      final currentLocation = state.uri.toString();
 
       if (!bootstrap.isReady) {
         return AppRoutes.splash;
@@ -193,14 +211,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return AppRoutes.splash;
       }
 
-      if (location == AppRoutes.splash) {
+      if (matchedLocation == AppRoutes.splash) {
         if (!bootstrap.onboardingCompleted) {
           return AppRoutes.onboarding;
         }
         return AppRoutes.home;
       }
 
-      final isOnboarding = RouteGuards.isOnboarding(location);
+      final isOnboarding = RouteGuards.isOnboarding(matchedLocation);
 
       if (!bootstrap.onboardingCompleted && !isOnboarding) {
         return AppRoutes.onboarding;
@@ -210,13 +228,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return AppRoutes.home;
       }
 
-      final isAuthRoute = RouteGuards.isAuthRoute(location);
-      final isProtected = RouteGuards.isProtectedRoute(location);
+      final isAuthRoute = RouteGuards.isAuthRoute(matchedLocation);
+      final isProtected = RouteGuards.isProtectedRoute(currentLocation);
 
       if (auth is AuthGuest && isProtected) {
         if (isAuthRoute) return null;
 
-        final encodedLocation = Uri.encodeComponent(location);
+        final encodedLocation = Uri.encodeComponent(currentLocation);
         return '${AppRoutes.login}?redirect=$encodedLocation';
       }
 
@@ -228,6 +246,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
   );
 });
+
+class _RouterRefreshNotifier extends ChangeNotifier {
+  void refresh() {
+    notifyListeners();
+  }
+}
 
 String _param(GoRouterState state, String key) =>
     Uri.decodeComponent(state.pathParameters[key] ?? '');

@@ -27,6 +27,7 @@ import 'package:africaonlinestores/features/social/application/providers/social_
 import 'package:africaonlinestores/features/social/application/state/social_connections_state.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/features/social/safety/presentation/widgets/user_safety_sheet.dart';
+import 'package:africaonlinestores/shared/components/verified_badge.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

@@ -31,6 +31,7 @@ class _SellerLocationScreenState extends ConsumerState<SellerLocationScreen> {
         setState(() {
           _selected = location;
           _nameController.text = location.name;
+          _instructionsController.text = location.instructions ?? '';
         });
       }
     });
@@ -56,6 +57,10 @@ class _SellerLocationScreenState extends ConsumerState<SellerLocationScreen> {
       if (_nameController.text.trim().isEmpty) {
         _nameController.text = picked.shortLabel;
       }
+      if (_instructionsController.text.trim().isEmpty &&
+          (picked.instructions?.trim().isNotEmpty ?? false)) {
+        _instructionsController.text = picked.instructions!;
+      }
     });
   }
 
@@ -77,7 +82,7 @@ class _SellerLocationScreenState extends ConsumerState<SellerLocationScreen> {
     if (!mounted) return;
     if (ok) {
       ShowSnack(context, 'Seller location saved.').success();
-      context.pop();
+      context.pop(true);
     } else {
       final error = ref.read(sellerLocationControllerProvider).error;
       ShowSnack(context, error ?? 'Failed to save location.').error();
@@ -90,7 +95,11 @@ class _SellerLocationScreenState extends ConsumerState<SellerLocationScreen> {
         .remove();
     if (!mounted) return;
     if (ok) {
-      setState(() => _selected = null);
+      setState(() {
+        _selected = null;
+        _nameController.clear();
+        _instructionsController.clear();
+      });
       ShowSnack(context, 'Seller location removed.').success();
     } else {
       ShowSnack(context, 'Failed to remove location.').error();
@@ -147,8 +156,14 @@ class _SellerLocationScreenState extends ConsumerState<SellerLocationScreen> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.check_circle_outline_rounded),
-              label: const Text('Save location'),
+                  : Icon(
+                      Icons.check_circle_outline_rounded,
+                      color: colors.white,
+                    ),
+              label: Text(
+                'Save location',
+                style: AppTextStylesX(context).button,
+              ),
             ),
             if (state.location != null || _selected != null) ...[
               const SizedBox(height: 10),

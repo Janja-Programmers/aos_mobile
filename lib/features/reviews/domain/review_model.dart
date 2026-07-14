@@ -5,6 +5,7 @@ class AdReview {
     required this.title,
     required this.comment,
     required this.reviewer,
+    this.reviewerAvatar,
     required this.creation,
     this.images = const [],
     this.isLiked = false,
@@ -18,6 +19,7 @@ class AdReview {
   final String title;
   final String comment;
   final String reviewer;
+  final String? reviewerAvatar;
   final DateTime? creation;
   final List<String> images;
   final bool isLiked;
@@ -67,6 +69,9 @@ class AdReview {
       reviewer: reviewerObject is Map
           ? (reviewerObject['full_name'] ?? '').toString()
           : (reviewerObject ?? '').toString(),
+      reviewerAvatar: reviewerObject is Map
+          ? reviewerObject['avatar']?.toString()
+          : json['reviewer_avatar']?.toString(),
       creation: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
@@ -83,6 +88,7 @@ class AdReview {
     String? title,
     String? comment,
     String? reviewer,
+    String? reviewerAvatar,
     DateTime? creation,
     List<String>? images,
     bool? isLiked,
@@ -96,6 +102,7 @@ class AdReview {
       title: title ?? this.title,
       comment: comment ?? this.comment,
       reviewer: reviewer ?? this.reviewer,
+      reviewerAvatar: reviewerAvatar ?? this.reviewerAvatar,
       creation: creation ?? this.creation,
       images: images ?? this.images,
       isLiked: isLiked ?? this.isLiked,

@@ -19,9 +19,18 @@ class OnboardingStorage {
   /// Save all user preference codes
   Future<void> savePreferences(UserPreferenceState prefs) async {
     await Future.wait([
-      _prefs.setString(_keyCountryCode, prefs.countryCode.toUpperCase()),
-      _prefs.setString(_keyLanguageCode, prefs.languageCode.toLowerCase()),
-      _prefs.setString(_keyCurrencyCode, prefs.currencyCode.toUpperCase()),
+      _prefs.setString(
+        _keyCountryCode,
+        UserPreferenceState.normalizeCountryCode(prefs.countryCode),
+      ),
+      _prefs.setString(
+        _keyLanguageCode,
+        UserPreferenceState.normalizeLanguageCode(prefs.languageCode),
+      ),
+      _prefs.setString(
+        _keyCurrencyCode,
+        UserPreferenceState.normalizeCurrencyCode(prefs.currencyCode),
+      ),
     ]);
   }
 
@@ -32,24 +41,42 @@ class OnboardingStorage {
     required String currencyCode,
   }) async {
     await Future.wait([
-      _prefs.setString(_keyCountryCode, countryCode.toUpperCase()),
-      _prefs.setString(_keyLanguageCode, languageCode.toLowerCase()),
-      _prefs.setString(_keyCurrencyCode, currencyCode.toUpperCase()),
+      _prefs.setString(
+        _keyCountryCode,
+        UserPreferenceState.normalizeCountryCode(countryCode),
+      ),
+      _prefs.setString(
+        _keyLanguageCode,
+        UserPreferenceState.normalizeLanguageCode(languageCode),
+      ),
+      _prefs.setString(
+        _keyCurrencyCode,
+        UserPreferenceState.normalizeCurrencyCode(currencyCode),
+      ),
     ]);
   }
 
   /// Update individual preference fields
 
   Future<void> setCountryCode(String code) async {
-    await _prefs.setString(_keyCountryCode, code.toUpperCase());
+    await _prefs.setString(
+      _keyCountryCode,
+      UserPreferenceState.normalizeCountryCode(code),
+    );
   }
 
   Future<void> setLanguageCode(String code) async {
-    await _prefs.setString(_keyLanguageCode, code.toLowerCase());
+    await _prefs.setString(
+      _keyLanguageCode,
+      UserPreferenceState.normalizeLanguageCode(code),
+    );
   }
 
   Future<void> setCurrencyCode(String code) async {
-    await _prefs.setString(_keyCurrencyCode, code.toUpperCase());
+    await _prefs.setString(
+      _keyCurrencyCode,
+      UserPreferenceState.normalizeCurrencyCode(code),
+    );
   }
 
   /// Load stored preferences (source of truth for UI)

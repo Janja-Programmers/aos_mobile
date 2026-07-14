@@ -174,6 +174,7 @@ class AccountScreen extends ConsumerWidget {
                     ),
                   ) ??
                   const SizedBox.shrink(),
+            if (isAuthenticated) const SizedBox(height: 14),
 
             /// User identity verification entry/status.
             // if (userVerificationAsync != null)
@@ -216,29 +217,11 @@ class AccountScreen extends ConsumerWidget {
                       title: 'My Wishlist',
                       onTap: () => AdNavigation.toWishlist(context),
                     ),
-                    AccountOptionTile(
-                      icon: Icons.place_outlined,
-                      title: 'Seller Location',
-                      onTap: () => SellerNavigation.toSellerLocation(context),
-                    ),
-
                     const SizedBox(height: 18),
                   ],
                 ),
               ),
 
-            AccountCard(
-              child: Column(
-                children: [
-                  AccountOptionTile(
-                    icon: Icons.map_outlined,
-                    title: 'Explore Sellers Nearby',
-                    showDivider: false,
-                    onTap: () => context.pushNamed(AppRoutes.nMaps),
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 18),
 
             /// SETTINGS
@@ -256,21 +239,11 @@ class AccountScreen extends ConsumerWidget {
                           context.pushNamed(AppRoutes.nPasswordSecurity),
                     ),
                   AccountOptionTile(
-                    icon: Icons.notifications_none,
-                    title: l10n.account_notifications_preferences,
-                    onTap: () => context.pushNamed(AppRoutes.nNotifications),
-                  ),
-                  AccountOptionTile(
                     icon: Icons.tune,
                     title: l10n.app_preferences,
                     onTap: () => context.pushNamed(AppRoutes.nPreference),
                   ),
                   if (isAuthenticated) ...[
-                    AccountOptionTile(
-                      icon: Icons.block_outlined,
-                      title: 'Blocked Users',
-                      onTap: () => context.pushNamed(AppRoutes.nBlockedUsers),
-                    ),
                     AccountOptionTile(
                       icon: Icons.delete_forever_outlined,
                       title: 'Delete Account',
@@ -329,10 +302,9 @@ class AccountScreen extends ConsumerWidget {
                 height: 54,
                 child: OutlinedButton.icon(
                   onPressed: () async {
-                    final parentContext = context;
-
-                    await showModalBottomSheet<void>(
-                      context: parentContext,
+                    final confirmed = await showModalBottomSheet<bool>(
+                      context: context,
+                      useRootNavigator: true,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
                       builder: (sheetContext) {
@@ -344,21 +316,20 @@ class AccountScreen extends ConsumerWidget {
                               'Are you sure you want to log out? You will need to sign in again.',
                           primaryText: 'Logout',
                           secondaryText: 'Cancel',
-                          onPrimary: () async {
-                            Navigator.of(sheetContext).pop();
-
-                            await ref
-                                .read(authControllerProvider.notifier)
-                                .logout();
-
-                            if (!parentContext.mounted) return;
-
-                            parentContext.go(AppRoutes.home);
-                          },
-                          onSecondary: () => Navigator.of(sheetContext).pop(),
+                          onPrimary: () => Navigator.of(sheetContext).pop(true),
+                          onSecondary: () =>
+                              Navigator.of(sheetContext).pop(false),
                         );
                       },
                     );
+
+                    if (confirmed != true || !context.mounted) return;
+
+                    await ref.read(authControllerProvider.notifier).logout();
+
+                    if (!context.mounted) return;
+
+                    context.go(AppRoutes.home);
                   },
                   style: OutlinedButton.styleFrom(
                     shape: const StadiumBorder(),

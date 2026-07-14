@@ -8,6 +8,9 @@ class ShortCreatorMapper {
       displayName: model.displayName,
       avatar: model.avatar,
       isVerified: model.isVerified,
+      isLive: model.isLive,
+      liveId: model.liveId,
+      liveStatus: model.liveStatus,
       seller: model.seller == null
           ? null
           : ShortCreatorSeller(id: model.seller!.id),

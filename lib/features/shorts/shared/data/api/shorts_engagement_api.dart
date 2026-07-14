@@ -7,6 +7,7 @@ import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_follow_result.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_like_result.dart';
+import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_repost_result.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/toggle_save_result.dart';
 import 'package:dio/dio.dart';
 
@@ -96,6 +97,44 @@ class ShortsEngagementApi {
       return Either.left(mapDioException(e));
     } catch (_) {
       return Either.left(const Failure('Unexpected error toggling follow'));
+    }
+  }
+
+  Future<Either<Failure, ToggleRepostResult>> toggleRepost({
+    required String shortId,
+    String? note,
+  }) async {
+    try {
+      final res = await _client.post(
+        ApiEndpoints.toggleShortRepost,
+        data: {
+          'short_id': shortId,
+          if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
+        },
+      );
+
+      final unwrapped = unwrapFrappe(res);
+      return unwrapped.fold(Either.left, (json) {
+        final data = _payload(json);
+        final viewerState = asJsonMap(data['viewer_state']);
+        final repostedRaw = data['reposted'] ?? viewerState['is_reposted'];
+        if (repostedRaw == null) {
+          return Either.left(const Failure('Invalid toggle repost response'));
+        }
+        final metrics = asJsonMap(data['metrics']);
+        return Either.right(
+          ToggleRepostResult(
+            shortId: data['short_id']?.toString() ?? shortId,
+            reposted: _toBool(repostedRaw),
+            repostCount: _toNullableInt(metrics['repost_count']),
+            shareCount: _toNullableInt(metrics['share_count']),
+          ),
+        );
+      });
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Unexpected error toggling repost'));
     }
   }
 

@@ -35,6 +35,9 @@ class ReviewCard extends StatelessWidget {
             CircleAvatar(
               radius: 18,
               backgroundColor: colors.primaryRedSoft,
+              foregroundImage: buildFileUrl(review.reviewerAvatar) == null
+                  ? null
+                  : NetworkImage(buildFileUrl(review.reviewerAvatar)!),
               child: Text(
                 avatarLetter,
                 style: context.pStrong.copyWith(color: colors.surface),

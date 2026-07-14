@@ -12,6 +12,7 @@ import 'package:africaonlinestores/features/social/application/providers/social_
 import 'package:africaonlinestores/features/social/application/state/social_connections_state.dart';
 import 'package:africaonlinestores/features/social/domain/social_friend.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+import 'package:africaonlinestores/shared/components/verified_badge.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -651,11 +652,7 @@ class _ContactCard extends StatelessWidget {
                       ),
                       if (verified) ...[
                         const SizedBox(width: 7),
-                        Icon(
-                          Icons.verified_rounded,
-                          color: colors.blue,
-                          size: 22,
-                        ),
+                        const VerifiedBadge(size: 22),
                       ],
                     ],
                   ),

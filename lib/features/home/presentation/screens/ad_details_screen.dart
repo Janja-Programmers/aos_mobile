@@ -13,9 +13,9 @@ import 'package:africaonlinestores/features/connect/calls/domain/call_participan
 import 'package:africaonlinestores/features/connect/chats/utils/chat_actions.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ad_seller_store_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/ads_header_info_section.dart';
-import 'package:africaonlinestores/features/home/presentation/components/ad_details/grid_ads_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/image_header_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/product_detail_section.dart';
+import 'package:africaonlinestores/features/home/presentation/components/ad_details/seller_location_section.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/ad_detail_controller.dart';
 import 'package:africaonlinestores/features/home/shared/providers/similar_ads_provider.dart';
 import 'package:africaonlinestores/features/reviews/application/controllers/review_controller.dart';
@@ -29,6 +29,7 @@ import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dar
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';
+import 'package:africaonlinestores/shared/components/cards/ad_card_horizontal.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
@@ -156,7 +157,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
           await ref
               .read(callStarterServiceProvider)
               .startOutgoingCall(
-                userId: ad.sellerId,
+                userId: seller?.effectiveUserId ?? ad.sellerId,
                 callType: AOSCallType.audio,
                 receiver: _buildReceiver(ad, seller),
               );
@@ -193,7 +194,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
         ChatActions.startChat(
           context: context,
           ref: ref,
-          user: ad.sellerId,
+          user: seller.effectiveUserId,
           displayName: seller.displayName,
           initialMessage: "Hi, I'm interested in ${ad.title}",
           adId: ad.id,
@@ -400,33 +401,45 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                         );
                       },
                       data: (seller) {
-                        return AdSellerInfoSection(
-                          displayName: seller.displayName,
-                          avatar: seller.avatar,
-                          rating: seller.rating,
-                          totalReviews: seller.totalReviews,
-                          totalFollowers: seller.totalFollowers,
-                          totalAds: seller.totalAds,
-                          joined: seller.joined,
-                          isFollowing: seller.isFollowing,
-                          isVerified: seller.isVerified,
-                          reviewState: reviewState,
-                          onVisitStore: () {
-                            SellerNavigation.toSellerStore(
-                              context,
-                              ad.sellerId,
-                              seller: seller,
-                            );
-                          },
-                          onReview: () {
-                            _openCreateReview(ad);
-                          },
-                          onReport: () {
-                            AdNavigation.toReportAd(context, ad.id);
-                          },
-                          onPostSimilar: () {
-                            AdNavigation.toCreateAd(context);
-                          },
+                        return Column(
+                          children: [
+                            AdSellerInfoSection(
+                              displayName: seller.displayName,
+                              avatar: seller.avatar,
+                              rating: seller.rating,
+                              totalReviews: seller.totalReviews,
+                              totalFollowers: seller.totalFollowers,
+                              totalAds: seller.totalAds,
+                              joined: seller.joined,
+                              isFollowing: seller.isFollowing,
+                              isVerified: seller.isVerified,
+                              reviewState: reviewState,
+                              onVisitStore: () {
+                                SellerNavigation.toSellerStore(
+                                  context,
+                                  ad.sellerId,
+                                  seller: seller,
+                                );
+                              },
+                              onReview: () {
+                                _openCreateReview(ad);
+                              },
+                              onReport: () {
+                                AdNavigation.toReportAd(context, ad.id);
+                              },
+                              onPostSimilar: () {
+                                AdNavigation.toCreateAd(context);
+                              },
+                            ),
+
+                            if (seller.location != null) ...[
+                              const SizedBox(height: 12),
+                              SellerLocationSection(
+                                sellerId: ad.sellerId,
+                                location: seller.location!,
+                              ),
+                            ],
+                          ],
                         );
                       },
                     ),
@@ -458,9 +471,27 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                         }
 
                         return SectionCard(
-                          child: GridAdsSectionBox(
-                            title: 'Similar Products',
-                            items: filteredItems,
+                          title: 'Similar Products',
+                          child: SizedBox(
+                            height: 205,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: filteredItems.length,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(width: 12),
+                              itemBuilder: (context, index) {
+                                final item = filteredItems[index];
+                                return SizedBox(
+                                  width: 164,
+                                  child: AdHorizontalCard(
+                                    ad: item,
+                                    onTap: () =>
+                                        AdNavigation.toDetail(context, item.id),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         );
                       },
@@ -629,7 +660,7 @@ CallParticipant _buildReceiver(AOSAdDetails ad, AOSSellerProfile? seller) {
   final sellerName = seller?.displayName.trim();
 
   return CallParticipant(
-    userId: ad.sellerId,
+    userId: seller?.effectiveUserId ?? ad.sellerId,
     displayName: sellerName != null && sellerName.isNotEmpty
         ? sellerName
         : ad.sellerId,

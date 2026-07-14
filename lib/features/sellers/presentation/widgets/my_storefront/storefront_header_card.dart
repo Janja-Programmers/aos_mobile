@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
+import 'package:africaonlinestores/shared/components/verified_badge.dart';
 import 'package:flutter/material.dart';
 
 class MyStorefrontHeaderCard extends StatelessWidget {
@@ -63,7 +64,7 @@ class MyStorefrontHeaderCard extends StatelessWidget {
               ),
               if (isVerified) ...[
                 const SizedBox(width: 6),
-                Icon(Icons.verified, color: colors.blue, size: 18),
+                const VerifiedBadge(),
               ],
             ],
           ),
@@ -96,8 +97,15 @@ class MyStorefrontHeaderCard extends StatelessWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: onCustomize,
-                  icon: const Icon(Icons.palette_outlined, size: 18),
-                  label: const Text('Customize'),
+                  icon: const Icon(
+                    Icons.palette_outlined,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                  label: const Text(
+                    'Customize',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),

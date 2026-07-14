@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/account/shared/utils/avator_image.dart';
+import 'package:africaonlinestores/shared/components/verified_badge.dart';
 import 'package:flutter/material.dart';
 
 class AccountCard extends StatelessWidget {
@@ -115,11 +116,7 @@ class _AccountHeaderCardState extends State<AccountHeaderCard> {
                           ),
                           if (widget.isVerified) ...[
                             const SizedBox(width: 6),
-                            Icon(
-                              Icons.verified_rounded,
-                              color: Colors.lightBlueAccent.shade400,
-                              size: 20,
-                            ),
+                            const VerifiedBadge(size: 20),
                           ],
                         ],
                       ),

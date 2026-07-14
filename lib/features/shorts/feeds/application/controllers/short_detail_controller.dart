@@ -330,6 +330,65 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     );
   }
 
+  Future<void> toggleRepost(String shortId, {String? note}) async {
+    if (state.pendingRepostIds.contains(shortId)) return;
+
+    final index = state.items.indexWhere((short) => short.id.value == shortId);
+    if (index == -1) return;
+
+    final original = state.items[index];
+    if (!original.canRepost && !original.isReposted) {
+      state = state.copyWith(errorMessage: 'This short cannot be reposted.');
+      return;
+    }
+
+    state = state.copyWith(
+      pendingRepostIds: {...state.pendingRepostIds, shortId},
+      errorMessage: null,
+    );
+
+    final result = await _engagementApi.toggleRepost(
+      shortId: shortId,
+      note: note,
+    );
+
+    result.fold(
+      (failure) {
+        final pending = {...state.pendingRepostIds}..remove(shortId);
+        state = state.copyWith(
+          pendingRepostIds: pending,
+          errorMessage: failure.message,
+        );
+      },
+      (toggleResult) {
+        final pending = {...state.pendingRepostIds}..remove(shortId);
+        final syncIndex = state.items.indexWhere(
+          (short) => short.id.value == toggleResult.shortId,
+        );
+        if (syncIndex == -1) {
+          state = state.copyWith(pendingRepostIds: pending);
+          return;
+        }
+
+        final current = state.items[syncIndex];
+        _replaceShortAt(
+          syncIndex,
+          current.copyWith(
+            metrics: current.metrics.copyWith(
+              repostCount:
+                  toggleResult.repostCount ?? current.metrics.repostCount,
+              shareCount: toggleResult.shareCount ?? current.metrics.shareCount,
+            ),
+            viewerState: current.viewerState.copyWith(
+              isReposted: toggleResult.reposted,
+            ),
+          ),
+          pendingRepostIds: pending,
+        );
+      },
+    );
+  }
+
   Future<void> shareShort(String shortId) async {
     if (state.pendingShareIds.contains(shortId)) return;
 
@@ -654,6 +713,7 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     Short updatedShort, {
     Set<String>? pendingLikeIds,
     Set<String>? pendingSaveIds,
+    Set<String>? pendingRepostIds,
     Set<String>? pendingShareIds,
     Set<String>? pendingDownloadIds,
   }) {
@@ -666,6 +726,7 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
       items: List.unmodifiable(updatedItems),
       pendingLikeIds: pendingLikeIds,
       pendingSaveIds: pendingSaveIds,
+      pendingRepostIds: pendingRepostIds,
       pendingShareIds: pendingShareIds,
       pendingDownloadIds: pendingDownloadIds,
     );

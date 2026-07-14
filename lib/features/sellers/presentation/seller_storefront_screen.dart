@@ -13,6 +13,7 @@ import 'package:africaonlinestores/features/sellers/presentation/sections/seller
 import 'package:africaonlinestores/features/sellers/presentation/sections/seller_header_section.dart';
 import 'package:africaonlinestores/features/sellers/presentation/sections/seller_products_section.dart';
 import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -49,7 +50,7 @@ class _SellerStorefrontScreenState
           await ref
               .read(callStarterServiceProvider)
               .startOutgoingCall(
-                userId: widget.sellerId,
+                userId: seller.effectiveUserId,
                 callType: AOSCallType.audio,
                 receiver: _buildReceiver(seller),
               );
@@ -68,7 +69,7 @@ class _SellerStorefrontScreenState
         ChatActions.startChat(
           context: context,
           ref: ref,
-          user: widget.sellerId,
+          user: seller.effectiveUserId,
           displayName: seller.displayName,
           initialMessage: 'Hello ${seller.displayName}',
         );
@@ -80,7 +81,7 @@ class _SellerStorefrontScreenState
     final sellerName = seller.displayName.trim();
 
     return CallParticipant(
-      userId: widget.sellerId,
+      userId: seller.effectiveUserId,
       displayName: sellerName.isNotEmpty ? sellerName : widget.sellerId,
       avatarUrl: seller.avatar,
     );
@@ -182,6 +183,8 @@ class _SellerStorefrontScreenState
           }
 
           final hasAbout = seller.aboutBusiness?.trim().isNotEmpty ?? false;
+          final hasHours = seller.operatingHours.isNotEmpty;
+          final hasLocation = seller.hasLocation;
 
           return RefreshIndicator(
             onRefresh: () async {
@@ -197,9 +200,13 @@ class _SellerStorefrontScreenState
               children: [
                 SellerHeaderSection(seller: seller, sellerId: widget.sellerId),
 
-                if (hasAbout) ...[
+                if (hasAbout || hasHours || hasLocation) ...[
                   const SizedBox(height: 14),
-                  SellerAboutSection(about: seller.aboutBusiness!),
+                  SellerAboutSection(
+                    about: seller.aboutBusiness ?? '',
+                    location: seller.location,
+                    operatingHours: seller.operatingHours,
+                  ),
                 ],
 
                 const SizedBox(height: 14),
@@ -214,8 +221,16 @@ class _SellerStorefrontScreenState
           : SafeArea(
               top: false,
               child: AdDetailActionBar(
-                onCall: () => _handleCall(seller),
-                onMessage: () => _handleMessage(seller),
+                onCall: seller.canCall
+                    ? () => _handleCall(seller)
+                    : () =>
+                          ShowSnack(context, 'Calling is unavailable.').info(),
+                onMessage: seller.canMessage
+                    ? () => _handleMessage(seller)
+                    : () => ShowSnack(
+                        context,
+                        'Messaging is unavailable.',
+                      ).info(),
               ),
             ),
     );

@@ -83,7 +83,15 @@ class SellerApi {
         data: data,
       );
 
-      return unwrapFrappe(res);
+      final unwrapped = unwrapFrappe(res);
+      if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
+
+      final payload = unwrapped.rightOrNull ?? const <String, dynamic>{};
+      if (payload['ok'] == false || payload['error'] != null) {
+        return Either.left(Failure.fromServerPayload(payload));
+      }
+
+      return Either.right(payload);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {

@@ -1,17 +1,17 @@
+import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
+import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/features/sellers/application/providers/seller_profile_provider.dart';
+import 'package:africaonlinestores/features/sellers/application/providers/seller_ads_provider.dart';
 import 'package:africaonlinestores/features/sellers/application/providers/seller_state_controller_provider.dart';
-import 'package:africaonlinestores/features/sellers/domain/storefront_post.dart';
+import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
-import 'package:africaonlinestores/features/sellers/presentation/widgets/my_storefront/analytics_section.dart';
-import 'package:africaonlinestores/features/sellers/presentation/widgets/my_storefront/owner_tabs.dart';
-import 'package:africaonlinestores/features/sellers/presentation/widgets/my_storefront/post_actions_bottom_sheet.dart';
-import 'package:africaonlinestores/features/sellers/presentation/widgets/my_storefront/post_section.dart';
-import 'package:africaonlinestores/features/sellers/presentation/widgets/my_storefront/storefront_header_card.dart';
-import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
-import 'package:africaonlinestores/features/shorts/music/presentation/music_picker_sheet.dart';
-import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
+import 'package:africaonlinestores/features/sellers/presentation/sections/seller_products_section.dart';
+import 'package:africaonlinestores/features/sellers/presentation/widgets/seller_banner_header.dart';
+import 'package:africaonlinestores/features/sellers/presentation/widgets/store_customization/store_image_source_sheet.dart';
+import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:africaonlinestores/shared/components/verified_badge.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,351 +26,67 @@ class MyStorefrontScreen extends ConsumerStatefulWidget {
 }
 
 class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
-  int _selectedTab = 0;
+  bool _uploadingBanner = false;
 
-  Future<void> _showPostActions({required StorefrontPost post}) async {
-    final postId = post.id;
-    final title = post.title;
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) {
-        return PostActionsBottomSheet(
-          postTitle: title,
-          onViewAnalytics: () {
-            Navigator.pop(context);
-            setState(() => _selectedTab = 1);
-          },
-          onEditPost: () {
-            Navigator.pop(context);
-            _showEditPostSheet(post);
-          },
-          onDeletePost: () async {
-            Navigator.pop(context);
-
-            final confirmed = await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Delete short?'),
-                content: const Text(
-                  'This will remove the short from your storefront and feeds.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel'),
-                  ),
-                  FilledButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Delete'),
-                  ),
-                ],
-              ),
-            );
-
-            if (confirmed != true) return;
-
-            final error = await ref
-                .read(storefrontDashboardControllerProvider.notifier)
-                .deletePost(postId);
-
-            if (!mounted) return;
-
-            if (error != null) {
-              ShowSnack(context, error).error();
-            } else {
-              ShowSnack(context, 'Post deleted').success();
-            }
-          },
-        );
-      },
-    );
+  Future<void> _refresh() async {
+    await ref.read(sellerStateProvider(widget.sellerId).notifier).load();
+    ref.invalidate(sellerAdsProvider(widget.sellerId));
   }
 
-  Future<void> _showEditPostSheet(StorefrontPost post) async {
-    final short = post.short;
-    final captionController = TextEditingController(text: short.caption.value);
-    final hashtagsController = TextEditingController(
-      text: short.hashtags.join(' '),
+  Future<void> _pickAndUpdateBanner() async {
+    if (_uploadingBanner) return;
+
+    final file = await showStoreImageSourceSheet(context);
+    if (!mounted || file == null) return;
+
+    setState(() => _uploadingBanner = true);
+
+    final uploaded = await ref
+        .read(mediaUploadApiProvider)
+        .uploadMedia(file: file, purpose: MediaUploadPurpose.sellerBanner);
+
+    if (!mounted) return;
+
+    final mediaId = uploaded.fold<String?>((failure) {
+      ShowSnack(context, failure.message).error();
+      return null;
+    }, (media) => media.mediaId);
+
+    if (mediaId == null || mediaId.trim().isEmpty) {
+      if (mounted) setState(() => _uploadingBanner = false);
+      return;
+    }
+
+    final error = await ref
+        .read(sellerStateProvider(widget.sellerId).notifier)
+        .updateSellerProfile(shopBanner: mediaId);
+
+    if (!mounted) return;
+
+    setState(() => _uploadingBanner = false);
+
+    if (error != null) {
+      ShowSnack(context, error).error();
+      return;
+    }
+
+    ShowSnack(context, 'Store banner updated.').success();
+  }
+
+  Future<void> _openCustomize() async {
+    final changed = await SellerNavigation.toCustomizeStore(
+      context,
+      widget.sellerId,
     );
-    var audience = short.audience;
-    var allowComments = short.allowComments;
-    var allowDownloads = short.allowDownloads;
-    var selectedSound = short.sound ?? ShortSound.original;
-    var saving = false;
-
-    await showModalBottomSheet<void>(
-      backgroundColor: context.appColors.surface,
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            final colors = context.appColors;
-            final bottom = MediaQuery.of(context).viewInsets.bottom;
-
-            Future<void> save() async {
-              if (saving) return;
-              setSheetState(() => saving = true);
-
-              final tags = hashtagsController.text
-                  .split(RegExp(r'\s+'))
-                  .map((value) => value.trim())
-                  .where((value) => value.isNotEmpty)
-                  .toList(growable: false);
-
-              final result = await ref
-                  .read(shortsUploadApiProvider)
-                  .updateMetadata(
-                    shortId: short.id.value,
-                    contentMode: short.contentMode,
-                    adId: short.ad?.id,
-                    caption: captionController.text.trim(),
-                    hashtags: tags,
-                    audience: audience,
-                    allowComments: allowComments,
-                    allowDownloads: allowDownloads,
-                    soundId: selectedSound.isOriginal ? null : selectedSound.id,
-                    soundStartMs: selectedSound.startMs,
-                    soundDurationMs: selectedSound.durationMs,
-                    soundVolume: selectedSound.volume,
-                  );
-
-              if (!mounted) return;
-
-              final metadataOk = result.fold((failure) {
-                setSheetState(() => saving = false);
-                ShowSnack(context, failure.message).error();
-                return false;
-              }, (_) => true);
-
-              if (!metadataOk) return;
-
-              if (selectedSound.isOriginal && short.hasSound) {
-                final removeResult = await ref
-                    .read(shortsSoundsApiProvider)
-                    .removeShortSound(shortId: short.id.value);
-                if (!mounted) return;
-
-                final removeOk = removeResult.fold((failure) {
-                  setSheetState(() => saving = false);
-                  ShowSnack(context, failure.message).error();
-                  return false;
-                }, (_) => true);
-
-                if (!removeOk) return;
-              }
-
-              if (!sheetContext.mounted) return;
-              Navigator.pop(sheetContext);
-
-              if (!context.mounted) return;
-              ShowSnack(context, 'Short updated').success();
-              await ref
-                  .read(storefrontDashboardControllerProvider.notifier)
-                  .load();
-            }
-
-            return Padding(
-              padding: EdgeInsets.only(bottom: bottom),
-              child: SafeArea(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text('Edit short', style: context.h5),
-                          ),
-                          IconButton(
-                            onPressed: saving
-                                ? null
-                                : () => Navigator.pop(context),
-                            icon: const Icon(Icons.close_rounded),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: captionController,
-                        maxLines: 4,
-                        maxLength: 512,
-                        decoration: InputDecoration(
-                          labelText: 'Caption',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: hashtagsController,
-                        decoration: InputDecoration(
-                          labelText: 'Hashtags',
-                          hintText: '#fashion #deals',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Text('Audience', style: context.pStrong),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          _EditAudienceChip(
-                            label: 'Everyone',
-                            value: 'everyone',
-                            groupValue: audience,
-                            onSelected: (value) =>
-                                setSheetState(() => audience = value),
-                          ),
-                          _EditAudienceChip(
-                            label: 'Followers',
-                            value: 'followers',
-                            groupValue: audience,
-                            onSelected: (value) =>
-                                setSheetState(() => audience = value),
-                          ),
-                          _EditAudienceChip(
-                            label: 'Friends',
-                            value: 'friends',
-                            groupValue: audience,
-                            onSelected: (value) =>
-                                setSheetState(() => audience = value),
-                          ),
-                          _EditAudienceChip(
-                            label: 'Only me',
-                            value: 'only_me',
-                            groupValue: audience,
-                            onSelected: (value) =>
-                                setSheetState(() => audience = value),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        curve: Curves.easeOut,
-                        decoration: BoxDecoration(
-                          color: allowComments
-                              ? colors.primary.withValues(alpha: 0.08)
-                              : colors.surface.withValues(alpha: 0.45),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: SwitchListTile.adaptive(
-                          value: allowComments,
-                          onChanged: (value) =>
-                              setSheetState(() => allowComments = value),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 2,
-                          ),
-                          title: Text('Allow comments', style: context.p),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.music_note_rounded),
-                        title: Text(
-                          selectedSound.title,
-                          style: context.pStrong,
-                        ),
-                        subtitle: Text(
-                          selectedSound.isOriginal
-                              ? 'Original video audio'
-                              : [
-                                  if (selectedSound.artist.trim().isNotEmpty)
-                                    selectedSound.artist,
-                                  if (selectedSound.durationLabel.isNotEmpty)
-                                    selectedSound.durationLabel,
-                                  if (selectedSound.isCommercialSafe)
-                                    'Commercial safe',
-                                ].join(' • '),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: saving
-                            ? null
-                            : () async {
-                                final picked = await showMusicPickerSheet(
-                                  sheetContext,
-                                  commercialSafeOnly:
-                                      short.contentMode == 'shop',
-                                );
-                                if (picked == null) return;
-                                setSheetState(() => selectedSound = picked);
-                              },
-                      ),
-                      const SizedBox(height: 10),
-                      SwitchListTile.adaptive(
-                        value: allowDownloads,
-                        onChanged: (value) =>
-                            setSheetState(() => allowDownloads = value),
-                        contentPadding: EdgeInsets.zero,
-                        title: Text('Allow downloads', style: context.p),
-                        subtitle: Text(
-                          'Disabled by default. Owner downloads still work.',
-                          style: context.small.copyWith(
-                            color: colors.textMuted,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: FilledButton(
-                          onPressed: saving ? null : save,
-                          child: saving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text(
-                                  'Save changes',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    captionController.dispose();
-    hashtagsController.dispose();
+    if (!mounted || changed != true) return;
+    await _refresh();
   }
 
   @override
   Widget build(BuildContext context) {
-    final sellerState = ref.watch(sellerStateProvider(widget.sellerId));
-    final dashboardState = ref.watch(storefrontDashboardControllerProvider);
-
-    final seller = sellerState.seller;
+    final state = ref.watch(sellerStateProvider(widget.sellerId));
+    final seller = state.seller;
     final colors = context.appColors;
-
-    if (seller == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -387,89 +103,191 @@ class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
           style: context.h5.copyWith(fontWeight: FontWeight.w800),
         ),
       ),
-      body: RefreshIndicator(
-        onRefresh: () {
-          return ref
-              .read(storefrontDashboardControllerProvider.notifier)
-              .load();
+      body: Builder(
+        builder: (_) {
+          if (seller == null && state.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (seller == null) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  state.error ?? 'Seller storefront not found.',
+                  textAlign: TextAlign.center,
+                  style: context.body,
+                ),
+              ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              children: [
+                _MyStorefrontHeader(
+                  seller: seller,
+                  uploadingBanner: _uploadingBanner,
+                  onEditBanner: _pickAndUpdateBanner,
+                  onCustomize: _openCustomize,
+                  onPreview: () {
+                    SellerNavigation.toSellerStore(
+                      context,
+                      widget.sellerId,
+                      seller: seller,
+                    );
+                  },
+                ),
+                const SizedBox(height: 14),
+                SellerProductsSection(sellerId: widget.sellerId),
+              ],
+            ),
+          );
         },
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          children: [
-            MyStorefrontHeaderCard(
-              sellerName: seller.displayName,
-              avatarUrl: seller.avatar,
-              isVerified: seller.isVerified,
-              totalAds: seller.totalAds,
-              totalFollowers: seller.totalFollowers,
-              rating: seller.rating,
-              totalReviews: seller.totalReviews,
-              onCustomize: () {
-                SellerNavigation.toCustomizeStore(context, seller.user);
-              },
-              onPreview: () {
-                SellerNavigation.toSellerStore(context, widget.sellerId);
-              },
-            ),
-
-            const SizedBox(height: 16),
-
-            OwnerTabs(
-              selectedIndex: _selectedTab,
-              onChanged: (index) {
-                setState(() => _selectedTab = index);
-              },
-            ),
-
-            const SizedBox(height: 18),
-
-            if (_selectedTab == 0)
-              MyPostsSection(
-                loading: dashboardState.loading,
-                error: dashboardState.error,
-                posts: dashboardState.posts,
-                onRefresh: () {
-                  ref
-                      .read(storefrontDashboardControllerProvider.notifier)
-                      .load();
-                },
-                onPostMenuTap: (post) {
-                  _showPostActions(post: post);
-                },
-              )
-            else
-              AnalyticsSection(analytics: dashboardState.analytics),
-          ],
-        ),
       ),
     );
   }
 }
 
-class _EditAudienceChip extends StatelessWidget {
-  final String label;
-  final String value;
-  final String groupValue;
-  final ValueChanged<String> onSelected;
-
-  const _EditAudienceChip({
-    required this.label,
-    required this.value,
-    required this.groupValue,
-    required this.onSelected,
+class _MyStorefrontHeader extends StatelessWidget {
+  const _MyStorefrontHeader({
+    required this.seller,
+    required this.uploadingBanner,
+    required this.onEditBanner,
+    required this.onCustomize,
+    required this.onPreview,
   });
+
+  final AOSSellerProfile seller;
+  final bool uploadingBanner;
+  final VoidCallback onEditBanner;
+  final VoidCallback onCustomize;
+  final VoidCallback onPreview;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final selected = value == groupValue;
 
-    return ChoiceChip(
-      selected: selected,
-      label: Text(label),
-      onSelected: (_) => onSelected(value),
-      selectedColor: colors.primary.withValues(alpha: .16),
-      side: BorderSide(color: selected ? colors.primary : colors.border),
+    return SectionCard(
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              SellerBannerHeader(seller: seller, onEditBanner: onEditBanner),
+              if (uploadingBanner)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.black.withValues(alpha: .22),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  seller.displayName,
+                  style: context.h5.copyWith(fontWeight: FontWeight.w900),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (seller.isVerified) ...[
+                const SizedBox(width: 6),
+                const VerifiedBadge(),
+              ],
+            ],
+          ),
+          if (seller.businessCategory?.trim().isNotEmpty ?? false) ...[
+            const SizedBox(height: 4),
+            Text(
+              seller.businessCategory!,
+              style: context.pMuted,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              color: colors.surface,
+              border: Border.all(color: colors.border.withValues(alpha: .6)),
+            ),
+            child: Row(
+              children: [
+                _StoreStat(value: seller.ratingLabel, label: 'Rating'),
+                _divider(colors),
+                _StoreStat(value: seller.followersLabel, label: 'Followers'),
+                _divider(colors),
+                _StoreStat(
+                  value: seller.joined.trim().isEmpty ? '—' : seller.joined,
+                  label: 'Joined',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onCustomize,
+                  icon: const Icon(Icons.tune_rounded, size: 18),
+                  label: const Text('Customize'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onPreview,
+                  icon: const Icon(Icons.remove_red_eye_outlined, size: 18),
+                  label: const Text('Preview'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
+}
+
+class _StoreStat extends StatelessWidget {
+  const _StoreStat({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: context.pStrong.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 3),
+          Text(label, style: context.smallMuted, textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
+}
+
+Widget _divider(AppColorTokens colors) {
+  return Container(width: 1, height: 34, color: colors.border);
 }

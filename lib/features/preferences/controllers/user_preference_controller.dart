@@ -32,9 +32,9 @@ class UserPreferenceController extends StateNotifier<UserPreferenceState> {
     state = state.copyWith(isLoading: true);
 
     final updated = UserPreferenceState(
-      languageCode: languageCode.toLowerCase(),
-      countryCode: countryCode.toUpperCase(),
-      currencyCode: currencyCode.toUpperCase(),
+      languageCode: UserPreferenceState.normalizeLanguageCode(languageCode),
+      countryCode: UserPreferenceState.normalizeCountryCode(countryCode),
+      currencyCode: UserPreferenceState.normalizeCurrencyCode(currencyCode),
     );
 
     await _storage.savePreferences(updated);
@@ -46,7 +46,9 @@ class UserPreferenceController extends StateNotifier<UserPreferenceState> {
   Future<void> updateLanguageCode(String languageCode) async {
     state = state.copyWith(isSaving: true);
 
-    final updated = state.copyWith(languageCode: languageCode.toLowerCase());
+    final updated = state.copyWith(
+      languageCode: UserPreferenceState.normalizeLanguageCode(languageCode),
+    );
 
     await _storage.savePreferences(updated);
 
@@ -57,7 +59,9 @@ class UserPreferenceController extends StateNotifier<UserPreferenceState> {
   Future<void> updateCountryCode(String countryCode) async {
     state = state.copyWith(isSaving: true);
 
-    final updated = state.copyWith(countryCode: countryCode.toUpperCase());
+    final updated = state.copyWith(
+      countryCode: UserPreferenceState.normalizeCountryCode(countryCode),
+    );
 
     await _storage.savePreferences(updated);
 
@@ -68,7 +72,9 @@ class UserPreferenceController extends StateNotifier<UserPreferenceState> {
   Future<void> updateCurrencyCode(String currencyCode) async {
     state = state.copyWith(isSaving: true);
 
-    final updated = state.copyWith(currencyCode: currencyCode.toUpperCase());
+    final updated = state.copyWith(
+      currencyCode: UserPreferenceState.normalizeCurrencyCode(currencyCode),
+    );
 
     await _storage.savePreferences(updated);
 
@@ -84,9 +90,15 @@ class UserPreferenceController extends StateNotifier<UserPreferenceState> {
     state = state.copyWith(isSaving: true);
 
     final updated = state.copyWith(
-      languageCode: languageCode?.toLowerCase(),
-      countryCode: countryCode?.toUpperCase(),
-      currencyCode: currencyCode?.toUpperCase(),
+      languageCode: languageCode == null
+          ? null
+          : UserPreferenceState.normalizeLanguageCode(languageCode),
+      countryCode: countryCode == null
+          ? null
+          : UserPreferenceState.normalizeCountryCode(countryCode),
+      currencyCode: currencyCode == null
+          ? null
+          : UserPreferenceState.normalizeCurrencyCode(currencyCode),
     );
 
     await _storage.savePreferences(updated);

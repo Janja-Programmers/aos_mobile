@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/sellers/domain/seller_list_item.dart';
+import 'package:africaonlinestores/shared/components/verified_badge.dart';
 import 'package:flutter/material.dart';
 
 class SellerTile extends StatelessWidget {
@@ -50,7 +51,7 @@ class SellerTile extends StatelessWidget {
           ),
           if (seller.isVerified) ...[
             const SizedBox(width: 4),
-            Icon(Icons.verified, size: 16, color: colors.blue),
+            const VerifiedBadge(size: 16),
           ],
         ],
       ),

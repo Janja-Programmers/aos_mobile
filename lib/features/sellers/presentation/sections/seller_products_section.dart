@@ -41,7 +41,11 @@ class SellerProductsSection extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
 
-                _FilterChip(label: 'Categories', showArrow: true, onTap: () {}),
+                _FilterChip(
+                  label: 'Filter',
+                  showArrow: true,
+                  onTap: () => _showFilterSheet(context),
+                ),
               ],
             ),
           ),
@@ -178,10 +182,63 @@ void _showSortSheet(BuildContext context) {
                 const SizedBox(height: 22),
                 Text('Sort By', style: context.h6),
                 const SizedBox(height: 22),
-                const _SortOption(label: 'Latest Saved'),
+                const _SortOption(label: 'Latest'),
                 const _SortOption(label: 'Most Reviewed'),
                 const _SortOption(label: 'Highest Price'),
                 const _SortOption(label: 'Lowest Price'),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+
+void _showFilterSheet(BuildContext context) {
+  final colors = context.appColors;
+
+  unawaited(
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Text('Filter', style: context.h6),
+                const SizedBox(height: 14),
+                Text(
+                  'Seller product filters will use this storefront product list.',
+                  style: context.pMuted,
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Done'),
+                  ),
+                ),
               ],
             ),
           ),

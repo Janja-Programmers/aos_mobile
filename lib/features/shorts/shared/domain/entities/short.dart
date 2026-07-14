@@ -77,6 +77,8 @@ class Short extends Equatable {
   bool get hasAudioMixFailed => audioMixStatus == 'failed';
 
   bool get isLiked => viewerState.liked;
+  bool get isReposted => viewerState.isReposted;
+  bool get canRepost => viewerState.canRepost;
   bool get isWatched => viewerState.watched;
 
   bool get isOwner => viewerState.isOwner;

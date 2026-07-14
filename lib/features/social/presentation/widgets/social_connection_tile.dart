@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/social/domain/social_friend.dart';
+import 'package:africaonlinestores/shared/components/verified_badge.dart';
 import 'package:flutter/material.dart';
 
 class SocialConnectionTile extends StatelessWidget {
@@ -71,11 +72,7 @@ class SocialConnectionTile extends StatelessWidget {
                       ),
                       if (friend.isVerified) ...[
                         const SizedBox(width: 4),
-                        Icon(
-                          Icons.verified_rounded,
-                          size: 15,
-                          color: colors.blue,
-                        ),
+                        const VerifiedBadge(size: 15),
                       ],
                     ],
                   ),

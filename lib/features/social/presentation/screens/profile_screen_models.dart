@@ -2,7 +2,7 @@ part of 'profile_screen.dart';
 
 enum _AvatarPhotoAction { gallery, camera }
 
-enum _ProfilePanel { posts, reposted, privateShorts }
+enum _ProfilePanel { posts, privateShorts, reposted, saved, liked }
 
 extension _ProfilePanelX on _ProfilePanel {
   String get label {
@@ -13,6 +13,10 @@ extension _ProfilePanelX on _ProfilePanel {
         return 'Reposted';
       case _ProfilePanel.privateShorts:
         return 'Private';
+      case _ProfilePanel.saved:
+        return 'Saved';
+      case _ProfilePanel.liked:
+        return 'Liked';
     }
   }
 
@@ -24,6 +28,10 @@ extension _ProfilePanelX on _ProfilePanel {
         return Icons.repeat_rounded;
       case _ProfilePanel.privateShorts:
         return Icons.lock_outline_rounded;
+      case _ProfilePanel.saved:
+        return Icons.bookmark_border_rounded;
+      case _ProfilePanel.liked:
+        return Icons.favorite_border_rounded;
     }
   }
 }
@@ -94,6 +102,8 @@ class _ProfileViewData {
   final List<Short> posts;
   final List<Short> reposted;
   final List<Short> privateShorts;
+  final List<Short> saved;
+  final List<Short> liked;
   final bool isSeller;
   final String? sellerId;
   final bool isFollowing;
@@ -119,6 +129,8 @@ class _ProfileViewData {
     required this.posts,
     required this.reposted,
     required this.privateShorts,
+    required this.saved,
+    required this.liked,
     required this.isSeller,
     required this.sellerId,
     required this.isFollowing,
@@ -162,6 +174,8 @@ class _ProfileViewData {
       posts: const <Short>[],
       reposted: const <Short>[],
       privateShorts: const <Short>[],
+      saved: const <Short>[],
+      liked: const <Short>[],
       isSeller: false,
       sellerId: null,
       isFollowing: false,

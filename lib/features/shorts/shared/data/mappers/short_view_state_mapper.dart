@@ -8,6 +8,8 @@ class ShortViewerStateMapper {
       watched: model.watched,
       watchProgress: model.watchProgress,
       isSaved: model.isSaved,
+      isReposted: model.isReposted,
+      canRepost: model.canRepost,
       isOwner: model.isOwner,
       canEdit: model.canEdit,
       canDelete: model.canDelete,

@@ -27,6 +27,7 @@ class StoreCustomizationScreen extends ConsumerStatefulWidget {
 
 class _StoreCustomizationScreenState
     extends ConsumerState<StoreCustomizationScreen> {
+  final _categoryCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   late final OperatingHoursForm _hoursForm;
 
@@ -45,27 +46,36 @@ class _StoreCustomizationScreenState
     _hoursForm = OperatingHoursForm();
 
     final seller = ref.read(sellerStateProvider(widget.sellerId)).seller;
-
     if (seller != null) {
-      _setDescriptionSilently(seller.aboutBusiness ?? '');
-      _hoursForm.hydrate(seller.operatingHours);
+      _hydrateFields(seller);
       _initializedFromSeller = true;
     }
 
+    _categoryCtrl.addListener(_markChanged);
     _descCtrl.addListener(_markChanged);
   }
 
   @override
   void dispose() {
-    _descCtrl.removeListener(_markChanged);
-    _descCtrl.dispose();
+    _categoryCtrl
+      ..removeListener(_markChanged)
+      ..dispose();
+    _descCtrl
+      ..removeListener(_markChanged)
+      ..dispose();
     super.dispose();
   }
 
   void _markChanged() {
-    if (!_changed) {
+    if (!_changed && mounted) {
       setState(() => _changed = true);
     }
+  }
+
+  void _setCategorySilently(String value) {
+    _categoryCtrl.removeListener(_markChanged);
+    _categoryCtrl.text = value;
+    _categoryCtrl.addListener(_markChanged);
   }
 
   void _setDescriptionSilently(String value) {
@@ -74,12 +84,16 @@ class _StoreCustomizationScreenState
     _descCtrl.addListener(_markChanged);
   }
 
+  void _hydrateFields(AOSSellerProfile seller) {
+    _setCategorySilently(seller.businessCategory ?? '');
+    _setDescriptionSilently(seller.aboutBusiness ?? '');
+    _hoursForm.hydrate(seller.operatingHours);
+  }
+
   void _hydrateFromSeller(AOSSellerProfile seller) {
     if (_initializedFromSeller) return;
 
-    _setDescriptionSilently(seller.aboutBusiness ?? '');
-    _hoursForm.hydrate(seller.operatingHours);
-
+    _hydrateFields(seller);
     _initializedFromSeller = true;
   }
 
@@ -87,8 +101,7 @@ class _StoreCustomizationScreenState
     if (_saving || _uploading) return;
 
     final file = await showStoreImageSourceSheet(context);
-
-    if (file == null) return;
+    if (!mounted || file == null) return;
 
     setState(() => _uploading = true);
 
@@ -121,7 +134,7 @@ class _StoreCustomizationScreenState
           _hoursForm.openTimes[day] ?? const TimeOfDay(hour: 9, minute: 0),
     );
 
-    if (picked == null) return;
+    if (!mounted || picked == null) return;
 
     setState(() {
       _hoursForm.openTimes[day] = picked;
@@ -136,7 +149,7 @@ class _StoreCustomizationScreenState
           _hoursForm.closeTimes[day] ?? const TimeOfDay(hour: 18, minute: 0),
     );
 
-    if (picked == null) return;
+    if (!mounted || picked == null) return;
 
     setState(() {
       _hoursForm.closeTimes[day] = picked;
@@ -151,6 +164,15 @@ class _StoreCustomizationScreenState
     });
   }
 
+  Future<void> _openLocationEditor() async {
+    if (_saving || _uploading) return;
+
+    await SellerNavigation.toSellerLocation(context);
+    if (!mounted) return;
+
+    await ref.read(sellerStateProvider(widget.sellerId).notifier).load();
+  }
+
   Future<void> _save() async {
     if (_saving || _uploading) return;
 
@@ -160,6 +182,7 @@ class _StoreCustomizationScreenState
       final error = await ref
           .read(sellerStateProvider(widget.sellerId).notifier)
           .updateSellerProfile(
+            businessCategory: _categoryCtrl.text.trim(),
             aboutBusiness: _descCtrl.text.trim(),
             shopBanner: _uploadedShopBannerMediaId,
             operatingHours: _hoursForm.toApiPayload(),
@@ -227,74 +250,184 @@ class _StoreCustomizationScreenState
           ),
         ],
       ),
-
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
-        children: [
-          const SectionTitle(
-            icon: Icons.account_circle_outlined,
-            label: 'Store Banner',
-          ),
-
-          const SizedBox(height: 14),
-
-          StoreBannerPicker(
-            bannerUrl: banner,
-            uploading: _uploading,
-            onTap: _pickAndUploadBanner,
-          ),
-
-          const SizedBox(height: 28),
-
-          const SectionTitle(
-            icon: Icons.description_outlined,
-            label: 'Store Description',
-          ),
-
-          const SizedBox(height: 12),
-
-          StoreDescriptionField(controller: _descCtrl),
-
-          const SizedBox(height: 20),
-
-          const SectionTitle(icon: Icons.access_time, label: 'Operating Hours'),
-
-          const SizedBox(height: 12),
-
-          OperatingHoursSection(
-            dayEnabled: _hoursForm.dayEnabled,
-            openTimes: _hoursForm.openTimes,
-            closeTimes: _hoursForm.closeTimes,
-            onDayChanged: _onDayChanged,
-            onOpenTimeTap: _pickOpenTime,
-            onCloseTimeTap: _pickCloseTime,
-          ),
-
-          const SizedBox(height: 28),
-
-          SizedBox(
-            height: 48,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                SellerNavigation.toSellerStore(context, widget.sellerId);
-              },
-              icon: Icon(Icons.remove_red_eye_outlined, color: colors.primary),
-              label: Text(
-                'Preview Storefront',
-                style: context.p.copyWith(
-                  color: colors.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: colors.primary),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(22, 16, 22, 28),
+          children: [
+            const SectionTitle(
+              icon: Icons.account_circle_outlined,
+              label: 'Store Banner',
+            ),
+            const SizedBox(height: 14),
+            StoreBannerPicker(
+              bannerUrl: banner,
+              uploading: _uploading,
+              onTap: _pickAndUploadBanner,
+            ),
+            const SizedBox(height: 28),
+            const SectionTitle(
+              icon: Icons.category_outlined,
+              label: 'Business Category',
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _categoryCtrl,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                hintText: 'Example: Electronics, Fashion, Food',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            const SectionTitle(
+              icon: Icons.location_on_outlined,
+              label: 'Store Location',
+            ),
+            const SizedBox(height: 12),
+            _StoreLocationCard(
+              location: seller.location,
+              onTap: _openLocationEditor,
+            ),
+            const SizedBox(height: 24),
+            const SectionTitle(
+              icon: Icons.description_outlined,
+              label: 'Store Description',
+            ),
+            const SizedBox(height: 12),
+            StoreDescriptionField(controller: _descCtrl),
+            const SizedBox(height: 20),
+            const SectionTitle(
+              icon: Icons.access_time,
+              label: 'Operating Hours',
+            ),
+            const SizedBox(height: 12),
+            OperatingHoursSection(
+              dayEnabled: _hoursForm.dayEnabled,
+              openTimes: _hoursForm.openTimes,
+              closeTimes: _hoursForm.closeTimes,
+              onDayChanged: _onDayChanged,
+              onOpenTimeTap: _pickOpenTime,
+              onCloseTimeTap: _pickCloseTime,
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  SellerNavigation.toSellerStore(context, widget.sellerId);
+                },
+                icon: Icon(
+                  Icons.remove_red_eye_outlined,
+                  color: colors.primary,
+                ),
+                label: Text(
+                  'Preview Storefront',
+                  style: context.p.copyWith(
+                    color: colors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: colors.primary),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StoreLocationCard extends StatelessWidget {
+  const _StoreLocationCard({required this.location, required this.onTap});
+
+  final AOSSellerLocation? location;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final hasLocation = location != null;
+    final title = hasLocation ? location!.title : 'Add store location';
+    final subtitle = hasLocation
+        ? location!.subtitle ?? 'Location saved'
+        : 'Let buyers find your shop or pickup point.';
+    final instructions = location?.instructions?.trim();
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Ink(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: colors.primary.withValues(alpha: .1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.store_mall_directory_outlined,
+                color: colors.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.pStrong.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.smallMuted,
+                  ),
+                  if (instructions != null && instructions.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      instructions,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.small.copyWith(color: colors.textPrimary),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              hasLocation ? 'Edit' : 'Add',
+              style: context.small.copyWith(
+                color: colors.primary,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+          ],
+        ),
       ),
     );
   }

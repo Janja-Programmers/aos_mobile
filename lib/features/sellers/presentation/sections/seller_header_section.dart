@@ -6,6 +6,7 @@ import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/seller_banner_header.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/seller_response_badge.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:africaonlinestores/shared/components/verified_badge.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,9 +24,7 @@ class SellerHeaderSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
-
     final state = ref.watch(sellerStateProvider(sellerId));
-    final isFollowing = state.isFollowing ?? false;
 
     return SectionCard(
       child: Column(
@@ -47,30 +46,7 @@ class SellerHeaderSection extends ConsumerWidget {
               ),
               if (seller.isVerified) ...[
                 const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.blue.withValues(alpha: .12),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.verified, size: 13, color: colors.blue),
-                      const SizedBox(width: 3),
-                      Text(
-                        'Verified',
-                        style: context.p.copyWith(
-                          color: colors.blue,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                const VerifiedBadge(),
               ],
             ],
           ),
@@ -97,20 +73,20 @@ class SellerHeaderSection extends ConsumerWidget {
             child: Row(
               children: [
                 _StatItem(
-                  icon: Icons.star,
-                  title: '${seller.rating.toStringAsFixed(1)} / 5',
+                  icon: Icons.star_rounded,
+                  title: seller.ratingLabel,
                   subtitle: 'Rating',
                 ),
                 _divider(colors),
                 _StatItem(
                   icon: Icons.group_outlined,
-                  title: _formatCount(seller.totalFollowers),
+                  title: seller.followersLabel,
                   subtitle: 'Followers',
                 ),
                 _divider(colors),
                 _StatItem(
                   icon: Icons.calendar_today_outlined,
-                  title: seller.joined,
+                  title: seller.joined.trim().isEmpty ? '—' : seller.joined,
                   subtitle: 'Joined',
                 ),
               ],
@@ -130,74 +106,117 @@ class SellerHeaderSection extends ConsumerWidget {
           else
             const SizedBox(height: 4),
 
-          if (!seller.isSelf)
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: state.followingLoading
-                    ? null
-                    : () async {
-                        final wasFollowing = isFollowing;
-
-                        final error = await ref
-                            .read(sellerStateProvider(sellerId).notifier)
-                            .toggleFollow();
-
-                        if (!context.mounted) return;
-
-                        if (error != null) {
-                          ShowSnack(context, error).error();
-                        } else {
-                          ShowSnack(
-                            context,
-                            wasFollowing ? 'Unfollowed' : 'Following',
-                          ).success();
-                        }
-                      },
-                icon: state.followingLoading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(
-                        isFollowing ? Icons.check : Icons.person_add_alt_1,
-                        size: 18,
-                      ),
-                label: Text(
-                  state.followingLoading
-                      ? 'Please wait...'
-                      : isFollowing
-                      ? 'Following'
-                      : 'Follow',
-                ),
-                style: ElevatedButton.styleFrom(
-                  elevation: 0,
-                  backgroundColor: isFollowing
-                      ? colors.surface
-                      : colors.primary,
-                  foregroundColor: isFollowing
-                      ? colors.textPrimary
-                      : colors.white,
-                  disabledBackgroundColor: isFollowing
-                      ? colors.surface
-                      : colors.primary,
-                  disabledForegroundColor: isFollowing
-                      ? colors.textPrimary
-                      : colors.white,
-                  side: BorderSide(
-                    color: isFollowing ? colors.border : colors.primary,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
+          if (!seller.isSelf && seller.canFollow)
+            _SellerFollowButton(
+              seller: seller,
+              sellerId: sellerId,
+              isFollowing: state.isFollowing,
+              loading: state.followingLoading,
             ),
         ],
       ),
     );
+  }
+}
+
+class _SellerFollowButton extends ConsumerWidget {
+  const _SellerFollowButton({
+    required this.seller,
+    required this.sellerId,
+    required this.isFollowing,
+    required this.loading,
+  });
+
+  final AOSSellerProfile seller;
+  final String sellerId;
+  final bool? isFollowing;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.appColors;
+
+    if (isFollowing == null) return const SizedBox.shrink();
+
+    final label = _followLabel(seller, effectiveFollowing: isFollowing!);
+    final active = label == 'Following';
+
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton.icon(
+        onPressed: loading
+            ? null
+            : () async {
+                final wasFollowing = active;
+
+                final error = await ref
+                    .read(sellerStateProvider(sellerId).notifier)
+                    .toggleFollow();
+
+                if (!context.mounted) return;
+
+                if (error != null) {
+                  ShowSnack(context, error).error();
+                } else {
+                  ShowSnack(
+                    context,
+                    wasFollowing ? 'Unfollowed' : 'Following',
+                  ).success();
+                }
+              },
+        icon: loading
+            ? SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: active ? colors.textPrimary : colors.white,
+                ),
+              )
+            : Icon(
+                active ? Icons.check_rounded : Icons.person_add_alt_1_rounded,
+                size: 18,
+              ),
+        label: Text(loading ? 'Please wait...' : label),
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          backgroundColor: active ? colors.surface : colors.primary,
+          foregroundColor: active ? colors.textPrimary : colors.white,
+          disabledBackgroundColor: active ? colors.surface : colors.primary,
+          disabledForegroundColor: active ? colors.textPrimary : colors.white,
+          side: BorderSide(color: active ? colors.border : colors.primary),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static String _followLabel(
+    AOSSellerProfile seller, {
+    required bool effectiveFollowing,
+  }) {
+    final status = seller.relationshipStatus.trim().toLowerCase();
+    final raw = seller.actionLabel.trim().toLowerCase();
+    final friend =
+        seller.isFriend || (seller.isFollowedBy && effectiveFollowing);
+
+    if (friend ||
+        effectiveFollowing ||
+        status == 'friends' ||
+        status == 'following') {
+      return 'Following';
+    }
+
+    if (seller.isFollowedBy ||
+        status == 'followed_by' ||
+        raw == 'follow back') {
+      return 'Follow back';
+    }
+
+    return 'Follow';
   }
 }
 
@@ -243,14 +262,4 @@ class _StatItem extends StatelessWidget {
 
 Widget _divider(AppColorTokens colors) {
   return Container(width: 1, height: 34, color: colors.border);
-}
-
-String _formatCount(int value) {
-  if (value >= 1000000) {
-    return '${(value / 1000000).toStringAsFixed(1)}M';
-  }
-  if (value >= 1000) {
-    return '${(value / 1000).toStringAsFixed(1)}K';
-  }
-  return value.toString();
 }

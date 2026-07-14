@@ -1,4 +1,20 @@
 class UserPreferenceState {
+  static final RegExp _countryIsoPattern = RegExp(r'^[A-Za-z]{2,3}$');
+
+  static String normalizeCountryCode(String value) {
+    final clean = value.trim();
+    if (_countryIsoPattern.hasMatch(clean)) return clean.toUpperCase();
+    return clean;
+  }
+
+  static String normalizeLanguageCode(String value) {
+    return value.trim().toLowerCase();
+  }
+
+  static String normalizeCurrencyCode(String value) {
+    return value.trim().toUpperCase();
+  }
+
   final String languageCode;
   final String countryCode;
   final String currencyCode;
@@ -73,9 +89,13 @@ class UserPreferenceState {
 
   factory UserPreferenceState.fromJson(Map<String, dynamic> json) {
     return UserPreferenceState(
-      countryCode: (json['country'] ?? '').toString().toUpperCase(),
-      languageCode: (json['language'] ?? 'en').toString().toLowerCase(),
-      currencyCode: (json['currency'] ?? 'USD').toString().toUpperCase(),
+      countryCode: normalizeCountryCode((json['country'] ?? '').toString()),
+      languageCode: normalizeLanguageCode(
+        (json['language'] ?? 'en').toString(),
+      ),
+      currencyCode: normalizeCurrencyCode(
+        (json['currency'] ?? 'USD').toString(),
+      ),
     );
   }
 

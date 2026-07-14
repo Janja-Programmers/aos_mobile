@@ -59,7 +59,11 @@ class SellerLocationController extends StateNotifier<SellerLocationState> {
     final res = await api.getSellerLocation(seller: seller);
     res.fold(
       (f) => state = state.copyWith(loading: false, error: f.message),
-      (location) => state = state.copyWith(loading: false, location: location),
+      (location) => state = state.copyWith(
+        loading: false,
+        location: location,
+        clearLocation: location == null,
+      ),
     );
   }
 

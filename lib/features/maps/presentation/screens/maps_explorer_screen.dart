@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:africaonlinestores/core/location/location_service.dart';
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/polyline6_decoder.dart';
@@ -21,7 +20,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:go_router/go_router.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 class MapsExplorerScreen extends ConsumerStatefulWidget {
@@ -952,12 +950,12 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
         OutlinedButton.icon(
           onPressed: _useMapCenterAsBuyer,
           icon: const Icon(Icons.add_location_alt_outlined),
-          label: const Text('Use center'),
+          label: const Text('Recenter'),
         ),
         FilledButton.icon(
           onPressed: _loading ? null : () => unawaited(_loadNearbySellers()),
-          icon: const Icon(Icons.search_rounded),
-          label: const Text('Find nearby'),
+          icon: Icon(Icons.search_rounded, color: context.appColors.white),
+          label: Text('Find nearby', style: AppTextStylesX(context).button),
         ),
       ],
       children: [
@@ -1029,8 +1027,8 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
       actions: [
         FilledButton.icon(
           onPressed: _loading ? null : () => unawaited(_loadMapPoints()),
-          icon: const Icon(Icons.refresh_rounded),
-          label: const Text('Refresh'),
+          icon: Icon(Icons.refresh_rounded, color: context.appColors.white),
+          label: Text('Refresh', style: AppTextStylesX(context).button),
         ),
       ],
       children: [
@@ -1063,7 +1061,7 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
                 _setMode(BuyerMapMode.storefront);
                 unawaited(_loadStorefrontLocation());
               },
-              child: const Text('Open'),
+              child: Text('Open', style: AppTextStylesX(context).button),
             ),
           ),
       ],
@@ -1089,25 +1087,24 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
             icon: const Icon(Icons.add_location_alt_outlined),
             label: const Text('Use center'),
           ),
-          FilledButton.icon(
-            onPressed: _loading
-                ? null
-                : () => unawaited(_loadStorefrontLocation()),
-            icon: const Icon(Icons.storefront_rounded),
-            label: const Text('Load seller'),
-          ),
         ],
         if ((loc?.hasLocation ?? false) && route == null)
           FilledButton.icon(
             onPressed: () => unawaited(_routeToSelectedSeller()),
-            icon: const Icon(Icons.directions_rounded),
-            label: const Text('Directions'),
+            icon: Icon(
+              Icons.directions_rounded,
+              color: context.appColors.white,
+            ),
+            label: Text('Directions', style: AppTextStylesX(context).button),
           ),
         if (route != null) ...[
           FilledButton.icon(
             onPressed: () => unawaited(_startNavigation()),
-            icon: const Icon(Icons.navigation_rounded),
-            label: const Text('Start'),
+            icon: Icon(
+              Icons.navigation_rounded,
+              color: context.appColors.white,
+            ),
+            label: Text('Start', style: AppTextStylesX(context).button),
           ),
           OutlinedButton.icon(
             onPressed: () => unawaited(_routeToSelectedSeller(refresh: true)),
@@ -1122,15 +1119,6 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
         ],
       ],
       children: [
-        if (route == null)
-          TextField(
-            controller: _sellerController,
-            decoration: const InputDecoration(
-              labelText: 'Seller ID',
-              hintText: 'Example: seller email or seller id',
-              isDense: true,
-            ),
-          ),
         if (_loading)
           const Padding(
             padding: EdgeInsets.only(top: 8),
@@ -1214,21 +1202,27 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
           OutlinedButton.icon(
             onPressed: _useMapCenterAsBuyer,
             icon: const Icon(Icons.add_location_alt_outlined),
-            label: const Text('Use center'),
+            label: const Text('Recenter'),
           ),
           FilledButton.icon(
             onPressed: _loading
                 ? null
                 : () => unawaited(_routeToDestinationPlace()),
-            icon: const Icon(Icons.directions_rounded),
-            label: const Text('Directions'),
+            icon: Icon(
+              Icons.directions_rounded,
+              color: context.appColors.white,
+            ),
+            label: Text('Directions', style: AppTextStylesX(context).button),
           ),
         ],
         if (route != null) ...[
           FilledButton.icon(
             onPressed: () => unawaited(_startNavigation()),
-            icon: const Icon(Icons.navigation_rounded),
-            label: const Text('Start'),
+            icon: Icon(
+              Icons.navigation_rounded,
+              color: context.appColors.white,
+            ),
+            label: Text('Start', style: AppTextStylesX(context).button),
           ),
           OutlinedButton.icon(
             onPressed: () => unawaited(_routeToDestinationPlace(refresh: true)),
@@ -1496,16 +1490,6 @@ class _MapsExplorerScreenState extends ConsumerState<MapsExplorerScreen> {
                 _mode == BuyerMapMode.place ? 'AOS Maps' : 'Sellers map',
                 style: context.h5,
               ),
-              actions: [
-                if (_mode != BuyerMapMode.place)
-                  TextButton.icon(
-                    onPressed: () => unawaited(
-                      context.pushNamed<void>(AppRoutes.nSellerLocation),
-                    ),
-                    icon: const Icon(Icons.add_location_alt_outlined),
-                    label: const Text('My store'),
-                  ),
-              ],
             ),
       body: Stack(
         children: [

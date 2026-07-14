@@ -13,11 +13,7 @@ class ProfileEditSheet extends ConsumerStatefulWidget {
   final String? initialFullName;
   final String? initialBio;
 
-  const ProfileEditSheet({
-    super.key,
-    this.initialFullName,
-    this.initialBio,
-  });
+  const ProfileEditSheet({super.key, this.initialFullName, this.initialBio});
 
   @override
   ConsumerState<ProfileEditSheet> createState() => _ProfileEditSheetState();
@@ -70,12 +66,20 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     final bio = _bioCtrl.text.trim();
 
     if (fullName.length < 2) {
-      showAppSnack(context, 'Please enter your name.');
+      showAppSnack(
+        context,
+        'Please enter your name.',
+        position: SnackPosition.top,
+      );
       return;
     }
 
     if (bio.length > 160) {
-      showAppSnack(context, 'Bio should be 160 characters or less.');
+      showAppSnack(
+        context,
+        'Bio should be 150 characters or less.',
+        position: SnackPosition.top,
+      );
       return;
     }
 
@@ -161,7 +165,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                   controller: _bioCtrl,
                   minLines: 3,
                   maxLines: 5,
-                  maxLength: 160,
+                  maxLength: 150,
                   textInputAction: TextInputAction.newline,
                   decoration: const InputDecoration(
                     labelText: 'Bio',

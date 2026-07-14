@@ -101,8 +101,8 @@ class SellerNavigation {
     );
   }
 
-  static Future<void> toSellerLocation(BuildContext context) async {
-    await context.pushNamed(AppRoutes.nSellerLocation);
+  static Future<bool?> toSellerLocation(BuildContext context) {
+    return context.pushNamed<bool>(AppRoutes.nSellerLocation);
   }
 }
 

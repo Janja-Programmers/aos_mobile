@@ -37,6 +37,12 @@ class _ProfileLoader {
       ApiEndpoints.repostedShorts,
       request.targetUser,
     );
+    final savedFuture = isOwnProfile
+        ? _loadShortPanel(ApiEndpoints.savedShorts, request.targetUser)
+        : Future<List<Short>>.value(const <Short>[]);
+    final likedFuture = isOwnProfile
+        ? _loadShortPanel(ApiEndpoints.likedShorts, request.targetUser)
+        : Future<List<Short>>.value(const <Short>[]);
     final relationshipFuture = isOwnProfile
         ? Future<_RelationshipLite>.value(const _RelationshipLite.self())
         : _loadRelationship(request.targetUser);
@@ -51,6 +57,8 @@ class _ProfileLoader {
       friendsFuture,
       postsFuture,
       repostedFuture,
+      savedFuture,
+      likedFuture,
       relationshipFuture,
       sellerFuture,
     ]);
@@ -61,8 +69,10 @@ class _ProfileLoader {
     final friends = results[3] as int?;
     final allPosts = results[4] as List<Short>;
     final reposted = results[5] as List<Short>;
-    final relationship = results[6] as _RelationshipLite;
-    final seller = results[7] as _SellerProfileLite?;
+    final saved = results[6] as List<Short>;
+    final liked = results[7] as List<Short>;
+    final relationship = results[8] as _RelationshipLite;
+    final seller = results[9] as _SellerProfileLite?;
 
     final posts = allPosts
         .where((short) => !short.isDeleted && !_isPrivateShort(short))
@@ -173,6 +183,8 @@ class _ProfileLoader {
       posts: posts,
       reposted: reposted,
       privateShorts: privateShorts,
+      saved: saved,
+      liked: liked,
       isSeller: seller != null,
       sellerId: seller?.sellerId,
       isFollowing: isFollowing || isFriend,
@@ -398,10 +410,7 @@ class _ProfileLoader {
 
   static bool _isPrivateShort(Short short) {
     final audience = short.audience.trim().toLowerCase();
-    final visibility = short.visibilityStatus.trim().toLowerCase();
-
-    return (audience.isNotEmpty && audience != 'everyone') ||
-        (visibility.isNotEmpty && visibility != 'visible');
+    return audience == 'only_me' || audience == 'private';
   }
 
   static String _normalizeFollowActionLabel(

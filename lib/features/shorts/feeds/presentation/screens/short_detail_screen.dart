@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/short_detail_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/video/short_video_page.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
@@ -83,6 +84,12 @@ class _ShortDetailScreenState extends ConsumerState<ShortDetailScreen> {
               final creatorUser = short.creator.user.trim();
               if (creatorUser.isEmpty) return;
 
+              final liveId = short.creator.liveId?.trim() ?? '';
+              if (short.creator.isLive && liveId.isNotEmpty) {
+                LiveNavigation.toLiveRoom(context, liveId: liveId);
+                return;
+              }
+
               SocialNavigation.toProfileScreen(
                 context,
                 user: creatorUser,
@@ -94,6 +101,10 @@ class _ShortDetailScreenState extends ConsumerState<ShortDetailScreen> {
             // Follow
             isFollowPending: state.pendingFollowUserIds.contains(targetUser),
             onToggleFollow: controller.toggleFollow,
+
+            // Repost
+            isRepostPending: state.pendingRepostIds.contains(shortId),
+            onRepost: controller.toggleRepost,
 
             // Share
             isSharePending: state.pendingShareIds.contains(shortId),

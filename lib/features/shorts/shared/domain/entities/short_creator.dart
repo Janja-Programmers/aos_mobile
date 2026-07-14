@@ -5,6 +5,9 @@ class ShortCreator extends Equatable {
   final String displayName;
   final String? avatar;
   final bool isVerified;
+  final bool isLive;
+  final String? liveId;
+  final String? liveStatus;
   final ShortCreatorSeller? seller;
 
   const ShortCreator({
@@ -12,6 +15,9 @@ class ShortCreator extends Equatable {
     required this.displayName,
     this.avatar,
     required this.isVerified,
+    this.isLive = false,
+    this.liveId,
+    this.liveStatus,
     this.seller,
   });
 
@@ -26,6 +32,9 @@ class ShortCreator extends Equatable {
     String? displayName,
     String? avatar,
     bool? isVerified,
+    bool? isLive,
+    String? liveId,
+    String? liveStatus,
     ShortCreatorSeller? seller,
   }) {
     return ShortCreator(
@@ -33,12 +42,24 @@ class ShortCreator extends Equatable {
       displayName: displayName ?? this.displayName,
       avatar: avatar ?? this.avatar,
       isVerified: isVerified ?? this.isVerified,
+      isLive: isLive ?? this.isLive,
+      liveId: liveId ?? this.liveId,
+      liveStatus: liveStatus ?? this.liveStatus,
       seller: seller ?? this.seller,
     );
   }
 
   @override
-  List<Object?> get props => [user, displayName, avatar, isVerified, seller];
+  List<Object?> get props => [
+    user,
+    displayName,
+    avatar,
+    isVerified,
+    isLive,
+    liveId,
+    liveStatus,
+    seller,
+  ];
 }
 
 class ShortCreatorSeller extends Equatable {

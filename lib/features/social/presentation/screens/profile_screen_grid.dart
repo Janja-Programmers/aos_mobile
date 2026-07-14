@@ -167,6 +167,8 @@ class _EmptyProfilePanelView extends StatelessWidget {
       _ProfilePanel.posts => Icons.video_library_outlined,
       _ProfilePanel.reposted => Icons.repeat_rounded,
       _ProfilePanel.privateShorts => Icons.lock_outline_rounded,
+      _ProfilePanel.saved => Icons.bookmark_border_rounded,
+      _ProfilePanel.liked => Icons.favorite_border_rounded,
     };
     final title = switch (panel) {
       _ProfilePanel.posts =>
@@ -175,6 +177,8 @@ class _EmptyProfilePanelView extends StatelessWidget {
       _ProfilePanel.privateShorts => isOwnProfile
           ? 'No private shorts yet'
           : 'Private shorts are hidden',
+      _ProfilePanel.saved => 'No saved shorts yet',
+      _ProfilePanel.liked => 'No liked shorts yet',
     };
     final message = switch (panel) {
       _ProfilePanel.posts =>
@@ -187,8 +191,10 @@ class _EmptyProfilePanelView extends StatelessWidget {
             : 'Visible reposted shorts will appear here.',
       _ProfilePanel.privateShorts =>
         isOwnProfile
-            ? 'Only-me, follower-only, friend-only, and hidden shorts appear here.'
+            ? 'Only-me shorts appear here.'
             : 'Only this user can view their private shorts.',
+      _ProfilePanel.saved => 'Shorts you save will appear here.',
+      _ProfilePanel.liked => 'Shorts you like will appear here.',
     };
 
     return Padding(

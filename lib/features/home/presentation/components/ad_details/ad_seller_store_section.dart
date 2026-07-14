@@ -3,8 +3,8 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/account/shared/utils/avator_image.dart';
 import 'package:africaonlinestores/features/reviews/application/state/review_state.dart';
-import 'package:africaonlinestores/features/reviews/presentation/helpers/build_review_button.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
+import 'package:africaonlinestores/shared/components/verified_badge.dart';
 import 'package:flutter/material.dart';
 
 class AdSellerInfoSection extends StatelessWidget {
@@ -35,9 +35,7 @@ class AdSellerInfoSection extends StatelessWidget {
   final String joined;
   final bool isFollowing;
   final bool isVerified;
-
   final ReviewState reviewState;
-
   final VoidCallback onVisitStore;
   final VoidCallback onReview;
   final VoidCallback onReport;
@@ -46,35 +44,31 @@ class AdSellerInfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
-    final safeDisplayName = displayName.trim().isNotEmpty
-        ? displayName.trim()
-        : 'Seller';
-
-    final ImageProvider? img = resolveAvatarImage(
-      avatar,
-      AppConfig.normalizedBaseUrl,
-    );
-
-    final initial = safeDisplayName.characters.first.toUpperCase();
+    final safeDisplayName = displayName.trim().isEmpty
+        ? 'Seller'
+        : displayName.trim();
+    final image = resolveAvatarImage(avatar, AppConfig.normalizedBaseUrl);
 
     return SectionCard(
       title: 'Seller Information',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// Header
           Row(
             children: [
               CircleAvatar(
                 radius: 24,
                 backgroundColor: colors.border,
-                backgroundImage: img,
-                onBackgroundImageError: img != null ? (_, _) {} : null,
-                child: img == null ? Text(initial, style: context.h2) : null,
+                backgroundImage: image,
+                onBackgroundImageError: image == null ? null : (_, _) {},
+                child: image == null
+                    ? Text(
+                        safeDisplayName.characters.first.toUpperCase(),
+                        style: context.h2,
+                      )
+                    : null,
               ),
               const SizedBox(width: 12),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,169 +78,171 @@ class AdSellerInfoSection extends StatelessWidget {
                         Flexible(
                           child: Text(
                             safeDisplayName,
-                            style: context.pStrong,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                            style: context.pStrong,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        if (isVerified)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(6),
-                              color: colors.success.withValues(alpha: 0.08),
-                            ),
-                            child: Text(
-                              'Verified',
-                              style: context.p.copyWith(
-                                color: colors.success,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
+                        if (isVerified) ...[
+                          const SizedBox(width: 6),
+                          const VerifiedBadge(),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.star, size: 16, color: colors.warning),
+                        Icon(Icons.star_rounded, size: 16, color: colors.warning),
                         const SizedBox(width: 4),
                         Text(rating.toStringAsFixed(1), style: context.pStrong),
                         const SizedBox(width: 6),
-                        Text('·', style: context.pStrong),
+                        Text('·', style: context.pMuted),
                         const SizedBox(width: 6),
-                        Text(
-                          '$totalFollowers followers',
-                          style: context.pMuted,
+                        Flexible(
+                          child: Text(
+                            '$totalFollowers followers',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.pMuted,
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
+              PopupMenuButton<_SellerAction>(
+                tooltip: 'More listing actions',
+                onSelected: (action) {
+                  switch (action) {
+                    case _SellerAction.postSimilar:
+                      onPostSimilar();
+                      return;
+                    case _SellerAction.report:
+                      onReport();
+                      return;
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(
+                    value: _SellerAction.postSimilar,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.add_box_outlined),
+                      title: Text('Post similar ad'),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: _SellerAction.report,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.flag_outlined),
+                      title: Text('Report listing'),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
-
           const SizedBox(height: 16),
-
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+          DecoratedBox(
             decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colors.border),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
               children: [
-                _info(
-                  context,
-                  Icons.rate_review_outlined,
-                  'Reviews',
-                  totalReviews.toString(),
+                _Metric(
+                  value: totalReviews.toString(),
+                  label: 'Reviews',
+                  icon: Icons.rate_review_outlined,
                 ),
-                _divider(colors.black.withValues(alpha: 0.5)),
-                _info(context, Icons.calendar_month, 'Joined', joined),
-                _divider(colors.black.withValues(alpha: 0.5)),
-                _info(
-                  context,
-                  Icons.inventory_2_outlined,
-                  'Listings',
-                  totalAds.toString(),
+                Container(width: 1, height: 54, color: colors.border),
+                _Metric(
+                  value: joined.trim().isEmpty ? '—' : joined,
+                  label: 'Joined',
+                  icon: Icons.calendar_month_outlined,
+                ),
+                Container(width: 1, height: 54, color: colors.border),
+                _Metric(
+                  value: totalAds.toString(),
+                  label: 'Listings',
+                  icon: Icons.inventory_2_outlined,
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: 18),
-
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton(
+            child: FilledButton.tonal(
               onPressed: onVisitStore,
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              child: Text(
-                'Visit Seller Store',
-                style: context.p.copyWith(color: colors.primary, fontSize: 13),
-              ),
+              child: const Text('Visit Seller Store'),
             ),
           ),
-          const SizedBox(height: 12),
-
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onReport,
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  child: Text(
-                    'Report Product',
-                    style: context.p.copyWith(
-                      color: colors.primary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
+          if (reviewState.canReview) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onReview,
+                icon: const Icon(Icons.rate_review_outlined),
+                label: const Text('Review Product'),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onPostSimilar,
-                  style: OutlinedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  child: Text(
-                    'Post similar Ad',
-                    style: context.p.copyWith(
-                      color: colors.primary,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          buildReviewButton(reviewState: reviewState, onReview: onReview),
+            ),
+          ],
         ],
       ),
     );
   }
+}
 
-  Widget _info(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String value,
-  ) {
+enum _SellerAction { postSimilar, report }
+
+class _Metric extends StatelessWidget {
+  const _Metric({
+    required this.value,
+    required this.label,
+    required this.icon,
+  });
+
+  final String value;
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Expanded(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 22, color: Theme.of(context).hintColor),
-          const SizedBox(height: 6),
-          Text(label, style: context.pMuted),
-          const SizedBox(height: 4),
-          Text(value, style: context.pStrong),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+        child: Column(
+          children: [
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.pStrong,
+            ),
+            const SizedBox(height: 5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 14, color: colors.textMuted),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.small.copyWith(color: colors.textMuted),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  Widget _divider(Color color) {
-    return Container(height: 40, width: 1, color: color);
   }
 }

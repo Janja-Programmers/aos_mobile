@@ -1,10 +1,12 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/pref_card.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/preferences/data/preferences_api_provider.dart';
+import 'package:africaonlinestores/features/preferences/state/user_preference_state.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/locale_picker_page.dart';
 import 'package:africaonlinestores/shared/utils/flag_emoji.dart';
@@ -27,6 +29,8 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
 
     final localization = ref.watch(localizationControllerProvider);
     final prefs = ref.watch(userPreferenceControllerProvider);
+    final auth = ref.watch(authControllerProvider);
+    final isSeller = auth.asAuthenticated?.seller.isSeller ?? false;
 
     if (localization.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -91,7 +95,11 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
               leading: Icons.location_on_outlined,
               title: l10n.settings_country,
               value: countryLabel ?? '—',
-              description: l10n.settings_country_description,
+              description: isSeller
+                  ? 'Seller country is locked to protect your marketplace data.'
+                  : l10n.settings_country_description,
+              enabled: !isSeller,
+              readOnlyLabel: isSeller ? 'Locked' : null,
               onTap: () => _openPicker(
                 context,
                 title: l10n.settings_country,
@@ -106,7 +114,11 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
               leading: Icons.attach_money,
               title: l10n.settings_currency,
               value: currencyLabel ?? '—',
-              description: l10n.settings_currency_description,
+              description: isSeller
+                  ? 'Seller currency is locked to keep listings consistent.'
+                  : l10n.settings_currency_description,
+              enabled: !isSeller,
+              readOnlyLabel: isSeller ? 'Locked' : null,
               onTap: () => _openPicker(
                 context,
                 title: l10n.settings_currency,
@@ -150,9 +162,18 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
     if (code == null) return null;
 
     try {
-      final match = items.firstWhere(
-        (e) => (e['code'] ?? '').toString().toUpperCase() == code.toUpperCase(),
-      );
+      final clean = code.trim();
+      final upper = clean.toUpperCase();
+      final lower = clean.toLowerCase();
+      final match = items.firstWhere((e) {
+        final itemCode = (e['code'] ?? '').toString();
+        final itemName = (e['name'] ?? '').toString();
+        final itemDisplay = (e['display'] ?? '').toString();
+
+        return itemCode.toUpperCase() == upper ||
+            itemName.toLowerCase() == lower ||
+            itemDisplay.toLowerCase() == lower;
+      });
 
       return (match['name'] ?? match['display'] ?? code).toString();
     } catch (_) {
@@ -166,51 +187,154 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
 
     final ctrl = ref.read(userPreferenceControllerProvider.notifier);
     final current = ref.read(userPreferenceControllerProvider);
+    final localization = ref.read(localizationControllerProvider);
+
+    final auth = ref.read(authControllerProvider);
+    final isSeller = auth.asAuthenticated?.seller.isSeller ?? false;
+
+    if (isSeller && type != _PreferenceType.language) {
+      if (!mounted) return;
+      ShowSnack(
+        context,
+        'Country and currency are locked for seller accounts.',
+      ).error();
+      return;
+    }
+
+    final countryCode = type == _PreferenceType.country
+        ? UserPreferenceState.normalizeCountryCode(clean)
+        : _canonicalPreferenceValue(
+            localization.countries,
+            current.countryCode,
+            preferName: true,
+          );
+    final languageCode = type == _PreferenceType.language
+        ? UserPreferenceState.normalizeLanguageCode(clean)
+        : current.languageCode;
+    final currencyCode = type == _PreferenceType.currency
+        ? UserPreferenceState.normalizeCurrencyCode(clean)
+        : _canonicalPreferenceValue(
+            localization.currencies,
+            current.currencyCode,
+            preferName: false,
+          );
 
     try {
-      switch (type) {
-        case _PreferenceType.language:
-          await ctrl.updatePreferences(
-            countryCode: current.countryCode,
-            languageCode: clean,
-            currencyCode: current.currencyCode,
-          );
-          await _syncServer({'language': clean});
-          break;
-        case _PreferenceType.country:
-          await ctrl.updatePreferences(
-            countryCode: clean,
-            languageCode: current.languageCode,
-            currencyCode: current.currencyCode,
-          );
-          await _syncServer({'country': clean});
-          break;
-        case _PreferenceType.currency:
-          await ctrl.updatePreferences(
-            countryCode: current.countryCode,
-            languageCode: current.languageCode,
-            currencyCode: clean,
-          );
-          await _syncServer({'currency': clean});
-          break;
-      }
+      final serverPrefs = await _syncServer(
+        countryCode: countryCode,
+        languageCode: languageCode,
+        currencyCode: currencyCode,
+      );
+
+      final resolvedCountry = _preferenceValue(
+        serverPrefs['country'],
+        fallback: countryCode,
+      );
+      final resolvedLanguage = _preferenceValue(
+        serverPrefs['language'],
+        fallback: languageCode,
+      );
+      final resolvedCurrency = _preferenceValue(
+        serverPrefs['currency'],
+        fallback: currencyCode,
+      );
+
+      await ctrl.updatePreferences(
+        countryCode: resolvedCountry,
+        languageCode: resolvedLanguage,
+        currencyCode: resolvedCurrency,
+      );
+
+      ref.read(authControllerProvider.notifier).setPreferencesFromMap({
+        'country': resolvedCountry,
+        'language': resolvedLanguage,
+        'currency': resolvedCurrency,
+      });
 
       if (!mounted) return;
       ShowSnack(context, 'Preference updated.').success();
-    } catch (_) {
+    } catch (err) {
       if (!mounted) return;
-      ShowSnack(context, 'Failed to update preference.').error();
+      final message = err.toString().replaceFirst('Exception: ', '').trim();
+      ShowSnack(
+        context,
+        message.isEmpty ? 'Failed to update preference.' : message,
+      ).error();
       rethrow;
     }
   }
 
-  Future<void> _syncServer(Map<String, dynamic> payload) async {
+  String _canonicalPreferenceValue(
+    List<Map<String, dynamic>> items,
+    String value, {
+    required bool preferName,
+  }) {
+    final clean = value.trim();
+    if (clean.isEmpty) return clean;
+
+    final upper = clean.toUpperCase();
+    final lower = clean.toLowerCase();
+
+    try {
+      final match = items.firstWhere((e) {
+        final itemCode = (e['code'] ?? '').toString();
+        final itemName = (e['name'] ?? '').toString();
+        final itemDisplay = (e['display'] ?? '').toString();
+
+        return itemCode.toUpperCase() == upper ||
+            itemName.toLowerCase() == lower ||
+            itemDisplay.toLowerCase() == lower;
+      });
+
+      final raw = preferName
+          ? (match['name'] ?? match['code'] ?? match['display'])
+          : (match['code'] ?? match['name'] ?? match['display']);
+      final resolved = asString(raw).trim();
+      return resolved.isEmpty ? clean : resolved;
+    } catch (_) {
+      return clean;
+    }
+  }
+
+  Future<Map<String, dynamic>> _syncServer({
+    required String countryCode,
+    required String languageCode,
+    required String currencyCode,
+  }) async {
+    final payload = <String, dynamic>{
+      'country': countryCode,
+      'language': languageCode,
+      'currency': currencyCode,
+    };
+
     final auth = ref.read(authControllerProvider);
-    if (!auth.isAuthenticated) return;
+    if (!auth.isAuthenticated) return payload;
 
     final api = ref.read(userPreferenceApiProvider);
     final res = await api.updateMyPreferences(payload);
-    if (res.isLeft) throw Exception(res.leftOrNull?.message);
+    if (res.isLeft) {
+      throw Exception(
+        res.leftOrNull?.message ?? 'Failed to update preference.',
+      );
+    }
+
+    final data = res.rightOrNull ?? const <String, dynamic>{};
+    return data.isEmpty ? payload : data;
+  }
+
+  String _preferenceValue(Object? raw, {required String fallback}) {
+    if (raw is Map) {
+      final map = asJsonMap(raw);
+      final code = asString(map['code']).trim();
+      if (code.isNotEmpty) return code;
+      final name = asString(map['name']).trim();
+      if (name.isNotEmpty) return name;
+      final id = asString(map['id']).trim();
+      if (id.isNotEmpty) return id;
+    }
+
+    final value = asString(raw).trim();
+    return value.isEmpty ? fallback : value;
   }
 }
 

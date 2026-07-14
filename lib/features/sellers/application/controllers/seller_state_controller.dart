@@ -52,10 +52,11 @@ class SellerStateController extends StateNotifier<SellerState> {
 
     final sellerBefore = state.seller;
     final controller = ref.read(sellerControllerProvider);
+    final followTarget = sellerBefore?.effectiveUserId ?? sellerId;
 
     state = state.copyWith(followingLoading: true, isFollowing: next);
 
-    final res = await controller.toggleFollow(sellerId: sellerId);
+    final res = await controller.toggleFollow(sellerId: followTarget);
 
     return res.fold(
       (f) {

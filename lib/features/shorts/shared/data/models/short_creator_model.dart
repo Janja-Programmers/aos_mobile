@@ -3,6 +3,9 @@ class ShortCreatorModel {
   final String displayName;
   final String? avatar;
   final bool isVerified;
+  final bool isLive;
+  final String? liveId;
+  final String? liveStatus;
   final ShortCreatorSellerModel? seller;
 
   const ShortCreatorModel({
@@ -10,6 +13,9 @@ class ShortCreatorModel {
     required this.displayName,
     this.avatar,
     required this.isVerified,
+    required this.isLive,
+    this.liveId,
+    this.liveStatus,
     this.seller,
   });
 
@@ -18,6 +24,7 @@ class ShortCreatorModel {
       user: '',
       displayName: '',
       isVerified: false,
+      isLive: false,
     );
   }
 
@@ -27,6 +34,9 @@ class ShortCreatorModel {
       displayName: json['display_name']?.toString() ?? '',
       avatar: json['avatar']?.toString(),
       isVerified: _toBool(json['is_verified']),
+      isLive: _toBool(json['is_live']),
+      liveId: json['live_id']?.toString(),
+      liveStatus: json['live_status']?.toString(),
       seller: _parseSeller(json['seller']),
     );
   }

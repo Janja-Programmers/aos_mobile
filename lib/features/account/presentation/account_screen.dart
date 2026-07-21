@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
@@ -6,30 +9,43 @@ import 'package:africaonlinestores/features/account/domain/account_state.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/account_guest_header_card.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/account_sections.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_controller.dart';
+import 'package:africaonlinestores/features/account/shared/routing/account_routes.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
+import 'package:africaonlinestores/features/verifications/controllers/get_my_verification_provider.dart';
 import 'package:africaonlinestores/features/verifications/controllers/seller_status_provider.dart';
+import 'package:africaonlinestores/features/verifications/controllers/verification_controller_provider.dart';
 import 'package:africaonlinestores/features/verifications/domain/verification_status.dart';
-import 'package:africaonlinestores/features/verifications/presentation/widgets/base_verification_banner.dart';
-import 'package:africaonlinestores/features/verifications/presentation/widgets/seller_verification_banner.dart';
+import 'package:africaonlinestores/features/verifications/presentation/widgets/account_verification_banner.dart';
+import 'package:africaonlinestores/features/verifications/presentation/widgets/verification_choice_bottom_sheet.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/application/user_verification_provider.dart';
+import 'package:africaonlinestores/features/verifications/user_verification/domain/user_verification_models.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/account_option_tile.dart';
 import 'package:africaonlinestores/shared/components/app_confirm_sheet.dart';
 import 'package:africaonlinestores/shared/components/app_switch_tile.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class AccountScreen extends ConsumerWidget {
+class AccountScreen extends ConsumerStatefulWidget {
   const AccountScreen({super.key});
+
+  @override
+  ConsumerState<AccountScreen> createState() => _AccountScreenState();
+}
+
+class _AccountScreenState extends ConsumerState<AccountScreen> {
+  bool _isOpeningVerificationFlow = false;
 
   Widget _buildAccountHeader(
     BuildContext context,
     AuthState auth,
     AccountState accountState,
+    bool verificationConfirmed,
   ) {
     final l10n = context.l10n;
 
@@ -67,13 +83,16 @@ class AccountScreen extends ConsumerWidget {
       initials: _initialsFromName(fullName),
       baseUrl: AppConfig.normalizedBaseUrl,
       imagePath: userImage.isNotEmpty ? userImage : null,
-      isVerified: user.isVerified || _truthy(fetched['is_verified']),
+      isVerified:
+          verificationConfirmed ||
+          user.isVerified ||
+          _isProfileVerified(fetched),
       onEdit: () => context.pushNamed(AppRoutes.nProfile),
     );
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
     final isDarkMode = themeMode == ThemeMode.dark;
 
@@ -83,12 +102,26 @@ class AccountScreen extends ConsumerWidget {
         ? ref.watch(accountsControllerProvider)
         : const AccountState();
 
-    /// ✅ Only watch protected verification status when authenticated.
-    final AsyncValue<SellerVerificationStatus>? statusAsync = isAuthenticated
-        ? ref.watch(sellerStatusProvider)
-        : null;
-    // final AsyncValue<UserVerificationStatus>? userVerificationAsync =
-    //     isAuthenticated ? ref.watch(userVerificationStatusProvider) : null;
+    final AsyncValue<SellerVerificationStatus>? sellerStatusAsync =
+        isAuthenticated ? ref.watch(sellerStatusProvider) : null;
+    final AsyncValue<UserVerificationStatus>? userVerificationAsync =
+        isAuthenticated ? ref.watch(userVerificationStatusProvider) : null;
+    final sellerStatus = _dataOrNull(sellerStatusAsync);
+    final userVerificationStatus = _dataOrNull(userVerificationAsync);
+    final accountVerified =
+        isAuthenticated &&
+        _isAccountVerified(
+          auth: auth,
+          profile: accountState.profile,
+          userStatus: userVerificationStatus,
+          sellerStatus: sellerStatus,
+        );
+    final bannerPresentation = _bannerPresentation(
+      userStatus: userVerificationStatus,
+      sellerStatus: sellerStatus,
+      statusUnavailable:
+          _hasError(userVerificationAsync) && _hasError(sellerStatusAsync),
+    );
 
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
@@ -109,85 +142,31 @@ class AccountScreen extends ConsumerWidget {
         ),
       ),
       body: RefreshIndicator(
-        onRefresh: () async {
-          if (isAuthenticated) {
-            ref.invalidate(sellerStatusProvider);
-            ref.invalidate(userVerificationStatusProvider);
-            await Future.wait([
-              ref
-                  .read(accountsControllerProvider.notifier)
-                  .loadProfile()
-                  .then((_) {}, onError: (Object _, StackTrace _) {}),
-              ref
-                  .read(sellerStatusProvider.future)
-                  .then((_) {}, onError: (Object _, StackTrace _) {}),
-              ref
-                  .read(userVerificationStatusProvider.future)
-                  .then((_) {}, onError: (Object _, StackTrace _) {}),
-            ]);
-          }
-        },
+        onRefresh: isAuthenticated
+            ? _refreshAccountAndVerificationState
+            : () async {},
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
           children: [
-            _buildAccountHeader(context, auth, accountState),
-            const SizedBox(height: 14),
-
-            /// Business verification entry/status.
-            if (isAuthenticated)
-              statusAsync?.when(
-                    data: (status) {
-                      if (status.isSeller) {
-                        return AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 240),
-                          child: SellerVerificationBanner(
-                            key: ValueKey(status.status),
-                            state: status,
-                          ),
-                        );
-                      }
-
-                      return BaseVerificationBanner(
-                        color: context.appColors.primary,
-                        icon: Icons.business_center_outlined,
-                        title: 'Verify Your Business',
-                        subtitle: 'Get verified as a registered business',
-                        onTap: () =>
-                            SellerNavigation.toSellerVerification(context),
-                      );
-                    },
-                    loading: () => BaseVerificationBanner(
-                      color: context.appColors.primary,
-                      icon: Icons.business_center_outlined,
-                      title: 'Verify Your Business',
-                      subtitle: 'Get verified as a registered business',
-                      onTap: () =>
-                          SellerNavigation.toSellerVerification(context),
+            _buildAccountHeader(context, auth, accountState, accountVerified),
+            if (isAuthenticated && !accountVerified) ...[
+              const SizedBox(height: 14),
+              AccountVerificationBanner(
+                title: bannerPresentation.title,
+                subtitle: bannerPresentation.subtitle,
+                tone: bannerPresentation.tone,
+                busy: _isOpeningVerificationFlow,
+                onTap: () {
+                  unawaited(
+                    _openVerificationFlow(
+                      userStatusAsync: userVerificationAsync,
+                      sellerStatusAsync: sellerStatusAsync,
                     ),
-                    error: (_, _) => BaseVerificationBanner(
-                      color: context.appColors.primary,
-                      icon: Icons.business_center_outlined,
-                      title: 'Verify Your Business',
-                      subtitle: 'Get verified as a registered business',
-                      onTap: () =>
-                          SellerNavigation.toSellerVerification(context),
-                    ),
-                  ) ??
-                  const SizedBox.shrink(),
+                  );
+                },
+              ),
+            ],
             if (isAuthenticated) const SizedBox(height: 14),
-
-            /// User identity verification entry/status.
-            // if (userVerificationAsync != null)
-            //   userVerificationAsync.when(
-            //     data: (status) => UserVerificationBanner(status: status),
-            //     loading: () => const SizedBox.shrink(),
-            //     error: (_, _) => const UserVerificationBanner(
-            //       status: UserVerificationStatus(
-            //         isVerified: false,
-            //         status: VerificationStatus.notSubmitted,
-            //       ),
-            //     ),
-            //   ),
 
             /// AUTHENTICATED ACTIONS
             if (isAuthenticated)
@@ -351,6 +330,271 @@ class AccountScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _openVerificationFlow({
+    required AsyncValue<UserVerificationStatus>? userStatusAsync,
+    required AsyncValue<SellerVerificationStatus>? sellerStatusAsync,
+  }) async {
+    if (_isOpeningVerificationFlow) return;
+
+    setState(() => _isOpeningVerificationFlow = true);
+
+    try {
+      if (_hasError(userStatusAsync)) {
+        ref.invalidate(userVerificationStatusProvider);
+      }
+      if (_hasError(sellerStatusAsync)) {
+        ref.invalidate(sellerStatusProvider);
+      }
+
+      final individualResolutionFuture = _resolveStatus(
+        current: userStatusAsync,
+        load: () => ref.read(userVerificationStatusProvider.future),
+      );
+      final businessResolutionFuture = _resolveStatus(
+        current: sellerStatusAsync,
+        load: () => ref.read(sellerStatusProvider.future),
+      );
+      final individualResolution = await individualResolutionFuture;
+      final businessResolution = await businessResolutionFuture;
+
+      if (!mounted) return;
+
+      final userStatus = individualResolution.data;
+      final sellerStatus = businessResolution.data;
+      final choice = await showVerificationChoiceBottomSheet(
+        context: context,
+        individualStatus: userStatus?.status,
+        businessStatus: sellerStatus?.status,
+        individualUnavailable: individualResolution.unavailable,
+        businessUnavailable: businessResolution.unavailable,
+        individualRejectionReason: userStatus?.rejectionReason,
+        businessRejectionReason: sellerStatus?.rejectionReason,
+      );
+
+      if (!mounted || choice == null) return;
+
+      final bool? submitted;
+      switch (choice) {
+        case VerificationChoice.individual:
+          if (userStatus?.status == VerificationStatus.pending ||
+              userStatus?.status == VerificationStatus.approved) {
+            return;
+          }
+
+          ref
+              .read(userVerificationControllerProvider.notifier)
+              .reset(
+                status: userStatus,
+                verificationType: choice.verificationType,
+              );
+          submitted = await AccountNavigation.toUserVerification(
+            context,
+            verificationType: choice.verificationType,
+          );
+          break;
+
+        case VerificationChoice.business:
+          if (sellerStatus?.status == VerificationStatus.pending ||
+              sellerStatus?.status == VerificationStatus.approved) {
+            return;
+          }
+
+          final controller = ref.read(
+            sellerVerificationControllerProvider.notifier,
+          );
+
+          if (sellerStatus?.status == VerificationStatus.rejected) {
+            ref.invalidate(myBusinessVerificationProvider);
+
+            try {
+              final verification = await ref.read(
+                myBusinessVerificationProvider.future,
+              );
+              if (!mounted) return;
+              controller.hydrateFromVerification(verification);
+              controller.updateBasic(verificationType: choice.verificationType);
+            } on Failure catch (failure) {
+              if (mounted) {
+                ShowSnack(context, failure.message).error();
+              }
+              return;
+            } on Exception {
+              if (mounted) {
+                ShowSnack(
+                  context,
+                  'Unable to load your business verification details.',
+                ).error();
+              }
+              return;
+            }
+          } else {
+            controller.reset(verificationType: choice.verificationType);
+          }
+
+          if (!mounted) return;
+          submitted = await SellerNavigation.openSellerVerification(context);
+          break;
+      }
+
+      if (!mounted || submitted != true) return;
+      await _refreshAccountAndVerificationState();
+    } finally {
+      if (mounted) {
+        setState(() => _isOpeningVerificationFlow = false);
+      }
+    }
+  }
+
+  Future<void> _refreshAccountAndVerificationState() async {
+    ref.invalidate(sellerStatusProvider);
+    ref.invalidate(userVerificationStatusProvider);
+    ref.invalidate(myBusinessVerificationProvider);
+
+    final sellerRefresh = _ignoreFailure(ref.read(sellerStatusProvider.future));
+    final userRefresh = _ignoreFailure(
+      ref.read(userVerificationStatusProvider.future),
+    );
+    final profileResult = await ref
+        .read(accountsControllerProvider.notifier)
+        .loadProfile();
+
+    if (!mounted) return;
+
+    final profile = profileResult.rightOrNull;
+    final currentAuth = ref.read(authControllerProvider);
+    if (profile != null && currentAuth is AuthAuthenticated) {
+      final mergedUser = <String, dynamic>{
+        'email': currentAuth.user.email,
+        'full_name': currentAuth.user.fullName,
+        'user_image': currentAuth.user.userImage,
+        'is_verified': currentAuth.user.isVerified,
+        ...profile,
+      };
+      ref.read(authControllerProvider.notifier).setUserFromMap(mergedUser);
+    }
+
+    await Future.wait<void>([sellerRefresh, userRefresh]);
+  }
+
+  static Future<void> _ignoreFailure<T>(Future<T> future) async {
+    try {
+      await future;
+    } on Exception {
+      return;
+    }
+  }
+
+  static T? _dataOrNull<T>(AsyncValue<T>? value) {
+    return value?.maybeWhen(data: (data) => data, orElse: () => null);
+  }
+
+  static bool _hasError<T>(AsyncValue<T>? value) {
+    return value?.maybeWhen(error: (_, _) => true, orElse: () => false) ??
+        false;
+  }
+
+  static Future<_StatusResolution<T>> _resolveStatus<T>({
+    required AsyncValue<T>? current,
+    required Future<T> Function() load,
+  }) async {
+    final currentData = _dataOrNull(current);
+    if (currentData != null) {
+      return _StatusResolution<T>.available(currentData);
+    }
+
+    try {
+      final data = await load();
+      return _StatusResolution<T>.available(data);
+    } on Exception {
+      return _StatusResolution<T>.unavailable();
+    }
+  }
+
+  static bool _isAccountVerified({
+    required AuthState auth,
+    required Map<String, dynamic> profile,
+    required UserVerificationStatus? userStatus,
+    required SellerVerificationStatus? sellerStatus,
+  }) {
+    final authVerified = auth is AuthAuthenticated && auth.user.isVerified;
+    final userVerified =
+        (userStatus?.isVerified ?? false) ||
+        userStatus?.status == VerificationStatus.approved;
+    final businessVerified =
+        (sellerStatus?.isVerified ?? false) ||
+        sellerStatus?.status == VerificationStatus.approved;
+
+    return authVerified ||
+        _isProfileVerified(profile) ||
+        userVerified ||
+        businessVerified;
+  }
+
+  static _VerificationBannerPresentation _bannerPresentation({
+    required UserVerificationStatus? userStatus,
+    required SellerVerificationStatus? sellerStatus,
+    required bool statusUnavailable,
+  }) {
+    if (statusUnavailable) {
+      return const _VerificationBannerPresentation(
+        title: 'Verification Unavailable',
+        subtitle: 'Pull down to refresh your verification status',
+        tone: AccountVerificationBannerTone.unavailable,
+      );
+    }
+
+    final userRejected = userStatus?.status == VerificationStatus.rejected;
+    final businessRejected =
+        sellerStatus?.status == VerificationStatus.rejected;
+
+    if (userRejected || businessRejected) {
+      final reason = userRejected
+          ? userStatus?.rejectionReason
+          : sellerStatus?.rejectionReason;
+      final cleanedReason = reason?.trim() ?? '';
+
+      return _VerificationBannerPresentation(
+        title: 'Verification Needs Update',
+        subtitle: cleanedReason.isEmpty
+            ? 'Review your details and submit your verification again'
+            : cleanedReason,
+        tone: AccountVerificationBannerTone.rejected,
+      );
+    }
+
+    final isPending =
+        userStatus?.status == VerificationStatus.pending ||
+        sellerStatus?.status == VerificationStatus.pending;
+
+    if (isPending) {
+      return const _VerificationBannerPresentation(
+        title: 'Verification in Review',
+        subtitle: 'Your verification request is currently being reviewed',
+        tone: AccountVerificationBannerTone.pending,
+      );
+    }
+
+    return const _VerificationBannerPresentation(
+      title: 'Get Verified',
+      subtitle: 'Verify as an individual or a business',
+      tone: AccountVerificationBannerTone.available,
+    );
+  }
+
+  static bool _isProfileVerified(Map<String, dynamic> profile) {
+    return _truthy(profile['is_verified']) ||
+        _truthy(profile['identity_verified']) ||
+        _truthy(profile['is_identity_verified']) ||
+        _approvedStatus(profile['verification_status']) ||
+        _approvedStatus(profile['identity_verification_status']) ||
+        _approvedStatus(profile['user_verification_status']);
+  }
+
+  static bool _approvedStatus(Object? value) {
+    final normalized = value?.toString().trim().toLowerCase() ?? '';
+    return normalized == 'approved' || normalized == 'verified';
+  }
+
   static String _initialsFromName(String? name) {
     final n = name?.trim() ?? '';
     if (n.isEmpty) return 'U';
@@ -375,8 +619,30 @@ class AccountScreen extends ConsumerWidget {
     return clean == '1' ||
         clean == 'true' ||
         clean == 'yes' ||
-        clean == 'approved';
+        clean == 'approved' ||
+        clean == 'verified';
   }
+}
+
+class _StatusResolution<T> {
+  const _StatusResolution.available(this.data) : unavailable = false;
+
+  const _StatusResolution.unavailable() : data = null, unavailable = true;
+
+  final T? data;
+  final bool unavailable;
+}
+
+class _VerificationBannerPresentation {
+  const _VerificationBannerPresentation({
+    required this.title,
+    required this.subtitle,
+    required this.tone,
+  });
+
+  final String title;
+  final String subtitle;
+  final AccountVerificationBannerTone tone;
 }
 
 /// Reusable rounded circle icon button

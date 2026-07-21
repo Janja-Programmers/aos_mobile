@@ -1,15 +1,20 @@
 import 'package:africaonlinestores/features/verifications/controllers/verification_form_state.dart';
 import 'package:africaonlinestores/features/verifications/domain/verification.dart';
 import 'package:africaonlinestores/features/verifications/domain/verification_document.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification_type.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 class SellerVerificationController
     extends StateNotifier<SellerVerificationState> {
   SellerVerificationController() : super(SellerVerificationState.initial());
 
+  void reset({VerificationType verificationType = VerificationType.business}) {
+    state = SellerVerificationState.initial(verificationType: verificationType);
+  }
+
   // --- Update Business Info ---
   void updateBasic({
-    String? verificationType,
+    VerificationType? verificationType,
     String? businessName,
     String? businessType,
     String? businessCategory,

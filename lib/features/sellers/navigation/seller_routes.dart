@@ -94,6 +94,10 @@ class SellerNavigation {
     context.pushNamed(AppRoutes.nSellerVerification);
   }
 
+  static Future<bool?> openSellerVerification(BuildContext context) {
+    return context.pushNamed<bool>(AppRoutes.nSellerVerification);
+  }
+
   static Future<bool?> toCustomizeStore(BuildContext context, String sellerId) {
     return context.pushNamed<bool>(
       AppRoutes.nSellerCustomizeStore,

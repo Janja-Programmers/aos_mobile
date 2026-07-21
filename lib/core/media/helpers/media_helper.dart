@@ -107,10 +107,13 @@ class MediaHelper {
     return video == null ? null : File(video.path);
   }
 
-  static Future<File?> pickImageFromCamera() async {
+  static Future<File?> pickImageFromCamera({
+    CameraDevice preferredCameraDevice = CameraDevice.rear,
+  }) async {
     final image = await _picker.pickImage(
       source: ImageSource.camera,
       imageQuality: 80,
+      preferredCameraDevice: preferredCameraDevice,
     );
     return image == null ? null : File(image.path);
   }

@@ -1,8 +1,9 @@
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/verifications/domain/verification_document.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification_type.dart';
 
 class BusinessVerification {
-  final String verificationType;
+  final VerificationType verificationType;
   final String? businessName;
   final String? businessType;
   final String? businessCategory;
@@ -13,7 +14,7 @@ class BusinessVerification {
   final List<VerificationDocument> documents;
 
   BusinessVerification({
-    this.verificationType = 'Business',
+    this.verificationType = VerificationType.business,
     this.businessName,
     this.businessType,
     this.businessCategory,
@@ -25,7 +26,7 @@ class BusinessVerification {
   });
 
   BusinessVerification copyWith({
-    String? verificationType,
+    VerificationType? verificationType,
     String? businessName,
     String? businessType,
     String? businessCategory,
@@ -50,7 +51,7 @@ class BusinessVerification {
 
   Map<String, dynamic> toPayload() {
     return {
-      'verification_type': verificationType,
+      'verification_type': verificationType.apiValue,
       'business_name': businessName,
       'business_type': businessType,
       'business_category': businessCategory,
@@ -64,9 +65,9 @@ class BusinessVerification {
 
   factory BusinessVerification.fromJson(Map<String, dynamic> json) {
     return BusinessVerification(
-      verificationType: asString(
+      verificationType: VerificationType.fromApiValue(
         json['verification_type'],
-        fallback: 'Business',
+        fallback: VerificationType.business,
       ),
       businessName: asNullableString(json['business_name']),
       businessType: asNullableString(json['business_type']),
@@ -74,7 +75,9 @@ class BusinessVerification {
       businessPhoneNumber: asNullableString(json['business_phone_number']),
       businessEmail: asNullableString(json['business_email']),
       businessWebsite: asNullableString(json['business_website']),
-      physicalAddress: asNullableString(json['physical_address']),
+      physicalAddress:
+          asNullableString(json['business_address']) ??
+          asNullableString(json['physical_address']),
       documents: asJsonMapList(
         json['verification_documents'],
       ).map(VerificationDocument.fromJson).toList(growable: false),

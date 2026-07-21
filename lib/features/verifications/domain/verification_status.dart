@@ -109,10 +109,19 @@ class SellerVerificationStatus {
     switch (status?.trim().toLowerCase()) {
       case 'pending':
       case 'reviewing':
+      case 'under review':
+      case 'under_review':
+      case 'under-review':
+      case 'in review':
+      case 'in_review':
+      case 'in-review':
+      case 'submitted':
         return VerificationStatus.pending;
       case 'approved':
+      case 'verified':
         return VerificationStatus.approved;
       case 'rejected':
+      case 'declined':
         return VerificationStatus.rejected;
       default:
         return VerificationStatus.notSubmitted;

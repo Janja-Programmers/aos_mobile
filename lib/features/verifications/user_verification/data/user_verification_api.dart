@@ -34,45 +34,12 @@ class UserVerificationApi {
     }
   }
 
-  Future<Either<Failure, Map<String, dynamic>>> sendPhoneOtp({
-    required String phoneNumber,
-  }) async {
-    try {
-      final res = await _dio.post<Map<String, dynamic>>(
-        ApiEndpoints.sendUserVerificationOtpEndpoint,
-        data: {'phone_number': phoneNumber},
-      );
-      return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Failed to send OTP.'));
-    }
-  }
-
-  Future<Either<Failure, Map<String, dynamic>>> verifyPhoneOtp({
-    required String phoneNumber,
-    required String otp,
-  }) async {
-    try {
-      final res = await _dio.post<Map<String, dynamic>>(
-        ApiEndpoints.verifyUserVerificationOtpEndpoint,
-        data: {'phone_number': phoneNumber, 'otp': otp},
-      );
-      return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
-      return Either.left(const Failure('Failed to verify OTP.'));
-    }
-  }
-
   Future<Either<Failure, Map<String, dynamic>>> submitUserVerification({
     required Map<String, dynamic> payload,
   }) async {
     try {
       final res = await _dio.post<Map<String, dynamic>>(
-        ApiEndpoints.submitUserVerificationEndpoint,
+        ApiEndpoints.submitVerificationEndpoint,
         data: payload,
       );
       return unwrapFrappe(res);

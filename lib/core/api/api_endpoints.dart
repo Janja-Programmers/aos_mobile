@@ -120,12 +120,6 @@ class ApiEndpoints {
       '/api/method/aos.api.v1.verification.submit_verification';
   static const String getMyVerificationEndpoint =
       '/api/method/aos.api.v1.verification.get_my_verification';
-  static const String submitUserVerificationEndpoint =
-      '/api/method/aos.api.v1.verification.submit_user_verification';
-  static const String sendUserVerificationOtpEndpoint =
-      '/api/method/aos.api.v1.verification.send_user_phone_otp';
-  static const String verifyUserVerificationOtpEndpoint =
-      '/api/method/aos.api.v1.verification.verify_user_phone_otp';
 
   // Localization Endpoints
   static const String getLocaleBundleEndpoint =

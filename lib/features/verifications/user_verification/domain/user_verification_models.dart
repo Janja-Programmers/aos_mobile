@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/verifications/domain/verification_status.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification_type.dart';
 
 class UserVerificationStatus {
   const UserVerificationStatus({
@@ -7,16 +8,20 @@ class UserVerificationStatus {
     required this.status,
     this.verifiedOn,
     this.rejectionReason,
-    this.phoneNumber,
     this.idType,
+    this.legalName,
+    this.phoneNumber,
+    this.verificationType,
   });
 
   final bool isVerified;
   final VerificationStatus status;
   final String? verifiedOn;
   final String? rejectionReason;
-  final String? phoneNumber;
   final String? idType;
+  final String? legalName;
+  final String? phoneNumber;
+  final String? verificationType;
 
   bool get isPending => status == VerificationStatus.pending;
   bool get isRejected => status == VerificationStatus.rejected;
@@ -41,29 +46,50 @@ class UserVerificationStatus {
         data['user_verification_status'] ??
         verification['status'];
 
-    final status = SellerVerificationStatus.mapStatus(rawStatus?.toString());
+    final verificationType =
+        asNullableString(verification['verification_type']) ??
+        asNullableString(data['verification_type']);
+    final normalizedType = verificationType?.trim().toLowerCase() ?? '';
+    final isUserVerification =
+        normalizedType.isEmpty ||
+        normalizedType == 'user' ||
+        normalizedType == 'individual' ||
+        normalizedType == 'personal';
+
+    if (!isUserVerification) {
+      return UserVerificationStatus.notSubmitted();
+    }
+
+    final status = SellerVerificationStatus.mapStatus(
+      asNullableString(rawStatus),
+    );
     final verified =
-        data['is_verified'] == true ||
-        data['identity_verified'] == true ||
-        data['is_identity_verified'] == true ||
+        asBool(data['is_verified']) ||
+        asBool(data['identity_verified']) ||
+        asBool(data['is_identity_verified']) ||
+        asBool(verification['is_verified']) ||
         status == VerificationStatus.approved;
 
     return UserVerificationStatus(
       isVerified: verified,
       status: verified ? VerificationStatus.approved : status,
       verifiedOn:
-          data['verified_on']?.toString() ??
-          verification['verified_on']?.toString(),
+          asNullableString(data['verified_on']) ??
+          asNullableString(verification['verified_on']),
       rejectionReason:
-          verification['rejection_reason']?.toString() ??
-          data['rejection_reason']?.toString(),
-      phoneNumber:
-          verification['phone_number']?.toString() ??
-          data['phone_number']?.toString(),
+          asNullableString(verification['rejection_reason']) ??
+          asNullableString(data['rejection_reason']),
       idType:
-          verification['id_type']?.toString() ??
-          verification['document_type']?.toString() ??
-          data['id_type']?.toString(),
+          asNullableString(verification['id_type']) ??
+          asNullableString(verification['document_type']) ??
+          asNullableString(data['id_type']),
+      legalName:
+          asNullableString(verification['legal_name']) ??
+          asNullableString(data['legal_name']),
+      phoneNumber:
+          asNullableString(verification['phone_number']) ??
+          asNullableString(data['phone_number']),
+      verificationType: verificationType,
     );
   }
 
@@ -84,51 +110,67 @@ class UserVerificationStatus {
 
 class UserVerificationDraft {
   const UserVerificationDraft({
-    this.countryCode = '+254',
+    this.verificationType = VerificationType.individual,
+    this.legalName = '',
     this.phoneNumber = '',
-    this.otp = '',
-    this.phoneOtpSent = false,
-    this.phoneVerified = false,
     this.idType = 'National ID',
     this.idFrontUrl,
     this.idBackUrl,
     this.selfieUrl,
   });
 
-  final String countryCode;
+  final VerificationType verificationType;
+  final String legalName;
   final String phoneNumber;
-  final String otp;
-  final bool phoneOtpSent;
-  final bool phoneVerified;
   final String idType;
   final String? idFrontUrl;
   final String? idBackUrl;
   final String? selfieUrl;
 
-  bool get hasPhone => phoneNumber.trim().length >= 7;
-  bool get hasOtp => otp.trim().length >= 4;
+  bool get hasLegalName => legalName.trim().isNotEmpty;
+  bool get hasPhoneNumber => phoneNumber.trim().isNotEmpty;
+  bool get hasPersonalDetails => hasLegalName && hasPhoneNumber;
   bool get hasFront => idFrontUrl?.trim().isNotEmpty ?? false;
   bool get hasBack => idBackUrl?.trim().isNotEmpty ?? false;
   bool get hasSelfie => selfieUrl?.trim().isNotEmpty ?? false;
-  String get fullPhoneNumber => '$countryCode ${phoneNumber.trim()}'.trim();
+  bool get hasProgress =>
+      hasLegalName ||
+      hasPhoneNumber ||
+      idType != 'National ID' ||
+      hasFront ||
+      hasBack ||
+      hasSelfie;
+
+  factory UserVerificationDraft.fromJson(Map<String, dynamic> json) {
+    final idType = asNullableString(json['id_type'])?.trim();
+
+    return UserVerificationDraft(
+      verificationType: VerificationType.fromApiValue(
+        json['verification_type'],
+        fallback: VerificationType.individual,
+      ),
+      legalName: asNullableString(json['legal_name'])?.trim() ?? '',
+      phoneNumber: asNullableString(json['phone_number'])?.trim() ?? '',
+      idType: idType == null || idType.isEmpty ? 'National ID' : idType,
+      idFrontUrl: asNullableString(json['id_front']),
+      idBackUrl: asNullableString(json['id_back']),
+      selfieUrl: asNullableString(json['selfie']),
+    );
+  }
 
   UserVerificationDraft copyWith({
-    String? countryCode,
+    VerificationType? verificationType,
+    String? legalName,
     String? phoneNumber,
-    String? otp,
-    bool? phoneOtpSent,
-    bool? phoneVerified,
     String? idType,
     String? idFrontUrl,
     String? idBackUrl,
     String? selfieUrl,
   }) {
     return UserVerificationDraft(
-      countryCode: countryCode ?? this.countryCode,
+      verificationType: verificationType ?? this.verificationType,
+      legalName: legalName ?? this.legalName,
       phoneNumber: phoneNumber ?? this.phoneNumber,
-      otp: otp ?? this.otp,
-      phoneOtpSent: phoneOtpSent ?? this.phoneOtpSent,
-      phoneVerified: phoneVerified ?? this.phoneVerified,
       idType: idType ?? this.idType,
       idFrontUrl: idFrontUrl ?? this.idFrontUrl,
       idBackUrl: idBackUrl ?? this.idBackUrl,
@@ -136,14 +178,23 @@ class UserVerificationDraft {
     );
   }
 
-  Map<String, dynamic> toPayload() {
+  Map<String, dynamic> toJson() {
     return {
-      'verification_type': 'User',
-      'phone_number': fullPhoneNumber,
+      'verification_type': verificationType.apiValue,
+      'legal_name': legalName,
+      'phone_number': phoneNumber,
       'id_type': idType,
       'id_front': idFrontUrl,
       'id_back': idBackUrl,
       'selfie': selfieUrl,
+    };
+  }
+
+  Map<String, dynamic> toPayload() {
+    return {
+      'verification_type': verificationType.apiValue,
+      'legal_name': legalName.trim(),
+      'phone_number': phoneNumber.trim().replaceAll(RegExp(r'[\s()\-]'), ''),
       'verification_documents': [
         if (hasFront)
           {
@@ -173,8 +224,7 @@ class UserVerificationState {
     this.draft = const UserVerificationDraft(),
     this.currentStep = 0,
     this.completedSteps = const <int>{},
-    this.isSendingOtp = false,
-    this.isVerifyingOtp = false,
+    this.isRestoringDraft = false,
     this.isUploadingFront = false,
     this.isUploadingBack = false,
     this.isUploadingSelfie = false,
@@ -184,16 +234,14 @@ class UserVerificationState {
   final UserVerificationDraft draft;
   final int currentStep;
   final Set<int> completedSteps;
-  final bool isSendingOtp;
-  final bool isVerifyingOtp;
+  final bool isRestoringDraft;
   final bool isUploadingFront;
   final bool isUploadingBack;
   final bool isUploadingSelfie;
   final bool isSubmitting;
 
   bool get isBusy =>
-      isSendingOtp ||
-      isVerifyingOtp ||
+      isRestoringDraft ||
       isUploadingFront ||
       isUploadingBack ||
       isUploadingSelfie ||
@@ -203,8 +251,7 @@ class UserVerificationState {
     UserVerificationDraft? draft,
     int? currentStep,
     Set<int>? completedSteps,
-    bool? isSendingOtp,
-    bool? isVerifyingOtp,
+    bool? isRestoringDraft,
     bool? isUploadingFront,
     bool? isUploadingBack,
     bool? isUploadingSelfie,
@@ -214,8 +261,7 @@ class UserVerificationState {
       draft: draft ?? this.draft,
       currentStep: currentStep ?? this.currentStep,
       completedSteps: completedSteps ?? this.completedSteps,
-      isSendingOtp: isSendingOtp ?? this.isSendingOtp,
-      isVerifyingOtp: isVerifyingOtp ?? this.isVerifyingOtp,
+      isRestoringDraft: isRestoringDraft ?? this.isRestoringDraft,
       isUploadingFront: isUploadingFront ?? this.isUploadingFront,
       isUploadingBack: isUploadingBack ?? this.isUploadingBack,
       isUploadingSelfie: isUploadingSelfie ?? this.isUploadingSelfie,

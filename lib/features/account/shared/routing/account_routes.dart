@@ -7,7 +7,9 @@ import 'package:africaonlinestores/features/account/presentation/screens/privacy
 import 'package:africaonlinestores/features/account/presentation/screens/restore_account_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/terms_conditions_screen.dart';
 import 'package:africaonlinestores/features/account/presentation/screens/user_preference_screen.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification_type.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/presentation/user_verification_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class AccountRoutes {
@@ -48,7 +50,13 @@ class AccountRoutes {
       GoRoute(
         name: AppRoutes.nUserVerification,
         path: AppRoutes.userVerification,
-        builder: (context, state) => const UserVerificationScreen(),
+        builder: (context, state) {
+          final extra = state.extra;
+          final verificationType = extra is VerificationType
+              ? extra
+              : VerificationType.individual;
+          return UserVerificationScreen(verificationType: verificationType);
+        },
       ),
       GoRoute(
         name: AppRoutes.nDeleteAccount,
@@ -61,5 +69,19 @@ class AccountRoutes {
         builder: (context, state) => const RestoreAccountScreen(),
       ),
     ];
+  }
+}
+
+class AccountNavigation {
+  const AccountNavigation._();
+
+  static Future<bool?> toUserVerification(
+    BuildContext context, {
+    required VerificationType verificationType,
+  }) {
+    return context.pushNamed<bool>(
+      AppRoutes.nUserVerification,
+      extra: verificationType,
+    );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/features/verifications/domain/verification.dart';
+import 'package:africaonlinestores/features/verifications/domain/verification_type.dart';
 
 enum VerificationMode { create, update }
 
@@ -19,9 +20,11 @@ class SellerVerificationState {
     Set<String>? uploadingDocs,
   }) : uploadingDocs = uploadingDocs ?? {};
 
-  factory SellerVerificationState.initial() {
+  factory SellerVerificationState.initial({
+    VerificationType verificationType = VerificationType.business,
+  }) {
     return SellerVerificationState(
-      data: BusinessVerification(),
+      data: BusinessVerification(verificationType: verificationType),
       currentStep: 0,
       isSubmitting: false,
       completedSteps: const {},

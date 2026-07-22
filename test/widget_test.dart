@@ -1,32 +1,26 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'helpers/pump_app.dart';
+
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp() as Widget);
+  testWidgets('shared widget harness installs AOS theme and localization', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpTestApp(
+      Builder(
+        builder: (BuildContext context) {
+          return Text(
+            Localizations.localeOf(context).languageCode,
+            key: const Key('locale'),
+            style: TextStyle(color: context.appColors.textPrimary),
+          );
+        },
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byKey(const Key('locale')), findsOneWidget);
+    expect(find.text('en'), findsOneWidget);
   });
-}
-
-class MyApp {
-  const MyApp();
 }

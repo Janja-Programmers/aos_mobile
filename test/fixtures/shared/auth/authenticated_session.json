@@ -1,0 +1,30 @@
+{
+  "message": {
+    "ok": true,
+    "message": "Authenticated.",
+    "data": {
+      "session": {
+        "sid": "test-session-id"
+      },
+      "user": {
+        "email": "user@example.invalid",
+        "full_name": "Test User",
+        "user_image": "https://cdn.example.invalid/profiles/test-user.jpg",
+        "is_verified": false
+      },
+      "preferences": {
+        "country": "KE",
+        "language": "en",
+        "currency": "KES"
+      },
+      "roles": [
+        "AOS User"
+      ],
+      "seller": {
+        "is_seller": false,
+        "seller_id": null,
+        "status": null
+      }
+    }
+  }
+}

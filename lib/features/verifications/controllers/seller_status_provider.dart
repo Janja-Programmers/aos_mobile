@@ -10,10 +10,7 @@ final sellerStatusProvider = FutureProvider<SellerVerificationStatus>((
   final api = ref.watch(verificationApiProvider);
   final sellerRes = await api.getMySellerStatus();
 
-  final sellerData = sellerRes.fold(
-    (failure) => throw failure,
-    _responseData,
-  );
+  final sellerData = sellerRes.fold((failure) => throw failure, _responseData);
   final isSeller = asBool(sellerData['is_seller']);
   final sellerStatus = asNullableString(sellerData['status']);
   final sellerId = asNullableString(sellerData['seller_id']);

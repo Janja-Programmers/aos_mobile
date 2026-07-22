@@ -47,7 +47,8 @@ Failure mapDioException(DioException e) {
       payload,
       statusCode: status,
       type: failureTypeForAuthError(error, statusCode: status),
-      fallbackMessage: messageFromServer ?? 'Something went wrong. Please try again.',
+      fallbackMessage:
+          messageFromServer ?? 'Something went wrong. Please try again.',
     );
   }
 

@@ -1,0 +1,27 @@
+{
+  "message": {
+    "ok": true,
+    "message": "Current user fetched.",
+    "data": {
+      "user": {
+        "id": "user@example.invalid",
+        "email": "user@example.invalid",
+        "full_name": "Test User",
+        "user_image": "",
+        "enabled": true,
+        "account_status": "Active"
+      },
+      "preferences": {
+        "country": "KE",
+        "language": "en",
+        "currency": "KES"
+      },
+      "roles": ["AOS User"],
+      "seller": {
+        "is_seller": false,
+        "seller_id": null,
+        "status": null
+      }
+    }
+  }
+}

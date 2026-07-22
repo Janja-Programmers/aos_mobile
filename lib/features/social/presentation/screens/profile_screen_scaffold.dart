@@ -201,4 +201,3 @@ class _ProfileScaffoldState extends State<_ProfileScaffold> {
     return value.toString();
   }
 }
-

@@ -155,9 +155,13 @@ class AOSSellerProfile {
       totalReviews: asInt(json['total_reviews']),
       totalReviewsDisplay: parseNullableString(json['total_reviews_display']),
       totalFollowers: asInt(json['total_followers']),
-      totalFollowersDisplay: parseNullableString(json['total_followers_display']),
+      totalFollowersDisplay: parseNullableString(
+        json['total_followers_display'],
+      ),
       totalFollowing: asInt(json['total_following']),
-      totalFollowingDisplay: parseNullableString(json['total_following_display']),
+      totalFollowingDisplay: parseNullableString(
+        json['total_following_display'],
+      ),
       totalFriends: asInt(json['total_friends']),
       totalFriendsDisplay: parseNullableString(json['total_friends_display']),
       totalAds: asInt(json['total_ads']),
@@ -279,9 +283,11 @@ class AOSSellerProfile {
       totalReviews: totalReviews ?? this.totalReviews,
       totalReviewsDisplay: totalReviewsDisplay ?? this.totalReviewsDisplay,
       totalFollowers: totalFollowers ?? this.totalFollowers,
-      totalFollowersDisplay: totalFollowersDisplay ?? this.totalFollowersDisplay,
+      totalFollowersDisplay:
+          totalFollowersDisplay ?? this.totalFollowersDisplay,
       totalFollowing: totalFollowing ?? this.totalFollowing,
-      totalFollowingDisplay: totalFollowingDisplay ?? this.totalFollowingDisplay,
+      totalFollowingDisplay:
+          totalFollowingDisplay ?? this.totalFollowingDisplay,
       totalFriends: totalFriends ?? this.totalFriends,
       totalFriendsDisplay: totalFriendsDisplay ?? this.totalFriendsDisplay,
       totalAds: totalAds ?? this.totalAds,
@@ -347,8 +353,10 @@ class AOSSellerProfile {
     return rating.toStringAsFixed(1);
   }
 
-  String get followersLabel => _displayCount(totalFollowersDisplay, totalFollowers);
-  String get followingLabel => _displayCount(totalFollowingDisplay, totalFollowing);
+  String get followersLabel =>
+      _displayCount(totalFollowersDisplay, totalFollowers);
+  String get followingLabel =>
+      _displayCount(totalFollowingDisplay, totalFollowing);
   String get friendsLabel => _displayCount(totalFriendsDisplay, totalFriends);
   String get adsLabel => _displayCount(totalAdsDisplay, totalAds);
   String get reviewsLabel => _displayCount(totalReviewsDisplay, totalReviews);
@@ -401,7 +409,8 @@ class AOSSellerLocation {
     final location = AOSSellerLocation.fromJson(map);
     if (!location.hasLocation) return null;
 
-    final hasCoordinates = location.latitude != null && location.longitude != null;
+    final hasCoordinates =
+        location.latitude != null && location.longitude != null;
     final hasAddress = location.displayAddress?.trim().isNotEmpty ?? false;
     return hasCoordinates || hasAddress ? location : null;
   }

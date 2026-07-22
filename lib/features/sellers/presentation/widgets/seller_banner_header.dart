@@ -84,9 +84,9 @@ class SellerBannerHeader extends StatelessWidget {
               behavior: HitTestBehavior.opaque,
               onTap: hasLive && seller.liveId != null
                   ? () => LiveNavigation.toLiveRoom(
-                        context,
-                        liveId: seller.liveId!,
-                      )
+                      context,
+                      liveId: seller.liveId!,
+                    )
                   : null,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 220),

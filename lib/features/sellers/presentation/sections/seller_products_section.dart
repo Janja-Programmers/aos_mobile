@@ -195,7 +195,6 @@ void _showSortSheet(BuildContext context) {
   );
 }
 
-
 void _showFilterSheet(BuildContext context) {
   final colors = context.appColors;
 

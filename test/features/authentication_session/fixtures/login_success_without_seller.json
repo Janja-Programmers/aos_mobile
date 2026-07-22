@@ -1,0 +1,19 @@
+{
+  "message": {
+    "ok": true,
+    "message": "Authenticated.",
+    "data": {
+      "session": {
+        "sid": "test-session-id",
+        "authenticated": true,
+        "expires_at": "2026-08-01T12:00:00Z"
+      },
+      "user": {
+        "email": "user@example.invalid",
+        "full_name": "Test User"
+      },
+      "preferences": {},
+      "roles": ["AOS User"]
+    }
+  }
+}

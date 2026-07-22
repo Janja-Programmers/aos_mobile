@@ -64,9 +64,7 @@ class UserVerificationReviewStep extends ConsumerWidget {
                 ],
               ),
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: colors.primary.withValues(alpha: 0.25),
-              ),
+              border: Border.all(color: colors.primary.withValues(alpha: 0.25)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

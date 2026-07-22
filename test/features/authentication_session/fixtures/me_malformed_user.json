@@ -1,0 +1,12 @@
+{
+  "message": {
+    "ok": true,
+    "message": "Current user fetched.",
+    "data": {
+      "user": {},
+      "preferences": {},
+      "roles": [],
+      "seller": null
+    }
+  }
+}

@@ -108,7 +108,10 @@ class SocialConnectionTile extends StatelessWidget {
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOutCubic,
                   height: 36,
-                  constraints: const BoxConstraints(minWidth: 88, maxWidth: 128),
+                  constraints: const BoxConstraints(
+                    minWidth: 88,
+                    maxWidth: 128,
+                  ),
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(

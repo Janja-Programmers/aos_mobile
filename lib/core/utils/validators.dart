@@ -28,7 +28,6 @@ class Validators {
     return null;
   }
 
-
   static String? identifier(String? v) {
     final t = (v ?? '').trim();
     if (t.isEmpty) return 'Email or phone is required';

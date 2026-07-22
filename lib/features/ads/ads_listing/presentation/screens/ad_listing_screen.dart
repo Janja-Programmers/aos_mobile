@@ -101,10 +101,8 @@ class AdListingScreen extends ConsumerWidget {
               context: context,
               ref: ref,
               ad: ad,
-              onEdit: () => AdNavigation.toReducedEditListing(
-                context,
-                adId: ad.id,
-              ),
+              onEdit: () =>
+                  AdNavigation.toReducedEditListing(context, adId: ad.id),
             );
             if (changed) await refreshAfterReturn();
             return;

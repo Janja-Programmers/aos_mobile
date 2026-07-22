@@ -1,0 +1,17 @@
+{
+  "message": {
+    "ok": true,
+    "message": "Authenticated.",
+    "data": {
+      "session": {
+        "authenticated": true
+      },
+      "user": {
+        "email": "user@example.invalid",
+        "full_name": "Test User"
+      },
+      "preferences": {},
+      "roles": []
+    }
+  }
+}

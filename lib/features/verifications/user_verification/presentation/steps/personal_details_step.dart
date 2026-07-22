@@ -69,9 +69,7 @@ class PersonalDetailsStep extends ConsumerWidget {
             decoration: BoxDecoration(
               color: colors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: colors.primary.withValues(alpha: 0.20),
-              ),
+              border: Border.all(color: colors.primary.withValues(alpha: 0.20)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,10 +128,7 @@ class _DetailsField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: context.pStrong.copyWith(color: colors.textPrimary),
-        ),
+        Text(label, style: context.pStrong.copyWith(color: colors.textPrimary)),
         const SizedBox(height: 8),
         TextFormField(
           initialValue: initialValue,

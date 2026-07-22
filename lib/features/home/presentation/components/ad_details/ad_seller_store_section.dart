@@ -92,7 +92,11 @@ class AdSellerInfoSection extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.star_rounded, size: 16, color: colors.warning),
+                        Icon(
+                          Icons.star_rounded,
+                          size: 16,
+                          color: colors.warning,
+                        ),
                         const SizedBox(width: 4),
                         Text(rating.toStringAsFixed(1), style: context.pStrong),
                         const SizedBox(width: 6),
@@ -200,11 +204,7 @@ class AdSellerInfoSection extends StatelessWidget {
 enum _SellerAction { postSimilar, report }
 
 class _Metric extends StatelessWidget {
-  const _Metric({
-    required this.value,
-    required this.label,
-    required this.icon,
-  });
+  const _Metric({required this.value, required this.label, required this.icon});
 
   final String value;
   final String label;

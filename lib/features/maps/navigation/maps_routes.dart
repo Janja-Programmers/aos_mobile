@@ -36,7 +36,6 @@ class MapsRoutes {
   }
 }
 
-
 class MapsNavigation {
   const MapsNavigation._();
 

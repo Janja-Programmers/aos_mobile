@@ -91,9 +91,8 @@ class AdsRoutes {
     GoRoute(
       name: AppRoutes.nEditListing,
       path: AppRoutes.editListing,
-      builder: (context, state) => ReducedEditListingScreen(
-        adId: state.pathParameters['adId'] ?? '',
-      ),
+      builder: (context, state) =>
+          ReducedEditListingScreen(adId: state.pathParameters['adId'] ?? ''),
     ),
 
     GoRoute(

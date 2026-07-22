@@ -1,0 +1,7 @@
+{
+  "message": {
+    "ok": false,
+    "error": "SESSION_INVALID",
+    "message": "Session was already expired."
+  }
+}

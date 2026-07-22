@@ -55,7 +55,10 @@ class Failure implements Exception {
     final data = asJsonMap(payload['data']);
 
     return Failure(
-      authFriendlyMessage(rawError, fallback: rawMessage.ifEmpty(fallbackMessage)),
+      authFriendlyMessage(
+        rawError,
+        fallback: rawMessage.ifEmpty(fallbackMessage),
+      ),
       statusCode: statusCode,
       type: type ?? failureTypeForAuthError(rawError, statusCode: statusCode),
       error: rawError.isEmpty ? null : rawError,

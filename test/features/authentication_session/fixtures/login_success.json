@@ -1,0 +1,32 @@
+{
+  "message": {
+    "ok": true,
+    "message": "Authenticated.",
+    "data": {
+      "session": {
+        "sid": "test-session-id",
+        "authenticated": true,
+        "expires_at": null
+      },
+      "user": {
+        "id": "user@example.invalid",
+        "email": "user@example.invalid",
+        "full_name": "Test User",
+        "user_image": "https://cdn.example.invalid/profiles/test-user.jpg",
+        "enabled": true,
+        "account_status": "Active"
+      },
+      "preferences": {
+        "country": "KE",
+        "language": "en",
+        "currency": "KES"
+      },
+      "roles": ["AOS User"],
+      "seller": {
+        "is_seller": true,
+        "seller_id": "SELLER-TEST-1",
+        "status": "Active"
+      }
+    }
+  }
+}

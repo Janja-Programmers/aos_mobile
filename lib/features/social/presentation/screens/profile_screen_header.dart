@@ -506,4 +506,3 @@ class _FollowProfileActionButton extends StatelessWidget {
     );
   }
 }
-

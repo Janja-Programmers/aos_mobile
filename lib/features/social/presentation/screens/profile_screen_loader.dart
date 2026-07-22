@@ -128,11 +128,14 @@ class _ProfileLoader {
         _bool(profile['is_live']) &&
         liveId.isNotEmpty;
 
-    final isFollowedBy = relationship.isFollowedBy ||
+    final isFollowedBy =
+        relationship.isFollowedBy ||
         (profileBelongsToTarget && _bool(profile['is_followed_by']));
-    final isFollowing = relationship.isFollowing ||
+    final isFollowing =
+        relationship.isFollowing ||
         (profileBelongsToTarget && _bool(profile['is_following']));
-    final isFriend = relationship.isFriend ||
+    final isFriend =
+        relationship.isFriend ||
         (profileBelongsToTarget && _bool(profile['is_friend'])) ||
         (isFollowing && isFollowedBy);
     final relationshipStatus = _firstNonEmpty([
@@ -456,4 +459,3 @@ class _ProfileLoader {
     return int.tryParse(value.toString());
   }
 }
-

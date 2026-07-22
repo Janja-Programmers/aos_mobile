@@ -309,9 +309,7 @@ class _UserVerificationScreenState
           backgroundColor: colors.surface,
           leading: IconButton(
             tooltip: state.currentStep == 0 ? 'Save and exit' : 'Previous step',
-            onPressed: isBusy || _isExiting
-                ? null
-                : () => unawaited(_back()),
+            onPressed: isBusy || _isExiting ? null : () => unawaited(_back()),
             icon: const Icon(Icons.arrow_back_rounded),
           ),
           title: Text('Get Verified', style: context.h4),
@@ -383,13 +381,9 @@ class _UserVerificationScreenState
                       ],
                       Expanded(
                         child: PrimaryButton(
-                          text: state.currentStep == 3
-                              ? 'Submit'
-                              : 'Continue',
+                          text: state.currentStep == 3 ? 'Submit' : 'Continue',
                           loading: state.isSubmitting,
-                          onPressed: isBusy
-                              ? null
-                              : () => unawaited(_next()),
+                          onPressed: isBusy ? null : () => unawaited(_next()),
                         ),
                       ),
                     ],

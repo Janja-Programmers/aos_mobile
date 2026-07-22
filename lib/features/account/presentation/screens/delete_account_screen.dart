@@ -163,6 +163,7 @@ class _DeleteAccountAppBar extends StatelessWidget {
     );
   }
 }
+
 class _DeleteAccountHero extends StatelessWidget {
   const _DeleteAccountHero();
 

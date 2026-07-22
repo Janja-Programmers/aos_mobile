@@ -271,10 +271,14 @@ class _ReducedEditListingScreenState
                         _priceType == 'Negotiable'
                             ? Icons.radio_button_checked
                             : Icons.radio_button_off,
-                        color: _priceType == 'Negotiable' ? colors.primary : null,
+                        color: _priceType == 'Negotiable'
+                            ? colors.primary
+                            : null,
                       ),
                       title: const Text('Negotiable'),
-                      subtitle: const Text('Buyers can make offers on this item'),
+                      subtitle: const Text(
+                        'Buyers can make offers on this item',
+                      ),
                       selected: _priceType == 'Negotiable',
                       onTap: () => setState(() => _priceType = 'Negotiable'),
                     ),
@@ -308,7 +312,10 @@ class _ReducedEditListingScreenState
                         Icon(Icons.calendar_month, color: colors.primary),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text('Schedule Offer Dates', style: context.pStrong),
+                          child: Text(
+                            'Schedule Offer Dates',
+                            style: context.pStrong,
+                          ),
                         ),
                         Switch(
                           value: _offerStart != null || _offerEnd != null,
@@ -333,7 +340,9 @@ class _ReducedEditListingScreenState
                             child: OutlinedButton.icon(
                               onPressed: () => _pickDate(start: true),
                               icon: const Icon(Icons.calendar_today_outlined),
-                              label: Text(_dateText(_offerStart) ?? 'Start date'),
+                              label: Text(
+                                _dateText(_offerStart) ?? 'Start date',
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),

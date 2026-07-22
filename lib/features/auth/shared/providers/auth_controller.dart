@@ -9,6 +9,7 @@ import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/auth/data/apple_auth_service.dart';
 import 'package:africaonlinestores/features/auth/data/auth_api.dart';
 import 'package:africaonlinestores/features/auth/data/google_auth_service.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_contract.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/preferences/data/preferences_api_provider.dart';
@@ -42,18 +43,22 @@ class AuthController extends StateNotifier<AuthState> {
     required AuthApi api,
     required ApiClient apiClient,
     required SessionStorage storage,
+    DateTime Function()? now,
   }) : _ref = ref,
        _api = api,
        _apiClient = apiClient,
        _storage = storage,
+       _now = now ?? DateTime.now,
        super(const AuthLoading());
 
   final Ref _ref;
   final AuthApi _api;
   final ApiClient _apiClient;
   final SessionStorage _storage;
+  final DateTime Function() _now;
 
   Future<bool>? _refreshingSession;
+  Future<Either<Failure, void>>? _loginInFlight;
   StreamSubscription<void>? _sessionSub;
 
   bool _isHydrating = false;
@@ -143,10 +148,12 @@ class AuthController extends StateNotifier<AuthState> {
             : const _SessionProbe.transient();
       }
 
-      final data = asJsonMap(payload['data']);
-      final user = asJsonMap(data['user']);
+      final Map<String, dynamic> data = asJsonMap(payload['data']);
+      final AuthSessionPayload authPayload = AuthSessionPayload.fromData(data);
 
-      if (user.isEmpty) return const _SessionProbe.invalid();
+      if (!authPayload.hasUser || authPayload.isExplicitlyUnauthenticated) {
+        return const _SessionProbe.invalid();
+      }
 
       return _SessionProbe.valid(data);
     } catch (e) {
@@ -159,7 +166,7 @@ class AuthController extends StateNotifier<AuthState> {
   // SESSION REFRESH
   // ---------------------------------------------------------------------------
   Future<bool> _refreshSession() async {
-    final now = DateTime.now();
+    final DateTime now = _now();
 
     if (_lastRefresh != null &&
         now.difference(_lastRefresh!) < _refreshCooldown) {
@@ -202,18 +209,42 @@ class AuthController extends StateNotifier<AuthState> {
     required String identifier,
     required String password,
     required bool rememberMe,
+  }) {
+    final Future<Either<Failure, void>>? activeLogin = _loginInFlight;
+    if (activeLogin != null) {
+      return activeLogin;
+    }
+
+    final Future<Either<Failure, void>> operation = _performLogin(
+      identifier: identifier,
+      password: password,
+      rememberMe: rememberMe,
+    );
+    _loginInFlight = operation;
+
+    return operation.whenComplete(() {
+      if (identical(_loginInFlight, operation)) {
+        _loginInFlight = null;
+      }
+    });
+  }
+
+  Future<Either<Failure, void>> _performLogin({
+    required String identifier,
+    required String password,
+    required bool rememberMe,
   }) async {
-    final cleanIdentifier = identifier.trim().toLowerCase();
+    final String cleanIdentifier = identifier.trim().toLowerCase();
 
     await _storage.clearSid();
     await _apiClient.clearSid();
 
-    final res = await _api.login(
+    final Either<Failure, Map<String, dynamic>> response = await _api.login(
       identifier: cleanIdentifier,
       password: password,
     );
-    final finished = await _finishAuthResponse(
-      res,
+    final Either<Failure, void> finished = await _finishAuthResponse(
+      response,
       fallbackMessage: 'Login failed.',
     );
 
@@ -249,6 +280,7 @@ class AuthController extends StateNotifier<AuthState> {
     await _apiClient.clearSid();
 
     _refreshingSession = null;
+    _loginInFlight = null;
     _isHydrating = false;
 
     state = const AuthGuest();
@@ -267,19 +299,16 @@ class AuthController extends StateNotifier<AuthState> {
       await _apiClient.setSid(sid);
       await _storage.setSid(sid);
 
-      final user = asJsonMap(authData['user']);
-      final preferences = asJsonMap(authData['preferences']);
-      final seller = AuthSellerSummary.fromMap(asJsonMap(authData['seller']));
-      final roles = asJsonList(authData['roles'])
-          .map((role) => role.toString())
-          .where((role) => role.trim().isNotEmpty)
-          .toList(growable: false);
+      final AuthSessionPayload payload = AuthSessionPayload.fromData(authData);
+      final AuthSellerSummary seller = AuthSellerSummary.fromMap(
+        payload.seller,
+      );
 
       state = AuthAuthenticated(
-        user: AuthUser.fromMap(user),
+        user: AuthUser.fromMap(payload.user),
         sid: sid,
-        preferences: preferences,
-        roles: roles,
+        preferences: payload.preferences,
+        roles: payload.roles,
         seller: seller,
       );
 
@@ -307,10 +336,7 @@ class AuthController extends StateNotifier<AuthState> {
     final current = state as AuthAuthenticated;
 
     state = current.copyWith(
-      preferences: <String, dynamic>{
-        ...current.preferences,
-        ...preferencesMap,
-      },
+      preferences: <String, dynamic>{...current.preferences, ...preferencesMap},
     );
   }
 
@@ -397,28 +423,30 @@ class AuthController extends StateNotifier<AuthState> {
       );
     }
 
-    final data = asJsonMap(payload['data']);
-    final sid = _sessionSid(data);
+    final Map<String, dynamic> data = asJsonMap(payload['data']);
+    final AuthSessionPayload authPayload = AuthSessionPayload.fromData(data);
 
-    if (sid.isEmpty) {
+    if (authPayload.isExplicitlyUnauthenticated) {
+      return Either.left(
+        const Failure(
+          'Login failed. The returned session was not authenticated.',
+        ),
+      );
+    }
+
+    if (authPayload.sid.isEmpty) {
       return Either.left(
         const Failure('Login failed. No session was returned.'),
       );
     }
 
-    final user = asJsonMap(data['user']);
-    if (user.isEmpty) {
+    if (!authPayload.hasUser) {
       return Either.left(const Failure('Login failed. User data was missing.'));
     }
 
-    await _completeLogin(sid: sid, authData: data);
+    await _completeLogin(sid: authPayload.sid, authData: data);
 
     return Either.right(null);
-  }
-
-  String _sessionSid(Map<String, dynamic> authData) {
-    final session = asJsonMap(authData['session']);
-    return asString(session['sid']).trim();
   }
 
   Failure _failureFromPayload(
@@ -743,6 +771,7 @@ class AuthController extends StateNotifier<AuthState> {
   void dispose() {
     unawaited(_sessionSub?.cancel());
     _refreshingSession = null;
+    _loginInFlight = null;
     super.dispose();
   }
 }

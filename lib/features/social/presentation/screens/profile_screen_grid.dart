@@ -174,9 +174,8 @@ class _EmptyProfilePanelView extends StatelessWidget {
       _ProfilePanel.posts =>
         isOwnProfile ? 'No posts yet' : 'No public posts yet',
       _ProfilePanel.reposted => 'No reposted shorts yet',
-      _ProfilePanel.privateShorts => isOwnProfile
-          ? 'No private shorts yet'
-          : 'Private shorts are hidden',
+      _ProfilePanel.privateShorts =>
+        isOwnProfile ? 'No private shorts yet' : 'Private shorts are hidden',
       _ProfilePanel.saved => 'No saved shorts yet',
       _ProfilePanel.liked => 'No liked shorts yet',
     };

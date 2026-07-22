@@ -44,29 +44,27 @@ class IdentityDocumentStep extends ConsumerWidget {
           Wrap(
             spacing: 10,
             runSpacing: 10,
-            children: const [
-              'National ID',
-              'Passport',
-              "Driver's License",
-            ].map((type) {
-              final selected = draft.idType == type;
+            children: const ['National ID', 'Passport', "Driver's License"].map(
+              (type) {
+                final selected = draft.idType == type;
 
-              return ChoiceChip(
-                selected: selected,
-                label: Text(type),
-                onSelected: state.isBusy
-                    ? null
-                    : (_) => controller.setIdType(type),
-                selectedColor: colors.primary,
-                backgroundColor: colors.elevated,
-                labelStyle: context.pStrong.copyWith(
-                  color: selected ? colors.white : colors.textPrimary,
-                ),
-                side: BorderSide(
-                  color: selected ? colors.primary : colors.border,
-                ),
-              );
-            }).toList(),
+                return ChoiceChip(
+                  selected: selected,
+                  label: Text(type),
+                  onSelected: state.isBusy
+                      ? null
+                      : (_) => controller.setIdType(type),
+                  selectedColor: colors.primary,
+                  backgroundColor: colors.elevated,
+                  labelStyle: context.pStrong.copyWith(
+                    color: selected ? colors.white : colors.textPrimary,
+                  ),
+                  side: BorderSide(
+                    color: selected ? colors.primary : colors.border,
+                  ),
+                );
+              },
+            ).toList(),
           ),
           const SizedBox(height: 28),
           Text('Front of ID', style: context.pStrong),

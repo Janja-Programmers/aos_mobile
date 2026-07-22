@@ -33,10 +33,7 @@ class SocialConnectionsAppBar extends StatelessWidget
         IconButton(
           tooltip: 'Find people',
           onPressed: onFindPeopleTap,
-          icon: Icon(
-            Icons.person_search_outlined,
-            color: colors.textPrimary,
-          ),
+          icon: Icon(Icons.person_search_outlined, color: colors.textPrimary),
         ),
       ],
     );

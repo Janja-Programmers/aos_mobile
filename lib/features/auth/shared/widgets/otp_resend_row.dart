@@ -31,22 +31,31 @@ class _OtpResendRowState extends State<OtpResendRow> {
     _startCountdown();
   }
 
-  void _startCountdown() {
+  void _startCountdown({bool rebuild = false}) {
     _timer?.cancel();
-    _secondsLeft = widget.initialSeconds;
+
+    if (rebuild) {
+      setState(() => _secondsLeft = widget.initialSeconds);
+    } else {
+      _secondsLeft = widget.initialSeconds;
+    }
+
+    if (_secondsLeft == 0) return;
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_secondsLeft == 0) {
+      if (_secondsLeft <= 1) {
         timer.cancel();
-      } else {
-        setState(() => _secondsLeft--);
+        setState(() => _secondsLeft = 0);
+        return;
       }
+
+      setState(() => _secondsLeft--);
     });
   }
 
   void _handleResend() {
     widget.onResend();
-    _startCountdown();
+    _startCountdown(rebuild: true);
   }
 
   @override

@@ -1,0 +1,24 @@
+{
+  "message": {
+    "ok": true,
+    "message": "Followed successfully.",
+    "data": {
+      "target_user": "public@example.invalid",
+      "status": "followed",
+      "is_self": false,
+      "is_following": true,
+      "is_followed_by": false,
+      "is_friend": false,
+      "relationship_status": "following",
+      "action_label": "Following",
+      "is_blocked_by_me": false,
+      "has_blocked_me": false,
+      "is_blocked": false,
+      "block_status": "none",
+      "target_total_followers": 1000,
+      "target_total_followers_display": "1K",
+      "current_total_following": 76,
+      "current_total_following_display": "76"
+    }
+  }
+}

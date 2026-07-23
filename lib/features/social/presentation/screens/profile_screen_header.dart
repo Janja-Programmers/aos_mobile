@@ -63,11 +63,11 @@ class _ProfileHeader extends StatelessWidget {
   final String followersCount;
   final String likesCount;
 
-  final VoidCallback onFollowingTap;
-  final VoidCallback onFollowersTap;
+  final VoidCallback? onFollowingTap;
+  final VoidCallback? onFollowersTap;
   final VoidCallback onAvatarTap;
   final VoidCallback onEditTap;
-  final VoidCallback onMessageTap;
+  final VoidCallback? onMessageTap;
   final VoidCallback? onSellerStoreTap;
   final VoidCallback? onFollowTap;
   final String followActionLabel;
@@ -108,6 +108,7 @@ class _ProfileHeader extends StatelessWidget {
       children: [
         const SizedBox(height: 10),
         GestureDetector(
+          key: const Key('profile_avatar_action'),
           behavior: HitTestBehavior.opaque,
           onTap: onAvatarTap,
           child: Stack(
@@ -283,6 +284,7 @@ class _ProfileHeader extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 40),
           child: isOwnProfile
               ? _MainProfileActionButton(
+                  key: const Key('profile_edit_action'),
                   label: 'Edit profile',
                   icon: Icons.edit_outlined,
                   onTap: onEditTap,
@@ -302,27 +304,33 @@ class _ProfileHeader extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                     ],
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: _MainProfileActionButton(
-                            label: 'Message',
-                            icon: Icons.send_rounded,
-                            onTap: onMessageTap,
-                            expanded: true,
-                            loading: messageLoading,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        _FollowProfileActionButton(
-                          label: followActionLabel,
-                          isFollowing: isFollowing,
-                          onTap: onFollowTap,
-                          loading: followLoading,
-                        ),
-                      ],
-                    ),
+                    if (onMessageTap != null || onFollowTap != null)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (onMessageTap != null)
+                            Expanded(
+                              child: _MainProfileActionButton(
+                                key: const Key('profile_message_action'),
+                                label: 'Message',
+                                icon: Icons.send_rounded,
+                                onTap: onMessageTap!,
+                                expanded: true,
+                                loading: messageLoading,
+                              ),
+                            ),
+                          if (onMessageTap != null && onFollowTap != null)
+                            const SizedBox(width: 10),
+                          if (onFollowTap != null)
+                            _FollowProfileActionButton(
+                              key: const Key('profile_follow_action'),
+                              label: followActionLabel,
+                              isFollowing: isFollowing,
+                              onTap: onFollowTap,
+                              loading: followLoading,
+                            ),
+                        ],
+                      ),
                   ],
                 ),
         ),
@@ -335,7 +343,7 @@ class _ProfileHeader extends StatelessWidget {
 class _ProfileStat extends StatelessWidget {
   final String value;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _ProfileStat({
     required this.value,
@@ -384,6 +392,7 @@ class _MainProfileActionButton extends StatelessWidget {
   final bool loading;
 
   const _MainProfileActionButton({
+    super.key,
     required this.label,
     required this.icon,
     required this.onTap,
@@ -450,6 +459,7 @@ class _FollowProfileActionButton extends StatelessWidget {
   final bool loading;
 
   const _FollowProfileActionButton({
+    super.key,
     required this.label,
     required this.isFollowing,
     required this.onTap,

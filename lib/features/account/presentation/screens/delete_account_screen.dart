@@ -100,6 +100,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
             _ConfirmationField(controller: _confirmationController),
             const SizedBox(height: 26),
             _DeleteAccountButton(
+              key: const Key('delete_account_submit_button'),
               enabled: _canDelete,
               loading: _loading,
               onPressed: _submit,
@@ -272,8 +273,10 @@ class _ReasonField extends StatelessWidget {
     return _FieldBlock(
       label: const Text('Reason for leaving (optional)'),
       child: TextField(
+        key: const Key('delete_account_reason_field'),
         controller: controller,
         minLines: 2,
+        maxLength: 300,
         maxLines: 4,
         textInputAction: TextInputAction.newline,
         decoration: _fieldDecoration(
@@ -308,6 +311,7 @@ class _ConfirmationField extends StatelessWidget {
         ),
       ),
       child: TextField(
+        key: const Key('delete_account_confirmation_field'),
         controller: controller,
         textCapitalization: TextCapitalization.characters,
         textInputAction: TextInputAction.done,
@@ -375,6 +379,7 @@ InputDecoration _fieldDecoration(
 
 class _DeleteAccountButton extends StatelessWidget {
   const _DeleteAccountButton({
+    super.key,
     required this.enabled,
     required this.loading,
     required this.onPressed,

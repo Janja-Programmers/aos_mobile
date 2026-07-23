@@ -1,0 +1,15 @@
+{
+  "message": {
+    "ok": true,
+    "message": "Followers fetched successfully.",
+    "data": {
+      "items": [],
+      "total": 0,
+      "total_display": "0",
+      "limit": 20,
+      "start": 0,
+      "search": "test",
+      "has_more": false
+    }
+  }
+}

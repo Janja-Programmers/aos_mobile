@@ -66,6 +66,7 @@ Future<AuthControllerHarness> buildAuthControllerHarness({
         return client;
       }),
       authApiProvider.overrideWith((Ref ref) {
+        // ignore: join_return_with_assignment
         api = ScriptedAuthApi(
           ref.watch(apiClientProvider),
           loginHandler: loginHandler,

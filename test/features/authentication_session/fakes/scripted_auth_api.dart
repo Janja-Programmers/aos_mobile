@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/features/auth/data/auth_api.dart';
@@ -10,14 +9,13 @@ typedef NoArgumentAuthHandler = Future<AuthApiResponse> Function();
 
 class ScriptedAuthApi extends AuthApi {
   ScriptedAuthApi(
-    ApiClient client, {
+    super.client, {
     LoginHandler? loginHandler,
     NoArgumentAuthHandler? meHandler,
     NoArgumentAuthHandler? logoutHandler,
   }) : loginHandler = loginHandler ?? _unexpectedLogin,
        meHandler = meHandler ?? _unexpectedNoArgumentCall,
-       logoutHandler = logoutHandler ?? _successfulLogout,
-       super(client);
+       logoutHandler = logoutHandler ?? _successfulLogout;
 
   LoginHandler loginHandler;
   NoArgumentAuthHandler meHandler;

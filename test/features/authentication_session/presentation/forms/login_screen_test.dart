@@ -44,7 +44,6 @@ void main() {
       (WidgetTester tester) async {
         final _LoginWidgetHarness harness = await _buildLoginWidgetHarness(
           storage: FakeSessionStorage(
-            rememberMe: true,
             rememberedEmail: 'remembered@example.invalid',
           ),
         );

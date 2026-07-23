@@ -84,24 +84,28 @@ class _ProfileScaffoldState extends State<_ProfileScaffold> {
                 bio: data.bio,
                 isVerified: data.isVerified,
                 isOwnProfile: data.isOwnProfile,
-                followingCount: _formatCount(data.followingCount),
-                followersCount: _formatCount(data.followersCount),
-                likesCount: _formatCount(data.likesCount),
-                onFollowingTap: () {
-                  SocialNavigation.toSocialConnectionsScreen(
-                    context,
-                    tab: SocialConnectionsTab.following,
-                    title: data.displayName,
-                    user: data.user,
-                  );
-                },
-                onFollowersTap: () {
-                  SocialNavigation.toSocialConnectionsScreen(
-                    context,
-                    title: data.displayName,
-                    user: data.user,
-                  );
-                },
+                followingCount: humanizeCount(data.followingCount),
+                followersCount: humanizeCount(data.followersCount),
+                likesCount: humanizeCount(data.likesCount),
+                onFollowingTap: data.canOpenConnections
+                    ? () {
+                        SocialNavigation.toSocialConnectionsScreen(
+                          context,
+                          tab: SocialConnectionsTab.following,
+                          title: data.displayName,
+                          user: data.user,
+                        );
+                      }
+                    : null,
+                onFollowersTap: data.canOpenConnections
+                    ? () {
+                        SocialNavigation.toSocialConnectionsScreen(
+                          context,
+                          title: data.displayName,
+                          user: data.user,
+                        );
+                      }
+                    : null,
                 isLive: data.isLive,
                 liveId: data.liveId,
                 onAvatarTap: widget.onAvatarTap,
@@ -187,17 +191,5 @@ class _ProfileScaffoldState extends State<_ProfileScaffold> {
       case _ProfilePanel.liked:
         return data.liked;
     }
-  }
-
-  static String _formatCount(int value) {
-    if (value >= 1000000) {
-      final short = value / 1000000;
-      return '${short.toStringAsFixed(short >= 10 ? 0 : 1)}M';
-    }
-    if (value >= 1000) {
-      final short = value / 1000;
-      return '${short.toStringAsFixed(short >= 10 ? 0 : 1)}K';
-    }
-    return value.toString();
   }
 }

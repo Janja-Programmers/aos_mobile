@@ -4,26 +4,34 @@ import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/features/account/domain/profile_update_request.dart';
 import 'package:dio/dio.dart';
 
 /// Accounts/Profile APIs.
 ///
 /// Backend:
-///  - aos.api.accounts.get_profile
-///  - aos.api.accounts.update_profile
+///  - aos.api.v1.accounts.get_profile
+///  - aos.api.v1.accounts.update_profile
 class AccountsApi {
   AccountsApi(this._client);
   final ApiClient _client;
 
-  Future<Either<Failure, Map<String, dynamic>>> getProfile() async {
+  Future<Either<Failure, Map<String, dynamic>>> getProfile({
+    String? targetUser,
+  }) async {
     try {
-      final res = await _client.dio.get<Map<String, dynamic>>(
-        ApiEndpoints.getProfileEndpoint,
-      );
+      final String cleanTarget = targetUser?.trim() ?? '';
+      final Response<Map<String, dynamic>> res = await _client.dio
+          .get<Map<String, dynamic>>(
+            ApiEndpoints.getProfileEndpoint,
+            queryParameters: cleanTarget.isEmpty
+                ? null
+                : <String, dynamic>{'target_user': cleanTarget},
+          );
       return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Exception {
       return Either.left(const Failure('Unexpected error. Please try again.'));
     }
   }
@@ -35,22 +43,22 @@ class AccountsApi {
     String? bio,
   }) async {
     try {
-      final data = <String, dynamic>{};
-      if (fullName != null) data['full_name'] = fullName;
-      if (userImage != null) data['user_image'] = userImage;
-      if (userImageMedia != null) {
-        data['profile_image_media'] = userImageMedia;
-      }
-      if (bio != null) data['bio'] = bio;
-
-      final res = await _client.dio.post<Map<String, dynamic>>(
-        ApiEndpoints.updateProfileEndpoint,
-        data: data,
+      final ProfileUpdateRequest request = ProfileUpdateRequest(
+        fullName: fullName,
+        userImage: userImage,
+        userImageMedia: userImageMedia,
+        bio: bio,
       );
+
+      final Response<Map<String, dynamic>> res = await _client.dio
+          .post<Map<String, dynamic>>(
+            ApiEndpoints.updateProfileEndpoint,
+            data: request.toJson(),
+          );
       return unwrapFrappe(res);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Exception {
       return Either.left(const Failure('Unexpected error. Please try again.'));
     }
   }

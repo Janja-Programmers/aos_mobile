@@ -69,6 +69,10 @@ class AppBootstrapController extends StateNotifier<AppBootstrapState> {
     state = state.copyWith(onboardingCompleted: true);
   }
 
+  void deferOnboardingForSession() {
+    state = state.copyWith(onboardingCompleted: true);
+  }
+
   // -----------------------------
   // Reset onboarding (for debug / logout cases)
   // -----------------------------

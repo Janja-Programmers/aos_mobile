@@ -13,11 +13,11 @@ import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../fakes/fake_session_storage.dart';
+import '../../../../fakes/recording_http_client_adapter.dart';
 import '../../../../helpers/pump_app.dart';
 import '../../fakes/mutable_auth_controller.dart';
 import '../../fakes/scripted_accounts_api.dart';
 import '../../helpers/account_profile_api_harness.dart';
-import '../../../../fakes/recording_http_client_adapter.dart';
 
 void main() {
   late AccountProfileApiHarness apiHarness;

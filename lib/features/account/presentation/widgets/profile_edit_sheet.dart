@@ -1,7 +1,6 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/account/data/accounts_api.dart';
-import 'package:africaonlinestores/features/account/domain/profile_update_request.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_provider.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
@@ -66,7 +65,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     final fullName = _nameCtrl.text.trim();
     final bio = _bioCtrl.text.trim();
 
-    if (fullName.length < ProfileUpdateRequest.fullNameMinLength) {
+    if (fullName.length < 2) {
       showAppSnack(
         context,
         'Please enter your name.',
@@ -75,19 +74,10 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       return;
     }
 
-    if (fullName.length > ProfileUpdateRequest.fullNameMaxLength) {
+    if (bio.length > 160) {
       showAppSnack(
         context,
-        'Name should be ${ProfileUpdateRequest.fullNameMaxLength} characters or less.',
-        position: SnackPosition.top,
-      );
-      return;
-    }
-
-    if (bio.length > ProfileUpdateRequest.bioMaxLength) {
-      showAppSnack(
-        context,
-        'Bio should be ${ProfileUpdateRequest.bioMaxLength} characters or less.',
+        'Bio should be 150 characters or less.',
         position: SnackPosition.top,
       );
       return;
@@ -164,9 +154,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                 const SizedBox(height: 24),
 
                 TextField(
-                  key: const Key('profile_edit_name_field'),
                   controller: _nameCtrl,
-                  maxLength: ProfileUpdateRequest.fullNameMaxLength,
                   textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(labelText: 'Name'),
                 ),
@@ -174,11 +162,10 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
                 const SizedBox(height: 20),
 
                 TextField(
-                  key: const Key('profile_edit_bio_field'),
                   controller: _bioCtrl,
                   minLines: 3,
                   maxLines: 5,
-                  maxLength: ProfileUpdateRequest.bioMaxLength,
+                  maxLength: 150,
                   textInputAction: TextInputAction.newline,
                   decoration: const InputDecoration(
                     labelText: 'Bio',
@@ -189,12 +176,7 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
 
                 const SizedBox(height: 20),
 
-                PrimaryButton(
-                  key: const Key('profile_edit_save_button'),
-                  text: 'Save',
-                  loading: _saving,
-                  onPressed: _save,
-                ),
+                PrimaryButton(text: 'Save', loading: _saving, onPressed: _save),
               ],
             ),
           ),

@@ -134,9 +134,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             email: _email.text.trim().toLowerCase(),
             password: _password.text,
             fullName: _name.text.trim(),
-            country: prefs.countryCode,
-            language: prefs.languageCode,
-            currency: prefs.currencyCode,
+            country: prefs.countryId,
+            language: prefs.languageId,
+            currency: prefs.currencyId,
           );
 
       if (!mounted) return;
@@ -176,9 +176,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       final result = await ref
           .read(authControllerProvider.notifier)
           .signInWithGoogle(
-            country: prefs.countryCode,
-            language: prefs.languageCode,
-            currency: prefs.currencyCode,
+            country: prefs.countryId,
+            language: prefs.languageId,
+            currency: prefs.currencyId,
           );
 
       if (!mounted) return;
@@ -206,9 +206,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       final result = await ref
           .read(authControllerProvider.notifier)
           .signInWithApple(
-            country: prefs.countryCode,
-            language: prefs.languageCode,
-            currency: prefs.currencyCode,
+            country: prefs.countryId,
+            language: prefs.languageId,
+            currency: prefs.currencyId,
           );
 
       if (!mounted) return;

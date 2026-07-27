@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:africaonlinestores/features/preferences/models/active_preference_snapshot.dart';
 import 'package:africaonlinestores/features/preferences/state/user_preference_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -6,122 +9,127 @@ class OnboardingStorage {
 
   final SharedPreferences _prefs;
 
-  /// Storage Keys
-  static const _keyCountryCode = 'pref_country_code';
-  static const _keyLanguageCode = 'pref_language_code';
-  static const _keyCurrencyCode = 'pref_currency_code';
+  static const _keyActiveSnapshot = 'aos_active_preference_snapshot_v1';
+  static const _keyGuestSnapshot = 'aos_guest_preference_snapshot_v1';
   static const _keyOnboardingCompleted = 'onboarding_completed';
 
-  /// -----------------------------
-  /// Preferences
-  /// -----------------------------
+  static const _legacyCountryCode = 'pref_country_code';
+  static const _legacyLanguageCode = 'pref_language_code';
+  static const _legacyCurrencyCode = 'pref_currency_code';
 
-  /// Save all user preference codes
-  Future<void> savePreferences(UserPreferenceState prefs) async {
-    await Future.wait([
-      _prefs.setString(
-        _keyCountryCode,
-        UserPreferenceState.normalizeCountryCode(prefs.countryCode),
-      ),
-      _prefs.setString(
-        _keyLanguageCode,
-        UserPreferenceState.normalizeLanguageCode(prefs.languageCode),
-      ),
-      _prefs.setString(
-        _keyCurrencyCode,
-        UserPreferenceState.normalizeCurrencyCode(prefs.currencyCode),
-      ),
-    ]);
+  Future<void> savePreferences(UserPreferenceState preferences) async {
+    final snapshot = preferences.snapshot;
+    if (snapshot == null || !snapshot.isValid) {
+      throw const FormatException(
+        'Cannot persist an invalid preference snapshot.',
+      );
+    }
+    await saveActiveSnapshot(snapshot);
   }
 
-  /// Save preferences directly from API payload
-  Future<void> savePreferencesFromApi({
-    required String countryCode,
-    required String languageCode,
-    required String currencyCode,
-  }) async {
-    await Future.wait([
-      _prefs.setString(
-        _keyCountryCode,
-        UserPreferenceState.normalizeCountryCode(countryCode),
-      ),
-      _prefs.setString(
-        _keyLanguageCode,
-        UserPreferenceState.normalizeLanguageCode(languageCode),
-      ),
-      _prefs.setString(
-        _keyCurrencyCode,
-        UserPreferenceState.normalizeCurrencyCode(currencyCode),
-      ),
-    ]);
+  Future<void> saveActiveSnapshot(ActivePreferenceSnapshot snapshot) async {
+    if (!snapshot.isValid) {
+      throw const FormatException(
+        'Cannot persist an invalid preference snapshot.',
+      );
+    }
+
+    final encoded = jsonEncode(snapshot.toJson());
+    final saved = await _prefs.setString(_keyActiveSnapshot, encoded);
+    if (!saved) {
+      throw Exception('Failed to persist the active preference snapshot.');
+    }
   }
 
-  /// Update individual preference fields
-
-  Future<void> setCountryCode(String code) async {
-    await _prefs.setString(
-      _keyCountryCode,
-      UserPreferenceState.normalizeCountryCode(code),
+  Future<void> saveGuestSnapshot(ActivePreferenceSnapshot snapshot) async {
+    if (!snapshot.isValid || !snapshot.isGuest) return;
+    final saved = await _prefs.setString(
+      _keyGuestSnapshot,
+      jsonEncode(snapshot.toJson()),
     );
+    if (!saved) {
+      throw Exception('Failed to persist the guest preference snapshot.');
+    }
   }
 
-  Future<void> setLanguageCode(String code) async {
-    await _prefs.setString(
-      _keyLanguageCode,
-      UserPreferenceState.normalizeLanguageCode(code),
-    );
-  }
-
-  Future<void> setCurrencyCode(String code) async {
-    await _prefs.setString(
-      _keyCurrencyCode,
-      UserPreferenceState.normalizeCurrencyCode(code),
-    );
-  }
-
-  /// Load stored preferences (source of truth for UI)
   UserPreferenceState loadPreferences() {
-    final countryCode = _prefs.getString(_keyCountryCode) ?? '';
-    final languageCode = _prefs.getString(_keyLanguageCode) ?? '';
-    final currencyCode = _prefs.getString(_keyCurrencyCode) ?? '';
-
-    return UserPreferenceState(
-      countryCode: countryCode,
-      languageCode: languageCode,
-      currencyCode: currencyCode,
-    );
+    final snapshot = _readSnapshot(_keyActiveSnapshot) ?? _migrateLegacy();
+    return UserPreferenceState(snapshot: snapshot);
   }
 
-  /// -----------------------------
-  /// Onboarding Flag
-  /// -----------------------------
+  ActivePreferenceSnapshot? loadGuestSnapshot() {
+    return _readSnapshot(_keyGuestSnapshot);
+  }
+
+  ActivePreferenceSnapshot? _readSnapshot(String key) {
+    try {
+      final raw = _prefs.getString(key)?.trim();
+      if (raw == null || raw.isEmpty) return null;
+
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<Object?, Object?>) return null;
+      final snapshot = ActivePreferenceSnapshot.fromJson(
+        Map<String, dynamic>.from(decoded),
+      );
+      return snapshot.isValid ? snapshot : null;
+    } on FormatException {
+      return null;
+    } on TypeError {
+      return null;
+    }
+  }
+
+  ActivePreferenceSnapshot? _migrateLegacy() {
+    try {
+      final country = _prefs.getString(_legacyCountryCode)?.trim() ?? '';
+      final language = _prefs.getString(_legacyLanguageCode)?.trim() ?? '';
+      final currency = _prefs.getString(_legacyCurrencyCode)?.trim() ?? '';
+      if (country.isEmpty || language.isEmpty || currency.isEmpty) return null;
+
+      return ActivePreferenceSnapshot.legacy(
+        country: country,
+        language: language,
+        currency: currency,
+      );
+    } on TypeError {
+      return null;
+    }
+  }
 
   Future<void> markOnboardingComplete() async {
-    await _prefs.setBool(_keyOnboardingCompleted, true);
+    final current = loadPreferences();
+    if (!current.hasValidPreference) {
+      throw StateError(
+        'Onboarding cannot complete without a valid preference snapshot.',
+      );
+    }
+
+    final saved = await _prefs.setBool(_keyOnboardingCompleted, true);
+    if (!saved) {
+      throw Exception('Failed to persist onboarding completion.');
+    }
   }
 
   bool isOnboardingComplete() {
-    return _prefs.getBool(_keyOnboardingCompleted) ?? false;
+    return (_prefs.getBool(_keyOnboardingCompleted) ?? false) &&
+        loadPreferences().hasValidPreference;
   }
-
-  /// -----------------------------
-  /// Reset onboarding only
-  /// (DO NOT remove preferences on logout)
-  /// -----------------------------
 
   Future<void> clearOnboardingFlag() async {
     await _prefs.remove(_keyOnboardingCompleted);
   }
 
-  /// -----------------------------
-  /// Dev reset (rarely used)
-  /// -----------------------------
+  Future<void> clearActivePreference() async {
+    await _prefs.remove(_keyActiveSnapshot);
+  }
 
   Future<void> clearAll() async {
-    await Future.wait([
-      _prefs.remove(_keyCountryCode),
-      _prefs.remove(_keyLanguageCode),
-      _prefs.remove(_keyCurrencyCode),
+    await Future.wait(<Future<bool>>[
+      _prefs.remove(_keyActiveSnapshot),
+      _prefs.remove(_keyGuestSnapshot),
+      _prefs.remove(_legacyCountryCode),
+      _prefs.remove(_legacyLanguageCode),
+      _prefs.remove(_legacyCurrencyCode),
       _prefs.remove(_keyOnboardingCompleted),
     ]);
   }

@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:africaonlinestores/core/api/api_response.dart';
-import 'package:africaonlinestores/core/api/failure.dart';
-import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
 import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
@@ -11,7 +9,6 @@ import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/normalize_image.dart';
-import 'package:africaonlinestores/features/account/domain/account_profile_snapshot.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/profile_edit_sheet.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_controller.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_provider.dart';
@@ -31,7 +28,6 @@ import 'package:africaonlinestores/features/social/application/state/social_conn
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/features/social/safety/presentation/widgets/user_safety_sheet.dart';
 import 'package:africaonlinestores/shared/components/verified_badge.dart';
-import 'package:africaonlinestores/shared/utils/helpers.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -113,9 +109,6 @@ class ProfileScreen extends ConsumerWidget {
         );
       },
       error: (error, _) {
-        final String errorMessage = error is Failure
-            ? error.message
-            : 'Please try again.';
         final fallback = _ProfileViewData.fallback(
           targetUser: targetUser,
           isOwnProfile: isOwnProfile,
@@ -154,7 +147,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    errorMessage,
+                    error.toString(),
                     textAlign: TextAlign.center,
                     style: context.pMuted,
                   ),
@@ -184,17 +177,16 @@ class ProfileScreen extends ConsumerWidget {
           onSellerStoreTap: data.canVisitSellerStore
               ? () => SellerNavigation.toSellerStore(context, data.sellerId!)
               : null,
-          onMessageTap: data.canMessage
-              ? (tapContext) => ChatActions.startChat(
-                  context: tapContext,
-                  ref: ref,
-                  user: data.user,
-                  displayName: data.displayName,
-                  avatar: data.avatarUrl,
-                )
-              : null,
-          onFollowTap: data.canToggleFollow
-              ? (tapContext) async {
+          onMessageTap: (tapContext) => ChatActions.startChat(
+            context: tapContext,
+            ref: ref,
+            user: data.user,
+            displayName: data.displayName,
+            avatar: data.avatarUrl,
+          ),
+          onFollowTap: data.isOwnProfile
+              ? null
+              : (tapContext) async {
                   final res = await ref
                       .read(socialRepositoryProvider)
                       .toggleFollow(targetUser: data.user);
@@ -212,8 +204,7 @@ class ProfileScreen extends ConsumerWidget {
                   ref.invalidate(_profileViewDataProvider(request));
                   ref.invalidate(accountsControllerProvider);
                   await ref.read(_profileViewDataProvider(request).future);
-                }
-              : null,
+                },
         );
       },
     );

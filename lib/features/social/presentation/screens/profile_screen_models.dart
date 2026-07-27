@@ -38,6 +38,15 @@ extension _ProfilePanelX on _ProfilePanel {
 
 @immutable
 class _ProfileRequest {
+  final String targetUser;
+  final String currentUserEmail;
+  final String currentDisplayName;
+  final String currentAvatar;
+  final String? currentBio;
+  final bool currentIsVerified;
+  final String? fallbackDisplayName;
+  final String? fallbackAvatar;
+
   const _ProfileRequest({
     required this.targetUser,
     required this.currentUserEmail,
@@ -48,15 +57,6 @@ class _ProfileRequest {
     this.fallbackDisplayName,
     this.fallbackAvatar,
   });
-
-  final String targetUser;
-  final String currentUserEmail;
-  final String currentDisplayName;
-  final String currentAvatar;
-  final String? currentBio;
-  final bool currentIsVerified;
-  final String? fallbackDisplayName;
-  final String? fallbackAvatar;
 
   @override
   bool operator ==(Object other) {
@@ -86,47 +86,12 @@ class _ProfileRequest {
 
 @immutable
 class _ProfileViewData {
-  const _ProfileViewData({
-    required this.user,
-    required this.displayName,
-    required this.username,
-    required this.avatarUrl,
-    required this.bio,
-    required this.isOwnProfile,
-    required this.isDeleted,
-    required this.isBlocked,
-    required this.canMessage,
-    required this.canToggleFollow,
-    required this.canOpenConnections,
-    required this.isLive,
-    required this.liveId,
-    required this.followingCount,
-    required this.followersCount,
-    required this.friendsCount,
-    required this.likesCount,
-    required this.isVerified,
-    required this.posts,
-    required this.reposted,
-    required this.privateShorts,
-    required this.saved,
-    required this.liked,
-    required this.isSeller,
-    required this.sellerId,
-    required this.isFollowing,
-    required this.followActionLabel,
-  });
-
   final String user;
   final String displayName;
   final String username;
   final String? avatarUrl;
   final String bio;
   final bool isOwnProfile;
-  final bool isDeleted;
-  final bool isBlocked;
-  final bool canMessage;
-  final bool canToggleFollow;
-  final bool canOpenConnections;
   final bool isLive;
   final String? liveId;
   final int followingCount;
@@ -145,7 +110,32 @@ class _ProfileViewData {
   final String followActionLabel;
 
   bool get canVisitSellerStore =>
-      canMessage && isSeller && (sellerId?.trim().isNotEmpty ?? false);
+      !isOwnProfile && isSeller && (sellerId?.trim().isNotEmpty ?? false);
+
+  const _ProfileViewData({
+    required this.user,
+    required this.displayName,
+    required this.username,
+    required this.avatarUrl,
+    required this.bio,
+    required this.isOwnProfile,
+    required this.isLive,
+    required this.liveId,
+    required this.followingCount,
+    required this.followersCount,
+    required this.friendsCount,
+    required this.likesCount,
+    required this.isVerified,
+    required this.posts,
+    required this.reposted,
+    required this.privateShorts,
+    required this.saved,
+    required this.liked,
+    required this.isSeller,
+    required this.sellerId,
+    required this.isFollowing,
+    required this.followActionLabel,
+  });
 
   factory _ProfileViewData.fallback({
     required String targetUser,
@@ -157,12 +147,12 @@ class _ProfileViewData {
     String? fallbackDisplayName,
     String? fallbackAvatar,
   }) {
-    final String displayName = _ProfileLoader._firstNonEmpty(<Object?>[
+    final displayName = _ProfileLoader._firstNonEmpty([
       fallbackDisplayName,
       isOwnProfile ? currentDisplayName : null,
       targetUser,
     ]);
-    final String avatar = _ProfileLoader._firstNonEmpty(<Object?>[
+    final avatar = _ProfileLoader._firstNonEmpty([
       fallbackAvatar,
       isOwnProfile ? currentAvatar : null,
     ]);
@@ -174,11 +164,6 @@ class _ProfileViewData {
       avatarUrl: buildFileUrl(avatar),
       bio: isOwnProfile ? (currentBio?.trim() ?? '') : '',
       isOwnProfile: isOwnProfile,
-      isDeleted: false,
-      isBlocked: false,
-      canMessage: false,
-      canToggleFollow: false,
-      canOpenConnections: false,
       isLive: false,
       liveId: null,
       followingCount: 0,
@@ -201,14 +186,41 @@ class _ProfileViewData {
 
 @immutable
 class _SellerProfileLite {
-  const _SellerProfileLite({required this.sellerId, required this.user});
-
   final String sellerId;
   final String user;
+
+  const _SellerProfileLite({required this.sellerId, required this.user});
+}
+
+@immutable
+class _RelationshipLite {
+  final bool isFollowing;
+  final bool isFollowedBy;
+  final bool isFriend;
+  final String relationshipStatus;
+  final String actionLabel;
+  final int? targetTotalFollowers;
+
+  const _RelationshipLite({
+    required this.isFollowing,
+    required this.isFollowedBy,
+    required this.isFriend,
+    required this.relationshipStatus,
+    required this.actionLabel,
+    required this.targetTotalFollowers,
+  });
+
+  const _RelationshipLite.self()
+    : isFollowing = false,
+      isFollowedBy = false,
+      isFriend = false,
+      relationshipStatus = 'self',
+      actionLabel = '',
+      targetTotalFollowers = null;
 }
 
 String _usernameFromEmail(String value) {
-  final String clean = value.trim();
+  final clean = value.trim();
   if (clean.contains('@')) return clean.split('@').first;
   return clean;
 }

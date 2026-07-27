@@ -121,9 +121,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final result = await ref
           .read(authControllerProvider.notifier)
           .signInWithGoogle(
-            country: prefs.countryCode,
-            language: prefs.languageCode,
-            currency: prefs.currencyCode,
+            country: prefs.countryId,
+            language: prefs.languageId,
+            currency: prefs.currencyId,
           );
 
       if (!mounted) return;
@@ -148,9 +148,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final result = await ref
           .read(authControllerProvider.notifier)
           .signInWithApple(
-            country: prefs.countryCode,
-            language: prefs.languageCode,
-            currency: prefs.currencyCode,
+            country: prefs.countryId,
+            language: prefs.languageId,
+            currency: prefs.currencyId,
           );
 
       if (!mounted) return;
@@ -202,7 +202,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   children: [
                     AppFormField(
-                      key: const Key('auth.login.identifier'),
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
                       label: 'Email or phone',
@@ -216,7 +215,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 16),
 
                     AppPasswordFormField(
-                      key: const Key('auth.login.password'),
                       controller: _passwordCtrl,
                       label: l10n.auth_password,
                       validator: Validators.passwordRequired,
@@ -232,7 +230,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Row(
                 children: [
                   Checkbox(
-                    key: const Key('auth.login.rememberMe'),
                     value: _rememberMe,
                     onChanged: (v) => setState(() => _rememberMe = v ?? true),
                     activeColor: scheme.primary,
@@ -252,7 +249,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 10),
 
               PrimaryButton(
-                key: const Key('auth.login.submit'),
                 text: l10n.auth_login_button,
                 onPressed: _busy ? null : _login,
                 loading: _loginLoading,

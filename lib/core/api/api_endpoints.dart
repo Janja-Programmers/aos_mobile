@@ -124,6 +124,8 @@ class ApiEndpoints {
   // Localization Endpoints
   static const String getLocaleBundleEndpoint =
       '/api/method/aos.api.v1.localization.get_locale_bundle';
+  static const String resolveLocaleContextEndpoint =
+      '/api/method/aos.api.v1.localization.resolve_locale_context';
   static const String getMyPreferencesEndpoint =
       '/api/method/aos.api.v1.accounts.get_my_preference';
   static const String updatePreferencesEndpoint =

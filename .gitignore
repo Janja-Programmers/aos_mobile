@@ -1,106 +1,65 @@
-# -----------------------------------------------------------------------------
-# Secrets and local environment
-# -----------------------------------------------------------------------------
-
-.env
-.env.*
-!.env.example
-
+# Miscellaneous
 *.jks
 *.keystore
-*.p12
-*.pfx
-*.mobileprovision
-
-/android/key.properties
-/key.properties
-
-# -----------------------------------------------------------------------------
-# Miscellaneous
-# -----------------------------------------------------------------------------
-
 *.class
 *.log
 *.pyc
 *.swp
-
 .DS_Store
 .atom/
-.history/
+.build/
+.kotlin/
+.buildlog/
+.history
 .svn/
 .swiftpm/
+.vscode/
 migrate_working_dir/
 
-.build/
-.buildlog/
-.kotlin/
-
-# -----------------------------------------------------------------------------
-# IDEs and editors
-# -----------------------------------------------------------------------------
-
+# IntelliJ related
 *.iml
 *.ipr
 *.iws
 .idea/
+.env
 
-# Ignore all VS Code settings except intentionally shared team configuration.
-.vscode/*
-!.vscode/extensions.json
-!.vscode/launch.json
-!.vscode/tasks.json
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
 
-# Use `.vscode/` instead if no VS Code configuration should be committed.
-
-# -----------------------------------------------------------------------------
-# Flutter, Dart, and Pub
-# -----------------------------------------------------------------------------
-
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
 .dart_tool/
-.flutter-plugins
 .flutter-plugins-dependencies
-.packages
 .pub-cache/
 .pub/
-
 /build/
-**/doc/api/
 /coverage/
 
-**/ios/Flutter/.last_build_id
-
-# -----------------------------------------------------------------------------
-# Generated Flutter localization
-# -----------------------------------------------------------------------------
-
-/lib/l10n/gen/
-untranslated.txt
-
-# -----------------------------------------------------------------------------
-# Symbolication and obfuscation
-# -----------------------------------------------------------------------------
-
+# Symbolication related
 app.*.symbols
+
+# Obfuscation related
 app.*.map.json
 
-# -----------------------------------------------------------------------------
-# Android generated and local files
-# -----------------------------------------------------------------------------
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# xcode related
+/ios/Flutter/flutter_export_environment.sh
+/ios/Flutter/Generated.xcconfig
+
+# Flutter generated localization
+lib/l10n/gen/*.dart
+untranslated.txt
 
 /android/local.properties
 /android/.gradle/
 /android/app/build/
-/android/app/debug/
-/android/app/profile/
-/android/app/release/
-
-# -----------------------------------------------------------------------------
-# iOS and Xcode generated/local files
-# -----------------------------------------------------------------------------
-
 /ios/Pods/
 /ios/.symlinks/
-/ios/Flutter/flutter_export_environment.sh
-/ios/Flutter/Generated.xcconfig
-
 *.xcuserstate

@@ -72,7 +72,6 @@ class _RestoreAccountScreenState extends ConsumerState<RestoreAccountScreen> {
             ),
             const SizedBox(height: 18),
             TextField(
-              key: const Key('restore_account_email_field'),
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
@@ -83,7 +82,6 @@ class _RestoreAccountScreenState extends ConsumerState<RestoreAccountScreen> {
             if (_requested) ...[
               const SizedBox(height: 12),
               TextField(
-                key: const Key('restore_account_otp_field'),
                 controller: _otpController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
@@ -94,7 +92,6 @@ class _RestoreAccountScreenState extends ConsumerState<RestoreAccountScreen> {
             ],
             const SizedBox(height: 22),
             ElevatedButton(
-              key: const Key('restore_account_submit_button'),
               onPressed: _loading ? null : (_requested ? _restore : _request),
               child: _loading
                   ? const SizedBox(

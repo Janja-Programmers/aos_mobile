@@ -5,10 +5,10 @@ import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../fakes/recording_http_client_adapter.dart';
 import '../../fakes/scripted_accounts_api.dart';
 import '../../helpers/account_profile_api_harness.dart';
 import '../../helpers/account_profile_fixture.dart';
-import '../../../../fakes/recording_http_client_adapter.dart';
 
 void main() {
   late AccountProfileApiHarness apiHarness;
@@ -35,6 +35,7 @@ void main() {
 
     expect(controller.state.loading, isTrue);
     final result = await operation;
+    // ignore: avoid_dynamic_calls
     expect(result.isRight, isTrue);
     expect(controller.state.loading, isFalse);
     expect(controller.state.profile['user'], 'owner@example.invalid');

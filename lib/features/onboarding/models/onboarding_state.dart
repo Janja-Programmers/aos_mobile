@@ -1,37 +1,67 @@
+import 'package:africaonlinestores/features/localization/models/localization_models.dart';
+
 class OnboardingState {
-  final int step;
-
-  final String? languageCode;
-  final String? countryCode;
-  final String? currencyCode;
-
-  final bool didInitDefaults;
-
   const OnboardingState({
     required this.step,
-    this.languageCode,
-    this.countryCode,
-    this.currencyCode,
-    required this.didInitDefaults,
+    required this.didInitialize,
+    required this.isCompleting,
+    this.language,
+    this.country,
+    this.currency,
+    this.initialResolvedCountry,
+    this.error,
   });
 
   factory OnboardingState.initial() {
-    return const OnboardingState(step: 0, didInitDefaults: false);
+    return const OnboardingState(
+      step: 0,
+      didInitialize: false,
+      isCompleting: false,
+    );
   }
+
+  final int step;
+  final LanguageOption? language;
+  final CountryOption? country;
+  final CurrencyOption? currency;
+  final CountryOption? initialResolvedCountry;
+  final bool didInitialize;
+  final bool isCompleting;
+  final String? error;
+
+  String? get languageId => language?.canonicalId;
+  String? get countryId => country?.canonicalId;
+  String? get currencyId => currency?.canonicalId;
+
+  bool get hasValidSelection =>
+      language != null &&
+      country != null &&
+      currency != null &&
+      language!.enabled &&
+      country!.enabled &&
+      currency!.enabled;
 
   OnboardingState copyWith({
     int? step,
-    String? languageCode,
-    String? countryCode,
-    String? currencyCode,
-    bool? didInitDefaults,
+    LanguageOption? language,
+    CountryOption? country,
+    CurrencyOption? currency,
+    CountryOption? initialResolvedCountry,
+    bool? didInitialize,
+    bool? isCompleting,
+    String? error,
+    bool clearError = false,
   }) {
     return OnboardingState(
       step: step ?? this.step,
-      languageCode: languageCode ?? this.languageCode,
-      countryCode: countryCode ?? this.countryCode,
-      currencyCode: currencyCode ?? this.currencyCode,
-      didInitDefaults: didInitDefaults ?? this.didInitDefaults,
+      language: language ?? this.language,
+      country: country ?? this.country,
+      currency: currency ?? this.currency,
+      initialResolvedCountry:
+          initialResolvedCountry ?? this.initialResolvedCountry,
+      didInitialize: didInitialize ?? this.didInitialize,
+      isCompleting: isCompleting ?? this.isCompleting,
+      error: clearError ? null : error ?? this.error,
     );
   }
 }

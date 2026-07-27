@@ -78,7 +78,6 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     final userImage = fetchedImage.isNotEmpty ? fetchedImage : user.userImage;
 
     return AccountHeaderCard(
-      key: const Key('account_header_card'),
       fullName: fullName,
       email: email,
       initials: _initialsFromName(fullName),
@@ -153,7 +152,6 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             if (isAuthenticated && !accountVerified) ...[
               const SizedBox(height: 14),
               AccountVerificationBanner(
-                key: const Key('account_verification_banner'),
                 title: bannerPresentation.title,
                 subtitle: bannerPresentation.subtitle,
                 tone: bannerPresentation.tone,
@@ -282,7 +280,6 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               SizedBox(
                 height: 54,
                 child: OutlinedButton.icon(
-                  key: const Key('account_logout_button'),
                   onPressed: () async {
                     final confirmed = await showModalBottomSheet<bool>(
                       context: context,

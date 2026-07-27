@@ -4,7 +4,6 @@ import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
-import 'package:africaonlinestores/features/auth/domain/auth_contract.dart';
 import 'package:dio/dio.dart';
 
 class AuthApi {
@@ -130,13 +129,13 @@ class AuthApi {
     required String password,
   }) async {
     try {
-      final MobileLoginRequest request = MobileLoginRequest(
-        identifier: identifier,
-        password: password,
-      );
       final res = await _client.post(
         ApiEndpoints.loginEndpoint,
-        data: request.toJson(),
+        data: {
+          'identifier': identifier,
+          'password': password,
+          'client_type': 'mobile',
+        },
       );
       return unwrapFrappe(res);
     } catch (e) {

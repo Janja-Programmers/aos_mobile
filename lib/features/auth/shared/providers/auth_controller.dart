@@ -9,10 +9,10 @@ import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/auth/data/apple_auth_service.dart';
 import 'package:africaonlinestores/features/auth/data/auth_api.dart';
 import 'package:africaonlinestores/features/auth/data/google_auth_service.dart';
-import 'package:africaonlinestores/features/auth/domain/auth_contract.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/preferences/data/preferences_api_provider.dart';
+import 'package:africaonlinestores/features/preferences/models/active_preference_snapshot.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -43,22 +43,18 @@ class AuthController extends StateNotifier<AuthState> {
     required AuthApi api,
     required ApiClient apiClient,
     required SessionStorage storage,
-    DateTime Function()? now,
   }) : _ref = ref,
        _api = api,
        _apiClient = apiClient,
        _storage = storage,
-       _now = now ?? DateTime.now,
        super(const AuthLoading());
 
   final Ref _ref;
   final AuthApi _api;
   final ApiClient _apiClient;
   final SessionStorage _storage;
-  final DateTime Function() _now;
 
   Future<bool>? _refreshingSession;
-  Future<Either<Failure, void>>? _loginInFlight;
   StreamSubscription<void>? _sessionSub;
 
   bool _isHydrating = false;
@@ -94,6 +90,9 @@ class AuthController extends StateNotifier<AuthState> {
       final sid = await _storage.getSid();
 
       if (sid == null || sid.isEmpty) {
+        await _ref
+            .read(userPreferenceControllerProvider.notifier)
+            .restoreGuestSnapshot();
         state = const AuthGuest();
         return;
       }
@@ -148,12 +147,10 @@ class AuthController extends StateNotifier<AuthState> {
             : const _SessionProbe.transient();
       }
 
-      final Map<String, dynamic> data = asJsonMap(payload['data']);
-      final AuthSessionPayload authPayload = AuthSessionPayload.fromData(data);
+      final data = asJsonMap(payload['data']);
+      final user = asJsonMap(data['user']);
 
-      if (!authPayload.hasUser || authPayload.isExplicitlyUnauthenticated) {
-        return const _SessionProbe.invalid();
-      }
+      if (user.isEmpty) return const _SessionProbe.invalid();
 
       return _SessionProbe.valid(data);
     } catch (e) {
@@ -166,7 +163,7 @@ class AuthController extends StateNotifier<AuthState> {
   // SESSION REFRESH
   // ---------------------------------------------------------------------------
   Future<bool> _refreshSession() async {
-    final DateTime now = _now();
+    final now = DateTime.now();
 
     if (_lastRefresh != null &&
         now.difference(_lastRefresh!) < _refreshCooldown) {
@@ -209,42 +206,18 @@ class AuthController extends StateNotifier<AuthState> {
     required String identifier,
     required String password,
     required bool rememberMe,
-  }) {
-    final Future<Either<Failure, void>>? activeLogin = _loginInFlight;
-    if (activeLogin != null) {
-      return activeLogin;
-    }
-
-    final Future<Either<Failure, void>> operation = _performLogin(
-      identifier: identifier,
-      password: password,
-      rememberMe: rememberMe,
-    );
-    _loginInFlight = operation;
-
-    return operation.whenComplete(() {
-      if (identical(_loginInFlight, operation)) {
-        _loginInFlight = null;
-      }
-    });
-  }
-
-  Future<Either<Failure, void>> _performLogin({
-    required String identifier,
-    required String password,
-    required bool rememberMe,
   }) async {
-    final String cleanIdentifier = identifier.trim().toLowerCase();
+    final cleanIdentifier = identifier.trim().toLowerCase();
 
     await _storage.clearSid();
     await _apiClient.clearSid();
 
-    final Either<Failure, Map<String, dynamic>> response = await _api.login(
+    final res = await _api.login(
       identifier: cleanIdentifier,
       password: password,
     );
-    final Either<Failure, void> finished = await _finishAuthResponse(
-      response,
+    final finished = await _finishAuthResponse(
+      res,
       fallbackMessage: 'Login failed.',
     );
 
@@ -280,9 +253,11 @@ class AuthController extends StateNotifier<AuthState> {
     await _apiClient.clearSid();
 
     _refreshingSession = null;
-    _loginInFlight = null;
     _isHydrating = false;
 
+    await _ref
+        .read(userPreferenceControllerProvider.notifier)
+        .restoreGuestSnapshot();
     state = const AuthGuest();
   }
 
@@ -299,20 +274,30 @@ class AuthController extends StateNotifier<AuthState> {
       await _apiClient.setSid(sid);
       await _storage.setSid(sid);
 
-      final AuthSessionPayload payload = AuthSessionPayload.fromData(authData);
-      final AuthSellerSummary seller = AuthSellerSummary.fromMap(
-        payload.seller,
+      final synchronizedPreferences = await _syncUserPreferencesAfterLogin(
+        authData,
       );
+      if (synchronizedPreferences == null) {
+        throw StateError(
+          'Authenticated account preferences could not be synchronized.',
+        );
+      }
+
+      final user = asJsonMap(authData['user']);
+      final preferences = synchronizedPreferences;
+      final seller = AuthSellerSummary.fromMap(asJsonMap(authData['seller']));
+      final roles = asJsonList(authData['roles'])
+          .map((role) => role.toString())
+          .where((role) => role.trim().isNotEmpty)
+          .toList(growable: false);
 
       state = AuthAuthenticated(
-        user: AuthUser.fromMap(payload.user),
+        user: AuthUser.fromMap(user),
         sid: sid,
-        preferences: payload.preferences,
-        roles: payload.roles,
+        preferences: preferences,
+        roles: roles,
         seller: seller,
       );
-
-      unawaited(_syncUserPreferencesAfterLogin(authData));
     } finally {
       _isHydrating = false;
     }
@@ -423,30 +408,38 @@ class AuthController extends StateNotifier<AuthState> {
       );
     }
 
-    final Map<String, dynamic> data = asJsonMap(payload['data']);
-    final AuthSessionPayload authPayload = AuthSessionPayload.fromData(data);
+    final data = asJsonMap(payload['data']);
+    final sid = _sessionSid(data);
 
-    if (authPayload.isExplicitlyUnauthenticated) {
-      return Either.left(
-        const Failure(
-          'Login failed. The returned session was not authenticated.',
-        ),
-      );
-    }
-
-    if (authPayload.sid.isEmpty) {
+    if (sid.isEmpty) {
       return Either.left(
         const Failure('Login failed. No session was returned.'),
       );
     }
 
-    if (!authPayload.hasUser) {
+    final user = asJsonMap(data['user']);
+    if (user.isEmpty) {
       return Either.left(const Failure('Login failed. User data was missing.'));
     }
 
-    await _completeLogin(sid: authPayload.sid, authData: data);
+    try {
+      await _completeLogin(sid: sid, authData: data);
+    } catch (error) {
+      appLogger.e('[Auth] Login hydration failed: $error');
+      await _clearSession();
+      return Either.left(
+        const Failure(
+          'Login succeeded, but account preferences could not be restored.',
+        ),
+      );
+    }
 
     return Either.right(null);
+  }
+
+  String _sessionSid(Map<String, dynamic> authData) {
+    final session = asJsonMap(authData['session']);
+    return asString(session['sid']).trim();
   }
 
   Failure _failureFromPayload(
@@ -483,111 +476,72 @@ class AuthController extends StateNotifier<AuthState> {
   // ---------------------------------------------------------------------------
   // USER PREFERENCES SYNC
   // ---------------------------------------------------------------------------
-  Future<void> _syncUserPreferencesAfterLogin(
+  Future<Map<String, dynamic>?> _syncUserPreferencesAfterLogin(
     Map<String, dynamic> authData,
   ) async {
-    final syncedFromAuthPayload = await _syncUserPreferencesFromAuthData(
+    final preferencesFromAuth = await _syncUserPreferencesFromAuthData(
       authData,
     );
-    if (!syncedFromAuthPayload) {
-      await _syncUserPreferences();
-    }
+    if (preferencesFromAuth != null) return preferencesFromAuth;
+    return _syncUserPreferences();
   }
 
-  Future<bool> _syncUserPreferencesFromAuthData(
+  Future<Map<String, dynamic>?> _syncUserPreferencesFromAuthData(
     Map<String, dynamic> authData,
   ) async {
     final preferences = asJsonMap(authData['preferences']);
-    if (preferences.isEmpty) return false;
-
-    final countryCode = _preferenceValue(preferences['country']);
-    final languageCode = _preferenceValue(preferences['language']);
-    final currencyCode = _preferenceValue(preferences['currency']);
-
-    if (countryCode.isEmpty || languageCode.isEmpty || currencyCode.isEmpty) {
-      return false;
-    }
+    if (preferences.isEmpty) return null;
 
     try {
-      final prefCtrl = _ref.read(userPreferenceControllerProvider.notifier);
-      await prefCtrl.syncFromServer(
-        countryCode: countryCode,
-        languageCode: languageCode,
-        currencyCode: currencyCode,
-      );
-      return true;
-    } catch (e) {
-      appLogger.e('[Auth] Prefs sync from auth payload failed: $e');
-      return false;
+      await _ref
+          .read(userPreferenceControllerProvider.notifier)
+          .syncFromServerPreferences(
+            preferences,
+            authority: PreferenceAuthority.authenticatedLogin,
+          );
+      return preferences;
+    } catch (error) {
+      appLogger.e('[Auth] Prefs sync from auth payload failed: $error');
+      return null;
     }
   }
 
-  String _preferenceValue(Object? raw) {
-    if (raw is Map) {
-      final map = asJsonMap(raw);
-      final value = asString(map['code']).trim();
-      if (value.isNotEmpty) return value;
-      final name = asString(map['name']).trim();
-      if (name.isNotEmpty) return name;
-      return asString(map['id']).trim();
-    }
-
-    return asString(raw).trim();
-  }
-
-  Future<void> _syncUserPreferences() async {
+  Future<Map<String, dynamic>?> _syncUserPreferences() async {
     final prefApi = _ref.read(userPreferenceApiProvider);
     final prefCtrl = _ref.read(userPreferenceControllerProvider.notifier);
 
     const maxAttempts = 2;
-
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         appLogger.i('[Auth] Sync prefs attempt $attempt');
-
-        final res = await prefApi.getMyPreferences();
-
-        if (res.isLeft) {
+        final result = await prefApi.getMyPreferences();
+        if (result.isLeft) {
           appLogger.w('[Auth] Prefs fetch failed (attempt $attempt)');
           continue;
         }
 
-        final payload = res.rightOrNull ?? {};
+        final payload = result.rightOrNull ?? <String, dynamic>{};
         if (payload['ok'] != true) {
           appLogger.w('[Auth] Prefs invalid payload');
-          return;
+          continue;
         }
 
-        final data = asJsonMap(payload['data'] ?? {});
+        final data = asJsonMap(payload['data']);
+        if (data.isEmpty) continue;
 
-        final country = asJsonMap(data['country']);
-        final language = asJsonMap(data['language']);
-        final currency = asJsonMap(data['currency']);
-
-        await prefCtrl.syncFromServer(
-          countryCode: asString(
-            country['code'],
-            fallback: asString(country['id']),
-          ),
-          languageCode: asString(
-            language['code'],
-            fallback: asString(language['id']),
-          ),
-          currencyCode: asString(
-            currency['code'],
-            fallback: asString(currency['name']),
-          ),
+        await prefCtrl.syncFromServerPreferences(
+          data,
+          authority: PreferenceAuthority.authenticatedMe,
         );
-
-        return;
-      } catch (e) {
-        appLogger.e('[Auth] Prefs sync error (attempt $attempt): $e');
-
-        if (attempt == maxAttempts) return;
-
-        await Future<void>.delayed(const Duration(milliseconds: 400));
+        return data;
+      } catch (error) {
+        appLogger.e('[Auth] Prefs sync error (attempt $attempt): $error');
+        if (attempt < maxAttempts) {
+          await Future<void>.delayed(const Duration(milliseconds: 400));
+        }
       }
     }
+    return null;
   }
 
   Future<Either<Failure, String>> register({
@@ -771,7 +725,6 @@ class AuthController extends StateNotifier<AuthState> {
   void dispose() {
     unawaited(_sessionSub?.cancel());
     _refreshingSession = null;
-    _loginInFlight = null;
     super.dispose();
   }
 }

@@ -1,32 +1,22 @@
 import 'dart:ui';
 
+import 'package:africaonlinestores/features/localization/models/supported_ui_languages.dart';
 import 'package:africaonlinestores/features/preferences/state/user_preference_state.dart';
 import 'package:flutter/widgets.dart';
 
-const List<Locale> kSupportedLocales = <Locale>[
-  Locale('en'),
-  Locale('sw'),
-  Locale('fr'),
-  Locale('ar'),
-  Locale('zh'),
-];
+const List<Locale> kSupportedLocales = kSupportedUiLocales;
 
-Locale? resolveLocale(UserPreferenceState? prefs) {
-  final raw = prefs?.languageCode;
+Locale? resolveLocale(UserPreferenceState? preferences) {
+  final raw = preferences?.snapshot?.language.displayCode;
   if (raw == null) return null;
 
-  final code = raw.trim().toLowerCase();
-  if (code.isEmpty) return null;
-
-  // Example: if someone accidentally saves "en-US", normalize to "en"
-  final normalized = code.split(RegExp('[-_]')).first;
-
-  // Validate against supported locales
-  for (final loc in kSupportedLocales) {
-    if (loc.languageCode.toLowerCase() == normalized) {
-      return loc;
-    }
+  final normalized = normalizeUiLanguageCode(raw);
+  if (normalized.isEmpty || !kSupportedUiLanguageCodes.contains(normalized)) {
+    return null;
   }
 
-  return const Locale('en');
+  for (final locale in kSupportedLocales) {
+    if (locale.languageCode.toLowerCase() == normalized) return locale;
+  }
+  return null;
 }

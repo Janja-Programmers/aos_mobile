@@ -1,5 +1,8 @@
 import 'package:africaonlinestores/core/storage/onboarding_storage.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/localization/models/localization_models.dart';
+import 'package:africaonlinestores/features/preferences/models/active_preference_snapshot.dart';
 import 'package:africaonlinestores/features/preferences/state/user_preference_state.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -10,108 +13,139 @@ final userPreferenceControllerProvider =
     });
 
 class UserPreferenceController extends StateNotifier<UserPreferenceState> {
-  final OnboardingStorage _storage;
-
   UserPreferenceController(this._storage)
     : super(UserPreferenceState.initial()) {
     _load();
   }
 
-  /// Load saved preferences from SharedPreferences
+  final OnboardingStorage _storage;
+
   void _load() {
-    final prefs = _storage.loadPreferences();
-    state = prefs;
+    state = _storage.loadPreferences();
   }
 
-  /// Sync preferences received from API (after login)
-  Future<void> syncFromServer({
-    required String languageCode,
-    required String countryCode,
-    required String currencyCode,
+  Future<void> initializeGuestFromResolution(
+    ResolvedLocaleContext context,
+  ) async {
+    if (state.hasValidPreference) return;
+    final snapshot = ActivePreferenceSnapshot.fromResolvedContext(context);
+    await _persist(snapshot);
+    await _saveGuestBackup(snapshot);
+  }
+
+  Future<void> replaceGuestSnapshot(ActivePreferenceSnapshot snapshot) async {
+    if (!snapshot.isValid || !snapshot.isGuest) {
+      throw const FormatException('A valid guest snapshot is required.');
+    }
+    await _persist(snapshot);
+    await _saveGuestBackup(snapshot);
+  }
+
+  Future<void> replaceAuthenticatedSnapshot(
+    ActivePreferenceSnapshot snapshot,
+  ) async {
+    if (!snapshot.isValid || snapshot.isGuest) {
+      throw const FormatException(
+        'A valid authenticated snapshot is required.',
+      );
+    }
+
+    final current = state.snapshot;
+    if (current != null && current.isValid && current.isGuest) {
+      await _saveGuestBackup(current);
+    }
+    await _persist(snapshot);
+  }
+
+  Future<void> syncFromServerPreferences(
+    Map<String, dynamic> preferences, {
+    required PreferenceAuthority authority,
   }) async {
-    state = state.copyWith(isLoading: true);
-
-    final updated = UserPreferenceState(
-      languageCode: UserPreferenceState.normalizeLanguageCode(languageCode),
-      countryCode: UserPreferenceState.normalizeCountryCode(countryCode),
-      currencyCode: UserPreferenceState.normalizeCurrencyCode(currencyCode),
+    final snapshot = ActivePreferenceSnapshot.fromServerPreferences(
+      preferences,
+      authority: authority,
     );
-
-    await _storage.savePreferences(updated);
-
-    state = updated.copyWith(isLoading: false);
+    await replaceAuthenticatedSnapshot(snapshot);
   }
 
-  /// Update language
-  Future<void> updateLanguageCode(String languageCode) async {
-    state = state.copyWith(isSaving: true);
+  Future<bool> restoreGuestSnapshot() async {
+    final guest = _storage.loadGuestSnapshot();
+    if (guest == null || !guest.isValid) {
+      final current = state.snapshot;
+      if (current != null && current.isValid && current.isGuest) return true;
 
-    final updated = state.copyWith(
-      languageCode: UserPreferenceState.normalizeLanguageCode(languageCode),
+      await _storage.clearActivePreference();
+      state = UserPreferenceState.empty();
+      return false;
+    }
+
+    final restored = guest.copyWith(
+      authority: PreferenceAuthority.offlineRestoration,
     );
-
-    await _storage.savePreferences(updated);
-
-    state = updated.copyWith(isSaving: false);
+    await _persist(restored);
+    return true;
   }
 
-  /// Update country
-  Future<void> updateCountryCode(String countryCode) async {
-    state = state.copyWith(isSaving: true);
-
-    final updated = state.copyWith(
-      countryCode: UserPreferenceState.normalizeCountryCode(countryCode),
+  Future<void> updateLanguage(LanguageOption language) async {
+    final current = _requireSnapshot();
+    final updated = current.copyWith(
+      language: PreferenceSelection.fromLanguage(
+        language,
+        source: LocaleResolutionSource.request,
+      ),
+      authority: PreferenceAuthority.guestManual,
     );
-
-    await _storage.savePreferences(updated);
-
-    state = updated.copyWith(isSaving: false);
+    await replaceGuestSnapshot(updated);
   }
 
-  /// Update currency
-  Future<void> updateCurrencyCode(String currencyCode) async {
-    state = state.copyWith(isSaving: true);
-
-    final updated = state.copyWith(
-      currencyCode: UserPreferenceState.normalizeCurrencyCode(currencyCode),
+  Future<void> updateCountry(CountryOption country) async {
+    final current = _requireSnapshot();
+    final updated = current.copyWith(
+      country: PreferenceSelection.fromCountry(
+        country,
+        source: LocaleResolutionSource.request,
+      ),
+      authority: PreferenceAuthority.guestManual,
     );
-
-    await _storage.savePreferences(updated);
-
-    state = updated.copyWith(isSaving: false);
+    await replaceGuestSnapshot(updated);
   }
 
-  /// Update multiple preferences at once
-  Future<void> updatePreferences({
-    String? languageCode,
-    String? countryCode,
-    String? currencyCode,
-  }) async {
-    state = state.copyWith(isSaving: true);
-
-    final updated = state.copyWith(
-      languageCode: languageCode == null
-          ? null
-          : UserPreferenceState.normalizeLanguageCode(languageCode),
-      countryCode: countryCode == null
-          ? null
-          : UserPreferenceState.normalizeCountryCode(countryCode),
-      currencyCode: currencyCode == null
-          ? null
-          : UserPreferenceState.normalizeCurrencyCode(currencyCode),
+  Future<void> updateCurrency(CurrencyOption currency) async {
+    final current = _requireSnapshot();
+    final updated = current.copyWith(
+      currency: PreferenceSelection.fromCurrency(
+        currency,
+        source: LocaleResolutionSource.request,
+      ),
+      authority: PreferenceAuthority.guestManual,
     );
-
-    await _storage.savePreferences(updated);
-
-    state = updated.copyWith(isSaving: false);
+    await replaceGuestSnapshot(updated);
   }
 
-  /// Reset preferences (dev/testing only)
-  Future<void> reset() async {
-    state = state.copyWith(isSaving: true);
+  Future<void> _saveGuestBackup(ActivePreferenceSnapshot snapshot) async {
+    try {
+      await _storage.saveGuestSnapshot(snapshot);
+    } on Exception catch (error) {
+      appLogger.w('[Preferences] Guest backup could not be persisted: $error');
+    }
+  }
 
-    await _storage.clearAll();
+  Future<void> _persist(ActivePreferenceSnapshot snapshot) async {
+    state = state.copyWith(isSaving: true, clearError: true);
+    try {
+      await _storage.saveActiveSnapshot(snapshot);
+      state = UserPreferenceState(snapshot: snapshot);
+    } catch (error) {
+      state = state.copyWith(isSaving: false, error: error.toString());
+      rethrow;
+    }
+  }
 
-    state = UserPreferenceState.initial();
+  ActivePreferenceSnapshot _requireSnapshot() {
+    final current = state.snapshot;
+    if (current == null || !current.isValid) {
+      throw StateError('A valid active preference snapshot is required.');
+    }
+    return current;
   }
 }

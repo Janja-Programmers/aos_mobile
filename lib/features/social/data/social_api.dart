@@ -146,9 +146,9 @@ class SocialApi {
         );
       }
 
-      final res = await _apiClient.get(
+      final res = await _apiClient.post(
         ApiEndpoints.getRelationshipStatusEndpoint,
-        queryParameters: <String, dynamic>{'target_user': cleanTarget},
+        data: {'target_user': cleanTarget},
       );
 
       final result = unwrapFrappe(res);
@@ -192,15 +192,20 @@ class SocialApi {
     required String parseFailureMessage,
     required String fallbackFailureMessage,
   }) async {
-    // Backend connection-list endpoints are scoped to the authenticated user.
-    // Keep [targetUser] for source compatibility, but never send unsupported aliases.
     try {
       final res = await _apiClient.get(
         endpoint,
-        queryParameters: <String, dynamic>{
+        queryParameters: {
           'limit': limit,
           'start': start,
-          if (query?.trim().isNotEmpty ?? false) 'search': query!.trim(),
+          if (targetUser?.trim().isNotEmpty ?? false) ...{
+            'target_user': targetUser!.trim(),
+            'user': targetUser.trim(),
+          },
+          if (query?.trim().isNotEmpty ?? false) ...{
+            'q': query!.trim(),
+            'search': query.trim(),
+          },
         },
       );
 

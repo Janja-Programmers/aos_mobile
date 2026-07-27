@@ -29,59 +29,56 @@ class PrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
     final isDisabled = onPressed == null || loading;
-
-    // Active (filled)
-    final activeBg = backgroundColor ?? colors.primary;
-    final activeFg = textColor ?? colors.white;
-
-    // Disabled (outlined)
-    final disBorder = disabledBorderColor ?? colors.textPrimary;
-    final disFg = disabledTextColor ?? colors.textPrimary;
-
-    final bgColor = isDisabled ? colors.surface : activeBg;
-    final fgColor = isDisabled ? disFg : activeFg;
-
-    // If disabled but we want a tap action, we can't rely on ElevatedButton's disabled state.
+    final activeBackground = backgroundColor ?? colors.primary;
+    final activeForeground = textColor ?? colors.white;
+    final disabledBorder = disabledBorderColor ?? colors.textPrimary;
+    final disabledForeground = disabledTextColor ?? colors.textPrimary;
+    final background = isDisabled ? colors.surface : activeBackground;
+    final foreground = isDisabled ? disabledForeground : activeForeground;
     final effectiveOnPressed = isDisabled ? onDisabledTap : onPressed;
 
     return SizedBox(
-      height: 56,
       width: double.infinity,
-      child: ElevatedButton(
-        onPressed: effectiveOnPressed,
-        style: ElevatedButton.styleFrom(
-          elevation: 0,
-          backgroundColor: bgColor,
-          foregroundColor: fgColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: isDisabled
-                ? BorderSide(color: disBorder, width: 1.2)
-                : BorderSide.none,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 56),
+        child: ElevatedButton(
+          onPressed: effectiveOnPressed,
+          style: ElevatedButton.styleFrom(
+            elevation: 0,
+            backgroundColor: background,
+            foregroundColor: foreground,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: isDisabled
+                  ? BorderSide(color: disabledBorder, width: 1.2)
+                  : BorderSide.none,
+            ),
           ),
-        ),
-        child: loading
-            ? SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation(fgColor),
-                ),
-              )
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 20, color: fgColor),
-                    const SizedBox(width: 8),
+          child: loading
+              ? SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(foreground),
+                  ),
+                )
+              : Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  children: <Widget>[
+                    if (icon != null) Icon(icon, size: 20, color: foreground),
+                    Text(
+                      text,
+                      style: context.p.copyWith(color: foreground),
+                      textAlign: TextAlign.center,
+                    ),
                   ],
-                  Text(text, style: context.p.copyWith(color: fgColor)),
-                ],
-              ),
+                ),
+        ),
       ),
     );
   }

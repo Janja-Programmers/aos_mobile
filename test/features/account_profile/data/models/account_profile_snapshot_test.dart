@@ -72,7 +72,7 @@ void main() {
 
     test('clamps malformed negative count values to zero', () {
       final AccountProfileSnapshot profile =
-          AccountProfileSnapshot.fromJson(<String, dynamic>{
+          AccountProfileSnapshot.fromJson(const <String, dynamic>{
             'user': 'safe@example.invalid',
             'total_followers': -4,
             'total_following': '-2',

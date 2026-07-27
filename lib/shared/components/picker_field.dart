@@ -33,55 +33,69 @@ class PickerField extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (effectiveLabel != null && effectiveLabel.isNotEmpty) ...[
+      children: <Widget>[
+        if (effectiveLabel != null && effectiveLabel.isNotEmpty) ...<Widget>[
           Text(
             required ? '$effectiveLabel *' : effectiveLabel,
             style: context.pStrong,
           ),
-          if (effectiveHelper != null && effectiveHelper.isNotEmpty) ...[
+          if (effectiveHelper != null &&
+              effectiveHelper.isNotEmpty) ...<Widget>[
             const SizedBox(height: 4),
             Text(effectiveHelper, style: context.pMuted),
           ],
           const SizedBox(height: 8),
         ],
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: BoxBorder.all(color: colors.border),
-              color: colors.surface,
-            ),
-            child: Row(
-              children: [
-                if (leading != null) ...[
-                  IconTheme(
-                    data: IconThemeData(color: colors.primary, size: 22),
-                    child: leading!,
-                  ),
-                  const SizedBox(width: 12),
-                ],
-                Expanded(
-                  child: Text(
-                    showValue ? value! : placeholder,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.p.copyWith(
-                      color: showValue ? colors.textPrimary : colors.textMuted,
-                      fontWeight: showValue ? FontWeight.w500 : null,
-                    ),
-                  ),
+        Semantics(
+          button: true,
+          enabled: onTap != null,
+          label: showValue ? value : placeholder,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(14),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: colors.border),
+                color: colors.surface,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
                 ),
-                trailing ??
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 20,
-                      color: colors.textPrimary,
+                child: Row(
+                  children: <Widget>[
+                    if (leading != null) ...<Widget>[
+                      IconTheme(
+                        data: IconThemeData(color: colors.primary, size: 22),
+                        child: leading!,
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: Text(
+                        showValue ? value! : placeholder,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.p.copyWith(
+                          color: showValue
+                              ? colors.textPrimary
+                              : colors.textMuted,
+                          fontWeight: showValue ? FontWeight.w500 : null,
+                        ),
+                      ),
                     ),
-              ],
+                    const SizedBox(width: 8),
+                    trailing ??
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 20,
+                          color: colors.textPrimary,
+                        ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

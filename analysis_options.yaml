@@ -45,6 +45,7 @@ analyzer:
     avoid_print: error
     only_throw_errors: error
     todo: warning
+    prefer_const_literals_to_create_immutables: ignore
 
 linter:
   rules:

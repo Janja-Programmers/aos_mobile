@@ -1,106 +1,70 @@
+import 'package:africaonlinestores/features/preferences/models/active_preference_snapshot.dart';
+
 class UserPreferenceState {
-  static final RegExp _countryIsoPattern = RegExp(r'^[A-Za-z]{2,3}$');
-
-  static String normalizeCountryCode(String value) {
-    final clean = value.trim();
-    if (_countryIsoPattern.hasMatch(clean)) return clean.toUpperCase();
-    return clean;
-  }
-
-  static String normalizeLanguageCode(String value) {
-    return value.trim().toLowerCase();
-  }
-
-  static String normalizeCurrencyCode(String value) {
-    return value.trim().toUpperCase();
-  }
-
-  final String languageCode;
-  final String countryCode;
-  final String currencyCode;
-
-  final bool isSaving;
-  final bool isLoading;
-  final String? error;
-
   const UserPreferenceState({
-    required this.languageCode,
-    required this.countryCode,
-    required this.currencyCode,
+    required this.snapshot,
     this.isSaving = false,
     this.isLoading = false,
     this.error,
   });
 
-  /// Default preferences used before API / storage load
   factory UserPreferenceState.initial() {
-    return const UserPreferenceState(
-      languageCode: 'en',
-      countryCode: 'US',
-      currencyCode: 'USD',
-    );
+    return const UserPreferenceState(snapshot: null, isLoading: true);
   }
 
-  factory UserPreferenceState.loading() {
-    return const UserPreferenceState(
-      languageCode: 'en',
-      countryCode: 'US',
-      currencyCode: 'USD',
-      isLoading: true,
-    );
+  factory UserPreferenceState.empty() {
+    return const UserPreferenceState(snapshot: null);
   }
 
   factory UserPreferenceState.error(String message) {
-    return UserPreferenceState(
-      languageCode: 'en',
-      countryCode: 'US',
-      currencyCode: 'USD',
-      error: message,
-    );
+    return UserPreferenceState(snapshot: null, error: message);
   }
 
+  final ActivePreferenceSnapshot? snapshot;
+  final bool isSaving;
+  final bool isLoading;
+  final String? error;
+
+  bool get hasValidPreference => snapshot?.isValid ?? false;
+
+  String get countryId => snapshot?.country.canonicalId ?? '';
+  String get languageId => snapshot?.language.canonicalId ?? '';
+  String get currencyId => snapshot?.currency.canonicalId ?? '';
+
+  // Display-code compatibility aliases for existing presentation consumers.
+  // Persistence and authentication must use the canonical *Id getters above.
+  String get countryCode => snapshot?.country.displayCode ?? '';
+  String get languageCode => snapshot?.language.displayCode ?? '';
+  String get currencyCode => snapshot?.currency.displayCode ?? '';
+
   UserPreferenceState copyWith({
-    String? languageCode,
-    String? countryCode,
-    String? currencyCode,
+    ActivePreferenceSnapshot? snapshot,
+    bool replaceSnapshot = false,
     bool? isSaving,
     bool? isLoading,
     String? error,
     bool clearError = false,
   }) {
     return UserPreferenceState(
-      languageCode: languageCode ?? this.languageCode,
-      countryCode: countryCode ?? this.countryCode,
-      currencyCode: currencyCode ?? this.currencyCode,
+      snapshot: replaceSnapshot ? snapshot : snapshot ?? this.snapshot,
       isSaving: isSaving ?? this.isSaving,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : error ?? this.error,
     );
   }
 
-  /// API payload format
   Map<String, dynamic> toJson() {
-    return {
-      'country': countryCode,
-      'language': languageCode,
-      'currency': currencyCode,
+    return <String, dynamic>{
+      'country': countryId,
+      'language': languageId,
+      'currency': currencyId,
     };
-  }
-
-  factory UserPreferenceState.fromJson(Map<String, dynamic> json) {
-    return UserPreferenceState(
-      countryCode: normalizeCountryCode((json['country'] ?? '').toString()),
-      languageCode: normalizeLanguageCode(
-        (json['language'] ?? 'en').toString(),
-      ),
-      currencyCode: normalizeCurrencyCode(
-        (json['currency'] ?? 'USD').toString(),
-      ),
-    );
   }
 
   @override
   String toString() {
-    return 'UserPreferenceState(countryCode: $countryCode, languageCode: $languageCode, currencyCode: $currencyCode)';
+    return 'UserPreferenceState(countryId: $countryId, languageId: '
+        '$languageId, currencyId: $currencyId, authority: '
+        '${snapshot?.authority.name})';
   }
 }

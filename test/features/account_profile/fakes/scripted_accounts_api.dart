@@ -1,4 +1,3 @@
-import 'package:africaonlinestores/core/api/api_client.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/features/account/data/accounts_api.dart';
@@ -26,10 +25,10 @@ typedef UpdateProfileHandler =
 
 class ScriptedAccountsApi extends AccountsApi {
   ScriptedAccountsApi(
-    ApiClient client, {
+    super.client, {
     this.getProfileHandler,
     this.updateProfileHandler,
-  }) : super(client);
+  });
 
   final GetProfileHandler? getProfileHandler;
   final UpdateProfileHandler? updateProfileHandler;

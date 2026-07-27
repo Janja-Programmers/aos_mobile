@@ -602,3 +602,7 @@ Recommended CI checks:
 # 📄 License
 
 MIT
+
+## Frontend architecture notes
+
+- [Launch, onboarding, and active preferences](docs/frontend/localization_onboarding.md)

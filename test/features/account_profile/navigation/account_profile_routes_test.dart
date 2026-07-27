@@ -1,8 +1,8 @@
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/account/shared/routing/account_routes.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 void main() {
   test('Account routes expose account lifecycle destinations', () {

@@ -5,63 +5,76 @@ import 'package:africaonlinestores/shared/components/buttons/primary_button.dart
 import 'package:flutter/material.dart';
 
 class WelcomeStep extends StatelessWidget {
-  final VoidCallback onContinue;
-
   const WelcomeStep({super.key, required this.onContinue});
+
+  final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final l10n = context.l10n;
+    final media = MediaQuery.of(context);
+    final landscape = media.orientation == Orientation.landscape;
 
-    return Scaffold(
-      backgroundColor: colors.surface,
-      body: Stack(
-        children: [
+    return ColoredBox(
+      color: colors.surface,
+      child: Stack(
+        children: <Widget>[
           Positioned.fill(
-            child: Image.asset('assets/images/welcome.png', fit: BoxFit.cover),
+            child: Image.asset(
+              'assets/images/welcome.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+            ),
           ),
-
           Align(
             alignment: Alignment.bottomCenter,
             child: ClipPath(
               clipper: _TopInnerCurveClipper(),
-              child: Container(
+              child: SizedBox(
                 width: double.infinity,
-                height: 280,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 28,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      colors.white.withValues(alpha: 0.92),
-                      colors.white,
-                    ],
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: media.size.height * (landscape ? 0.82 : 0.62),
                   ),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      l10n.account_guest_title,
-                      style: context.h3.copyWith(fontWeight: FontWeight.w700),
-                      textAlign: TextAlign.center,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: <Color>[
+                          colors.white.withValues(alpha: 0.92),
+                          colors.white,
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 14),
-                    Text(
-                      l10n.account_guest_description,
-                      style: context.pMuted.copyWith(height: 1.5),
-                      textAlign: TextAlign.center,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(28, 30, 28, 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Text(
+                            l10n.account_guest_title,
+                            style: context.h3.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            l10n.account_guest_description,
+                            style: context.pMuted.copyWith(height: 1.5),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          PrimaryButton(
+                            text: l10n.common_get_started,
+                            onPressed: onContinue,
+                          ),
+                        ],
+                      ),
                     ),
-                    const Spacer(),
-                    PrimaryButton(
-                      text: l10n.common_get_started,
-                      onPressed: onContinue,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -76,18 +89,14 @@ class _TopInnerCurveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     const radius = 40.0;
-
-    final path = Path();
-
-    path.moveTo(0, radius);
-    path.quadraticBezierTo(0, 0, radius, 0);
-    path.lineTo(size.width - radius, 0);
-    path.quadraticBezierTo(size.width, 0, size.width, radius);
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
-    path.close();
-
-    return path;
+    return Path()
+      ..moveTo(0, radius)
+      ..quadraticBezierTo(0, 0, radius, 0)
+      ..lineTo(size.width - radius, 0)
+      ..quadraticBezierTo(size.width, 0, size.width, radius)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
   }
 
   @override

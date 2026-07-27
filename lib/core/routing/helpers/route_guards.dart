@@ -37,31 +37,6 @@ class RouteGuards {
     return isAuthRoute(location) || isOnboarding(location);
   }
 
-  /// Resolves only authentication-dependent navigation.
-  ///
-  /// Bootstrap and onboarding redirects remain the router's responsibility.
-  /// Keeping this decision pure makes redirect preservation and loop prevention
-  /// deterministic to test without mounting feature screens.
-  static String? authenticationRedirect({
-    required String currentLocation,
-    required bool isGuest,
-    required bool isAuthenticated,
-  }) {
-    final bool isAuth = isAuthRoute(currentLocation);
-    final bool isProtected = isProtectedRoute(currentLocation);
-
-    if (isGuest && isProtected) {
-      final String encodedLocation = Uri.encodeComponent(currentLocation);
-      return '${AppRoutes.login}?redirect=$encodedLocation';
-    }
-
-    if (isAuthenticated && isAuth) {
-      return AppRoutes.home;
-    }
-
-    return null;
-  }
-
   /// Protected routes (require login)
   static bool isProtectedRoute(String location) {
     final path = _pathOnly(location);

@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/localization/controller/localization_controller.dart';
+import 'package:africaonlinestores/features/localization/models/localization_state.dart';
 import 'package:africaonlinestores/features/onboarding/controller/onboarding_controller.dart';
 import 'package:africaonlinestores/features/onboarding/steps/country_step.dart';
 import 'package:africaonlinestores/features/onboarding/steps/currency_step.dart';
@@ -19,57 +23,56 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-
-    /// Initialize defaults after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final controller = ref.read(onboardingControllerProvider.notifier);
-
-      controller.initializeDefaultsIfNeeded();
-      controller.initializeOfflineDefaultsIfNeeded();
+      unawaited(
+        ref.read(onboardingControllerProvider.notifier).initializeIfNeeded(),
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
     final state = ref.watch(onboardingControllerProvider);
     final controller = ref.read(onboardingControllerProvider.notifier);
 
+    ref.listen<LocalizationState>(localizationControllerProvider, (_, next) {
+      if (next.isReady) unawaited(controller.initializeIfNeeded());
+    });
+
     final steps = <Widget>[
       WelcomeStep(onContinue: controller.nextStep),
-
-      LanguageStep(onContinue: controller.nextStep, onSkip: controller.finish),
-
+      LanguageStep(
+        onContinue: controller.nextStep,
+        onSkip: () => unawaited(controller.skipForNow()),
+      ),
       CountryStep(
         onContinue: controller.nextStep,
         onBack: controller.previousStep,
-        onSkip: controller.finish,
+        onSkip: () => unawaited(controller.skipForNow()),
         showBack: true,
       ),
-
       CurrencyStep(
-        onContinue: controller.finish,
+        onContinue: () => unawaited(controller.finish()),
         onBack: controller.previousStep,
-        onSkip: controller.finish,
+        onSkip: () => unawaited(controller.skipForNow()),
         showBack: true,
       ),
     ];
 
-    final int safeIndex = state.step.clamp(0, steps.length - 1).toInt();
+    final safeIndex = state.step.clamp(0, steps.length - 1).toInt();
 
     return Scaffold(
       backgroundColor: colors.surface,
       body: SafeArea(
         child: Column(
-          children: [
-            const SizedBox(height: 16),
+          children: <Widget>[
+            const SizedBox(height: 12),
             OnboardingProgressIndicator(
               currentStep: safeIndex,
               totalSteps: steps.length,
             ),
-
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),

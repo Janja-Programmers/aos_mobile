@@ -101,6 +101,7 @@ void main() {
       };
 
       PlatformDispatcher.instance.onError = (error, stack) {
+        appLogger.e('Uncaught platform error', error: error, stackTrace: stack);
         return true;
       };
 

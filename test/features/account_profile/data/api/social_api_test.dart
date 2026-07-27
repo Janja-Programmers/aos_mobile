@@ -73,8 +73,6 @@ void main() {
       addTearDown(harness.container.dispose);
 
       await harness.socialApi.getFollowers(
-        limit: 20,
-        start: 40,
         targetUser: 'unsupported-target@example.invalid',
         query: ' test ',
       );

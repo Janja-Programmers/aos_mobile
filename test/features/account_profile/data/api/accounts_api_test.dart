@@ -106,7 +106,7 @@ void main() {
       });
     });
 
-    test('uses empty user_image only for avatar clearing', () async {
+    test('uses remove_avatar for avatar clearing', () async {
       final RecordingHttpClientAdapter adapter = RecordingHttpClientAdapter(
         (RequestOptions options) => jsonResponse(<String, dynamic>{
           'message': <String, dynamic>{
@@ -122,7 +122,9 @@ void main() {
 
       await harness.accountsApi.updateProfile(userImage: '');
 
-      expect(adapter.singleRequest.data, <String, dynamic>{'user_image': ''});
+      expect(adapter.singleRequest.data, <String, dynamic>{
+        'remove_avatar': true,
+      });
     });
 
     test('maps timeout deterministically', () async {

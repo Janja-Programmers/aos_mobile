@@ -9,7 +9,7 @@ class OtpResendRow extends StatefulWidget {
   const OtpResendRow({
     super.key,
     required this.onResend,
-    this.initialSeconds = 25,
+    this.initialSeconds = 60,
   });
 
   final VoidCallback onResend;
@@ -35,18 +35,25 @@ class _OtpResendRowState extends State<OtpResendRow> {
     _timer?.cancel();
     _secondsLeft = widget.initialSeconds;
 
+    if (_secondsLeft <= 0) return;
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_secondsLeft == 0) {
+      if (!mounted) {
         timer.cancel();
-      } else {
-        setState(() => _secondsLeft--);
+        return;
       }
+
+      setState(() {
+        if (_secondsLeft > 0) _secondsLeft -= 1;
+      });
+
+      if (_secondsLeft == 0) timer.cancel();
     });
   }
 
   void _handleResend() {
     widget.onResend();
-    _startCountdown();
+    setState(_startCountdown);
   }
 
   @override
@@ -69,12 +76,14 @@ class _OtpResendRowState extends State<OtpResendRow> {
 
         if (_canResend)
           GestureDetector(
+            key: const Key('auth.otp.resend.action'),
             onTap: _handleResend,
             child: Text(l10n.auth_resend, style: context.pStrong),
           )
         else
           Text(
             '${l10n.auth_resend_in} ${_secondsLeft}s',
+            key: const Key('auth.otp.resend.countdown'),
             style: context.pMuted,
           ),
       ],

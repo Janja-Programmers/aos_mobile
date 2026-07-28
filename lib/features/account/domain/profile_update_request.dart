@@ -11,7 +11,7 @@ class ProfileUpdateRequest {
 
   static const int fullNameMinLength = 2;
   static const int fullNameMaxLength = 80;
-  static const int bioMaxLength = 300;
+  static const int bioMaxLength = 500;
 
   final String? fullName;
   final String? bio;
@@ -37,12 +37,29 @@ class ProfileUpdateRequest {
     return null;
   }
 
+  String? get avatarValidationMessage {
+    final bool removesAvatar = userImage != null && userImage!.trim().isEmpty;
+    final String? cleanMediaId = userImageMedia?.trim();
+    final bool replacesAvatar = cleanMediaId?.isNotEmpty ?? false;
+    if (userImageMedia != null && !replacesAvatar) {
+      return 'Avatar media ID is required.';
+    }
+    if (removesAvatar && replacesAvatar) {
+      return 'Avatar replacement and removal cannot be combined.';
+    }
+    if (userImage != null && userImage!.trim().isNotEmpty) {
+      return 'Profile images must be uploaded as backend media IDs.';
+    }
+    return null;
+  }
+
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       if (fullName != null) 'full_name': _normalizeWhitespace(fullName!),
       if (bio != null) 'bio': _normalizeBio(bio!),
-      if (userImage != null) 'user_image': userImage!.trim(),
-      if (userImageMedia != null) 'profile_image_media': userImageMedia!.trim(),
+      if (userImage != null && userImage!.trim().isEmpty) 'remove_avatar': true,
+      if (userImageMedia != null && userImageMedia!.trim().isNotEmpty)
+        'profile_image_media': userImageMedia!.trim(),
     };
   }
 

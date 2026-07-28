@@ -2,7 +2,15 @@ part of 'profile_screen.dart';
 
 final _profileViewDataProvider =
     FutureProvider.family<_ProfileViewData, _ProfileRequest>((ref, request) {
-      return _ProfileLoader(ref).load(request);
+      return _ProfileLoader(ref).loadProfile(request);
+    });
+
+final _profileContentProvider =
+    FutureProvider.family<_ProfileContentData, _ProfileContentRequest>((
+      ref,
+      request,
+    ) {
+      return _ProfileLoader(ref).loadContent(request);
     });
 
 class _ProfileLoader {
@@ -10,292 +18,183 @@ class _ProfileLoader {
 
   const _ProfileLoader(this.ref);
 
-  Future<_ProfileViewData> load(_ProfileRequest request) async {
-    final isOwnProfile = _sameUser(
+  Future<_ProfileViewData> loadProfile(_ProfileRequest request) async {
+    final bool isOwnProfile = _sameUser(
       request.targetUser,
       request.currentUserEmail,
     );
 
-    final profileFuture = _loadProfilePayload(request);
-    final followingFuture = _loadConnectionTotal(
-      ApiEndpoints.getFollowingEndpoint,
-      request.targetUser,
-    );
-    final followersFuture = _loadConnectionTotal(
-      ApiEndpoints.getFollowsEndpoint,
-      request.targetUser,
-    );
-    final friendsFuture = _loadConnectionTotal(
-      ApiEndpoints.getFriendsEndpoint,
-      request.targetUser,
-    );
-    final postsFuture = _loadPosts(
-      request.targetUser,
+    final Map<String, dynamic> profile = await _loadProfilePayload(
+      request,
       isOwnProfile: isOwnProfile,
     );
-    final repostedFuture = _loadShortPanel(
-      ApiEndpoints.repostedShorts,
-      request.targetUser,
-    );
-    final savedFuture = isOwnProfile
-        ? _loadShortPanel(ApiEndpoints.savedShorts, request.targetUser)
-        : Future<List<Short>>.value(const <Short>[]);
-    final likedFuture = isOwnProfile
-        ? _loadShortPanel(ApiEndpoints.likedShorts, request.targetUser)
-        : Future<List<Short>>.value(const <Short>[]);
-    final relationshipFuture = isOwnProfile
-        ? Future<_RelationshipLite>.value(const _RelationshipLite.self())
-        : _loadRelationship(request.targetUser);
-    final sellerFuture = isOwnProfile
-        ? Future<_SellerProfileLite?>.value()
-        : _loadSellerProfile(request.targetUser);
 
-    final results = await Future.wait<dynamic>([
-      profileFuture,
-      followingFuture,
-      followersFuture,
-      friendsFuture,
-      postsFuture,
-      repostedFuture,
-      savedFuture,
-      likedFuture,
-      relationshipFuture,
-      sellerFuture,
+    final bool isDeleted = _bool(profile['is_deleted']);
+    final bool isDeactivated = _bool(profile['is_deactivated']);
+    final bool isBlockedByMe = _bool(profile['is_blocked_by_me']);
+    final bool hasBlockedMe = _bool(profile['has_blocked_me']);
+    final bool isBlocked =
+        _bool(profile['is_blocked']) || isBlockedByMe || hasBlockedMe;
+    final bool contentAvailable = !isDeleted && !isDeactivated && !isBlocked;
+
+    // A successful get_profile response is authoritative for the requested
+    // account. The backend may canonicalize an email/reference to a public ID,
+    // so the frontend must not reject the payload because those strings differ.
+    final String profileUser = _firstNonEmpty(<Object?>[
+      profile['account_id'],
+      profile['user'],
+      profile['target_user'],
+      request.targetUser,
     ]);
-
-    final profile = results[0] as Map<String, dynamic>;
-    final following = results[1] as int?;
-    final followers = results[2] as int?;
-    final friends = results[3] as int?;
-    final allPosts = results[4] as List<Short>;
-    final reposted = results[5] as List<Short>;
-    final saved = results[6] as List<Short>;
-    final liked = results[7] as List<Short>;
-    final relationship = results[8] as _RelationshipLite;
-    final seller = results[9] as _SellerProfileLite?;
-
-    final posts = allPosts
-        .where((short) => !short.isDeleted && !_isPrivateShort(short))
-        .toList(growable: false);
-    final privateShorts = isOwnProfile
-        ? allPosts
-              .where((short) => !short.isDeleted && _isPrivateShort(short))
-              .toList(growable: false)
-        : const <Short>[];
-
-    final profileBelongsToTarget = _profileBelongsToTarget(
-      profile,
-      request.targetUser,
-      isOwnProfile,
-    );
-
-    final displayName = _firstNonEmpty([
-      if (profileBelongsToTarget) profile['display_name'],
-      if (profileBelongsToTarget) profile['full_name'],
-      if (profileBelongsToTarget) profile['name'],
+    final String displayName = _firstNonEmpty(<Object?>[
+      profile['display_name'],
+      profile['full_name'],
+      profile['name'],
       request.fallbackDisplayName,
       isOwnProfile ? request.currentDisplayName : null,
-      request.targetUser,
+      'AOS User',
     ]);
-
-    final rawAvatar = _firstNonEmpty([
-      if (profileBelongsToTarget) profile['avatar'],
-      if (profileBelongsToTarget) profile['user_image'],
-      if (profileBelongsToTarget) profile['image'],
+    final String rawAvatar = _firstNonEmpty(<Object?>[
+      profile['avatar'],
+      profile['user_image'],
+      profile['image'],
       request.fallbackAvatar,
       isOwnProfile ? request.currentAvatar : null,
     ]);
-
-    final bio = _firstNonEmpty([
-      if (profileBelongsToTarget) profile['bio'],
-      if (profileBelongsToTarget) profile['about'],
-      if (profileBelongsToTarget) profile['description'],
+    final String bio = _firstNonEmpty(<Object?>[
+      profile['bio'],
       isOwnProfile ? request.currentBio : null,
     ]);
 
-    final isVerified =
-        profileBelongsToTarget &&
-        (_bool(profile['is_verified']) ||
-            _bool(profile['verified']) ||
-            _bool(profile['identity_verified']) ||
-            _bool(profile['is_identity_verified']));
+    final bool canInteract = !isOwnProfile && contentAvailable;
 
-    final liveId = profileBelongsToTarget
-        ? _firstNonEmpty([profile['live_id']])
-        : '';
-    final isLive =
-        profileBelongsToTarget &&
-        _bool(profile['is_live']) &&
-        liveId.isNotEmpty;
-
-    final isFollowedBy =
-        relationship.isFollowedBy ||
-        (profileBelongsToTarget && _bool(profile['is_followed_by']));
-    final isFollowing =
-        relationship.isFollowing ||
-        (profileBelongsToTarget && _bool(profile['is_following']));
-    final isFriend =
-        relationship.isFriend ||
-        (profileBelongsToTarget && _bool(profile['is_friend'])) ||
-        (isFollowing && isFollowedBy);
-    final relationshipStatus = _firstNonEmpty([
-      relationship.relationshipStatus,
-      if (profileBelongsToTarget) profile['relationship_status'],
+    final bool isFollowing = _bool(profile['is_following']);
+    final bool isFollowedBy = _bool(profile['is_followed_by']);
+    final bool isFriend =
+        _bool(profile['is_friend']) || (isFollowing && isFollowedBy);
+    final String relationshipStatus = _firstNonEmpty(<Object?>[
+      profile['relationship_status'],
     ]);
-    final followActionLabel = _normalizeFollowActionLabel(
-      _firstNonEmpty([
-        relationship.actionLabel,
-        if (profileBelongsToTarget) profile['action_label'],
-      ]),
+    final String followActionLabel = _normalizeFollowActionLabel(
+      _firstNonEmpty(<Object?>[profile['action_label']]),
       isFollowing: isFollowing,
       isFollowedBy: isFollowedBy,
       isFriend: isFriend,
       relationshipStatus: relationshipStatus,
     );
 
-    final profileUser = _firstNonEmpty([
-      if (profileBelongsToTarget) profile['user'],
-      if (profileBelongsToTarget) profile['email'],
-      if (profileBelongsToTarget) profile['target_user'],
-      seller?.user,
-      request.targetUser,
+    final Map<String, dynamic> seller = asJsonMap(profile['seller']);
+    final bool isSeller = _bool(seller['is_seller']);
+    final String sellerId = _firstNonEmpty(<Object?>[
+      seller['seller_id'],
+      seller['name'],
     ]);
+
+    final String liveId = _firstNonEmpty(<Object?>[profile['live_id']]);
+    final bool isLive =
+        !isDeleted &&
+        !isDeactivated &&
+        _bool(profile['is_live']) &&
+        liveId.isNotEmpty;
 
     return _ProfileViewData(
       user: profileUser,
       displayName: displayName,
-      username: _usernameFromEmail(profileUser),
-      avatarUrl: buildFileUrl(rawAvatar),
-      bio: bio,
+      username: isDeleted || isDeactivated
+          ? ''
+          : _usernameFromEmail(profileUser),
+      avatarUrl: isDeleted || isDeactivated ? null : buildFileUrl(rawAvatar),
+      bio: isDeleted || isDeactivated ? '' : bio,
       isOwnProfile: isOwnProfile,
       isLive: isLive,
-      liveId: liveId.isEmpty ? null : liveId,
-      followingCount: following ?? _int(profile['total_following']) ?? 0,
-      followersCount:
-          followers ??
-          _int(profile['total_followers']) ??
-          relationship.targetTotalFollowers ??
-          0,
-      friendsCount: friends ?? _int(profile['total_friends']) ?? 0,
-      likesCount:
-          _int(profile['total_short_likes']) ??
-          _int(profile['total_likes']) ??
-          _int(profile['like_count']) ??
-          allPosts.fold<int>(0, (sum, short) => sum + short.metrics.likeCount),
-      isVerified: isVerified || (isOwnProfile && request.currentIsVerified),
-      posts: posts,
-      reposted: reposted,
-      privateShorts: privateShorts,
-      saved: saved,
-      liked: liked,
-      isSeller: seller != null,
-      sellerId: seller?.sellerId,
+      liveId: isLive ? liveId : null,
+      followingCount: _nonNegativeInt(
+        profile['following_count'] ?? profile['total_following'],
+      ),
+      followersCount: _nonNegativeInt(
+        profile['followers_count'] ?? profile['total_followers'],
+      ),
+      friendsCount: _nonNegativeInt(
+        profile['friends_count'] ?? profile['total_friends'],
+      ),
+      likesCount: _nonNegativeInt(
+        profile['total_short_likes'] ??
+            profile['total_likes'] ??
+            profile['like_count'],
+      ),
+      isVerified:
+          !isDeleted &&
+          !isDeactivated &&
+          (_bool(profile['is_verified']) ||
+              (isOwnProfile && request.currentIsVerified)),
+      posts: const <Short>[],
+      reposted: const <Short>[],
+      privateShorts: const <Short>[],
+      saved: const <Short>[],
+      liked: const <Short>[],
+      isSeller: isSeller,
+      sellerId: sellerId.isEmpty ? null : sellerId,
       isFollowing: isFollowing || isFriend,
       followActionLabel: followActionLabel,
+      canInteract: canInteract,
+      contentAvailable: contentAvailable,
+    );
+  }
+
+  Future<_ProfileContentData> loadContent(
+    _ProfileContentRequest request,
+  ) async {
+    final List<dynamic> contentResults =
+        await Future.wait<dynamic>(<Future<dynamic>>[
+          _loadPosts(request.targetUser, isOwnProfile: request.isOwnProfile),
+          _loadShortPanel(
+            ApiEndpoints.repostedShorts,
+            targetUser: request.targetUser,
+          ),
+          request.isOwnProfile
+              ? _loadShortPanel(ApiEndpoints.savedShorts)
+              : Future<List<Short>>.value(const <Short>[]),
+          request.isOwnProfile
+              ? _loadShortPanel(ApiEndpoints.likedShorts)
+              : Future<List<Short>>.value(const <Short>[]),
+        ]);
+
+    final List<Short> allPosts = contentResults[0] as List<Short>;
+    final List<Short> posts = allPosts
+        .where((Short short) => !short.isDeleted && !_isPrivateShort(short))
+        .toList(growable: false);
+    final List<Short> privateShorts = request.isOwnProfile
+        ? allPosts
+              .where(
+                (Short short) => !short.isDeleted && _isPrivateShort(short),
+              )
+              .toList(growable: false)
+        : const <Short>[];
+
+    return _ProfileContentData(
+      posts: posts,
+      reposted: contentResults[1] as List<Short>,
+      privateShorts: privateShorts,
+      saved: contentResults[2] as List<Short>,
+      liked: contentResults[3] as List<Short>,
     );
   }
 
   Future<Map<String, dynamic>> _loadProfilePayload(
-    _ProfileRequest request,
-  ) async {
-    try {
-      final res = await ref
-          .read(apiClientProvider)
-          .get(
-            ApiEndpoints.getProfileEndpoint,
-            queryParameters: _targetQuery(request.targetUser),
-          );
-      final unwrapped = unwrapFrappe(res);
+    _ProfileRequest request, {
+    required bool isOwnProfile,
+  }) async {
+    final Either<Failure, Map<String, dynamic>> result = await ref
+        .read(accountsApiProvider)
+        .getProfile(targetUser: isOwnProfile ? null : request.targetUser);
 
-      if (unwrapped.isLeft) return <String, dynamic>{};
+    if (result.isLeft) throw result.leftOrNull!;
 
-      final raw = _extractData(unwrapped.rightOrNull);
-      return asJsonMap(raw);
-    } catch (_) {}
-
-    return <String, dynamic>{};
-  }
-
-  Future<int?> _loadConnectionTotal(String endpoint, String targetUser) async {
-    try {
-      final res = await ref
-          .read(apiClientProvider)
-          .get(
-            endpoint,
-            queryParameters: {
-              ..._targetQuery(targetUser),
-              'limit': 1,
-              'start': 0,
-            },
-          );
-      final unwrapped = unwrapFrappe(res);
-      if (unwrapped.isLeft) return null;
-
-      final raw = _extractData(unwrapped.rightOrNull);
-      return _int(raw['total']);
-    } catch (_) {}
-
-    return null;
-  }
-
-  Future<_RelationshipLite> _loadRelationship(String targetUser) async {
-    try {
-      final relationship = await ref
-          .read(socialRepositoryProvider)
-          .getRelationshipStatus(targetUser: targetUser);
-
-      if (relationship.isRight) {
-        final value = relationship.rightOrNull!;
-        return _RelationshipLite(
-          isFollowing: value.isFollowing,
-          isFollowedBy: value.isFollowedBy,
-          isFriend: value.isFriend,
-          relationshipStatus: value.relationshipStatus,
-          actionLabel: value.actionLabel,
-          targetTotalFollowers: value.targetTotalFollowers,
-        );
-      }
-    } catch (_) {}
-
-    return const _RelationshipLite(
-      isFollowing: false,
-      isFollowedBy: false,
-      isFriend: false,
-      relationshipStatus: '',
-      actionLabel: 'Follow',
-      targetTotalFollowers: null,
-    );
-  }
-
-  Future<_SellerProfileLite?> _loadSellerProfile(String targetUser) async {
-    try {
-      final res = await ref
-          .read(apiClientProvider)
-          .get(
-            ApiEndpoints.getSellerEndpoint,
-            queryParameters: {'seller': targetUser},
-          );
-
-      final unwrapped = unwrapFrappe(res);
-      if (unwrapped.isLeft) return null;
-
-      final payload = unwrapped.rightOrNull ?? <String, dynamic>{};
-      if (_isFailurePayload(payload)) return null;
-
-      final data = _extractData(payload);
-      if (_isFailurePayload(data)) return null;
-
-      final sellerId = _firstNonEmpty([data['seller']]);
-      final user = _firstNonEmpty([data['user']]);
-
-      if (sellerId.isEmpty || user.isEmpty || !_sameUser(user, targetUser)) {
-        return null;
-      }
-
-      return _SellerProfileLite(sellerId: sellerId, user: user);
-    } catch (_) {
-      return null;
+    final Map<String, dynamic> profile = _extractData(result.rightOrNull);
+    if (profile.isEmpty) {
+      throw const Failure('Invalid profile response.', type: FailureType.parse);
     }
+    return profile;
   }
 
   Future<List<Short>> _loadPosts(
@@ -304,14 +203,14 @@ class _ProfileLoader {
   }) {
     return _loadShortPanel(
       isOwnProfile ? ApiEndpoints.myShorts : ApiEndpoints.userShorts,
-      targetUser,
+      targetUser: isOwnProfile ? null : targetUser,
       onlyCreator: true,
     );
   }
 
   Future<List<Short>> _loadShortPanel(
-    String endpoint,
-    String targetUser, {
+    String endpoint, {
+    String? targetUser,
     bool onlyCreator = false,
   }) async {
     try {
@@ -319,9 +218,9 @@ class _ProfileLoader {
           .read(apiClientProvider)
           .get(
             endpoint,
-            queryParameters: {
-              ..._targetQuery(targetUser),
-              'owner': targetUser,
+            queryParameters: <String, dynamic>{
+              if (targetUser != null && targetUser.trim().isNotEmpty)
+                'user': targetUser.trim(),
               'limit': 30,
             },
           );
@@ -339,10 +238,13 @@ class _ProfileLoader {
       if (!onlyCreator) return list;
 
       return list
-          .where((short) {
+          .where((Short short) {
             final creatorUser = short.creator.user.trim().toLowerCase();
             if (creatorUser.isEmpty) return true;
-            return creatorUser == targetUser.trim().toLowerCase();
+            final String? cleanTarget = targetUser?.trim().toLowerCase();
+            return cleanTarget == null ||
+                cleanTarget.isEmpty ||
+                creatorUser == cleanTarget;
           })
           .toList(growable: false);
     } catch (_) {
@@ -350,40 +252,17 @@ class _ProfileLoader {
     }
   }
 
-  static Map<String, dynamic> _targetQuery(String targetUser) {
-    return {'user': targetUser, 'target_user': targetUser};
-  }
-
   static Map<String, dynamic> _extractData(Object? payload) {
-    final data = asJsonMap(payload);
-    final innerData = asJsonMap(data['data']);
-    if (innerData.isNotEmpty) return innerData;
+    final Map<String, dynamic> root = asJsonMap(payload);
+    final Map<String, dynamic> directData = asJsonMap(root['data']);
+    if (directData.isNotEmpty) return directData;
 
-    final message = asJsonMap(data['message']);
-    if (message.isNotEmpty) {
-      final messageData = asJsonMap(message['data']);
-      return messageData.isNotEmpty ? messageData : message;
-    }
+    final Map<String, dynamic> message = asJsonMap(root['message']);
+    final Map<String, dynamic> messageData = asJsonMap(message['data']);
+    if (messageData.isNotEmpty) return messageData;
+    if (message.isNotEmpty) return message;
 
-    return data;
-  }
-
-  static bool _profileBelongsToTarget(
-    Map<String, dynamic> profile,
-    String targetUser,
-    bool isOwnProfile,
-  ) {
-    if (isOwnProfile) return true;
-
-    final target = targetUser.trim().toLowerCase();
-    final identity = _firstNonEmpty([
-      profile['user'],
-      profile['email'],
-      profile['target_user'],
-    ]).trim().toLowerCase();
-
-    if (identity.isEmpty) return false;
-    return identity == target;
+    return root;
   }
 
   static bool _sameUser(String a, String b) {
@@ -391,8 +270,8 @@ class _ProfileLoader {
   }
 
   static String _firstNonEmpty(List<Object?> values) {
-    for (final value in values) {
-      final clean = value?.toString().trim();
+    for (final Object? value in values) {
+      final String? clean = value?.toString().trim();
       if (clean != null && clean.isNotEmpty && clean.toLowerCase() != 'null') {
         return clean;
       }
@@ -400,19 +279,8 @@ class _ProfileLoader {
     return '';
   }
 
-  static bool _isFailurePayload(Map<String, dynamic> payload) {
-    if (!payload.containsKey('ok')) return false;
-
-    final ok = payload['ok'];
-    if (ok is bool) return !ok;
-    if (ok is num) return ok == 0;
-
-    final clean = ok?.toString().trim().toLowerCase() ?? '';
-    return clean == 'false' || clean == '0' || clean == 'no';
-  }
-
   static bool _isPrivateShort(Short short) {
-    final audience = short.audience.trim().toLowerCase();
+    final String audience = short.audience.trim().toLowerCase();
     return audience == 'only_me' || audience == 'private';
   }
 
@@ -423,20 +291,18 @@ class _ProfileLoader {
     required bool isFriend,
     required String relationshipStatus,
   }) {
-    final status = relationshipStatus.trim().toLowerCase();
-    final clean = raw.trim().toLowerCase();
+    final String status = relationshipStatus.trim().toLowerCase();
+    final String clean = raw.trim().toLowerCase();
 
-    if (isFriend ||
-        isFollowing ||
-        status == 'friends' ||
-        status == 'following') {
+    if (isFriend || status == 'friends' || clean == 'friends') {
+      return 'Friends';
+    }
+    if (isFollowing || status == 'following' || clean == 'following') {
       return 'Following';
     }
-
     if (isFollowedBy || status == 'followed_by' || clean == 'follow back') {
       return 'Follow back';
     }
-
     return 'Follow';
   }
 
@@ -444,18 +310,16 @@ class _ProfileLoader {
     if (value == null) return false;
     if (value is bool) return value;
     if (value is num) return value == 1;
-    final clean = value.toString().trim().toLowerCase();
-    return clean == '1' ||
-        clean == 'true' ||
-        clean == 'yes' ||
-        clean == 'approved';
+    final String clean = value.toString().trim().toLowerCase();
+    return clean == '1' || clean == 'true' || clean == 'yes';
   }
 
-  static int? _int(dynamic value) {
-    if (value == null) return null;
-    if (value is int) return value;
-    if (value is double) return value.toInt();
-    if (value is num) return value.toInt();
-    return int.tryParse(value.toString());
+  static int _nonNegativeInt(dynamic value, {int fallback = 0}) {
+    final int parsed = switch (value) {
+      final int number => number,
+      final num number => number.toInt(),
+      _ => int.tryParse(value?.toString() ?? '') ?? fallback,
+    };
+    return parsed < 0 ? 0 : parsed;
   }
 }

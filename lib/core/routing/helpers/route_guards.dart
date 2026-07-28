@@ -47,6 +47,26 @@ class RouteGuards {
     });
   }
 
+  /// Resolves only authentication-dependent redirects.
+  ///
+  /// Bootstrap and onboarding redirects remain owned by the app router.
+  static String? authenticationRedirect({
+    required String currentLocation,
+    required bool isGuest,
+    required bool isAuthenticated,
+  }) {
+    if (isGuest && isProtectedRoute(currentLocation)) {
+      final String encodedLocation = Uri.encodeComponent(currentLocation);
+      return '${AppRoutes.login}?redirect=$encodedLocation';
+    }
+
+    if (isAuthenticated && isAuthRoute(currentLocation)) {
+      return AppRoutes.home;
+    }
+
+    return null;
+  }
+
   static String _pathOnly(String location) {
     return Uri.tryParse(location)?.path ?? location.split('?').first;
   }

@@ -12,13 +12,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class SocialConnectionsScreen extends ConsumerStatefulWidget {
   final String title;
   final SocialConnectionsTab initialTab;
-  final String? targetUser;
-
   const SocialConnectionsScreen({
     super.key,
     this.title = 'Connections',
     this.initialTab = SocialConnectionsTab.followers,
-    this.targetUser,
   });
 
   @override
@@ -40,10 +37,7 @@ class _SocialConnectionsScreenState
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    final args = SocialConnectionsArgs(
-      initialTab: widget.initialTab,
-      targetUser: widget.targetUser,
-    );
+    final args = SocialConnectionsArgs(initialTab: widget.initialTab);
 
     final state = ref.watch(socialConnectionsControllerProvider(args));
 

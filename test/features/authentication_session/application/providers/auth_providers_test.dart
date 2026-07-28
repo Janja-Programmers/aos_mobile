@@ -75,14 +75,23 @@ void main() {
           'full_name': 'Updated Test User',
         });
         harness.controller.setPreferencesFromMap(<String, dynamic>{
-          'language': 'sw',
+          ...((harness.state as AuthAuthenticated).preferences),
+          'language': <String, dynamic>{
+            'id': 'sw',
+            'code': 'sw',
+            'name': 'Kiswahili',
+            'flag': '🇰🇪',
+          },
         });
 
         final AuthAuthenticated state =
             harness.container.read(authControllerProvider) as AuthAuthenticated;
         expect(state.sid, 'test-session-id');
         expect(state.user.fullName, 'Updated Test User');
-        expect(state.preferences['language'], 'sw');
+        expect(
+          (state.preferences['language'] as Map<String, dynamic>)['code'],
+          'sw',
+        );
         expect(state.roles, <String>['AOS User']);
       },
     );

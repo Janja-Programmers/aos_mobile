@@ -112,10 +112,18 @@ void main() {
     expect(banner, findsOneWidget);
 
     await tester.tap(banner);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('Get Verified'), findsOneWidget);
     expect(find.text('Individual'), findsOneWidget);
     expect(find.text('Business'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: banner,
+        matching: find.byType(CircularProgressIndicator),
+      ),
+      findsNothing,
+    );
   });
 }

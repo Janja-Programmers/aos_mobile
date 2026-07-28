@@ -22,14 +22,12 @@ class SocialApi {
   Future<Either<Failure, SocialFriendsPage>> getFollowers({
     int limit = 20,
     int start = 0,
-    String? targetUser,
     String? query,
   }) {
     return _getPeoplePage(
       endpoint: ApiEndpoints.getFollowsEndpoint,
       limit: limit,
       start: start,
-      targetUser: targetUser,
       query: query,
       parseFailureMessage: 'Invalid followers response format',
       fallbackFailureMessage: 'Failed to load followers. Please try again.',
@@ -42,14 +40,12 @@ class SocialApi {
   Future<Either<Failure, SocialFriendsPage>> getFollowing({
     int limit = 20,
     int start = 0,
-    String? targetUser,
     String? query,
   }) {
     return _getPeoplePage(
       endpoint: ApiEndpoints.getFollowingEndpoint,
       limit: limit,
       start: start,
-      targetUser: targetUser,
       query: query,
       parseFailureMessage: 'Invalid following response format',
       fallbackFailureMessage: 'Failed to load following. Please try again.',
@@ -62,14 +58,12 @@ class SocialApi {
   Future<Either<Failure, SocialFriendsPage>> getFriends({
     int limit = 20,
     int start = 0,
-    String? targetUser,
     String? query,
   }) {
     return _getPeoplePage(
       endpoint: ApiEndpoints.getFriendsEndpoint,
       limit: limit,
       start: start,
-      targetUser: targetUser,
       query: query,
       parseFailureMessage: 'Invalid friends response format',
       fallbackFailureMessage: 'Failed to load friends. Please try again.',
@@ -146,9 +140,9 @@ class SocialApi {
         );
       }
 
-      final res = await _apiClient.post(
+      final res = await _apiClient.get(
         ApiEndpoints.getRelationshipStatusEndpoint,
-        data: {'target_user': cleanTarget},
+        queryParameters: <String, dynamic>{'target_user': cleanTarget},
       );
 
       final result = unwrapFrappe(res);
@@ -187,7 +181,6 @@ class SocialApi {
     required String endpoint,
     required int limit,
     required int start,
-    String? targetUser,
     String? query,
     required String parseFailureMessage,
     required String fallbackFailureMessage,
@@ -198,14 +191,7 @@ class SocialApi {
         queryParameters: {
           'limit': limit,
           'start': start,
-          if (targetUser?.trim().isNotEmpty ?? false) ...{
-            'target_user': targetUser!.trim(),
-            'user': targetUser.trim(),
-          },
-          if (query?.trim().isNotEmpty ?? false) ...{
-            'q': query!.trim(),
-            'search': query.trim(),
-          },
+          if (query?.trim().isNotEmpty ?? false) 'search': query!.trim(),
         },
       );
 

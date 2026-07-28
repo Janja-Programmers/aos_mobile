@@ -8,21 +8,18 @@ abstract class SocialRepository {
   Future<Either<Failure, SocialFriendsPage>> getFollowers({
     int limit = 20,
     int start = 0,
-    String? targetUser,
     String? query,
   });
 
   Future<Either<Failure, SocialFriendsPage>> getFollowing({
     int limit = 20,
     int start = 0,
-    String? targetUser,
     String? query,
   });
 
   Future<Either<Failure, SocialFriendsPage>> getFriends({
     int limit = 20,
     int start = 0,
-    String? targetUser,
     String? query,
   });
 
@@ -44,45 +41,27 @@ class SocialRepositoryImpl implements SocialRepository {
   Future<Either<Failure, SocialFriendsPage>> getFollowers({
     int limit = 20,
     int start = 0,
-    String? targetUser,
     String? query,
   }) {
-    return api.getFollowers(
-      limit: limit,
-      start: start,
-      targetUser: targetUser,
-      query: query,
-    );
+    return api.getFollowers(limit: limit, start: start, query: query);
   }
 
   @override
   Future<Either<Failure, SocialFriendsPage>> getFollowing({
     int limit = 20,
     int start = 0,
-    String? targetUser,
     String? query,
   }) {
-    return api.getFollowing(
-      limit: limit,
-      start: start,
-      targetUser: targetUser,
-      query: query,
-    );
+    return api.getFollowing(limit: limit, start: start, query: query);
   }
 
   @override
   Future<Either<Failure, SocialFriendsPage>> getFriends({
     int limit = 20,
     int start = 0,
-    String? targetUser,
     String? query,
   }) {
-    return api.getFriends(
-      limit: limit,
-      start: start,
-      targetUser: targetUser,
-      query: query,
-    );
+    return api.getFriends(limit: limit, start: start, query: query);
   }
 
   @override

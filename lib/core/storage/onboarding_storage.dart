@@ -63,7 +63,7 @@ class OnboardingStorage {
 
   ActivePreferenceSnapshot? _readSnapshot(String key) {
     try {
-      final raw = _prefs.getString(key)?.trim();
+      final String? raw = _readStoredString(key);
       if (raw == null || raw.isEmpty) return null;
 
       final decoded = jsonDecode(raw);
@@ -74,26 +74,28 @@ class OnboardingStorage {
       return snapshot.isValid ? snapshot : null;
     } on FormatException {
       return null;
-    } on TypeError {
-      return null;
     }
   }
 
   ActivePreferenceSnapshot? _migrateLegacy() {
-    try {
-      final country = _prefs.getString(_legacyCountryCode)?.trim() ?? '';
-      final language = _prefs.getString(_legacyLanguageCode)?.trim() ?? '';
-      final currency = _prefs.getString(_legacyCurrencyCode)?.trim() ?? '';
-      if (country.isEmpty || language.isEmpty || currency.isEmpty) return null;
+    final String country = _readStoredString(_legacyCountryCode) ?? '';
+    final String language = _readStoredString(_legacyLanguageCode) ?? '';
+    final String currency = _readStoredString(_legacyCurrencyCode) ?? '';
+    if (country.isEmpty || language.isEmpty || currency.isEmpty) return null;
 
-      return ActivePreferenceSnapshot.legacy(
-        country: country,
-        language: language,
-        currency: currency,
-      );
-    } on TypeError {
-      return null;
-    }
+    return ActivePreferenceSnapshot.legacy(
+      country: country,
+      language: language,
+      currency: currency,
+    );
+  }
+
+  String? _readStoredString(String key) {
+    final Object? value = _prefs.get(key);
+    if (value is! String) return null;
+
+    final String clean = value.trim();
+    return clean.isEmpty ? null : clean;
   }
 
   Future<void> markOnboardingComplete() async {

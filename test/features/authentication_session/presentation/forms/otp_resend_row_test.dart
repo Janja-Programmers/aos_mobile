@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/features/auth/shared/widgets/otp_resend_row.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../helpers/pump_app.dart';
@@ -18,18 +19,24 @@ void main() {
         ),
       );
 
-      expect(find.textContaining('2s'), findsOneWidget);
-      expect(find.text('Resend'), findsNothing);
+      expect(
+        find.byKey(const Key('auth.otp.resend.countdown')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('auth.otp.resend.action')), findsNothing);
 
       await tester.pump(const Duration(seconds: 2));
       await tester.pump(const Duration(seconds: 1));
 
-      expect(find.text('Resend'), findsOneWidget);
-      await tester.tap(find.text('Resend'));
+      expect(find.byKey(const Key('auth.otp.resend.action')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('auth.otp.resend.action')));
       await tester.pump();
 
       expect(resendCalls, 1);
-      expect(find.textContaining('2s'), findsOneWidget);
+      expect(
+        find.byKey(const Key('auth.otp.resend.countdown')),
+        findsOneWidget,
+      );
     },
   );
 }

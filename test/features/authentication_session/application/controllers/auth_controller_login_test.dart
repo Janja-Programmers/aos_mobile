@@ -41,7 +41,10 @@ void main() {
           harness.state as AuthAuthenticated;
       expect(authenticated.user.email, 'user@example.invalid');
       expect(authenticated.roles, <String>['AOS User']);
-      expect(authenticated.preferences['currency'], 'KES');
+      expect(
+        authenticated.preferences['currency'],
+        containsPair('code', 'KES'),
+      );
       expect(authenticated.seller.isSeller, isTrue);
       expect(authenticated.seller.sellerId, 'SELLER-TEST-1');
     });

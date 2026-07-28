@@ -39,7 +39,8 @@ class AccountScreen extends ConsumerStatefulWidget {
 }
 
 class _AccountScreenState extends ConsumerState<AccountScreen> {
-  bool _isOpeningVerificationFlow = false;
+  bool _isVerificationFlowActive = false;
+  bool _isResolvingVerificationStatus = false;
 
   Widget _buildAccountHeader(
     BuildContext context,
@@ -78,6 +79,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     final userImage = fetchedImage.isNotEmpty ? fetchedImage : user.userImage;
 
     return AccountHeaderCard(
+      key: const Key('account_header_card'),
       fullName: fullName,
       email: email,
       initials: _initialsFromName(fullName),
@@ -152,10 +154,11 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
             if (isAuthenticated && !accountVerified) ...[
               const SizedBox(height: 14),
               AccountVerificationBanner(
+                key: const Key('account_verification_banner'),
                 title: bannerPresentation.title,
                 subtitle: bannerPresentation.subtitle,
                 tone: bannerPresentation.tone,
-                busy: _isOpeningVerificationFlow,
+                busy: _isResolvingVerificationStatus,
                 onTap: () {
                   unawaited(
                     _openVerificationFlow(
@@ -334,9 +337,12 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     required AsyncValue<UserVerificationStatus>? userStatusAsync,
     required AsyncValue<SellerVerificationStatus>? sellerStatusAsync,
   }) async {
-    if (_isOpeningVerificationFlow) return;
+    if (_isVerificationFlowActive) return;
 
-    setState(() => _isOpeningVerificationFlow = true);
+    setState(() {
+      _isVerificationFlowActive = true;
+      _isResolvingVerificationStatus = true;
+    });
 
     try {
       if (_hasError(userStatusAsync)) {
@@ -358,6 +364,8 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       final businessResolution = await businessResolutionFuture;
 
       if (!mounted) return;
+
+      setState(() => _isResolvingVerificationStatus = false);
 
       final userStatus = individualResolution.data;
       final sellerStatus = businessResolution.data;
@@ -440,7 +448,10 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       await _refreshAccountAndVerificationState();
     } finally {
       if (mounted) {
-        setState(() => _isOpeningVerificationFlow = false);
+        setState(() {
+          _isVerificationFlowActive = false;
+          _isResolvingVerificationStatus = false;
+        });
       }
     }
   }

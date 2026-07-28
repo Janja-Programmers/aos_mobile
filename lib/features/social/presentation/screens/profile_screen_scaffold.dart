@@ -87,26 +87,30 @@ class _ProfileScaffoldState extends State<_ProfileScaffold> {
                 followingCount: _formatCount(data.followingCount),
                 followersCount: _formatCount(data.followersCount),
                 likesCount: _formatCount(data.likesCount),
-                onFollowingTap: () {
-                  SocialNavigation.toSocialConnectionsScreen(
-                    context,
-                    tab: SocialConnectionsTab.following,
-                    title: data.displayName,
-                    user: data.user,
-                  );
-                },
-                onFollowersTap: () {
-                  SocialNavigation.toSocialConnectionsScreen(
-                    context,
-                    title: data.displayName,
-                    user: data.user,
-                  );
-                },
+                onFollowingTap: data.isOwnProfile
+                    ? () {
+                        SocialNavigation.toSocialConnectionsScreen(
+                          context,
+                          tab: SocialConnectionsTab.following,
+                          title: data.displayName,
+                        );
+                      }
+                    : null,
+                onFollowersTap: data.isOwnProfile
+                    ? () {
+                        SocialNavigation.toSocialConnectionsScreen(
+                          context,
+                          title: data.displayName,
+                        );
+                      }
+                    : null,
                 isLive: data.isLive,
                 liveId: data.liveId,
                 onAvatarTap: widget.onAvatarTap,
                 onEditTap: widget.onEditTap,
-                onMessageTap: _handleMessageTap,
+                onMessageTap: widget.onMessageTap == null
+                    ? null
+                    : _handleMessageTap,
                 onSellerStoreTap: widget.onSellerStoreTap,
                 followActionLabel: data.followActionLabel,
                 isFollowing: data.isFollowing,

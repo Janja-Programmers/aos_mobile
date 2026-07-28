@@ -46,19 +46,13 @@ class SocialRoutes {
         builder: (context, state) {
           final tab = state.uri.queryParameters['tab'];
           final title = state.uri.queryParameters['title'] ?? 'Connections';
-          final user = state.uri.queryParameters['user'];
-
           final initialTab = switch (tab) {
             'following' => SocialConnectionsTab.following,
             'friends' => SocialConnectionsTab.friends,
             'followers' || _ => SocialConnectionsTab.followers,
           };
 
-          return SocialConnectionsScreen(
-            title: title,
-            initialTab: initialTab,
-            targetUser: user,
-          );
+          return SocialConnectionsScreen(title: title, initialTab: initialTab);
         },
       ),
     ];
@@ -93,14 +87,12 @@ class SocialNavigation {
     BuildContext context, {
     SocialConnectionsTab tab = SocialConnectionsTab.followers,
     String? title,
-    String? user,
   }) {
     context.pushNamed(
       AppRoutes.nSocialConnections,
       queryParameters: {
         'tab': _tabToQuery(tab),
         if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
-        if (user != null && user.trim().isNotEmpty) 'user': user.trim(),
       },
     );
   }

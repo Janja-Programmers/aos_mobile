@@ -12,19 +12,13 @@ import 'package:flutter_riverpod/legacy.dart';
 class SocialConnectionsController
     extends StateNotifier<SocialConnectionsState> {
   final SocialRepository _repository;
-  final String? _targetUser;
-
   Timer? _searchDebounce;
   int _requestSerial = 0;
 
   SocialConnectionsController(
     this._repository, {
     SocialConnectionsTab initialTab = SocialConnectionsTab.followers,
-    String? targetUser,
-  }) : _targetUser = targetUser?.trim().isNotEmpty ?? false
-           ? targetUser!.trim()
-           : null,
-       super(SocialConnectionsState(selectedTab: initialTab)) {
+  }) : super(SocialConnectionsState(selectedTab: initialTab)) {
     loadInitial();
   }
 
@@ -178,17 +172,14 @@ class SocialConnectionsController
     return switch (tab) {
       SocialConnectionsTab.following => _repository.getFollowing(
         start: start,
-        targetUser: _targetUser,
         query: query,
       ),
       SocialConnectionsTab.followers => _repository.getFollowers(
         start: start,
-        targetUser: _targetUser,
         query: query,
       ),
       SocialConnectionsTab.friends => _repository.getFriends(
         start: start,
-        targetUser: _targetUser,
         query: query,
       ),
     };
@@ -196,9 +187,9 @@ class SocialConnectionsController
 
   Future<void> _loadCounts() async {
     final results = await Future.wait([
-      _repository.getFollowing(limit: 1, targetUser: _targetUser),
-      _repository.getFollowers(limit: 1, targetUser: _targetUser),
-      _repository.getFriends(limit: 1, targetUser: _targetUser),
+      _repository.getFollowing(limit: 1),
+      _repository.getFollowers(limit: 1),
+      _repository.getFriends(limit: 1),
     ]);
 
     int following = state.followingCount;

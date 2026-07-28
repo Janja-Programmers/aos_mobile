@@ -12,6 +12,5 @@ final socialConnectionsControllerProvider =
       return SocialConnectionsController(
         ref.read(socialRepositoryProvider),
         initialTab: args.initialTab,
-        targetUser: args.targetUser,
       );
     });

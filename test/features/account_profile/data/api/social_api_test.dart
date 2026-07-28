@@ -72,10 +72,7 @@ void main() {
           await buildAccountProfileApiHarness(adapter);
       addTearDown(harness.container.dispose);
 
-      await harness.socialApi.getFollowers(
-        targetUser: 'unsupported-target@example.invalid',
-        query: ' test ',
-      );
+      await harness.socialApi.getFollowers(start: 40, query: ' test ');
 
       expect(adapter.singleRequest.method, 'GET');
       expect(adapter.singleRequest.path, ApiEndpoints.getFollowsEndpoint);

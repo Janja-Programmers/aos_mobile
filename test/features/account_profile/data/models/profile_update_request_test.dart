@@ -7,19 +7,45 @@ void main() {
       const ProfileUpdateRequest request = ProfileUpdateRequest(
         fullName: ' Test   Owner ',
         bio: ' First line.  \n\n\n Second line. ',
-        userImage: '',
         userImageMedia: ' MEDIA-TEST-001 ',
       );
 
       expect(request.toJson(), <String, dynamic>{
         'full_name': 'Test Owner',
         'bio': 'First line. \n\n Second line.',
-        'user_image': '',
         'profile_image_media': 'MEDIA-TEST-001',
       });
       expect(request.toJson().containsKey('display_name'), isFalse);
       expect(request.toJson().containsKey('email'), isFalse);
       expect(request.toJson().containsKey('phone'), isFalse);
+    });
+
+    test('maps empty legacy avatar value to remove_avatar', () {
+      const ProfileUpdateRequest request = ProfileUpdateRequest(userImage: '');
+
+      expect(request.avatarValidationMessage, isNull);
+      expect(request.toJson(), <String, dynamic>{'remove_avatar': true});
+    });
+
+    test('rejects an empty avatar media ID', () {
+      const ProfileUpdateRequest request = ProfileUpdateRequest(
+        userImageMedia: ' ',
+      );
+
+      expect(request.avatarValidationMessage, 'Avatar media ID is required.');
+      expect(request.toJson(), isEmpty);
+    });
+
+    test('rejects combined avatar replacement and removal', () {
+      const ProfileUpdateRequest request = ProfileUpdateRequest(
+        userImage: '',
+        userImageMedia: 'MEDIA-TEST-001',
+      );
+
+      expect(
+        request.avatarValidationMessage,
+        'Avatar replacement and removal cannot be combined.',
+      );
     });
 
     test('omits unchanged nullable fields', () {
@@ -61,7 +87,7 @@ void main() {
       );
     });
 
-    test('accepts 300-character bio and rejects 301 characters', () {
+    test('accepts 500-character bio and rejects 501 characters', () {
       expect(
         ProfileUpdateRequest(
           bio: List<String>.filled(
@@ -78,7 +104,7 @@ void main() {
             'A',
           ).join(),
         ).bioValidationMessage,
-        contains('Maximum is 300'),
+        contains('Maximum is 500'),
       );
     });
   });

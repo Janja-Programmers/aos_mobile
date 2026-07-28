@@ -46,10 +46,21 @@ void main() {
   }
 
   Future<({AccountProfileApiHarness harness, ScriptedAccountsApi api})>
-  buildHarnessFor(String fixtureName) async {
+  buildHarnessFor(String fixtureName, {Future<void>? contentGate}) async {
     final RecordingHttpClientAdapter adapter = RecordingHttpClientAdapter((
       RequestOptions options,
-    ) {
+    ) async {
+      if (contentGate != null &&
+          <String>{
+            ApiEndpoints.myShorts,
+            ApiEndpoints.userShorts,
+            ApiEndpoints.repostedShorts,
+            ApiEndpoints.savedShorts,
+            ApiEndpoints.likedShorts,
+          }.contains(options.path)) {
+        await contentGate;
+      }
+
       if (options.path == ApiEndpoints.getSellerEndpoint) {
         return jsonResponse(<String, dynamic>{
           'message': <String, dynamic>{
@@ -123,7 +134,14 @@ void main() {
   testWidgets(
     'public friend profile hides owner controls and preserves Friends',
     (WidgetTester tester) async {
-      final bundle = await buildHarnessFor('public_profile_friend.json');
+      final Completer<void> contentGate = Completer<void>();
+      addTearDown(() {
+        if (!contentGate.isCompleted) contentGate.complete();
+      });
+      final bundle = await buildHarnessFor(
+        'public_profile_friend.json',
+        contentGate: contentGate.future,
+      );
       addTearDown(bundle.harness.container.dispose);
 
       await tester.pumpTestApp(
@@ -141,25 +159,39 @@ void main() {
       expect(find.text('Saved'), findsNothing);
       expect(find.text('Liked'), findsNothing);
       expect(find.text('friend@example.invalid'), findsNothing);
+
+      contentGate.complete();
+      await tester.pump();
     },
   );
 
-  testWidgets('blocked public profile exposes no message or follow action', (
+  testWidgets('blocked public profile is unavailable and non-interactive', (
     WidgetTester tester,
   ) async {
     final bundle = await buildHarnessFor('public_profile_blocked_by_me.json');
     addTearDown(bundle.harness.container.dispose);
+    final ScriptedAccountsApi api = ScriptedAccountsApi(
+      bundle.harness.client,
+      getProfileHandler: (_) async => Either.left(
+        const Failure(
+          'Profile is unavailable.',
+          type: FailureType.forbidden,
+          error: 'PROFILE_UNAVAILABLE',
+        ),
+      ),
+    );
 
     await tester.pumpTestApp(
       const ProfileScreen(user: 'blocked@example.invalid'),
-      overrides: overridesFor(bundle.harness, bundle.api),
+      overrides: overridesFor(bundle.harness, api),
     );
-    await pumpUntilVisible(tester, find.text('Blocked User'));
+    await pumpUntilVisible(tester, find.text('Profile unavailable'));
 
     expect(find.byKey(const Key('profile_message_action')), findsNothing);
     expect(find.byKey(const Key('profile_follow_action')), findsNothing);
     expect(find.text('Message'), findsNothing);
     expect(find.text('Unblock'), findsNothing);
+    expect(find.text('blocked@example.invalid'), findsNothing);
   });
 
   testWidgets('deleted public profile remains redacted and non-interactive', (

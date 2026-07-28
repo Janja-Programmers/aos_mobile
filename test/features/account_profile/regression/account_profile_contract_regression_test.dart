@@ -40,8 +40,8 @@ void main() {
     expect(relationship.canFollow, isFalse);
   });
 
-  test('regression: bio editing follows backend 300-character limit', () {
-    expect(ProfileUpdateRequest.bioMaxLength, 300);
+  test('regression: bio editing follows backend 500-character limit', () {
+    expect(ProfileUpdateRequest.bioMaxLength, 500);
   });
 
   test(

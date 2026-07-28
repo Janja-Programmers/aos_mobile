@@ -1,15 +1,26 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/account/data/accounts_api.dart';
 import 'package:africaonlinestores/features/account/domain/account_state.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_provider.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 final accountsControllerProvider =
     StateNotifierProvider<AccountsController, AccountState>((ref) {
-      final api = ref.watch(accountsApiProvider);
-      return AccountsController(api: api)..loadProfile();
+      final AuthState authState = ref.watch(authControllerProvider);
+      final AccountsApi api = ref.watch(accountsApiProvider);
+      final AccountsController controller = AccountsController(api: api);
+
+      if (authState is AuthAuthenticated) {
+        unawaited(controller.loadProfile());
+      }
+
+      return controller;
     });
 
 class AccountsController extends StateNotifier<AccountState> {

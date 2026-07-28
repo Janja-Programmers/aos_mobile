@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:africaonlinestores/core/api/api_client.dart';
+import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
@@ -51,7 +52,7 @@ void main() {
           return AuthApi(ref.watch(apiClientProvider));
         }),
         authControllerProvider.overrideWith((Ref ref) {
-          authController = MutableAuthController(
+          return authController = MutableAuthController(
             ref: ref,
             api: ref.watch(authApiProvider),
             apiClient: ref.watch(apiClientProvider),
@@ -64,18 +65,16 @@ void main() {
               sid: 'test-session-id',
             ),
           );
-          return authController;
         }),
         accountsApiProvider.overrideWith((Ref ref) {
-          accountsApi = ScriptedAccountsApi(
+          return accountsApi = ScriptedAccountsApi(
             ref.watch(apiClientProvider),
-            getProfileHandler: (_) async => Either.right(profilePayload),
+            getProfileHandler: (_) async =>
+                Either<Failure, Map<String, dynamic>>.right(profilePayload),
           );
-          return accountsApi;
         }),
       ],
     );
-    addTearDown(container.dispose);
 
     final Completer<void> loaded = Completer<void>();
     final ProviderSubscription<AccountState> subscription = container

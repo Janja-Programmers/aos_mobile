@@ -43,18 +43,22 @@ class AuthController extends StateNotifier<AuthState> {
     required AuthApi api,
     required ApiClient apiClient,
     required SessionStorage storage,
+    DateTime Function()? now,
   }) : _ref = ref,
        _api = api,
        _apiClient = apiClient,
        _storage = storage,
+       _now = now ?? DateTime.now,
        super(const AuthLoading());
 
   final Ref _ref;
   final AuthApi _api;
   final ApiClient _apiClient;
   final SessionStorage _storage;
+  final DateTime Function() _now;
 
   Future<bool>? _refreshingSession;
+  Future<Either<Failure, void>>? _loginInFlight;
   StreamSubscription<void>? _sessionSub;
 
   bool _isHydrating = false;
@@ -163,7 +167,7 @@ class AuthController extends StateNotifier<AuthState> {
   // SESSION REFRESH
   // ---------------------------------------------------------------------------
   Future<bool> _refreshSession() async {
-    final now = DateTime.now();
+    final DateTime now = _now();
 
     if (_lastRefresh != null &&
         now.difference(_lastRefresh!) < _refreshCooldown) {
@@ -206,8 +210,31 @@ class AuthController extends StateNotifier<AuthState> {
     required String identifier,
     required String password,
     required bool rememberMe,
+  }) {
+    final Future<Either<Failure, void>>? activeRequest = _loginInFlight;
+    if (activeRequest != null) return activeRequest;
+
+    late final Future<Either<Failure, void>> request;
+    request =
+        _performLogin(
+          identifier: identifier,
+          password: password,
+          rememberMe: rememberMe,
+        ).whenComplete(() {
+          if (identical(_loginInFlight, request)) {
+            _loginInFlight = null;
+          }
+        });
+    _loginInFlight = request;
+    return request;
+  }
+
+  Future<Either<Failure, void>> _performLogin({
+    required String identifier,
+    required String password,
+    required bool rememberMe,
   }) async {
-    final cleanIdentifier = identifier.trim().toLowerCase();
+    final String cleanIdentifier = identifier.trim().toLowerCase();
 
     await _storage.clearSid();
     await _apiClient.clearSid();
@@ -221,9 +248,7 @@ class AuthController extends StateNotifier<AuthState> {
       fallbackMessage: 'Login failed.',
     );
 
-    if (finished.isLeft) {
-      return finished;
-    }
+    if (finished.isLeft) return finished;
 
     await _storage.setRememberMe(rememberMe);
     if (rememberMe) {
@@ -409,8 +434,14 @@ class AuthController extends StateNotifier<AuthState> {
     }
 
     final data = asJsonMap(payload['data']);
-    final sid = _sessionSid(data);
+    final session = asJsonMap(data['session']);
+    if (session['authenticated'] != true) {
+      return Either.left(
+        const Failure('Login failed. Session is not authenticated.'),
+      );
+    }
 
+    final sid = asString(session['sid']).trim();
     if (sid.isEmpty) {
       return Either.left(
         const Failure('Login failed. No session was returned.'),
@@ -435,11 +466,6 @@ class AuthController extends StateNotifier<AuthState> {
     }
 
     return Either.right(null);
-  }
-
-  String _sessionSid(Map<String, dynamic> authData) {
-    final session = asJsonMap(authData['session']);
-    return asString(session['sid']).trim();
   }
 
   Failure _failureFromPayload(

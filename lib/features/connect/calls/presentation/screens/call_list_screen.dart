@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
@@ -20,20 +23,74 @@ class CallListScreen extends ConsumerStatefulWidget {
   ConsumerState<CallListScreen> createState() => _CallListScreenState();
 }
 
-class _CallListScreenState extends ConsumerState<CallListScreen> {
+class _CallListScreenState extends ConsumerState<CallListScreen>
+    with WidgetsBindingObserver {
   String selectedFilter = 'all';
   String _query = '';
+  bool? _canUseFullScreenIntent;
+  bool _isOpeningFullScreenIntentSettings = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     _query = widget.searchQuery ?? '';
 
-    // 🔥 Load once
-    Future.microtask(() {
-      ref.read(callManagerProvider.notifier).loadCallLogs();
+    unawaited(_initializeScreen());
+  }
+
+  Future<void> _initializeScreen() async {
+    await ref.read(callManagerProvider.notifier).loadCallLogs();
+    if (!mounted) return;
+    await _refreshFullScreenIntentStatus();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_refreshFullScreenIntentStatus());
+    }
+  }
+
+  Future<void> _refreshFullScreenIntentStatus() async {
+    if (!Platform.isAndroid) return;
+
+    final allowed = await ref
+        .read(callKitServiceProvider)
+        .canUseFullScreenIntent();
+    if (!mounted || _canUseFullScreenIntent == allowed) return;
+
+    setState(() {
+      _canUseFullScreenIntent = allowed;
     });
+  }
+
+  Future<void> _requestFullScreenIntentPermission() async {
+    if (_isOpeningFullScreenIntentSettings) return;
+
+    setState(() {
+      _isOpeningFullScreenIntentSettings = true;
+    });
+
+    try {
+      await ref
+          .read(callKitServiceProvider)
+          .requestFullScreenIntentPermission();
+      await _refreshFullScreenIntentStatus();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isOpeningFullScreenIntentSettings = false;
+        });
+      }
+    }
   }
 
   @override
@@ -54,6 +111,7 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
 
     return Column(
       children: [
+        if (_canUseFullScreenIntent == false) _buildFullScreenIntentBanner(),
         AnimatedSize(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
@@ -65,6 +123,59 @@ class _CallListScreenState extends ConsumerState<CallListScreen> {
 
         Expanded(child: _buildBody(state)),
       ],
+    );
+  }
+
+  Widget _buildFullScreenIntentBanner() {
+    final colors = context.appColors;
+
+    return Semantics(
+      container: true,
+      label: 'Full-screen incoming calls are disabled',
+      child: Material(
+        color: colors.primary.withValues(alpha: 0.08),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.phone_in_talk_outlined, color: colors.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Enable full-screen incoming calls',
+                      style: context.pStrong,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Android may otherwise show only a heads-up call '
+                'notification.',
+                style: context.smallMuted,
+              ),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: TextButton(
+                  onPressed: _isOpeningFullScreenIntentSettings
+                      ? null
+                      : _requestFullScreenIntentPermission,
+                  child: _isOpeningFullScreenIntentSettings
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Open settings'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

@@ -9,6 +9,10 @@ class SocialRelationshipModel extends SocialRelationship {
     required super.isFriend,
     required super.relationshipStatus,
     required super.actionLabel,
+    super.isBlockedByMe,
+    super.hasBlockedMe,
+    super.isBlocked,
+    super.blockStatus,
     super.status,
     super.targetTotalFollowers,
     super.currentTotalFollowing,
@@ -23,6 +27,10 @@ class SocialRelationshipModel extends SocialRelationship {
       isFriend: _bool(json['is_friend']),
       relationshipStatus: _string(json['relationship_status']),
       actionLabel: _string(json['action_label']),
+      isBlockedByMe: _bool(json['is_blocked_by_me']),
+      hasBlockedMe: _bool(json['has_blocked_me']),
+      isBlocked: _bool(json['is_blocked']),
+      blockStatus: _string(json['block_status']),
       status: _nullableString(json['status']),
       targetTotalFollowers: _nullableInt(json['target_total_followers']),
       currentTotalFollowing: _nullableInt(json['current_total_following']),
@@ -38,6 +46,10 @@ class SocialRelationshipModel extends SocialRelationship {
       'is_friend': isFriend,
       'relationship_status': relationshipStatus,
       'action_label': actionLabel,
+      'is_blocked_by_me': isBlockedByMe,
+      'has_blocked_me': hasBlockedMe,
+      'is_blocked': isBlocked,
+      'block_status': blockStatus,
       'status': status,
       'target_total_followers': targetTotalFollowers,
       'current_total_following': currentTotalFollowing,
@@ -60,10 +72,18 @@ class SocialRelationshipModel extends SocialRelationship {
 
   static int? _nullableInt(dynamic value) {
     if (value == null) return null;
-    if (value is int) return value;
-    if (value is double) return value.toInt();
 
-    return int.tryParse(value.toString());
+    final int? parsed;
+    if (value is int) {
+      parsed = value;
+    } else if (value is num) {
+      parsed = value.toInt();
+    } else {
+      parsed = int.tryParse(value.toString());
+    }
+
+    if (parsed == null) return null;
+    return parsed < 0 ? 0 : parsed;
   }
 
   static bool _bool(dynamic value) {

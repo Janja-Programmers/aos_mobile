@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:africaonlinestores/core/api/api_response.dart';
+import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
 import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
 import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/normalize_image.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/profile_edit_sheet.dart';
@@ -109,6 +111,9 @@ class ProfileScreen extends ConsumerWidget {
         );
       },
       error: (error, _) {
+        final Failure? failure = error is Failure ? error : null;
+        final bool profileUnavailable =
+            failure?.error?.trim().toUpperCase() == 'PROFILE_UNAVAILABLE';
         final fallback = _ProfileViewData.fallback(
           targetUser: targetUser,
           isOwnProfile: isOwnProfile,
@@ -123,7 +128,7 @@ class ProfileScreen extends ConsumerWidget {
         return Scaffold(
           backgroundColor: colors.surface,
           appBar: _ProfileAppBar(
-            title: fallback.displayName,
+            title: profileUnavailable ? 'Profile' : fallback.displayName,
             onActivityTap: () => ActivityNavigation.toActivityCenter(context),
             onMoreTap: fallback.isOwnProfile
                 ? null
@@ -142,21 +147,25 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Failed to load profile.',
+                    profileUnavailable
+                        ? 'Profile unavailable'
+                        : 'Failed to load profile.',
                     style: context.pStrong.copyWith(color: colors.textPrimary),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    error.toString(),
+                    failure?.message ?? 'Please try again.',
                     textAlign: TextAlign.center,
                     style: context.pMuted,
                   ),
-                  const SizedBox(height: 18),
-                  TextButton(
-                    onPressed: () =>
-                        ref.invalidate(_profileViewDataProvider(request)),
-                    child: const Text('Try again'),
-                  ),
+                  if (!profileUnavailable) ...[
+                    const SizedBox(height: 18),
+                    TextButton(
+                      onPressed: () =>
+                          ref.invalidate(_profileViewDataProvider(request)),
+                      child: const Text('Try again'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -164,32 +173,63 @@ class ProfileScreen extends ConsumerWidget {
         );
       },
       data: (data) {
+        final _ProfileContentRequest contentRequest = _ProfileContentRequest(
+          targetUser: request.targetUser,
+          isOwnProfile: data.isOwnProfile,
+        );
+        final AsyncValue<_ProfileContentData>? contentAsync =
+            data.contentAvailable
+            ? ref.watch(_profileContentProvider(contentRequest))
+            : null;
+        final _ProfileContentData? content = contentAsync?.maybeWhen(
+          data: (value) => value,
+          orElse: () => null,
+        );
+        final bool contentLoading =
+            contentAsync?.maybeWhen(loading: () => true, orElse: () => false) ??
+            false;
+        final _ProfileViewData resolvedData = content == null
+            ? data
+            : data.withContent(content);
+
         return _ProfileScaffold(
-          data: data,
+          data: resolvedData,
+          isLoading: contentLoading,
           onRefresh: () async {
             ref.invalidate(_profileViewDataProvider(request));
+            if (data.contentAvailable) {
+              ref.invalidate(_profileContentProvider(contentRequest));
+            }
             ref.invalidate(accountsControllerProvider);
             await ref.read(_profileViewDataProvider(request).future);
+            if (data.contentAvailable) {
+              await ref.read(_profileContentProvider(contentRequest).future);
+            }
           },
           onActivityTap: () => ActivityNavigation.toActivityCenter(context),
-          onAvatarTap: () => _handleAvatarTap(context, ref, data, request),
-          onEditTap: () => _showEditSheet(context, ref, data, request),
-          onSellerStoreTap: data.canVisitSellerStore
-              ? () => SellerNavigation.toSellerStore(context, data.sellerId!)
+          onAvatarTap: () =>
+              _handleAvatarTap(context, ref, resolvedData, request),
+          onEditTap: () => _showEditSheet(context, ref, resolvedData, request),
+          onSellerStoreTap: resolvedData.canVisitSellerStore
+              ? () => SellerNavigation.toSellerStore(
+                  context,
+                  resolvedData.sellerId!,
+                )
               : null,
-          onMessageTap: (tapContext) => ChatActions.startChat(
-            context: tapContext,
-            ref: ref,
-            user: data.user,
-            displayName: data.displayName,
-            avatar: data.avatarUrl,
-          ),
-          onFollowTap: data.isOwnProfile
-              ? null
-              : (tapContext) async {
+          onMessageTap: resolvedData.canInteract
+              ? (tapContext) => ChatActions.startChat(
+                  context: tapContext,
+                  ref: ref,
+                  user: resolvedData.user,
+                  displayName: resolvedData.displayName,
+                  avatar: resolvedData.avatarUrl,
+                )
+              : null,
+          onFollowTap: resolvedData.canInteract
+              ? (tapContext) async {
                   final res = await ref
                       .read(socialRepositoryProvider)
-                      .toggleFollow(targetUser: data.user);
+                      .toggleFollow(targetUser: resolvedData.user);
 
                   if (!tapContext.mounted) return;
 
@@ -204,7 +244,8 @@ class ProfileScreen extends ConsumerWidget {
                   ref.invalidate(_profileViewDataProvider(request));
                   ref.invalidate(accountsControllerProvider);
                   await ref.read(_profileViewDataProvider(request).future);
-                },
+                }
+              : null,
         );
       },
     );

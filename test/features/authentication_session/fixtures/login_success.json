@@ -17,11 +17,30 @@
         "account_status": "Active"
       },
       "preferences": {
-        "country": "KE",
-        "language": "en",
-        "currency": "KES"
+        "country": {
+          "id": "Kenya",
+          "name": "Kenya",
+          "code": "KE",
+          "flag": "🇰🇪"
+        },
+        "currency": {
+          "id": "KES",
+          "code": "KES",
+          "symbol": "KSh",
+          "name": "Kenyan Shilling"
+        },
+        "language": {
+          "id": "en",
+          "code": "en",
+          "name": "English",
+          "flag": "🇬🇧"
+        },
+        "location": null,
+        "is_country_locked": false
       },
-      "roles": ["AOS User"],
+      "roles": [
+        "AOS User"
+      ],
       "seller": {
         "is_seller": true,
         "seller_id": "SELLER-TEST-1",

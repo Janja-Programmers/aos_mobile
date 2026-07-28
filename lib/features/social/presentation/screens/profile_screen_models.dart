@@ -108,9 +108,11 @@ class _ProfileViewData {
   final String? sellerId;
   final bool isFollowing;
   final String followActionLabel;
+  final bool canInteract;
+  final bool contentAvailable;
 
   bool get canVisitSellerStore =>
-      !isOwnProfile && isSeller && (sellerId?.trim().isNotEmpty ?? false);
+      canInteract && isSeller && (sellerId?.trim().isNotEmpty ?? false);
 
   const _ProfileViewData({
     required this.user,
@@ -135,7 +137,43 @@ class _ProfileViewData {
     required this.sellerId,
     required this.isFollowing,
     required this.followActionLabel,
+    required this.canInteract,
+    required this.contentAvailable,
   });
+
+  _ProfileViewData withContent(_ProfileContentData content) {
+    final int contentLikes = content.posts.fold<int>(
+      0,
+      (int sum, Short short) => sum + short.metrics.likeCount,
+    );
+
+    return _ProfileViewData(
+      user: user,
+      displayName: displayName,
+      username: username,
+      avatarUrl: avatarUrl,
+      bio: bio,
+      isOwnProfile: isOwnProfile,
+      isLive: isLive,
+      liveId: liveId,
+      followingCount: followingCount,
+      followersCount: followersCount,
+      friendsCount: friendsCount,
+      likesCount: likesCount > 0 ? likesCount : contentLikes,
+      isVerified: isVerified,
+      posts: content.posts,
+      reposted: content.reposted,
+      privateShorts: content.privateShorts,
+      saved: content.saved,
+      liked: content.liked,
+      isSeller: isSeller,
+      sellerId: sellerId,
+      isFollowing: isFollowing,
+      followActionLabel: followActionLabel,
+      canInteract: canInteract,
+      contentAvailable: contentAvailable,
+    );
+  }
 
   factory _ProfileViewData.fallback({
     required String targetUser,
@@ -180,43 +218,48 @@ class _ProfileViewData {
       sellerId: null,
       isFollowing: false,
       followActionLabel: 'Follow',
+      canInteract: false,
+      contentAvailable: true,
     );
   }
 }
 
 @immutable
-class _SellerProfileLite {
-  final String sellerId;
-  final String user;
+class _ProfileContentRequest {
+  final String targetUser;
+  final bool isOwnProfile;
 
-  const _SellerProfileLite({required this.sellerId, required this.user});
+  const _ProfileContentRequest({
+    required this.targetUser,
+    required this.isOwnProfile,
+  });
+
+  @override
+  bool operator ==(Object other) {
+    return other is _ProfileContentRequest &&
+        other.targetUser == targetUser &&
+        other.isOwnProfile == isOwnProfile;
+  }
+
+  @override
+  int get hashCode => Object.hash(targetUser, isOwnProfile);
 }
 
 @immutable
-class _RelationshipLite {
-  final bool isFollowing;
-  final bool isFollowedBy;
-  final bool isFriend;
-  final String relationshipStatus;
-  final String actionLabel;
-  final int? targetTotalFollowers;
+class _ProfileContentData {
+  final List<Short> posts;
+  final List<Short> reposted;
+  final List<Short> privateShorts;
+  final List<Short> saved;
+  final List<Short> liked;
 
-  const _RelationshipLite({
-    required this.isFollowing,
-    required this.isFollowedBy,
-    required this.isFriend,
-    required this.relationshipStatus,
-    required this.actionLabel,
-    required this.targetTotalFollowers,
+  const _ProfileContentData({
+    required this.posts,
+    required this.reposted,
+    required this.privateShorts,
+    required this.saved,
+    required this.liked,
   });
-
-  const _RelationshipLite.self()
-    : isFollowing = false,
-      isFollowedBy = false,
-      isFriend = false,
-      relationshipStatus = 'self',
-      actionLabel = '',
-      targetTotalFollowers = null;
 }
 
 String _usernameFromEmail(String value) {

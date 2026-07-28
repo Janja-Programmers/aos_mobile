@@ -228,21 +228,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return AppRoutes.home;
       }
 
-      final isAuthRoute = RouteGuards.isAuthRoute(matchedLocation);
-      final isProtected = RouteGuards.isProtectedRoute(currentLocation);
-
-      if (auth is AuthGuest && isProtected) {
-        if (isAuthRoute) return null;
-
-        final encodedLocation = Uri.encodeComponent(currentLocation);
-        return '${AppRoutes.login}?redirect=$encodedLocation';
-      }
-
-      if (auth is AuthAuthenticated && isAuthRoute) {
-        return AppRoutes.home;
-      }
-
-      return null;
+      return RouteGuards.authenticationRedirect(
+        currentLocation: currentLocation,
+        isGuest: auth is AuthGuest,
+        isAuthenticated: auth is AuthAuthenticated,
+      );
     },
   );
 });

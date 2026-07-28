@@ -75,7 +75,7 @@ void main() {
     expect(name.controller?.text, 'Profile Owner');
     expect(bio.controller?.text, 'Prefilled profile bio.');
     expect(name.maxLength, 80);
-    expect(bio.maxLength, 300);
+    expect(bio.maxLength, 500);
   });
 
   testWidgets('duplicate save taps share one in-flight update', (

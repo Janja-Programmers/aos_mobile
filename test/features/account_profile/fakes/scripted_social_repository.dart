@@ -52,7 +52,6 @@ class ScriptedSocialRepository implements SocialRepository {
   Future<Either<Failure, SocialFriendsPage>> getFollowers({
     int limit = 20,
     int start = 0,
-    String? targetUser,
     String? query,
   }) async {
     return Either.right(const SocialFriendsPage.empty());
@@ -62,7 +61,6 @@ class ScriptedSocialRepository implements SocialRepository {
   Future<Either<Failure, SocialFriendsPage>> getFollowing({
     int limit = 20,
     int start = 0,
-    String? targetUser,
     String? query,
   }) async {
     return Either.right(const SocialFriendsPage.empty());
@@ -72,7 +70,6 @@ class ScriptedSocialRepository implements SocialRepository {
   Future<Either<Failure, SocialFriendsPage>> getFriends({
     int limit = 20,
     int start = 0,
-    String? targetUser,
     String? query,
   }) async {
     return Either.right(const SocialFriendsPage.empty());

@@ -14,6 +14,7 @@ import 'package:africaonlinestores/features/verifications/user_verification/pres
 import 'package:africaonlinestores/features/verifications/user_verification/presentation/widgets/selfie_source_bottom_sheet.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/presentation/widgets/user_verification_stepper.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/presentation/widgets/user_verification_submission_dialog.dart';
+import 'package:africaonlinestores/shared/components/app_bottom_bar_surface.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
@@ -359,35 +360,30 @@ class _UserVerificationScreenState
               ),
         bottomNavigationBar: state.isRestoringDraft
             ? null
-            : SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
-                  child: Row(
-                    children: [
-                      if (state.currentStep > 0) ...[
-                        Expanded(
-                          child: SizedBox(
-                            height: 56,
-                            child: OutlinedButton(
-                              onPressed: isBusy
-                                  ? null
-                                  : () => unawaited(_back()),
-                              child: const Text('Back'),
-                            ),
+            : AppBottomBarSurface(
+                padding: const EdgeInsets.all(10),
+                child: Row(
+                  children: [
+                    if (state.currentStep > 0) ...[
+                      Expanded(
+                        child: SizedBox(
+                          height: 56,
+                          child: OutlinedButton(
+                            onPressed: isBusy ? null : () => unawaited(_back()),
+                            child: const Text('Back'),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                      ],
-                      Expanded(
-                        child: PrimaryButton(
-                          text: state.currentStep == 3 ? 'Submit' : 'Continue',
-                          loading: state.isSubmitting,
-                          onPressed: isBusy ? null : () => unawaited(_next()),
-                        ),
                       ),
+                      const SizedBox(width: 12),
                     ],
-                  ),
+                    Expanded(
+                      child: PrimaryButton(
+                        text: state.currentStep == 3 ? 'Submit' : 'Continue',
+                        loading: state.isSubmitting,
+                        onPressed: isBusy ? null : () => unawaited(_next()),
+                      ),
+                    ),
+                  ],
                 ),
               ),
       ),

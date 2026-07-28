@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/shared/components/app_bottom_bar_surface.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -13,43 +14,38 @@ class AdDetailActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: Row(
-          children: [
-            _AdDetailActionButton(
-              icon: Icons.home_outlined,
+    return AppBottomBarSurface(
+      padding: const EdgeInsets.all(10),
+      child: Row(
+        children: [
+          _AdDetailActionButton(
+            icon: Icons.home_outlined,
+            filled: false,
+            onTap: () => context.goNamed(AppRoutes.nHome),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _AdDetailActionButton(
+              icon: Icons.call,
+              filled: true,
+              label: 'Call',
+              onTap:
+                  onCall ??
+                  () => ShowSnack(context, 'Wire call action later').info(),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _AdDetailActionButton(
+              icon: Icons.chat_bubble_outline,
               filled: false,
-              onTap: () => context.goNamed(AppRoutes.nHome),
+              label: 'Message',
+              onTap:
+                  onMessage ??
+                  () => ShowSnack(context, 'Wire chat action later').info(),
             ),
-            const SizedBox(width: 10),
-
-            Expanded(
-              child: _AdDetailActionButton(
-                icon: Icons.call,
-                filled: true,
-                label: 'Call',
-                onTap:
-                    onCall ??
-                    () => ShowSnack(context, 'Wire call action later').info(),
-              ),
-            ),
-            const SizedBox(width: 10),
-
-            Expanded(
-              child: _AdDetailActionButton(
-                icon: Icons.chat_bubble_outline,
-                filled: false,
-                label: 'Message',
-                onTap:
-                    onMessage ??
-                    () => ShowSnack(context, 'Wire chat action later').info(),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -73,9 +69,7 @@ class _AdDetailActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appColors = context.appColors;
-
     final isIconOnly = label == null || label!.trim().isEmpty;
-
     final iconColor = filled ? appColors.white : appColors.primary;
     final textColor = filled ? appColors.white : appColors.primary;
 

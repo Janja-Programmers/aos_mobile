@@ -4,6 +4,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
+import 'package:africaonlinestores/shared/components/app_bottom_bar_surface.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -363,8 +364,8 @@ class _ReducedEditListingScreenState
           ),
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      bottomNavigationBar: AppBottomBarSurface(
+        padding: const EdgeInsets.all(10),
         child: FilledButton(
           onPressed: _saving ? null : _save,
           style: FilledButton.styleFrom(

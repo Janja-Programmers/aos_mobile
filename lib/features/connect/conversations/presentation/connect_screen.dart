@@ -180,7 +180,7 @@ class _ConnectHeader extends ConsumerWidget {
 
               return List.generate(items.length, (i) {
                 final item = items[i];
-                final isActive = location.contains(item.routeName);
+                final isActive = item.matchesLocation(location);
                 final itemColor = isActive
                     ? colors.primary
                     : colors.textPrimary;
@@ -194,7 +194,10 @@ class _ConnectHeader extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        Icon(item.icon, color: itemColor),
+                        Icon(
+                          isActive ? item.activeIcon : item.icon,
+                          color: itemColor,
+                        ),
                         const SizedBox(width: 10),
                         Text(
                           item.label,

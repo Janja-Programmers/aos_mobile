@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/features/verifications/presentation/widgets/verification_stepper.dart';
+import 'package:africaonlinestores/shared/components/app_bottom_bar_surface.dart';
 import 'package:flutter/material.dart';
 
 class SellerVerificationShell extends StatelessWidget {
@@ -62,7 +63,10 @@ class SellerVerificationShell extends StatelessWidget {
           Expanded(child: child),
         ],
       ),
-      bottomNavigationBar: bottom,
+      bottomNavigationBar: AppBottomBarSurface(
+        padding: const EdgeInsets.all(10),
+        child: bottom,
+      ),
     );
   }
 }

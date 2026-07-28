@@ -129,14 +129,14 @@ class _SellerStorefrontScreenState
 
               return List.generate(items.length, (i) {
                 final item = items[i];
-                final isActive = location.contains(item.routeName);
+                final isActive = item.matchesLocation(location);
 
                 return PopupMenuItem<int>(
                   value: i,
                   child: Row(
                     children: [
                       Icon(
-                        item.icon,
+                        isActive ? item.activeIcon : item.icon,
                         size: 20,
                         color: isActive ? colors.primary : colors.textPrimary,
                       ),
@@ -218,20 +218,14 @@ class _SellerStorefrontScreenState
       ),
       bottomNavigationBar: seller == null || seller.isSelf
           ? null
-          : SafeArea(
-              top: false,
-              child: AdDetailActionBar(
-                onCall: seller.canCall
-                    ? () => _handleCall(seller)
-                    : () =>
-                          ShowSnack(context, 'Calling is unavailable.').info(),
-                onMessage: seller.canMessage
-                    ? () => _handleMessage(seller)
-                    : () => ShowSnack(
-                        context,
-                        'Messaging is unavailable.',
-                      ).info(),
-              ),
+          : AdDetailActionBar(
+              onCall: seller.canCall
+                  ? () => _handleCall(seller)
+                  : () => ShowSnack(context, 'Calling is unavailable.').info(),
+              onMessage: seller.canMessage
+                  ? () => _handleMessage(seller)
+                  : () =>
+                        ShowSnack(context, 'Messaging is unavailable.').info(),
             ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/widgets/ad_stepper.dart';
+import 'package:africaonlinestores/shared/components/app_bottom_bar_surface.dart';
 import 'package:flutter/material.dart';
 
 class ScaffoldShell extends StatelessWidget {
@@ -65,7 +66,10 @@ class ScaffoldShell extends StatelessWidget {
             Expanded(child: child),
           ],
         ),
-        bottomNavigationBar: bottom,
+        bottomNavigationBar: AppBottomBarSurface(
+          padding: const EdgeInsets.all(10),
+          child: bottom,
+        ),
       ),
     );
   }

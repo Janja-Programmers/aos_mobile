@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/core/routing/app_nav_config.dart';
+import 'package:africaonlinestores/core/routing/app_nav_item.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
@@ -13,7 +14,10 @@ class AppNavigation {
     WidgetRef ref,
     int index,
   ) async {
-    final item = AppNavConfig.items(context)[index];
+    final items = AppNavConfig.items(context);
+    if (index < 0 || index >= items.length) return;
+
+    final item = items[index];
     final auth = ref.read(authControllerProvider);
 
     if (item.requiresAuth && auth is! AuthAuthenticated) {
@@ -21,8 +25,18 @@ class AppNavigation {
       return;
     }
 
-    if (context.mounted) {
-      context.goNamed(item.routeName);
+    if (!context.mounted) return;
+
+    final location = GoRouterState.of(context).uri.toString();
+    if (item.isDestination(location)) return;
+
+    switch (item.behavior) {
+      case AppNavBehavior.replace:
+        context.goNamed(item.routeName);
+        return;
+      case AppNavBehavior.push:
+        await context.pushNamed(item.routeName);
+        return;
     }
   }
 
@@ -58,11 +72,7 @@ class AppNavigation {
           message: 'Please login to continue',
           primaryText: 'Cancel',
           secondaryText: 'Log in',
-
-          /// Close sheet
           onPrimary: () => Navigator.of(sheetContext).pop(),
-
-          /// Navigate to login
           onSecondary: () {
             Navigator.of(sheetContext).pop();
 

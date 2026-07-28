@@ -272,37 +272,31 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
     final result = runner.validate();
     final isValid = runner.isValid;
 
-    final bottom = SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: PrimaryButton(
-          text: runner.isLast
-              ? (widget.mode == AdFormMode.create ? 'Post Ad' : 'Update Ad')
-              : 'Continue',
-          loading: flowState.posting,
-          icon: runner.isLast ? Icons.check : Icons.arrow_forward,
-          onPressed: (flowState.posting || !isValid)
-              ? null
-              : () async {
-                  flowCtrl.markAttempted(index);
-                  flowCtrl.markCompleted(index);
-
-                  if (!runner.isLast) {
-                    await _goTo(index + 1);
-                  } else {
-                    await _post(draft: draft, schema: schema);
-                  }
-                },
-          onDisabledTap: () {
-            if (!result.isValid) {
+    final bottom = PrimaryButton(
+      text: runner.isLast
+          ? (widget.mode == AdFormMode.create ? 'Post Ad' : 'Update Ad')
+          : 'Continue',
+      loading: flowState.posting,
+      icon: runner.isLast ? Icons.check : Icons.arrow_forward,
+      onPressed: (flowState.posting || !isValid)
+          ? null
+          : () async {
               flowCtrl.markAttempted(index);
-              final firstError = result.fieldErrors.values.first;
-              ShowSnack(context, firstError).error();
-            }
-          },
-        ),
-      ),
+              flowCtrl.markCompleted(index);
+
+              if (!runner.isLast) {
+                await _goTo(index + 1);
+              } else {
+                await _post(draft: draft, schema: schema);
+              }
+            },
+      onDisabledTap: () {
+        if (!result.isValid) {
+          flowCtrl.markAttempted(index);
+          final firstError = result.fieldErrors.values.first;
+          ShowSnack(context, firstError).error();
+        }
+      },
     );
 
     return ScaffoldShell(

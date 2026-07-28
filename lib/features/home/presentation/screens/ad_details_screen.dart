@@ -258,14 +258,14 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
 
               return List.generate(items.length, (index) {
                 final item = items[index];
-                final isActive = location.contains(item.routeName);
+                final isActive = item.matchesLocation(location);
 
                 return PopupMenuItem<int>(
                   value: index,
                   child: Row(
                     children: [
                       Icon(
-                        item.icon,
+                        isActive ? item.activeIcon : item.icon,
                         color: isActive
                             ? context.appColors.primary
                             : context.appColors.textPrimary,

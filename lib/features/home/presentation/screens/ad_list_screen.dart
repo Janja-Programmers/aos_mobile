@@ -1,7 +1,6 @@
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/pickers/select_location_screen.dart';
-import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
 import 'package:africaonlinestores/features/home/domain/location_picker.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_app_bar.dart';
 import 'package:africaonlinestores/features/home/presentation/controller/home_page_controller.dart';
@@ -84,18 +83,6 @@ class _AdListScreenState extends ConsumerState<AdListScreen> {
     final header = HomeAppBar(
       locationLabel: locationLabel ?? l10n.location_all_locations,
       onTapLocation: _openLocationPicker,
-      onTapConnect: () {
-        AppNavigation.requireAuth(
-          context,
-          ref,
-          onAuthenticated: () {
-            ConnectScreenNavigation.toMessagesTab(context);
-          },
-        );
-      },
-      onTapMaps: () {
-        context.pushNamed(AppRoutes.nMaps);
-      },
       onTapNotifications: () {
         AppNavigation.requireAuth(
           context,

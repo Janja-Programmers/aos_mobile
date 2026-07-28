@@ -40,6 +40,8 @@ class CallKitPayloadMapper {
       handle: isVideo ? 'Incoming video call' : 'Incoming voice call',
       type: isVideo ? 1 : 0,
       duration: 30000,
+      textAccept: 'Accept',
+      textDecline: 'Decline',
       extra: {
         ...data,
         'call_id': callId,
@@ -54,7 +56,6 @@ class CallKitPayloadMapper {
         isShowLogo: true,
         isShowCallID: false,
         isShowFullLockedScreen: true,
-        isFullScreen: true,
         isImportant: true,
         ringtonePath: 'system_ringtone_default',
         backgroundColor: '#FFFFFF',
@@ -62,8 +63,6 @@ class CallKitPayloadMapper {
         actionColor: '#16A34A',
         incomingCallNotificationChannelName: 'AOS Calls',
         missedCallNotificationChannelName: 'Missed Calls',
-        textAccept: 'Answer',
-        textDecline: 'Reject',
       ),
       ios: IOSParams(
         iconName: 'CallKitLogo',

@@ -20,6 +20,7 @@ import 'package:africaonlinestores/features/connect/calls/application/listeners/
 import 'package:africaonlinestores/features/connect/calls/application/listeners/call_navigation_listener.dart';
 import 'package:africaonlinestores/features/connect/calls/application/listeners/callkit_state_listener.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/call_runtime_log.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_payload_mapper.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_pending_payload_store.dart';
 import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
@@ -50,6 +51,17 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   final data = asJsonMap(message.data);
 
+  CallRuntimeLog.write(
+    'fcm_background_received',
+    callId: data['call_id']?.toString(),
+    details: <String, Object?>{
+      'has_notification_block': message.notification != null,
+      'event': data['event']?.toString(),
+      'type': data['type']?.toString(),
+      'message_id': message.messageId,
+    },
+  );
+
   final event = _normalizePushType(data['event']);
   final type = _normalizePushType(data['type']);
   final notificationType = _normalizePushType(data['notification_type']);
@@ -66,10 +78,14 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       action == 'incoming_call' ||
       action == 'call';
 
-  if (!isIncomingCall) return;
+  if (!isIncomingCall) {
+    CallRuntimeLog.write('fcm_background_not_call');
+    return;
+  }
 
   final callId = data['call_id']?.toString().trim();
   if (callId == null || callId.isEmpty || callId.toLowerCase() == 'null') {
+    CallRuntimeLog.write('fcm_background_missing_call_id');
     return;
   }
 
@@ -78,7 +94,18 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   await const CallKitPendingPayloadStore().save(pendingPayload);
 
-  await FlutterCallkitIncoming.showCallkitIncoming(params);
+  try {
+    CallRuntimeLog.write('callkit_show_requested', callId: callId);
+    await FlutterCallkitIncoming.showCallkitIncoming(params);
+    CallRuntimeLog.write('callkit_show_completed', callId: callId);
+  } catch (error) {
+    CallRuntimeLog.write(
+      'callkit_show_failed',
+      callId: callId,
+      details: <String, Object?>{'error_type': error.runtimeType.toString()},
+    );
+    rethrow;
+  }
 }
 
 String? _normalizePushType(Object? value) {

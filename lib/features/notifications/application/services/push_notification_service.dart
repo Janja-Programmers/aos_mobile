@@ -97,12 +97,25 @@ class PushNotificationService {
   // PERMISSION
   // =====================================================
   Future<bool> _requestPermission() async {
-    final settings = await _messaging.requestPermission();
+    final currentSettings = await _messaging.getNotificationSettings();
+    final currentStatus = currentSettings.authorizationStatus;
 
-    final status = settings.authorizationStatus;
+    if (currentStatus == AuthorizationStatus.authorized ||
+        currentStatus == AuthorizationStatus.provisional) {
+      return true;
+    }
 
-    return status == AuthorizationStatus.authorized ||
-        status == AuthorizationStatus.provisional;
+    // A denied decision must not trigger another launch-time request. The user
+    // can change it later from Android/iOS application settings.
+    if (currentStatus == AuthorizationStatus.denied) {
+      return false;
+    }
+
+    final requestedSettings = await _messaging.requestPermission();
+    final requestedStatus = requestedSettings.authorizationStatus;
+
+    return requestedStatus == AuthorizationStatus.authorized ||
+        requestedStatus == AuthorizationStatus.provisional;
   }
 
   Future<void> _configureForegroundPresentation() async {
@@ -347,7 +360,12 @@ class PushNotificationService {
             notification.payload.extra,
           );
 
-          if (handled) return;
+          if (!handled) {
+            appLogger.i(
+              '📞 Incoming call tap ignored because the call is no longer actionable',
+            );
+          }
+          return;
         }
 
         _navigationHandler.handleNotificationTap(notification);
@@ -381,7 +399,12 @@ class PushNotificationService {
           notification.payload.extra,
         );
 
-        if (handled) return;
+        if (!handled) {
+          appLogger.i(
+            '📞 Terminated incoming call launch ignored because the call is no longer actionable',
+          );
+        }
+        return;
       }
 
       _navigationHandler.handleNotificationTap(notification);

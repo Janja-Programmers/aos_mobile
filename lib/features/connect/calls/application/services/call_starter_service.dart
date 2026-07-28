@@ -39,7 +39,16 @@ class CallStarterService {
       return false;
     }
 
-    await callKitService.registerOutgoingCall(callId: call.id);
+    final callkitUuid = await callKitService.registerOutgoingCall(
+      callId: call.id,
+      callType: call.callType,
+      receiver: call.receiver ?? callManager.currentState.receiver ?? receiver,
+    );
+
+    if (callkitUuid == null) {
+      await callManager.endCurrentCall(expectedCallId: call.id);
+      return false;
+    }
 
     return true;
   }

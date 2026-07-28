@@ -431,6 +431,8 @@ class CallManager extends StateNotifier<CallState> {
 
     if (!_callActionLocks.add(callId)) return;
 
+    var backendAccepted = false;
+
     try {
       state = state.copyWith(isBusy: true, clearErrorMessage: true);
 
@@ -452,8 +454,34 @@ class CallManager extends StateNotifier<CallState> {
         return;
       }
 
+      final activeIncomingCall = state.activeCall;
+      if (activeIncomingCall == null) {
+        state = state.copyWith(isBusy: false);
+        return;
+      }
+
+      await mediaService.prepareForCall(
+        isVideo: activeIncomingCall.callType == AOSCallType.video,
+      );
+
       final ongoingCall = await repository.acceptCall(callId: callId);
-      final mergedCall = _mergeCallForAction(state.activeCall, ongoingCall);
+      backendAccepted = true;
+      var mergedCall = _mergeCallForAction(state.activeCall, ongoingCall);
+
+      if (mergedCall.token.isEmpty || mergedCall.wsUrl.isEmpty) {
+        final tokenCall = await repository.getCallToken(callId: callId);
+        mergedCall = _mergeCallForAction(
+          mergedCall,
+          tokenCall.copyWith(
+            conversationId: mergedCall.conversationId,
+            callType: mergedCall.callType,
+            caller: mergedCall.caller,
+            receiver: mergedCall.receiver,
+            videoUpgradeStatus: mergedCall.videoUpgradeStatus,
+            videoUpgradeRequestedBy: mergedCall.videoUpgradeRequestedBy,
+          ),
+        );
+      }
 
       _applyBackendState(
         BackendCallStatus.ongoing,
@@ -480,6 +508,17 @@ class CallManager extends StateNotifier<CallState> {
         callId: callId,
         hasIncomingCallUi: false,
       );
+
+      if (!synced && backendAccepted) {
+        try {
+          await repository.endCall(callId: callId);
+          await _leaveRoomInternal();
+          _applyBackendState(BackendCallStatus.ended, hasIncomingCallUi: false);
+          return;
+        } catch (_) {
+          // Fall through to the existing error state when backend cleanup fails.
+        }
+      }
 
       if (!synced) {
         await _failCall(e);

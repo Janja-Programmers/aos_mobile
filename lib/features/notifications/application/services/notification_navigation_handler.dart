@@ -141,7 +141,8 @@ class NotificationNavigationHandler {
         return;
 
       case NotificationType.incomingCall:
-        _openCalls();
+        // Incoming-call pushes are owned by CallKit/CallManager. A normal
+        // notification tap must never compete by opening the Calls list.
         return;
 
       // =========================

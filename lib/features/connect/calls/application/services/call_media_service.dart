@@ -7,6 +7,10 @@ class CallMediaService {
 
   CallMediaService(this.liveKit);
 
+  Future<void> prepareForCall({required bool isVideo}) async {
+    await _requestPermissions(isVideo);
+  }
+
   Future<Room> joinCall({
     required String wsUrl,
     required String token,

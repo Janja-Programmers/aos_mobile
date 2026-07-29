@@ -46,21 +46,10 @@ void main() {
   }
 
   Future<({AccountProfileApiHarness harness, ScriptedAccountsApi api})>
-  buildHarnessFor(String fixtureName, {Future<void>? contentGate}) async {
+  buildHarnessFor(String fixtureName) async {
     final RecordingHttpClientAdapter adapter = RecordingHttpClientAdapter((
       RequestOptions options,
     ) async {
-      if (contentGate != null &&
-          <String>{
-            ApiEndpoints.myShorts,
-            ApiEndpoints.userShorts,
-            ApiEndpoints.repostedShorts,
-            ApiEndpoints.savedShorts,
-            ApiEndpoints.likedShorts,
-          }.contains(options.path)) {
-        await contentGate;
-      }
-
       if (options.path == ApiEndpoints.getSellerEndpoint) {
         return jsonResponse(<String, dynamic>{
           'message': <String, dynamic>{
@@ -134,21 +123,15 @@ void main() {
   testWidgets(
     'public friend profile hides owner controls and preserves Friends',
     (WidgetTester tester) async {
-      final Completer<void> contentGate = Completer<void>();
-      addTearDown(() {
-        if (!contentGate.isCompleted) contentGate.complete();
-      });
-      final bundle = await buildHarnessFor(
-        'public_profile_friend.json',
-        contentGate: contentGate.future,
-      );
+      final bundle = await buildHarnessFor('public_profile_friend.json');
       addTearDown(bundle.harness.container.dispose);
 
       await tester.pumpTestApp(
         const ProfileScreen(user: 'friend@example.invalid'),
         overrides: overridesFor(bundle.harness, bundle.api),
       );
-      await pumpUntilVisible(tester, find.text('Friend User'));
+      await pumpUntilVisible(tester, find.text('Friend User'), maxPumps: 10);
+      await tester.pump();
 
       expect(find.text('Friend User'), findsWidgets);
       expect(find.byKey(const Key('profile_edit_action')), findsNothing);
@@ -160,8 +143,13 @@ void main() {
       expect(find.text('Liked'), findsNothing);
       expect(find.text('friend@example.invalid'), findsNothing);
 
-      contentGate.complete();
-      await tester.pump();
+      final Iterable<String> initialPaths = bundle.harness.adapter.requests.map(
+        (RequestOptions request) => request.path,
+      );
+      expect(initialPaths, contains(ApiEndpoints.userShorts));
+      expect(initialPaths, isNot(contains(ApiEndpoints.repostedShorts)));
+      expect(initialPaths, isNot(contains(ApiEndpoints.savedShorts)));
+      expect(initialPaths, isNot(contains(ApiEndpoints.likedShorts)));
     },
   );
 

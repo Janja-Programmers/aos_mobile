@@ -1,7 +1,8 @@
 part of 'profile_screen.dart';
 
-class _ProfileScaffold extends StatefulWidget {
+class _ProfileScaffold extends ConsumerStatefulWidget {
   final _ProfileViewData data;
+  final String contentUser;
   final bool isLoading;
   final Future<void> Function() onRefresh;
   final VoidCallback onActivityTap;
@@ -13,6 +14,7 @@ class _ProfileScaffold extends StatefulWidget {
 
   const _ProfileScaffold({
     required this.data,
+    required this.contentUser,
     this.isLoading = false,
     required this.onRefresh,
     required this.onActivityTap,
@@ -24,13 +26,138 @@ class _ProfileScaffold extends StatefulWidget {
   });
 
   @override
-  State<_ProfileScaffold> createState() => _ProfileScaffoldState();
+  ConsumerState<_ProfileScaffold> createState() => _ProfileScaffoldState();
 }
 
-class _ProfileScaffoldState extends State<_ProfileScaffold> {
+class _ProfileScaffoldState extends ConsumerState<_ProfileScaffold> {
   _ProfilePanel _selectedPanel = _ProfilePanel.posts;
+  List<Short> _panelItems = const <Short>[];
+  bool _panelLoading = false;
   bool _messageLoading = false;
   bool _followLoading = false;
+  int _panelRequestGeneration = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _panelItems = _itemsForPanel(widget.data, _selectedPanel);
+    _schedulePanelLoad();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ProfileScaffold oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    final bool userChanged = oldWidget.contentUser != widget.contentUser;
+    final bool becameReady = oldWidget.isLoading && !widget.isLoading;
+    final bool availabilityChanged =
+        oldWidget.data.contentAvailable != widget.data.contentAvailable;
+    final bool ownershipChanged =
+        oldWidget.data.isOwnProfile != widget.data.isOwnProfile;
+    final bool panelBecameUnavailable =
+        !widget.data.isOwnProfile &&
+        (_selectedPanel == _ProfilePanel.privateShorts ||
+            _selectedPanel == _ProfilePanel.saved ||
+            _selectedPanel == _ProfilePanel.liked);
+
+    if (userChanged || panelBecameUnavailable) {
+      _selectedPanel = _ProfilePanel.posts;
+    }
+
+    if (userChanged ||
+        becameReady ||
+        availabilityChanged ||
+        ownershipChanged ||
+        panelBecameUnavailable) {
+      _panelRequestGeneration += 1;
+      _panelLoading = false;
+      _panelItems = _itemsForPanel(widget.data, _selectedPanel);
+      _schedulePanelLoad();
+    }
+  }
+
+  @override
+  void dispose() {
+    _panelRequestGeneration += 1;
+    super.dispose();
+  }
+
+  _ProfilePanelRequest _panelRequest(_ProfileViewData data) {
+    return _ProfilePanelRequest(
+      targetUser: widget.contentUser,
+      isOwnProfile: data.isOwnProfile,
+      panel: _selectedPanel,
+    );
+  }
+
+  void _schedulePanelLoad() {
+    if (widget.isLoading || !widget.data.contentAvailable) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_loadSelectedPanel());
+    });
+  }
+
+  Future<void> _loadSelectedPanel({bool forceRefresh = false}) async {
+    if (widget.isLoading || !widget.data.contentAvailable) {
+      if (!mounted) return;
+      setState(() {
+        _panelLoading = false;
+        _panelItems = _itemsForPanel(widget.data, _selectedPanel);
+      });
+      return;
+    }
+
+    final _ProfilePanelRequest request = _panelRequest(widget.data);
+    final int generation = ++_panelRequestGeneration;
+
+    if (forceRefresh) {
+      ref.invalidate(_profilePanelProvider(request));
+    }
+
+    if (mounted) {
+      setState(() {
+        _panelLoading = true;
+        _panelItems = _itemsForPanel(widget.data, _selectedPanel);
+      });
+    }
+
+    try {
+      final List<Short> items = await ref.read(
+        _profilePanelProvider(request).future,
+      );
+      if (!mounted || generation != _panelRequestGeneration) return;
+      setState(() {
+        _panelItems = items;
+        _panelLoading = false;
+      });
+    } catch (_) {
+      if (!mounted || generation != _panelRequestGeneration) return;
+      setState(() {
+        _panelItems = const <Short>[];
+        _panelLoading = false;
+      });
+    }
+  }
+
+  Future<void> _handleRefresh() async {
+    await widget.onRefresh();
+    if (!mounted) return;
+    await _loadSelectedPanel(forceRefresh: true);
+  }
+
+  void _selectPanel(_ProfilePanel panel) {
+    if (_selectedPanel == panel) return;
+
+    _panelRequestGeneration += 1;
+    setState(() {
+      _selectedPanel = panel;
+      _panelLoading = false;
+      _panelItems = _itemsForPanel(widget.data, panel);
+    });
+    unawaited(_loadSelectedPanel());
+  }
 
   Future<void> _handleMessageTap() async {
     final action = widget.onMessageTap;
@@ -60,7 +187,8 @@ class _ProfileScaffoldState extends State<_ProfileScaffold> {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final data = widget.data;
-    final selectedItems = _itemsForPanel(data, _selectedPanel);
+    final List<Short> selectedItems = _panelItems;
+    final bool panelLoading = widget.isLoading || _panelLoading;
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -72,7 +200,7 @@ class _ProfileScaffoldState extends State<_ProfileScaffold> {
             : () => ProfileScreen._showSafetySheet(context, data),
       ),
       body: RefreshIndicator(
-        onRefresh: widget.onRefresh,
+        onRefresh: _handleRefresh,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
@@ -127,12 +255,12 @@ class _ProfileScaffoldState extends State<_ProfileScaffold> {
                 child: _ProfileTabs(
                   selected: _selectedPanel,
                   isOwnProfile: data.isOwnProfile,
-                  onChanged: (panel) => setState(() => _selectedPanel = panel),
+                  onChanged: _selectPanel,
                 ),
                 backgroundColor: colors.surface,
               ),
             ),
-            if (widget.isLoading)
+            if (panelLoading)
               SliverGrid(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) => _ProfileGridSkeleton(index: index),

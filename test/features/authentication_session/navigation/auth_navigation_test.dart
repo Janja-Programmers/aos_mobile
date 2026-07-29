@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/routing/helpers/route_guards.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -66,6 +67,45 @@ void main() {
       );
 
       expect(redirect, isNull);
+    });
+  });
+  group('session-resolution redirects', () {
+    test('loading, restoring, and retryable failure remain on splash', () {
+      expect(
+        RouteGuards.requiresSessionResolution(const AuthLoading()),
+        isTrue,
+      );
+      expect(
+        RouteGuards.requiresSessionResolution(const AuthRestoring()),
+        isTrue,
+      );
+      expect(
+        RouteGuards.requiresSessionResolution(
+          const AuthRestorationFailure(
+            reason: AuthRestorationFailureReason.network,
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('guest and authenticated states are fully resolved', () {
+      expect(
+        RouteGuards.requiresSessionResolution(const AuthGuest()),
+        isFalse,
+      );
+      expect(
+        RouteGuards.requiresSessionResolution(
+          AuthAuthenticated(
+            user: AuthUser(
+              email: 'user@example.invalid',
+              fullName: 'Test User',
+            ),
+            sid: 'test-session',
+          ),
+        ),
+        isFalse,
+      );
     });
   });
 }

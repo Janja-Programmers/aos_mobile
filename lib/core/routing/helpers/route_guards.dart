@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 
 class RouteGuards {
   static const _protectedPrefixes = [
@@ -22,6 +23,12 @@ class RouteGuards {
     AppRoutes.forgotPassword,
     AppRoutes.resetPassword,
   ];
+
+  static bool requiresSessionResolution(AuthState authState) {
+    return authState is AuthLoading ||
+        authState is AuthRestoring ||
+        authState is AuthRestorationFailure;
+  }
 
   static bool isOnboarding(String location) {
     return location.startsWith(AppRoutes.onboarding);

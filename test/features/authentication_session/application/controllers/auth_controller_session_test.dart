@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../fakes/recording_http_client_adapter.dart';
+import '../../fakes/scripted_auth_api.dart';
 import '../../helpers/auth_controller_harness.dart';
 import '../../helpers/auth_fixture.dart';
 
@@ -76,21 +77,24 @@ void main() {
       expect(await harness.storage.getSid(), isNull);
     });
 
-    test('malformed /me user cannot create authenticated state', () async {
+    test('malformed /me user becomes retryable without clearing SID', () async {
       final Map<String, dynamic> mePayload = await loadAuthMessageFixture(
         'me_malformed_user.json',
       );
       final harness = await buildAuthControllerHarness(
-        storedSid: 'stale-test-session-id',
+        storedSid: 'test-session-id',
         meHandler: () async => successfulAuthResponse(mePayload),
       );
 
-      expect(harness.state, isA<AuthGuest>());
-      expect(await harness.storage.getSid(), isNull);
+      expect(harness.state, isA<AuthRestorationFailure>());
+      final AuthRestorationFailure failure =
+          harness.state as AuthRestorationFailure;
+      expect(failure.reason, AuthRestorationFailureReason.unknown);
+      expect(await harness.storage.getSid(), 'test-session-id');
     });
 
     test(
-      'temporary /me failure falls back to guest but preserves stored SID',
+      'temporary /me network failure is retryable and preserves stored SID',
       () async {
         final harness = await buildAuthControllerHarness(
           storedSid: 'test-session-id',
@@ -99,10 +103,176 @@ void main() {
           ),
         );
 
-        expect(harness.state, isA<AuthGuest>());
+        expect(harness.state, isA<AuthRestorationFailure>());
+        final AuthRestorationFailure failure =
+            harness.state as AuthRestorationFailure;
+        expect(failure.reason, AuthRestorationFailureReason.network);
         expect(await harness.storage.getSid(), 'test-session-id');
       },
     );
+
+    test('server failure is retryable and preserves stored SID', () async {
+      final harness = await buildAuthControllerHarness(
+        storedSid: 'test-session-id',
+        meHandler: () async => failedAuthResponse(
+          const Failure(
+            'Temporarily unavailable.',
+            statusCode: 503,
+            type: FailureType.server,
+          ),
+        ),
+      );
+
+      final AuthRestorationFailure failure =
+          harness.state as AuthRestorationFailure;
+      expect(failure.reason, AuthRestorationFailureReason.server);
+      expect(await harness.storage.getSid(), 'test-session-id');
+    });
+
+    test(
+      '401 without a stable invalid-session error remains retryable',
+      () async {
+        final harness = await buildAuthControllerHarness(
+          storedSid: 'test-session-id',
+          meHandler: () async => failedAuthResponse(
+            const Failure(
+              'Unauthorized response without a stable error identifier.',
+              statusCode: 401,
+              type: FailureType.unauthorized,
+            ),
+          ),
+        );
+
+        expect(harness.state, isA<AuthRestorationFailure>());
+        expect(await harness.storage.getSid(), 'test-session-id');
+      },
+    );
+
+    test('retry restores the preserved session exactly once', () async {
+      final Map<String, dynamic> mePayload = await loadAuthMessageFixture(
+        'me_success.json',
+      );
+      int attempt = 0;
+      final harness = await buildAuthControllerHarness(
+        storedSid: 'test-session-id',
+        meHandler: () async {
+          attempt++;
+          if (attempt == 1) {
+            return failedAuthResponse(
+              const Failure('Network unavailable.', type: FailureType.network),
+            );
+          }
+          return successfulAuthResponse(mePayload);
+        },
+      );
+
+      await harness.controller.retrySessionRestoration();
+
+      expect(harness.api.meCalls, 2);
+      expect(harness.state, isA<AuthAuthenticated>());
+      expect(await harness.storage.getSid(), 'test-session-id');
+    });
+
+    test('duplicate init calls share one restoration request', () async {
+      final Map<String, dynamic> mePayload = await loadAuthMessageFixture(
+        'me_success.json',
+      );
+      final Completer<AuthApiResponse> response =
+          Completer<AuthApiResponse>();
+      final harness = await buildAuthControllerHarness(
+        storedSid: 'test-session-id',
+        meHandler: () => response.future,
+        waitForInitialization: false,
+      );
+
+      final Future<void> first = harness.controller.init();
+      final Future<void> second = harness.controller.init();
+      expect(identical(first, second), isTrue);
+
+      response.complete(successfulAuthResponse(mePayload));
+      await Future.wait<void>(<Future<void>>[first, second]);
+
+      expect(harness.api.meCalls, 1);
+      expect(harness.state, isA<AuthAuthenticated>());
+    });
+
+    test('a resolved session ignores later redundant init calls', () async {
+      final Map<String, dynamic> mePayload = await loadAuthMessageFixture(
+        'me_success.json',
+      );
+      final AuthControllerHarness harness = await buildAuthControllerHarness(
+        storedSid: 'sid-existing',
+        meHandler: () async => successfulAuthResponse(mePayload),
+      );
+      addTearDown(harness.container.dispose);
+
+      await harness.controller.init();
+      await harness.controller.init();
+
+      expect(harness.api.meCalls, 1);
+      expect(harness.controller.state, isA<AuthAuthenticated>());
+    });
+
+    test('new-account login invalidates an older restoration result', () async {
+      final Map<String, dynamic> oldMePayload = await loadAuthMessageFixture(
+        'me_success.json',
+      );
+      final Map<String, dynamic> loginPayload = await loadAuthMessageFixture(
+        'login_success.json',
+      );
+      final Map<String, dynamic> loginData =
+          loginPayload['data'] as Map<String, dynamic>;
+      final Map<String, dynamic> loginUser =
+          loginData['user'] as Map<String, dynamic>;
+      loginUser['email'] = 'new-account@example.invalid';
+      loginUser['full_name'] = 'New Account';
+
+      final Completer<AuthApiResponse> oldResponse =
+          Completer<AuthApiResponse>();
+      final harness = await buildAuthControllerHarness(
+        storedSid: 'old-session-id',
+        meHandler: () => oldResponse.future,
+        loginHandler: (String identifier, String password) async {
+          return successfulAuthResponse(loginPayload);
+        },
+        waitForInitialization: false,
+      );
+      final Future<void> restoration = harness.controller.init();
+
+      await harness.controller.login(
+        identifier: 'new-account@example.invalid',
+        password: 'fake-password',
+        rememberMe: true,
+      );
+      oldResponse.complete(successfulAuthResponse(oldMePayload));
+      await restoration;
+
+      final AuthAuthenticated authenticated =
+          harness.state as AuthAuthenticated;
+      expect(authenticated.user.email, 'new-account@example.invalid');
+      expect(await harness.storage.getSid(), authenticated.sid);
+    });
+
+    test('logout invalidates an in-flight restoration result', () async {
+      final Map<String, dynamic> mePayload = await loadAuthMessageFixture(
+        'me_success.json',
+      );
+      final Completer<AuthApiResponse> response =
+          Completer<AuthApiResponse>();
+      final harness = await buildAuthControllerHarness(
+        storedSid: 'test-session-id',
+        meHandler: () => response.future,
+        waitForInitialization: false,
+      );
+      final Future<void> restoration = harness.controller.init();
+
+      await harness.controller.logout();
+      response.complete(successfulAuthResponse(mePayload));
+      await restoration;
+
+      expect(harness.state, isA<AuthGuest>());
+      expect(await harness.storage.getSid(), isNull);
+    });
   });
 
   group('logout', () {
@@ -119,11 +289,20 @@ void main() {
         logoutHandler: () async => successfulAuthResponse(logoutPayload),
       );
 
+      expect(
+        await harness.client.cookieJar.loadForRequest(harness.client.baseUri),
+        isNotEmpty,
+      );
+
       await harness.controller.logout();
 
       expect(harness.api.logoutCalls, 1);
       expect(harness.state, isA<AuthGuest>());
       expect(await harness.storage.getSid(), isNull);
+      expect(
+        await harness.client.cookieJar.loadForRequest(harness.client.baseUri),
+        isEmpty,
+      );
     });
 
     test(

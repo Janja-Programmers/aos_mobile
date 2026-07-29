@@ -115,9 +115,20 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('Get Verified'), findsOneWidget);
-    expect(find.text('Individual'), findsOneWidget);
-    expect(find.text('Business'), findsOneWidget);
+    final Finder sheet = find.byKey(const Key('verification_choice_sheet'));
+    expect(sheet, findsOneWidget);
+    expect(
+      find.byKey(const Key('verification_choice_sheet_title')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: sheet, matching: find.text('Individual')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: sheet, matching: find.text('Business')),
+      findsOneWidget,
+    );
     expect(
       find.descendant(
         of: banner,

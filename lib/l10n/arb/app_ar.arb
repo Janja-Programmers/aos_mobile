@@ -156,5 +156,10 @@
   "settings_preferences": "التفضيلات",
   "settings_manage_app": "إدارة كيفية عمل التطبيق لك",
   "settings_terms_conditions": "الشروط والأحكام",
-  "onboarding_preference_error": "تعذر حفظ تفضيلك. يُرجى المحاولة مرة أخرى."
+  "onboarding_preference_error": "تعذر حفظ تفضيلك. يُرجى المحاولة مرة أخرى.",
+  "session_restore_offline_title": "أنت غير متصل بالإنترنت",
+  "session_restore_offline_message": "تعذر على AOS التحقق من جلستك الحالية. اتصل بالإنترنت ثم حاول مرة أخرى. لم يتم حذف جلستك المحفوظة.",
+  "session_restore_unavailable_title": "تعذر استعادة جلستك",
+  "session_restore_unavailable_message": "يتعذر على AOS التحقق من جلستك الحالية الآن. حاول مرة أخرى. لم يتم حذف جلستك المحفوظة.",
+  "privacy_cover_accessibility_label": "يحمي AOS معلومات حسابك."
 }

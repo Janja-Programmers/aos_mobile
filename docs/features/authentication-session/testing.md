@@ -56,7 +56,7 @@ sanitized identities, tokens, URLs, and session values.
 
 ## Provider isolation
 
-`buildAuthControllerHarness` creates one isolated `ProviderContainer`, overrides storage/API/client/bootstrap dependencies, waits for initialization to leave `AuthLoading`, and relies on the shared helper to dispose the container.
+`buildAuthControllerHarness` creates one isolated `ProviderContainer`, overrides storage/API/client/bootstrap dependencies, waits for initialization to reach a terminal restoration state. Each test that creates a harness owns and disposes its container.
 
 ## Commands
 
@@ -86,3 +86,21 @@ flutter test
 - server-side authorization and session expiry scheduling;
 - complete account deletion/restoration flows;
 - full realtime and push service integration after auth state changes.
+
+
+## App-lock prerequisite focused suites
+
+```bash
+flutter test test/features/authentication_session/application/controllers/auth_controller_session_test.dart
+flutter test test/features/authentication_session/navigation/auth_navigation_test.dart
+flutter test test/app/bootstrap/app_bootstrap_controller_test.dart
+flutter test test/app/splash/splash_restoration_failure_test.dart
+flutter test test/core/lifecycle/app_lifecycle_coordinator_test.dart
+flutter test test/core/privacy/privacy_cover_test.dart
+flutter test test/core/navigation/protected_navigation_coordinator_test.dart
+flutter test test/features/notifications/application/services/notification_destination_parser_test.dart
+flutter test test/features/authentication_session/data/storage/session_storage_test.dart
+flutter test test/security/sensitive_logging_source_test.dart
+```
+
+These suites cover bootstrap restoration, retryable session restoration, stable invalidation, duplicate and stale requests, redirect blocking, lifecycle normalization, privacy-cover opacity and accessibility, notification route validation, exactly-once navigation, account-bound clearing, storage boundaries, and sensitive-log source regression checks.

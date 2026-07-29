@@ -5,12 +5,9 @@ final _profileViewDataProvider =
       return _ProfileLoader(ref).loadProfile(request);
     });
 
-final _profileContentProvider =
-    FutureProvider.family<_ProfileContentData, _ProfileContentRequest>((
-      ref,
-      request,
-    ) {
-      return _ProfileLoader(ref).loadContent(request);
+final _profilePanelProvider = FutureProvider.autoDispose
+    .family<List<Short>, _ProfilePanelRequest>((ref, request) {
+      return _ProfileLoader(ref).loadPanel(request);
     });
 
 class _ProfileLoader {
@@ -141,43 +138,37 @@ class _ProfileLoader {
     );
   }
 
-  Future<_ProfileContentData> loadContent(
-    _ProfileContentRequest request,
-  ) async {
-    final List<dynamic> contentResults =
-        await Future.wait<dynamic>(<Future<dynamic>>[
-          _loadPosts(request.targetUser, isOwnProfile: request.isOwnProfile),
-          _loadShortPanel(
-            ApiEndpoints.repostedShorts,
-            targetUser: request.targetUser,
-          ),
-          request.isOwnProfile
-              ? _loadShortPanel(ApiEndpoints.savedShorts)
-              : Future<List<Short>>.value(const <Short>[]),
-          request.isOwnProfile
-              ? _loadShortPanel(ApiEndpoints.likedShorts)
-              : Future<List<Short>>.value(const <Short>[]),
-        ]);
-
-    final List<Short> allPosts = contentResults[0] as List<Short>;
-    final List<Short> posts = allPosts
-        .where((Short short) => !short.isDeleted && !_isPrivateShort(short))
-        .toList(growable: false);
-    final List<Short> privateShorts = request.isOwnProfile
-        ? allPosts
-              .where(
-                (Short short) => !short.isDeleted && _isPrivateShort(short),
-              )
-              .toList(growable: false)
-        : const <Short>[];
-
-    return _ProfileContentData(
-      posts: posts,
-      reposted: contentResults[1] as List<Short>,
-      privateShorts: privateShorts,
-      saved: contentResults[2] as List<Short>,
-      liked: contentResults[3] as List<Short>,
-    );
+  Future<List<Short>> loadPanel(_ProfilePanelRequest request) async {
+    switch (request.panel) {
+      case _ProfilePanel.posts:
+        final List<Short> posts = await _loadPosts(
+          request.targetUser,
+          isOwnProfile: request.isOwnProfile,
+        );
+        return posts
+            .where((Short short) => !short.isDeleted && !_isPrivateShort(short))
+            .toList(growable: false);
+      case _ProfilePanel.privateShorts:
+        if (!request.isOwnProfile) return const <Short>[];
+        final List<Short> posts = await _loadPosts(
+          request.targetUser,
+          isOwnProfile: true,
+        );
+        return posts
+            .where((Short short) => !short.isDeleted && _isPrivateShort(short))
+            .toList(growable: false);
+      case _ProfilePanel.reposted:
+        return _loadShortPanel(
+          ApiEndpoints.repostedShorts,
+          targetUser: request.targetUser,
+        );
+      case _ProfilePanel.saved:
+        if (!request.isOwnProfile) return const <Short>[];
+        return _loadShortPanel(ApiEndpoints.savedShorts);
+      case _ProfilePanel.liked:
+        if (!request.isOwnProfile) return const <Short>[];
+        return _loadShortPanel(ApiEndpoints.likedShorts);
+    }
   }
 
   Future<Map<String, dynamic>> _loadProfilePayload(

@@ -45,6 +45,7 @@ Future<AuthControllerHarness> buildAuthControllerHarness({
   NoArgumentAuthHandler? meHandler,
   NoArgumentAuthHandler? logoutHandler,
   DateTime Function()? now,
+  bool waitForInitialization = true,
 }) async {
   final preferences = await setUpTestPreferences();
   final OnboardingStorage onboardingStorage = OnboardingStorage(preferences);
@@ -96,7 +97,11 @@ Future<AuthControllerHarness> buildAuthControllerHarness({
         AuthState? previous,
         AuthState next,
       ) {
-        if (next is! AuthLoading && !initialized.isCompleted) {
+        final bool isTerminal =
+            next is AuthGuest ||
+            next is AuthAuthenticated ||
+            next is AuthRestorationFailure;
+        if (isTerminal && !initialized.isCompleted) {
           initialized.complete();
         }
       }, fireImmediately: true);
@@ -104,7 +109,9 @@ Future<AuthControllerHarness> buildAuthControllerHarness({
   final AuthController controller = container.read(
     authControllerProvider.notifier,
   );
-  if (container.read(authControllerProvider) is AuthLoading) {
+  final AuthState currentState = container.read(authControllerProvider);
+  if (waitForInitialization &&
+      (currentState is AuthLoading || currentState is AuthRestoring)) {
     await initialized.future.timeout(const Duration(seconds: 2));
   }
   subscription.close();

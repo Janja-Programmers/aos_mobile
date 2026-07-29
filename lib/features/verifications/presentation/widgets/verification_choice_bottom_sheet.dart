@@ -64,6 +64,7 @@ class VerificationChoiceBottomSheet extends StatelessWidget {
     final colors = context.appColors;
 
     return Material(
+      key: const Key('verification_choice_sheet'),
       color: colors.elevated,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
       clipBehavior: Clip.antiAlias,
@@ -90,6 +91,7 @@ class VerificationChoiceBottomSheet extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Get Verified',
+                      key: const Key('verification_choice_sheet_title'),
                       style: context.h6.copyWith(fontWeight: FontWeight.w700),
                     ),
                   ),

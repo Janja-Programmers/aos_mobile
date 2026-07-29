@@ -1,65 +1,60 @@
-# Miscellaneous
-*.jks
-*.keystore
-*.class
-*.log
-*.pyc
-*.swp
+# Operating systems and editors
 .DS_Store
-.atom/
-.build/
-.kotlin/
-.buildlog/
-.history
-.svn/
-.swiftpm/
+Thumbs.db
+.idea/
 .vscode/
-migrate_working_dir/
-
-# IntelliJ related
 *.iml
 *.ipr
 *.iws
-.idea/
+*.swp
+
+# Local environment and credentials
 .env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.cer
+*.crt
+*.mobileprovision
+android/key.properties
+android/local.properties
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
+# Dart and Flutter
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+build/
+**/build/
+coverage/
+**/coverage/
+.flutter-plugins
+.flutter-plugins-dependencies
 **/doc/api/
 **/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-/coverage/
 
-# Symbolication related
-app.*.symbols
+# Native build caches
+.gradle/
+**/.gradle/
+.kotlin/
+Pods/
+**/Pods/
+DerivedData/
+.swiftpm/
 
-# Obfuscation related
-app.*.map.json
+# Generated crash and diagnostic output
+*.log
+hs_err_pid*
+*.dmp
+*.stackdump
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
-
-# xcode related
-/ios/Flutter/flutter_export_environment.sh
-/ios/Flutter/Generated.xcconfig
-
-# Flutter generated localization
-lib/l10n/gen/*.dart
-untranslated.txt
-
-/android/local.properties
-/android/.gradle/
-/android/app/build/
-/ios/Pods/
-/ios/.symlinks/
-*.xcuserstate
+# Temporary archives and local patches
+*.tmp
+*.bak
+*.orig

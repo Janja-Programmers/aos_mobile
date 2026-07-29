@@ -156,5 +156,10 @@
   "ads_post_first_ad": "Publiez votre première annonce",
   "location_all_locations": "Tous les emplacements",
   "account_settings": "Paramètres du compte",
-  "onboarding_preference_error": "Impossible d’enregistrer votre préférence. Veuillez réessayer."
+  "onboarding_preference_error": "Impossible d’enregistrer votre préférence. Veuillez réessayer.",
+  "session_restore_offline_title": "Vous êtes hors connexion",
+  "session_restore_offline_message": "AOS n’a pas pu vérifier votre session existante. Reconnectez-vous puis réessayez. Votre session enregistrée n’a pas été supprimée.",
+  "session_restore_unavailable_title": "Impossible de restaurer votre session",
+  "session_restore_unavailable_message": "AOS ne peut pas vérifier votre session existante pour le moment. Réessayez. Votre session enregistrée n’a pas été supprimée.",
+  "privacy_cover_accessibility_label": "AOS protège les informations de votre compte."
 }

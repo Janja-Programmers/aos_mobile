@@ -96,6 +96,7 @@ class ProfileScreen extends ConsumerWidget {
 
         return _ProfileScaffold(
           data: fallback,
+          contentUser: request.targetUser,
           isLoading: true,
           onRefresh: () async {
             ref.invalidate(_profileViewDataProvider(request));
@@ -173,63 +174,34 @@ class ProfileScreen extends ConsumerWidget {
         );
       },
       data: (data) {
-        final _ProfileContentRequest contentRequest = _ProfileContentRequest(
-          targetUser: request.targetUser,
-          isOwnProfile: data.isOwnProfile,
-        );
-        final AsyncValue<_ProfileContentData>? contentAsync =
-            data.contentAvailable
-            ? ref.watch(_profileContentProvider(contentRequest))
-            : null;
-        final _ProfileContentData? content = contentAsync?.maybeWhen(
-          data: (value) => value,
-          orElse: () => null,
-        );
-        final bool contentLoading =
-            contentAsync?.maybeWhen(loading: () => true, orElse: () => false) ??
-            false;
-        final _ProfileViewData resolvedData = content == null
-            ? data
-            : data.withContent(content);
-
         return _ProfileScaffold(
-          data: resolvedData,
-          isLoading: contentLoading,
+          data: data,
+          contentUser: request.targetUser,
           onRefresh: () async {
             ref.invalidate(_profileViewDataProvider(request));
-            if (data.contentAvailable) {
-              ref.invalidate(_profileContentProvider(contentRequest));
-            }
             ref.invalidate(accountsControllerProvider);
             await ref.read(_profileViewDataProvider(request).future);
-            if (data.contentAvailable) {
-              await ref.read(_profileContentProvider(contentRequest).future);
-            }
           },
           onActivityTap: () => ActivityNavigation.toActivityCenter(context),
-          onAvatarTap: () =>
-              _handleAvatarTap(context, ref, resolvedData, request),
-          onEditTap: () => _showEditSheet(context, ref, resolvedData, request),
-          onSellerStoreTap: resolvedData.canVisitSellerStore
-              ? () => SellerNavigation.toSellerStore(
-                  context,
-                  resolvedData.sellerId!,
-                )
+          onAvatarTap: () => _handleAvatarTap(context, ref, data, request),
+          onEditTap: () => _showEditSheet(context, ref, data, request),
+          onSellerStoreTap: data.canVisitSellerStore
+              ? () => SellerNavigation.toSellerStore(context, data.sellerId!)
               : null,
-          onMessageTap: resolvedData.canInteract
+          onMessageTap: data.canInteract
               ? (tapContext) => ChatActions.startChat(
                   context: tapContext,
                   ref: ref,
-                  user: resolvedData.user,
-                  displayName: resolvedData.displayName,
-                  avatar: resolvedData.avatarUrl,
+                  user: data.user,
+                  displayName: data.displayName,
+                  avatar: data.avatarUrl,
                 )
               : null,
-          onFollowTap: resolvedData.canInteract
+          onFollowTap: data.canInteract
               ? (tapContext) async {
                   final res = await ref
                       .read(socialRepositoryProvider)
-                      .toggleFollow(targetUser: resolvedData.user);
+                      .toggleFollow(targetUser: data.user);
 
                   if (!tapContext.mounted) return;
 

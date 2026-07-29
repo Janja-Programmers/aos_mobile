@@ -349,7 +349,7 @@ class PushNotificationService {
 
     _tapSub = FirebaseMessaging.onMessageOpenedApp.listen((message) async {
       try {
-        appLogger.i('📲 Notification tapped (background): ${message.data}');
+        appLogger.i('📲 Notification tap received from background');
 
         final notification = _mapMessageToNotification(message);
 
@@ -456,7 +456,7 @@ class PushNotificationService {
           data['type']?.toString();
 
       if (event == null || event.trim().isEmpty) {
-        appLogger.w('⚠️ Missing notification type/event: $data');
+        appLogger.w('⚠️ Push payload missing notification type/event');
         return null;
       }
 
@@ -469,7 +469,7 @@ class PushNotificationService {
       );
 
       if (notification.type == NotificationType.unknown) {
-        appLogger.w('⚠️ Unknown notification event: $event');
+        appLogger.w('⚠️ Unknown notification event');
       }
 
       return notification;

@@ -41,23 +41,25 @@ class AppBootstrapController extends StateNotifier<AppBootstrapState> {
       return existing;
     }
 
-    _initializeFuture = _initialize();
-
-    return _initializeFuture!;
+    late final Future<void> request;
+    request = _initialize().whenComplete(() {
+      if (identical(_initializeFuture, request)) {
+        _initializeFuture = null;
+      }
+    });
+    _initializeFuture = request;
+    return request;
   }
 
   Future<void> _initialize() async {
     appLogger.i('[App] Bootstrapping...');
 
-    try {
-      final completed = _storage.isOnboardingComplete();
-
-      state = state.copyWith(isReady: true, onboardingCompleted: completed);
-
-      _hasInitialized = true;
-    } finally {
-      _initializeFuture = null;
-    }
+    final bool completed = _storage.isOnboardingComplete();
+    state = state.copyWith(
+      isReady: true,
+      onboardingCompleted: completed,
+    );
+    _hasInitialized = true;
   }
 
   // -----------------------------

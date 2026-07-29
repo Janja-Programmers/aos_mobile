@@ -141,40 +141,6 @@ class _ProfileViewData {
     required this.contentAvailable,
   });
 
-  _ProfileViewData withContent(_ProfileContentData content) {
-    final int contentLikes = content.posts.fold<int>(
-      0,
-      (int sum, Short short) => sum + short.metrics.likeCount,
-    );
-
-    return _ProfileViewData(
-      user: user,
-      displayName: displayName,
-      username: username,
-      avatarUrl: avatarUrl,
-      bio: bio,
-      isOwnProfile: isOwnProfile,
-      isLive: isLive,
-      liveId: liveId,
-      followingCount: followingCount,
-      followersCount: followersCount,
-      friendsCount: friendsCount,
-      likesCount: likesCount > 0 ? likesCount : contentLikes,
-      isVerified: isVerified,
-      posts: content.posts,
-      reposted: content.reposted,
-      privateShorts: content.privateShorts,
-      saved: content.saved,
-      liked: content.liked,
-      isSeller: isSeller,
-      sellerId: sellerId,
-      isFollowing: isFollowing,
-      followActionLabel: followActionLabel,
-      canInteract: canInteract,
-      contentAvailable: contentAvailable,
-    );
-  }
-
   factory _ProfileViewData.fallback({
     required String targetUser,
     required bool isOwnProfile,
@@ -225,41 +191,27 @@ class _ProfileViewData {
 }
 
 @immutable
-class _ProfileContentRequest {
+class _ProfilePanelRequest {
   final String targetUser;
   final bool isOwnProfile;
+  final _ProfilePanel panel;
 
-  const _ProfileContentRequest({
+  const _ProfilePanelRequest({
     required this.targetUser,
     required this.isOwnProfile,
+    required this.panel,
   });
 
   @override
   bool operator ==(Object other) {
-    return other is _ProfileContentRequest &&
+    return other is _ProfilePanelRequest &&
         other.targetUser == targetUser &&
-        other.isOwnProfile == isOwnProfile;
+        other.isOwnProfile == isOwnProfile &&
+        other.panel == panel;
   }
 
   @override
-  int get hashCode => Object.hash(targetUser, isOwnProfile);
-}
-
-@immutable
-class _ProfileContentData {
-  final List<Short> posts;
-  final List<Short> reposted;
-  final List<Short> privateShorts;
-  final List<Short> saved;
-  final List<Short> liked;
-
-  const _ProfileContentData({
-    required this.posts,
-    required this.reposted,
-    required this.privateShorts,
-    required this.saved,
-    required this.liked,
-  });
+  int get hashCode => Object.hash(targetUser, isOwnProfile, panel);
 }
 
 String _usernameFromEmail(String value) {

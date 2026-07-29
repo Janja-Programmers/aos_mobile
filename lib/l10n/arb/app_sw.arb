@@ -156,5 +156,10 @@
   "settings_country_description": "Huamua matangazo yaliyo karibu na mahali matangazo yako yataonekana.",
   "settings_currency_description": "Hutumika kwa bei wakati wa kuangalia na kuchapisha matangazo.",
   "common_discover_more": "Gundua zaidi",
-  "onboarding_preference_error": "Hatukuweza kuhifadhi chaguo lako. Tafadhali jaribu tena."
+  "onboarding_preference_error": "Hatukuweza kuhifadhi chaguo lako. Tafadhali jaribu tena.",
+  "session_restore_offline_title": "Hujaunganishwa kwenye intaneti",
+  "session_restore_offline_message": "AOS haikuweza kuthibitisha kipindi chako kilichopo. Unganisha intaneti kisha ujaribu tena. Kipindi chako kilichohifadhiwa hakijafutwa.",
+  "session_restore_unavailable_title": "Hatukuweza kurejesha kipindi chako",
+  "session_restore_unavailable_message": "AOS haiwezi kuthibitisha kipindi chako kilichopo kwa sasa. Jaribu tena. Kipindi chako kilichohifadhiwa hakijafutwa.",
+  "privacy_cover_accessibility_label": "AOS inalinda taarifa za akaunti yako."
 }

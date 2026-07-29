@@ -63,7 +63,11 @@ class ConversationsController
       return;
     }
 
-    if (next is AuthLoading && !state.hasValue) {
+    final bool isResolvingSession =
+        next is AuthLoading ||
+        next is AuthRestoring ||
+        next is AuthRestorationFailure;
+    if (isResolvingSession && !state.hasValue) {
       state = const AsyncLoading();
     }
   }

@@ -1,8 +1,13 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 const List<IconData> _kWheelIcons = [
@@ -16,14 +21,14 @@ const List<IconData> _kWheelIcons = [
   Icons.inventory_2_outlined,
 ];
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
   late final AnimationController _entryController;
   late final AnimationController _ringController;
@@ -179,8 +184,13 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final ringRadius = (width * .34).clamp(118.0, 164.0);
+    final AuthState authState = ref.watch(authControllerProvider);
+    if (authState is AuthRestorationFailure) {
+      return _SessionRestorationUnavailable(reason: authState.reason);
+    }
+
+    final double width = MediaQuery.sizeOf(context).width;
+    final double ringRadius = (width * .34).clamp(118.0, 164.0);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -219,6 +229,91 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
               ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _SessionRestorationUnavailable extends ConsumerWidget {
+  const _SessionRestorationUnavailable({required this.reason});
+
+  final AuthRestorationFailureReason reason;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations localizations = AppLocalizations.of(context)!;
+    final bool isConnectivityIssue =
+        reason == AuthRestorationFailureReason.network ||
+        reason == AuthRestorationFailureReason.timeout;
+    final String title = isConnectivityIssue
+        ? localizations.session_restore_offline_title
+        : localizations.session_restore_unavailable_title;
+    final String message = isConnectivityIssue
+        ? localizations.session_restore_offline_message
+        : localizations.session_restore_unavailable_message;
+    final ThemeData theme = Theme.of(context);
+
+    return Scaffold(
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: math.max(0, constraints.maxHeight - 48),
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: Semantics(
+                      container: true,
+                      liveRegion: true,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isConnectivityIssue
+                                ? Icons.cloud_off_outlined
+                                : Icons.sync_problem_outlined,
+                            size: 64,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            title,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            message,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyLarge,
+                          ),
+                          const SizedBox(height: 28),
+                          FilledButton.icon(
+                            onPressed: () {
+                              unawaited(
+                                ref
+                                    .read(authControllerProvider.notifier)
+                                    .retrySessionRestoration(),
+                              );
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: Text(localizations.common_try_again),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             );
           },
         ),

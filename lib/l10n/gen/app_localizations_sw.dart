@@ -425,21 +425,12 @@ class AppLocalizationsSw extends AppLocalizations {
       'Hatukuweza kuhifadhi chaguo lako. Tafadhali jaribu tena.';
 
   @override
-  String get session_restore_offline_title => 'Hujaunganishwa kwenye intaneti';
+  String get wishlist_add => 'Ongeza kwenye orodha ya matamanio';
 
   @override
-  String get session_restore_offline_message =>
-      'AOS haikuweza kuthibitisha kipindi chako kilichopo. Unganisha intaneti kisha ujaribu tena. Kipindi chako kilichohifadhiwa hakijafutwa.';
+  String get wishlist_remove => 'Ondoa kwenye orodha ya matamanio';
 
   @override
-  String get session_restore_unavailable_title =>
-      'Hatukuweza kurejesha kipindi chako';
-
-  @override
-  String get session_restore_unavailable_message =>
-      'AOS haiwezi kuthibitisha kipindi chako kilichopo kwa sasa. Jaribu tena. Kipindi chako kilichohifadhiwa hakijafutwa.';
-
-  @override
-  String get privacy_cover_accessibility_label =>
-      'AOS inalinda taarifa za akaunti yako.';
+  String get wishlist_update_error =>
+      'Imeshindikana kusasisha orodha yako ya matamanio. Tafadhali jaribu tena.';
 }

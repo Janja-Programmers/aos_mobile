@@ -1,144 +1,138 @@
-import 'dart:async';
-
 import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/ads/data/ads_api.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_state.dart';
-import 'package:africaonlinestores/features/wishlist/domain/wishlist_storage.dart';
-import 'package:africaonlinestores/features/wishlist/wishlist_storage_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final wishlistControllerProvider =
-    AsyncNotifierProvider<WishlistController, WishlistState>(
-      WishlistController.new,
-    );
+    NotifierProvider<WishlistController, WishlistState>(WishlistController.new);
 
-class WishlistController extends AsyncNotifier<WishlistState> {
-  late final WishlistStorage _storage;
-  late final AdsApi _api;
+class WishlistController extends Notifier<WishlistState> {
+  int _generation = 0;
+
+  AdsApi get _api => ref.read(adsApiProvider);
 
   @override
-  Future<WishlistState> build() async {
-    _storage = ref.read(wishlistStorageProvider);
-    _api = ref.read(adsApiProvider);
-
-    final auth = ref.watch(authControllerProvider);
-
-    if (auth is! AuthAuthenticated) {
-      final localIds = await _storage.readIds();
-
-      if (localIds.isNotEmpty) {
-        await _storage.clear();
-      }
-
-      return WishlistState.initial();
-    }
-
-    final localIds = await _storage.readIds();
-
-    state = AsyncData(
-      WishlistState.initial().copyWith(ids: localIds, isReady: true),
+  WishlistState build() {
+    // Reset account-scoped overrides only when the authenticated session changes.
+    ref.watch(
+      authControllerProvider.select(
+        (auth) => auth is AuthAuthenticated ? auth.sid : null,
+      ),
     );
+    _generation += 1;
 
-    final res = await _api.listWishlist(limit: 100);
-
-    return res.fold(
-      (_) => WishlistState.initial().copyWith(ids: localIds, isReady: true),
-      (payload) {
-        final data = asJsonMap(payload['data']);
-        final raw = data['items'];
-        final ids = <String>{};
-
-        for (final item in asJsonMapList(raw)) {
-          final id = asNullableString(
-            item['ad_id'] ?? item['ad'] ?? item['name'],
-          )?.trim();
-          if (id != null && id.isNotEmpty) {
-            ids.add(id);
-          }
-        }
-
-        unawaited(_storage.writeIds(ids));
-
-        return WishlistState.initial().copyWith(ids: ids, isReady: true);
-      },
-    );
+    return WishlistState.initial();
   }
 
-  bool isWishlisted(String adId) {
-    final ids = state.value?.ids ?? {};
-    return ids.contains(adId.trim());
-  }
-
-  Future<bool> toggle(String adId) async {
+  Future<bool> toggle(
+    String adId, {
+    required bool currentValue,
+  }) async {
     final auth = ref.read(authControllerProvider);
-
     if (auth is! AuthAuthenticated) return false;
 
     final id = adId.trim();
-    if (id.isEmpty) return false;
+    if (id.isEmpty || state.pending.contains(id)) return false;
 
-    final current = state.value ?? WishlistState.initial();
-    if (current.pending.contains(id)) return false;
+    final requestGeneration = _generation;
+    final requestSid = auth.sid;
+    final before = state;
+    final wasWishlisted = before.resolve(id, fallback: currentValue);
+    final shouldBeWishlisted = !wasWishlisted;
+    final hadOverride = before.overrides.containsKey(id);
+    final previousOverride = before.overrides[id];
 
-    final wasWishlisted = current.ids.contains(id);
+    final optimisticOverrides = Map<String, bool>.from(before.overrides)
+      ..[id] = shouldBeWishlisted;
+    final pending = Set<String>.from(before.pending)..add(id);
 
-    final optimisticIds = Set<String>.from(current.ids);
-    if (wasWishlisted) {
-      optimisticIds.remove(id);
-    } else {
-      optimisticIds.add(id);
-    }
-
-    final pendingIds = Set<String>.from(current.pending)..add(id);
-
-    state = AsyncData(
-      current.copyWith(ids: optimisticIds, pending: pendingIds),
+    state = before.copyWith(
+      overrides: optimisticOverrides,
+      pending: pending,
     );
 
     try {
-      await _storage.writeIds(optimisticIds);
-
-      final res = await _api.toggleWishlist(adId: id);
-
-      return res.fold(
-        (_) async {
-          await _finishToggle(id: id, shouldBeWishlisted: wasWishlisted);
-          return false;
-        },
-        (_) async {
-          await _finishToggle(id: id, shouldBeWishlisted: !wasWishlisted);
-          return true;
-        },
+      final result = await _api.toggleWishlist(
+        adId: id,
+        wishlisted: shouldBeWishlisted,
       );
-    } catch (_) {
-      await _finishToggle(id: id, shouldBeWishlisted: wasWishlisted);
+
+      if (result.isLeft) {
+        _restoreAfterFailure(
+          id: id,
+          generation: requestGeneration,
+          sid: requestSid,
+          hadOverride: hadOverride,
+          previousOverride: previousOverride,
+        );
+        return false;
+      }
+
+      if (!_isCurrentRequest(requestGeneration, requestSid)) {
+        return true;
+      }
+
+      final payload = result.rightOrNull ?? const <String, dynamic>{};
+      final data = asJsonMap(payload['data']);
+      final backendValue = data.containsKey('wishlisted')
+          ? asBool(data['wishlisted'], fallback: shouldBeWishlisted)
+          : shouldBeWishlisted;
+
+      final latest = state;
+      final overrides = Map<String, bool>.from(latest.overrides)
+        ..[id] = backendValue;
+      final latestPending = Set<String>.from(latest.pending)..remove(id);
+
+      state = latest.copyWith(
+        overrides: overrides,
+        pending: latestPending,
+      );
+      return true;
+    } catch (error, stackTrace) {
+      appLogger.e(
+        'WishlistController -> toggle failed unexpectedly',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      _restoreAfterFailure(
+        id: id,
+        generation: requestGeneration,
+        sid: requestSid,
+        hadOverride: hadOverride,
+        previousOverride: previousOverride,
+      );
       return false;
     }
   }
 
-  Future<void> _finishToggle({
+  bool _isCurrentRequest(int generation, String sid) {
+    if (generation != _generation) return false;
+    final auth = ref.read(authControllerProvider);
+    return auth is AuthAuthenticated && auth.sid == sid;
+  }
+
+  void _restoreAfterFailure({
     required String id,
-    required bool shouldBeWishlisted,
-  }) async {
-    final latest = state.value ?? WishlistState.initial();
-    final ids = Set<String>.from(latest.ids);
-    final pending = Set<String>.from(latest.pending)..remove(id);
+    required int generation,
+    required String sid,
+    required bool hadOverride,
+    required bool? previousOverride,
+  }) {
+    if (!_isCurrentRequest(generation, sid)) return;
 
-    if (shouldBeWishlisted) {
-      ids.add(id);
+    final latest = state;
+    final overrides = Map<String, bool>.from(latest.overrides);
+    if (hadOverride) {
+      overrides[id] = previousOverride!;
     } else {
-      ids.remove(id);
+      overrides.remove(id);
     }
 
-    state = AsyncData(latest.copyWith(ids: ids, pending: pending));
-
-    try {
-      await _storage.writeIds(ids);
-    } catch (_) {
-      // The server response remains authoritative; storage can resync later.
-    }
+    final pending = Set<String>.from(latest.pending)..remove(id);
+    state = latest.copyWith(overrides: overrides, pending: pending);
   }
 }

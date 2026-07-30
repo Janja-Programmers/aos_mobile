@@ -401,38 +401,46 @@ class AdsApi {
   }
 
   Future<Either<Failure, Map<String, dynamic>>> listWishlist({
-    int limit = 200,
+    int limit = 20,
     int offset = 0,
     String? sort,
     String? q,
     int? priceMin,
     int? priceMax,
     int? ratingMin,
-    bool? verifiedSellers,
-    bool? preferredStore,
+    bool? verifiedSeller,
   }) async {
     try {
+      if (limit < 1 || limit > 50) {
+        return Either.left(const Failure('Invalid wishlist page size.'));
+      }
+      if (offset < 0) {
+        return Either.left(const Failure('Invalid wishlist page offset.'));
+      }
       if (sort != null && !_allowedSorts.contains(sort)) {
         return Either.left(Failure('Invalid sort value: $sort'));
       }
 
       final cleanQuery = q?.trim();
-      final res = await _dio.get<Map<String, dynamic>>(
+      if (cleanQuery != null && cleanQuery.isNotEmpty && cleanQuery.length < 2) {
+        return Either.left(
+          const Failure('Enter at least two characters to search.'),
+        );
+      }
+
+      final res = await _client.get(
         ApiEndpoints.listWishlistEndpoint,
+        marketContext: true,
         queryParameters: {
           'limit': limit,
           'offset': offset,
           if (sort?.trim().isNotEmpty ?? false) 'sort': sort!.trim(),
-          if (cleanQuery?.isNotEmpty ?? false) ...{
-            'q': cleanQuery,
-            'search': cleanQuery,
-          },
+          if (cleanQuery?.isNotEmpty ?? false) 'q': cleanQuery,
           'price_min': ?priceMin,
           'price_max': ?priceMax,
           'rating_min': ?ratingMin,
-          if (verifiedSellers != null)
-            'verified_sellers': verifiedSellers ? 1 : 0,
-          if (preferredStore != null) 'preferred_store': preferredStore ? 1 : 0,
+          if (verifiedSeller != null)
+            'verified_seller': _binaryFlag(verifiedSeller),
         },
       );
 
@@ -446,11 +454,12 @@ class AdsApi {
 
   Future<Either<Failure, Map<String, dynamic>>> toggleWishlist({
     required String adId,
+    required bool wishlisted,
   }) async {
     try {
       final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.toggleWishlistEndpoint,
-        data: {'ad_id': adId},
+        data: {'ad_id': adId.trim(), 'wishlisted': _binaryFlag(wishlisted)},
       );
 
       return unwrapFrappe(res);
@@ -461,3 +470,8 @@ class AdsApi {
     }
   }
 }
+
+int _binaryFlag(bool value) => switch (value) {
+  true => 1,
+  false => 0,
+};

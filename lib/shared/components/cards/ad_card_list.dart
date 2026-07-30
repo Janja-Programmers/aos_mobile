@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
@@ -5,6 +7,7 @@ import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/utils/helpers.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
@@ -27,11 +30,22 @@ class AdListItem extends ConsumerWidget {
     final isAuth = ref.watch(isAuthenticatedProvider);
 
     final wishlistState = isAuth
-        ? ref.watch(wishlistControllerProvider).value
+        ? ref.watch(wishlistControllerProvider)
         : null;
 
-    final wish = wishlistState?.ids.contains(ad.id) ?? false;
+    final wish =
+        wishlistState?.resolve(ad.id, fallback: ad.isWishlisted) ?? false;
     final pending = wishlistState?.pending.contains(ad.id) ?? false;
+
+    Future<void> toggleWishlist() async {
+      final success = await ref
+          .read(wishlistControllerProvider.notifier)
+          .toggle(ad.id, currentValue: wish);
+
+      if (!success && context.mounted) {
+        ShowSnack(context, context.l10n.wishlist_update_error).error();
+      }
+    }
 
     return InkWell(
       borderRadius: BorderRadius.circular(14),
@@ -80,54 +94,53 @@ class AdListItem extends ConsumerWidget {
                 Positioned(
                   top: 8,
                   right: 8,
-                  child: Material(
-                    color: colors.white,
-                    shape: const CircleBorder(),
-                    elevation: 2,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: pending
-                          ? null
-                          : () async {
-                              if (!isAuth) {
-                                await AppNavigation.requireAuth(
-                                  context,
-                                  ref,
-                                  onAuthenticated: () {},
-                                );
-                                return;
-                              }
-
-                              final ok = await ref
-                                  .read(wishlistControllerProvider.notifier)
-                                  .toggle(ad.id);
-
-                              if (!ok && context.mounted) {
-                                ShowSnack(
-                                  context,
-                                  'Unexpected error. Please try again.',
-                                ).error();
-                              }
-                            },
-                      child: SizedBox(
-                        height: 32,
-                        width: 32,
-                        child: Center(
-                          child: pending
-                              ? const SizedBox(
-                                  height: 14,
-                                  width: 14,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                  child: Semantics(
+                    button: true,
+                    enabled: !pending,
+                    label: wish
+                        ? context.l10n.wishlist_remove
+                        : context.l10n.wishlist_add,
+                    child: Material(
+                      color: colors.white,
+                      shape: const CircleBorder(),
+                      elevation: 2,
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: pending
+                            ? null
+                            : () {
+                                unawaited(
+                                  AppNavigation.requireAuth(
+                                    context,
+                                    ref,
+                                    onAuthenticated: () {
+                                      unawaited(toggleWishlist());
+                                    },
                                   ),
-                                )
-                              : Icon(
-                                  wish ? Icons.favorite : Icons.favorite_border,
-                                  size: 18,
-                                  color: wish
-                                      ? colors.primary
-                                      : colors.textPrimary,
-                                ),
+                                );
+                              },
+                        child: SizedBox(
+                          height: 48,
+                          width: 48,
+                          child: Center(
+                            child: pending
+                                ? const SizedBox(
+                                    height: 16,
+                                    width: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Icon(
+                                    wish
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    size: 18,
+                                    color: wish
+                                        ? colors.primary
+                                        : colors.textPrimary,
+                                  ),
+                          ),
                         ),
                       ),
                     ),

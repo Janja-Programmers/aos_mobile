@@ -15,7 +15,7 @@ The application uses root and shell navigator keys. Core marketplace destination
 The redirect function reads bootstrap and auth state:
 
 1. before bootstrap readiness, all locations redirect to `/splash`;
-2. while auth is loading, restoring, or in a retryable restoration failure, navigation remains on `/splash`;
+2. while auth is loading, navigation remains on `/splash`;
 3. splash redirects to onboarding or home after readiness;
 4. incomplete onboarding redirects all non-onboarding routes to onboarding;
 5. completed onboarding prevents re-entry to onboarding;
@@ -33,8 +33,3 @@ This is a frontend navigation guard, not an authorization boundary. Backend auth
 ## Route testing
 
 Use `test/helpers/test_router.dart` for isolated route/widget tests. Full application redirect tests should override bootstrap and auth providers and read `appRouterProvider`. Do not instantiate multiple incompatible router harnesses per feature.
-
-
-## Notification protected-navigation boundary
-
-Notification taps are parsed into typed, allowlisted destinations before GoRouter is invoked. Canonical identifiers are validated, arbitrary route strings are rejected, and incoming calls remain in the call pipeline. `ProtectedNavigationCoordinator` binds requests to the authenticated account, deduplicates stable request keys, holds at most one pending destination, and clears it on logout, confirmed expiry, or account switching. Its current access policy permits navigation immediately and is intentionally replaceable by the later app-lock gate.

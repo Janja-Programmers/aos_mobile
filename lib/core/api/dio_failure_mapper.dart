@@ -37,13 +37,10 @@ Failure mapDioException(DioException e) {
   final error = asString(payload['error']).trim().toUpperCase();
   final messageFromServer = _extractServerMessage(e.response?.data);
 
-  appLogger.w(
-    'API request failed',
-    error: <String, Object?>{
-      'status': status,
-      'error_id': error.isEmpty ? null : error,
-    },
-  );
+  appLogger.i('STATUS: $status');
+  appLogger.i('RAW RESPONSE: ${e.response?.data}');
+  appLogger.i('EXTRACTED ERROR: $error');
+  appLogger.i('EXTRACTED MESSAGE: $messageFromServer');
 
   if (payload.isNotEmpty && (error.isNotEmpty || payload['message'] != null)) {
     return Failure.fromServerPayload(

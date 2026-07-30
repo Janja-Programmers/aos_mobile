@@ -15,6 +15,5 @@ AOS is a mature, feature-oriented Flutter application. Its implementation combin
 9. [Media handling](media-handling.md)
 10. [Theming and localization](theming-and-localization.md)
 11. [Dependency map](dependency-map.md)
-12. [Native app-lock prerequisites](app-lock-prerequisites.md)
 
 These documents describe the uploaded frontend as implemented. They do not define backend behavior that cannot be confirmed from frontend code.

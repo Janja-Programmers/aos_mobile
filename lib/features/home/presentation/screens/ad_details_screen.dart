@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/config/app_config.dart';
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/routing/app_nav.dart';
@@ -27,6 +29,7 @@ import 'package:africaonlinestores/features/sellers/application/providers/seller
 import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/shared/components/buttons/ad_detail_action_buttons.dart';
 import 'package:africaonlinestores/shared/components/cards/ad_card_horizontal.dart';
@@ -54,25 +57,27 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
   int _selectedImage = 0;
   bool _isCalling = false;
 
-  void _handleWishlistTap(String adId) {
-    AppNavigation.requireAuth(
-      context,
-      ref,
-      onAuthenticated: () {
-        _toggleWishlist(adId);
-      },
+  void _handleWishlistTap(AOSAdDetails ad) {
+    unawaited(
+      AppNavigation.requireAuth(
+        context,
+        ref,
+        onAuthenticated: () {
+          unawaited(_toggleWishlist(ad));
+        },
+      ),
     );
   }
 
-  Future<void> _toggleWishlist(String adId) async {
+  Future<void> _toggleWishlist(AOSAdDetails ad) async {
     final success = await ref
         .read(wishlistControllerProvider.notifier)
-        .toggle(adId);
+        .toggle(ad.id, currentValue: ad.isWishlisted);
 
     if (!success && mounted) {
       ShowSnack(
         context,
-        'Unable to update your wishlist. Please try again.',
+        context.l10n.wishlist_update_error,
       ).error();
     }
   }
@@ -315,14 +320,13 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
           final isAuthenticated = ref.watch(isAuthenticatedProvider);
 
           final wishlistState = isAuthenticated
-              ? ref.watch(wishlistControllerProvider).value
+              ? ref.watch(wishlistControllerProvider)
               : null;
 
           final isFavorite =
               isAuthenticated &&
-              (wishlistState?.isReady ?? false
-                  ? wishlistState!.ids.contains(ad.id)
-                  : ad.isWishlisted);
+              (wishlistState?.resolve(ad.id, fallback: ad.isWishlisted) ??
+                  ad.isWishlisted);
 
           final isFavoritePending =
               wishlistState?.pending.contains(ad.id) ?? false;
@@ -352,7 +356,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
                       onFavoriteTap: isFavoritePending
                           ? null
                           : () {
-                              _handleWishlistTap(ad.id);
+                              _handleWishlistTap(ad);
                             },
                     ),
                     const SizedBox(height: 12),

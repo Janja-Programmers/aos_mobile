@@ -2,9 +2,7 @@ import 'dart:async';
 
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/core/config/app_config.dart';
-import 'package:africaonlinestores/core/lifecycle/app_lifecycle_coordinator.dart';
 import 'package:africaonlinestores/core/notifications/android_notification_channel.dart';
-import 'package:africaonlinestores/core/privacy/privacy_cover.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/core/routing/app_router.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
@@ -60,6 +58,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       'has_notification_block': message.notification != null,
       'event': data['event']?.toString(),
       'type': data['type']?.toString(),
+      'message_id': message.messageId,
     },
   );
 
@@ -155,7 +154,7 @@ void main() {
       await flutterLocalNotificationsPlugin.initialize(
         settings: initSettings,
         onDidReceiveNotificationResponse: (response) {
-          appLogger.i('Local notification response received');
+          appLogger.i('Notification tapped: ${response.payload}');
         },
       );
 
@@ -204,13 +203,12 @@ class AppRoot extends ConsumerStatefulWidget {
 }
 
 class _AppRootState extends ConsumerState<AppRoot> {
+  bool _bootstrapStarted = false;
   ProviderSubscription<AuthState>? _authSub;
 
   @override
   void initState() {
     super.initState();
-
-    unawaited(ref.read(appBootstrapControllerProvider.notifier).initialize());
 
     _authSub = ref.listenManual<AuthState>(authControllerProvider, (
       prev,
@@ -236,26 +234,14 @@ class _AppRootState extends ConsumerState<AppRoot> {
         try {
           final pushService = ref.read(pushNotificationServiceProvider);
           await pushService.init();
-        } catch (error, stackTrace) {
-          appLogger.w(
-            'Push notification initialization failed',
-            error: error,
-            stackTrace: stackTrace,
-          );
-        }
+        } catch (_) {}
 
         // 📥 Load Notifications (initial fetch)
         try {
           await ref
               .read(notificationControllerProvider.notifier)
               .loadNotifications();
-        } catch (error, stackTrace) {
-          appLogger.w(
-            'Initial notification loading failed',
-            error: error,
-            stackTrace: stackTrace,
-          );
-        }
+        } catch (_, _) {}
 
         return;
       }
@@ -281,7 +267,15 @@ class _AppRootState extends ConsumerState<AppRoot> {
 
   @override
   Widget build(BuildContext context) {
-    return const RootLifecycleCoordinator(child: AOSApp());
+    if (!_bootstrapStarted) {
+      _bootstrapStarted = true;
+
+      Future.microtask(() {
+        ref.read(appBootstrapControllerProvider.notifier).initialize();
+      });
+    }
+
+    return const AOSApp();
   }
 }
 
@@ -300,9 +294,6 @@ class AOSApp extends ConsumerWidget {
 
     ref.watch(socketCallListenerProvider);
     ref.watch(notificationRealtimeListenerProvider);
-    ref.watch(protectedNavigationCoordinatorProvider);
-
-    final PrivacyCoverState privacyCover = ref.watch(privacyCoverStateProvider);
 
     return MaterialApp.router(
       title: 'Africa Online Stores',
@@ -325,9 +316,8 @@ class AOSApp extends ConsumerWidget {
 
         final isOnActiveCall = location.contains(AppRoutes.callSession);
 
-        final Widget protectedApplication = Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
+        return Stack(
+          children: [
             CallAudioFeedbackListener(
               child: CallKitStateListener(
                 child: CallNavigationListener(
@@ -337,22 +327,10 @@ class AOSApp extends ConsumerWidget {
                 ),
               ),
             ),
-            if (!isOnActiveCall) const ActiveCallOverlay(),
-            const InAppBannerListener(),
-          ],
-        );
 
-        return Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            IgnorePointer(
-              ignoring: privacyCover.isVisible,
-              child: ExcludeSemantics(
-                excluding: privacyCover.isVisible,
-                child: protectedApplication,
-              ),
-            ),
-            if (privacyCover.isVisible) const PrivacyCover(),
+            if (!isOnActiveCall) const ActiveCallOverlay(),
+
+            const InAppBannerListener(),
           ],
         );
       },

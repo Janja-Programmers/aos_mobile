@@ -527,7 +527,6 @@ void _showWishlistFilterSheet(
     int? priceMax,
     int? ratingMin,
     bool verifiedSellers,
-    bool preferredStore,
   })
   onApply,
 }) {
@@ -537,7 +536,6 @@ void _showWishlistFilterSheet(
   int? selectedMax = state.wishlistMaxPrice;
   int? selectedRating = state.wishlistMinRating;
   bool verified = state.wishlistVerifiedSellers;
-  bool preferred = state.wishlistPreferredStore;
 
   showModalBottomSheet<void>(
     context: context,
@@ -704,23 +702,13 @@ void _showWishlistFilterSheet(
                         selected: verified,
                         onTap: () => setSheetState(() {
                           verified = !verified;
-                          if (verified) preferred = false;
-                        }),
-                      ),
-                      chip(
-                        label: 'Preferred Store',
-                        selected: preferred,
-                        onTap: () => setSheetState(() {
-                          preferred = !preferred;
-                          if (preferred) verified = false;
                         }),
                       ),
                       chip(
                         label: 'All Sellers',
-                        selected: !verified && !preferred,
+                        selected: !verified,
                         onTap: () => setSheetState(() {
                           verified = false;
-                          preferred = false;
                         }),
                       ),
                     ],
@@ -744,7 +732,6 @@ void _showWishlistFilterSheet(
                           priceMax: selectedMax,
                           ratingMin: selectedRating,
                           verifiedSellers: verified,
-                          preferredStore: preferred,
                         );
                         Navigator.pop(sheetContext);
                       },

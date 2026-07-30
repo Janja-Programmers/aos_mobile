@@ -419,19 +419,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذر حفظ تفضيلك. يُرجى المحاولة مرة أخرى.';
 
   @override
-  String get session_restore_offline_title => 'أنت غير متصل بالإنترنت';
+  String get wishlist_add => 'إضافة إلى قائمة الرغبات';
 
   @override
-  String get session_restore_offline_message =>
-      'تعذر على AOS التحقق من جلستك الحالية. اتصل بالإنترنت ثم حاول مرة أخرى. لم يتم حذف جلستك المحفوظة.';
+  String get wishlist_remove => 'إزالة من قائمة الرغبات';
 
   @override
-  String get session_restore_unavailable_title => 'تعذر استعادة جلستك';
-
-  @override
-  String get session_restore_unavailable_message =>
-      'يتعذر على AOS التحقق من جلستك الحالية الآن. حاول مرة أخرى. لم يتم حذف جلستك المحفوظة.';
-
-  @override
-  String get privacy_cover_accessibility_label => 'يحمي AOS معلومات حسابك.';
+  String get wishlist_update_error =>
+      'تعذر تحديث قائمة رغباتك. يُرجى المحاولة مرة أخرى.';
 }

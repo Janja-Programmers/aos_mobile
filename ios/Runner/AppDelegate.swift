@@ -36,9 +36,7 @@ import FirebaseMessaging
     _ application: UIApplication,
     didFailToRegisterForRemoteNotificationsWithError error: Error
   ) {
-#if DEBUG
-    print("❌ APNS registration failed")
-#endif
+    print("❌ APNS registration failed: \(error.localizedDescription)")
 
     super.application(
       application,
@@ -50,10 +48,8 @@ import FirebaseMessaging
     _ messaging: Messaging,
     didReceiveRegistrationToken fcmToken: String?
   ) {
-    if fcmToken != nil {
-#if DEBUG
-      print("✅ FCM registration token received")
-#endif
+    if let fcmToken = fcmToken {
+      print("✅ FCM registration token received: \(fcmToken)")
     }
   }
 }

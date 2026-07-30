@@ -23,7 +23,6 @@ class AllAdsState {
     this.wishlistMaxPrice,
     this.wishlistMinRating,
     this.wishlistVerifiedSellers = false,
-    this.wishlistPreferredStore = false,
   });
 
   final List<AOSAdListItem> items;
@@ -51,14 +50,12 @@ class AllAdsState {
   final int? wishlistMaxPrice;
   final int? wishlistMinRating;
   final bool wishlistVerifiedSellers;
-  final bool wishlistPreferredStore;
 
   bool get hasWishlistFilters {
     return wishlistMinPrice != null ||
         wishlistMaxPrice != null ||
         wishlistMinRating != null ||
-        wishlistVerifiedSellers ||
-        wishlistPreferredStore;
+        wishlistVerifiedSellers;
   }
 
   AllAdsState copyWith({
@@ -78,7 +75,6 @@ class AllAdsState {
     Object? wishlistMaxPrice = _unset,
     Object? wishlistMinRating = _unset,
     bool? wishlistVerifiedSellers,
-    bool? wishlistPreferredStore,
   }) {
     return AllAdsState(
       items: items ?? this.items,
@@ -107,8 +103,6 @@ class AllAdsState {
           : wishlistMinRating as int?,
       wishlistVerifiedSellers:
           wishlistVerifiedSellers ?? this.wishlistVerifiedSellers,
-      wishlistPreferredStore:
-          wishlistPreferredStore ?? this.wishlistPreferredStore,
     );
   }
 }

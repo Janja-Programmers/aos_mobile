@@ -207,8 +207,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return AppRoutes.splash;
       }
 
-      if (RouteGuards.requiresSessionResolution(auth)) {
-        return matchedLocation == AppRoutes.splash ? null : AppRoutes.splash;
+      if (auth is AuthLoading) {
+        return AppRoutes.splash;
       }
 
       if (matchedLocation == AppRoutes.splash) {

@@ -68,7 +68,7 @@ class LiveRealtimeListener {
     final liveId = data['live_id']?.toString();
 
     if (liveId == null || liveId.isEmpty) {
-      appLogger.e('[LiveRealtime] Invalid live-ended payload');
+      appLogger.e('[LiveRealtime] ❌ Invalid live ended payload → $payload');
       return;
     }
 
@@ -79,13 +79,17 @@ class LiveRealtimeListener {
   // VIEWER COUNT
   // -----------------------------
   void _handleViewerCount(dynamic payload) {
+    appLogger.i(
+      '[LiveRealtime] 👥 Viewer count payload: → ${payload.toString()}',
+    );
+
     final data = _extract(payload);
 
     final liveId = data['live_id']?.toString();
     final countRaw = data['viewer_count'];
 
     if (liveId == null || countRaw == null) {
-      appLogger.e('[LiveRealtime] Invalid viewer-count payload');
+      appLogger.e('[LiveRealtime] ❌ Invalid viewer count → $payload');
       return;
     }
 
@@ -102,7 +106,7 @@ class LiveRealtimeListener {
     final liveId = data['live_id']?.toString();
 
     if (liveId == null || liveId.isEmpty) {
-      appLogger.e('[LiveRealtime] Invalid live-started payload');
+      appLogger.e('[LiveRealtime] ❌ Invalid live started payload → $payload');
       return;
     }
 

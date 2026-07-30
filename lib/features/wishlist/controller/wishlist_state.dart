@@ -1,26 +1,28 @@
 class WishlistState {
-  const WishlistState({
-    required this.ids,
-    required this.pending,
-    required this.isReady,
-  });
+  WishlistState({
+    Map<String, bool> overrides = const <String, bool>{},
+    Set<String> pending = const <String>{},
+  }) : overrides = Map<String, bool>.unmodifiable(overrides),
+       pending = Set<String>.unmodifiable(pending);
 
-  final Set<String> ids;
+  final Map<String, bool> overrides;
   final Set<String> pending;
-  final bool isReady;
 
-  factory WishlistState.initial() =>
-      const WishlistState(ids: <String>{}, pending: <String>{}, isReady: false);
+  factory WishlistState.initial() => WishlistState();
+
+  bool resolve(String adId, {required bool fallback}) {
+    final id = adId.trim();
+    if (id.isEmpty) return fallback;
+    return overrides[id] ?? fallback;
+  }
 
   WishlistState copyWith({
-    Set<String>? ids,
+    Map<String, bool>? overrides,
     Set<String>? pending,
-    bool? isReady,
   }) {
     return WishlistState(
-      ids: ids ?? this.ids,
+      overrides: overrides ?? this.overrides,
       pending: pending ?? this.pending,
-      isReady: isReady ?? this.isReady,
     );
   }
 }

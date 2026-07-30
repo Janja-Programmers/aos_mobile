@@ -265,9 +265,7 @@
   "settings_terms_conditions": "Terms & Conditions",
   "@settings_terms_conditions": {},
   "onboarding_preference_error": "We couldn't save your preference. Please try again.",
-  "session_restore_offline_title": "You're offline",
-  "session_restore_offline_message": "AOS couldn't verify your existing session. Reconnect and try again. Your stored session has not been cleared.",
-  "session_restore_unavailable_title": "We couldn't restore your session",
-  "session_restore_unavailable_message": "AOS couldn't verify your existing session right now. Try again. Your stored session has not been cleared.",
-  "privacy_cover_accessibility_label": "AOS is protecting your account information."
+  "wishlist_add": "Add to wishlist",
+  "wishlist_remove": "Remove from wishlist",
+  "wishlist_update_error": "Unable to update your wishlist. Please try again."
 }

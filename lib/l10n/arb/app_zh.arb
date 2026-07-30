@@ -157,9 +157,7 @@
   "settings_manage_app": "管理应用的运行方式",
   "settings_terms_conditions": "条款和条件",
   "onboarding_preference_error": "无法保存您的偏好设置。请重试。",
-  "session_restore_offline_title": "你当前处于离线状态",
-  "session_restore_offline_message": "AOS 无法验证你现有的会话。请重新连接网络后重试。已保存的会话尚未清除。",
-  "session_restore_unavailable_title": "无法恢复你的会话",
-  "session_restore_unavailable_message": "AOS 目前无法验证你现有的会话。请重试。已保存的会话尚未清除。",
-  "privacy_cover_accessibility_label": "AOS 正在保护你的账户信息。"
+  "wishlist_add": "添加到愿望清单",
+  "wishlist_remove": "从愿望清单中移除",
+  "wishlist_update_error": "无法更新您的愿望清单。请重试。"
 }

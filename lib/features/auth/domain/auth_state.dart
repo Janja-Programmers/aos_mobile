@@ -62,7 +62,7 @@ class AuthSellerSummary {
 sealed class AuthState {
   const AuthState();
 
-  bool get isLoading => this is AuthLoading || this is AuthRestoring;
+  bool get isLoading => this is AuthLoading;
   bool get isGuest => this is AuthGuest;
   bool get isAuthenticated => this is AuthAuthenticated;
 
@@ -72,18 +72,6 @@ sealed class AuthState {
 
 class AuthLoading extends AuthState {
   const AuthLoading();
-}
-
-enum AuthRestorationFailureReason { network, timeout, server, unknown }
-
-class AuthRestoring extends AuthState {
-  const AuthRestoring();
-}
-
-class AuthRestorationFailure extends AuthState {
-  const AuthRestorationFailure({required this.reason});
-
-  final AuthRestorationFailureReason reason;
 }
 
 class AuthGuest extends AuthState {

@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/routing/app_nav.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,14 +25,25 @@ class AdCardImage extends ConsumerWidget {
 
     final isAuth = ref.watch(isAuthenticatedProvider);
 
-    Set<String> ids = const {};
+    final wishlistState = isAuth
+        ? ref.watch(wishlistControllerProvider)
+        : null;
+    final isWishlisted =
+        wishlistState?.resolve(ad.id, fallback: ad.isWishlisted) ?? false;
+    final isPending = wishlistState?.pending.contains(ad.id) ?? false;
 
-    if (isAuth) {
-      final wishlist = ref.watch(wishlistControllerProvider).value;
-      ids = wishlist?.ids ?? {};
+    Future<void> toggleWishlist() async {
+      final success = await ref
+          .read(wishlistControllerProvider.notifier)
+          .toggle(ad.id, currentValue: isWishlisted);
+
+      if (!success && context.mounted) {
+        ShowSnack(
+          context,
+          context.l10n.wishlist_update_error,
+        ).error();
+      }
     }
-
-    final isWishlisted = ids.contains(ad.id);
 
     return Stack(
       children: [
@@ -81,29 +96,53 @@ class AdCardImage extends ConsumerWidget {
               else
                 const SizedBox(),
 
-              GestureDetector(
-                onTap: () {
-                  AppNavigation.requireAuth(
-                    context,
-                    ref,
-                    onAuthenticated: () {
-                      ref
-                          .read(wishlistControllerProvider.notifier)
-                          .toggle(ad.id);
-                    },
-                  );
-                },
-                child: Container(
-                  height: 28,
-                  width: 28,
-                  decoration: BoxDecoration(
-                    color: colors.surface.withValues(alpha: 0.9),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isWishlisted ? Icons.favorite : Icons.favorite_border,
-                    size: 16,
-                    color: isWishlisted ? colors.primary : colors.textPrimary,
+              Semantics(
+                button: true,
+                enabled: !isPending,
+                label: isWishlisted
+                    ? context.l10n.wishlist_remove
+                    : context.l10n.wishlist_add,
+                child: Material(
+                  color: colors.surface.withValues(alpha: 0.9),
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: isPending
+                        ? null
+                        : () {
+                            unawaited(
+                              AppNavigation.requireAuth(
+                                context,
+                                ref,
+                                onAuthenticated: () {
+                                  unawaited(toggleWishlist());
+                                },
+                              ),
+                            );
+                          },
+                    child: SizedBox(
+                      height: 48,
+                      width: 48,
+                      child: Center(
+                        child: isPending
+                            ? const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(
+                                isWishlisted
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                size: 18,
+                                color: isWishlisted
+                                    ? colors.primary
+                                    : colors.textPrimary,
+                              ),
+                      ),
+                    ),
                   ),
                 ),
               ),

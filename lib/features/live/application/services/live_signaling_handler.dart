@@ -14,7 +14,7 @@ class LiveSignalingHandler {
       final liveId = data['live_id']?.toString();
 
       if (liveId == null || liveId.isEmpty) {
-        appLogger.e('Invalid live-started payload');
+        appLogger.e('❌ Invalid live-started payload: $data');
         return;
       }
 
@@ -31,7 +31,7 @@ class LiveSignalingHandler {
       final liveId = data['live_id']?.toString();
 
       if (liveId == null || liveId.isEmpty) {
-        appLogger.e('Invalid live-ended payload');
+        appLogger.e('❌ Invalid live-ended payload: $data');
         return;
       }
 
@@ -70,7 +70,7 @@ class LiveSignalingHandler {
       final liveId = data['live_id']?.toString();
 
       if (liveId == null || liveId.isEmpty) {
-        appLogger.e('Invalid viewer-joined payload');
+        appLogger.e('❌ Invalid viewer-joined payload: $data');
         return;
       }
 
@@ -87,7 +87,7 @@ class LiveSignalingHandler {
       final liveId = data['live_id']?.toString();
 
       if (liveId == null || liveId.isEmpty) {
-        appLogger.e('Invalid viewer-left payload');
+        appLogger.e('❌ Invalid viewer-left payload: $data');
         return;
       }
 
@@ -105,7 +105,7 @@ class LiveSignalingHandler {
       final comment = data['message'] ?? data['comment'];
 
       if (liveId == null || liveId.isEmpty || comment is! Map) {
-        appLogger.e('Invalid live-comment payload');
+        appLogger.e('❌ Invalid live-comment payload: $data');
         return;
       }
 
@@ -113,13 +113,7 @@ class LiveSignalingHandler {
         liveId: liveId,
         comment: asJsonMap(comment),
       );
-    } catch (error, stackTrace) {
-      appLogger.e(
-        'handleLiveComment failed',
-        error: error,
-        stackTrace: stackTrace,
-      );
-    }
+    } catch (_) {}
   }
 
   // ================= LIVE COMMENT DELETED =================
@@ -139,7 +133,7 @@ class LiveSignalingHandler {
           liveId.isEmpty ||
           commentId == null ||
           commentId.isEmpty) {
-        appLogger.e('Invalid live-comment-deleted payload');
+        appLogger.e('❌ Invalid live-comment-deleted payload: $data');
         return;
       }
 
@@ -160,7 +154,7 @@ class LiveSignalingHandler {
       final rawReaction = data['reaction'];
 
       if (liveId == null || liveId.isEmpty || rawReaction is! Map) {
-        appLogger.e('Invalid live-reaction payload');
+        appLogger.e('❌ Invalid live-reaction payload: $data');
         return;
       }
 

@@ -39,13 +39,12 @@ class AuthControllerHarness {
   AuthState get state => container.read(authControllerProvider);
 }
 
-Future<AuthControllerHarness> buildAuthControllerHarness({
+Future<AuthControllerHarness> buildAuthControllerHar`Future<AuthControllerHarness> Future<AuthControllerHarness> ness({
   String? storedSid,
   LoginHandler? loginHandler,
   NoArgumentAuthHandler? meHandler,
   NoArgumentAuthHandler? logoutHandler,
   DateTime Function()? now,
-  bool waitForInitialization = true,
 }) async {
   final preferences = await setUpTestPreferences();
   final OnboardingStorage onboardingStorage = OnboardingStorage(preferences);
@@ -97,11 +96,7 @@ Future<AuthControllerHarness> buildAuthControllerHarness({
         AuthState? previous,
         AuthState next,
       ) {
-        final bool isTerminal =
-            next is AuthGuest ||
-            next is AuthAuthenticated ||
-            next is AuthRestorationFailure;
-        if (isTerminal && !initialized.isCompleted) {
+        if (next is! AuthLoading && !initialized.isCompleted) {
           initialized.complete();
         }
       }, fireImmediately: true);
@@ -109,9 +104,7 @@ Future<AuthControllerHarness> buildAuthControllerHarness({
   final AuthController controller = container.read(
     authControllerProvider.notifier,
   );
-  final AuthState currentState = container.read(authControllerProvider);
-  if (waitForInitialization &&
-      (currentState is AuthLoading || currentState is AuthRestoring)) {
+  if (container.read(authControllerProvider) is AuthLoading) {
     await initialized.future.timeout(const Duration(seconds: 2));
   }
   subscription.close();

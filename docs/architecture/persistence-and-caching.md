@@ -8,11 +8,12 @@
 | `OnboardingStorage` | `SharedPreferences` | country, language, currency, onboarding completion |
 | `ThemePrefs` | `SharedPreferences` | theme mode |
 | Search recent storage | `SharedPreferences` | recent search terms/state |
-| Wishlist storage | `SharedPreferences` | local wishlist persistence/support |
 | User verification draft storage | `SharedPreferences` | in-progress verification draft |
 | CallKit pending payload store | `SharedPreferences` | deferred incoming-call payload |
 | Chat local preferences | `SharedPreferences` | chat-specific local settings |
 | Device identifier | `FlutterSecureStorage` | stable local device identity |
+
+Wishlist membership is not stored locally. Backend ad/list/detail responses provide the initial state, and Riverpod keeps only temporary mutation overrides for the active authenticated session.
 
 No general-purpose local relational database or offline synchronization layer is represented in the uploaded frontend.
 

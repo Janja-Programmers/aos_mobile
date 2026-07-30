@@ -890,35 +890,25 @@ abstract class AppLocalizations {
   /// **'We couldn\'t save your preference. Please try again.'**
   String get onboarding_preference_error;
 
-  /// No description provided for @session_restore_offline_title.
+  /// No description provided for @wishlist_add.
   ///
   /// In en, this message translates to:
-  /// **'You\'re offline'**
-  String get session_restore_offline_title;
+  /// **'Add to wishlist'**
+  String get wishlist_add;
 
-  /// No description provided for @session_restore_offline_message.
+  /// No description provided for @wishlist_remove.
   ///
   /// In en, this message translates to:
-  /// **'AOS couldn\'t verify your existing session. Reconnect and try again. Your stored session has not been cleared.'**
-  String get session_restore_offline_message;
+  /// **'Remove from wishlist'**
+  String get wishlist_remove;
 
-  /// No description provided for @session_restore_unavailable_title.
+  /// No description provided for @wishlist_update_error.
   ///
   /// In en, this message translates to:
-  /// **'We couldn\'t restore your session'**
-  String get session_restore_unavailable_title;
+  /// **'Unable to update your wishlist. Please try again.'**
+  String get wishlist_update_error;
 
-  /// No description provided for @session_restore_unavailable_message.
-  ///
-  /// In en, this message translates to:
-  /// **'AOS couldn\'t verify your existing session right now. Try again. Your stored session has not been cleared.'**
-  String get session_restore_unavailable_message;
-
-  /// No description provided for @privacy_cover_accessibility_label.
-  ///
-  /// In en, this message translates to:
-  /// **'AOS is protecting your account information.'**
-  String get privacy_cover_accessibility_label;
+  String? get privacy_cover_accessibility_label => null;
 }
 
 class _AppLocalizationsDelegate

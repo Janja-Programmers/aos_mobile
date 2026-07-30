@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -33,7 +34,9 @@ class ImageHeaderOverlayActions extends StatelessWidget {
         const SizedBox(width: 2.5),
         _CircleActionButton(
           icon: isFavorite ? Icons.favorite : Icons.favorite_border,
-          tooltip: isFavorite ? 'Remove from wishlist' : 'Add to wishlist',
+          tooltip: isFavorite
+              ? context.l10n.wishlist_remove
+              : context.l10n.wishlist_add,
           isLoading: isFavoritePending,
           onTap: isFavoritePending ? null : onFavoriteTap,
         ),

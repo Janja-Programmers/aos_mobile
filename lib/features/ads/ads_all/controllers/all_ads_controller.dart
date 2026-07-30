@@ -23,6 +23,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
   static const _limit = 20;
   int _offset = 0;
+  int _requestGeneration = 0;
 
   Timer? _wishlistSearchDebounce;
   bool _bootstrapped = false;
@@ -134,6 +135,8 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     if (state.loading || state.loadingMore) return;
     if (!state.hasMore && !initial) return;
 
+    final requestGeneration = _requestGeneration;
+
     state = state.copyWith(
       loading: initial,
       loadingMore: !initial,
@@ -149,15 +152,16 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     final res = isWishlist
         ? await api.listWishlist(
-            limit: _limit,
             offset: _offset,
             sort: sort,
             q: wishlistQuery.isEmpty ? null : wishlistQuery,
             priceMin: state.wishlistMinPrice,
             priceMax: state.wishlistMaxPrice,
             ratingMin: state.wishlistMinRating,
-            verifiedSellers: state.wishlistVerifiedSellers ? true : null,
-            preferredStore: state.wishlistPreferredStore ? true : null,
+            verifiedSeller: switch (state.wishlistVerifiedSellers) {
+              true => true,
+              false => null,
+            },
           )
         : await api.listAds(
             categoryId: categoryId,
@@ -165,6 +169,10 @@ class AllAdsController extends StateNotifier<AllAdsState> {
             sort: sort,
             offset: _offset,
           );
+
+    if (!mounted || requestGeneration != _requestGeneration) {
+      return;
+    }
 
     res.fold(
       (failure) {
@@ -179,14 +187,19 @@ class AllAdsController extends StateNotifier<AllAdsState> {
         final list = asJsonMapList(
           responseData['items'],
         ).map(AOSAdListItem.fromJson).toList();
+        final pagination = asJsonMap(responseData['pagination']);
+        final hasMore = pagination.isEmpty
+            ? list.length == _limit
+            : asBool(pagination['has_more']);
+        final nextOffset = asNullableInt(pagination['next_offset']);
 
         final merged = _offset == 0 ? list : [...state.items, ...list];
 
-        _offset += list.length;
+        _offset = nextOffset ?? (_offset + list.length);
 
         state = state.copyWith(
           items: merged,
-          hasMore: list.length == _limit,
+          hasMore: hasMore,
           loading: false,
           loadingMore: false,
           clearError: true,
@@ -196,6 +209,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   }
 
   Future<void> refresh() async {
+    _invalidateActiveRequest();
     _offset = 0;
 
     state = state.copyWith(hasMore: true, items: [], clearError: true);
@@ -212,11 +226,11 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   void setCategory(String? id) {
     if (isWishlist) return;
 
-    _offset = 0;
-
     final nextId = id;
-
     if (state.selectedCategoryId == nextId) return;
+
+    _invalidateActiveRequest();
+    _offset = 0;
 
     state = state.copyWith(
       selectedCategoryId: nextId,
@@ -230,8 +244,9 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   }
 
   void setDealType(DealType type) {
-    if (isWishlist) return;
+    if (isWishlist || state.selectedDealType == type) return;
 
+    _invalidateActiveRequest();
     _offset = 0;
 
     state = state.copyWith(selectedDealType: type, items: [], hasMore: true);
@@ -240,6 +255,9 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   }
 
   void setSortType(AdsSort? sortType) {
+    if (state.selectedSort == sortType) return;
+
+    _invalidateActiveRequest();
     _offset = 0;
 
     state = state.copyWith(selectedSort: sortType, items: [], hasMore: true);
@@ -254,10 +272,16 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     if (clean == state.wishlistQuery) return;
 
     _wishlistSearchDebounce?.cancel();
-    _offset = 0;
+    _invalidateActiveRequest();
 
+    state = state.copyWith(wishlistQuery: clean, clearError: true);
+
+    // The backend accepts either an empty query or at least two characters.
+    // Keep the current results while the user has typed only one character.
+    if (clean.length == 1) return;
+
+    _offset = 0;
     state = state.copyWith(
-      wishlistQuery: clean,
       items: [],
       hasMore: true,
       loading: true,
@@ -276,23 +300,33 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     int? priceMax,
     int? ratingMin,
     bool verifiedSellers = false,
-    bool preferredStore = false,
   }) {
     if (!isWishlist) return;
 
+    final unchanged = state.wishlistMinPrice == priceMin &&
+        state.wishlistMaxPrice == priceMax &&
+        state.wishlistMinRating == ratingMin &&
+        state.wishlistVerifiedSellers == verifiedSellers;
+    if (unchanged) return;
+
+    _invalidateActiveRequest();
     _offset = 0;
     state = state.copyWith(
       wishlistMinPrice: priceMin,
       wishlistMaxPrice: priceMax,
       wishlistMinRating: ratingMin,
       wishlistVerifiedSellers: verifiedSellers,
-      wishlistPreferredStore: preferredStore,
       items: [],
       hasMore: true,
       clearError: true,
     );
 
     unawaited(load(initial: true));
+  }
+
+  void _invalidateActiveRequest() {
+    _requestGeneration += 1;
+    state = state.copyWith(loading: false, loadingMore: false);
   }
 
   void clearWishlistFilters() {

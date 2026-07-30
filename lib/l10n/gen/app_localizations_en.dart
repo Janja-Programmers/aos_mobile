@@ -422,21 +422,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'We couldn\'t save your preference. Please try again.';
 
   @override
-  String get session_restore_offline_title => 'You\'re offline';
+  String get wishlist_add => 'Add to wishlist';
 
   @override
-  String get session_restore_offline_message =>
-      'AOS couldn\'t verify your existing session. Reconnect and try again. Your stored session has not been cleared.';
+  String get wishlist_remove => 'Remove from wishlist';
 
   @override
-  String get session_restore_unavailable_title =>
-      'We couldn\'t restore your session';
-
-  @override
-  String get session_restore_unavailable_message =>
-      'AOS couldn\'t verify your existing session right now. Try again. Your stored session has not been cleared.';
-
-  @override
-  String get privacy_cover_accessibility_label =>
-      'AOS is protecting your account information.';
+  String get wishlist_update_error =>
+      'Unable to update your wishlist. Please try again.';
 }

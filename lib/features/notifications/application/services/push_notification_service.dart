@@ -78,8 +78,8 @@ class PushNotificationService {
       if (permissionGranted) {
         await _setupToken();
       } else {
-        appLogger.w(
-          '🔕 Notifications permission not granted. Token setup skipped.',
+        appLogger.i(
+          '🔕 Notifications are disabled. Push token registration is deferred.',
         );
       }
     } catch (e, s) {
@@ -349,7 +349,7 @@ class PushNotificationService {
 
     _tapSub = FirebaseMessaging.onMessageOpenedApp.listen((message) async {
       try {
-        appLogger.i('📲 Notification tap received from background');
+        appLogger.i('📲 Notification tapped (background): ${message.data}');
 
         final notification = _mapMessageToNotification(message);
 
@@ -456,7 +456,7 @@ class PushNotificationService {
           data['type']?.toString();
 
       if (event == null || event.trim().isEmpty) {
-        appLogger.w('⚠️ Push payload missing notification type/event');
+        appLogger.w('⚠️ Missing notification type/event: $data');
         return null;
       }
 
@@ -469,7 +469,7 @@ class PushNotificationService {
       );
 
       if (notification.type == NotificationType.unknown) {
-        appLogger.w('⚠️ Unknown notification event');
+        appLogger.w('⚠️ Unknown notification event: $event');
       }
 
       return notification;

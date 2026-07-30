@@ -4,10 +4,8 @@
 
 Authentication is represented by the sealed `AuthState` hierarchy:
 
-- `AuthLoading` before storage inspection;
-- `AuthRestoring` while a stored SID is being validated;
-- `AuthRestorationFailure` when validation is temporarily unavailable and may be retried without clearing the SID;
-- `AuthGuest` only when no stored session exists or the backend confirms invalidation;
+- `AuthLoading` during restoration or an in-flight transition;
+- `AuthGuest` when no valid session exists;
 - `AuthAuthenticated` containing `AuthUser`, SID, preferences, roles, and seller summary.
 
 `AuthUser.fromMap` supports compatible identity-verification field names and defensive boolean coercion. This compatibility behavior should be protected by authentication feature tests.
@@ -32,9 +30,7 @@ Google and Apple login requests also include `client_type: mobile` plus optional
 
 ## Expiry and cleanup
 
-The API client emits a session-expired event on HTTP 401. Authentication logic performs one `/me` refresh and clears local state only when a stable backend error identifier confirms session or account invalidation. A transient refresh failure preserves the authenticated session. Logout clears local auth/session state regardless of the remote logout outcome.
-
-Cold-start restoration uses request deduplication and operation generations so duplicate or stale responses cannot overwrite logout or a newer account operation. Retryable restoration remains on `/splash`; neither login nor authenticated content is rendered until the session is resolved.
+The API client emits a session-expired event on any HTTP 401. Authentication logic subscribes to that event and must clear local session state when the session becomes invalid. Logout is expected to clear local auth/session state regardless of remote logout outcome.
 
 At the application root:
 
@@ -49,7 +45,3 @@ Protected route access by a guest redirects to login and preserves the attempted
 ## Trust boundary
 
 Frontend route guards and visibility conditions are user-experience controls only. Every protected API must enforce server-side authentication and authorization. Tests should verify frontend behavior without treating it as a security boundary.
-
-## App-lock preparation
-
-See [Native app-lock prerequisites](app-lock-prerequisites.md) for lifecycle, privacy-cover, and typed protected-navigation ownership. Native app lock is not implemented in this iteration.

@@ -426,21 +426,12 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d’enregistrer votre préférence. Veuillez réessayer.';
 
   @override
-  String get session_restore_offline_title => 'Vous êtes hors connexion';
+  String get wishlist_add => 'Ajouter à la liste de souhaits';
 
   @override
-  String get session_restore_offline_message =>
-      'AOS n’a pas pu vérifier votre session existante. Reconnectez-vous puis réessayez. Votre session enregistrée n’a pas été supprimée.';
+  String get wishlist_remove => 'Retirer de la liste de souhaits';
 
   @override
-  String get session_restore_unavailable_title =>
-      'Impossible de restaurer votre session';
-
-  @override
-  String get session_restore_unavailable_message =>
-      'AOS ne peut pas vérifier votre session existante pour le moment. Réessayez. Votre session enregistrée n’a pas été supprimée.';
-
-  @override
-  String get privacy_cover_accessibility_label =>
-      'AOS protège les informations de votre compte.';
+  String get wishlist_update_error =>
+      'Impossible de mettre à jour votre liste de souhaits. Veuillez réessayer.';
 }

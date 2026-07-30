@@ -404,19 +404,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboarding_preference_error => '无法保存您的偏好设置。请重试。';
 
   @override
-  String get session_restore_offline_title => '你当前处于离线状态';
+  String get wishlist_add => '添加到愿望清单';
 
   @override
-  String get session_restore_offline_message =>
-      'AOS 无法验证你现有的会话。请重新连接网络后重试。已保存的会话尚未清除。';
+  String get wishlist_remove => '从愿望清单中移除';
 
   @override
-  String get session_restore_unavailable_title => '无法恢复你的会话';
-
-  @override
-  String get session_restore_unavailable_message =>
-      'AOS 目前无法验证你现有的会话。请重试。已保存的会话尚未清除。';
-
-  @override
-  String get privacy_cover_accessibility_label => 'AOS 正在保护你的账户信息。';
+  String get wishlist_update_error => '无法更新您的愿望清单。请重试。';
 }

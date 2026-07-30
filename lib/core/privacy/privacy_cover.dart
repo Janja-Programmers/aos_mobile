@@ -25,7 +25,9 @@ class PrivacyCoverCoordinator {
   }
 }
 
-final privacyCoverCoordinatorProvider = Provider<PrivacyCoverCoordinator>((ref) {
+final privacyCoverCoordinatorProvider = Provider<PrivacyCoverCoordinator>((
+  ref,
+) {
   return const PrivacyCoverCoordinator();
 });
 
@@ -44,7 +46,7 @@ class PrivacyCover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AppLocalizations localizations = AppLocalizations.of(context)!;
+    final AppLocalizations localizations = AppLocalizations.of(context);
     final Color backgroundColor = Theme.of(
       context,
     ).colorScheme.surface.withAlpha(255);

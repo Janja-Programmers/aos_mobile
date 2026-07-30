@@ -50,8 +50,3 @@ Auth and session decisions must use the error token/type, not backend message wo
 ## API test seam
 
 `test/fakes/recording_http_client_adapter.dart` scripts Dio responses and records `RequestOptions`. It enables assertions on method, path, query, body, headers, cancellation, and parsing without contacting staging or production.
-
-
-## Platform transport policy review
-
-The current Android manifest permits cleartext traffic globally and the iOS configuration permits arbitrary loads globally. This iteration leaves both unchanged because a complete authoritative inventory of API, media, realtime, maps, and call hosts was not supplied. Narrowing must be performed only after that inventory is verified, preferably with release-specific and host-specific exceptions. This limitation is tracked in [Native app-lock prerequisites](app-lock-prerequisites.md).

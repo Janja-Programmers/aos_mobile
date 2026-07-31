@@ -608,4 +608,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appLockPatternPointAccessibility => '图案点';
+
+  @override
+  String get ads_location_select_title => '选择地点';
+
+  @override
+  String ads_location_results_more(Object count) {
+    return '找到超过 $count 个地点';
+  }
+
+  @override
+  String ads_location_results_exact(Object count) {
+    return '找到 $count 个地点';
+  }
 }

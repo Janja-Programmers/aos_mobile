@@ -13,7 +13,6 @@ class AdFormPayloadBuilder {
       'location': d.locationId,
       'category': d.categoryId,
       'description': d.description.trim(),
-      if (!isEmptyStr(d.countryId)) 'country': d.countryId,
       'images': d.images
           .asMap()
           .entries
@@ -109,10 +108,6 @@ class AdFormPayloadBuilder {
             if (d.offerEnd != null) {
               payload['offer_end_date'] = _formatDate(d.offerEnd!);
             }
-
-            payload['schedule_offer_dates'] = 1;
-          } else {
-            payload['schedule_offer_dates'] = 0;
           }
         }
       }

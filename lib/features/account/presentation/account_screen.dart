@@ -10,9 +10,11 @@ import 'package:africaonlinestores/features/account/presentation/widgets/account
 import 'package:africaonlinestores/features/account/presentation/widgets/account_sections.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_controller.dart';
 import 'package:africaonlinestores/features/account/shared/routing/account_routes.dart';
+import 'package:africaonlinestores/features/activity/navigation/activity_navigation.dart';
 import 'package:africaonlinestores/features/ads/shared/routing/ads_routes.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
+import 'package:africaonlinestores/features/sellers/domain/seller_identity.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
 import 'package:africaonlinestores/features/verifications/controllers/get_my_verification_provider.dart';
 import 'package:africaonlinestores/features/verifications/controllers/seller_status_provider.dart';
@@ -62,7 +64,10 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     final user = auth.user;
     final fetched = accountState.profile;
 
-    final fetchedName = fetched['full_name']?.toString().trim() ?? '';
+    final fetchedName = _firstNonEmpty(<Object?>[
+      fetched['display_name'],
+      fetched['full_name'],
+    ]);
     final fetchedEmail = fetched['email']?.toString().trim() ?? '';
     final fetchedImage = _firstNonEmpty([
       fetched['user_image'],
@@ -109,6 +114,13 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     final AsyncValue<UserVerificationStatus>? userVerificationAsync =
         isAuthenticated ? ref.watch(userVerificationStatusProvider) : null;
     final sellerStatus = _dataOrNull(sellerStatusAsync);
+    final authenticated = auth.asAuthenticated;
+    final isSeller =
+        sellerStatus?.isSeller ?? authenticated?.seller.isSeller ?? false;
+    final sellerId = firstPublicSellerId(<Object?>[
+      sellerStatus?.sellerId,
+      authenticated?.seller.sellerId,
+    ]);
     final userVerificationStatus = _dataOrNull(userVerificationAsync);
     final accountVerified =
         isAuthenticated &&
@@ -176,30 +188,33 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               AccountCard(
                 child: Column(
                   children: [
-                    AccountOptionTile(
-                      icon: Icons.list_alt_sharp,
-                      title: 'My Listings',
-                      onTap: () => AdNavigation.toMyAds(context),
-                    ),
-
-                    AccountOptionTile(
-                      icon: Icons.store_mall_directory_outlined,
-                      title: 'My Storefront',
-                      onTap: () {
-                        final current = auth;
-                        SellerNavigation.toMyStoreFront(
-                          context,
-                          current.user.email,
-                        );
-                      },
-                    ),
-
+                    if (isSeller) ...[
+                      AccountOptionTile(
+                        icon: Icons.list_alt_sharp,
+                        title: 'My Listings',
+                        onTap: () => AdNavigation.toMyAds(context),
+                      ),
+                      if (sellerId != null)
+                        AccountOptionTile(
+                          icon: Icons.store_mall_directory_outlined,
+                          title: 'My Storefront',
+                          onTap: () => SellerNavigation.toMyStoreFront(
+                            context,
+                            sellerId,
+                          ),
+                        ),
+                    ],
                     AccountOptionTile(
                       icon: Icons.favorite_border,
                       title: 'My Wishlist',
                       onTap: () => AdNavigation.toWishlist(context),
                     ),
-                    const SizedBox(height: 18),
+                    AccountOptionTile(
+                      icon: Icons.notifications_active_outlined,
+                      title: 'Activity Center',
+                      showDivider: false,
+                      onTap: () => ActivityNavigation.toActivityCenter(context),
+                    ),
                   ],
                 ),
               ),
@@ -225,29 +240,35 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                     title: l10n.app_preferences,
                     onTap: () => context.pushNamed(AppRoutes.nPreference),
                   ),
-                  if (isAuthenticated) ...[
-                    AccountOptionTile(
-                      icon: Icons.delete_forever_outlined,
-                      title: 'Delete Account',
-                      onTap: () => context.pushNamed(AppRoutes.nDeleteAccount),
-                    ),
-                    AccountOptionTile(
-                      icon: Icons.settings_backup_restore_sharp,
-                      title: 'Restore account',
-                      onTap: () => context.pushNamed(AppRoutes.nRestoreAccount),
-                    ),
-                  ],
                   AppSwitchTile(
                     icon: Icons.dark_mode_outlined,
                     title: l10n.settings_dark_mode,
                     value: isDarkMode,
-                    showDivider: false,
+                    showDivider: isAuthenticated,
                     onChanged: (val) {
                       ref
                           .read(themeModeProvider.notifier)
                           .setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
                     },
                   ),
+
+                  AccountOptionTile(
+                    icon: Icons.settings_backup_restore_sharp,
+                    title: 'Restore account',
+                    showDivider: false,
+                    onTap: () => context.pushNamed(AppRoutes.nRestoreAccount),
+                  ),
+                  if (isAuthenticated) ...[
+                    AccountOptionTile(
+                      icon: Icons.delete_forever_outlined,
+                      title: 'Delete Account',
+                      foregroundColor: scheme.primary,
+                      iconBackgroundColor: scheme.primary.withValues(
+                        alpha: 0.12,
+                      ),
+                      onTap: () => context.pushNamed(AppRoutes.nDeleteAccount),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -284,6 +305,9 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                 height: 54,
                 child: OutlinedButton.icon(
                   onPressed: () async {
+                    final authController = ref.read(
+                      authControllerProvider.notifier,
+                    );
                     final confirmed = await showModalBottomSheet<bool>(
                       context: context,
                       useRootNavigator: true,
@@ -307,11 +331,11 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
 
                     if (confirmed != true || !context.mounted) return;
 
-                    await ref.read(authControllerProvider.notifier).logout();
+                    await authController.logout();
 
                     if (!context.mounted) return;
 
-                    context.go(AppRoutes.home);
+                    context.goNamed(AppRoutes.nLogin);
                   },
                   style: OutlinedButton.styleFrom(
                     shape: const StadiumBorder(),

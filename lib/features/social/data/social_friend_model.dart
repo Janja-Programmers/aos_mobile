@@ -21,14 +21,24 @@ class SocialFriendModel extends SocialFriend {
 
   factory SocialFriendModel.fromJson(Map<String, dynamic> json) {
     return SocialFriendModel(
-      user: _string(json['user']),
-      fullName: _string(json['full_name']),
-      userImage: _nullableString(json['user_image']),
+      user: _firstString(<Object?>[json['account_id'], json['user']]),
+      fullName: _firstString(<Object?>[
+        json['display_name'],
+        json['full_name'],
+      ]),
+      userImage: _firstNullableString(<Object?>[
+        json['avatar'],
+        json['user_image'],
+      ]),
       totalFollowers: _int(json['total_followers']),
       totalFollowing: _int(json['total_following']),
       isVerified: _bool(json['is_verified']),
       followedAt: _date(json['followed_at']),
-      targetUser: _string(json['target_user']),
+      targetUser: _firstString(<Object?>[
+        json['target_user'],
+        json['account_id'],
+        json['user'],
+      ]),
       isSelf: _bool(json['is_self']),
       isFollowing: _bool(json['is_following']),
       isFollowedBy: _bool(json['is_followed_by']),
@@ -79,18 +89,21 @@ class SocialFriendModel extends SocialFriend {
     };
   }
 
-  static String _string(dynamic value) {
-    return value?.toString().trim() ?? '';
+  static String _firstString(Iterable<Object?> values) {
+    for (final value in values) {
+      final clean = _string(value);
+      if (clean.isNotEmpty && clean.toLowerCase() != 'null') return clean;
+    }
+    return '';
   }
 
-  static String? _nullableString(dynamic value) {
-    final clean = value?.toString().trim();
+  static String? _firstNullableString(Iterable<Object?> values) {
+    final clean = _firstString(values);
+    return clean.isEmpty ? null : clean;
+  }
 
-    if (clean == null || clean.isEmpty || clean.toLowerCase() == 'null') {
-      return null;
-    }
-
-    return clean;
+  static String _string(dynamic value) {
+    return value?.toString().trim() ?? '';
   }
 
   static int _int(dynamic value) {

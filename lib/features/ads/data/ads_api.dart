@@ -5,10 +5,11 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/ads/ads_form/domain/ad_location_page.dart';
 import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
 import 'package:dio/dio.dart';
 
-class AdsApi {
+class AdsApi implements AdLocationRepository {
   AdsApi(this._client);
   final ApiClient _client;
 
@@ -30,11 +31,22 @@ class AdsApi {
     'Free',
   };
 
-  Future<Either<Failure, List<Map<String, dynamic>>>> getLocations() async {
+  @override
+  Future<Either<Failure, AdLocationPage>> getLocations({
+    String? query,
+    int limit = 20,
+    int offset = 0,
+  }) async {
     try {
+      final String cleanQuery = query?.trim() ?? '';
       final res = await _client.get(
         ApiEndpoints.getLocationsEndpoint,
         marketContext: true,
+        queryParameters: <String, dynamic>{
+          if (cleanQuery.isNotEmpty) 'q': cleanQuery,
+          'limit': limit,
+          'offset': offset,
+        },
       );
 
       final unwrapped = unwrapFrappe(res);
@@ -43,24 +55,24 @@ class AdsApi {
       }
 
       final payload = unwrapped.rightOrNull!;
+      final data = asJsonMap(payload['data']);
+      final locations = asJsonMapList(data['locations'])
+          .map(AdLocation.fromJson)
+          .where(
+            (AdLocation item) => item.id.isNotEmpty && item.name.isNotEmpty,
+          )
+          .toList(growable: false);
+      final pagination = asJsonMap(data['pagination']);
 
-      final raw = payload['data'];
-
-      if (raw is List) {
-        return Either.right(asJsonMapList(raw));
-      }
-
-      if (raw is Map) {
-        final data = asJsonMap(raw);
-        final list =
-            data['locations'] ?? data['items'] ?? data['data'] ?? data['list'];
-
-        if (list is List) {
-          return Either.right(asJsonMapList(list));
-        }
-      }
-
-      return Either.right(const []);
+      return Either.right(
+        AdLocationPage(
+          items: locations,
+          limit: asInt(pagination['limit'], fallback: limit),
+          offset: asInt(pagination['offset'], fallback: offset),
+          hasMore: asBool(pagination['has_more']),
+          nextOffset: asNullableInt(pagination['next_offset']),
+        ),
+      );
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {

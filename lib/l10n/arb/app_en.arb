@@ -335,5 +335,19 @@
   "appLockTimingFifteenSeconds": "After 15 seconds",
   "appLockPinInputAccessibility": "PIN entry",
   "appLockPatternInputAccessibility": "Pattern entry",
-  "appLockPatternPointAccessibility": "Pattern point"
+  "appLockPatternPointAccessibility": "Pattern point",
+  "ads_location_select_title": "Select location",
+  "@ads_location_select_title": {},
+  "ads_location_results_more": "More than {count} locations found",
+  "@ads_location_results_more": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "ads_location_results_exact": "{count} locations found",
+  "@ads_location_results_exact": {
+    "placeholders": {
+      "count": {}
+    }
+  }
 }

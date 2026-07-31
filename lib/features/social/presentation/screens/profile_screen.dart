@@ -64,13 +64,21 @@ class ProfileScreen extends ConsumerWidget {
     final currentUser = auth.user;
     final targetUser = _cleanUser(user).isNotEmpty
         ? _cleanUser(user)
-        : currentUser.email.trim();
-    final isOwnProfile = _sameUser(targetUser, currentUser.email);
+        : _firstNonEmptyIdentity(<String>[
+            currentUser.accountId,
+            currentUser.email,
+          ]);
+    final isOwnProfile = _isCurrentIdentity(
+      targetUser,
+      accountId: currentUser.accountId,
+      email: currentUser.email,
+    );
     final colors = context.appColors;
 
     final request = _ProfileRequest(
       targetUser: targetUser,
       currentUserEmail: currentUser.email,
+      currentAccountId: currentUser.accountId,
       currentDisplayName: currentUser.fullName,
       currentAvatar: currentUser.userImage,
       currentBio: currentUser.bio,
@@ -225,8 +233,26 @@ class ProfileScreen extends ConsumerWidget {
 
   static String _cleanUser(String? value) => value?.trim() ?? '';
 
-  static bool _sameUser(String a, String b) {
-    return a.trim().toLowerCase() == b.trim().toLowerCase();
+  static String _firstNonEmptyIdentity(Iterable<String> values) {
+    for (final value in values) {
+      final clean = value.trim();
+      if (clean.isNotEmpty) return clean;
+    }
+    return '';
+  }
+
+  static bool _isCurrentIdentity(
+    String target, {
+    required String accountId,
+    required String email,
+  }) {
+    final normalizedTarget = target.trim().toLowerCase();
+    if (normalizedTarget.isEmpty) return false;
+
+    return <String>[accountId, email]
+        .map((value) => value.trim().toLowerCase())
+        .where((value) => value.isNotEmpty)
+        .contains(normalizedTarget);
   }
 
   static void _showEditSheet(

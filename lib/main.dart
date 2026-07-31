@@ -214,7 +214,10 @@ class _AppRootState extends ConsumerState<AppRoot> {
   void initState() {
     super.initState();
 
-    unawaited(ref.read(appBootstrapControllerProvider.notifier).initialize());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(ref.read(appBootstrapControllerProvider.notifier).initialize());
+    });
 
     _authSub = ref.listenManual<AuthState>(authControllerProvider, (
       prev,

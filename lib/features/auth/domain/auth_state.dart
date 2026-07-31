@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/utils/json_utils.dart';
 
 class AuthUser {
   AuthUser({
+    this.accountId = '',
     required this.email,
     required this.fullName,
     this.userImage = '',
@@ -9,6 +10,7 @@ class AuthUser {
     this.isVerified = false,
   });
 
+  final String accountId;
   final String email;
   final String fullName;
   final String userImage;
@@ -16,9 +18,17 @@ class AuthUser {
   final bool isVerified;
 
   factory AuthUser.fromMap(Map<String, dynamic> m) {
+    final rawId = _firstText(<Object?>[m['account_id'], m['id']]);
+    final normalizedId = rawId.toUpperCase();
+    final rawEmail = _firstText(<Object?>[m['email']]);
+    final email = rawEmail.isNotEmpty
+        ? rawEmail
+        : (rawId.contains('@') ? rawId : '');
+
     return AuthUser(
-      email: (m['email'] ?? m['id'] ?? '').toString(),
-      fullName: (m['full_name'] ?? '').toString(),
+      accountId: normalizedId.startsWith('ACC-') ? normalizedId : '',
+      email: email,
+      fullName: _firstText(<Object?>[m['display_name'], m['full_name']]),
       userImage: (m['user_image'] ?? '').toString(),
       bio: (m['bio'] ?? '').toString(),
       isVerified:
@@ -27,6 +37,14 @@ class AuthUser {
           _bool(m['is_identity_verified']) ||
           _bool(m['verified']),
     );
+  }
+
+  static String _firstText(Iterable<Object?> values) {
+    for (final value in values) {
+      final clean = value?.toString().trim() ?? '';
+      if (clean.isNotEmpty && clean.toLowerCase() != 'null') return clean;
+    }
+    return '';
   }
 
   static bool _bool(dynamic value) {

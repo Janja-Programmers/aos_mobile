@@ -460,7 +460,17 @@ class AuthController extends StateNotifier<AuthState> {
     if (state is! AuthAuthenticated) return;
 
     final AuthAuthenticated current = state as AuthAuthenticated;
-    state = current.copyWith(user: AuthUser.fromMap(userMap));
+    state = current.copyWith(
+      user: AuthUser.fromMap(<String, dynamic>{
+        'account_id': current.user.accountId,
+        'email': current.user.email,
+        'display_name': current.user.fullName,
+        'user_image': current.user.userImage,
+        'bio': current.user.bio,
+        'is_verified': current.user.isVerified,
+        ...userMap,
+      }),
+    );
   }
 
   void setPreferencesFromMap(Map<String, dynamic> preferencesMap) {

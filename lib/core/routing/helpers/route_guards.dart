@@ -85,10 +85,36 @@ class RouteGuards {
     }
 
     if (isAuthenticated && isAuthRoute(currentLocation)) {
-      return AppRoutes.home;
+      return _postAuthenticationDestination(currentLocation) ?? AppRoutes.home;
     }
 
     return null;
+  }
+
+  static String? _postAuthenticationDestination(String currentLocation) {
+    final Uri? authUri = Uri.tryParse(currentLocation);
+    if (authUri == null || authUri.path != AppRoutes.login) return null;
+
+    final String target = authUri.queryParameters['redirect']?.trim() ?? '';
+    if (target.isEmpty || target.length > 2048) return null;
+    if (!target.startsWith('/') || target.startsWith('//')) return null;
+    if (target.contains('\\')) return null;
+
+    final Uri? targetUri = Uri.tryParse(target);
+    if (targetUri == null || targetUri.hasScheme || targetUri.hasAuthority) {
+      return null;
+    }
+
+    try {
+      for (final String segment in targetUri.pathSegments) {
+        final String decoded = Uri.decodeComponent(segment);
+        if (decoded == '.' || decoded == '..') return null;
+      }
+    } on FormatException {
+      return null;
+    }
+
+    return isProtectedRoute(target) ? target : null;
   }
 
   static String _pathOnly(String location) {

@@ -40,6 +40,7 @@ extension _ProfilePanelX on _ProfilePanel {
 class _ProfileRequest {
   final String targetUser;
   final String currentUserEmail;
+  final String currentAccountId;
   final String currentDisplayName;
   final String currentAvatar;
   final String? currentBio;
@@ -50,6 +51,7 @@ class _ProfileRequest {
   const _ProfileRequest({
     required this.targetUser,
     required this.currentUserEmail,
+    required this.currentAccountId,
     required this.currentDisplayName,
     required this.currentAvatar,
     this.currentBio,
@@ -63,6 +65,7 @@ class _ProfileRequest {
     return other is _ProfileRequest &&
         other.targetUser == targetUser &&
         other.currentUserEmail == currentUserEmail &&
+        other.currentAccountId == currentAccountId &&
         other.currentDisplayName == currentDisplayName &&
         other.currentAvatar == currentAvatar &&
         other.currentBio == currentBio &&
@@ -75,6 +78,7 @@ class _ProfileRequest {
   int get hashCode => Object.hash(
     targetUser,
     currentUserEmail,
+    currentAccountId,
     currentDisplayName,
     currentAvatar,
     currentBio,
@@ -154,7 +158,7 @@ class _ProfileViewData {
     final displayName = _ProfileLoader._firstNonEmpty([
       fallbackDisplayName,
       isOwnProfile ? currentDisplayName : null,
-      targetUser,
+      'AOS User',
     ]);
     final avatar = _ProfileLoader._firstNonEmpty([
       fallbackAvatar,
@@ -164,7 +168,7 @@ class _ProfileViewData {
     return _ProfileViewData(
       user: targetUser,
       displayName: displayName,
-      username: _usernameFromEmail(targetUser),
+      username: '',
       avatarUrl: buildFileUrl(avatar),
       bio: isOwnProfile ? (currentBio?.trim() ?? '') : '',
       isOwnProfile: isOwnProfile,
@@ -212,10 +216,4 @@ class _ProfilePanelRequest {
 
   @override
   int get hashCode => Object.hash(targetUser, isOwnProfile, panel);
-}
-
-String _usernameFromEmail(String value) {
-  final clean = value.trim();
-  if (clean.contains('@')) return clean.split('@').first;
-  return clean;
 }

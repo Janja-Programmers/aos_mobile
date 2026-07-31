@@ -76,13 +76,6 @@ class SocialConnectionTile extends StatelessWidget {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _usernameFromEmail(friend.user),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.pMuted.copyWith(fontSize: 12, height: 1.15),
-                  ),
                   if (_showSubtitle(friend)) ...[
                     const SizedBox(height: 2),
                     Text(
@@ -175,16 +168,6 @@ class SocialConnectionTile extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static String _usernameFromEmail(String value) {
-    final clean = value.trim();
-
-    if (clean.contains('@')) {
-      return clean.split('@').first;
-    }
-
-    return clean;
   }
 
   static bool _showSubtitle(SocialFriend friend) {

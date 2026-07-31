@@ -85,5 +85,20 @@ void main() {
       expect(profile.totalFriends, 0);
       expect(profile.totalShortLikes, 0);
     });
+
+    test('prefers backend public identity and display fields', () {
+      final AccountProfileSnapshot profile =
+          AccountProfileSnapshot.fromJson(const <String, dynamic>{
+            'account_id': 'ACC-ABCDEFGHIJKLMNOPQRST',
+            'user': 'legacy@example.invalid',
+            'display_name': 'Bobby',
+            'full_name': 'Stale Name',
+            'avatar': '/files/bobby.jpg',
+          });
+
+      expect(profile.user, 'ACC-ABCDEFGHIJKLMNOPQRST');
+      expect(profile.fullName, 'Bobby');
+      expect(profile.userImage, '/files/bobby.jpg');
+    });
   });
 }

@@ -645,4 +645,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appLockPatternPointAccessibility => 'Pattern point';
+
+  @override
+  String get ads_location_select_title => 'Select location';
+
+  @override
+  String ads_location_results_more(Object count) {
+    return 'More than $count locations found';
+  }
+
+  @override
+  String ads_location_results_exact(Object count) {
+    return '$count locations found';
+  }
 }

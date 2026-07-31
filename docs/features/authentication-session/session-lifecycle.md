@@ -6,6 +6,8 @@ The production feature does not use the separate `core/session/SessionState` enu
 
 ```text
 AuthLoading
+  -> AuthRestoring
+  -> AuthRestorationFailure
   -> AuthGuest
   -> AuthAuthenticated
 ```
@@ -21,7 +23,8 @@ stateDiagram-v2
     [*] --> Loading
     Loading --> Guest: no SID
     Loading --> Guest: invalid or malformed /me
-    Loading --> Guest: temporary /me failure
+    Loading --> RestorationFailure: temporary /me failure
+    RestorationFailure --> Loading: retry
     Loading --> Authenticated: stored SID + valid /me
     Guest --> Authenticated: valid password/social login
     Guest --> Guest: failed login
@@ -55,22 +58,22 @@ Only then does `_completeLogin` install and persist SID and emit `AuthAuthentica
 
 ## Restoration outcomes
 
-| `/me` outcome | Local SID | Auth state |
-| --- | --- | --- |
-| user present | retained | authenticated |
-| 401/auth-required | cleared | guest |
-| disabled/deleted/suspended | cleared | guest |
-| user missing/malformed | cleared | guest |
-| network/transient failure | retained | guest |
+| `/me` outcome                                           | Local SID | Auth state                    |
+| ------------------------------------------------------- | --------- | ----------------------------- |
+| user present                                            | retained  | authenticated                 |
+| 401/auth-required                                       | cleared   | guest                         |
+| disabled/deleted/suspended                              | cleared   | guest                         |
+| user missing/malformed without a stable invalidation ID | retained  | retryable restoration failure |
+| network/transient failure                               | retained  | retryable restoration failure |
 
 ## Expiry refresh outcomes
 
-| Refresh outcome | Result |
-| --- | --- |
-| valid `/me` | rehydrates authenticated state |
-| transient failure | keeps current authenticated state |
-| invalid/auth-required | clears session and becomes guest |
-| no stored SID | clears session and becomes guest |
+| Refresh outcome       | Result                            |
+| --------------------- | --------------------------------- |
+| valid `/me`           | rehydrates authenticated state    |
+| transient failure     | keeps current authenticated state |
+| invalid/auth-required | clears session and becomes guest  |
+| no stored SID         | clears session and becomes guest  |
 
 ## Cleanup ownership
 

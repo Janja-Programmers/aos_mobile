@@ -224,5 +224,19 @@
   "appLockTimingFifteenSeconds": "15 秒后",
   "appLockPinInputAccessibility": "PIN 输入",
   "appLockPatternInputAccessibility": "图案输入",
-  "appLockPatternPointAccessibility": "图案点"
+  "appLockPatternPointAccessibility": "图案点",
+  "ads_location_select_title": "选择地点",
+  "@ads_location_select_title": {},
+  "ads_location_results_more": "找到超过 {count} 个地点",
+  "@ads_location_results_more": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "ads_location_results_exact": "找到 {count} 个地点",
+  "@ads_location_results_exact": {
+    "placeholders": {
+      "count": {}
+    }
+  }
 }

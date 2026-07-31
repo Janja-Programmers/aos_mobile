@@ -10,6 +10,8 @@ class AccountOptionTile extends StatelessWidget {
     this.subtitle,
     this.onTap,
     this.showDivider = true,
+    this.foregroundColor,
+    this.iconBackgroundColor,
   });
 
   final IconData icon;
@@ -17,10 +19,13 @@ class AccountOptionTile extends StatelessWidget {
   final String? subtitle;
   final VoidCallback? onTap;
   final bool showDivider;
+  final Color? foregroundColor;
+  final Color? iconBackgroundColor;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final effectiveForeground = foregroundColor;
 
     return InkWell(
       onTap: onTap,
@@ -30,23 +35,37 @@ class AccountOptionTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
-                _LeadingIcon(icon: icon),
+                _LeadingIcon(
+                  icon: icon,
+                  foregroundColor: effectiveForeground,
+                  backgroundColor: iconBackgroundColor,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: context.p),
+                      Text(
+                        title,
+                        style: context.p.copyWith(color: effectiveForeground),
+                      ),
                       if (subtitle != null) ...[
                         const SizedBox(height: 3),
-                        Text(subtitle!, style: context.pMuted),
+                        Text(
+                          subtitle!,
+                          style: context.pMuted.copyWith(
+                            color: effectiveForeground?.withValues(alpha: 0.72),
+                          ),
+                        ),
                       ],
                     ],
                   ),
                 ),
                 Icon(
                   Icons.chevron_right,
-                  color: scheme.onSurface.withValues(alpha: 0.45),
+                  color:
+                      effectiveForeground ??
+                      scheme.onSurface.withValues(alpha: 0.45),
                 ),
               ],
             ),
@@ -64,8 +83,15 @@ class AccountOptionTile extends StatelessWidget {
 }
 
 class _LeadingIcon extends StatelessWidget {
-  const _LeadingIcon({required this.icon});
+  const _LeadingIcon({
+    required this.icon,
+    this.foregroundColor,
+    this.backgroundColor,
+  });
+
   final IconData icon;
+  final Color? foregroundColor;
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -75,10 +101,10 @@ class _LeadingIcon extends StatelessWidget {
       width: 38,
       height: 38,
       decoration: BoxDecoration(
-        color: colors.border,
+        color: backgroundColor ?? colors.border,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(icon, size: 20, color: colors.black),
+      child: Icon(icon, size: 20, color: foregroundColor ?? colors.black),
     );
   }
 }

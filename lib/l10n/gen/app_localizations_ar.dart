@@ -635,4 +635,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appLockPatternPointAccessibility => 'نقطة النمط';
+
+  @override
+  String get ads_location_select_title => 'اختر الموقع';
+
+  @override
+  String ads_location_results_more(Object count) {
+    return 'تم العثور على أكثر من $count موقعًا';
+  }
+
+  @override
+  String ads_location_results_exact(Object count) {
+    return 'تم العثور على $count موقعًا';
+  }
 }

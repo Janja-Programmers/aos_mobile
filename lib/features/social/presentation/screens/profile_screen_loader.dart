@@ -24,9 +24,10 @@ class _ProfileLoader {
   const _ProfileLoader(this.ref);
 
   Future<_ProfileViewData> loadProfile(_ProfileRequest request) async {
-    final bool isOwnProfile = _sameUser(
+    final bool isOwnProfile = ProfileScreen._isCurrentIdentity(
       request.targetUser,
-      request.currentUserEmail,
+      accountId: request.currentAccountId,
+      email: request.currentUserEmail,
     );
 
     final Map<String, dynamic> profile = await _loadProfilePayload(
@@ -58,6 +59,10 @@ class _ProfileLoader {
       request.fallbackDisplayName,
       isOwnProfile ? request.currentDisplayName : null,
       'AOS User',
+    ]);
+    final String username = _firstNonEmpty(<Object?>[
+      profile['username'],
+      profile['handle'],
     ]);
     final String rawAvatar = _firstNonEmpty(<Object?>[
       profile['avatar'],
@@ -105,9 +110,7 @@ class _ProfileLoader {
     return _ProfileViewData(
       user: profileUser,
       displayName: displayName,
-      username: isDeleted || isDeactivated
-          ? ''
-          : _usernameFromEmail(profileUser),
+      username: isDeleted || isDeactivated ? '' : username,
       avatarUrl: isDeleted || isDeactivated ? null : buildFileUrl(rawAvatar),
       bio: isDeleted || isDeactivated ? '' : bio,
       isOwnProfile: isOwnProfile,
@@ -262,10 +265,6 @@ class _ProfileLoader {
     if (message.isNotEmpty) return message;
 
     return root;
-  }
-
-  static bool _sameUser(String a, String b) {
-    return a.trim().toLowerCase() == b.trim().toLowerCase();
   }
 
   static String _firstNonEmpty(List<Object?> values) {

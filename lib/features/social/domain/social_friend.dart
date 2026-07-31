@@ -44,12 +44,7 @@ class SocialFriend {
 
   String get displayName {
     final cleanName = fullName.trim();
-    if (cleanName.isNotEmpty) return cleanName;
-
-    final cleanUser = user.trim();
-    if (cleanUser.isNotEmpty) return cleanUser;
-
-    return 'AOS User';
+    return cleanName.isNotEmpty ? cleanName : 'AOS User';
   }
 
   String get initials {

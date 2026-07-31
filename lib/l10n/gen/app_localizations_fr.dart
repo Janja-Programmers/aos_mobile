@@ -650,4 +650,17 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get appLockPatternPointAccessibility => 'Point du schéma';
+
+  @override
+  String get ads_location_select_title => 'Sélectionner un lieu';
+
+  @override
+  String ads_location_results_more(Object count) {
+    return 'Plus de $count lieux trouvés';
+  }
+
+  @override
+  String ads_location_results_exact(Object count) {
+    return '$count lieux trouvés';
+  }
 }

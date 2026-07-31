@@ -46,7 +46,10 @@ void main() {
   }
 
   Future<({AccountProfileApiHarness harness, ScriptedAccountsApi api})>
-  buildHarnessFor(String fixtureName) async {
+  buildHarnessFor(
+    String fixtureName, {
+    void Function(Map<String, dynamic> data)? mutateData,
+  }) async {
     final RecordingHttpClientAdapter adapter = RecordingHttpClientAdapter((
       RequestOptions options,
     ) async {
@@ -79,6 +82,7 @@ void main() {
       ..['user_image'] = null
       ..['is_live'] = false
       ..['live_id'] = null;
+    mutateData?.call(data);
     final Map<String, dynamic> safePayload = <String, dynamic>{
       ...payload,
       'data': data,
@@ -109,6 +113,7 @@ void main() {
           storage: FakeSessionStorage(sid: 'test-session-id'),
           initialState: AuthAuthenticated(
             user: AuthUser(
+              accountId: 'ACC-ABCDEFGHIJKLMNOPQRST',
               email: currentUser,
               fullName: 'Test Owner',
               bio: 'Owner bio.',
@@ -278,4 +283,32 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(repository.toggleFollowCalls, 1);
   });
+  testWidgets(
+    'own profile uses display_name and never exposes account ID as username',
+    (WidgetTester tester) async {
+      const accountId = 'ACC-ABCDEFGHIJKLMNOPQRST';
+      final bundle = await buildHarnessFor(
+        'own_profile.json',
+        mutateData: (data) {
+          data
+            ..['account_id'] = accountId
+            ..['user'] = accountId
+            ..['target_user'] = accountId
+            ..['display_name'] = 'Bobby'
+            ..['full_name'] = 'Bobby';
+        },
+      );
+
+      await tester.pumpTestApp(
+        const ProfileScreen(),
+        overrides: overridesFor(bundle.harness, bundle.api),
+      );
+      await pumpUntilVisible(tester, find.text('Bobby'));
+
+      expect(find.text('Bobby'), findsWidgets);
+      expect(find.text('@$accountId'), findsNothing);
+      expect(find.text(accountId), findsNothing);
+      expect(find.text('@owner'), findsNothing);
+    },
+  );
 }

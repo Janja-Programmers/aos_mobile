@@ -1297,6 +1297,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pattern point'**
   String get appLockPatternPointAccessibility;
+
+  /// No description provided for @ads_location_select_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Select location'**
+  String get ads_location_select_title;
+
+  /// No description provided for @ads_location_results_more.
+  ///
+  /// In en, this message translates to:
+  /// **'More than {count} locations found'**
+  String ads_location_results_more(Object count);
+
+  /// No description provided for @ads_location_results_exact.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} locations found'**
+  String ads_location_results_exact(Object count);
 }
 
 class _AppLocalizationsDelegate

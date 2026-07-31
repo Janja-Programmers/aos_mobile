@@ -647,4 +647,17 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get appLockPatternPointAccessibility => 'Nukta ya mchoro';
+
+  @override
+  String get ads_location_select_title => 'Chagua eneo';
+
+  @override
+  String ads_location_results_more(Object count) {
+    return 'Zaidi ya maeneo $count yamepatikana';
+  }
+
+  @override
+  String ads_location_results_exact(Object count) {
+    return 'Maeneo $count yamepatikana';
+  }
 }

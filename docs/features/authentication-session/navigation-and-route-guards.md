@@ -2,13 +2,13 @@
 
 ## Auth routes
 
-| Name | Path | Inputs |
-| --- | --- | --- |
-| `login` | `/login` | query `email`, query `redirect` |
-| `register` | `/register` | none |
-| `verifyOtp` | `/verify-otp` | extra String email or Map with `email` and `purpose` |
-| `forgotPassword` | `/forgot-password` | none |
-| `resetPassword` | `/reset-password` | extra Map with `email`, `reset_token` |
+| Name             | Path               | Inputs                                               |
+| ---------------- | ------------------ | ---------------------------------------------------- |
+| `login`          | `/login`           | query `email`, query `redirect`                      |
+| `register`       | `/register`        | none                                                 |
+| `verifyOtp`      | `/verify-otp`      | extra String email or Map with `email` and `purpose` |
+| `forgotPassword` | `/forgot-password` | none                                                 |
+| `resetPassword`  | `/reset-password`  | extra Map with `email`, `reset_token`                |
 
 `RouteGuards.isAuthRoute` removes query data and requires exact path equality. `/login/other` is not classified as an auth route.
 
@@ -36,7 +36,8 @@ auth loading -> /splash
 onboarding incomplete + other route -> /onboarding
 onboarding complete + onboarding route -> /
 guest + protected route -> /login?redirect=<encoded current URI>
-authenticated + auth route -> /
+authenticated + login with valid protected redirect -> redirect target
+authenticated + other auth route -> /
 otherwise -> no redirect
 ```
 
@@ -44,16 +45,19 @@ The redirect uses `state.uri.toString()`, preserving query parameters in the enc
 
 ## Login completion
 
-Password login explicitly navigates to:
-
-- `redirectLocation` when non-empty;
-- `/` otherwise.
-
-Social login on `LoginScreen` relies on auth-state router refresh. Social login from registration explicitly navigates home.
+`LoginScreen` updates authentication state only. `GoRouter.redirect` is the
+single post-login navigation owner for password and social login. A login
+`redirect` query is accepted only when it is an internal, validated protected
+route; external URLs, protocol-relative URLs, traversal segments, malformed
+URIs, and public-route injection fall back to `/`.
 
 ## Logout and expiry
 
-When auth becomes guest while the current URI is protected, router refresh redirects to login and encodes the current protected URI. Guest-safe routes remain unchanged.
+When auth becomes guest while the current URI is protected, router refresh
+redirects to login and encodes the current protected URI. Accounts is a public
+shell, so its explicit Logout action clears auth and then opens Login once.
+The logout callback captures the auth controller before awaiting confirmation,
+preventing use of a disposed widget `ref`.
 
 ## Guard tests
 

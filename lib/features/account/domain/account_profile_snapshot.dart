@@ -81,11 +81,17 @@ class AccountProfileSnapshot {
 
   factory AccountProfileSnapshot.fromJson(Map<String, dynamic> json) {
     return AccountProfileSnapshot(
-      user: _string(json['user']),
-      fullName: _string(json['full_name']),
+      user: _firstString(<Object?>[json['account_id'], json['user']]),
+      fullName: _firstString(<Object?>[
+        json['display_name'],
+        json['full_name'],
+      ]),
       email: _nullableString(json['email']),
       bio: _string(json['bio']),
-      userImage: _nullableString(json['user_image']),
+      userImage: _firstNullableString(<Object?>[
+        json['avatar'],
+        json['user_image'],
+      ]),
       profileImageMediaId: _nullableString(
         json['profile_image_media_id'] ?? json['profile_image_media'],
       ),
@@ -138,6 +144,19 @@ class AccountProfileSnapshot {
   static String _display(Object? display, Object? raw) {
     final String clean = _string(display);
     return clean.isNotEmpty ? clean : _nonNegativeInt(raw).toString();
+  }
+
+  static String _firstString(Iterable<Object?> values) {
+    for (final value in values) {
+      final clean = _string(value);
+      if (clean.isNotEmpty) return clean;
+    }
+    return '';
+  }
+
+  static String? _firstNullableString(Iterable<Object?> values) {
+    final clean = _firstString(values);
+    return clean.isEmpty ? null : clean;
   }
 
   static String _string(Object? value) {

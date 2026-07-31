@@ -40,7 +40,7 @@ At the application root:
 
 ## Navigation interaction
 
-Protected route access by a guest redirects to login and preserves the attempted URI in a `redirect` query parameter. Authenticated access to login/register/OTP/reset routes redirects home.
+Protected route access by a guest redirects to login and preserves the attempted URI in a `redirect` query parameter. After authentication, the router is the single navigation owner: it restores a validated internal protected destination or falls back home. Login widgets do not issue a competing success navigation.
 
 ## Trust boundary
 

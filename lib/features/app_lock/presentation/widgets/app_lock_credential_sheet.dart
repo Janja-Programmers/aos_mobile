@@ -56,6 +56,7 @@ Future<AppLockCredentialInput?> showAppLockCredentialSheet({
   required bool confirmCredential,
   required AppLockCredentialSheetLabels labels,
 }) {
+  // ignore: prefer_asserts_with_message
   assert(method != AppLockMethod.biometric);
   return showModalBottomSheet<AppLockCredentialInput>(
     context: context,

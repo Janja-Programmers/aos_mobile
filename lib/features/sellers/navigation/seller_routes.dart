@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
+import 'package:africaonlinestores/features/sellers/domain/seller_identity.dart';
 import 'package:africaonlinestores/features/sellers/location/presentation/screens/seller_location_screen.dart';
 import 'package:africaonlinestores/features/sellers/presentation/my_storefront_screen.dart';
 import 'package:africaonlinestores/features/sellers/presentation/seller_storefront_screen.dart';
@@ -79,15 +80,19 @@ class SellerNavigation {
     );
   }
 
-  static void toMyStoreFront(
+  static bool toMyStoreFront(
     BuildContext context,
     String sellerId, {
     AOSSellerProfile? seller,
   }) {
+    final normalizedSellerId = normalizePublicSellerId(sellerId);
+    if (normalizedSellerId == null) return false;
+
     context.pushNamed(
       AppRoutes.nMyStoreFront,
-      pathParameters: {'sellerId': sellerId},
+      pathParameters: {'sellerId': normalizedSellerId},
     );
+    return true;
   }
 
   static void toSellerVerification(BuildContext context) {

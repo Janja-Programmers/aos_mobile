@@ -224,5 +224,19 @@
   "appLockTimingFifteenSeconds": "Baada ya sekunde 15",
   "appLockPinInputAccessibility": "Uingizaji wa PIN",
   "appLockPatternInputAccessibility": "Uingizaji wa mchoro",
-  "appLockPatternPointAccessibility": "Nukta ya mchoro"
+  "appLockPatternPointAccessibility": "Nukta ya mchoro",
+  "ads_location_select_title": "Chagua eneo",
+  "@ads_location_select_title": {},
+  "ads_location_results_more": "Zaidi ya maeneo {count} yamepatikana",
+  "@ads_location_results_more": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "ads_location_results_exact": "Maeneo {count} yamepatikana",
+  "@ads_location_results_exact": {
+    "placeholders": {
+      "count": {}
+    }
+  }
 }

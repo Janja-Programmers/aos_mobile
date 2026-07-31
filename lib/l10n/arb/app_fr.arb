@@ -224,5 +224,19 @@
   "appLockTimingFifteenSeconds": "Après 15 secondes",
   "appLockPinInputAccessibility": "Saisie du PIN",
   "appLockPatternInputAccessibility": "Saisie du schéma",
-  "appLockPatternPointAccessibility": "Point du schéma"
+  "appLockPatternPointAccessibility": "Point du schéma",
+  "ads_location_select_title": "Sélectionner un lieu",
+  "@ads_location_select_title": {},
+  "ads_location_results_more": "Plus de {count} lieux trouvés",
+  "@ads_location_results_more": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "ads_location_results_exact": "{count} lieux trouvés",
+  "@ads_location_results_exact": {
+    "placeholders": {
+      "count": {}
+    }
+  }
 }

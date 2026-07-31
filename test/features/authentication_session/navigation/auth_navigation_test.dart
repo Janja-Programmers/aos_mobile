@@ -59,6 +59,34 @@ void main() {
       },
     );
 
+    test('authenticated login restores a validated protected destination', () {
+      final String? redirect = RouteGuards.authenticationRedirect(
+        currentLocation: '/login?redirect=%2Fconnect%3Ftab%3Dunread',
+        isGuest: false,
+        isAuthenticated: true,
+      );
+
+      expect(redirect, '/connect?tab=unread');
+    });
+
+    test('authenticated login rejects unsafe redirect destinations', () {
+      expect(
+        RouteGuards.authenticationRedirect(
+          currentLocation: '/login?redirect=https%3A%2F%2Fevil.invalid',
+          isGuest: false,
+          isAuthenticated: true,
+        ),
+        AppRoutes.home,
+      );
+      expect(
+        RouteGuards.authenticationRedirect(
+          currentLocation: '/login?redirect=%2Fads%2F..%2Fconnect',
+          isGuest: false,
+          isAuthenticated: true,
+        ),
+        AppRoutes.home,
+      );
+    });
     test('guest access to login does not create a redirect loop', () {
       final String? redirect = RouteGuards.authenticationRedirect(
         currentLocation: '${AppRoutes.login}?redirect=%2Fconnect',

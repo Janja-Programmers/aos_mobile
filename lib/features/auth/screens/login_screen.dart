@@ -97,10 +97,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           }
         },
         (_) {
-          final target = widget.redirectLocation?.trim();
-          context.go(
-            (target == null || target.isEmpty) ? AppRoutes.home : target,
-          );
+          // Authentication state is the only success side effect here.
+          // GoRouter.redirect owns the post-login destination so the login
+          // widget cannot race a router refresh after it is unmounted.
         },
       );
     } catch (_) {

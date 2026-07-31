@@ -660,4 +660,10 @@ class AppLocalizationsSw extends AppLocalizations {
   String ads_location_results_exact(Object count) {
     return 'Maeneo $count yamepatikana';
   }
+
+  @override
+  String get ad_media_download_image => 'Pakua picha';
+
+  @override
+  String get ad_media_saved_to_gallery => 'Picha imehifadhiwa kwenye matunzio.';
 }

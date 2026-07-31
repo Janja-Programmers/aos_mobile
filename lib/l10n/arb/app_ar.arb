@@ -238,5 +238,9 @@
     "placeholders": {
       "count": {}
     }
-  }
+  },
+  "ad_media_download_image": "تنزيل الصورة",
+  "@ad_media_download_image": {},
+  "ad_media_saved_to_gallery": "تم حفظ الصورة في المعرض.",
+  "@ad_media_saved_to_gallery": {}
 }

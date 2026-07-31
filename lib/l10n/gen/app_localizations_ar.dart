@@ -648,4 +648,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String ads_location_results_exact(Object count) {
     return 'تم العثور على $count موقعًا';
   }
+
+  @override
+  String get ad_media_download_image => 'تنزيل الصورة';
+
+  @override
+  String get ad_media_saved_to_gallery => 'تم حفظ الصورة في المعرض.';
 }

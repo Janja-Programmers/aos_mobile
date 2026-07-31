@@ -663,4 +663,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String ads_location_results_exact(Object count) {
     return '$count lieux trouvés';
   }
+
+  @override
+  String get ad_media_download_image => 'Télécharger l’image';
+
+  @override
+  String get ad_media_saved_to_gallery => 'Image enregistrée dans la galerie.';
 }

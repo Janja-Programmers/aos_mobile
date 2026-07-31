@@ -621,4 +621,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String ads_location_results_exact(Object count) {
     return '找到 $count 个地点';
   }
+
+  @override
+  String get ad_media_download_image => '下载图片';
+
+  @override
+  String get ad_media_saved_to_gallery => '图片已保存到图库。';
 }

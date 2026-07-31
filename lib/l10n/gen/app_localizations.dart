@@ -1315,6 +1315,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} locations found'**
   String ads_location_results_exact(Object count);
+
+  /// No description provided for @ad_media_download_image.
+  ///
+  /// In en, this message translates to:
+  /// **'Download image'**
+  String get ad_media_download_image;
+
+  /// No description provided for @ad_media_saved_to_gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Image saved to gallery.'**
+  String get ad_media_saved_to_gallery;
 }
 
 class _AppLocalizationsDelegate

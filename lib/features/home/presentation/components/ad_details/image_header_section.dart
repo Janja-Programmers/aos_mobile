@@ -6,6 +6,7 @@ import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/home/presentation/components/ad_details/image_header_widgets.dart';
 import 'package:africaonlinestores/features/home/presentation/services/ad_image_export_service.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/foundation.dart';
@@ -741,9 +742,7 @@ class _FullScreenImageViewerState extends ConsumerState<FullScreenImageViewer> {
   late final PageController _pageController;
   late int _currentIndex;
 
-  final GlobalKey _exportButtonKey = GlobalKey();
-
-  bool _isExporting = false;
+  bool _isDownloading = false;
 
   @override
   void initState() {
@@ -760,49 +759,32 @@ class _FullScreenImageViewerState extends ConsumerState<FullScreenImageViewer> {
     super.dispose();
   }
 
-  Rect _resolveSharePositionOrigin() {
-    final buttonContext = _exportButtonKey.currentContext;
-    final renderBox = buttonContext?.findRenderObject();
-
-    if (renderBox is RenderBox && renderBox.hasSize) {
-      final topLeft = renderBox.localToGlobal(Offset.zero);
-
-      return topLeft & renderBox.size;
-    }
-
-    final screenSize = MediaQuery.sizeOf(context);
-
-    return Rect.fromLTWH(screenSize.width - 60, 12, 48, 48);
-  }
-
-  Future<void> _exportCurrentImage() async {
-    if (_isExporting || widget.images.isEmpty) {
+  Future<void> _downloadCurrentImage() async {
+    if (_isDownloading || widget.images.isEmpty) {
       return;
     }
 
     final safeIndex = _safeIndex(_currentIndex, widget.images.length);
 
     setState(() {
-      _isExporting = true;
+      _isDownloading = true;
     });
 
     try {
       final service = ref.read(adImageExportServiceProvider);
 
-      await service.exportImage(
-        imageUrl: widget.images[safeIndex],
-        sharePositionOrigin: _resolveSharePositionOrigin(),
-      );
+      await service.saveImageToGallery(imageUrl: widget.images[safeIndex]);
 
-      // No success snackbar is needed.
-      // The native platform sheet provides the visible result.
+      if (!mounted) return;
+
+      ShowSnack(context, context.l10n.ad_media_saved_to_gallery).success();
     } on AdImageExportException catch (error) {
       if (!mounted) return;
 
       ShowSnack(context, error.message).error();
     } catch (error, stackTrace) {
       appLogger.e(
-        'Unexpected full-screen image export failure',
+        'Unexpected full-screen image download failure',
         error: error,
         stackTrace: stackTrace,
       );
@@ -816,16 +798,16 @@ class _FullScreenImageViewerState extends ConsumerState<FullScreenImageViewer> {
           .trim();
 
       final message = detail.isEmpty
-          ? 'Unexpected image-export error '
+          ? 'Unexpected image-download error '
                 '(${error.runtimeType}).'
-          : 'Unexpected image-export error '
+          : 'Unexpected image-download error '
                 '(${error.runtimeType}): $detail';
 
       ShowSnack(context, message).error();
     } finally {
       if (mounted) {
         setState(() {
-          _isExporting = false;
+          _isDownloading = false;
         });
       }
     }
@@ -908,7 +890,7 @@ class _FullScreenImageViewerState extends ConsumerState<FullScreenImageViewer> {
               top: 12,
               left: 12,
               child: _FullScreenActionButton(
-                tooltip: 'Close',
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
                 icon: Icons.close,
                 onPressed: () {
                   Navigator.of(context).pop();
@@ -919,11 +901,12 @@ class _FullScreenImageViewerState extends ConsumerState<FullScreenImageViewer> {
               top: 12,
               right: 12,
               child: _FullScreenActionButton(
-                key: _exportButtonKey,
-                tooltip: 'Save or share image',
+                tooltip: context.l10n.ad_media_download_image,
                 icon: Icons.download_outlined,
-                isLoading: _isExporting,
-                onPressed: _isExporting ? null : _exportCurrentImage,
+                isLoading: _isDownloading,
+                onPressed: _isDownloading || widget.images.isEmpty
+                    ? null
+                    : _downloadCurrentImage,
               ),
             ),
             if (widget.images.length > 1)
@@ -962,7 +945,6 @@ class _FullScreenImageViewerState extends ConsumerState<FullScreenImageViewer> {
 
 class _FullScreenActionButton extends StatelessWidget {
   const _FullScreenActionButton({
-    super.key,
     required this.tooltip,
     required this.icon,
     this.isLoading = false,

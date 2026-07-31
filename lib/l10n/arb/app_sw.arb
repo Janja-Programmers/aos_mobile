@@ -238,5 +238,9 @@
     "placeholders": {
       "count": {}
     }
-  }
+  },
+  "ad_media_download_image": "Pakua picha",
+  "@ad_media_download_image": {},
+  "ad_media_saved_to_gallery": "Picha imehifadhiwa kwenye matunzio.",
+  "@ad_media_saved_to_gallery": {}
 }

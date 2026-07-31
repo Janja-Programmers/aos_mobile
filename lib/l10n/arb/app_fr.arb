@@ -238,5 +238,9 @@
     "placeholders": {
       "count": {}
     }
-  }
+  },
+  "ad_media_download_image": "Télécharger l’image",
+  "@ad_media_download_image": {},
+  "ad_media_saved_to_gallery": "Image enregistrée dans la galerie.",
+  "@ad_media_saved_to_gallery": {}
 }

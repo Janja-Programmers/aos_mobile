@@ -27,3 +27,4 @@ The first recommended feature is **authentication and session** because it estab
 - [Application lock](native-app-lock.md)
 
 - [Ad creation](ad-creation.md)
+- [Ad detail gallery download](ad-detail-media-download.md)

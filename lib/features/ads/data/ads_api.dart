@@ -422,7 +422,9 @@ class AdsApi {
       }
 
       final cleanQuery = q?.trim();
-      if (cleanQuery != null && cleanQuery.isNotEmpty && cleanQuery.length < 2) {
+      if (cleanQuery != null &&
+          cleanQuery.isNotEmpty &&
+          cleanQuery.length < 2) {
         return Either.left(
           const Failure('Enter at least two characters to search.'),
         );

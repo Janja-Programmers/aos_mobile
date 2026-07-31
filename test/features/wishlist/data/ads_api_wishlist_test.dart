@@ -137,16 +137,11 @@ class _AdsApiHarness {
   final AdsApi api;
 }
 
-Future<_AdsApiHarness> _buildHarness(
-  RecordingHttpClientAdapter adapter,
-) async {
+Future<_AdsApiHarness> _buildHarness(RecordingHttpClientAdapter adapter) async {
   final preferences = await setUpTestPreferences();
   final onboardingStorage = OnboardingStorage(preferences);
   final clientProvider = Provider<ApiClient>((Ref ref) {
-    final client = ApiClient(
-      baseUrl: TestEnvironment.apiBaseUrl,
-      ref: ref,
-    );
+    final client = ApiClient(baseUrl: TestEnvironment.apiBaseUrl, ref: ref);
     client.dio.httpClientAdapter = adapter;
     ref.onDispose(client.dispose);
     return client;

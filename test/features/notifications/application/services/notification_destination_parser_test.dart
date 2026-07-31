@@ -17,15 +17,18 @@ void main() {
     expect(destination?.canonicalId, 'AD-2026-00001');
   });
 
-  test('rejects malformed canonical IDs and uses the safe feature fallback', () {
-    final ProtectedNavigationDestination? destination = parser.parse(
-      type: NotificationType.adRejected,
-      payload: const NotificationPayload(adId: '../account/delete'),
-    );
+  test(
+    'rejects malformed canonical IDs and uses the safe feature fallback',
+    () {
+      final ProtectedNavigationDestination? destination = parser.parse(
+        type: NotificationType.adRejected,
+        payload: const NotificationPayload(adId: '../account/delete'),
+      );
 
-    expect(destination?.kind, ProtectedNavigationKind.myAds);
-    expect(destination?.canonicalId, isNull);
-  });
+      expect(destination?.kind, ProtectedNavigationKind.myAds);
+      expect(destination?.canonicalId, isNull);
+    },
+  );
 
   test('accepts only allowlisted unknown internal routes', () {
     final ProtectedNavigationDestination? accepted = parser.parse(
@@ -46,6 +49,8 @@ void main() {
       'https://example.invalid/account',
       '//example.invalid/account',
       '/ads/../account',
+      '/ads/%2E%2E/account',
+      r'/ads/..\account',
     ];
 
     for (final String route in unsafeRoutes) {

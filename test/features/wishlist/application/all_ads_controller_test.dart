@@ -69,53 +69,56 @@ void main() {
     expect(harness.api.lastQuery, 'ab');
   });
 
-  test('stale wishlist responses cannot overwrite newer search results', () async {
-    final harness = await _buildDeferredHarness();
-    const params = AllAdsParams(mode: AllAdsMode.wishlist);
-    final subscription = harness.container.listen(
-      allAdsControllerProvider(params),
-      (previous, next) {},
-      fireImmediately: true,
-    );
-    addTearDown(subscription.close);
-    await pumpEventQueue(times: 5);
+  test(
+    'stale wishlist responses cannot overwrite newer search results',
+    () async {
+      final harness = await _buildDeferredHarness();
+      const params = AllAdsParams(mode: AllAdsMode.wishlist);
+      final subscription = harness.container.listen(
+        allAdsControllerProvider(params),
+        (previous, next) {},
+        fireImmediately: true,
+      );
+      addTearDown(subscription.close);
+      await pumpEventQueue(times: 5);
 
-    expect(harness.api.requests, hasLength(1));
+      expect(harness.api.requests, hasLength(1));
 
-    final controller = harness.container.read(
-      allAdsControllerProvider(params).notifier,
-    );
-    controller.setWishlistSearch('new');
-    await Future<void>.delayed(const Duration(milliseconds: 450));
-    await pumpEventQueue(times: 5);
+      final controller = harness.container.read(
+        allAdsControllerProvider(params).notifier,
+      );
+      controller.setWishlistSearch('new');
+      await Future<void>.delayed(const Duration(milliseconds: 450));
+      await pumpEventQueue(times: 5);
 
-    expect(harness.api.requests, hasLength(2));
-    expect(harness.api.queries, <String?>[null, 'new']);
+      expect(harness.api.requests, hasLength(2));
+      expect(harness.api.queries, <String?>[null, 'new']);
 
-    harness.api.complete(1, id: 'AD-NEW', title: 'New result');
-    await pumpEventQueue(times: 5);
+      harness.api.complete(1, id: 'AD-NEW', title: 'New result');
+      await pumpEventQueue(times: 5);
 
-    expect(
-      harness.container
-          .read(allAdsControllerProvider(params))
-          .items
-          .single
-          .id,
-      'AD-NEW',
-    );
+      expect(
+        harness.container
+            .read(allAdsControllerProvider(params))
+            .items
+            .single
+            .id,
+        'AD-NEW',
+      );
 
-    harness.api.complete(0, id: 'AD-OLD', title: 'Old result');
-    await pumpEventQueue(times: 5);
+      harness.api.complete(0, id: 'AD-OLD', title: 'Old result');
+      await pumpEventQueue(times: 5);
 
-    expect(
-      harness.container
-          .read(allAdsControllerProvider(params))
-          .items
-          .single
-          .id,
-      'AD-NEW',
-    );
-  });
+      expect(
+        harness.container
+            .read(allAdsControllerProvider(params))
+            .items
+            .single
+            .id,
+        'AD-NEW',
+      );
+    },
+  );
 }
 
 class _RecordingWishlistAdsApi extends AdsApi {
@@ -186,10 +189,7 @@ Future<_AllAdsHarness> _buildHarness({
   late _RecordingWishlistAdsApi api;
 
   final clientProvider = Provider<ApiClient>((Ref ref) {
-    final client = ApiClient(
-      baseUrl: TestEnvironment.apiBaseUrl,
-      ref: ref,
-    );
+    final client = ApiClient(baseUrl: TestEnvironment.apiBaseUrl, ref: ref);
     ref.onDispose(client.dispose);
     return client;
   });
@@ -198,6 +198,7 @@ Future<_AllAdsHarness> _buildHarness({
     overrides: <Override>[
       onboardingStorageProvider.overrideWithValue(onboardingStorage),
       adsApiProvider.overrideWith((Ref ref) {
+        // ignore: join_return_with_assignment
         api = _RecordingWishlistAdsApi(
           ref.read(clientProvider),
           itemCount: itemCount,
@@ -241,11 +242,7 @@ class _DeferredWishlistAdsApi extends AdsApi {
         'ok': true,
         'data': <String, dynamic>{
           'items': <Map<String, dynamic>>[
-            <String, dynamic>{
-              'id': id,
-              'title': title,
-              'is_wishlisted': true,
-            },
+            <String, dynamic>{'id': id, 'title': title, 'is_wishlisted': true},
           ],
           'pagination': <String, dynamic>{
             'limit': 20,
@@ -274,10 +271,7 @@ Future<_DeferredHarness> _buildDeferredHarness() async {
   late _DeferredWishlistAdsApi api;
 
   final clientProvider = Provider<ApiClient>((Ref ref) {
-    final client = ApiClient(
-      baseUrl: TestEnvironment.apiBaseUrl,
-      ref: ref,
-    );
+    final client = ApiClient(baseUrl: TestEnvironment.apiBaseUrl, ref: ref);
     ref.onDispose(client.dispose);
     return client;
   });
@@ -286,6 +280,7 @@ Future<_DeferredHarness> _buildDeferredHarness() async {
     overrides: <Override>[
       onboardingStorageProvider.overrideWithValue(onboardingStorage),
       adsApiProvider.overrideWith((Ref ref) {
+        // ignore: join_return_with_assignment
         api = _DeferredWishlistAdsApi(ref.read(clientProvider));
         return api;
       }),
@@ -295,4 +290,3 @@ Future<_DeferredHarness> _buildDeferredHarness() async {
   container.read(adsApiProvider);
   return _DeferredHarness(container: container, api: api);
 }
-

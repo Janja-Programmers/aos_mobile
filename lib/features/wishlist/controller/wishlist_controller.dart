@@ -28,10 +28,7 @@ class WishlistController extends Notifier<WishlistState> {
     return WishlistState.initial();
   }
 
-  Future<bool> toggle(
-    String adId, {
-    required bool currentValue,
-  }) async {
+  Future<bool> toggle(String adId, {required bool currentValue}) async {
     final auth = ref.read(authControllerProvider);
     if (auth is! AuthAuthenticated) return false;
 
@@ -50,10 +47,7 @@ class WishlistController extends Notifier<WishlistState> {
       ..[id] = shouldBeWishlisted;
     final pending = Set<String>.from(before.pending)..add(id);
 
-    state = before.copyWith(
-      overrides: optimisticOverrides,
-      pending: pending,
-    );
+    state = before.copyWith(overrides: optimisticOverrides, pending: pending);
 
     try {
       final result = await _api.toggleWishlist(
@@ -87,10 +81,7 @@ class WishlistController extends Notifier<WishlistState> {
         ..[id] = backendValue;
       final latestPending = Set<String>.from(latest.pending)..remove(id);
 
-      state = latest.copyWith(
-        overrides: overrides,
-        pending: latestPending,
-      );
+      state = latest.copyWith(overrides: overrides, pending: latestPending);
       return true;
     } catch (error, stackTrace) {
       appLogger.e(

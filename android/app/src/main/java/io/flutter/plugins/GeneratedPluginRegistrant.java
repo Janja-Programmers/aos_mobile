@@ -126,6 +126,11 @@ public final class GeneratedPluginRegistrant {
       Log.e(TAG, "Error registering plugin livekit_client, io.livekit.plugin.LiveKitPlugin", e);
     }
     try {
+      flutterEngine.getPlugins().add(new io.flutter.plugins.localauth.LocalAuthPlugin());
+    } catch (Exception e) {
+      Log.e(TAG, "Error registering plugin local_auth_android, io.flutter.plugins.localauth.LocalAuthPlugin", e);
+    }
+    try {
       flutterEngine.getPlugins().add(new org.maplibre.maplibregl.MapLibreMapsPlugin());
     } catch (Exception e) {
       Log.e(TAG, "Error registering plugin maplibre_gl, org.maplibre.maplibregl.MapLibreMapsPlugin", e);

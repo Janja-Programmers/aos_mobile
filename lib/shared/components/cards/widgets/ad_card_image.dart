@@ -25,9 +25,7 @@ class AdCardImage extends ConsumerWidget {
 
     final isAuth = ref.watch(isAuthenticatedProvider);
 
-    final wishlistState = isAuth
-        ? ref.watch(wishlistControllerProvider)
-        : null;
+    final wishlistState = isAuth ? ref.watch(wishlistControllerProvider) : null;
     final isWishlisted =
         wishlistState?.resolve(ad.id, fallback: ad.isWishlisted) ?? false;
     final isPending = wishlistState?.pending.contains(ad.id) ?? false;
@@ -38,10 +36,7 @@ class AdCardImage extends ConsumerWidget {
           .toggle(ad.id, currentValue: isWishlisted);
 
       if (!success && context.mounted) {
-        ShowSnack(
-          context,
-          context.l10n.wishlist_update_error,
-        ).error();
+        ShowSnack(context, context.l10n.wishlist_update_error).error();
       }
     }
 

@@ -425,12 +425,226 @@ class AppLocalizationsSw extends AppLocalizations {
       'Hatukuweza kuhifadhi chaguo lako. Tafadhali jaribu tena.';
 
   @override
-  String get wishlist_add => 'Ongeza kwenye orodha ya matamanio';
+  String get session_restore_offline_title => 'Hujaunganishwa kwenye intaneti';
 
   @override
-  String get wishlist_remove => 'Ondoa kwenye orodha ya matamanio';
+  String get session_restore_offline_message =>
+      'AOS haikuweza kuthibitisha kipindi chako kilichopo. Unganisha intaneti kisha ujaribu tena. Kipindi chako kilichohifadhiwa hakijafutwa.';
+
+  @override
+  String get session_restore_unavailable_title =>
+      'Hatukuweza kurejesha kipindi chako';
+
+  @override
+  String get session_restore_unavailable_message =>
+      'AOS haiwezi kuthibitisha kipindi chako kilichopo kwa sasa. Jaribu tena. Kipindi chako kilichohifadhiwa hakijafutwa.';
+
+  @override
+  String get privacy_cover_accessibility_label =>
+      'AOS inalinda taarifa za akaunti yako.';
+
+  @override
+  String get appLockScreenAccessibilityLabel => 'AOS imefungwa';
+
+  @override
+  String get appLockTitle => 'Fungua AOS';
+
+  @override
+  String get appLockPrompt => 'Weka kufuli ya programu kuendelea.';
+
+  @override
+  String get appLockUnlock => 'Fungua';
+
+  @override
+  String get appLockAuthenticating => 'Inathibitisha…';
+
+  @override
+  String get appLockLogout => 'Ondoka';
+
+  @override
+  String get appLockForgottenCredentialHelp =>
+      'Weka upya kufuli ili utoke na kuondoa taarifa ya kufuli iliyosahaulika.';
+
+  @override
+  String get appLockUnlockReason => 'Thibitisha ili kufungua AOS.';
+
+  @override
+  String get appLockEnableReason => 'Thibitisha kuwasha kufuli ya biometriki.';
+
+  @override
+  String get appLockDisableReason => 'Thibitisha kuzima kufuli ya programu.';
+
+  @override
+  String get appLockCancelled =>
+      'Uthibitishaji umeghairiwa. Akaunti yako bado imeingia.';
+
+  @override
+  String get appLockTemporaryLockout =>
+      'Majaribio mengi sana. Jaribu tena baadaye au weka upya kufuli ya programu.';
+
+  @override
+  String get appLockPermanentLockout =>
+      'Biometriki zimefungwa. Tumia urejeshaji wa kifaa au weka upya kufuli.';
+
+  @override
+  String get appLockNoDeviceCredential =>
+      'Sanidi alama ya kidole, Face ID au biometriki nyingine kwenye mipangilio ya kifaa kwanza.';
+
+  @override
+  String get appLockUnsupported =>
+      'Uthibitishaji wa kifaa haupatikani kwenye kifaa hiki.';
+
+  @override
+  String get appLockTryAgain => 'Jaribu tena';
+
+  @override
+  String get appLockFailed => 'Uthibitishaji umeshindwa. Jaribu tena.';
+
+  @override
+  String get appLockSettingTitle => 'Kufuli ya Programu';
+
+  @override
+  String get appLockSettingDescription =>
+      'Linda sehemu binafsi kwa PIN ya tarakimu 4, mchoro au biometriki.';
+
+  @override
+  String get appLockTimingTitle => 'Muda wa kufunga';
+
+  @override
+  String get appLockTimingImmediately => 'Mara moja';
+
+  @override
+  String get appLockTimingThirtySeconds => 'Baada ya sekunde 30';
+
+  @override
+  String get appLockTimingOneMinute => 'Baada ya dakika 1';
+
+  @override
+  String get appLockTimingFiveMinutes => 'Baada ya dakika 5';
+
+  @override
+  String get wishlist_add => 'Ongeza kwenye vipendwa';
+
+  @override
+  String get wishlist_remove => 'Ondoa kwenye vipendwa';
 
   @override
   String get wishlist_update_error =>
-      'Imeshindikana kusasisha orodha yako ya matamanio. Tafadhali jaribu tena.';
+      'Hatukuweza kusasisha vipendwa vyako. Tafadhali jaribu tena.';
+
+  @override
+  String get appLockBiometricPrompt =>
+      'Tumia alama ya kidole, uso au biometriki nyingine iliyosajiliwa kuendelea.';
+
+  @override
+  String get appLockUseBiometrics => 'Tumia biometriki';
+
+  @override
+  String get appLockReset => 'Weka upya kufuli ya programu';
+
+  @override
+  String get appLockResetHelp =>
+      'Umesahau PIN au mchoro? Kuweka upya kutakuondoa kwenye akaunti na kufuta kufuli ya ndani.';
+
+  @override
+  String get appLockResetTitle => 'Weka upya kufuli ya programu?';
+
+  @override
+  String get appLockResetMessage =>
+      'Hii itakuondoa kwenye akaunti, kufuta kufuli iliyohifadhiwa na kurudisha kwenye sehemu ya umma. Ingia tena kuweka kufuli mpya.';
+
+  @override
+  String get appLockResetConfirm => 'Weka upya na utoke';
+
+  @override
+  String get appLockCancel => 'Ghairi';
+
+  @override
+  String get appLockClear => 'Futa';
+
+  @override
+  String get appLockEnterPin => 'Weka PIN yako ya tarakimu 4';
+
+  @override
+  String get appLockEnterPattern => 'Chora mchoro wako';
+
+  @override
+  String get appLockInvalidCredential => 'Kufuli hiyo si sahihi. Jaribu tena.';
+
+  @override
+  String get appLockPinHelp => 'Tumia tarakimu 4 kamili.';
+
+  @override
+  String get appLockPatternHelp => 'Unganisha angalau nukta 4.';
+
+  @override
+  String get appLockConfirmPin => 'Thibitisha PIN yako';
+
+  @override
+  String get appLockConfirmPattern => 'Thibitisha mchoro wako';
+
+  @override
+  String get appLockConfirmationMismatch =>
+      'Uthibitisho haufanani. Jaribu tena.';
+
+  @override
+  String get appLockContinue => 'Endelea';
+
+  @override
+  String get appLockConfirm => 'Thibitisha';
+
+  @override
+  String get appLockStorageFailure =>
+      'Mipangilio ya kufuli haikuweza kuhifadhiwa kwa usalama. Jaribu tena.';
+
+  @override
+  String get appLockConfigured => 'Kufuli ya programu imewashwa';
+
+  @override
+  String get appLockProcessRestartNote =>
+      'AOS hufungwa kila programu inapofungwa kabisa au kuwashwa upya.';
+
+  @override
+  String get appLockChangeMethod => 'Badilisha njia ya kufuli';
+
+  @override
+  String get appLockDisable => 'Zima kufuli ya programu';
+
+  @override
+  String get appLockChooseMethod => 'Chagua njia ya kufuli';
+
+  @override
+  String get appLockMethodHelp =>
+      'PIN na mchoro huhifadhiwa kama hash salama yenye chumvi. Data ya biometriki inasimamiwa na kifaa chako.';
+
+  @override
+  String get appLockMethodPin => 'PIN ya tarakimu 4';
+
+  @override
+  String get appLockMethodPattern => 'Mchoro';
+
+  @override
+  String get appLockMethodBiometric => 'Alama ya kidole au biometriki';
+
+  @override
+  String get appLockChangeReason =>
+      'Thibitisha ili kubadilisha kufuli ya programu.';
+
+  @override
+  String get appLockTimingFiveSeconds => 'Baada ya sekunde 5';
+
+  @override
+  String get appLockTimingTenSeconds => 'Baada ya sekunde 10';
+
+  @override
+  String get appLockTimingFifteenSeconds => 'Baada ya sekunde 15';
+
+  @override
+  String get appLockPinInputAccessibility => 'Uingizaji wa PIN';
+
+  @override
+  String get appLockPatternInputAccessibility => 'Uingizaji wa mchoro';
+
+  @override
+  String get appLockPatternPointAccessibility => 'Nukta ya mchoro';
 }

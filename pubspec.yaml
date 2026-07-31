@@ -13,6 +13,7 @@ dependencies:
   cached_network_image: ^3.4.1
   chewie: ^1.13.0
   cookie_jar: ^4.0.8
+  crypto: ^3.0.7
   cupertino_icons: ^1.0.8
   dio: ^5.9.0
   dio_cookie_manager: ^3.3.0
@@ -48,6 +49,7 @@ dependencies:
   just_audio: ^0.10.5
   keyboard_actions: ^4.2.1
   livekit_client: ^2.7.0
+  local_auth: ^3.0.2
   logger: ^2.7.0
   maplibre_gl: ^0.26.2
   path_provider: ^2.1.5

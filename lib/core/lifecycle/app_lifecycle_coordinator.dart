@@ -2,13 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-enum AppVisibilityPhase {
-  foreground,
-  inactive,
-  hidden,
-  background,
-  detached,
-}
+enum AppVisibilityPhase { foreground, inactive, hidden, background, detached }
 
 class AppLifecycleSnapshot {
   const AppLifecycleSnapshot({
@@ -100,9 +94,7 @@ class _RootLifecycleCoordinatorState
   @override
   void initState() {
     super.initState();
-    _listener = AppLifecycleListener(
-      onStateChange: _handleStateChange,
-    );
+    _listener = AppLifecycleListener(onStateChange: _handleStateChange);
   }
 
   void _handleStateChange(AppLifecycleState state) {

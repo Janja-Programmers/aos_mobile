@@ -419,12 +419,220 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذر حفظ تفضيلك. يُرجى المحاولة مرة أخرى.';
 
   @override
+  String get session_restore_offline_title => 'أنت غير متصل بالإنترنت';
+
+  @override
+  String get session_restore_offline_message =>
+      'تعذر على AOS التحقق من جلستك الحالية. اتصل بالإنترنت ثم حاول مرة أخرى. لم يتم حذف جلستك المحفوظة.';
+
+  @override
+  String get session_restore_unavailable_title => 'تعذر استعادة جلستك';
+
+  @override
+  String get session_restore_unavailable_message =>
+      'يتعذر على AOS التحقق من جلستك الحالية الآن. حاول مرة أخرى. لم يتم حذف جلستك المحفوظة.';
+
+  @override
+  String get privacy_cover_accessibility_label => 'يحمي AOS معلومات حسابك.';
+
+  @override
+  String get appLockScreenAccessibilityLabel => 'تطبيق AOS مقفل';
+
+  @override
+  String get appLockTitle => 'فتح AOS';
+
+  @override
+  String get appLockPrompt => 'أدخل قفل التطبيق للمتابعة.';
+
+  @override
+  String get appLockUnlock => 'فتح';
+
+  @override
+  String get appLockAuthenticating => 'جارٍ التحقق…';
+
+  @override
+  String get appLockLogout => 'تسجيل الخروج';
+
+  @override
+  String get appLockForgottenCredentialHelp =>
+      'أعد تعيين القفل لتسجيل الخروج وحذف بيانات القفل المحلية المنسية.';
+
+  @override
+  String get appLockUnlockReason => 'تحقق لفتح AOS.';
+
+  @override
+  String get appLockEnableReason => 'تحقق لتفعيل قفل التطبيق البيومتري.';
+
+  @override
+  String get appLockDisableReason => 'تحقق لتعطيل قفل التطبيق.';
+
+  @override
+  String get appLockCancelled => 'تم إلغاء التحقق. ما زالت جلستك مسجلة الدخول.';
+
+  @override
+  String get appLockTemporaryLockout =>
+      'محاولات كثيرة جدًا. حاول لاحقًا أو أعد تعيين قفل التطبيق.';
+
+  @override
+  String get appLockPermanentLockout =>
+      'القياسات الحيوية مقفلة. استخدم استرداد الجهاز أو أعد تعيين قفل التطبيق.';
+
+  @override
+  String get appLockNoDeviceCredential =>
+      'قم أولًا بإعداد بصمة أو Face ID أو قياسات حيوية مدعومة في إعدادات الجهاز.';
+
+  @override
+  String get appLockUnsupported => 'مصادقة الجهاز غير متاحة على هذا الجهاز.';
+
+  @override
+  String get appLockTryAgain => 'حاول مرة أخرى';
+
+  @override
+  String get appLockFailed => 'فشلت المصادقة. حاول مرة أخرى.';
+
+  @override
+  String get appLockSettingTitle => 'قفل التطبيق';
+
+  @override
+  String get appLockSettingDescription =>
+      'احمِ الأقسام الخاصة برمز من 4 أرقام أو نمط أو قياسات حيوية.';
+
+  @override
+  String get appLockTimingTitle => 'توقيت القفل';
+
+  @override
+  String get appLockTimingImmediately => 'فورًا';
+
+  @override
+  String get appLockTimingThirtySeconds => 'بعد 30 ثانية';
+
+  @override
+  String get appLockTimingOneMinute => 'بعد دقيقة واحدة';
+
+  @override
+  String get appLockTimingFiveMinutes => 'بعد 5 دقائق';
+
+  @override
   String get wishlist_add => 'إضافة إلى قائمة الرغبات';
 
   @override
   String get wishlist_remove => 'إزالة من قائمة الرغبات';
 
   @override
-  String get wishlist_update_error =>
-      'تعذر تحديث قائمة رغباتك. يُرجى المحاولة مرة أخرى.';
+  String get wishlist_update_error => 'تعذر تحديث قائمة رغباتك. حاول مرة أخرى.';
+
+  @override
+  String get appLockBiometricPrompt =>
+      'استخدم بصمة الإصبع أو الوجه أو وسيلة بيومترية مسجلة للمتابعة.';
+
+  @override
+  String get appLockUseBiometrics => 'استخدام القياسات الحيوية';
+
+  @override
+  String get appLockReset => 'إعادة تعيين قفل التطبيق';
+
+  @override
+  String get appLockResetHelp =>
+      'هل نسيت الرمز أو النمط؟ ستؤدي إعادة التعيين إلى تسجيل خروجك وحذف القفل المحلي.';
+
+  @override
+  String get appLockResetTitle => 'إعادة تعيين قفل التطبيق؟';
+
+  @override
+  String get appLockResetMessage =>
+      'سيتم تسجيل خروجك وحذف قفل التطبيق المحفوظ والعودة إلى الجزء العام. سجّل الدخول مجددًا لإعداد قفل جديد.';
+
+  @override
+  String get appLockResetConfirm => 'إعادة التعيين وتسجيل الخروج';
+
+  @override
+  String get appLockCancel => 'إلغاء';
+
+  @override
+  String get appLockClear => 'مسح';
+
+  @override
+  String get appLockEnterPin => 'أدخل رمز PIN المكوّن من 4 أرقام';
+
+  @override
+  String get appLockEnterPattern => 'ارسم النمط';
+
+  @override
+  String get appLockInvalidCredential =>
+      'بيانات قفل التطبيق غير صحيحة. حاول مرة أخرى.';
+
+  @override
+  String get appLockPinHelp => 'استخدم 4 أرقام بالضبط.';
+
+  @override
+  String get appLockPatternHelp => 'صِل 4 نقاط على الأقل.';
+
+  @override
+  String get appLockConfirmPin => 'أكد رمز PIN';
+
+  @override
+  String get appLockConfirmPattern => 'أكد النمط';
+
+  @override
+  String get appLockConfirmationMismatch => 'التأكيد غير مطابق. حاول مرة أخرى.';
+
+  @override
+  String get appLockContinue => 'متابعة';
+
+  @override
+  String get appLockConfirm => 'تأكيد';
+
+  @override
+  String get appLockStorageFailure =>
+      'تعذر حفظ إعدادات القفل بأمان. حاول مرة أخرى.';
+
+  @override
+  String get appLockConfigured => 'قفل التطبيق مفعّل';
+
+  @override
+  String get appLockProcessRestartNote =>
+      'يُقفل AOS دائمًا بعد إنهاء التطبيق أو إعادة تشغيله.';
+
+  @override
+  String get appLockChangeMethod => 'تغيير طريقة القفل';
+
+  @override
+  String get appLockDisable => 'تعطيل قفل التطبيق';
+
+  @override
+  String get appLockChooseMethod => 'اختر طريقة القفل';
+
+  @override
+  String get appLockMethodHelp =>
+      'يُحفظ الرمز والنمط فقط كقيم تجزئة آمنة ومملحة. تبقى البيانات البيومترية تحت إدارة الجهاز.';
+
+  @override
+  String get appLockMethodPin => 'رمز PIN من 4 أرقام';
+
+  @override
+  String get appLockMethodPattern => 'نمط';
+
+  @override
+  String get appLockMethodBiometric => 'بصمة أو قياسات حيوية';
+
+  @override
+  String get appLockChangeReason => 'تحقق لتغيير قفل التطبيق.';
+
+  @override
+  String get appLockTimingFiveSeconds => 'بعد 5 ثوانٍ';
+
+  @override
+  String get appLockTimingTenSeconds => 'بعد 10 ثوانٍ';
+
+  @override
+  String get appLockTimingFifteenSeconds => 'بعد 15 ثانية';
+
+  @override
+  String get appLockPinInputAccessibility => 'إدخال رمز PIN';
+
+  @override
+  String get appLockPatternInputAccessibility => 'إدخال النمط';
+
+  @override
+  String get appLockPatternPointAccessibility => 'نقطة النمط';
 }

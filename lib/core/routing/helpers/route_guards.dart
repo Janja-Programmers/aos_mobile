@@ -1,6 +1,13 @@
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 
 class RouteGuards {
+  static bool requiresSessionResolution(AuthState authState) {
+    return authState is AuthLoading ||
+        authState is AuthRestoring ||
+        authState is AuthRestorationFailure;
+  }
+
   static const _protectedPrefixes = [
     AppRoutes.sellerStore,
     AppRoutes.sellerLocation,
@@ -9,7 +16,17 @@ class RouteGuards {
     AppRoutes.myAds,
     AppRoutes.connect,
     AppRoutes.createAd,
+    AppRoutes.passwordSecurity,
     AppRoutes.userVerification,
+    AppRoutes.deleteAccount,
+    AppRoutes.restoreAccount,
+    AppRoutes.activityCenter,
+    AppRoutes.notifications,
+    AppRoutes.notification,
+    AppRoutes.chatsList,
+    AppRoutes.messages,
+    AppRoutes.callsList,
+    AppRoutes.newCall,
     AppRoutes.profile,
     AppRoutes.reportAdBase,
     AppRoutes.reviewAdBase,
@@ -45,6 +62,13 @@ class RouteGuards {
       final base = _staticRouteBase(route);
       return path == base || path.startsWith('$base/');
     });
+  }
+
+  /// Routes that may be publicly reachable for guests but expose private
+  /// account content when an authenticated session exists.
+  static bool isAppLockProtectedRoute(String location) {
+    final String path = _pathOnly(location);
+    return isProtectedRoute(location) || path == AppRoutes.account;
   }
 
   /// Resolves only authentication-dependent redirects.

@@ -32,6 +32,8 @@
 		<!-- ================= PERMISSIONS ================= -->
 		<key>NSCameraUsageDescription</key>
 		<string>AOS needs camera access for video calls, live streams, taking photos, and uploading product media.</string>
+		<key>NSFaceIDUsageDescription</key>
+		<string>Use Face ID to unlock your signed-in AOS account.</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>AOS needs microphone access for voice calls, video calls, live streams, and voice features.</string>
 		<key>NSPhotoLibraryUsageDescription</key>

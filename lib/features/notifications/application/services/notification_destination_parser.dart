@@ -12,9 +12,7 @@ class NotificationDestinationParser {
   }) {
     switch (type) {
       case NotificationType.message:
-        final String? conversationId = _safeIdentifier(
-          payload.conversationId,
-        );
+        final String? conversationId = _safeIdentifier(payload.conversationId);
         if (conversationId == null) {
           return const ProtectedNavigationDestination(
             kind: ProtectedNavigationKind.messages,
@@ -107,7 +105,8 @@ class NotificationDestinationParser {
     final String? cleanRoute = _clean(route);
     if (cleanRoute == null ||
         !cleanRoute.startsWith('/') ||
-        cleanRoute.startsWith('//')) {
+        cleanRoute.startsWith('//') ||
+        _containsUnsafePathSyntax(cleanRoute)) {
       return null;
     }
 
@@ -220,7 +219,8 @@ String? _readShortIdFromRoute(String? route) {
   final String? cleanRoute = _clean(route);
   if (cleanRoute == null ||
       !cleanRoute.startsWith('/') ||
-      cleanRoute.startsWith('//')) {
+      cleanRoute.startsWith('//') ||
+      _containsUnsafePathSyntax(cleanRoute)) {
     return null;
   }
 
@@ -237,6 +237,30 @@ String? _readShortIdFromRoute(String? route) {
   return uri.queryParameters['short_id'] ??
       uri.queryParameters['shortId'] ??
       uri.queryParameters['short'];
+}
+
+bool _containsUnsafePathSyntax(String route) {
+  final String rawPath = route.split(RegExp('[?#]')).first;
+  if (rawPath.contains('\\')) return true;
+
+  for (final String rawSegment in rawPath.split('/')) {
+    if (rawSegment.isEmpty) continue;
+
+    late final String decoded;
+    try {
+      decoded = Uri.decodeComponent(rawSegment);
+    } on FormatException {
+      return true;
+    }
+
+    if (decoded == '.' ||
+        decoded == '..' ||
+        decoded.contains('/') ||
+        decoded.contains('\\')) {
+      return true;
+    }
+  }
+  return false;
 }
 
 String? _safeIdentifier(String? value) {

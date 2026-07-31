@@ -13,32 +13,34 @@ void main() {
   testWidgets(
     'uses backend fallback, exposes semantics, and does not overflow at 200% text',
     (tester) async {
-      final semantics = tester.ensureSemantics();
-      addTearDown(semantics.dispose);
+      final SemanticsHandle semantics = tester.ensureSemantics();
+      try {
+        await tester.pumpTestApp(
+          const MediaQuery(
+            data: MediaQueryData(
+              size: Size(320, 640),
+              textScaler: TextScaler.linear(2),
+            ),
+            child: SizedBox(
+              width: 160,
+              child: AdCardImage(ad: _wishlistedAd, height: 120),
+            ),
+          ),
+          overrides: <Override>[
+            isAuthenticatedProvider.overrideWithValue(true),
+            wishlistControllerProvider.overrideWith(
+              () => _SeededWishlistController(WishlistState.initial()),
+            ),
+          ],
+        );
 
-      await tester.pumpTestApp(
-        const MediaQuery(
-          data: MediaQueryData(
-            size: Size(320, 640),
-            textScaler: TextScaler.linear(2),
-          ),
-          child: SizedBox(
-            width: 160,
-            child: AdCardImage(ad: _wishlistedAd, height: 120),
-          ),
-        ),
-        overrides: <Override>[
-          isAuthenticatedProvider.overrideWithValue(true),
-          wishlistControllerProvider.overrideWith(
-            () => _SeededWishlistController(WishlistState.initial()),
-          ),
-        ],
-      );
-
-      expect(find.byIcon(Icons.favorite), findsOneWidget);
-      expect(find.bySemanticsLabel('Remove from wishlist'), findsOneWidget);
-      expect(tester.getSize(find.byType(InkWell)), const Size(48, 48));
-      expect(tester.takeException(), isNull);
+        expect(find.byIcon(Icons.favorite), findsOneWidget);
+        expect(find.bySemanticsLabel('Remove from wishlist'), findsOneWidget);
+        expect(tester.getSize(find.byType(InkWell)), const Size(48, 48));
+        expect(tester.takeException(), isNull);
+      } finally {
+        semantics.dispose();
+      }
     },
   );
 
@@ -54,9 +56,7 @@ void main() {
         isAuthenticatedProvider.overrideWithValue(true),
         wishlistControllerProvider.overrideWith(
           () => _SeededWishlistController(
-            WishlistState(
-              overrides: <String, bool>{'AD-001': false},
-            ),
+            WishlistState(overrides: <String, bool>{'AD-001': false}),
           ),
         ),
       ],

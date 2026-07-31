@@ -1,60 +1,48 @@
-# Operating systems and editors
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-*.iml
-*.ipr
-*.iws
-*.swp
-
-# Local environment and credentials
+# Secrets and signing
 .env
 .env.*
-!.env.example
 *.jks
 *.keystore
 *.p12
 *.pfx
 *.pem
 *.cer
-*.crt
 *.mobileprovision
-android/key.properties
-android/local.properties
-ios/Flutter/Generated.xcconfig
-ios/Flutter/ephemeral/
+**/key.properties
 
-# Dart and Flutter
+# Local machine configuration
+**/local.properties
+.DS_Store
+Thumbs.db
+*.iml
+.idea/
+.vscode/
+
+# Flutter and Dart
 .dart_tool/
 .packages
 .pub/
 .pub-cache/
-build/
-**/build/
-coverage/
-**/coverage/
 .flutter-plugins
 .flutter-plugins-dependencies
+build/
+coverage/
 **/doc/api/
-**/ios/Flutter/.last_build_id
 
-# Native build caches
-.gradle/
-**/.gradle/
-.kotlin/
-Pods/
-**/Pods/
-DerivedData/
-.swiftpm/
+# Android
+android/.gradle/
+android/.kotlin/
+android/build/
+android/app/build/
+android/hs_err_pid*
 
-# Generated crash and diagnostic output
+# iOS/macOS generated files
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/ephemeral/
+macos/Pods/
+macos/Flutter/ephemeral/
+
+# Logs and crash output
 *.log
 hs_err_pid*
-*.dmp
-*.stackdump
-
-# Temporary archives and local patches
-*.tmp
-*.bak
-*.orig

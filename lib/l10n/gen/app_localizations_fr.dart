@@ -426,6 +426,106 @@ class AppLocalizationsFr extends AppLocalizations {
       'Impossible d’enregistrer votre préférence. Veuillez réessayer.';
 
   @override
+  String get session_restore_offline_title => 'Vous êtes hors connexion';
+
+  @override
+  String get session_restore_offline_message =>
+      'AOS n’a pas pu vérifier votre session existante. Reconnectez-vous puis réessayez. Votre session enregistrée n’a pas été supprimée.';
+
+  @override
+  String get session_restore_unavailable_title =>
+      'Impossible de restaurer votre session';
+
+  @override
+  String get session_restore_unavailable_message =>
+      'AOS ne peut pas vérifier votre session existante pour le moment. Réessayez. Votre session enregistrée n’a pas été supprimée.';
+
+  @override
+  String get privacy_cover_accessibility_label =>
+      'AOS protège les informations de votre compte.';
+
+  @override
+  String get appLockScreenAccessibilityLabel => 'AOS est verrouillé';
+
+  @override
+  String get appLockTitle => 'Déverrouiller AOS';
+
+  @override
+  String get appLockPrompt => 'Saisissez le verrouillage pour continuer.';
+
+  @override
+  String get appLockUnlock => 'Déverrouiller';
+
+  @override
+  String get appLockAuthenticating => 'Authentification…';
+
+  @override
+  String get appLockLogout => 'Se déconnecter';
+
+  @override
+  String get appLockForgottenCredentialHelp =>
+      'Réinitialisez le verrouillage pour vous déconnecter et supprimer un identifiant local oublié.';
+
+  @override
+  String get appLockUnlockReason => 'Authentifiez-vous pour déverrouiller AOS.';
+
+  @override
+  String get appLockEnableReason =>
+      'Authentifiez-vous pour activer le verrou biométrique.';
+
+  @override
+  String get appLockDisableReason =>
+      'Authentifiez-vous pour désactiver le verrouillage.';
+
+  @override
+  String get appLockCancelled =>
+      'Authentification annulée. Votre session reste ouverte.';
+
+  @override
+  String get appLockTemporaryLockout =>
+      'Trop de tentatives. Réessayez plus tard ou réinitialisez le verrouillage.';
+
+  @override
+  String get appLockPermanentLockout =>
+      'La biométrie est verrouillée. Utilisez la récupération de l’appareil ou réinitialisez le verrouillage.';
+
+  @override
+  String get appLockNoDeviceCredential =>
+      'Configurez d’abord une empreinte, Face ID ou une autre biométrie dans les réglages de l’appareil.';
+
+  @override
+  String get appLockUnsupported =>
+      'L’authentification native est indisponible sur cet appareil.';
+
+  @override
+  String get appLockTryAgain => 'Réessayer';
+
+  @override
+  String get appLockFailed => 'Échec de l’authentification. Réessayez.';
+
+  @override
+  String get appLockSettingTitle => 'Verrouillage de l’application';
+
+  @override
+  String get appLockSettingDescription =>
+      'Protégez les zones privées avec un PIN à 4 chiffres, un schéma ou la biométrie.';
+
+  @override
+  String get appLockTimingTitle => 'Délai de verrouillage';
+
+  @override
+  String get appLockTimingImmediately => 'Immédiatement';
+
+  @override
+  String get appLockTimingThirtySeconds => 'Après 30 secondes';
+
+  @override
+  String get appLockTimingOneMinute => 'Après 1 minute';
+
+  @override
+  String get appLockTimingFiveMinutes => 'Après 5 minutes';
+
+  @override
   String get wishlist_add => 'Ajouter à la liste de souhaits';
 
   @override
@@ -433,5 +533,121 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get wishlist_update_error =>
-      'Impossible de mettre à jour votre liste de souhaits. Veuillez réessayer.';
+      'Impossible de mettre à jour votre liste de souhaits. Réessayez.';
+
+  @override
+  String get appLockBiometricPrompt =>
+      'Utilisez votre empreinte, votre visage ou une autre biométrie enregistrée pour continuer.';
+
+  @override
+  String get appLockUseBiometrics => 'Utiliser la biométrie';
+
+  @override
+  String get appLockReset => 'Réinitialiser le verrouillage';
+
+  @override
+  String get appLockResetHelp =>
+      'PIN ou schéma oublié ? La réinitialisation vous déconnecte et supprime le verrou local.';
+
+  @override
+  String get appLockResetTitle => 'Réinitialiser le verrouillage ?';
+
+  @override
+  String get appLockResetMessage =>
+      'Vous serez déconnecté, le verrou enregistré sera supprimé et l’application publique s’ouvrira. Reconnectez-vous pour créer un nouveau verrou.';
+
+  @override
+  String get appLockResetConfirm => 'Réinitialiser et se déconnecter';
+
+  @override
+  String get appLockCancel => 'Annuler';
+
+  @override
+  String get appLockClear => 'Effacer';
+
+  @override
+  String get appLockEnterPin => 'Saisissez votre PIN à 4 chiffres';
+
+  @override
+  String get appLockEnterPattern => 'Dessinez votre schéma';
+
+  @override
+  String get appLockInvalidCredential => 'Ce verrou est incorrect. Réessayez.';
+
+  @override
+  String get appLockPinHelp => 'Utilisez exactement 4 chiffres.';
+
+  @override
+  String get appLockPatternHelp => 'Reliez au moins 4 points.';
+
+  @override
+  String get appLockConfirmPin => 'Confirmez votre PIN';
+
+  @override
+  String get appLockConfirmPattern => 'Confirmez votre schéma';
+
+  @override
+  String get appLockConfirmationMismatch =>
+      'La confirmation ne correspond pas. Réessayez.';
+
+  @override
+  String get appLockContinue => 'Continuer';
+
+  @override
+  String get appLockConfirm => 'Confirmer';
+
+  @override
+  String get appLockStorageFailure =>
+      'Les paramètres du verrouillage n’ont pas pu être enregistrés de façon sécurisée. Réessayez.';
+
+  @override
+  String get appLockConfigured => 'Le verrouillage est activé';
+
+  @override
+  String get appLockProcessRestartNote =>
+      'AOS se verrouille toujours après l’arrêt ou le redémarrage de l’application.';
+
+  @override
+  String get appLockChangeMethod => 'Changer la méthode';
+
+  @override
+  String get appLockDisable => 'Désactiver le verrouillage';
+
+  @override
+  String get appLockChooseMethod => 'Choisissez une méthode';
+
+  @override
+  String get appLockMethodHelp =>
+      'Le PIN et le schéma ne sont stockés que sous forme de hachages salés sécurisés. Les données biométriques restent gérées par l’appareil.';
+
+  @override
+  String get appLockMethodPin => 'PIN à 4 chiffres';
+
+  @override
+  String get appLockMethodPattern => 'Schéma';
+
+  @override
+  String get appLockMethodBiometric => 'Empreinte ou biométrie';
+
+  @override
+  String get appLockChangeReason =>
+      'Authentifiez-vous pour modifier le verrouillage.';
+
+  @override
+  String get appLockTimingFiveSeconds => 'Après 5 secondes';
+
+  @override
+  String get appLockTimingTenSeconds => 'Après 10 secondes';
+
+  @override
+  String get appLockTimingFifteenSeconds => 'Après 15 secondes';
+
+  @override
+  String get appLockPinInputAccessibility => 'Saisie du PIN';
+
+  @override
+  String get appLockPatternInputAccessibility => 'Saisie du schéma';
+
+  @override
+  String get appLockPatternPointAccessibility => 'Point du schéma';
 }

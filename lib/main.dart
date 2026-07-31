@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:africaonlinestores/app/bootstrap/app_bootstrap_controller.dart';
 import 'package:africaonlinestores/core/config/app_config.dart';
+import 'package:africaonlinestores/core/lifecycle/app_lifecycle_coordinator.dart';
 import 'package:africaonlinestores/core/notifications/android_notification_channel.dart';
+import 'package:africaonlinestores/core/privacy/privacy_cover.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/core/routing/app_router.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/core/routing/helpers/route_guards.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage.dart';
 import 'package:africaonlinestores/core/storage/onboarding_storage_provider.dart';
 import 'package:africaonlinestores/core/theme/app_theme.dart';
@@ -14,6 +17,9 @@ import 'package:africaonlinestores/core/theme/theme_prefs.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/local_resolver.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/app_lock/application/app_lock_controller.dart';
+import 'package:africaonlinestores/features/app_lock/domain/app_lock_models.dart';
+import 'package:africaonlinestores/features/app_lock/presentation/app_lock_screen.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/connect/calls/application/listeners/call_audio_feedback_listener.dart';
@@ -58,7 +64,6 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       'has_notification_block': message.notification != null,
       'event': data['event']?.toString(),
       'type': data['type']?.toString(),
-      'message_id': message.messageId,
     },
   );
 
@@ -154,7 +159,7 @@ void main() {
       await flutterLocalNotificationsPlugin.initialize(
         settings: initSettings,
         onDidReceiveNotificationResponse: (response) {
-          appLogger.i('Notification tapped: ${response.payload}');
+          appLogger.i('Local notification response received');
         },
       );
 
@@ -203,12 +208,13 @@ class AppRoot extends ConsumerStatefulWidget {
 }
 
 class _AppRootState extends ConsumerState<AppRoot> {
-  bool _bootstrapStarted = false;
   ProviderSubscription<AuthState>? _authSub;
 
   @override
   void initState() {
     super.initState();
+
+    unawaited(ref.read(appBootstrapControllerProvider.notifier).initialize());
 
     _authSub = ref.listenManual<AuthState>(authControllerProvider, (
       prev,
@@ -234,14 +240,26 @@ class _AppRootState extends ConsumerState<AppRoot> {
         try {
           final pushService = ref.read(pushNotificationServiceProvider);
           await pushService.init();
-        } catch (_) {}
+        } catch (error, stackTrace) {
+          appLogger.w(
+            'Push notification initialization failed',
+            error: error,
+            stackTrace: stackTrace,
+          );
+        }
 
         // 📥 Load Notifications (initial fetch)
         try {
           await ref
               .read(notificationControllerProvider.notifier)
               .loadNotifications();
-        } catch (_, _) {}
+        } catch (error, stackTrace) {
+          appLogger.w(
+            'Initial notification loading failed',
+            error: error,
+            stackTrace: stackTrace,
+          );
+        }
 
         return;
       }
@@ -267,15 +285,7 @@ class _AppRootState extends ConsumerState<AppRoot> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_bootstrapStarted) {
-      _bootstrapStarted = true;
-
-      Future.microtask(() {
-        ref.read(appBootstrapControllerProvider.notifier).initialize();
-      });
-    }
-
-    return const AOSApp();
+    return const RootLifecycleCoordinator(child: AOSApp());
   }
 }
 
@@ -294,6 +304,18 @@ class AOSApp extends ConsumerWidget {
 
     ref.watch(socketCallListenerProvider);
     ref.watch(notificationRealtimeListenerProvider);
+    final protectedNavigation = ref.watch(
+      protectedNavigationCoordinatorProvider,
+    );
+    final AppLockState appLockState = ref.watch(appLockControllerProvider);
+    ref.listen<AppLockState>(appLockControllerProvider, (previous, next) {
+      if ((previous?.blocksProtectedContent ?? false) &&
+          !next.blocksProtectedContent) {
+        protectedNavigation.resumePending();
+      }
+    });
+
+    final PrivacyCoverState privacyCover = ref.watch(privacyCoverStateProvider);
 
     return MaterialApp.router(
       title: 'Africa Online Stores',
@@ -316,8 +338,9 @@ class AOSApp extends ConsumerWidget {
 
         final isOnActiveCall = location.contains(AppRoutes.callSession);
 
-        return Stack(
-          children: [
+        final Widget protectedApplication = Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
             CallAudioFeedbackListener(
               child: CallKitStateListener(
                 child: CallNavigationListener(
@@ -327,10 +350,33 @@ class AOSApp extends ConsumerWidget {
                 ),
               ),
             ),
-
             if (!isOnActiveCall) const ActiveCallOverlay(),
-
             const InAppBannerListener(),
+          ],
+        );
+
+        final AuthState authState = ref.watch(authControllerProvider);
+        final bool showAppLock =
+            authState is AuthAuthenticated &&
+            RouteGuards.isAppLockProtectedRoute(location) &&
+            appLockState.blocksProtectedContent;
+
+        return Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            if (!showAppLock)
+              IgnorePointer(
+                ignoring: privacyCover.isVisible,
+                child: ExcludeSemantics(
+                  excluding: privacyCover.isVisible,
+                  child: protectedApplication,
+                ),
+              )
+            else if (appLockState.phase == AppLockPhase.initializing)
+              const PrivacyCover()
+            else
+              const AppLockScreen(),
+            if (privacyCover.isVisible) const PrivacyCover(),
           ],
         );
       },

@@ -422,6 +422,105 @@ class AppLocalizationsEn extends AppLocalizations {
       'We couldn\'t save your preference. Please try again.';
 
   @override
+  String get session_restore_offline_title => 'You\'re offline';
+
+  @override
+  String get session_restore_offline_message =>
+      'AOS couldn\'t verify your existing session. Reconnect and try again. Your stored session has not been cleared.';
+
+  @override
+  String get session_restore_unavailable_title =>
+      'We couldn\'t restore your session';
+
+  @override
+  String get session_restore_unavailable_message =>
+      'AOS couldn\'t verify your existing session right now. Try again. Your stored session has not been cleared.';
+
+  @override
+  String get privacy_cover_accessibility_label =>
+      'AOS is protecting your account information.';
+
+  @override
+  String get appLockScreenAccessibilityLabel => 'AOS is locked';
+
+  @override
+  String get appLockTitle => 'Unlock AOS';
+
+  @override
+  String get appLockPrompt => 'Enter your app lock to continue.';
+
+  @override
+  String get appLockUnlock => 'Unlock';
+
+  @override
+  String get appLockAuthenticating => 'Authenticating…';
+
+  @override
+  String get appLockLogout => 'Log out';
+
+  @override
+  String get appLockForgottenCredentialHelp =>
+      'Reset app lock to sign out and remove a forgotten local credential.';
+
+  @override
+  String get appLockUnlockReason => 'Authenticate to unlock AOS.';
+
+  @override
+  String get appLockEnableReason =>
+      'Authenticate to enable biometric app lock.';
+
+  @override
+  String get appLockDisableReason => 'Authenticate to disable app lock.';
+
+  @override
+  String get appLockCancelled =>
+      'Authentication was cancelled. Your session is still signed in.';
+
+  @override
+  String get appLockTemporaryLockout =>
+      'Too many attempts. Try again later or reset app lock.';
+
+  @override
+  String get appLockPermanentLockout =>
+      'Biometrics are locked. Use your device recovery options or reset app lock.';
+
+  @override
+  String get appLockNoDeviceCredential =>
+      'Set up fingerprint, Face ID, or another supported biometric in device settings first.';
+
+  @override
+  String get appLockUnsupported =>
+      'Native device authentication is unavailable on this device.';
+
+  @override
+  String get appLockTryAgain => 'Try again';
+
+  @override
+  String get appLockFailed => 'Authentication failed. Try again.';
+
+  @override
+  String get appLockSettingTitle => 'App Lock';
+
+  @override
+  String get appLockSettingDescription =>
+      'Protect private areas with a 4-digit PIN, pattern, or biometrics.';
+
+  @override
+  String get appLockTimingTitle => 'Lock timing';
+
+  @override
+  String get appLockTimingImmediately => 'Immediately';
+
+  @override
+  String get appLockTimingThirtySeconds => 'After 30 seconds';
+
+  @override
+  String get appLockTimingOneMinute => 'After 1 minute';
+
+  @override
+  String get appLockTimingFiveMinutes => 'After 5 minutes';
+
+  @override
   String get wishlist_add => 'Add to wishlist';
 
   @override
@@ -429,5 +528,121 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wishlist_update_error =>
-      'Unable to update your wishlist. Please try again.';
+      'We couldn\'t update your wishlist. Please try again.';
+
+  @override
+  String get appLockBiometricPrompt =>
+      'Use your fingerprint, face, or other enrolled biometric to continue.';
+
+  @override
+  String get appLockUseBiometrics => 'Use biometrics';
+
+  @override
+  String get appLockReset => 'Reset app lock';
+
+  @override
+  String get appLockResetHelp =>
+      'Forgot your PIN or pattern? Resetting app lock signs you out and removes the local lock.';
+
+  @override
+  String get appLockResetTitle => 'Reset app lock?';
+
+  @override
+  String get appLockResetMessage =>
+      'This will sign you out, clear the saved app lock, and return you to the public app. Sign in again to set a new lock.';
+
+  @override
+  String get appLockResetConfirm => 'Reset and log out';
+
+  @override
+  String get appLockCancel => 'Cancel';
+
+  @override
+  String get appLockClear => 'Clear';
+
+  @override
+  String get appLockEnterPin => 'Enter your 4-digit PIN';
+
+  @override
+  String get appLockEnterPattern => 'Draw your pattern';
+
+  @override
+  String get appLockInvalidCredential =>
+      'That app-lock credential is incorrect. Try again.';
+
+  @override
+  String get appLockPinHelp => 'Use exactly 4 digits.';
+
+  @override
+  String get appLockPatternHelp => 'Connect at least 4 points.';
+
+  @override
+  String get appLockConfirmPin => 'Confirm your PIN';
+
+  @override
+  String get appLockConfirmPattern => 'Confirm your pattern';
+
+  @override
+  String get appLockConfirmationMismatch =>
+      'The confirmation does not match. Try again.';
+
+  @override
+  String get appLockContinue => 'Continue';
+
+  @override
+  String get appLockConfirm => 'Confirm';
+
+  @override
+  String get appLockStorageFailure =>
+      'App-lock settings could not be saved securely. Try again.';
+
+  @override
+  String get appLockConfigured => 'App lock is enabled';
+
+  @override
+  String get appLockProcessRestartNote =>
+      'AOS always locks after the app is terminated or restarted.';
+
+  @override
+  String get appLockChangeMethod => 'Change lock method';
+
+  @override
+  String get appLockDisable => 'Disable app lock';
+
+  @override
+  String get appLockChooseMethod => 'Choose a lock method';
+
+  @override
+  String get appLockMethodHelp =>
+      'PIN and pattern are stored only as secure salted hashes. Biometric data remains managed by your device.';
+
+  @override
+  String get appLockMethodPin => '4-digit PIN';
+
+  @override
+  String get appLockMethodPattern => 'Pattern';
+
+  @override
+  String get appLockMethodBiometric => 'Fingerprint or biometrics';
+
+  @override
+  String get appLockChangeReason => 'Authenticate to change your app lock.';
+
+  @override
+  String get appLockTimingFiveSeconds => 'After 5 seconds';
+
+  @override
+  String get appLockTimingTenSeconds => 'After 10 seconds';
+
+  @override
+  String get appLockTimingFifteenSeconds => 'After 15 seconds';
+
+  @override
+  String get appLockPinInputAccessibility => 'PIN entry';
+
+  @override
+  String get appLockPatternInputAccessibility => 'Pattern entry';
+
+  @override
+  String get appLockPatternPointAccessibility => 'Pattern point';
 }

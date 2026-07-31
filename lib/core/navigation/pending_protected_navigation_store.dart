@@ -17,6 +17,8 @@ class PendingProtectedNavigationStore
     extends StateNotifier<PendingProtectedNavigation?> {
   PendingProtectedNavigationStore() : super(null);
 
+  PendingProtectedNavigation? get pending => state;
+
   void replace(PendingProtectedNavigation request) {
     state = request;
   }

@@ -66,7 +66,7 @@ class ProtectedNavigationCoordinator {
   void resumePending() {
     if (_isExecuting || !_accessPermitted()) return;
 
-    final PendingProtectedNavigation? request = _store.state;
+    final PendingProtectedNavigation? request = _store.pending;
     if (request == null) return;
 
     if (request.accountId != _accountId) {

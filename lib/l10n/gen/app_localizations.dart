@@ -890,6 +890,180 @@ abstract class AppLocalizations {
   /// **'We couldn\'t save your preference. Please try again.'**
   String get onboarding_preference_error;
 
+  /// No description provided for @session_restore_offline_title.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline'**
+  String get session_restore_offline_title;
+
+  /// No description provided for @session_restore_offline_message.
+  ///
+  /// In en, this message translates to:
+  /// **'AOS couldn\'t verify your existing session. Reconnect and try again. Your stored session has not been cleared.'**
+  String get session_restore_offline_message;
+
+  /// No description provided for @session_restore_unavailable_title.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t restore your session'**
+  String get session_restore_unavailable_title;
+
+  /// No description provided for @session_restore_unavailable_message.
+  ///
+  /// In en, this message translates to:
+  /// **'AOS couldn\'t verify your existing session right now. Try again. Your stored session has not been cleared.'**
+  String get session_restore_unavailable_message;
+
+  /// No description provided for @privacy_cover_accessibility_label.
+  ///
+  /// In en, this message translates to:
+  /// **'AOS is protecting your account information.'**
+  String get privacy_cover_accessibility_label;
+
+  /// No description provided for @appLockScreenAccessibilityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'AOS is locked'**
+  String get appLockScreenAccessibilityLabel;
+
+  /// No description provided for @appLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock AOS'**
+  String get appLockTitle;
+
+  /// No description provided for @appLockPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your app lock to continue.'**
+  String get appLockPrompt;
+
+  /// No description provided for @appLockUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get appLockUnlock;
+
+  /// No description provided for @appLockAuthenticating.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticating…'**
+  String get appLockAuthenticating;
+
+  /// No description provided for @appLockLogout.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get appLockLogout;
+
+  /// No description provided for @appLockForgottenCredentialHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset app lock to sign out and remove a forgotten local credential.'**
+  String get appLockForgottenCredentialHelp;
+
+  /// No description provided for @appLockUnlockReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to unlock AOS.'**
+  String get appLockUnlockReason;
+
+  /// No description provided for @appLockEnableReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to enable biometric app lock.'**
+  String get appLockEnableReason;
+
+  /// No description provided for @appLockDisableReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to disable app lock.'**
+  String get appLockDisableReason;
+
+  /// No description provided for @appLockCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication was cancelled. Your session is still signed in.'**
+  String get appLockCancelled;
+
+  /// No description provided for @appLockTemporaryLockout.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again later or reset app lock.'**
+  String get appLockTemporaryLockout;
+
+  /// No description provided for @appLockPermanentLockout.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometrics are locked. Use your device recovery options or reset app lock.'**
+  String get appLockPermanentLockout;
+
+  /// No description provided for @appLockNoDeviceCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up fingerprint, Face ID, or another supported biometric in device settings first.'**
+  String get appLockNoDeviceCredential;
+
+  /// No description provided for @appLockUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Native device authentication is unavailable on this device.'**
+  String get appLockUnsupported;
+
+  /// No description provided for @appLockTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get appLockTryAgain;
+
+  /// No description provided for @appLockFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed. Try again.'**
+  String get appLockFailed;
+
+  /// No description provided for @appLockSettingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App Lock'**
+  String get appLockSettingTitle;
+
+  /// No description provided for @appLockSettingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect private areas with a 4-digit PIN, pattern, or biometrics.'**
+  String get appLockSettingDescription;
+
+  /// No description provided for @appLockTimingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock timing'**
+  String get appLockTimingTitle;
+
+  /// No description provided for @appLockTimingImmediately.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediately'**
+  String get appLockTimingImmediately;
+
+  /// No description provided for @appLockTimingThirtySeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'After 30 seconds'**
+  String get appLockTimingThirtySeconds;
+
+  /// No description provided for @appLockTimingOneMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'After 1 minute'**
+  String get appLockTimingOneMinute;
+
+  /// No description provided for @appLockTimingFiveMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'After 5 minutes'**
+  String get appLockTimingFiveMinutes;
+
   /// No description provided for @wishlist_add.
   ///
   /// In en, this message translates to:
@@ -905,10 +1079,224 @@ abstract class AppLocalizations {
   /// No description provided for @wishlist_update_error.
   ///
   /// In en, this message translates to:
-  /// **'Unable to update your wishlist. Please try again.'**
+  /// **'We couldn\'t update your wishlist. Please try again.'**
   String get wishlist_update_error;
 
-  String? get privacy_cover_accessibility_label => null;
+  /// No description provided for @appLockBiometricPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your fingerprint, face, or other enrolled biometric to continue.'**
+  String get appLockBiometricPrompt;
+
+  /// No description provided for @appLockUseBiometrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Use biometrics'**
+  String get appLockUseBiometrics;
+
+  /// No description provided for @appLockReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset app lock'**
+  String get appLockReset;
+
+  /// No description provided for @appLockResetHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot your PIN or pattern? Resetting app lock signs you out and removes the local lock.'**
+  String get appLockResetHelp;
+
+  /// No description provided for @appLockResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset app lock?'**
+  String get appLockResetTitle;
+
+  /// No description provided for @appLockResetMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will sign you out, clear the saved app lock, and return you to the public app. Sign in again to set a new lock.'**
+  String get appLockResetMessage;
+
+  /// No description provided for @appLockResetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset and log out'**
+  String get appLockResetConfirm;
+
+  /// No description provided for @appLockCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get appLockCancel;
+
+  /// No description provided for @appLockClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get appLockClear;
+
+  /// No description provided for @appLockEnterPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your 4-digit PIN'**
+  String get appLockEnterPin;
+
+  /// No description provided for @appLockEnterPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw your pattern'**
+  String get appLockEnterPattern;
+
+  /// No description provided for @appLockInvalidCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'That app-lock credential is incorrect. Try again.'**
+  String get appLockInvalidCredential;
+
+  /// No description provided for @appLockPinHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Use exactly 4 digits.'**
+  String get appLockPinHelp;
+
+  /// No description provided for @appLockPatternHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect at least 4 points.'**
+  String get appLockPatternHelp;
+
+  /// No description provided for @appLockConfirmPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your PIN'**
+  String get appLockConfirmPin;
+
+  /// No description provided for @appLockConfirmPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your pattern'**
+  String get appLockConfirmPattern;
+
+  /// No description provided for @appLockConfirmationMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The confirmation does not match. Try again.'**
+  String get appLockConfirmationMismatch;
+
+  /// No description provided for @appLockContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get appLockContinue;
+
+  /// No description provided for @appLockConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get appLockConfirm;
+
+  /// No description provided for @appLockStorageFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'App-lock settings could not be saved securely. Try again.'**
+  String get appLockStorageFailure;
+
+  /// No description provided for @appLockConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock is enabled'**
+  String get appLockConfigured;
+
+  /// No description provided for @appLockProcessRestartNote.
+  ///
+  /// In en, this message translates to:
+  /// **'AOS always locks after the app is terminated or restarted.'**
+  String get appLockProcessRestartNote;
+
+  /// No description provided for @appLockChangeMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Change lock method'**
+  String get appLockChangeMethod;
+
+  /// No description provided for @appLockDisable.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable app lock'**
+  String get appLockDisable;
+
+  /// No description provided for @appLockChooseMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a lock method'**
+  String get appLockChooseMethod;
+
+  /// No description provided for @appLockMethodHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN and pattern are stored only as secure salted hashes. Biometric data remains managed by your device.'**
+  String get appLockMethodHelp;
+
+  /// No description provided for @appLockMethodPin.
+  ///
+  /// In en, this message translates to:
+  /// **'4-digit PIN'**
+  String get appLockMethodPin;
+
+  /// No description provided for @appLockMethodPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Pattern'**
+  String get appLockMethodPattern;
+
+  /// No description provided for @appLockMethodBiometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint or biometrics'**
+  String get appLockMethodBiometric;
+
+  /// No description provided for @appLockChangeReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to change your app lock.'**
+  String get appLockChangeReason;
+
+  /// No description provided for @appLockTimingFiveSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'After 5 seconds'**
+  String get appLockTimingFiveSeconds;
+
+  /// No description provided for @appLockTimingTenSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'After 10 seconds'**
+  String get appLockTimingTenSeconds;
+
+  /// No description provided for @appLockTimingFifteenSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'After 15 seconds'**
+  String get appLockTimingFifteenSeconds;
+
+  /// No description provided for @appLockPinInputAccessibility.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN entry'**
+  String get appLockPinInputAccessibility;
+
+  /// No description provided for @appLockPatternInputAccessibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Pattern entry'**
+  String get appLockPatternInputAccessibility;
+
+  /// No description provided for @appLockPatternPointAccessibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Pattern point'**
+  String get appLockPatternPointAccessibility;
 }
 
 class _AppLocalizationsDelegate

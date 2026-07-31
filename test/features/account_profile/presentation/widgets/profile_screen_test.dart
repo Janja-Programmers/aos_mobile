@@ -124,7 +124,6 @@ void main() {
     'public friend profile hides owner controls and preserves Friends',
     (WidgetTester tester) async {
       final bundle = await buildHarnessFor('public_profile_friend.json');
-      addTearDown(bundle.harness.container.dispose);
 
       await tester.pumpTestApp(
         const ProfileScreen(user: 'friend@example.invalid'),
@@ -157,7 +156,6 @@ void main() {
     WidgetTester tester,
   ) async {
     final bundle = await buildHarnessFor('public_profile_blocked_by_me.json');
-    addTearDown(bundle.harness.container.dispose);
     final ScriptedAccountsApi api = ScriptedAccountsApi(
       bundle.harness.client,
       getProfileHandler: (_) async => Either.left(
@@ -186,7 +184,6 @@ void main() {
     WidgetTester tester,
   ) async {
     final bundle = await buildHarnessFor('public_profile_deleted.json');
-    addTearDown(bundle.harness.container.dispose);
 
     await tester.pumpTestApp(
       const ProfileScreen(user: 'deleted@example.invalid'),
@@ -204,7 +201,6 @@ void main() {
     WidgetTester tester,
   ) async {
     final bundle = await buildHarnessFor('own_profile.json');
-    addTearDown(bundle.harness.container.dispose);
 
     await tester.pumpTestApp(
       const ProfileScreen(),
@@ -224,7 +220,6 @@ void main() {
     WidgetTester tester,
   ) async {
     final bundle = await buildHarnessFor('public_profile_follow.json');
-    addTearDown(bundle.harness.container.dispose);
 
     await tester.pumpTestApp(
       const ProfileScreen(user: 'public@example.invalid'),
@@ -249,7 +244,6 @@ void main() {
     WidgetTester tester,
   ) async {
     final bundle = await buildHarnessFor('public_profile_follow.json');
-    addTearDown(bundle.harness.container.dispose);
     final Completer<void> requestStarted = Completer<void>();
     final Completer<Either<Failure, SocialRelationship>> response =
         Completer<Either<Failure, SocialRelationship>>();

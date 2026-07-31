@@ -18,7 +18,6 @@ void main() {
           const Failure('Network unavailable.', type: FailureType.network),
         ),
       );
-      addTearDown(harness.container.dispose);
 
       tester.view.physicalSize = const Size(320, 480);
       tester.view.devicePixelRatio = 1;
@@ -30,11 +29,10 @@ void main() {
           container: harness.container,
           child: MaterialApp(
             locale: const Locale('ar'),
-            localizationsDelegates:
-                const <LocalizationsDelegate<dynamic>>[
-                  AppLocalizations.delegate,
-                  ...GlobalMaterialLocalizations.delegates,
-                ],
+            localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+              AppLocalizations.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
             supportedLocales: AppLocalizations.supportedLocales,
             builder: (BuildContext context, Widget? child) {
               return MediaQuery(
@@ -70,7 +68,6 @@ void main() {
           const Failure('Server unavailable.', type: FailureType.server),
         ),
       );
-      addTearDown(harness.container.dispose);
 
       tester.view.physicalSize = const Size(640, 320);
       tester.view.devicePixelRatio = 1;
@@ -84,17 +81,16 @@ void main() {
             theme: ThemeData.light(),
             darkTheme: ThemeData.dark(),
             themeMode: ThemeMode.dark,
-            localizationsDelegates:
-                const <LocalizationsDelegate<dynamic>>[
-                  AppLocalizations.delegate,
-                  ...GlobalMaterialLocalizations.delegates,
-                ],
+            localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+              AppLocalizations.delegate,
+              ...GlobalMaterialLocalizations.delegates,
+            ],
             supportedLocales: AppLocalizations.supportedLocales,
             builder: (BuildContext context, Widget? child) {
               return MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  textScaler: const TextScaler.linear(2),
-                ),
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: const TextScaler.linear(2)),
                 child: child ?? const SizedBox.shrink(),
               );
             },

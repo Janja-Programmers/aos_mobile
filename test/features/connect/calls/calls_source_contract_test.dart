@@ -9,16 +9,27 @@ void main() {
     expect(pubspec, isNot(contains('flutter_callkit_incoming: ^3.0.0')));
   });
 
-  test('incoming notification navigation does not open CallListScreen', () {
-    final source = File(
+  test('incoming notification navigation remains owned by CallKit', () {
+    final String handlerSource = File(
       'lib/features/notifications/application/services/'
       'notification_navigation_handler.dart',
     ).readAsStringSync();
-    final incomingCase = source
-        .split('case NotificationType.incomingCall:')[1]
-        .split('// =========================')[0];
+    final String parserSource = File(
+      'lib/features/notifications/application/services/'
+      'notification_destination_parser.dart',
+    ).readAsStringSync();
 
-    expect(incomingCase, isNot(contains('_openCalls()')));
+    expect(handlerSource, isNot(contains('CallListScreen')));
+    expect(handlerSource, isNot(contains('_openCalls')));
+
+    final List<String> incomingSplit = parserSource.split(
+      'case NotificationType.incomingCall:',
+    );
+    expect(incomingSplit, hasLength(2));
+    final String incomingCase = incomingSplit.last
+        .split('case NotificationType.follow:')
+        .first;
+    expect(incomingCase, contains('return null;'));
   });
 
   test('outgoing flow invokes native CallKit startCall', () {

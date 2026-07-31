@@ -38,38 +38,40 @@ void main() {
     expect(harness.api.toggleCalls, 0);
   });
 
-  test('optimistically updates, blocks duplicates, and confirms backend state', () async {
-    final completer =
-        Completer<Either<Failure, Map<String, dynamic>>>();
-    final harness = await _buildHarness(
-      toggleHandler: ({required String adId, required bool wishlisted}) {
-        return completer.future;
-      },
-    );
-    final controller = harness.container.read(
-      wishlistControllerProvider.notifier,
-    );
+  test(
+    'optimistically updates, blocks duplicates, and confirms backend state',
+    () async {
+      final completer = Completer<Either<Failure, Map<String, dynamic>>>();
+      final harness = await _buildHarness(
+        toggleHandler: ({required String adId, required bool wishlisted}) {
+          return completer.future;
+        },
+      );
+      final controller = harness.container.read(
+        wishlistControllerProvider.notifier,
+      );
 
-    final first = controller.toggle('AD-001', currentValue: false);
-    await Future<void>.delayed(Duration.zero);
+      final first = controller.toggle('AD-001', currentValue: false);
+      await Future<void>.delayed(Duration.zero);
 
-    WishlistState state = harness.container.read(wishlistControllerProvider);
-    expect(state.resolve('AD-001', fallback: false), isTrue);
-    expect(state.pending, contains('AD-001'));
-    expect(harness.api.toggleCalls, 1);
-    expect(harness.api.lastWishlisted, isTrue);
+      WishlistState state = harness.container.read(wishlistControllerProvider);
+      expect(state.resolve('AD-001', fallback: false), isTrue);
+      expect(state.pending, contains('AD-001'));
+      expect(harness.api.toggleCalls, 1);
+      expect(harness.api.lastWishlisted, isTrue);
 
-    final duplicate = await controller.toggle('AD-001', currentValue: false);
-    expect(duplicate, isFalse);
-    expect(harness.api.toggleCalls, 1);
+      final duplicate = await controller.toggle('AD-001', currentValue: false);
+      expect(duplicate, isFalse);
+      expect(harness.api.toggleCalls, 1);
 
-    completer.complete(_success(adId: 'AD-001', wishlisted: true));
-    expect(await first, isTrue);
+      completer.complete(_success(adId: 'AD-001', wishlisted: true));
+      expect(await first, isTrue);
 
-    state = harness.container.read(wishlistControllerProvider);
-    expect(state.resolve('AD-001', fallback: false), isTrue);
-    expect(state.pending, isNot(contains('AD-001')));
-  });
+      state = harness.container.read(wishlistControllerProvider);
+      expect(state.resolve('AD-001', fallback: false), isTrue);
+      expect(state.pending, isNot(contains('AD-001')));
+    },
+  );
 
   test('rolls back the optimistic override after a failure', () async {
     final harness = await _buildHarness(
@@ -144,10 +146,7 @@ typedef WishlistToggleHandler =
     });
 
 class _ScriptedWishlistAdsApi extends AdsApi {
-  _ScriptedWishlistAdsApi(
-    super.client, {
-    required this.toggleHandler,
-  });
+  _ScriptedWishlistAdsApi(super.client, {required this.toggleHandler});
 
   final WishlistToggleHandler toggleHandler;
   int listCalls = 0;
@@ -166,12 +165,10 @@ class _ScriptedWishlistAdsApi extends AdsApi {
     bool? verifiedSeller,
   }) async {
     listCalls += 1;
-    return Either<Failure, Map<String, dynamic>>.right(
-      const <String, dynamic>{
-        'ok': true,
-        'data': <String, dynamic>{'items': <Object?>[]},
-      },
-    );
+    return Either<Failure, Map<String, dynamic>>.right(const <String, dynamic>{
+      'ok': true,
+      'data': <String, dynamic>{'items': <Object?>[]},
+    });
   }
 
   @override
@@ -210,6 +207,7 @@ Future<_WishlistHarness> _buildHarness({
     overrides: <Override>[
       onboardingStorageProvider.overrideWithValue(onboardingStorage),
       adsApiProvider.overrideWith((Ref ref) {
+        // ignore: join_return_with_assignment
         api = _ScriptedWishlistAdsApi(
           ref.read(_testApiClientProvider),
           toggleHandler: toggleHandler,
@@ -218,6 +216,7 @@ Future<_WishlistHarness> _buildHarness({
       }),
       authControllerProvider.overrideWith((Ref ref) {
         final resolvedClient = ref.read(_testApiClientProvider);
+        // ignore: join_return_with_assignment
         authController = MutableAuthController(
           ref: ref,
           api: AuthApi(resolvedClient),
@@ -234,10 +233,7 @@ Future<_WishlistHarness> _buildHarness({
         return authController;
       }),
       _testApiClientProvider.overrideWith((Ref ref) {
-        final client = ApiClient(
-          baseUrl: TestEnvironment.apiBaseUrl,
-          ref: ref,
-        );
+        final client = ApiClient(baseUrl: TestEnvironment.apiBaseUrl, ref: ref);
         ref.onDispose(client.dispose);
         return client;
       }),

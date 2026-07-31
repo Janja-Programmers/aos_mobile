@@ -6,8 +6,16 @@ final _profileViewDataProvider =
     });
 
 final _profilePanelProvider = FutureProvider.autoDispose
-    .family<List<Short>, _ProfilePanelRequest>((ref, request) {
-      return _ProfileLoader(ref).loadPanel(request);
+    .family<List<Short>, _ProfilePanelRequest>((ref, request) async {
+      // A panel load is started imperatively from the profile scaffold. Keep
+      // the auto-disposed provider alive only until that request settles so a
+      // frame boundary cannot cancel the Future being awaited by the widget.
+      final keepAliveLink = ref.keepAlive();
+      try {
+        return await _ProfileLoader(ref).loadPanel(request);
+      } finally {
+        keepAliveLink.close();
+      }
     });
 
 class _ProfileLoader {

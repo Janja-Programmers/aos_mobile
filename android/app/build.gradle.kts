@@ -1,5 +1,6 @@
-import java.util.Properties
 import java.io.FileInputStream
+import java.util.Properties
+import org.gradle.api.GradleException
 
 plugins {
     id("com.android.application")
@@ -16,6 +17,28 @@ val keystorePropertiesFile = rootProject.file("key.properties")
 
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
+val releaseSigningPropertyNames = listOf(
+    "keyAlias",
+    "keyPassword",
+    "storePassword",
+    "storeFile",
+)
+val hasReleaseSigningProperties =
+    keystorePropertiesFile.exists() &&
+        releaseSigningPropertyNames.all { propertyName ->
+            !keystoreProperties.getProperty(propertyName).isNullOrBlank()
+        }
+val isReleaseBuildRequested = gradle.startParameter.taskNames.any { taskName ->
+    taskName.contains("release", ignoreCase = true)
+}
+
+if (isReleaseBuildRequested && !hasReleaseSigningProperties) {
+    throw GradleException(
+        "Release signing is not configured. Create android/key.properties " +
+            "with keyAlias, keyPassword, storePassword, and storeFile.",
+    )
 }
 
 android {
@@ -41,7 +64,7 @@ android {
     defaultConfig {
         applicationId = "com.africaonlinestores.app"
 
-        minSdk = flutter.minSdkVersion
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
 
         versionCode = flutter.versionCode
@@ -49,17 +72,21 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String
-            keyPassword = keystoreProperties["keyPassword"] as String
-            storePassword = keystoreProperties["storePassword"] as String
-            storeFile = file(keystoreProperties["storeFile"] as String)
+        if (hasReleaseSigningProperties) {
+            create("release") {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storePassword = keystoreProperties.getProperty("storePassword")
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseSigningProperties) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 }

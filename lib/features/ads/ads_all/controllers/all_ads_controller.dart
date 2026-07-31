@@ -303,7 +303,8 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   }) {
     if (!isWishlist) return;
 
-    final unchanged = state.wishlistMinPrice == priceMin &&
+    final unchanged =
+        state.wishlistMinPrice == priceMin &&
         state.wishlistMaxPrice == priceMax &&
         state.wishlistMinRating == ratingMin &&
         state.wishlistVerifiedSellers == verifiedSellers;

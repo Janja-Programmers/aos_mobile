@@ -103,7 +103,9 @@ class AppConfirmSheet extends StatelessWidget {
                         ),
                         child: Text(
                           primaryText,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                          style: AppTextStylesX(context).button.copyWith(
+                            color: context.appColors.textPrimary,
+                          ),
                         ),
                       ),
                     ),

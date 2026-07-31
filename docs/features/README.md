@@ -23,3 +23,5 @@ The first recommended feature is **authentication and session** because it estab
 
 - [Calls](calls/README.md)
 - [Wishlist](wishlist/README.md)
+
+- [Application lock](native-app-lock.md)

@@ -1,10 +1,16 @@
+import 'package:africaonlinestores/core/navigation/pending_protected_navigation_store.dart';
+import 'package:africaonlinestores/core/navigation/protected_navigation_coordinator.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/core/routing/app_router.dart';
+import 'package:africaonlinestores/features/app_lock/application/app_lock_controller.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
 import 'package:africaonlinestores/features/notifications/application/controllers/notification_controller.dart';
 import 'package:africaonlinestores/features/notifications/application/controllers/push_token_controller.dart';
+import 'package:africaonlinestores/features/notifications/application/services/go_router_protected_navigation_executor.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_notification_service.dart';
 import 'package:africaonlinestores/features/notifications/application/services/notification_navigation_handler.dart';
 import 'package:africaonlinestores/features/notifications/application/services/notification_realtime_listener.dart';
@@ -61,17 +67,56 @@ final pushTokenControllerProvider =
     });
 
 // =====================================================
-// NAVIGATION HANDLER
+// PROTECTED NAVIGATION FOUNDATION
+// =====================================================
+
+final pendingProtectedNavigationStoreProvider =
+    StateNotifierProvider<
+      PendingProtectedNavigationStore,
+      PendingProtectedNavigation?
+    >((ref) {
+      return PendingProtectedNavigationStore();
+    });
+
+final protectedNavigationAccessPolicyProvider = Provider<bool Function()>((
+  ref,
+) {
+  return () => ref.read(appLockAccessPermittedProvider);
+});
+
+final protectedNavigationExecutorProvider =
+    Provider<ProtectedNavigationExecutor>((ref) {
+      return GoRouterProtectedNavigationExecutor(
+        router: ref.watch(appRouterProvider),
+        liveManager: ref.read(liveManagerProvider.notifier),
+      );
+    });
+
+final protectedNavigationCoordinatorProvider =
+    Provider<ProtectedNavigationCoordinator>((ref) {
+      final ProtectedNavigationCoordinator coordinator =
+          ProtectedNavigationCoordinator(
+            store: ref.read(pendingProtectedNavigationStoreProvider.notifier),
+            executor: ref.watch(protectedNavigationExecutorProvider),
+            accessPermitted: ref.watch(protectedNavigationAccessPolicyProvider),
+          );
+
+      coordinator.handleAuthState(ref.read(authControllerProvider));
+      ref.listen<AuthState>(authControllerProvider, (previous, next) {
+        coordinator.handleAuthState(next);
+      });
+
+      return coordinator;
+    });
+
+// =====================================================
+// NOTIFICATION NAVIGATION HANDLER
 // =====================================================
 
 final notificationNavigationHandlerProvider =
     Provider<NotificationNavigationHandler>((ref) {
-      final router = ref.watch(appRouterProvider);
-      final liveManager = ref.read(liveManagerProvider.notifier);
-
       return NotificationNavigationHandler(
-        router: router,
-        liveManager: liveManager,
+        coordinator: ref.watch(protectedNavigationCoordinatorProvider),
       );
     });
 

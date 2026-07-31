@@ -29,9 +29,7 @@ class AdListItem extends ConsumerWidget {
 
     final isAuth = ref.watch(isAuthenticatedProvider);
 
-    final wishlistState = isAuth
-        ? ref.watch(wishlistControllerProvider)
-        : null;
+    final wishlistState = isAuth ? ref.watch(wishlistControllerProvider) : null;
 
     final wish =
         wishlistState?.resolve(ad.id, fallback: ad.isWishlisted) ?? false;

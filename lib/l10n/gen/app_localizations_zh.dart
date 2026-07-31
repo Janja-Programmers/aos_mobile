@@ -404,11 +404,208 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboarding_preference_error => '无法保存您的偏好设置。请重试。';
 
   @override
+  String get session_restore_offline_title => '你当前处于离线状态';
+
+  @override
+  String get session_restore_offline_message =>
+      'AOS 无法验证你现有的会话。请重新连接网络后重试。已保存的会话尚未清除。';
+
+  @override
+  String get session_restore_unavailable_title => '无法恢复你的会话';
+
+  @override
+  String get session_restore_unavailable_message =>
+      'AOS 目前无法验证你现有的会话。请重试。已保存的会话尚未清除。';
+
+  @override
+  String get privacy_cover_accessibility_label => 'AOS 正在保护你的账户信息。';
+
+  @override
+  String get appLockScreenAccessibilityLabel => 'AOS 已锁定';
+
+  @override
+  String get appLockTitle => '解锁 AOS';
+
+  @override
+  String get appLockPrompt => '输入应用锁以继续。';
+
+  @override
+  String get appLockUnlock => '解锁';
+
+  @override
+  String get appLockAuthenticating => '正在验证…';
+
+  @override
+  String get appLockLogout => '退出登录';
+
+  @override
+  String get appLockForgottenCredentialHelp => '重置应用锁可退出登录并删除忘记的本地凭据。';
+
+  @override
+  String get appLockUnlockReason => '验证身份以解锁 AOS。';
+
+  @override
+  String get appLockEnableReason => '验证身份以启用生物识别应用锁。';
+
+  @override
+  String get appLockDisableReason => '验证身份以停用应用锁。';
+
+  @override
+  String get appLockCancelled => '验证已取消。您的会话仍保持登录。';
+
+  @override
+  String get appLockTemporaryLockout => '尝试次数过多。请稍后重试或重置应用锁。';
+
+  @override
+  String get appLockPermanentLockout => '生物识别已锁定。请使用设备恢复方式或重置应用锁。';
+
+  @override
+  String get appLockNoDeviceCredential => '请先在设备设置中登记指纹、Face ID 或其他受支持的生物识别。';
+
+  @override
+  String get appLockUnsupported => '此设备不支持本机设备验证。';
+
+  @override
+  String get appLockTryAgain => '重试';
+
+  @override
+  String get appLockFailed => '验证失败。请重试。';
+
+  @override
+  String get appLockSettingTitle => '应用锁';
+
+  @override
+  String get appLockSettingDescription => '使用 4 位 PIN、图案或生物识别保护私密区域。';
+
+  @override
+  String get appLockTimingTitle => '锁定时间';
+
+  @override
+  String get appLockTimingImmediately => '立即';
+
+  @override
+  String get appLockTimingThirtySeconds => '30 秒后';
+
+  @override
+  String get appLockTimingOneMinute => '1 分钟后';
+
+  @override
+  String get appLockTimingFiveMinutes => '5 分钟后';
+
+  @override
   String get wishlist_add => '添加到愿望清单';
 
   @override
   String get wishlist_remove => '从愿望清单中移除';
 
   @override
-  String get wishlist_update_error => '无法更新您的愿望清单。请重试。';
+  String get wishlist_update_error => '无法更新愿望清单。请重试。';
+
+  @override
+  String get appLockBiometricPrompt => '使用已登记的指纹、面容或其他生物识别方式继续。';
+
+  @override
+  String get appLockUseBiometrics => '使用生物识别';
+
+  @override
+  String get appLockReset => '重置应用锁';
+
+  @override
+  String get appLockResetHelp => '忘记 PIN 或图案？重置会退出登录并删除本地应用锁。';
+
+  @override
+  String get appLockResetTitle => '重置应用锁？';
+
+  @override
+  String get appLockResetMessage => '这会退出登录、删除已保存的应用锁并返回公开区域。重新登录后可设置新锁。';
+
+  @override
+  String get appLockResetConfirm => '重置并退出登录';
+
+  @override
+  String get appLockCancel => '取消';
+
+  @override
+  String get appLockClear => '清除';
+
+  @override
+  String get appLockEnterPin => '输入 4 位 PIN';
+
+  @override
+  String get appLockEnterPattern => '绘制图案';
+
+  @override
+  String get appLockInvalidCredential => '应用锁凭据不正确，请重试。';
+
+  @override
+  String get appLockPinHelp => '必须正好使用 4 位数字。';
+
+  @override
+  String get appLockPatternHelp => '至少连接 4 个点。';
+
+  @override
+  String get appLockConfirmPin => '确认 PIN';
+
+  @override
+  String get appLockConfirmPattern => '确认图案';
+
+  @override
+  String get appLockConfirmationMismatch => '两次输入不一致，请重试。';
+
+  @override
+  String get appLockContinue => '继续';
+
+  @override
+  String get appLockConfirm => '确认';
+
+  @override
+  String get appLockStorageFailure => '无法安全保存应用锁设置，请重试。';
+
+  @override
+  String get appLockConfigured => '应用锁已启用';
+
+  @override
+  String get appLockProcessRestartNote => '应用被终止或重新启动后，AOS 始终会锁定。';
+
+  @override
+  String get appLockChangeMethod => '更改锁定方式';
+
+  @override
+  String get appLockDisable => '停用应用锁';
+
+  @override
+  String get appLockChooseMethod => '选择锁定方式';
+
+  @override
+  String get appLockMethodHelp => 'PIN 和图案只以安全加盐哈希保存。生物识别数据始终由设备管理。';
+
+  @override
+  String get appLockMethodPin => '4 位 PIN';
+
+  @override
+  String get appLockMethodPattern => '图案';
+
+  @override
+  String get appLockMethodBiometric => '指纹或生物识别';
+
+  @override
+  String get appLockChangeReason => '验证身份以更改应用锁。';
+
+  @override
+  String get appLockTimingFiveSeconds => '5 秒后';
+
+  @override
+  String get appLockTimingTenSeconds => '10 秒后';
+
+  @override
+  String get appLockTimingFifteenSeconds => '15 秒后';
+
+  @override
+  String get appLockPinInputAccessibility => 'PIN 输入';
+
+  @override
+  String get appLockPatternInputAccessibility => '图案输入';
+
+  @override
+  String get appLockPatternPointAccessibility => '图案点';
 }

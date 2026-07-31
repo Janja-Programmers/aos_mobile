@@ -68,9 +68,7 @@ class GoRouterProtectedNavigationExecutor
         _router
             .pushNamed<void>(
               AppRoutes.nAdDetails,
-              pathParameters: <String, String>{
-                'id': destination.canonicalId!,
-              },
+              pathParameters: <String, String>{'id': destination.canonicalId!},
             )
             .ignore();
         return;

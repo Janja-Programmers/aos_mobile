@@ -16,10 +16,7 @@ class WishlistState {
     return overrides[id] ?? fallback;
   }
 
-  WishlistState copyWith({
-    Map<String, bool>? overrides,
-    Set<String>? pending,
-  }) {
+  WishlistState copyWith({Map<String, bool>? overrides, Set<String>? pending}) {
     return WishlistState(
       overrides: overrides ?? this.overrides,
       pending: pending ?? this.pending,

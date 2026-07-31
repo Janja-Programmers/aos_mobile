@@ -75,10 +75,7 @@ class _AdDetailsScreenState extends ConsumerState<AdDetailsScreen> {
         .toggle(ad.id, currentValue: ad.isWishlisted);
 
     if (!success && mounted) {
-      ShowSnack(
-        context,
-        context.l10n.wishlist_update_error,
-      ).error();
+      ShowSnack(context, context.l10n.wishlist_update_error).error();
     }
   }
 

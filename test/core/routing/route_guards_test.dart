@@ -20,6 +20,18 @@ void main() {
     });
 
     test(
+      'app lock protects authenticated account content without making the guest account route private',
+      () {
+        expect(RouteGuards.isProtectedRoute(AppRoutes.account), isFalse);
+        expect(RouteGuards.isAppLockProtectedRoute(AppRoutes.account), isTrue);
+        expect(
+          RouteGuards.isAppLockProtectedRoute('/ads/detail/AD-1'),
+          isFalse,
+        );
+      },
+    );
+
+    test(
       'recognizes only exact auth route paths after removing query data',
       () {
         expect(RouteGuards.isAuthRoute('/login?redirect=%2Fconnect'), isTrue);

@@ -669,4 +669,26 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get ad_media_saved_to_gallery => 'Image enregistrée dans la galerie.';
+
+  @override
+  String get liveLikeAction => 'Aimer le direct';
+
+  @override
+  String get liveShareAction => 'Partager le direct';
+
+  @override
+  String get liveMuteAction => 'Couper le microphone';
+
+  @override
+  String get liveUnmuteAction => 'Activer le microphone';
+
+  @override
+  String get liveFlipCameraAction => 'Changer de caméra';
+
+  @override
+  String get watchThisLiveOnAos => 'Regardez ce direct sur AOS';
+
+  @override
+  String get unableToOpenShareOptions =>
+      'Impossible d’ouvrir les options de partage.';
 }

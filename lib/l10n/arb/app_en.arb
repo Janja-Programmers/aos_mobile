@@ -353,5 +353,19 @@
   "ad_media_download_image": "Download image",
   "@ad_media_download_image": {},
   "ad_media_saved_to_gallery": "Image saved to gallery.",
-  "@ad_media_saved_to_gallery": {}
+  "@ad_media_saved_to_gallery": {},
+  "liveLikeAction": "Like live",
+  "@liveLikeAction": {},
+  "liveShareAction": "Share live",
+  "@liveShareAction": {},
+  "liveMuteAction": "Mute microphone",
+  "@liveMuteAction": {},
+  "liveUnmuteAction": "Unmute microphone",
+  "@liveUnmuteAction": {},
+  "liveFlipCameraAction": "Flip camera",
+  "@liveFlipCameraAction": {},
+  "watchThisLiveOnAos": "Watch this live on AOS",
+  "@watchThisLiveOnAos": {},
+  "unableToOpenShareOptions": "Unable to open share options.",
+  "@unableToOpenShareOptions": {}
 }

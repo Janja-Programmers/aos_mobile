@@ -1327,6 +1327,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Image saved to gallery.'**
   String get ad_media_saved_to_gallery;
+
+  /// No description provided for @liveLikeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Like live'**
+  String get liveLikeAction;
+
+  /// No description provided for @liveShareAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share live'**
+  String get liveShareAction;
+
+  /// No description provided for @liveMuteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute microphone'**
+  String get liveMuteAction;
+
+  /// No description provided for @liveUnmuteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute microphone'**
+  String get liveUnmuteAction;
+
+  /// No description provided for @liveFlipCameraAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Flip camera'**
+  String get liveFlipCameraAction;
+
+  /// No description provided for @watchThisLiveOnAos.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch this live on AOS'**
+  String get watchThisLiveOnAos;
+
+  /// No description provided for @unableToOpenShareOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to open share options.'**
+  String get unableToOpenShareOptions;
 }
 
 class _AppLocalizationsDelegate

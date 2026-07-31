@@ -13,6 +13,7 @@ class ShortMapper {
     return Short(
       id: ShortId(model.id),
       playbackUrl: model.playbackUrl,
+      processedFileUrl: model.processedFileUrl,
       thumbnailUrl: model.thumbnailUrl,
       durationSeconds: model.durationSeconds,
       contentMode: model.contentMode,

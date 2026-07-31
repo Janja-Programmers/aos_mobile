@@ -10,6 +10,7 @@ class ShortModel {
   final String id;
 
   final String playbackUrl;
+  final String? processedFileUrl;
   final String? thumbnailUrl;
   final double durationSeconds;
 
@@ -41,6 +42,7 @@ class ShortModel {
   const ShortModel({
     required this.id,
     required this.playbackUrl,
+    this.processedFileUrl,
     this.thumbnailUrl,
     required this.durationSeconds,
     required this.contentMode,
@@ -68,6 +70,7 @@ class ShortModel {
     return ShortModel(
       id: json['id']?.toString() ?? '',
       playbackUrl: json['playback_url']?.toString() ?? '',
+      processedFileUrl: json['processed_file_url']?.toString(),
       thumbnailUrl: json['thumbnail_url']?.toString(),
       durationSeconds: _toDouble(json['duration_seconds']),
       contentMode: _parseContentMode(json['content_mode']),

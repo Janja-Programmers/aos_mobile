@@ -666,4 +666,26 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get ad_media_saved_to_gallery => 'Picha imehifadhiwa kwenye matunzio.';
+
+  @override
+  String get liveLikeAction => 'Penda mubashara';
+
+  @override
+  String get liveShareAction => 'Shiriki mubashara';
+
+  @override
+  String get liveMuteAction => 'Zima maikrofoni';
+
+  @override
+  String get liveUnmuteAction => 'Washa maikrofoni';
+
+  @override
+  String get liveFlipCameraAction => 'Geuza kamera';
+
+  @override
+  String get watchThisLiveOnAos => 'Tazama mubashara huu kwenye AOS';
+
+  @override
+  String get unableToOpenShareOptions =>
+      'Imeshindikana kufungua chaguo za kushiriki.';
 }

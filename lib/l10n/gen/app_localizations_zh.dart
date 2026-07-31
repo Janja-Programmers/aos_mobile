@@ -627,4 +627,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ad_media_saved_to_gallery => '图片已保存到图库。';
+
+  @override
+  String get liveLikeAction => '点赞直播';
+
+  @override
+  String get liveShareAction => '分享直播';
+
+  @override
+  String get liveMuteAction => '关闭麦克风';
+
+  @override
+  String get liveUnmuteAction => '打开麦克风';
+
+  @override
+  String get liveFlipCameraAction => '切换摄像头';
+
+  @override
+  String get watchThisLiveOnAos => '在 AOS 上观看此直播';
+
+  @override
+  String get unableToOpenShareOptions => '无法打开分享选项。';
 }

@@ -242,5 +242,19 @@
   "ad_media_download_image": "Télécharger l’image",
   "@ad_media_download_image": {},
   "ad_media_saved_to_gallery": "Image enregistrée dans la galerie.",
-  "@ad_media_saved_to_gallery": {}
+  "@ad_media_saved_to_gallery": {},
+  "liveLikeAction": "Aimer le direct",
+  "@liveLikeAction": {},
+  "liveShareAction": "Partager le direct",
+  "@liveShareAction": {},
+  "liveMuteAction": "Couper le microphone",
+  "@liveMuteAction": {},
+  "liveUnmuteAction": "Activer le microphone",
+  "@liveUnmuteAction": {},
+  "liveFlipCameraAction": "Changer de caméra",
+  "@liveFlipCameraAction": {},
+  "watchThisLiveOnAos": "Regardez ce direct sur AOS",
+  "@watchThisLiveOnAos": {},
+  "unableToOpenShareOptions": "Impossible d’ouvrir les options de partage.",
+  "@unableToOpenShareOptions": {}
 }

@@ -45,6 +45,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
   bool _hasMore = true;
   bool _isLoading = false;
   bool _isLoadingMore = false;
+  int _requestGeneration = 0;
 
   bool get _canLoadMore {
     return !_isLoading &&
@@ -62,7 +63,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
       ref.read(liveApiProvider),
     );
 
-    _loadInitial();
+    unawaited(_loadInitial());
     _scrollController.addListener(_onScroll);
   }
 
@@ -81,18 +82,24 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
 
     if (oldWidget.contentMode != widget.contentMode ||
         oldWidget.feedType != widget.feedType) {
-      _loadInitial();
+      unawaited(_loadInitial());
+
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(0);
+      }
     }
   }
 
   Future<({List<Object> items, String? nextCursor, bool hasMore})> _fetchPage({
+    required ShortsFeedType feedType,
+    required String? contentMode,
     String? cursor,
   }) async {
-    switch (widget.feedType) {
+    switch (feedType) {
       case ShortsFeedType.forYou:
         final page = await _repository.fetchForYou(
           cursor: cursor,
-          contentMode: widget.contentMode,
+          contentMode: contentMode,
         );
         return (
           items: <Object>[...page.items],
@@ -103,7 +110,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
       case ShortsFeedType.following:
         final page = await _repository.fetchFollowing(
           cursor: cursor,
-          contentMode: widget.contentMode,
+          contentMode: contentMode,
         );
         return (
           items: <Object>[...page.items],
@@ -122,30 +129,33 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
   }
 
   Future<void> _loadInitial() async {
-    if (_isLoading) return;
+    final generation = ++_requestGeneration;
+    final feedType = widget.feedType;
+    final contentMode = widget.contentMode;
 
     setState(() {
       _isLoading = true;
       _isLoadingMore = false;
+      _items.clear();
       _nextCursor = null;
       _hasMore = true;
     });
 
     try {
-      final page = await _fetchPage();
+      final page = await _fetchPage(
+        feedType: feedType,
+        contentMode: contentMode,
+      );
 
-      if (!mounted) return;
+      if (!mounted || generation != _requestGeneration) return;
 
       setState(() {
-        _items
-          ..clear()
-          ..addAll(page.items);
-
+        _items.addAll(page.items);
         _nextCursor = page.nextCursor;
         _hasMore = page.hasMore;
       });
-    } catch (e) {
-      if (!mounted) return;
+    } catch (_) {
+      if (!mounted || generation != _requestGeneration) return;
 
       setState(() {
         _items.clear();
@@ -153,7 +163,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
         _hasMore = false;
       });
     } finally {
-      if (mounted) {
+      if (mounted && generation == _requestGeneration) {
         setState(() => _isLoading = false);
       }
     }
@@ -166,12 +176,20 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
 
     if (cursor == null || cursor.isEmpty) return;
 
+    final generation = _requestGeneration;
+    final feedType = widget.feedType;
+    final contentMode = widget.contentMode;
+
     setState(() => _isLoadingMore = true);
 
     try {
-      final page = await _fetchPage(cursor: cursor);
+      final page = await _fetchPage(
+        feedType: feedType,
+        contentMode: contentMode,
+        cursor: cursor,
+      );
 
-      if (!mounted) return;
+      if (!mounted || generation != _requestGeneration) return;
 
       setState(() {
         _items.addAll(page.items);
@@ -180,7 +198,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
       });
     } catch (_) {
     } finally {
-      if (mounted) {
+      if (mounted && generation == _requestGeneration) {
         setState(() => _isLoadingMore = false);
       }
     }

@@ -28,3 +28,4 @@ The first recommended feature is **authentication and session** because it estab
 
 - [Ad creation](ad-creation.md)
 - [Ad detail gallery download](ad-detail-media-download.md)
+- [Shorts Feed and media sharing](shorts-live-feed-sharing.md)

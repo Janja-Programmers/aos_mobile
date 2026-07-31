@@ -654,4 +654,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ad_media_saved_to_gallery => 'تم حفظ الصورة في المعرض.';
+
+  @override
+  String get liveLikeAction => 'الإعجاب بالبث المباشر';
+
+  @override
+  String get liveShareAction => 'مشاركة البث المباشر';
+
+  @override
+  String get liveMuteAction => 'كتم الميكروفون';
+
+  @override
+  String get liveUnmuteAction => 'إلغاء كتم الميكروفون';
+
+  @override
+  String get liveFlipCameraAction => 'تبديل الكاميرا';
+
+  @override
+  String get watchThisLiveOnAos => 'شاهد هذا البث المباشر على AOS';
+
+  @override
+  String get unableToOpenShareOptions => 'تعذر فتح خيارات المشاركة.';
 }

@@ -242,5 +242,19 @@
   "ad_media_download_image": "Pakua picha",
   "@ad_media_download_image": {},
   "ad_media_saved_to_gallery": "Picha imehifadhiwa kwenye matunzio.",
-  "@ad_media_saved_to_gallery": {}
+  "@ad_media_saved_to_gallery": {},
+  "liveLikeAction": "Penda mubashara",
+  "@liveLikeAction": {},
+  "liveShareAction": "Shiriki mubashara",
+  "@liveShareAction": {},
+  "liveMuteAction": "Zima maikrofoni",
+  "@liveMuteAction": {},
+  "liveUnmuteAction": "Washa maikrofoni",
+  "@liveUnmuteAction": {},
+  "liveFlipCameraAction": "Geuza kamera",
+  "@liveFlipCameraAction": {},
+  "watchThisLiveOnAos": "Tazama mubashara huu kwenye AOS",
+  "@watchThisLiveOnAos": {},
+  "unableToOpenShareOptions": "Imeshindikana kufungua chaguo za kushiriki.",
+  "@unableToOpenShareOptions": {}
 }

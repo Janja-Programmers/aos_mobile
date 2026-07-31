@@ -242,5 +242,19 @@
   "ad_media_download_image": "下载图片",
   "@ad_media_download_image": {},
   "ad_media_saved_to_gallery": "图片已保存到图库。",
-  "@ad_media_saved_to_gallery": {}
+  "@ad_media_saved_to_gallery": {},
+  "liveLikeAction": "点赞直播",
+  "@liveLikeAction": {},
+  "liveShareAction": "分享直播",
+  "@liveShareAction": {},
+  "liveMuteAction": "关闭麦克风",
+  "@liveMuteAction": {},
+  "liveUnmuteAction": "打开麦克风",
+  "@liveUnmuteAction": {},
+  "liveFlipCameraAction": "切换摄像头",
+  "@liveFlipCameraAction": {},
+  "watchThisLiveOnAos": "在 AOS 上观看此直播",
+  "@watchThisLiveOnAos": {},
+  "unableToOpenShareOptions": "无法打开分享选项。",
+  "@unableToOpenShareOptions": {}
 }

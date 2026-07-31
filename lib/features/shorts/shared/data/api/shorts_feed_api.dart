@@ -9,6 +9,7 @@ import 'package:africaonlinestores/features/shorts/shared/data/models/short_feed
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_grid_page.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class ShortsFeedApi {
   final ApiClient _client;
@@ -21,12 +22,11 @@ class ShortsFeedApi {
     String? contentMode,
   }) async {
     try {
-      final query = <String, dynamic>{
-        'limit': ?limit,
-        if (cursor?.isNotEmpty ?? false) 'cursor': cursor,
-        if (contentMode?.trim().isNotEmpty ?? false)
-          'content_mode': contentMode!.trim(),
-      };
+      final query = buildFeedQueryParameters(
+        limit: limit,
+        cursor: cursor,
+        contentMode: contentMode,
+      );
 
       final res = await _client.get(
         ApiEndpoints.shortsFeedForYou,
@@ -72,13 +72,12 @@ class ShortsFeedApi {
     String? contentMode,
   }) async {
     try {
-      final params = <String, dynamic>{
-        'limit': ?limit,
-        if (cursor?.isNotEmpty ?? false) 'cursor': cursor,
-        if (query?.trim().isNotEmpty ?? false) 'search': query!.trim(),
-        if (contentMode?.trim().isNotEmpty ?? false)
-          'content_mode': contentMode!.trim(),
-      };
+      final params = buildFeedQueryParameters(
+        limit: limit,
+        cursor: cursor,
+        contentMode: contentMode,
+        search: query,
+      );
 
       final res = await _client.get(
         ApiEndpoints.shortsFeedFollowing,
@@ -156,6 +155,26 @@ class ShortsFeedApi {
     } catch (e) {
       return Either.left(Failure('Unexpected error fetching ad feed: $e'));
     }
+  }
+
+  @visibleForTesting
+  static Map<String, dynamic> buildFeedQueryParameters({
+    int? limit,
+    String? cursor,
+    String? contentMode,
+    String? search,
+  }) {
+    final normalizedCursor = cursor?.trim() ?? '';
+    final normalizedSearch = search?.trim() ?? '';
+
+    return <String, dynamic>{
+      'limit': ?limit,
+      if (normalizedCursor.isNotEmpty) 'cursor': normalizedCursor,
+      if (normalizedSearch.isNotEmpty) 'search': normalizedSearch,
+      // Match the explicit blank request proven against the deployed API;
+      // backend source normalizes this value as the unfiltered All feed.
+      'content_mode': contentMode?.trim() ?? '',
+    };
   }
 
   static Map<String, dynamic> _payload(

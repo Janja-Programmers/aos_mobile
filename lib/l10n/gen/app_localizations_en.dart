@@ -664,4 +664,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ad_media_saved_to_gallery => 'Image saved to gallery.';
+
+  @override
+  String get liveLikeAction => 'Like live';
+
+  @override
+  String get liveShareAction => 'Share live';
+
+  @override
+  String get liveMuteAction => 'Mute microphone';
+
+  @override
+  String get liveUnmuteAction => 'Unmute microphone';
+
+  @override
+  String get liveFlipCameraAction => 'Flip camera';
+
+  @override
+  String get watchThisLiveOnAos => 'Watch this live on AOS';
+
+  @override
+  String get unableToOpenShareOptions => 'Unable to open share options.';
 }

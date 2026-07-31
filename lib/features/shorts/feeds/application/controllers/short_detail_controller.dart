@@ -440,7 +440,10 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
             ShareParams(
               title: 'Share short',
               subject: 'Check out this short',
-              text: _buildShareText(short, shareResult.shareUrl),
+              text: _buildShareText(
+                short,
+                short.preferredPublicShareUrl ?? shareResult.shareUrl,
+              ),
             ),
           );
         } catch (e) {
@@ -732,7 +735,7 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     );
   }
 
-  String _buildShareText(Short short, String shareUrl) {
+  String _buildShareText(Short short, String targetUrl) {
     final title = short.caption.toString().trim();
     final buffer = StringBuffer();
 
@@ -742,7 +745,7 @@ class ShortDetailController extends StateNotifier<ShortDetailState> {
     }
 
     buffer.writeln('Check out this short on AOS');
-    buffer.writeln(shareUrl);
+    buffer.writeln(targetUrl);
 
     return buffer.toString().trim();
   }

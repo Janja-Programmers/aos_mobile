@@ -6,6 +6,7 @@ import 'package:africaonlinestores/core/media/livekit_track_events.dart';
 import 'package:africaonlinestores/core/realtime/realtime_event.dart';
 import 'package:africaonlinestores/core/realtime/realtime_event_type.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
+import 'package:africaonlinestores/core/sharing/aos_share_links.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/live/application/controllers/live_cohost_controller.dart';
@@ -22,10 +23,12 @@ import 'package:africaonlinestores/features/live/presentation/widgets/live_chat_
 import 'package:africaonlinestores/features/live/presentation/widgets/live_input_bar.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_right_actions.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_top_bar.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
+import 'package:share_plus/share_plus.dart';
 
 class LiveScreen extends ConsumerStatefulWidget {
   final String? liveId;
@@ -214,6 +217,40 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
         _remoteVideoTrack = null;
       });
       return;
+    }
+  }
+
+  Future<void> _shareLive({
+    required String liveId,
+    String? title,
+  }) async {
+    try {
+      final link = AosShareLinks.live(liveId);
+      final normalizedTitle = title?.trim() ?? '';
+      final text = StringBuffer();
+
+      if (normalizedTitle.isNotEmpty) {
+        text
+          ..writeln(normalizedTitle)
+          ..writeln();
+      }
+
+      text
+        ..writeln(context.l10n.watchThisLiveOnAos)
+        ..write(link);
+
+      await SharePlus.instance.share(
+        ShareParams(
+          title: context.l10n.liveShareAction,
+          subject: context.l10n.watchThisLiveOnAos,
+          text: text.toString(),
+        ),
+      );
+    } catch (error) {
+      debugPrint('Open live share intent failed: $error');
+      if (mounted) {
+        ShowSnack(context, context.l10n.unableToOpenShareOptions).error();
+      }
     }
   }
 
@@ -559,6 +596,12 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
             ),
             LiveRightActions(
               onLike: () => unawaited(manager.sendReaction()),
+              onShare: () => unawaited(
+                _shareLive(
+                  liveId: state.session!.liveId,
+                  title: state.live?.title,
+                ),
+              ),
               onFlip: state.isBroadcaster
                   ? () => unawaited(manager.flipCamera())
                   : () {},

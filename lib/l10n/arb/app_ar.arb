@@ -242,5 +242,19 @@
   "ad_media_download_image": "تنزيل الصورة",
   "@ad_media_download_image": {},
   "ad_media_saved_to_gallery": "تم حفظ الصورة في المعرض.",
-  "@ad_media_saved_to_gallery": {}
+  "@ad_media_saved_to_gallery": {},
+  "liveLikeAction": "الإعجاب بالبث المباشر",
+  "@liveLikeAction": {},
+  "liveShareAction": "مشاركة البث المباشر",
+  "@liveShareAction": {},
+  "liveMuteAction": "كتم الميكروفون",
+  "@liveMuteAction": {},
+  "liveUnmuteAction": "إلغاء كتم الميكروفون",
+  "@liveUnmuteAction": {},
+  "liveFlipCameraAction": "تبديل الكاميرا",
+  "@liveFlipCameraAction": {},
+  "watchThisLiveOnAos": "شاهد هذا البث المباشر على AOS",
+  "@watchThisLiveOnAos": {},
+  "unableToOpenShareOptions": "تعذر فتح خيارات المشاركة.",
+  "@unableToOpenShareOptions": {}
 }

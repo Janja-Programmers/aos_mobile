@@ -14,6 +14,7 @@ class Short extends Equatable {
   final List<String> hashtags;
 
   final String playbackUrl;
+  final String? processedFileUrl;
   final String? thumbnailUrl;
   final double durationSeconds;
 
@@ -40,6 +41,7 @@ class Short extends Equatable {
   const Short({
     required this.id,
     required this.playbackUrl,
+    this.processedFileUrl,
     this.thumbnailUrl,
     required this.durationSeconds,
     required this.contentMode,
@@ -76,6 +78,21 @@ class Short extends Equatable {
       audioMixStatus == 'pending' || audioMixStatus == 'processing';
   bool get hasAudioMixFailed => audioMixStatus == 'failed';
 
+  /// A direct public media URL is safe to share only for public, playable
+  /// shorts. The backend share endpoint remains the fallback for restricted
+  /// audiences and for incomplete media processing.
+  String? get preferredPublicShareUrl {
+    if (!isPlayable || visibilityStatus.trim().toLowerCase() != 'visible') {
+      return null;
+    }
+    if (audience.trim().toLowerCase() != 'everyone') return null;
+
+    final mp4Url = _validPublicMediaUrl(processedFileUrl);
+    final streamUrl = _validPublicMediaUrl(playbackUrl);
+
+    return allowDownloads ? mp4Url ?? streamUrl : streamUrl;
+  }
+
   bool get isLiked => viewerState.liked;
   bool get isReposted => viewerState.isReposted;
   bool get canRepost => viewerState.canRepost;
@@ -95,6 +112,7 @@ class Short extends Equatable {
 
   Short copyWith({
     String? playbackUrl,
+    String? processedFileUrl,
     String? thumbnailUrl,
     double? durationSeconds,
     String? contentMode,
@@ -120,6 +138,7 @@ class Short extends Equatable {
     return Short(
       id: id,
       playbackUrl: playbackUrl ?? this.playbackUrl,
+      processedFileUrl: processedFileUrl ?? this.processedFileUrl,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       durationSeconds: durationSeconds ?? this.durationSeconds,
       contentMode: contentMode ?? this.contentMode,
@@ -148,6 +167,7 @@ class Short extends Equatable {
   List<Object?> get props => [
     id,
     playbackUrl,
+    processedFileUrl,
     thumbnailUrl,
     durationSeconds,
     contentMode,
@@ -170,4 +190,15 @@ class Short extends Equatable {
     postedAt,
     viewerState,
   ];
+}
+
+String? _validPublicMediaUrl(String? raw) {
+  final value = raw?.trim() ?? '';
+  if (value.isEmpty) return null;
+
+  final uri = Uri.tryParse(value);
+  if (uri == null || !uri.hasAuthority) return null;
+  if (uri.scheme != 'https' && uri.scheme != 'http') return null;
+
+  return uri.toString();
 }

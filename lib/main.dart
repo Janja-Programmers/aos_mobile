@@ -34,6 +34,7 @@ import 'package:africaonlinestores/features/notifications/application/providers/
 import 'package:africaonlinestores/features/notifications/application/services/in_app_banner_listener.dart';
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/listeners/upload_short_listener.dart';
+import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/firebase_options.dart';
 import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/widgets/active_call_overlay.dart';
@@ -238,6 +239,16 @@ class _AppRootState extends ConsumerState<AppRoot> {
             email: next.user.email,
           );
         }
+
+        unawaited(
+          ref
+              .read(shortPublishingCoordinatorProvider)
+              .resumePending(
+                ownerId: next.user.accountId.isNotEmpty
+                    ? next.user.accountId
+                    : next.user.email,
+              ),
+        );
 
         // 🔔 Initialize Push Notifications
         try {

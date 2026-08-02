@@ -55,15 +55,18 @@ void main() {
       expect(short.preferredPublicShareUrl, hlsUrl);
     });
 
-    test('does not expose MP4 when downloads are disabled and HLS is absent', () {
-      final short = _short(
-        processedFileUrl: mp4Url,
-        playbackUrl: '',
-        allowDownloads: false,
-      );
+    test(
+      'does not expose MP4 when downloads are disabled and HLS is absent',
+      () {
+        final short = _short(
+          processedFileUrl: mp4Url,
+          playbackUrl: '',
+          allowDownloads: false,
+        );
 
-      expect(short.preferredPublicShareUrl, isNull);
-    });
+        expect(short.preferredPublicShareUrl, isNull);
+      },
+    );
 
     test('does not expose direct media for restricted audiences', () {
       final short = _short(

@@ -79,7 +79,7 @@ class ShortsSoundsApi {
       final unwrapped = unwrapFrappe(res);
       return unwrapped.fold(Either.left, (json) {
         final soundJson = _data(json)['sound'];
-        if (soundJson is! Map) {
+        if (soundJson is! Map<Object?, Object?>) {
           return Either.left(const Failure('Unexpected sound response'));
         }
         return Either.right(ShortSound.fromJson(asJsonMap(soundJson)));
@@ -145,7 +145,7 @@ class ShortsSoundsApi {
       final unwrapped = unwrapFrappe(res);
       return unwrapped.fold(Either.left, (json) {
         final soundJson = _data(json)['sound'];
-        if (soundJson is! Map) {
+        if (soundJson is! Map<Object?, Object?>) {
           return Either.left(const Failure('Unexpected sound response'));
         }
         return Either.right(ShortSound.fromJson(asJsonMap(soundJson)));

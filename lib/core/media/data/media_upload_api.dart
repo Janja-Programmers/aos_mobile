@@ -10,6 +10,8 @@ import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:dio/dio.dart';
 
+enum MediaUploadStage { initializing, uploading, confirming }
+
 class MediaUploadApi {
   MediaUploadApi(this._client, {Dio? uploadDio})
     : _uploadDio =
@@ -28,6 +30,9 @@ class MediaUploadApi {
   Future<Either<Failure, MediaUploadResult>> uploadMedia({
     required File file,
     required String purpose,
+    String? idempotencyKey,
+    CancelToken? cancelToken,
+    void Function(MediaUploadStage stage)? onStage,
     void Function(int sent, int total)? onSendProgress,
   }) async {
     try {
@@ -39,11 +44,13 @@ class MediaUploadApi {
         return Either.left(const Failure('File is empty.'));
       }
 
+      onStage?.call(MediaUploadStage.initializing);
       final init = await initUpload(
         purpose: purpose,
         filename: prepared.filename,
         contentType: prepared.contentType,
         sizeBytes: prepared.sizeBytes,
+        idempotencyKey: idempotencyKey,
       );
 
       if (init.isLeft) {
@@ -55,18 +62,21 @@ class MediaUploadApi {
         return Either.left(const Failure('Upload could not be initialized.'));
       }
 
+      onStage?.call(MediaUploadStage.uploading);
       final putResult = await putToMinio(
         file: file,
         init: initData,
         contentType: prepared.contentType,
         sizeBytes: prepared.sizeBytes,
         onSendProgress: onSendProgress,
+        cancelToken: cancelToken,
       );
 
       if (putResult.isLeft) {
         return Either.left(putResult.leftOrNull!);
       }
 
+      onStage?.call(MediaUploadStage.confirming);
       return confirmUpload(mediaId: initData.mediaId);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
@@ -82,6 +92,7 @@ class MediaUploadApi {
     required String filename,
     required String contentType,
     required int sizeBytes,
+    String? idempotencyKey,
   }) async {
     try {
       final res = await _client.post(
@@ -92,6 +103,8 @@ class MediaUploadApi {
           'content_type': contentType,
           'size_bytes': sizeBytes,
           'filesize': sizeBytes,
+          if (idempotencyKey?.trim().isNotEmpty ?? false)
+            'idempotency_key': idempotencyKey!.trim(),
         },
       );
 
@@ -120,6 +133,8 @@ class MediaUploadApi {
     required MediaUploadInitResponse init,
     required String contentType,
     required int sizeBytes,
+    CancelToken? cancelToken,
+    void Function(MediaUploadStage stage)? onStage,
     void Function(int sent, int total)? onSendProgress,
   }) async {
     try {
@@ -146,6 +161,7 @@ class MediaUploadApi {
           responseType: ResponseType.plain,
         ),
         onSendProgress: onSendProgress,
+        cancelToken: cancelToken,
       );
 
       return Either.right(null);

@@ -3,27 +3,47 @@ import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:dio/dio.dart';
 
-/// Helpers for dealing with Frappe-style responses.
-///
-/// Frappe often wraps responses like: {"message": {...}}
+/// Unwraps the Frappe response envelope while preserving backend error IDs.
 Either<Failure, Map<String, dynamic>> unwrapFrappe(Response<Object?> res) {
-  final data = res.data;
   try {
-    if (data is Map && data['message'] is Map) {
-      return Either.right(asJsonMap(data['message'] as Map));
+    final raw = res.data;
+    if (raw is! Map<Object?, Object?>) {
+      return Either.left(
+        const Failure(
+          'Unexpected response from server',
+          type: FailureType.parse,
+        ),
+      );
     }
 
-    if (data is Map && data.containsKey('message') && data['message'] is! Map) {
-      return Either.right({'ok': true, 'message': data['message'].toString()});
+    final root = asJsonMap(raw);
+    final Object? message = root['message'];
+    final Map<String, dynamic> payload = message is Map<Object?, Object?>
+        ? asJsonMap(message)
+        : root;
+
+    if (payload['ok'] == false || _hasError(payload)) {
+      return Either.left(
+        Failure.fromServerPayload(payload, statusCode: res.statusCode),
+      );
     }
 
-    if (data is Map) {
-      return Either.right(asJsonMap(data));
+    if (message != null && message is! Map<Object?, Object?>) {
+      return Either.right(<String, dynamic>{
+        'ok': true,
+        'message': message.toString(),
+      });
     }
+
+    return Either.right(payload);
   } catch (_) {
-    // fall through to parse failure
+    return Either.left(
+      const Failure('Unexpected response from server', type: FailureType.parse),
+    );
   }
-  return Either.left(
-    const Failure('Unexpected response from server', type: FailureType.parse),
-  );
+}
+
+bool _hasError(Map<String, dynamic> payload) {
+  final error = payload['error']?.toString().trim() ?? '';
+  return error.isNotEmpty && error.toLowerCase() != 'null';
 }

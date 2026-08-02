@@ -22,3 +22,5 @@ must not redefine backend contracts.
 ## Security
 
 - [Native application lock](features/native-app-lock.md)
+
+- [Shorts creation and publishing](features/shorts-creation-publishing.md)

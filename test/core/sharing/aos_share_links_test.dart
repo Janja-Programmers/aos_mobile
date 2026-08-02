@@ -12,10 +12,7 @@ void main() {
       expect(link.queryParameters, <String, String>{
         'live_id': 'LIVE-2026-00042',
       });
-      expect(
-        link.toString(),
-        'aos://open/live/room?live_id=LIVE-2026-00042',
-      );
+      expect(link.toString(), 'aos://open/live/room?live_id=LIVE-2026-00042');
     });
 
     test('rejects an empty live ID', () {

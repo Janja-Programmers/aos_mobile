@@ -12,31 +12,13 @@ enum UploadStatus {
   initializing,
   uploading,
   confirming,
+  publishing,
   processing,
   ready,
   failed,
 }
 
 class UploadState extends Equatable {
-  final UploadStatus status;
-  final ShortId? shortId;
-  final Short? short;
-
-  final List<SelectedMedia> media;
-
-  final String contentMode;
-  final String? selectedAdId;
-  final AOSAdListItem? selectedAdPreview;
-  final String caption;
-  final List<String> hashtags;
-  final String audience;
-  final bool allowComments;
-  final bool allowDownloads;
-  final ShortSound selectedSound;
-
-  final double progress;
-  final String? errorMessage;
-
   const UploadState({
     required this.status,
     required this.shortId,
@@ -50,53 +32,73 @@ class UploadState extends Equatable {
     required this.audience,
     required this.allowComments,
     required this.allowDownloads,
+    required this.saveToDevice,
+    required this.savedToDevice,
     required this.selectedSound,
     required this.progress,
     required this.errorMessage,
   });
 
-  factory UploadState.initial() {
-    return const UploadState(
-      status: UploadStatus.idle,
-      shortId: null,
-      short: null,
-      media: [],
-      contentMode: ShortContentModes.shop,
-      selectedAdId: null,
-      selectedAdPreview: null,
-      caption: '',
-      hashtags: [],
-      audience: 'everyone',
-      allowComments: true,
-      allowDownloads: false,
-      selectedSound: ShortSound.original,
-      progress: 0,
-      errorMessage: null,
-    );
-  }
+  factory UploadState.initial() => const UploadState(
+    status: UploadStatus.idle,
+    shortId: null,
+    short: null,
+    media: <SelectedMedia>[],
+    contentMode: ShortContentModes.geo,
+    selectedAdId: null,
+    selectedAdPreview: null,
+    caption: '',
+    hashtags: <String>[],
+    audience: 'everyone',
+    allowComments: true,
+    allowDownloads: false,
+    saveToDevice: false,
+    savedToDevice: false,
+    selectedSound: ShortSound.original,
+    progress: 0,
+    errorMessage: null,
+  );
 
-  bool get isBusy =>
-      status == UploadStatus.initializing ||
-      status == UploadStatus.uploading ||
-      status == UploadStatus.confirming ||
-      status == UploadStatus.processing;
+  final UploadStatus status;
+  final ShortId? shortId;
+  final Short? short;
+  final List<SelectedMedia> media;
+  final String contentMode;
+  final String? selectedAdId;
+  final AOSAdListItem? selectedAdPreview;
+  final String caption;
+  final List<String> hashtags;
+  final String audience;
+  final bool allowComments;
+  final bool allowDownloads;
+  final bool saveToDevice;
+  final bool savedToDevice;
+  final ShortSound selectedSound;
+  final double progress;
+  final String? errorMessage;
+
+  bool get isBusy => switch (status) {
+    UploadStatus.initializing ||
+    UploadStatus.uploading ||
+    UploadStatus.confirming ||
+    UploadStatus.publishing ||
+    UploadStatus.processing => true,
+    _ => false,
+  };
 
   bool get isReady => status == UploadStatus.ready;
   bool get hasError => status == UploadStatus.failed;
   bool get hasMedia => media.isNotEmpty;
-  SelectedMedia? get primaryMedia => media.isNotEmpty ? media.first : null;
+  SelectedMedia? get primaryMedia => media.isEmpty ? null : media.first;
   bool get requiresAd => ShortContentModes.requiresAd(contentMode);
-
-  bool get hasSelectedAd =>
-      selectedAdId != null && selectedAdId!.trim().isNotEmpty;
+  bool get hasSelectedAd => selectedAdId?.trim().isNotEmpty ?? false;
+  bool get isVideo => primaryMedia?.type == MediaType.video;
 
   bool get canUpload {
-    if (!hasMedia || isBusy) return false;
+    if (!hasMedia || !isVideo || isBusy || shortId != null) return false;
     if (requiresAd && !hasSelectedAd) return false;
     return true;
   }
-
-  bool get isVideo => primaryMedia?.type == MediaType.video;
 
   UploadState copyWith({
     UploadStatus? status,
@@ -111,6 +113,8 @@ class UploadState extends Equatable {
     String? audience,
     bool? allowComments,
     bool? allowDownloads,
+    bool? saveToDevice,
+    bool? savedToDevice,
     ShortSound? selectedSound,
     double? progress,
     String? errorMessage,
@@ -121,26 +125,32 @@ class UploadState extends Equatable {
     return UploadState(
       status: status ?? this.status,
       shortId: shortId ?? this.shortId,
-      short: clearShort ? null : (short ?? this.short),
-      media: media ?? this.media,
+      short: clearShort ? null : short ?? this.short,
+      media: media == null
+          ? this.media
+          : List<SelectedMedia>.unmodifiable(media),
       contentMode: contentMode ?? this.contentMode,
       selectedAdId: clearSelectedAd ? null : selectedAdId ?? this.selectedAdId,
       selectedAdPreview: clearSelectedAd
           ? null
           : selectedAdPreview ?? this.selectedAdPreview,
       caption: caption ?? this.caption,
-      hashtags: hashtags != null ? List.unmodifiable(hashtags) : this.hashtags,
+      hashtags: hashtags == null
+          ? this.hashtags
+          : List<String>.unmodifiable(hashtags),
       audience: audience ?? this.audience,
       allowComments: allowComments ?? this.allowComments,
       allowDownloads: allowDownloads ?? this.allowDownloads,
+      saveToDevice: saveToDevice ?? this.saveToDevice,
+      savedToDevice: savedToDevice ?? this.savedToDevice,
       selectedSound: selectedSound ?? this.selectedSound,
       progress: progress ?? this.progress,
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 
   @override
-  List<Object?> get props => [
+  List<Object?> get props => <Object?>[
     status,
     shortId,
     short,
@@ -153,6 +163,8 @@ class UploadState extends Equatable {
     audience,
     allowComments,
     allowDownloads,
+    saveToDevice,
+    savedToDevice,
     selectedSound,
     progress,
     errorMessage,

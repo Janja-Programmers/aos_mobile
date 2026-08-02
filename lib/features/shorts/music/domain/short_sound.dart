@@ -66,9 +66,32 @@ class ShortSound extends Equatable {
     return '$minutes:${remainder.toString().padLeft(2, '0')}';
   }
 
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'id': id,
+    'title': title,
+    'artist': artist,
+    'source_type': sourceType,
+    'file_url': fileUrl,
+    'duration_seconds': durationSeconds,
+    'usage_count': usageCount,
+    'usage_count_display': usageCountDisplay,
+    'favorite_count': favoriteCount,
+    'favorite_count_display': favoriteCountDisplay,
+    'status': status,
+    'is_favorite': isFavorite,
+    'can_favorite': canFavorite,
+    'is_commercial_safe': isCommercialSafe,
+    'owner': owner,
+    'created_from_short': createdFromShort,
+    'start_ms': startMs,
+    'duration_ms': durationMs,
+    'volume': volume,
+    'is_original_audio': isOriginalAudio,
+  };
+
   factory ShortSound.fromJson(Map<String, dynamic> json) {
-    final viewerState = json['viewer_state'] is Map
-        ? asJsonMap(json['viewer_state'] as Map)
+    final viewerState = json['viewer_state'] is Map<Object?, Object?>
+        ? asJsonMap(json['viewer_state'] as Map<Object?, Object?>)
         : const <String, dynamic>{};
 
     return ShortSound(
@@ -149,7 +172,7 @@ class ShortSound extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
+  List<Object?> get props => <Object?>[
     id,
     title,
     artist,
@@ -172,19 +195,19 @@ class ShortSound extends Equatable {
     isOriginalAudio,
   ];
 
-  static int _toInt(dynamic value) {
+  static int _toInt(Object? value) {
     if (value is int) return value;
     if (value is num) return value.toInt();
     return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
-  static double _toDouble(dynamic value, {double defaultValue = 0}) {
+  static double _toDouble(Object? value, {double defaultValue = 0}) {
     if (value is double) return value;
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? defaultValue;
   }
 
-  static bool _toBool(dynamic value) {
+  static bool _toBool(Object? value) {
     if (value is bool) return value;
     if (value is num) return value != 0;
     final raw = value?.toString().trim().toLowerCase() ?? '';

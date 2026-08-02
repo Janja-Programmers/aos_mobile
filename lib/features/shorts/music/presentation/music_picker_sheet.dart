@@ -3,10 +3,8 @@ import 'dart:io';
 
 import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
 import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
-import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
-import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/features/shorts/music/data/shorts_sounds_api.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/providers/short_creation_providers.dart';
+import 'package:africaonlinestores/features/shorts/music/application/sound_picker_controller.dart';
 import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:file_picker/file_picker.dart';
@@ -21,674 +19,385 @@ Future<ShortSound?> showMusicPickerSheet(
   return showModalBottomSheet<ShortSound>(
     context: context,
     isScrollControlled: true,
-    showDragHandle: true,
+    useSafeArea: true,
     builder: (_) => MusicPickerSheet(commercialSafeOnly: commercialSafeOnly),
   );
 }
 
 class MusicPickerSheet extends ConsumerStatefulWidget {
-  final bool commercialSafeOnly;
-
   const MusicPickerSheet({super.key, this.commercialSafeOnly = false});
+
+  final bool commercialSafeOnly;
 
   @override
   ConsumerState<MusicPickerSheet> createState() => _MusicPickerSheetState();
 }
 
 class _MusicPickerSheetState extends ConsumerState<MusicPickerSheet> {
-  final _queryController = TextEditingController();
-  final _scrollController = ScrollController();
-  final _player = AudioPlayer();
-
-  final List<ShortSound> _sounds = [ShortSound.original];
-  String? _nextCursor;
-  String? _playingSoundId;
-  Timer? _debounce;
-  String _query = '';
-  String _sourceType = 'all';
-  bool _showFavorites = false;
-  bool _loading = false;
-  bool _loadingMore = false;
+  final TextEditingController _query = TextEditingController();
+  final ScrollController _scroll = ScrollController();
   bool _uploading = false;
-  bool _hasMore = false;
-  String? _error;
 
-  ShortsSoundsApi get _api => ref.read(shortsSoundsApiProvider);
+  SoundPickerController get _controller =>
+      ref.read(soundPickerControllerProvider.notifier);
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitial());
-  }
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    _queryController.dispose();
-    _scrollController.dispose();
-    _player.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadInitial() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-      _nextCursor = null;
-      _hasMore = false;
-      _sounds
-        ..clear()
-        ..add(ShortSound.original);
-    });
-
-    final res = _showFavorites
-        ? await _api.myFavoriteSounds()
-        : await _api.listSounds(sourceType: _sourceType);
-
-    if (!mounted) return;
-
-    res.fold(
-      (failure) {
-        setState(() {
-          _error = failure.message;
-          _loading = false;
-        });
-      },
-      (page) {
-        setState(() {
-          _sounds.addAll(_filterCommercial(page.items));
-          _nextCursor = page.nextCursor;
-          _hasMore = page.hasMore;
-          _loading = false;
-        });
-      },
-    );
-  }
-
-  Future<void> _loadMore() async {
-    if (_loadingMore || !_hasMore || _nextCursor == null || _query.isNotEmpty) {
-      return;
-    }
-
-    setState(() => _loadingMore = true);
-    final res = _showFavorites
-        ? await _api.myFavoriteSounds(cursor: _nextCursor)
-        : await _api.listSounds(cursor: _nextCursor, sourceType: _sourceType);
-
-    if (!mounted) return;
-
-    res.fold(
-      (failure) => setState(() {
-        _error = failure.message;
-        _loadingMore = false;
-      }),
-      (page) => setState(() {
-        _mergeSounds(_filterCommercial(page.items));
-        _nextCursor = page.nextCursor;
-        _hasMore = page.hasMore;
-        _loadingMore = false;
-      }),
-    );
-  }
-
-  Future<void> _search(String value) async {
-    _debounce?.cancel();
-    _query = value.trim();
-
-    _debounce = Timer(const Duration(milliseconds: 350), () async {
-      if (!mounted) return;
-      if (_query.isEmpty) {
-        await _loadInitial();
-        return;
-      }
-
-      setState(() {
-        _loading = true;
-        _error = null;
-        _nextCursor = null;
-        _hasMore = false;
-        _sounds
-          ..clear()
-          ..add(ShortSound.original);
-      });
-
-      final res = await _api.searchSounds(query: _query, limit: 30);
-      if (!mounted) return;
-
-      res.fold(
-        (failure) => setState(() {
-          _error = failure.message;
-          _loading = false;
-        }),
-        (items) => setState(() {
-          _sounds.addAll(_filterCommercial(items));
-          _loading = false;
-        }),
+    _scroll.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(
+        _controller.initialize(commercialSafeOnly: widget.commercialSafeOnly),
       );
     });
   }
 
+  @override
+  void dispose() {
+    _query.dispose();
+    _scroll.dispose();
+    super.dispose();
+  }
+
   void _onScroll() {
-    if (!_scrollController.hasClients) return;
-    final position = _scrollController.position;
-    if (position.pixels >= position.maxScrollExtent - 240) {
-      _loadMore();
+    if (!_scroll.hasClients) return;
+    if (_scroll.position.extentAfter < 280) {
+      unawaited(
+        _controller.loadMore(commercialSafeOnly: widget.commercialSafeOnly),
+      );
     }
-  }
-
-  List<ShortSound> _filterCommercial(List<ShortSound> items) {
-    if (!widget.commercialSafeOnly) return items;
-    return items
-        .where((sound) => sound.isCommercialSafe)
-        .toList(growable: false);
-  }
-
-  void _mergeSounds(List<ShortSound> items) {
-    final existing = _sounds.map((sound) => sound.id).toSet();
-    for (final sound in items) {
-      if (existing.add(sound.id)) _sounds.add(sound);
-    }
-  }
-
-  Future<void> _toggleFavorite(ShortSound sound) async {
-    if (sound.isOriginal) return;
-
-    final previous = sound;
-    final optimistic = sound.copyWith(
-      isFavorite: !sound.isFavorite,
-      favoriteCount: sound.isFavorite
-          ? (sound.favoriteCount - 1).clamp(0, 1 << 31).toInt()
-          : sound.favoriteCount + 1,
-    );
-    _replaceSound(optimistic);
-
-    final res = await _api.favoriteSound(soundId: sound.id);
-    if (!mounted) return;
-
-    res.fold(
-      (failure) {
-        _replaceSound(previous);
-        _showSnack(failure.message);
-      },
-      (result) {
-        _replaceSound(
-          optimistic.copyWith(
-            isFavorite: result.favorited,
-            favoriteCount: result.favoriteCount,
-            favoriteCountDisplay: result.favoriteCountDisplay,
-          ),
-        );
-      },
-    );
-  }
-
-  void _replaceSound(ShortSound sound) {
-    final index = _sounds.indexWhere((item) => item.id == sound.id);
-    if (index == -1) return;
-    setState(() => _sounds[index] = sound);
-  }
-
-  Future<void> _togglePreview(ShortSound sound) async {
-    if (!sound.isPlayable) return;
-
-    try {
-      if (_playingSoundId == sound.id) {
-        await _player.stop();
-        if (mounted) setState(() => _playingSoundId = null);
-        return;
-      }
-
-      await _player.setUrl(sound.fileUrl!);
-      await _player.play();
-      if (mounted) setState(() => _playingSoundId = sound.id);
-    } catch (_) {
-      if (mounted) _showSnack('Could not preview this sound.');
-    }
-  }
-
-  Future<void> _uploadSound() async {
-    final picked = await FilePicker.pickFiles(type: FileType.audio);
-    final path = picked?.files.single.path;
-    if (path == null || path.trim().isEmpty) return;
-
-    final file = File(path);
-    final filename = picked!.files.single.name;
-    final titleController = TextEditingController(
-      text: filename.contains('.') ? filename.split('.').first : filename,
-    );
-    final artistController = TextEditingController(text: 'Original sound');
-    bool isCommercialSafe = false;
-
-    if (!mounted) return;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setDialogState) {
-            return AlertDialog(
-              title: const Text('Upload sound'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: titleController,
-                      decoration: const InputDecoration(labelText: 'Title'),
-                    ),
-                    TextField(
-                      controller: artistController,
-                      decoration: const InputDecoration(labelText: 'Artist'),
-                    ),
-                    CheckboxListTile.adaptive(
-                      value: isCommercialSafe,
-                      onChanged: (value) => setDialogState(
-                        () => isCommercialSafe = value ?? false,
-                      ),
-                      title: const Text('Commercial safe'),
-                      subtitle: const Text(
-                        'Use only if you own or have rights to this audio.',
-                      ),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext, false),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.pop(dialogContext, true),
-                  child: const Text(
-                    'Upload',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    final title = titleController.text.trim();
-    final artist = artistController.text.trim();
-    titleController.dispose();
-    artistController.dispose();
-
-    if (confirmed != true || title.isEmpty) return;
-
-    setState(() => _uploading = true);
-
-    Duration? duration;
-    final probe = AudioPlayer();
-    try {
-      duration = await probe.setFilePath(file.path);
-    } catch (_) {
-      duration = null;
-    } finally {
-      await probe.dispose();
-    }
-
-    final mediaUpload = await ref
-        .read(mediaUploadApiProvider)
-        .uploadMedia(file: file, purpose: MediaUploadPurpose.soundUpload);
-
-    final uploadReady = await mediaUpload.fold<Future<ShortSound?>>(
-      (failure) async {
-        _showSnack(failure.message);
-        return null;
-      },
-      (uploaded) async {
-        final confirmedSound = await _api.createSoundFromMedia(
-          soundMedia: uploaded.mediaId,
-          title: title,
-          artist: artist,
-          durationSeconds: duration?.inMilliseconds == null
-              ? 0
-              : duration!.inMilliseconds / 1000,
-          isCommercialSafe: isCommercialSafe,
-        );
-
-        return confirmedSound.fold((failure) {
-          _showSnack(failure.message);
-          return null;
-        }, (sound) => sound);
-      },
-    );
-
-    if (!mounted) return;
-
-    setState(() => _uploading = false);
-
-    if (uploadReady != null) {
-      setState(() {
-        _sounds.insert(1, uploadReady);
-      });
-
-      if (widget.commercialSafeOnly && !uploadReady.isCommercialSafe) {
-        _showSnack(
-          'Sound uploaded, but shop shorts can only use commercial-safe sounds.',
-        );
-        return;
-      }
-
-      _showSnack('Sound uploaded.');
-      Navigator.pop(context, uploadReady);
-    }
-  }
-
-  void _showSnack(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.appColors;
+    final state = ref.watch(soundPickerControllerProvider);
+    final theme = Theme.of(context);
+    final height = MediaQuery.sizeOf(context).height * .9;
 
-    return SafeArea(
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height * .82,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: Text('Add music', style: context.h5)),
-                      if (_uploading)
-                        const SizedBox(
-                          width: 20,
-                          height: 20,
+    ref.listen<SoundPickerState>(soundPickerControllerProvider, (
+      previous,
+      next,
+    ) {
+      final error = next.errorMessage;
+      if (error != null && error != previous?.errorMessage) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error)));
+      }
+    });
+
+    return SizedBox(
+      height: height,
+      child: Column(
+        children: <Widget>[
+          const SizedBox(height: 8),
+          Container(
+            width: 44,
+            height: 4,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.outlineVariant,
+              borderRadius: BorderRadius.circular(99),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: TextField(
+                    controller: _query,
+                    onChanged: (value) => _controller.search(
+                      value,
+                      commercialSafeOnly: widget.commercialSafeOnly,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'Search sounds',
+                      prefixIcon: Icon(Icons.search_rounded),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                FilledButton.tonalIcon(
+                  onPressed: _uploading ? null : _uploadSound,
+                  icon: _uploading
+                      ? const SizedBox.square(
+                          dimension: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      else
-                        IconButton(
-                          tooltip: 'Upload sound',
-                          onPressed: _uploadSound,
-                          icon: const Icon(Icons.upload_file_rounded),
-                        ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    widget.commercialSafeOnly
-                        ? 'Shop shorts can only use commercial-safe sounds.'
-                        : 'Choose a sound, use original video audio, or upload your own audio.',
-                    style: context.small.copyWith(color: colors.textMuted),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _queryController,
-                    onChanged: _search,
-                    decoration: InputDecoration(
-                      hintText: 'Search sounds...',
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _filterChip(
-                          'All',
-                          selected: !_showFavorites && _sourceType == 'all',
-                          onTap: () {
-                            _showFavorites = false;
-                            _sourceType = 'all';
-                            _loadInitial();
-                          },
-                        ),
-                        _filterChip(
-                          'Library',
-                          selected: !_showFavorites && _sourceType == 'library',
-                          onTap: () {
-                            _showFavorites = false;
-                            _sourceType = 'library';
-                            _loadInitial();
-                          },
-                        ),
-                        _filterChip(
-                          'Commercial',
-                          selected:
-                              !_showFavorites && _sourceType == 'commercial',
-                          onTap: () {
-                            _showFavorites = false;
-                            _sourceType = 'commercial';
-                            _loadInitial();
-                          },
-                        ),
-                        _filterChip(
-                          'Uploaded',
-                          selected:
-                              !_showFavorites && _sourceType == 'uploaded',
-                          onTap: () {
-                            _showFavorites = false;
-                            _sourceType = 'uploaded';
-                            _loadInitial();
-                          },
-                        ),
-                        _filterChip(
-                          'Favorites',
-                          selected: _showFavorites,
-                          onTap: () {
-                            _showFavorites = true;
-                            _queryController.clear();
-                            _query = '';
-                            _loadInitial();
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                      : const Icon(Icons.library_music_outlined),
+                  label: const Text('Import'),
+                ),
+              ],
             ),
-            Expanded(child: _body(colors)),
-          ],
-        ),
+          ),
+          SizedBox(
+            height: 52,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: <Widget>[
+                _chip(
+                  'For you',
+                  !state.showFavorites && state.sourceType == 'all',
+                  () {
+                    _controller.setSourceType(
+                      'all',
+                      commercialSafeOnly: widget.commercialSafeOnly,
+                    );
+                  },
+                ),
+                _chip(
+                  'Library',
+                  !state.showFavorites && state.sourceType == 'library',
+                  () {
+                    _controller.setSourceType(
+                      'library',
+                      commercialSafeOnly: widget.commercialSafeOnly,
+                    );
+                  },
+                ),
+                _chip(
+                  'Commercial',
+                  !state.showFavorites && state.sourceType == 'commercial',
+                  () {
+                    _controller.setSourceType(
+                      'commercial',
+                      commercialSafeOnly: widget.commercialSafeOnly,
+                    );
+                  },
+                ),
+                _chip('Saved', state.showFavorites, () {
+                  _controller.setFavorites(
+                    true,
+                    commercialSafeOnly: widget.commercialSafeOnly,
+                  );
+                }),
+              ],
+            ),
+          ),
+          Expanded(child: _body(state)),
+        ],
       ),
     );
   }
 
-  Widget _filterChip(
-    String label, {
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    final colors = context.appColors;
+  Widget _chip(String label, bool selected, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ChoiceChip(
         label: Text(label),
         selected: selected,
         onSelected: (_) => onTap(),
-        selectedColor: colors.primary.withValues(alpha: .14),
-        side: BorderSide(color: selected ? colors.primary : colors.border),
       ),
     );
   }
 
-  Widget _body(AppColorTokens colors) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-
-    if (_error != null) {
+  Widget _body(SoundPickerState state) {
+    if (state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (state.items.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(_error!, textAlign: TextAlign.center),
+            children: <Widget>[
+              const Icon(Icons.music_off_outlined, size: 48),
               const SizedBox(height: 12),
-              FilledButton(onPressed: _loadInitial, child: const Text('Retry')),
+              const Text('No sounds found.'),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () => _controller.retry(
+                  commercialSafeOnly: widget.commercialSafeOnly,
+                ),
+                child: const Text('Retry'),
+              ),
             ],
           ),
         ),
       );
     }
-
-    if (_sounds.length == 1 && widget.commercialSafeOnly) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            'No commercial-safe sounds found. Use original audio or upload a sound you have rights to use.',
-            textAlign: TextAlign.center,
-            style: context.p.copyWith(color: colors.textMuted),
-          ),
-        ),
-      );
-    }
-
     return ListView.separated(
-      controller: _scrollController,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      itemCount: _sounds.length + (_loadingMore ? 1 : 0),
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
-      itemBuilder: (_, index) {
-        if (index >= _sounds.length) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(),
-            ),
+      controller: _scroll,
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      itemCount: state.items.length + (state.isLoadingMore ? 1 : 0),
+      separatorBuilder: (_, _) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        if (index == state.items.length) {
+          return const Padding(
+            padding: EdgeInsets.all(20),
+            child: Center(child: CircularProgressIndicator()),
           );
         }
-        return _SoundTile(
-          sound: _sounds[index],
-          isPlaying: _playingSoundId == _sounds[index].id,
-          onPick: () => Navigator.pop(context, _sounds[index]),
-          onPreview: () => _togglePreview(_sounds[index]),
-          onFavorite: () => _toggleFavorite(_sounds[index]),
+        final sound = state.items[index];
+        return ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 4),
+          leading: Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                colors: <Color>[
+                  Theme.of(context).colorScheme.primary,
+                  Theme.of(context).colorScheme.tertiary,
+                ],
+              ),
+            ),
+            child: const Icon(Icons.music_note_rounded, color: Colors.white),
+          ),
+          title: Text(
+            sound.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(
+            sound.isOriginal
+                ? 'Use the video audio'
+                : <String>[
+                    if (sound.artist.trim().isNotEmpty) sound.artist,
+                    if (sound.usageCountDisplay.isNotEmpty)
+                      '${sound.usageCountDisplay} shorts',
+                    if (sound.durationLabel.isNotEmpty) sound.durationLabel,
+                  ].join(' · '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          onTap: () => Navigator.of(context).pop(sound),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              if (sound.isPlayable)
+                IconButton(
+                  tooltip: state.playingSoundId == sound.id
+                      ? 'Stop preview'
+                      : 'Preview sound',
+                  onPressed: () => _controller.togglePreview(sound),
+                  icon: Icon(
+                    state.playingSoundId == sound.id
+                        ? Icons.stop_circle_outlined
+                        : Icons.play_circle_outline,
+                  ),
+                ),
+              if (!sound.isOriginal && sound.canFavorite)
+                IconButton(
+                  tooltip: sound.isFavorite
+                      ? 'Remove from saved'
+                      : 'Save sound',
+                  onPressed: () => _controller.toggleFavorite(sound),
+                  icon: Icon(
+                    sound.isFavorite
+                        ? Icons.bookmark_rounded
+                        : Icons.bookmark_border_rounded,
+                  ),
+                ),
+            ],
+          ),
         );
       },
     );
   }
-}
 
-class _SoundTile extends StatelessWidget {
-  final ShortSound sound;
-  final bool isPlaying;
-  final VoidCallback onPick;
-  final VoidCallback onPreview;
-  final VoidCallback onFavorite;
+  Future<void> _uploadSound() async {
+    final picked = await FilePicker.pickFiles(type: FileType.audio);
+    final path = picked?.files.single.path;
+    if (path == null || path.trim().isEmpty || !mounted) return;
+    final details = await _askUploadDetails(picked!.files.single.name);
+    if (details == null || !mounted) return;
 
-  const _SoundTile({
-    required this.sound,
-    required this.isPlaying,
-    required this.onPick,
-    required this.onPreview,
-    required this.onFavorite,
-  });
+    setState(() => _uploading = true);
+    try {
+      final file = File(path);
+      Duration? duration;
+      final probe = AudioPlayer();
+      try {
+        duration = await probe.setFilePath(path);
+      } finally {
+        await probe.dispose();
+      }
+      final upload = await ref
+          .read(mediaUploadApiProvider)
+          .uploadMedia(file: file, purpose: MediaUploadPurpose.soundUpload);
+      final media = upload.rightOrNull;
+      if (media == null) {
+        _showMessage(upload.leftOrNull?.message ?? 'Could not upload sound.');
+        return;
+      }
+      final created = await ref
+          .read(shortsSoundsApiProvider)
+          .createSoundFromMedia(
+            soundMedia: media.mediaId,
+            title: details.$1,
+            artist: details.$2,
+            durationSeconds: (duration?.inMilliseconds ?? 0) / 1000,
+          );
+      final sound = created.rightOrNull;
+      if (sound == null) {
+        _showMessage(created.leftOrNull?.message ?? 'Could not create sound.');
+        return;
+      }
+      if (widget.commercialSafeOnly && !sound.isCommercialSafe) {
+        _showMessage('Shop shorts require a commercial-safe sound.');
+        return;
+      }
+      if (mounted) Navigator.of(context).pop(sound);
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final isOriginal = sound.isOriginal;
-
-    return InkWell(
-      onTap: onPick,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colors.border),
+  Future<(String, String)?> _askUploadDetails(String filename) async {
+    final title = TextEditingController(
+      text: filename.contains('.')
+          ? filename.substring(0, filename.lastIndexOf('.'))
+          : filename,
+    );
+    final artist = TextEditingController(text: 'Original sound');
+    final result = await showDialog<(String, String)>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Import sound'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: title,
+                decoration: const InputDecoration(labelText: 'Title'),
+              ),
+              TextField(
+                controller: artist,
+                decoration: const InputDecoration(labelText: 'Artist'),
+              ),
+            ],
+          ),
         ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: colors.primary.withValues(alpha: .10),
-              child: Icon(
-                isOriginal
-                    ? Icons.graphic_eq_rounded
-                    : Icons.music_note_rounded,
-                color: colors.primary,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          sound.title,
-                          style: context.pStrong,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (sound.isCommercialSafe && !isOriginal)
-                        Icon(
-                          Icons.verified_rounded,
-                          size: 16,
-                          color: colors.success,
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    isOriginal
-                        ? 'Original video audio'
-                        : [
-                            if (sound.artist.trim().isNotEmpty) sound.artist,
-                            if (sound.durationLabel.isNotEmpty)
-                              sound.durationLabel,
-                            '${sound.usageCountDisplay} uses',
-                          ].join(' • '),
-                    style: context.small.copyWith(color: colors.textMuted),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            if (!isOriginal)
-              IconButton(
-                tooltip: isPlaying ? 'Stop preview' : 'Preview',
-                onPressed: onPreview,
-                icon: Icon(
-                  isPlaying
-                      ? Icons.stop_circle_rounded
-                      : Icons.play_circle_rounded,
-                ),
-              ),
-            if (!isOriginal)
-              IconButton(
-                tooltip: sound.isFavorite ? 'Unfavorite' : 'Favorite',
-                onPressed: onFavorite,
-                icon: Icon(
-                  sound.isFavorite
-                      ? Icons.bookmark_rounded
-                      : Icons.bookmark_border_rounded,
-                ),
-              )
-            else
-              Icon(Icons.check_rounded, color: colors.primary),
-          ],
-        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final clean = title.text.trim();
+              if (clean.isEmpty) return;
+              Navigator.pop(context, (clean, artist.text.trim()));
+            },
+            child: const Text('Import'),
+          ),
+        ],
       ),
     );
+    title.dispose();
+    artist.dispose();
+    return result;
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }

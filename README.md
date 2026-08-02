@@ -606,3 +606,7 @@ MIT
 ## Frontend architecture notes
 
 - [Launch, onboarding, and active preferences](docs/frontend/localization_onboarding.md)
+
+## Feature documentation
+
+- [Shorts creation and publishing](docs/features/shorts-creation-publishing.md)

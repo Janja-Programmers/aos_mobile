@@ -220,10 +220,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
     }
   }
 
-  Future<void> _shareLive({
-    required String liveId,
-    String? title,
-  }) async {
+  Future<void> _shareLive({required String liveId, String? title}) async {
     try {
       final link = AosShareLinks.live(liveId);
       final normalizedTitle = title?.trim() ?? '';

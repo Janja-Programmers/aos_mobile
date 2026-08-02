@@ -1,10 +1,18 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
 import 'package:africaonlinestores/core/providers.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
 import 'package:africaonlinestores/features/shorts/analytics/data/shorts_analytics_api.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/controllers/post_short_controller.dart';
+import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_publishing_coordinator.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/state/short_state.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
+import 'package:africaonlinestores/features/shorts/create_short/data/pending_short_publication_repository.dart';
+import 'package:africaonlinestores/features/shorts/create_short/data/short_draft_repository.dart';
+import 'package:africaonlinestores/features/shorts/create_short/data/short_local_media_saver.dart';
 // Controllers
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/comment_controller.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/controllers/replies_controller.dart';
@@ -79,6 +87,33 @@ final shortsSoundsApiProvider = Provider<ShortsSoundsApi>((ref) {
   return ShortsSoundsApi(ref.read(apiClientProvider));
 });
 
+final shortLocalMediaSaverProvider = Provider<ShortLocalMediaSaver>((ref) {
+  return const GalShortLocalMediaSaver();
+});
+
+final shortDraftRepositoryProvider = Provider<ShortDraftRepository>((ref) {
+  return const LocalShortDraftRepository();
+});
+
+final pendingShortPublicationRepositoryProvider =
+    Provider<PendingShortPublicationRepository>((ref) {
+      return const PendingShortPublicationRepository();
+    });
+
+final shortPublishingCoordinatorProvider = Provider<ShortPublishingCoordinator>(
+  (ref) {
+    return ShortPublishingCoordinator(
+      uploadApi: ref.read(shortsUploadApiProvider),
+      managementApi: ref.read(shortsManagementApiProvider),
+      repository: ref.read(pendingShortPublicationRepositoryProvider),
+      draftRepository: ref.read(shortDraftRepositoryProvider),
+      onReady: (_) {
+        unawaited(ref.read(shortsControllerProvider.notifier).loadInitial());
+      },
+    );
+  },
+);
+
 // ─────────────────────────────────────────────
 // CONTROLLERS (THE BRAIN)
 // ─────────────────────────────────────────────
@@ -117,11 +152,20 @@ final postShortControllerProvider =
       ref,
       sessionId,
     ) {
+      final auth = ref.read(authControllerProvider);
+      final ownerId = auth is AuthAuthenticated
+          ? (auth.user.accountId.isNotEmpty
+                ? auth.user.accountId
+                : auth.user.email)
+          : '';
       return PostShortController(
         uploadApi: ref.read(shortsUploadApiProvider),
         managementApi: ref.read(shortsManagementApiProvider),
         mediaUploadApi: ref.read(mediaUploadApiProvider),
+        localMediaSaver: ref.read(shortLocalMediaSaverProvider),
+        publishingCoordinator: ref.read(shortPublishingCoordinatorProvider),
         sessionId: sessionId,
+        ownerId: ownerId,
       );
     });
 

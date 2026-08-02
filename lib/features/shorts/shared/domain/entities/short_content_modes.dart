@@ -20,13 +20,13 @@ class ShortContentModes {
 
   static String normalize(String? mode) {
     if (mode == null || mode.trim().isEmpty) {
-      return shop;
+      return geo;
     }
 
     final normalized = mode.trim().toLowerCase();
 
     if (!isValid(normalized)) {
-      return shop;
+      return geo;
     }
 
     return normalized;

@@ -26,8 +26,9 @@ class ShortUploadProgressBanner extends ConsumerWidget {
     final isDone = state.status == UploadStatus.ready;
     final isFailed = state.status == UploadStatus.failed;
     final progress = state.status == UploadStatus.uploading
-        ? state.progress.clamp(0.0, 1.0)
-        : state.status == UploadStatus.processing
+        ? state.progress.clamp(0.0, 1.0).toDouble()
+        : state.status == UploadStatus.publishing ||
+              state.status == UploadStatus.processing
         ? null
         : isDone
         ? 1.0
@@ -124,6 +125,8 @@ class ShortUploadProgressBanner extends ConsumerWidget {
         return 'Uploading ${(state.progress * 100).clamp(0, 100).round()}%';
       case UploadStatus.confirming:
         return 'Confirming upload...';
+      case UploadStatus.publishing:
+        return 'Publishing short...';
       case UploadStatus.processing:
         return 'Processing video...';
       case UploadStatus.ready:

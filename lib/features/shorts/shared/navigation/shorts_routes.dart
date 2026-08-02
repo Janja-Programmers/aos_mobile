@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/screens/post_short_details_screen.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/screens/post_short_media_picker_screen.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/screens/short_detail_screen.dart';
+import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
@@ -15,8 +18,13 @@ import 'package:go_router/go_router.dart';
 class PostShortDetailsArgs {
   final String sessionId;
   final List<SelectedMedia> media;
+  final ShortSound selectedSound;
 
-  PostShortDetailsArgs({required this.sessionId, required this.media});
+  PostShortDetailsArgs({
+    required this.sessionId,
+    required this.media,
+    required this.selectedSound,
+  });
 }
 
 /// ─────────────────────────────────────────
@@ -120,6 +128,7 @@ class ShortsRoutes {
           return PostShortDetailsScreen(
             sessionId: args.sessionId,
             media: args.media,
+            selectedSound: args.selectedSound,
           );
         },
       ),
@@ -169,8 +178,6 @@ class _ShortDetailByIdScreen extends ConsumerWidget {
 class ShortsNavigation {
   const ShortsNavigation._();
 
-  // ───────── OPEN FEED DETAIL ─────────
-
   static void toShortDetail(
     BuildContext context, {
     required List<Short> initialShorts,
@@ -178,13 +185,15 @@ class ShortsNavigation {
     required String? initialNextCursor,
     required bool initialHasMore,
   }) {
-    context.pushNamed(
-      AppRoutes.nShortDetail,
-      extra: ShortDetailArgs(
-        initialShorts: initialShorts,
-        initialIndex: initialIndex,
-        initialNextCursor: initialNextCursor,
-        initialHasMore: initialHasMore,
+    unawaited(
+      context.pushNamed<void>(
+        AppRoutes.nShortDetail,
+        extra: ShortDetailArgs(
+          initialShorts: initialShorts,
+          initialIndex: initialIndex,
+          initialNextCursor: initialNextCursor,
+          initialHasMore: initialHasMore,
+        ),
       ),
     );
   }
@@ -193,26 +202,33 @@ class ShortsNavigation {
     BuildContext context, {
     required String shortId,
   }) {
-    context.pushNamed(
-      AppRoutes.nShortDetail,
-      queryParameters: {'short_id': shortId},
+    unawaited(
+      context.pushNamed<void>(
+        AppRoutes.nShortDetail,
+        queryParameters: <String, String>{'short_id': shortId},
+      ),
     );
   }
 
-  // ───────── CREATE SHORTS ROUTES ─────────
-
-  static Future<void> toPostShort(BuildContext context) {
-    return context.pushNamed(AppRoutes.nPostShort);
+  static Future<void> toPostShort(BuildContext context) async {
+    await context.pushNamed<void>(AppRoutes.nPostShort);
   }
 
   static void toPostShortDetails(
     BuildContext context, {
     required String sessionId,
     required List<SelectedMedia> media,
+    required ShortSound selectedSound,
   }) {
-    context.pushNamed(
-      AppRoutes.nPostShortDetails,
-      extra: PostShortDetailsArgs(sessionId: sessionId, media: media),
+    unawaited(
+      context.pushNamed<void>(
+        AppRoutes.nPostShortDetails,
+        extra: PostShortDetailsArgs(
+          sessionId: sessionId,
+          media: media,
+          selectedSound: selectedSound,
+        ),
+      ),
     );
   }
 }

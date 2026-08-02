@@ -47,9 +47,7 @@ class LiveRightActions extends StatelessWidget {
             const SizedBox(height: 12),
             _button(
               context,
-              icon: isMuted
-                  ? Icons.mic_off_outlined
-                  : Icons.mic_none_outlined,
+              icon: isMuted ? Icons.mic_off_outlined : Icons.mic_none_outlined,
               tooltip: isMuted
                   ? context.l10n.liveUnmuteAction
                   : context.l10n.liveMuteAction,

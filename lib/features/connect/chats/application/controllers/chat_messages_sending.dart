@@ -12,7 +12,6 @@ mixin ChatMessagesSending on ChatMessagesControllerBase {
     String? adPrice,
     String? adImage,
     String? adImageFileId,
-    String? senderId,
     String? fallbackUser,
     String? fallbackDisplayName,
     String? fallbackAvatar,
@@ -20,9 +19,12 @@ mixin ChatMessagesSending on ChatMessagesControllerBase {
     ChatReplyPreview? replyTo,
     List<ChatInputAttachment> attachments = const [],
   }) async {
-    final safeSenderId = senderId?.trim().toLowerCase();
+    final generation = _sessionGeneration;
+    if (!_isCurrentSession(generation)) return false;
 
-    if (safeSenderId == null || safeSenderId.isEmpty) {
+    final safeSenderId = _activeCanonicalAccountId;
+
+    if (safeSenderId.isEmpty) {
       return false;
     }
 
@@ -60,7 +62,7 @@ mixin ChatMessagesSending on ChatMessagesControllerBase {
 
     final tempMessage = _buildTempMessage(
       tempId: tempId,
-      sender: safeSenderId,
+      senderCanonicalId: safeSenderId,
       text: trimmedText,
       adId: hasAd ? adId : null,
       adTitle: adTitle,
@@ -79,6 +81,8 @@ mixin ChatMessagesSending on ChatMessagesControllerBase {
       replyToMessage: replyToMessage,
       attachments: apiAttachments,
     );
+
+    if (!_isCurrentSession(generation)) return true;
 
     if (realMsg == null) {
       _markTempMessageFailed(tempId, error: 'Failed to send. Tap to retry.');
@@ -104,6 +108,9 @@ mixin ChatMessagesSending on ChatMessagesControllerBase {
     String? replyToMessage,
     List<Map<String, dynamic>> attachments = const [],
   }) async {
+    final generation = _sessionGeneration;
+    if (!_isCurrentSession(generation)) return null;
+
     final trimmedText = text?.trim();
 
     final hasText = trimmedText != null && trimmedText.isNotEmpty;
@@ -124,12 +131,15 @@ mixin ChatMessagesSending on ChatMessagesControllerBase {
       attachments: List<Map<String, dynamic>>.from(attachments),
     );
 
-    if (res.isLeft) return null;
+    if (!_isCurrentSession(generation) || res.isLeft) return null;
 
     return res.rightOrNull;
   }
 
   Future<bool> retryMessage(String tempId) async {
+    final generation = _sessionGeneration;
+    if (!_isCurrentSession(generation)) return false;
+
     final payload = _pendingSends[tempId];
 
     if (payload == null) {
@@ -157,6 +167,8 @@ mixin ChatMessagesSending on ChatMessagesControllerBase {
       attachments: payload.attachments,
     );
 
+    if (!_isCurrentSession(generation)) return true;
+
     if (realMsg == null) {
       _markTempMessageFailed(tempId, error: 'Still failed. Tap to retry.');
       return false;
@@ -177,7 +189,7 @@ mixin ChatMessagesSending on ChatMessagesControllerBase {
 
   ChatMessage _buildTempMessage({
     required String tempId,
-    required String sender,
+    required String senderCanonicalId,
     required String? text,
     required String? adId,
     required String? adTitle,
@@ -206,7 +218,7 @@ mixin ChatMessagesSending on ChatMessagesControllerBase {
 
     return ChatMessage.temp(
       id: tempId,
-      sender: sender,
+      senderCanonicalId: senderCanonicalId,
       content: text,
       attachments: tempAttachments,
       ad: adId,

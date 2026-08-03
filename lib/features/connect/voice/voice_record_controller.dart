@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/connect/voice/audio_recorder_service.dart';
 import 'package:africaonlinestores/features/connect/voice/voice_record_state.dart';
 import 'package:africaonlinestores/features/connect/voice/voice_sound_feedback_service.dart';
@@ -19,33 +20,53 @@ class VoiceRecordController extends StateNotifier<VoiceRecordState> {
   Future<void> startRecording() async {
     if (state.isRecording || state.isUploading) return;
 
-    final granted = await _service.hasPermission();
-    if (!granted) {
+    try {
+      final granted = await _service.hasPermission();
+      if (!mounted) return;
+      if (!granted) {
+        state = state.copyWith(
+          status: VoiceRecordStatus.error,
+          error: VoiceRecordError.microphonePermissionDenied,
+        );
+        return;
+      }
+
+      await _soundService.playStartCue();
+      if (!mounted) return;
+
+      await _service.start();
+      if (!mounted) {
+        await _service.cancel();
+        return;
+      }
+
+      state = state.copyWith(
+        status: VoiceRecordStatus.recording,
+        duration: Duration.zero,
+        dragDx: 0,
+        clearError: true,
+        clearRecordedFilePath: true,
+      );
+
+      _timer?.cancel();
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!mounted || !state.isRecording) return;
+        state = state.copyWith(
+          duration: state.duration + const Duration(seconds: 1),
+        );
+      });
+    } catch (error, stackTrace) {
+      appLogger.e(
+        'Voice recording could not start',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) return;
       state = state.copyWith(
         status: VoiceRecordStatus.error,
-        error: 'Microphone permission denied',
+        error: VoiceRecordError.startFailed,
       );
-      return;
     }
-
-    await _soundService.playStartCue();
-
-    await _service.start();
-
-    state = state.copyWith(
-      status: VoiceRecordStatus.recording,
-      duration: Duration.zero,
-      dragDx: 0,
-      clearError: true,
-      clearRecordedFilePath: true,
-    );
-
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      state = state.copyWith(
-        duration: state.duration + const Duration(seconds: 1),
-      );
-    });
   }
 
   void updateDrag(double dx) {
@@ -69,42 +90,65 @@ class VoiceRecordController extends StateNotifier<VoiceRecordState> {
     if (!state.isRecording) return null;
 
     final shouldCancel = state.status == VoiceRecordStatus.canceling;
-    _timer?.cancel();
-    _timer = null;
+    _stopTimer();
 
-    if (shouldCancel) {
-      await _service.cancel();
-      await _soundService.playCancelCue();
+    try {
+      if (shouldCancel) {
+        await _service.cancel();
+        await _soundService.playCancelCue();
+        if (!mounted) return null;
+
+        state = state.copyWith(
+          status: VoiceRecordStatus.idle,
+          duration: Duration.zero,
+          dragDx: 0,
+          clearRecordedFilePath: true,
+        );
+        return null;
+      }
+
+      final path = await _service.stop();
+      if (!mounted) return null;
 
       state = state.copyWith(
         status: VoiceRecordStatus.idle,
+        recordedFilePath: path,
         duration: Duration.zero,
         dragDx: 0,
-        clearRecordedFilePath: true,
       );
-
+      return path;
+    } catch (error, stackTrace) {
+      appLogger.e(
+        'Voice recording could not finish',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) return null;
+      state = state.copyWith(
+        status: VoiceRecordStatus.error,
+        error: VoiceRecordError.finishFailed,
+        duration: Duration.zero,
+        dragDx: 0,
+      );
       return null;
     }
-
-    final path = await _service.stop();
-
-    state = state.copyWith(
-      status: VoiceRecordStatus.idle,
-      recordedFilePath: path,
-      duration: Duration.zero,
-      dragDx: 0,
-    );
-
-    return path;
   }
 
   Future<void> cancelRecording() async {
-    _timer?.cancel();
-    _timer = null;
+    _stopTimer();
 
-    await _service.cancel();
-    await _soundService.playCancelCue();
+    try {
+      await _service.cancel();
+      await _soundService.playCancelCue();
+    } catch (error, stackTrace) {
+      appLogger.e(
+        'Voice recording cancellation failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
 
+    if (!mounted) return;
     state = state.copyWith(
       status: VoiceRecordStatus.idle,
       duration: Duration.zero,
@@ -113,14 +157,16 @@ class VoiceRecordController extends StateNotifier<VoiceRecordState> {
     );
   }
 
-  @override
-  void dispose() {
+  void _stopTimer() {
     _timer?.cancel();
     _timer = null;
+  }
 
+  @override
+  void dispose() {
+    _stopTimer();
     unawaited(_service.dispose());
     unawaited(_soundService.dispose());
-
     super.dispose();
   }
 }

@@ -21,6 +21,7 @@ Required topics where applicable:
 
 The first recommended feature is **authentication and session** because it establishes the deterministic identity seam required by protected routes, account/profile, user-private caches, realtime startup, seller ownership, chat, notifications, and verification tests.
 
+- [Connect Chat](connect-chat.md)
 - [Calls](calls/README.md)
 - [Wishlist](wishlist/README.md)
 

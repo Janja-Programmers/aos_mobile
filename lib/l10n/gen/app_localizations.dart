@@ -1369,6 +1369,1458 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to open share options.'**
   String get unableToOpenShareOptions;
+
+  /// No description provided for @chat_connect_title.
+  ///
+  /// In en, this message translates to:
+  /// **'AOS Connect'**
+  String get chat_connect_title;
+
+  /// No description provided for @chat_close_connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Connect'**
+  String get chat_close_connect;
+
+  /// No description provided for @chat_close_search.
+  ///
+  /// In en, this message translates to:
+  /// **'Close search'**
+  String get chat_close_search;
+
+  /// No description provided for @chat_search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get chat_search;
+
+  /// No description provided for @chat_more_options.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get chat_more_options;
+
+  /// No description provided for @chat_search_chats_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search chats...'**
+  String get chat_search_chats_hint;
+
+  /// No description provided for @chat_search_calls_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search calls...'**
+  String get chat_search_calls_hint;
+
+  /// No description provided for @chat_all_marked_read.
+  ///
+  /// In en, this message translates to:
+  /// **'All chats marked as read.'**
+  String get chat_all_marked_read;
+
+  /// No description provided for @chat_some_mark_read_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Some chats could not be marked as read.'**
+  String get chat_some_mark_read_failed;
+
+  /// No description provided for @chat_clear_call_log_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear call log?'**
+  String get chat_clear_call_log_title;
+
+  /// No description provided for @chat_clear_call_log_body.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes your visible call history. It does not delete other users’ records.'**
+  String get chat_clear_call_log_body;
+
+  /// No description provided for @chat_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get chat_cancel;
+
+  /// No description provided for @chat_clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get chat_clear;
+
+  /// No description provided for @chat_call_log_cleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Call log cleared.'**
+  String get chat_call_log_cleared;
+
+  /// No description provided for @chat_call_log_clear_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not clear call log.'**
+  String get chat_call_log_clear_failed;
+
+  /// No description provided for @chat_clear_call_log.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear call log'**
+  String get chat_clear_call_log;
+
+  /// No description provided for @chat_settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get chat_settings;
+
+  /// No description provided for @chat_mark_all_read.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all read'**
+  String get chat_mark_all_read;
+
+  /// No description provided for @chat_starred_messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Starred messages'**
+  String get chat_starred_messages;
+
+  /// No description provided for @chat_chats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get chat_chats;
+
+  /// No description provided for @chat_new_conversation.
+  ///
+  /// In en, this message translates to:
+  /// **'New conversation'**
+  String get chat_new_conversation;
+
+  /// No description provided for @chat_new.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get chat_new;
+
+  /// No description provided for @chat_calls.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls'**
+  String get chat_calls;
+
+  /// No description provided for @chat_back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get chat_back;
+
+  /// No description provided for @chat_call.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get chat_call;
+
+  /// No description provided for @chat_video_call.
+  ///
+  /// In en, this message translates to:
+  /// **'Video call'**
+  String get chat_video_call;
+
+  /// No description provided for @chat_change_wallpaper.
+  ///
+  /// In en, this message translates to:
+  /// **'Change wallpaper'**
+  String get chat_change_wallpaper;
+
+  /// No description provided for @chat_user_might_be_offline.
+  ///
+  /// In en, this message translates to:
+  /// **'User might be offline'**
+  String get chat_user_might_be_offline;
+
+  /// No description provided for @chat_failed_to_start_call.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to start call'**
+  String get chat_failed_to_start_call;
+
+  /// No description provided for @chat_gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get chat_gallery;
+
+  /// No description provided for @chat_camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get chat_camera;
+
+  /// No description provided for @chat_voice_call.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice call'**
+  String get chat_voice_call;
+
+  /// No description provided for @chat_location.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get chat_location;
+
+  /// No description provided for @chat_document.
+  ///
+  /// In en, this message translates to:
+  /// **'Document'**
+  String get chat_document;
+
+  /// No description provided for @chat_contact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get chat_contact;
+
+  /// No description provided for @chat_attachment_upload_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment upload failed. Please try again.'**
+  String get chat_attachment_upload_failed;
+
+  /// No description provided for @chat_message_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get chat_message_hint;
+
+  /// No description provided for @chat_share_location_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Share location'**
+  String get chat_share_location_title;
+
+  /// No description provided for @chat_retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get chat_retry;
+
+  /// No description provided for @chat_could_not_load_messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load messages'**
+  String get chat_could_not_load_messages;
+
+  /// No description provided for @chat_check_connection_try_again.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again.'**
+  String get chat_check_connection_try_again;
+
+  /// No description provided for @chat_no_messages_yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get chat_no_messages_yet;
+
+  /// No description provided for @chat_no_messages_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a message to start this conversation.'**
+  String get chat_no_messages_hint;
+
+  /// No description provided for @chat_older_messages_load_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Older messages could not be loaded.'**
+  String get chat_older_messages_load_failed;
+
+  /// No description provided for @chat_reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get chat_reply;
+
+  /// No description provided for @chat_edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get chat_edit;
+
+  /// No description provided for @chat_copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get chat_copy;
+
+  /// No description provided for @chat_forward.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward'**
+  String get chat_forward;
+
+  /// No description provided for @chat_translate_again.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate again'**
+  String get chat_translate_again;
+
+  /// No description provided for @chat_translate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate'**
+  String get chat_translate;
+
+  /// No description provided for @chat_unstar.
+  ///
+  /// In en, this message translates to:
+  /// **'Unstar'**
+  String get chat_unstar;
+
+  /// No description provided for @chat_star.
+  ///
+  /// In en, this message translates to:
+  /// **'Star'**
+  String get chat_star;
+
+  /// No description provided for @chat_delete_for_me.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for me'**
+  String get chat_delete_for_me;
+
+  /// No description provided for @chat_delete_for_everyone.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete for everyone'**
+  String get chat_delete_for_everyone;
+
+  /// No description provided for @chat_message_reactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Message reactions'**
+  String get chat_message_reactions;
+
+  /// No description provided for @chat_choose_another_reaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another reaction'**
+  String get chat_choose_another_reaction;
+
+  /// No description provided for @chat_react_with.
+  ///
+  /// In en, this message translates to:
+  /// **'React with {emoji}'**
+  String chat_react_with(Object emoji);
+
+  /// No description provided for @chat_remove_reaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {emoji} reaction'**
+  String chat_remove_reaction(Object emoji);
+
+  /// No description provided for @chat_editing_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing message'**
+  String get chat_editing_message;
+
+  /// No description provided for @chat_cancel_editing.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel editing'**
+  String get chat_cancel_editing;
+
+  /// No description provided for @chat_copied_to_clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get chat_copied_to_clipboard;
+
+  /// No description provided for @chat_message_still_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Message still failed. Try again.'**
+  String get chat_message_still_failed;
+
+  /// No description provided for @chat_send_ad_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send ad message. Please try again.'**
+  String get chat_send_ad_failed;
+
+  /// No description provided for @chat_send_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send message. Please try again.'**
+  String get chat_send_failed;
+
+  /// No description provided for @chat_star_update_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update star.'**
+  String get chat_star_update_failed;
+
+  /// No description provided for @chat_reaction_update_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update reaction.'**
+  String get chat_reaction_update_failed;
+
+  /// No description provided for @chat_forward_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to forward message.'**
+  String get chat_forward_failed;
+
+  /// No description provided for @chat_forwarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Message forwarded.'**
+  String get chat_forwarded;
+
+  /// No description provided for @chat_forwarded_to_chats.
+  ///
+  /// In en, this message translates to:
+  /// **'Message forwarded to {count} chats.'**
+  String chat_forwarded_to_chats(Object count);
+
+  /// No description provided for @chat_translate_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to translate message.'**
+  String get chat_translate_failed;
+
+  /// No description provided for @chat_delete_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete message.'**
+  String get chat_delete_failed;
+
+  /// No description provided for @chat_deleted_for_everyone.
+  ///
+  /// In en, this message translates to:
+  /// **'Message deleted for everyone.'**
+  String get chat_deleted_for_everyone;
+
+  /// No description provided for @chat_deleted_for_you.
+  ///
+  /// In en, this message translates to:
+  /// **'Message deleted for you.'**
+  String get chat_deleted_for_you;
+
+  /// No description provided for @chat_edit_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to edit message.'**
+  String get chat_edit_failed;
+
+  /// No description provided for @chat_settings_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat Settings'**
+  String get chat_settings_title;
+
+  /// No description provided for @chat_privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get chat_privacy;
+
+  /// No description provided for @chat_read_receipts.
+  ///
+  /// In en, this message translates to:
+  /// **'Read receipts'**
+  String get chat_read_receipts;
+
+  /// No description provided for @chat_read_receipts_managed.
+  ///
+  /// In en, this message translates to:
+  /// **'Managed by AOS for message delivery'**
+  String get chat_read_receipts_managed;
+
+  /// No description provided for @chat_last_seen_online.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen & online'**
+  String get chat_last_seen_online;
+
+  /// No description provided for @chat_no_backend_preference.
+  ///
+  /// In en, this message translates to:
+  /// **'No account preference is exposed by the backend'**
+  String get chat_no_backend_preference;
+
+  /// No description provided for @chat_blocked_contacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked contacts'**
+  String get chat_blocked_contacts;
+
+  /// No description provided for @chat_chats_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats'**
+  String get chat_chats_section;
+
+  /// No description provided for @chat_wallpaper.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat wallpaper'**
+  String get chat_wallpaper;
+
+  /// No description provided for @chat_wallpaper_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the default background for chats'**
+  String get chat_wallpaper_description;
+
+  /// No description provided for @chat_enter_is_send.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter is send'**
+  String get chat_enter_is_send;
+
+  /// No description provided for @chat_enter_is_send_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter key sends your message'**
+  String get chat_enter_is_send_description;
+
+  /// No description provided for @chat_media_auto_download.
+  ///
+  /// In en, this message translates to:
+  /// **'Media auto-download'**
+  String get chat_media_auto_download;
+
+  /// No description provided for @chat_unavailable_backend.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available in the current backend contract'**
+  String get chat_unavailable_backend;
+
+  /// No description provided for @chat_notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get chat_notifications;
+
+  /// No description provided for @chat_message_notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Message notifications'**
+  String get chat_message_notifications;
+
+  /// No description provided for @chat_call_notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Call notifications'**
+  String get chat_call_notifications;
+
+  /// No description provided for @chat_system_notification_settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Controlled by system notification settings'**
+  String get chat_system_notification_settings;
+
+  /// No description provided for @chat_on.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get chat_on;
+
+  /// No description provided for @chat_off.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get chat_off;
+
+  /// No description provided for @chat_starred_load_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load starred messages'**
+  String get chat_starred_load_failed;
+
+  /// No description provided for @chat_no_starred_messages.
+  ///
+  /// In en, this message translates to:
+  /// **'No starred messages'**
+  String get chat_no_starred_messages;
+
+  /// No description provided for @chat_no_starred_messages_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages you star will appear here.'**
+  String get chat_no_starred_messages_hint;
+
+  /// No description provided for @chat_unstar_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Unstar message'**
+  String get chat_unstar_message;
+
+  /// No description provided for @chat_unstar_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to unstar message.'**
+  String get chat_unstar_failed;
+
+  /// No description provided for @chat_message_unstarred.
+  ///
+  /// In en, this message translates to:
+  /// **'Message unstarred.'**
+  String get chat_message_unstarred;
+
+  /// No description provided for @chat_attachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment'**
+  String get chat_attachment;
+
+  /// No description provided for @chat_you.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get chat_you;
+
+  /// No description provided for @chat_other_user.
+  ///
+  /// In en, this message translates to:
+  /// **'Other user'**
+  String get chat_other_user;
+
+  /// No description provided for @chat_aos_user.
+  ///
+  /// In en, this message translates to:
+  /// **'AOS user'**
+  String get chat_aos_user;
+
+  /// No description provided for @chat_sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending...'**
+  String get chat_sending;
+
+  /// No description provided for @chat_edited.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited'**
+  String get chat_edited;
+
+  /// No description provided for @chat_starred.
+  ///
+  /// In en, this message translates to:
+  /// **'Starred'**
+  String get chat_starred;
+
+  /// No description provided for @chat_translated.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated'**
+  String get chat_translated;
+
+  /// No description provided for @chat_failed_to_send.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send'**
+  String get chat_failed_to_send;
+
+  /// No description provided for @chat_read.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get chat_read;
+
+  /// No description provided for @chat_delivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get chat_delivered;
+
+  /// No description provided for @chat_sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get chat_sent;
+
+  /// No description provided for @chat_forwarded_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Forwarded'**
+  String get chat_forwarded_label;
+
+  /// No description provided for @chat_deleted_message.
+  ///
+  /// In en, this message translates to:
+  /// **'This message was deleted'**
+  String get chat_deleted_message;
+
+  /// No description provided for @chat_translating.
+  ///
+  /// In en, this message translates to:
+  /// **'Translating...'**
+  String get chat_translating;
+
+  /// No description provided for @chat_tap_to_retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to retry'**
+  String get chat_tap_to_retry;
+
+  /// No description provided for @chat_translate_to.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate to'**
+  String get chat_translate_to;
+
+  /// No description provided for @chat_translate_to_language.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate to {language}'**
+  String chat_translate_to_language(Object language);
+
+  /// No description provided for @chat_voice_release_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to cancel'**
+  String get chat_voice_release_cancel;
+
+  /// No description provided for @chat_voice_recording_locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording locked'**
+  String get chat_voice_recording_locked;
+
+  /// No description provided for @chat_voice_slide_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide left to cancel'**
+  String get chat_voice_slide_cancel;
+
+  /// No description provided for @chat_voice_recording_status.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice recording {duration}. {instruction}'**
+  String chat_voice_recording_status(Object duration, Object instruction);
+
+  /// No description provided for @chat_starred_message_from.
+  ///
+  /// In en, this message translates to:
+  /// **'Starred message from {sender}'**
+  String chat_starred_message_from(Object sender);
+
+  /// No description provided for @chat_verified_sellers.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified Sellers'**
+  String get chat_verified_sellers;
+
+  /// No description provided for @chat_friends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get chat_friends;
+
+  /// No description provided for @chat_search_sellers_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search sellers...'**
+  String get chat_search_sellers_hint;
+
+  /// No description provided for @chat_search_friends_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search friends...'**
+  String get chat_search_friends_hint;
+
+  /// No description provided for @chat_loading_sellers.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading sellers'**
+  String get chat_loading_sellers;
+
+  /// No description provided for @chat_loading_sellers_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait while we find verified sellers.'**
+  String get chat_loading_sellers_hint;
+
+  /// No description provided for @chat_could_not_load_sellers.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load sellers'**
+  String get chat_could_not_load_sellers;
+
+  /// No description provided for @chat_no_verified_sellers.
+  ///
+  /// In en, this message translates to:
+  /// **'No verified sellers'**
+  String get chat_no_verified_sellers;
+
+  /// No description provided for @chat_no_sellers_found.
+  ///
+  /// In en, this message translates to:
+  /// **'No sellers found'**
+  String get chat_no_sellers_found;
+
+  /// No description provided for @chat_no_verified_sellers_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified sellers will appear here when available.'**
+  String get chat_no_verified_sellers_hint;
+
+  /// No description provided for @chat_no_sellers_found_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another seller name, category, or location.'**
+  String get chat_no_sellers_found_hint;
+
+  /// No description provided for @chat_refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get chat_refresh;
+
+  /// No description provided for @chat_loading_friends.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading friends'**
+  String get chat_loading_friends;
+
+  /// No description provided for @chat_loading_friends_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait while we find your friends.'**
+  String get chat_loading_friends_hint;
+
+  /// No description provided for @chat_could_not_load_friends.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load friends'**
+  String get chat_could_not_load_friends;
+
+  /// No description provided for @chat_try_again.
+  ///
+  /// In en, this message translates to:
+  /// **'Please try again.'**
+  String get chat_try_again;
+
+  /// No description provided for @chat_no_friends_yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends yet'**
+  String get chat_no_friends_yet;
+
+  /// No description provided for @chat_no_friends_found.
+  ///
+  /// In en, this message translates to:
+  /// **'No friends found'**
+  String get chat_no_friends_found;
+
+  /// No description provided for @chat_no_friends_yet_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends will appear here once you follow each other.'**
+  String get chat_no_friends_yet_hint;
+
+  /// No description provided for @chat_no_friends_found_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try searching with another name or email.'**
+  String get chat_no_friends_found_hint;
+
+  /// No description provided for @chat_online.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get chat_online;
+
+  /// No description provided for @chat_last_seen_recently.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen recently'**
+  String get chat_last_seen_recently;
+
+  /// No description provided for @chat_friend.
+  ///
+  /// In en, this message translates to:
+  /// **'Friend'**
+  String get chat_friend;
+
+  /// No description provided for @chat_message_contact.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get chat_message_contact;
+
+  /// No description provided for @chat_call_contact.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get chat_call_contact;
+
+  /// No description provided for @chat_all_chats.
+  ///
+  /// In en, this message translates to:
+  /// **'All Chats'**
+  String get chat_all_chats;
+
+  /// No description provided for @chat_unread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get chat_unread;
+
+  /// No description provided for @chat_loading_conversations.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading conversations'**
+  String get chat_loading_conversations;
+
+  /// No description provided for @chat_loading_conversations_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait while we fetch your chats.'**
+  String get chat_loading_conversations_hint;
+
+  /// No description provided for @chat_could_not_load_chats.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load chats'**
+  String get chat_could_not_load_chats;
+
+  /// No description provided for @chat_no_chats_found.
+  ///
+  /// In en, this message translates to:
+  /// **'No chats found'**
+  String get chat_no_chats_found;
+
+  /// No description provided for @chat_no_chats_search_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try searching with another name or message.'**
+  String get chat_no_chats_search_hint;
+
+  /// No description provided for @chat_no_read_chats.
+  ///
+  /// In en, this message translates to:
+  /// **'No read chats'**
+  String get chat_no_read_chats;
+
+  /// No description provided for @chat_no_unread_chats.
+  ///
+  /// In en, this message translates to:
+  /// **'No unread chats'**
+  String get chat_no_unread_chats;
+
+  /// No description provided for @chat_no_conversations_yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations yet'**
+  String get chat_no_conversations_yet;
+
+  /// No description provided for @chat_no_read_chats_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats you have already read will appear here.'**
+  String get chat_no_read_chats_hint;
+
+  /// No description provided for @chat_no_unread_chats_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread chats will appear here as new messages arrive.'**
+  String get chat_no_unread_chats_hint;
+
+  /// No description provided for @chat_no_conversations_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your conversations will appear here once you start chatting.'**
+  String get chat_no_conversations_hint;
+
+  /// No description provided for @chat_deleted_from_list.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat deleted from your conversation list.'**
+  String get chat_deleted_from_list;
+
+  /// No description provided for @chat_delete_chat_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete chat. Please try again.'**
+  String get chat_delete_chat_failed;
+
+  /// No description provided for @chat_typing.
+  ///
+  /// In en, this message translates to:
+  /// **'Typing...'**
+  String get chat_typing;
+
+  /// No description provided for @chat_last_seen_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen {time}'**
+  String chat_last_seen_time(Object time);
+
+  /// No description provided for @chat_forward_to_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward to'**
+  String get chat_forward_to_title;
+
+  /// No description provided for @chat_close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get chat_close;
+
+  /// No description provided for @chat_search_conversations_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search conversations'**
+  String get chat_search_conversations_hint;
+
+  /// No description provided for @chat_clear_search.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get chat_clear_search;
+
+  /// No description provided for @chat_could_not_load_conversations.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load conversations'**
+  String get chat_could_not_load_conversations;
+
+  /// No description provided for @chat_no_other_conversations.
+  ///
+  /// In en, this message translates to:
+  /// **'No other conversations'**
+  String get chat_no_other_conversations;
+
+  /// No description provided for @chat_no_other_conversations_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Start another chat first, then you can forward messages here.'**
+  String get chat_no_other_conversations_hint;
+
+  /// No description provided for @chat_no_conversations_found.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations found'**
+  String get chat_no_conversations_found;
+
+  /// No description provided for @chat_search_conversations_empty_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try searching with another name or message.'**
+  String get chat_search_conversations_empty_hint;
+
+  /// No description provided for @chat_forward_to_one_chat.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward to 1 chat'**
+  String get chat_forward_to_one_chat;
+
+  /// No description provided for @chat_forward_to_chats_count.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward to {count} chats'**
+  String chat_forward_to_chats_count(Object count);
+
+  /// No description provided for @chat_default_wallpaper_applied.
+  ///
+  /// In en, this message translates to:
+  /// **'Default wallpaper applied.'**
+  String get chat_default_wallpaper_applied;
+
+  /// No description provided for @chat_wallpaper_updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallpaper updated.'**
+  String get chat_wallpaper_updated;
+
+  /// No description provided for @chat_named_wallpaper_applied.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wallpaper applied.'**
+  String chat_named_wallpaper_applied(Object name);
+
+  /// No description provided for @chat_choose_conversation_background.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a background for this conversation'**
+  String get chat_choose_conversation_background;
+
+  /// No description provided for @chat_default.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get chat_default;
+
+  /// No description provided for @chat_choose_from_gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get chat_choose_from_gallery;
+
+  /// No description provided for @chat_solid_colors.
+  ///
+  /// In en, this message translates to:
+  /// **'Solid colors'**
+  String get chat_solid_colors;
+
+  /// No description provided for @chat_emoji_recent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get chat_emoji_recent;
+
+  /// No description provided for @chat_emoji_smileys.
+  ///
+  /// In en, this message translates to:
+  /// **'Smileys'**
+  String get chat_emoji_smileys;
+
+  /// No description provided for @chat_emoji_animals.
+  ///
+  /// In en, this message translates to:
+  /// **'Animals'**
+  String get chat_emoji_animals;
+
+  /// No description provided for @chat_emoji_food.
+  ///
+  /// In en, this message translates to:
+  /// **'Food'**
+  String get chat_emoji_food;
+
+  /// No description provided for @chat_emoji_flags.
+  ///
+  /// In en, this message translates to:
+  /// **'Flags'**
+  String get chat_emoji_flags;
+
+  /// No description provided for @chat_search_emoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Search emoji'**
+  String get chat_search_emoji;
+
+  /// No description provided for @chat_no_emoji_found.
+  ///
+  /// In en, this message translates to:
+  /// **'No emoji found'**
+  String get chat_no_emoji_found;
+
+  /// No description provided for @chat_share_contact.
+  ///
+  /// In en, this message translates to:
+  /// **'Share a contact'**
+  String get chat_share_contact;
+
+  /// No description provided for @chat_search_aos_users.
+  ///
+  /// In en, this message translates to:
+  /// **'Search AOS users'**
+  String get chat_search_aos_users;
+
+  /// No description provided for @chat_could_not_load_contacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load contacts'**
+  String get chat_could_not_load_contacts;
+
+  /// No description provided for @chat_search_people_on_aos.
+  ///
+  /// In en, this message translates to:
+  /// **'Search people on AOS'**
+  String get chat_search_people_on_aos;
+
+  /// No description provided for @chat_search_people_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type at least 2 characters to find a contact to share.'**
+  String get chat_search_people_hint;
+
+  /// No description provided for @chat_no_contacts_found.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts found'**
+  String get chat_no_contacts_found;
+
+  /// No description provided for @chat_no_contacts_found_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another name, username, or email.'**
+  String get chat_no_contacts_found_hint;
+
+  /// No description provided for @chat_unmute.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute'**
+  String get chat_unmute;
+
+  /// No description provided for @chat_mute.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute'**
+  String get chat_mute;
+
+  /// No description provided for @chat_end_call.
+  ///
+  /// In en, this message translates to:
+  /// **'End call'**
+  String get chat_end_call;
+
+  /// No description provided for @chat_calling.
+  ///
+  /// In en, this message translates to:
+  /// **'Calling'**
+  String get chat_calling;
+
+  /// No description provided for @chat_ringing.
+  ///
+  /// In en, this message translates to:
+  /// **'Ringing'**
+  String get chat_ringing;
+
+  /// No description provided for @chat_incoming_call.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming call'**
+  String get chat_incoming_call;
+
+  /// No description provided for @chat_connecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting'**
+  String get chat_connecting;
+
+  /// No description provided for @chat_delete_chat_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete chat?'**
+  String get chat_delete_chat_title;
+
+  /// No description provided for @chat_delete_chat_description.
+  ///
+  /// In en, this message translates to:
+  /// **'This will remove your chat with {name} from your conversation list. It will not delete it for the other user.'**
+  String chat_delete_chat_description(Object name);
+
+  /// No description provided for @chat_this_user.
+  ///
+  /// In en, this message translates to:
+  /// **'this user'**
+  String get chat_this_user;
+
+  /// No description provided for @chat_delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get chat_delete;
+
+  /// No description provided for @chat_view_profile.
+  ///
+  /// In en, this message translates to:
+  /// **'View profile'**
+  String get chat_view_profile;
+
+  /// No description provided for @chat_view_contact.
+  ///
+  /// In en, this message translates to:
+  /// **'View contact'**
+  String get chat_view_contact;
+
+  /// No description provided for @chat_cannot_open_document.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot open this type of document'**
+  String get chat_cannot_open_document;
+
+  /// No description provided for @chat_failed_to_start_chat.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to start chat. Please try again.'**
+  String get chat_failed_to_start_chat;
+
+  /// No description provided for @chat_invalid_conversation_response.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid conversation response'**
+  String get chat_invalid_conversation_response;
+
+  /// No description provided for @chat_voice_hold_to_record.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to record a voice message'**
+  String get chat_voice_hold_to_record;
+
+  /// No description provided for @chat_voice_release_to_finish.
+  ///
+  /// In en, this message translates to:
+  /// **'Release to finish voice recording'**
+  String get chat_voice_release_to_finish;
+
+  /// No description provided for @chat_microphone_permission_denied.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone permission denied.'**
+  String get chat_microphone_permission_denied;
+
+  /// No description provided for @chat_voice_record_start_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start voice recording.'**
+  String get chat_voice_record_start_failed;
+
+  /// No description provided for @chat_voice_record_finish_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not finish voice recording.'**
+  String get chat_voice_record_finish_failed;
+
+  /// No description provided for @chat_language_english.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get chat_language_english;
+
+  /// No description provided for @chat_language_swahili.
+  ///
+  /// In en, this message translates to:
+  /// **'Swahili'**
+  String get chat_language_swahili;
+
+  /// No description provided for @chat_language_french.
+  ///
+  /// In en, this message translates to:
+  /// **'French'**
+  String get chat_language_french;
+
+  /// No description provided for @chat_language_spanish.
+  ///
+  /// In en, this message translates to:
+  /// **'Spanish'**
+  String get chat_language_spanish;
+
+  /// No description provided for @chat_language_german.
+  ///
+  /// In en, this message translates to:
+  /// **'German'**
+  String get chat_language_german;
+
+  /// No description provided for @chat_language_portuguese.
+  ///
+  /// In en, this message translates to:
+  /// **'Portuguese'**
+  String get chat_language_portuguese;
+
+  /// No description provided for @chat_language_arabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get chat_language_arabic;
+
+  /// No description provided for @chat_language_hausa.
+  ///
+  /// In en, this message translates to:
+  /// **'Hausa'**
+  String get chat_language_hausa;
+
+  /// No description provided for @chat_language_yoruba.
+  ///
+  /// In en, this message translates to:
+  /// **'Yoruba'**
+  String get chat_language_yoruba;
+
+  /// No description provided for @chat_language_igbo.
+  ///
+  /// In en, this message translates to:
+  /// **'Igbo'**
+  String get chat_language_igbo;
+
+  /// No description provided for @chat_language_amharic.
+  ///
+  /// In en, this message translates to:
+  /// **'Amharic'**
+  String get chat_language_amharic;
+
+  /// No description provided for @chat_language_somali.
+  ///
+  /// In en, this message translates to:
+  /// **'Somali'**
+  String get chat_language_somali;
+
+  /// No description provided for @chat_language_kinyarwanda.
+  ///
+  /// In en, this message translates to:
+  /// **'Kinyarwanda'**
+  String get chat_language_kinyarwanda;
+
+  /// No description provided for @chat_language_luganda.
+  ///
+  /// In en, this message translates to:
+  /// **'Luganda'**
+  String get chat_language_luganda;
+
+  /// No description provided for @chat_language_zulu.
+  ///
+  /// In en, this message translates to:
+  /// **'Zulu'**
+  String get chat_language_zulu;
+
+  /// No description provided for @chat_language_xhosa.
+  ///
+  /// In en, this message translates to:
+  /// **'Xhosa'**
+  String get chat_language_xhosa;
+
+  /// No description provided for @chat_wallpaper_midnight.
+  ///
+  /// In en, this message translates to:
+  /// **'Midnight'**
+  String get chat_wallpaper_midnight;
+
+  /// No description provided for @chat_wallpaper_navy.
+  ///
+  /// In en, this message translates to:
+  /// **'Navy'**
+  String get chat_wallpaper_navy;
+
+  /// No description provided for @chat_wallpaper_forest.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest'**
+  String get chat_wallpaper_forest;
+
+  /// No description provided for @chat_wallpaper_plum.
+  ///
+  /// In en, this message translates to:
+  /// **'Plum'**
+  String get chat_wallpaper_plum;
+
+  /// No description provided for @chat_wallpaper_charcoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Charcoal'**
+  String get chat_wallpaper_charcoal;
+
+  /// No description provided for @chat_wallpaper_maroon.
+  ///
+  /// In en, this message translates to:
+  /// **'Maroon'**
+  String get chat_wallpaper_maroon;
+
+  /// No description provided for @chat_wallpaper_teal.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal'**
+  String get chat_wallpaper_teal;
+
+  /// No description provided for @chat_wallpaper_coffee.
+  ///
+  /// In en, this message translates to:
+  /// **'Coffee'**
+  String get chat_wallpaper_coffee;
 }
 
 class _AppLocalizationsDelegate

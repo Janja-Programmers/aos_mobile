@@ -11,6 +11,7 @@ import 'package:africaonlinestores/features/sellers/domain/seller_list_item.dart
 import 'package:africaonlinestores/features/social/application/providers/social_connections_provider.dart';
 import 'package:africaonlinestores/features/social/application/state/social_connections_state.dart';
 import 'package:africaonlinestores/features/social/domain/social_friend.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/shared/components/verified_badge.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
@@ -189,13 +190,19 @@ class _NewConversationScreenState extends ConsumerState<NewConversationScreen> {
               );
 
           if (!started && mounted) {
-            ShowSnack(context, 'Failed to start call').error();
+            ShowSnack(
+              context,
+              AppLocalizations.of(context).chat_failed_to_start_call,
+            ).error();
           }
         },
       );
     } catch (_) {
       if (mounted) {
-        ShowSnack(context, 'Failed to start call').error();
+        ShowSnack(
+          context,
+          AppLocalizations.of(context).chat_failed_to_start_call,
+        ).error();
       }
     } finally {
       _isStartingCall = false;
@@ -205,6 +212,7 @@ class _NewConversationScreenState extends ConsumerState<NewConversationScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: colors.surface,
@@ -219,8 +227,8 @@ class _NewConversationScreenState extends ConsumerState<NewConversationScreen> {
                 controller: _searchController,
                 autofocus: true,
                 hintText: _selectedTab == _NewConversationTab.sellers
-                    ? 'Search sellers...'
-                    : 'Search friends...',
+                    ? l10n.chat_search_sellers_hint
+                    : l10n.chat_search_friends_hint,
                 margin: EdgeInsets.zero,
                 onChanged: _syncSearch,
                 onSubmitted: _syncSearch,
@@ -260,37 +268,42 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 28, 18),
       child: Row(
         children: [
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onBack,
-              borderRadius: BorderRadius.circular(14),
-              child: Ink(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: colors.elevated,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: colors.border),
-                ),
-                child: Icon(
-                  Icons.arrow_back_rounded,
-                  color: colors.textPrimary,
-                  size: 30,
+          Semantics(
+            button: true,
+            label: l10n.chat_back,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onBack,
+                borderRadius: BorderRadius.circular(14),
+                child: Ink(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: colors.elevated,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: Icon(
+                    Icons.arrow_back_rounded,
+                    color: colors.textPrimary,
+                    size: 30,
+                  ),
                 ),
               ),
             ),
           ),
           Expanded(
             child: Text(
-              'New Conversation',
+              l10n.chat_new_conversation,
               textAlign: TextAlign.center,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: context.h4.copyWith(
                 fontSize: 23,
@@ -314,6 +327,7 @@ class _SegmentedTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 28),
@@ -326,12 +340,12 @@ class _SegmentedTabs extends StatelessWidget {
       child: Row(
         children: [
           _SegmentButton(
-            label: 'Verified Sellers',
+            label: l10n.chat_verified_sellers,
             selected: selectedTab == _NewConversationTab.sellers,
             onTap: () => onChanged(_NewConversationTab.sellers),
           ),
           _SegmentButton(
-            label: 'Friends',
+            label: l10n.chat_friends,
             selected: selectedTab == _NewConversationTab.friends,
             onTap: () => onChanged(_NewConversationTab.friends),
           ),
@@ -363,7 +377,8 @@ class _SegmentButton extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
-          height: 52,
+          constraints: const BoxConstraints(minHeight: 52),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: selected ? colors.primary : Colors.transparent,
@@ -371,7 +386,7 @@ class _SegmentButton extends StatelessWidget {
           ),
           child: Text(
             label,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: context.p.copyWith(
               color: selected ? colors.white : colors.textMuted,
@@ -399,14 +414,15 @@ class _SellerResults extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(sellerListControllerProvider);
     final controller = ref.read(sellerListControllerProvider.notifier);
 
     if (state.isLoadingInitial && state.items.isEmpty) {
-      return const _CenteredState(
+      return _CenteredState(
         icon: Icons.storefront_outlined,
-        title: 'Loading sellers',
-        message: 'Please wait while we find verified sellers.',
+        title: l10n.chat_loading_sellers,
+        message: l10n.chat_loading_sellers_hint,
         showSpinner: true,
       );
     }
@@ -414,9 +430,9 @@ class _SellerResults extends ConsumerWidget {
     if (state.error != null && state.items.isEmpty) {
       return _CenteredState(
         icon: Icons.error_outline_rounded,
-        title: 'Could not load sellers',
+        title: l10n.chat_could_not_load_sellers,
         message: state.error!.message,
-        actionText: 'Retry',
+        actionText: l10n.chat_retry,
         onAction: controller.retry,
       );
     }
@@ -425,12 +441,12 @@ class _SellerResults extends ConsumerWidget {
       return _CenteredState(
         icon: Icons.search_off_rounded,
         title: state.search.isEmpty
-            ? 'No verified sellers'
-            : 'No sellers found',
+            ? l10n.chat_no_verified_sellers
+            : l10n.chat_no_sellers_found,
         message: state.search.isEmpty
-            ? 'Verified sellers will appear here when available.'
-            : 'Try another seller name, category, or location.',
-        actionText: 'Refresh',
+            ? l10n.chat_no_verified_sellers_hint
+            : l10n.chat_no_sellers_found_hint,
+        actionText: l10n.chat_refresh,
         onAction: controller.retry,
       );
     }
@@ -483,6 +499,7 @@ class _FriendResults extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(socialConnectionsControllerProvider(args));
     final controller = ref.read(
       socialConnectionsControllerProvider(args).notifier,
@@ -490,10 +507,10 @@ class _FriendResults extends ConsumerWidget {
     final items = state.items;
 
     if (state.isLoading && items.isEmpty) {
-      return const _CenteredState(
+      return _CenteredState(
         icon: Icons.people_alt_outlined,
-        title: 'Loading friends',
-        message: 'Please wait while we find your friends.',
+        title: l10n.chat_loading_friends,
+        message: l10n.chat_loading_friends_hint,
         showSpinner: true,
       );
     }
@@ -501,9 +518,9 @@ class _FriendResults extends ConsumerWidget {
     if (state.hasError && items.isEmpty) {
       return _CenteredState(
         icon: Icons.error_outline_rounded,
-        title: 'Could not load friends',
-        message: state.errorMessage ?? 'Please try again.',
-        actionText: 'Retry',
+        title: l10n.chat_could_not_load_friends,
+        message: state.errorMessage ?? l10n.chat_try_again,
+        actionText: l10n.chat_retry,
         onAction: controller.refresh,
       );
     }
@@ -511,11 +528,13 @@ class _FriendResults extends ConsumerWidget {
     if (items.isEmpty) {
       return _CenteredState(
         icon: Icons.search_off_rounded,
-        title: state.query.isEmpty ? 'No friends yet' : 'No friends found',
+        title: state.query.isEmpty
+            ? l10n.chat_no_friends_yet
+            : l10n.chat_no_friends_found,
         message: state.query.isEmpty
-            ? 'Friends will appear here once you follow each other.'
-            : 'Try searching with another name or email.',
-        actionText: 'Refresh',
+            ? l10n.chat_no_friends_yet_hint
+            : l10n.chat_no_friends_found_hint,
+        actionText: l10n.chat_refresh,
         onAction: controller.refresh,
       );
     }
@@ -539,9 +558,9 @@ class _FriendResults extends ConsumerWidget {
         final friend = items[index];
         return _ContactCard(
           title: friend.displayName,
-          subtitle: _friendSubtitle(friend),
+          subtitle: _friendSubtitle(friend, l10n),
           avatarUrl: friend.userImage,
-          initial: friend.initials.characters.first,
+          initial: _initial(friend.initials),
           verified: friend.isVerified,
           online: friend.isFriend,
           onMessage: () => onMessage(friend),
@@ -551,11 +570,14 @@ class _FriendResults extends ConsumerWidget {
     );
   }
 
-  String _friendSubtitle(SocialFriend friend) {
-    if (friend.isFriend) return 'Online';
-    if (friend.followedBackAt != null) return 'Last seen recently';
-    if (friend.followedAt != null) return 'Last seen recently';
-    return 'Friend';
+  String _friendSubtitle(
+    SocialFriend friend,
+    AppLocalizations l10n,
+  ) {
+    if (friend.isFriend) return l10n.chat_online;
+    if (friend.followedBackAt != null) return l10n.chat_last_seen_recently;
+    if (friend.followedAt != null) return l10n.chat_last_seen_recently;
+    return l10n.chat_friend;
   }
 }
 
@@ -583,6 +605,7 @@ class _ContactCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
     final imageUrl = buildFileUrl(avatarUrl);
 
     return ConstrainedBox(
@@ -600,7 +623,7 @@ class _ContactCard extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 CircleAvatar(
-                  radius: 32,
+                  radius: 28,
                   backgroundColor: colors.primary.withValues(alpha: 0.16),
                   backgroundImage: imageUrl == null
                       ? null
@@ -631,7 +654,7 @@ class _ContactCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(width: 18),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -666,15 +689,17 @@ class _ContactCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
             _RoundActionButton(
+              semanticLabel: l10n.chat_message_contact,
               icon: Icons.chat_bubble_rounded,
               iconColor: colors.primary,
               backgroundColor: colors.primary.withValues(alpha: 0.13),
               onTap: onMessage,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
             _RoundActionButton(
+              semanticLabel: l10n.chat_call_contact,
               icon: Icons.call_rounded,
               iconColor: colors.success,
               backgroundColor: colors.success.withValues(alpha: 0.13),
@@ -689,12 +714,14 @@ class _ContactCard extends StatelessWidget {
 
 class _RoundActionButton extends StatelessWidget {
   const _RoundActionButton({
+    required this.semanticLabel,
     required this.icon,
     required this.iconColor,
     required this.backgroundColor,
     required this.onTap,
   });
 
+  final String semanticLabel;
   final IconData icon;
   final Color iconColor;
   final Color backgroundColor;
@@ -702,18 +729,22 @@ class _RoundActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Container(
-        width: 54,
-        height: 54,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          shape: BoxShape.circle,
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          width: 48,
+          height: 48,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: iconColor, size: 25),
         ),
-        child: Icon(icon, color: iconColor, size: 27),
       ),
     );
   }
@@ -741,7 +772,7 @@ class _CenteredState extends StatelessWidget {
     final colors = context.appColors;
 
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(28),
         child: Column(
           mainAxisSize: MainAxisSize.min,

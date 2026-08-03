@@ -10,28 +10,35 @@ mixin ChatMessagesRealtime on ChatMessagesControllerBase {
     final realtime = ref.read(chatRealtimeServiceProvider);
 
     await _cancelRealtimeSubscriptions();
+    final generation = _sessionGeneration;
 
     _messageSub = realtime.messages.listen((data) {
+      if (!_isCurrentSession(generation)) return;
       _handleRealtimeMessage(asJsonMap(data));
     });
 
     _messageStatusSub = realtime.messageStatus.listen((data) {
+      if (!_isCurrentSession(generation)) return;
       _handleRealtimeMessageStatus(asJsonMap(data));
     });
 
     _messageEditedSub = realtime.messageEdited.listen((data) {
+      if (!_isCurrentSession(generation)) return;
       _handleRealtimeMessageEdited(asJsonMap(data));
     });
 
     _messagesDeletedSub = realtime.messagesDeleted.listen((data) async {
+      if (!_isCurrentSession(generation)) return;
       await _handleRealtimeMessagesDeleted(asJsonMap(data));
     });
 
     _messageReactionSub = realtime.messageReactionUpdated.listen((data) {
+      if (!_isCurrentSession(generation)) return;
       _handleRealtimeReactionUpdated(asJsonMap(data));
     });
   }
 
+  @override
   Future<void> _cancelRealtimeSubscriptions() async {
     await _messageSub?.cancel();
     await _messageStatusSub?.cancel();

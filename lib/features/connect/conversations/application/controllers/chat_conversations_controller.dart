@@ -7,6 +7,7 @@ import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/chat_identity.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,8 +19,16 @@ class ConversationsController
 
   String _currentUser = '';
   String? _activeSid;
-  bool _isBootstrapping = false;
+  int _bootstrapSerial = 0;
   int _loadSerial = 0;
+  int _nextOffset = 0;
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
+
+  static const int _pageSize = 30;
+
+  bool get hasMore => _hasMore;
+  bool get isLoadingMore => _isLoadingMore;
 
   StreamSubscription<Object?>? _messageSub;
   StreamSubscription<Object?>? _messageEditedSub;
@@ -39,25 +48,42 @@ class ConversationsController
   void _handleAuthChanged(AuthState? previous, AuthState next) {
     if (next is AuthAuthenticated) {
       final sid = next.sid.trim();
-      final user = _normalizeUser(next.user.email);
+      final user = normalizeCanonicalUserId(next.user.accountId);
 
-      if (_activeSid == sid && _currentUser == user && state.hasValue) {
+      if (_activeSid == sid && _currentUser == user) {
         return;
       }
 
       _activeSid = sid;
       _currentUser = user.isNotEmpty
           ? user
-          : _normalizeUser(ref.read(currentUserProvider));
+          : normalizeCanonicalUserId(
+              ref.read(currentCanonicalAccountIdProvider),
+            );
 
-      unawaited(_bootstrapForAuthenticatedUser());
+      // A conversation list belongs to exactly one authenticated account.
+      // Clear it before loading the next session so account A is never rendered
+      // while account B is becoming active.
+      ++_loadSerial;
+      _nextOffset = 0;
+      _hasMore = true;
+      _isLoadingMore = false;
+      state = const AsyncLoading();
+      unawaited(_cancelRealtimeSubscriptions());
+
+      final bootstrapSerial = ++_bootstrapSerial;
+      unawaited(_bootstrapForAuthenticatedUser(bootstrapSerial));
       return;
     }
 
-    if (next is AuthGuest) {
+    if (next is AuthGuest || next is AuthRestorationFailure) {
       _activeSid = null;
       _currentUser = '';
       _loadSerial++;
+      _bootstrapSerial++;
+      _nextOffset = 0;
+      _hasMore = true;
+      _isLoadingMore = false;
       unawaited(_cancelRealtimeSubscriptions());
       state = const AsyncData([]);
       return;
@@ -68,21 +94,15 @@ class ConversationsController
     }
   }
 
-  Future<void> _bootstrapForAuthenticatedUser() async {
-    if (_isBootstrapping) return;
-
-    _isBootstrapping = true;
-
-    try {
-      if (!state.hasValue) {
-        state = const AsyncLoading();
-      }
-
-      await load();
-      await _subscribeToRealtime();
-    } finally {
-      _isBootstrapping = false;
+  Future<void> _bootstrapForAuthenticatedUser(int bootstrapSerial) async {
+    if (!state.hasValue) {
+      state = const AsyncLoading();
     }
+
+    await load();
+    if (!mounted || bootstrapSerial != _bootstrapSerial) return;
+
+    await _subscribeToRealtime();
   }
 
   // -----------------------------
@@ -97,6 +117,8 @@ class ConversationsController
     }
 
     final serial = ++_loadSerial;
+    _nextOffset = 0;
+    _hasMore = true;
     final repo = ref.read(chatRepositoryProvider);
     final res = await repo.getConversations();
 
@@ -110,19 +132,109 @@ class ConversationsController
     }
 
     final conversations = List<ChatConversation>.from(res.rightOrNull ?? []);
+    _nextOffset = conversations.length;
+    _hasMore = conversations.length >= _pageSize;
 
-    conversations.sort((a, b) {
-      final aTime = a.lastMessageAt;
-      final bTime = b.lastMessageAt;
-
-      if (aTime == null && bTime == null) return 0;
-      if (aTime == null) return 1;
-      if (bTime == null) return -1;
-
-      return bTime.compareTo(aTime);
-    });
+    conversations.sort(_compareConversations);
 
     state = AsyncData(conversations);
+  }
+
+  Future<void> loadMore() async {
+    final auth = ref.read(authControllerProvider);
+    if (auth is! AuthAuthenticated ||
+        _isLoadingMore ||
+        !_hasMore ||
+        !state.hasValue) {
+      return;
+    }
+
+    final loadSerial = _loadSerial;
+    final activeSid = _activeSid;
+    _isLoadingMore = true;
+    state = AsyncData(List<ChatConversation>.from(state.value ?? const []));
+
+    try {
+      final repo = ref.read(chatRepositoryProvider);
+      final res = await repo.getConversations(
+        offset: _nextOffset,
+      );
+      if (!mounted || loadSerial != _loadSerial || activeSid != _activeSid) {
+        return;
+      }
+
+      if (res.isLeft) {
+        appLogger.w(
+          '[ConversationsController] loadMore failed: ${res.leftOrNull}',
+        );
+        return;
+      }
+
+      final page = List<ChatConversation>.from(res.rightOrNull ?? const []);
+      _nextOffset += page.length;
+      _hasMore = page.length >= _pageSize;
+
+      final byId = <String, ChatConversation>{
+        for (final conversation in state.value ?? const <ChatConversation>[])
+          conversation.id: conversation,
+      };
+      for (final conversation in page) {
+        byId.putIfAbsent(conversation.id, () => conversation);
+      }
+
+      final merged = byId.values.toList()..sort(_compareConversations);
+      state = AsyncData(merged);
+    } finally {
+      _isLoadingMore = false;
+      if (mounted &&
+          loadSerial == _loadSerial &&
+          activeSid == _activeSid &&
+          state.hasValue) {
+        state = AsyncData(List<ChatConversation>.from(state.value ?? const []));
+      }
+    }
+  }
+
+  Future<bool> markAllRead() async {
+    final auth = ref.read(authControllerProvider);
+    if (auth is! AuthAuthenticated) return false;
+
+    final activeSid = _activeSid;
+    final loadSerial = _loadSerial;
+    final repo = ref.read(chatRepositoryProvider);
+    final all = <String, ChatConversation>{};
+    var offset = 0;
+
+    while (true) {
+      final res = await repo.getConversations(limit: 50, offset: offset);
+      if (!mounted || activeSid != _activeSid || loadSerial != _loadSerial) {
+        return false;
+      }
+      if (res.isLeft) return false;
+      final page = res.rightOrNull ?? const <ChatConversation>[];
+      for (final conversation in page) {
+        all[conversation.id] = conversation;
+      }
+      offset += page.length;
+      if (page.length < 50) break;
+    }
+
+    var allSucceeded = true;
+    for (final conversation in all.values.where(
+      (item) => item.unreadCount > 0,
+    )) {
+      final result = await repo.markRead(conversation.id);
+      if (!mounted || activeSid != _activeSid || loadSerial != _loadSerial) {
+        return false;
+      }
+      if (result.isLeft) {
+        allSucceeded = false;
+        continue;
+      }
+      markConversationAsReadLocally(conversation.id);
+    }
+
+    return allSucceeded;
   }
 
   Future<void> refresh() async {
@@ -147,6 +259,8 @@ class ConversationsController
       return false;
     }
 
+    final activeSid = _activeSid;
+    final loadSerial = _loadSerial;
     final repo = ref.read(chatRepositoryProvider);
     final previousState = state;
 
@@ -156,7 +270,9 @@ class ConversationsController
 
     final res = await repo.deleteConversation(cleanId);
 
-    if (!mounted) return false;
+    if (!mounted || activeSid != _activeSid || loadSerial != _loadSerial) {
+      return false;
+    }
 
     if (res.isLeft) {
       state = previousState;
@@ -199,6 +315,11 @@ class ConversationsController
       conversationId: conversationId,
       lastMessage: preview,
       lastMessageAt: message.createdAt,
+      lastSender: message.senderCanonicalId,
+      lastSenderDisplayName: message.senderDisplayName,
+      lastSenderAvatar: message.senderAvatar,
+      lastMessageDeliveredAt: message.deliveredAt,
+      lastMessageReadAt: message.readAt,
       incrementUnread: incrementUnread,
       fallbackUser: fallbackUser,
       fallbackDisplayName: fallbackDisplayName,
@@ -224,14 +345,14 @@ class ConversationsController
 
       final message = ChatMessage.fromJson(asJsonMap(rawMessage));
 
-      final sender = _normalizeUser(message.sender);
+      final sender = normalizeCanonicalUserId(message.senderCanonicalId);
       final shouldIncrement = sender.isNotEmpty && sender != _currentUser;
 
       syncConversationWithMessage(
         conversationId: conversationId,
         message: message,
         incrementUnread: shouldIncrement,
-        fallbackUser: shouldIncrement ? message.sender : null,
+        fallbackUser: shouldIncrement ? message.senderCanonicalId : null,
         fallbackDisplayName: message.senderDisplayName,
         fallbackAvatar: message.senderAvatar,
       );
@@ -275,6 +396,11 @@ class ConversationsController
     required String conversationId,
     required String lastMessage,
     required DateTime lastMessageAt,
+    required String lastSender,
+    String? lastSenderDisplayName,
+    String? lastSenderAvatar,
+    DateTime? lastMessageDeliveredAt,
+    DateTime? lastMessageReadAt,
     bool incrementUnread = false,
     String? fallbackUser,
     String? fallbackDisplayName,
@@ -293,6 +419,11 @@ class ConversationsController
       final updatedConversation = existing.copyWith(
         lastMessage: lastMessage,
         lastMessageAt: lastMessageAt,
+        lastSender: normalizeCanonicalUserId(lastSender),
+        lastSenderDisplayName: _safeText(lastSenderDisplayName),
+        lastSenderAvatar: _safeText(lastSenderAvatar),
+        lastMessageDeliveredAt: lastMessageDeliveredAt,
+        lastMessageReadAt: lastMessageReadAt,
         unreadCount: incrementUnread
             ? existing.unreadCount + 1
             : existing.unreadCount,
@@ -306,17 +437,41 @@ class ConversationsController
       return;
     }
 
+    final canonicalFallbackUser = normalizeCanonicalUserId(fallbackUser);
+    final canonicalLastSender = normalizeCanonicalUserId(lastSender);
     final newConversation = ChatConversation(
       id: conversationId,
-      user: fallbackUser ?? '',
-      displayName: _safeText(fallbackDisplayName) ?? 'New Chat',
+      user: canonicalFallbackUser.isNotEmpty
+          ? canonicalFallbackUser
+          : canonicalLastSender,
+      displayName:
+          _safeText(fallbackDisplayName) ??
+          _safeText(lastSenderDisplayName) ??
+          (canonicalFallbackUser.isNotEmpty
+              ? canonicalFallbackUser
+              : conversationId),
       avatar: _safeText(fallbackAvatar),
       lastMessage: lastMessage,
       lastMessageAt: lastMessageAt,
+      lastSender: canonicalLastSender,
+      lastSenderDisplayName: _safeText(lastSenderDisplayName),
+      lastSenderAvatar: _safeText(lastSenderAvatar),
+      lastMessageDeliveredAt: lastMessageDeliveredAt,
+      lastMessageReadAt: lastMessageReadAt,
       unreadCount: incrementUnread ? 1 : 0,
     );
 
     state = AsyncData(<ChatConversation>[newConversation, ...current]);
+  }
+
+  int _compareConversations(ChatConversation a, ChatConversation b) {
+    final aTime = a.lastMessageAt;
+    final bTime = b.lastMessageAt;
+    if (aTime == null && bTime == null) return a.id.compareTo(b.id);
+    if (aTime == null) return 1;
+    if (bTime == null) return -1;
+    final byTime = bTime.compareTo(aTime);
+    return byTime != 0 ? byTime : a.id.compareTo(b.id);
   }
 
   String _messagePreview(ChatMessage message) {
@@ -349,10 +504,6 @@ class ConversationsController
     }
 
     return 'Message';
-  }
-
-  String _normalizeUser(String? value) {
-    return value?.trim().toLowerCase() ?? '';
   }
 
   String? _safeText(String? value) {

@@ -17,6 +17,9 @@ mixin ChatMessagesTranslation on ChatMessagesControllerBase {
     required String messageId,
     required String targetLanguage,
   }) async {
+    final generation = _sessionGeneration;
+    if (!_isCurrentSession(generation)) return false;
+
     final cleanMessageId = messageId.trim();
     final cleanTargetLanguage = targetLanguage.trim();
 
@@ -43,6 +46,7 @@ mixin ChatMessagesTranslation on ChatMessagesControllerBase {
       targetLanguage: cleanTargetLanguage,
     );
 
+    if (!_isCurrentSession(generation)) return false;
     _translatingMessageIds.remove(cleanMessageId);
 
     if (res.isLeft) {

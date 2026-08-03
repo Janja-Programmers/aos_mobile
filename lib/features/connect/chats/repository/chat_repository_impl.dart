@@ -24,8 +24,11 @@ class ChatRepository {
     return api.openConversation(user);
   }
 
-  Future<Either<Failure, List<ChatConversation>>> getConversations() {
-    return api.listConversations();
+  Future<Either<Failure, List<ChatConversation>>> getConversations({
+    int limit = 30,
+    int offset = 0,
+  }) {
+    return api.listConversations(limit: limit, offset: offset);
   }
 
   Future<Either<Failure, void>> deleteConversation(String conversationId) {

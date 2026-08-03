@@ -691,4 +691,805 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get unableToOpenShareOptions =>
       'Impossible d’ouvrir les options de partage.';
+
+  @override
+  String get chat_connect_title => 'AOS Connect';
+
+  @override
+  String get chat_close_connect => 'Fermer Connect';
+
+  @override
+  String get chat_close_search => 'Fermer la recherche';
+
+  @override
+  String get chat_search => 'Rechercher';
+
+  @override
+  String get chat_more_options => 'Plus d’options';
+
+  @override
+  String get chat_search_chats_hint => 'Rechercher des discussions…';
+
+  @override
+  String get chat_search_calls_hint => 'Rechercher des appels…';
+
+  @override
+  String get chat_all_marked_read =>
+      'Toutes les discussions ont été marquées comme lues.';
+
+  @override
+  String get chat_some_mark_read_failed =>
+      'Certaines discussions n’ont pas pu être marquées comme lues.';
+
+  @override
+  String get chat_clear_call_log_title => 'Effacer le journal des appels ?';
+
+  @override
+  String get chat_clear_call_log_body =>
+      'Cela supprime votre historique d’appels visible. Les données des autres utilisateurs ne sont pas supprimées.';
+
+  @override
+  String get chat_cancel => 'Annuler';
+
+  @override
+  String get chat_clear => 'Effacer';
+
+  @override
+  String get chat_call_log_cleared => 'Journal des appels effacé.';
+
+  @override
+  String get chat_call_log_clear_failed =>
+      'Impossible d’effacer le journal des appels.';
+
+  @override
+  String get chat_clear_call_log => 'Effacer le journal des appels';
+
+  @override
+  String get chat_settings => 'Paramètres';
+
+  @override
+  String get chat_mark_all_read => 'Tout marquer comme lu';
+
+  @override
+  String get chat_starred_messages => 'Messages favoris';
+
+  @override
+  String get chat_chats => 'Discussions';
+
+  @override
+  String get chat_new_conversation => 'Nouvelle discussion';
+
+  @override
+  String get chat_new => 'Nouveau';
+
+  @override
+  String get chat_calls => 'Appels';
+
+  @override
+  String get chat_back => 'Retour';
+
+  @override
+  String get chat_call => 'Appeler';
+
+  @override
+  String get chat_video_call => 'Appel vidéo';
+
+  @override
+  String get chat_change_wallpaper => 'Changer le fond d’écran';
+
+  @override
+  String get chat_user_might_be_offline =>
+      'L’utilisateur est peut-être hors ligne';
+
+  @override
+  String get chat_failed_to_start_call => 'Impossible de démarrer l’appel';
+
+  @override
+  String get chat_gallery => 'Galerie';
+
+  @override
+  String get chat_camera => 'Caméra';
+
+  @override
+  String get chat_voice_call => 'Appel vocal';
+
+  @override
+  String get chat_location => 'Localisation';
+
+  @override
+  String get chat_document => 'Document';
+
+  @override
+  String get chat_contact => 'Contact';
+
+  @override
+  String get chat_attachment_upload_failed =>
+      'Échec de l’envoi de la pièce jointe. Réessayez.';
+
+  @override
+  String get chat_message_hint => 'Message';
+
+  @override
+  String get chat_share_location_title => 'Partager la localisation';
+
+  @override
+  String get chat_retry => 'Réessayer';
+
+  @override
+  String get chat_could_not_load_messages =>
+      'Impossible de charger les messages';
+
+  @override
+  String get chat_check_connection_try_again =>
+      'Vérifiez votre connexion et réessayez.';
+
+  @override
+  String get chat_no_messages_yet => 'Aucun message';
+
+  @override
+  String get chat_no_messages_hint =>
+      'Envoyez un message pour commencer cette discussion.';
+
+  @override
+  String get chat_older_messages_load_failed =>
+      'Impossible de charger les anciens messages.';
+
+  @override
+  String get chat_reply => 'Répondre';
+
+  @override
+  String get chat_edit => 'Modifier';
+
+  @override
+  String get chat_copy => 'Copier';
+
+  @override
+  String get chat_forward => 'Transférer';
+
+  @override
+  String get chat_translate_again => 'Retraduire';
+
+  @override
+  String get chat_translate => 'Traduire';
+
+  @override
+  String get chat_unstar => 'Retirer des favoris';
+
+  @override
+  String get chat_star => 'Ajouter aux favoris';
+
+  @override
+  String get chat_delete_for_me => 'Supprimer pour moi';
+
+  @override
+  String get chat_delete_for_everyone => 'Supprimer pour tout le monde';
+
+  @override
+  String get chat_message_reactions => 'Réactions au message';
+
+  @override
+  String get chat_choose_another_reaction => 'Choisir une autre réaction';
+
+  @override
+  String chat_react_with(Object emoji) {
+    return 'Réagir avec $emoji';
+  }
+
+  @override
+  String chat_remove_reaction(Object emoji) {
+    return 'Retirer la réaction $emoji';
+  }
+
+  @override
+  String get chat_editing_message => 'Modification du message';
+
+  @override
+  String get chat_cancel_editing => 'Annuler la modification';
+
+  @override
+  String get chat_copied_to_clipboard => 'Copié dans le presse-papiers';
+
+  @override
+  String get chat_message_still_failed =>
+      'Le message n’a toujours pas été envoyé. Réessayez.';
+
+  @override
+  String get chat_send_ad_failed =>
+      'Impossible d’envoyer le message de l’annonce. Réessayez.';
+
+  @override
+  String get chat_send_failed => 'Impossible d’envoyer le message. Réessayez.';
+
+  @override
+  String get chat_star_update_failed =>
+      'Impossible de mettre à jour le favori.';
+
+  @override
+  String get chat_reaction_update_failed =>
+      'Impossible de mettre à jour la réaction.';
+
+  @override
+  String get chat_forward_failed => 'Impossible de transférer le message.';
+
+  @override
+  String get chat_forwarded => 'Message transféré.';
+
+  @override
+  String chat_forwarded_to_chats(Object count) {
+    return 'Message transféré vers $count discussions.';
+  }
+
+  @override
+  String get chat_translate_failed => 'Impossible de traduire le message.';
+
+  @override
+  String get chat_delete_failed => 'Impossible de supprimer le message.';
+
+  @override
+  String get chat_deleted_for_everyone =>
+      'Message supprimé pour tout le monde.';
+
+  @override
+  String get chat_deleted_for_you => 'Message supprimé pour vous.';
+
+  @override
+  String get chat_edit_failed => 'Impossible de modifier le message.';
+
+  @override
+  String get chat_settings_title => 'Paramètres de discussion';
+
+  @override
+  String get chat_privacy => 'Confidentialité';
+
+  @override
+  String get chat_read_receipts => 'Confirmations de lecture';
+
+  @override
+  String get chat_read_receipts_managed =>
+      'Gérées par AOS pour la remise des messages';
+
+  @override
+  String get chat_last_seen_online => 'Dernière connexion et en ligne';
+
+  @override
+  String get chat_no_backend_preference =>
+      'Aucune préférence de compte n’est exposée par le serveur';
+
+  @override
+  String get chat_blocked_contacts => 'Contacts bloqués';
+
+  @override
+  String get chat_chats_section => 'Discussions';
+
+  @override
+  String get chat_wallpaper => 'Fond d’écran des discussions';
+
+  @override
+  String get chat_wallpaper_description =>
+      'Définir le fond d’écran par défaut des discussions';
+
+  @override
+  String get chat_enter_is_send => 'Entrée pour envoyer';
+
+  @override
+  String get chat_enter_is_send_description =>
+      'La touche Entrée envoie votre message';
+
+  @override
+  String get chat_media_auto_download =>
+      'Téléchargement automatique des médias';
+
+  @override
+  String get chat_unavailable_backend =>
+      'Non disponible dans le contrat serveur actuel';
+
+  @override
+  String get chat_notifications => 'Notifications';
+
+  @override
+  String get chat_message_notifications => 'Notifications de messages';
+
+  @override
+  String get chat_call_notifications => 'Notifications d’appels';
+
+  @override
+  String get chat_system_notification_settings =>
+      'Contrôlées par les paramètres de notification du système';
+
+  @override
+  String get chat_on => 'Activé';
+
+  @override
+  String get chat_off => 'Désactivé';
+
+  @override
+  String get chat_starred_load_failed =>
+      'Impossible de charger les messages favoris';
+
+  @override
+  String get chat_no_starred_messages => 'Aucun message favori';
+
+  @override
+  String get chat_no_starred_messages_hint =>
+      'Les messages ajoutés aux favoris apparaîtront ici.';
+
+  @override
+  String get chat_unstar_message => 'Retirer le message des favoris';
+
+  @override
+  String get chat_unstar_failed =>
+      'Impossible de retirer le message des favoris.';
+
+  @override
+  String get chat_message_unstarred => 'Message retiré des favoris.';
+
+  @override
+  String get chat_attachment => 'Pièce jointe';
+
+  @override
+  String get chat_you => 'Vous';
+
+  @override
+  String get chat_other_user => 'Autre utilisateur';
+
+  @override
+  String get chat_aos_user => 'Utilisateur AOS';
+
+  @override
+  String get chat_sending => 'Envoi…';
+
+  @override
+  String get chat_edited => 'Modifié';
+
+  @override
+  String get chat_starred => 'Favori';
+
+  @override
+  String get chat_translated => 'Traduit';
+
+  @override
+  String get chat_failed_to_send => 'Échec de l’envoi';
+
+  @override
+  String get chat_read => 'Lu';
+
+  @override
+  String get chat_delivered => 'Remis';
+
+  @override
+  String get chat_sent => 'Envoyé';
+
+  @override
+  String get chat_forwarded_label => 'Transféré';
+
+  @override
+  String get chat_deleted_message => 'Ce message a été supprimé';
+
+  @override
+  String get chat_translating => 'Traduction…';
+
+  @override
+  String get chat_tap_to_retry => 'Appuyer pour réessayer';
+
+  @override
+  String get chat_translate_to => 'Traduire vers';
+
+  @override
+  String chat_translate_to_language(Object language) {
+    return 'Traduire vers $language';
+  }
+
+  @override
+  String get chat_voice_release_cancel => 'Relâchez pour annuler';
+
+  @override
+  String get chat_voice_recording_locked => 'Enregistrement verrouillé';
+
+  @override
+  String get chat_voice_slide_cancel => 'Glissez vers la gauche pour annuler';
+
+  @override
+  String chat_voice_recording_status(Object duration, Object instruction) {
+    return 'Enregistrement vocal $duration. $instruction';
+  }
+
+  @override
+  String chat_starred_message_from(Object sender) {
+    return 'Message favori de $sender';
+  }
+
+  @override
+  String get chat_verified_sellers => 'Vendeurs vérifiés';
+
+  @override
+  String get chat_friends => 'Amis';
+
+  @override
+  String get chat_search_sellers_hint => 'Rechercher des vendeurs…';
+
+  @override
+  String get chat_search_friends_hint => 'Rechercher des amis…';
+
+  @override
+  String get chat_loading_sellers => 'Chargement des vendeurs';
+
+  @override
+  String get chat_loading_sellers_hint =>
+      'Veuillez patienter pendant la recherche de vendeurs vérifiés.';
+
+  @override
+  String get chat_could_not_load_sellers =>
+      'Impossible de charger les vendeurs';
+
+  @override
+  String get chat_no_verified_sellers => 'Aucun vendeur vérifié';
+
+  @override
+  String get chat_no_sellers_found => 'Aucun vendeur trouvé';
+
+  @override
+  String get chat_no_verified_sellers_hint =>
+      'Les vendeurs vérifiés apparaîtront ici lorsqu’ils seront disponibles.';
+
+  @override
+  String get chat_no_sellers_found_hint =>
+      'Essayez un autre nom, une autre catégorie ou un autre lieu.';
+
+  @override
+  String get chat_refresh => 'Actualiser';
+
+  @override
+  String get chat_loading_friends => 'Chargement des amis';
+
+  @override
+  String get chat_loading_friends_hint =>
+      'Veuillez patienter pendant la recherche de vos amis.';
+
+  @override
+  String get chat_could_not_load_friends => 'Impossible de charger les amis';
+
+  @override
+  String get chat_try_again => 'Veuillez réessayer.';
+
+  @override
+  String get chat_no_friends_yet => 'Aucun ami pour le moment';
+
+  @override
+  String get chat_no_friends_found => 'Aucun ami trouvé';
+
+  @override
+  String get chat_no_friends_yet_hint =>
+      'Vos amis apparaîtront ici lorsque vous vous suivrez mutuellement.';
+
+  @override
+  String get chat_no_friends_found_hint =>
+      'Essayez un autre nom ou une autre adresse e-mail.';
+
+  @override
+  String get chat_online => 'En ligne';
+
+  @override
+  String get chat_last_seen_recently => 'Vu récemment';
+
+  @override
+  String get chat_friend => 'Ami';
+
+  @override
+  String get chat_message_contact => 'Message';
+
+  @override
+  String get chat_call_contact => 'Appeler';
+
+  @override
+  String get chat_all_chats => 'Toutes les discussions';
+
+  @override
+  String get chat_unread => 'Non lues';
+
+  @override
+  String get chat_loading_conversations => 'Chargement des discussions';
+
+  @override
+  String get chat_loading_conversations_hint =>
+      'Veuillez patienter pendant le chargement de vos discussions.';
+
+  @override
+  String get chat_could_not_load_chats =>
+      'Impossible de charger les discussions';
+
+  @override
+  String get chat_no_chats_found => 'Aucune discussion trouvée';
+
+  @override
+  String get chat_no_chats_search_hint =>
+      'Essayez un autre nom ou un autre message.';
+
+  @override
+  String get chat_no_read_chats => 'Aucune discussion lue';
+
+  @override
+  String get chat_no_unread_chats => 'Aucune discussion non lue';
+
+  @override
+  String get chat_no_conversations_yet => 'Aucune discussion pour le moment';
+
+  @override
+  String get chat_no_read_chats_hint =>
+      'Les discussions déjà lues apparaîtront ici.';
+
+  @override
+  String get chat_no_unread_chats_hint =>
+      'Les discussions non lues apparaîtront ici à l’arrivée de nouveaux messages.';
+
+  @override
+  String get chat_no_conversations_hint =>
+      'Vos discussions apparaîtront ici lorsque vous commencerez à échanger.';
+
+  @override
+  String get chat_deleted_from_list => 'Discussion supprimée de votre liste.';
+
+  @override
+  String get chat_delete_chat_failed =>
+      'Impossible de supprimer la discussion. Réessayez.';
+
+  @override
+  String get chat_typing => 'Écrit…';
+
+  @override
+  String chat_last_seen_time(Object time) {
+    return 'Vu à $time';
+  }
+
+  @override
+  String get chat_forward_to_title => 'Transférer à';
+
+  @override
+  String get chat_close => 'Fermer';
+
+  @override
+  String get chat_search_conversations_hint => 'Rechercher des conversations';
+
+  @override
+  String get chat_clear_search => 'Effacer la recherche';
+
+  @override
+  String get chat_could_not_load_conversations =>
+      'Impossible de charger les conversations';
+
+  @override
+  String get chat_no_other_conversations => 'Aucune autre conversation';
+
+  @override
+  String get chat_no_other_conversations_hint =>
+      'Démarrez d’abord une autre discussion pour pouvoir y transférer des messages.';
+
+  @override
+  String get chat_no_conversations_found => 'Aucune conversation trouvée';
+
+  @override
+  String get chat_search_conversations_empty_hint =>
+      'Essayez un autre nom ou message.';
+
+  @override
+  String get chat_forward_to_one_chat => 'Transférer à 1 discussion';
+
+  @override
+  String chat_forward_to_chats_count(Object count) {
+    return 'Transférer à $count discussions';
+  }
+
+  @override
+  String get chat_default_wallpaper_applied =>
+      'Fond d’écran par défaut appliqué.';
+
+  @override
+  String get chat_wallpaper_updated => 'Fond d’écran mis à jour.';
+
+  @override
+  String chat_named_wallpaper_applied(Object name) {
+    return 'Fond d’écran $name appliqué.';
+  }
+
+  @override
+  String get chat_choose_conversation_background =>
+      'Choisissez un arrière-plan pour cette conversation';
+
+  @override
+  String get chat_default => 'Par défaut';
+
+  @override
+  String get chat_choose_from_gallery => 'Choisir dans la galerie';
+
+  @override
+  String get chat_solid_colors => 'Couleurs unies';
+
+  @override
+  String get chat_emoji_recent => 'Récents';
+
+  @override
+  String get chat_emoji_smileys => 'Visages';
+
+  @override
+  String get chat_emoji_animals => 'Animaux';
+
+  @override
+  String get chat_emoji_food => 'Nourriture';
+
+  @override
+  String get chat_emoji_flags => 'Drapeaux';
+
+  @override
+  String get chat_search_emoji => 'Rechercher un emoji';
+
+  @override
+  String get chat_no_emoji_found => 'Aucun emoji trouvé';
+
+  @override
+  String get chat_share_contact => 'Partager un contact';
+
+  @override
+  String get chat_search_aos_users => 'Rechercher des utilisateurs AOS';
+
+  @override
+  String get chat_could_not_load_contacts =>
+      'Impossible de charger les contacts';
+
+  @override
+  String get chat_search_people_on_aos => 'Rechercher des personnes sur AOS';
+
+  @override
+  String get chat_search_people_hint =>
+      'Saisissez au moins 2 caractères pour trouver un contact à partager.';
+
+  @override
+  String get chat_no_contacts_found => 'Aucun contact trouvé';
+
+  @override
+  String get chat_no_contacts_found_hint =>
+      'Essayez un autre nom, nom d’utilisateur ou e-mail.';
+
+  @override
+  String get chat_unmute => 'Réactiver le son';
+
+  @override
+  String get chat_mute => 'Couper le son';
+
+  @override
+  String get chat_end_call => 'Terminer l’appel';
+
+  @override
+  String get chat_calling => 'Appel en cours';
+
+  @override
+  String get chat_ringing => 'Sonnerie';
+
+  @override
+  String get chat_incoming_call => 'Appel entrant';
+
+  @override
+  String get chat_connecting => 'Connexion';
+
+  @override
+  String get chat_delete_chat_title => 'Supprimer la discussion ?';
+
+  @override
+  String chat_delete_chat_description(Object name) {
+    return 'Cela retirera votre discussion avec $name de votre liste. Elle ne sera pas supprimée pour l’autre utilisateur.';
+  }
+
+  @override
+  String get chat_this_user => 'cet utilisateur';
+
+  @override
+  String get chat_delete => 'Supprimer';
+
+  @override
+  String get chat_view_profile => 'Voir le profil';
+
+  @override
+  String get chat_view_contact => 'Voir le contact';
+
+  @override
+  String get chat_cannot_open_document =>
+      'Impossible d’ouvrir ce type de document';
+
+  @override
+  String get chat_failed_to_start_chat =>
+      'Impossible de démarrer la discussion. Réessayez.';
+
+  @override
+  String get chat_invalid_conversation_response =>
+      'Réponse de conversation invalide';
+
+  @override
+  String get chat_voice_hold_to_record =>
+      'Maintenez pour enregistrer un message vocal';
+
+  @override
+  String get chat_voice_release_to_finish =>
+      'Relâchez pour terminer l’enregistrement vocal';
+
+  @override
+  String get chat_microphone_permission_denied =>
+      'Autorisation du microphone refusée.';
+
+  @override
+  String get chat_voice_record_start_failed =>
+      'Impossible de démarrer l’enregistrement vocal.';
+
+  @override
+  String get chat_voice_record_finish_failed =>
+      'Impossible de terminer l’enregistrement vocal.';
+
+  @override
+  String get chat_language_english => 'Anglais';
+
+  @override
+  String get chat_language_swahili => 'Swahili';
+
+  @override
+  String get chat_language_french => 'Français';
+
+  @override
+  String get chat_language_spanish => 'Espagnol';
+
+  @override
+  String get chat_language_german => 'Allemand';
+
+  @override
+  String get chat_language_portuguese => 'Portugais';
+
+  @override
+  String get chat_language_arabic => 'Arabe';
+
+  @override
+  String get chat_language_hausa => 'Haoussa';
+
+  @override
+  String get chat_language_yoruba => 'Yoruba';
+
+  @override
+  String get chat_language_igbo => 'Igbo';
+
+  @override
+  String get chat_language_amharic => 'Amharique';
+
+  @override
+  String get chat_language_somali => 'Somali';
+
+  @override
+  String get chat_language_kinyarwanda => 'Kinyarwanda';
+
+  @override
+  String get chat_language_luganda => 'Luganda';
+
+  @override
+  String get chat_language_zulu => 'Zoulou';
+
+  @override
+  String get chat_language_xhosa => 'Xhosa';
+
+  @override
+  String get chat_wallpaper_midnight => 'Minuit';
+
+  @override
+  String get chat_wallpaper_navy => 'Bleu marine';
+
+  @override
+  String get chat_wallpaper_forest => 'Forêt';
+
+  @override
+  String get chat_wallpaper_plum => 'Prune';
+
+  @override
+  String get chat_wallpaper_charcoal => 'Anthracite';
+
+  @override
+  String get chat_wallpaper_maroon => 'Bordeaux';
+
+  @override
+  String get chat_wallpaper_teal => 'Sarcelle';
+
+  @override
+  String get chat_wallpaper_coffee => 'Café';
 }

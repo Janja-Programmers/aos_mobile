@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/conversations/application/providers/conversation_provider.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,6 +52,7 @@ class _ChatForwardConversationPickerState
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(conversationsControllerProvider);
 
     return DraggableScrollableSheet(
@@ -89,14 +91,14 @@ class _ChatForwardConversationPickerState
                     children: [
                       Expanded(
                         child: Text(
-                          'Forward to',
+                          l10n.chat_forward_to_title,
                           style: context.h5.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
                       IconButton(
-                        tooltip: 'Close',
+                        tooltip: l10n.chat_close,
                         onPressed: () => Navigator.pop(context),
                         icon: const Icon(Icons.close_rounded),
                       ),
@@ -112,12 +114,12 @@ class _ChatForwardConversationPickerState
                       setState(() => _query = value.trim().toLowerCase());
                     },
                     decoration: InputDecoration(
-                      hintText: 'Search conversations',
+                      hintText: l10n.chat_search_conversations_hint,
                       prefixIcon: const Icon(Icons.search_rounded),
                       suffixIcon: _query.isEmpty
                           ? null
                           : IconButton(
-                              tooltip: 'Clear search',
+                              tooltip: l10n.chat_clear_search,
                               onPressed: () {
                                 _searchController.clear();
                                 setState(() => _query = '');
@@ -144,9 +146,9 @@ class _ChatForwardConversationPickerState
                     ),
                     error: (_, _) => _ForwardPickerEmptyState(
                       icon: Icons.wifi_off_rounded,
-                      title: 'Could not load conversations',
-                      message: 'Check your connection and try again.',
-                      actionLabel: 'Retry',
+                      title: l10n.chat_could_not_load_conversations,
+                      message: l10n.chat_check_connection_try_again,
+                      actionLabel: l10n.chat_retry,
                       onAction: () {
                         ref
                             .read(conversationsControllerProvider.notifier)
@@ -174,11 +176,11 @@ class _ChatForwardConversationPickerState
                               ? Icons.chat_bubble_outline_rounded
                               : Icons.search_off_rounded,
                           title: _query.isEmpty
-                              ? 'No other conversations'
-                              : 'No conversations found',
+                              ? l10n.chat_no_other_conversations
+                              : l10n.chat_no_conversations_found,
                           message: _query.isEmpty
-                              ? 'Start another chat first, then you can forward messages here.'
-                              : 'Try searching with another name or message.',
+                              ? l10n.chat_no_other_conversations_hint
+                              : l10n.chat_search_conversations_empty_hint,
                         );
                       }
 
@@ -281,7 +283,7 @@ class _ForwardConversationTile extends StatelessWidget {
         style: context.bodyStrong,
       ),
       subtitle: Text(
-        conversation.lastMessage ?? 'No messages yet',
+        conversation.lastMessage ?? AppLocalizations.of(context).chat_no_messages_yet,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: context.p.copyWith(color: colors.textMuted),
@@ -318,9 +320,10 @@ class _ForwardPickerBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
     final label = selectedCount == 1
-        ? 'Forward to 1 chat'
-        : 'Forward to $selectedCount chats';
+        ? l10n.chat_forward_to_one_chat
+        : l10n.chat_forward_to_chats_count(selectedCount);
 
     return Container(
       key: ValueKey(selectedCount),

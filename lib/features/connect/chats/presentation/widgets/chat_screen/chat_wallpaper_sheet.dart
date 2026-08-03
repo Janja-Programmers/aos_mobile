@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_local_preferences_controller.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +29,7 @@ class ChatWallpaperSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
     final preferences = ref.watch(
       chatLocalPreferencesControllerProvider(conversationId),
     );
@@ -39,7 +41,7 @@ class ChatWallpaperSheet extends ConsumerWidget {
       unawaited(() async {
         await controller.resetWallpaper();
         if (!context.mounted) return;
-        ShowSnack(context, 'Default wallpaper applied.').success();
+        ShowSnack(context, l10n.chat_default_wallpaper_applied).success();
       }());
     }
 
@@ -47,7 +49,7 @@ class ChatWallpaperSheet extends ConsumerWidget {
       unawaited(() async {
         final changed = await controller.chooseGalleryWallpaper();
         if (!context.mounted || !changed) return;
-        ShowSnack(context, 'Wallpaper updated.').success();
+        ShowSnack(context, l10n.chat_wallpaper_updated).success();
       }());
     }
 
@@ -55,7 +57,11 @@ class ChatWallpaperSheet extends ConsumerWidget {
       unawaited(() async {
         await controller.setWallpaper(option.id);
         if (!context.mounted) return;
-        ShowSnack(context, '${option.label} wallpaper applied.').success();
+        final label = _wallpaperLabel(l10n, option.id);
+        ShowSnack(
+          context,
+          l10n.chat_named_wallpaper_applied(label),
+        ).success();
       }());
     }
 
@@ -86,29 +92,29 @@ class ChatWallpaperSheet extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 28),
-              Text('Chat wallpaper', style: context.h5),
+              Text(l10n.chat_wallpaper, style: context.h5),
               const SizedBox(height: 6),
               Text(
-                'Choose a background for this conversation',
+                l10n.chat_choose_conversation_background,
                 style: context.pMuted,
               ),
               const SizedBox(height: 22),
               _WallpaperActionTile(
                 icon: Icons.refresh_rounded,
-                title: 'Default',
+                title: l10n.chat_default,
                 selected: preferences.wallpaperId == chatWallpaperDefaultId,
                 onTap: applyDefaultWallpaper,
               ),
               const SizedBox(height: 12),
               _WallpaperActionTile(
                 icon: Icons.photo_library_outlined,
-                title: 'Choose from gallery',
+                title: l10n.chat_choose_from_gallery,
                 selected: preferences.wallpaperId == chatWallpaperGalleryId,
                 onTap: chooseGalleryWallpaper,
               ),
               const SizedBox(height: 24),
               Text(
-                'Solid colors',
+                l10n.chat_solid_colors,
                 style: context.pStrong.copyWith(color: colors.textMuted),
               ),
               const SizedBox(height: 16),
@@ -119,6 +125,7 @@ class ChatWallpaperSheet extends ConsumerWidget {
                   for (final option in chatSolidWallpaperOptions)
                     _WallpaperColorButton(
                       option: option,
+                      label: _wallpaperLabel(l10n, option.id),
                       selected: preferences.wallpaperId == option.id,
                       onTap: () => applySolidWallpaper(option),
                     ),
@@ -130,6 +137,20 @@ class ChatWallpaperSheet extends ConsumerWidget {
       },
     );
   }
+}
+
+String _wallpaperLabel(AppLocalizations l10n, String id) {
+  return switch (id) {
+    'midnight' => l10n.chat_wallpaper_midnight,
+    'navy' => l10n.chat_wallpaper_navy,
+    'forest' => l10n.chat_wallpaper_forest,
+    'plum' => l10n.chat_wallpaper_plum,
+    'charcoal' => l10n.chat_wallpaper_charcoal,
+    'maroon' => l10n.chat_wallpaper_maroon,
+    'teal' => l10n.chat_wallpaper_teal,
+    'coffee' => l10n.chat_wallpaper_coffee,
+    _ => id,
+  };
 }
 
 class _WallpaperActionTile extends StatelessWidget {
@@ -182,11 +203,13 @@ class _WallpaperActionTile extends StatelessWidget {
 class _WallpaperColorButton extends StatelessWidget {
   const _WallpaperColorButton({
     required this.option,
+    required this.label,
     required this.selected,
     required this.onTap,
   });
 
   final ChatWallpaperOption option;
+  final String label;
   final bool selected;
   final VoidCallback onTap;
 
@@ -197,7 +220,7 @@ class _WallpaperColorButton extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: option.label,
+      label: label,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,

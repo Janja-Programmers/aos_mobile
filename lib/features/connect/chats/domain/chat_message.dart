@@ -10,7 +10,7 @@ const Object _unset = Object();
 
 class ChatMessage {
   final String id;
-  final String sender;
+  final String senderCanonicalId;
   final String? senderDisplayName;
   final String? senderAvatar;
   final String? content;
@@ -49,7 +49,7 @@ class ChatMessage {
 
   const ChatMessage({
     required this.id,
-    required this.sender,
+    required this.senderCanonicalId,
     this.senderDisplayName,
     this.senderAvatar,
     this.content,
@@ -107,7 +107,7 @@ class ChatMessage {
 
     return ChatMessage(
       id: json['id']?.toString() ?? '',
-      sender: json['sender']?.toString() ?? '',
+      senderCanonicalId: _normalizeSender(json['sender']),
       senderDisplayName: _cleanNullableString(json['sender_display_name']),
       senderAvatar: _cleanNullableString(json['sender_avatar']),
       content: _cleanNullableString(json['content']),
@@ -121,7 +121,7 @@ class ChatMessage {
           : null,
       hasAttachments:
           _truthy(json['has_attachments']) || attachments.isNotEmpty,
-      createdAt: _parseDate(json['created_at']) ?? DateTime.now(),
+      createdAt: _parseDate(json['created_at']) ?? _invalidServerTimestamp,
       deliveredAt: _parseDate(json['delivered_at']),
       readAt: _parseDate(json['read_at']),
       attachments: attachments,
@@ -185,13 +185,13 @@ class ChatMessage {
       case 'contact':
         return type!;
       default:
-        return 'text';
+        return 'unknown';
     }
   }
 
   ChatMessage copyWith({
     String? id,
-    String? sender,
+    String? senderCanonicalId,
     Object? senderDisplayName = _unset,
     Object? senderAvatar = _unset,
     Object? content = _unset,
@@ -235,7 +235,7 @@ class ChatMessage {
   }) {
     return ChatMessage(
       id: id ?? this.id,
-      sender: sender ?? this.sender,
+      senderCanonicalId: senderCanonicalId ?? this.senderCanonicalId,
       senderDisplayName: identical(senderDisplayName, _unset)
           ? this.senderDisplayName
           : senderDisplayName as String?,
@@ -318,7 +318,7 @@ class ChatMessage {
 
   factory ChatMessage.temp({
     required String id,
-    required String sender,
+    required String senderCanonicalId,
     String? senderDisplayName,
     String? senderAvatar,
     String? content,
@@ -356,7 +356,7 @@ class ChatMessage {
 
     return ChatMessage(
       id: id,
-      sender: sender,
+      senderCanonicalId: _normalizeSender(senderCanonicalId),
       senderDisplayName: senderDisplayName,
       senderAvatar: senderAvatar,
       content: hasText ? cleanContent : null,
@@ -434,18 +434,26 @@ class ChatMessage {
   }
 
   bool get isSystemMessage {
-    return sender.trim().toLowerCase() == 'administrator' ||
+    return senderCanonicalId.trim().toLowerCase() == 'administrator' ||
         isSystemType ||
         isCallType;
   }
 
   bool get isGenericSystemMessage {
-    return sender.trim().toLowerCase() == 'administrator' || isSystemType;
+    return senderCanonicalId.trim().toLowerCase() == 'administrator' || isSystemType;
   }
 
   bool get isLocalSending => localStatus == ChatLocalMessageStatus.sending;
   bool get isLocalFailed => localStatus == ChatLocalMessageStatus.failed;
   bool get isLocalOnly => id.startsWith('temp-');
+}
+
+final DateTime _invalidServerTimestamp = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+
+String _normalizeSender(dynamic value) {
+  final clean = value?.toString().trim() ?? '';
+  if (clean.isEmpty || clean.toLowerCase() == 'null') return '';
+  return clean.toUpperCase();
 }
 
 String? _specialPayloadType(String? value) {

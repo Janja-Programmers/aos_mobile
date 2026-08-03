@@ -8,6 +8,7 @@ import 'package:africaonlinestores/features/connect/calls/domain/call_participan
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_presence_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/presence_label.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
@@ -16,13 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const double _chatAppBarHeight = 78;
 
-enum ChatMenuAction {
-  audioCall,
-  videoCall,
-  changeWallpaper,
-  settings,
-  clearChat,
-}
+enum ChatMenuAction { audioCall, videoCall, changeWallpaper }
 
 class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
   const ChatAppBar({
@@ -34,10 +29,8 @@ class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
     this.lastSeen,
     this.textColor,
     this.onHeaderTap,
-    this.onDeleteAllMessages,
     this.onChangeWallpaper,
-    this.onOpenSettings,
-    this.onCloseToHome,
+    this.onBack,
   });
 
   final String conversationId;
@@ -46,10 +39,8 @@ class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
   final String? imageUrl;
   final DateTime? lastSeen;
   final Color? textColor;
-  final VoidCallback? onDeleteAllMessages;
   final VoidCallback? onChangeWallpaper;
-  final VoidCallback? onOpenSettings;
-  final VoidCallback? onCloseToHome;
+  final VoidCallback? onBack;
   final VoidCallback? onHeaderTap;
 
   @override
@@ -69,7 +60,8 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
     final presence = presenceMap[widget.otherUserId];
 
     if (presence?.isOnline == false) {
-      ShowSnack(context, 'User might be offline').error();
+      ShowSnack(context, AppLocalizations.of(context).chat_user_might_be_offline)
+          .error();
     }
 
     setState(() => _isCalling = true);
@@ -93,11 +85,13 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
       if (!mounted) return;
 
       if (!success) {
-        ShowSnack(context, 'Failed to start call').error();
+        ShowSnack(context, AppLocalizations.of(context).chat_failed_to_start_call)
+            .error();
       }
     } on Object {
       if (mounted) {
-        ShowSnack(context, 'Failed to start call').error();
+        ShowSnack(context, AppLocalizations.of(context).chat_failed_to_start_call)
+            .error();
       }
     } finally {
       if (mounted) {
@@ -117,18 +111,13 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
       case ChatMenuAction.changeWallpaper:
         widget.onChangeWallpaper?.call();
         break;
-      case ChatMenuAction.settings:
-        widget.onOpenSettings?.call();
-        break;
-      case ChatMenuAction.clearChat:
-        widget.onDeleteAllMessages?.call();
-        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
     final presence = ref.watch(
       chatPresenceControllerProvider.select((map) => map[widget.otherUserId]),
     );
@@ -153,10 +142,10 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
         padding: const EdgeInsets.only(left: 14),
         child: Center(
           child: _RoundIconButton(
-            icon: Icons.close_rounded,
-            tooltip: 'Close chat',
+            icon: Icons.arrow_back_rounded,
+            tooltip: l10n.chat_back,
             color: foreground,
-            onTap: widget.onCloseToHome,
+            onTap: widget.onBack,
           ),
         ),
       ),
@@ -226,32 +215,19 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
                 context,
                 value: ChatMenuAction.audioCall,
                 icon: Icons.call_outlined,
-                label: 'Call',
+                label: l10n.chat_call,
               ),
               _menuItem(
                 context,
                 value: ChatMenuAction.videoCall,
                 icon: Icons.videocam_outlined,
-                label: 'Video call',
+                label: l10n.chat_video_call,
               ),
               _menuItem(
                 context,
                 value: ChatMenuAction.changeWallpaper,
                 icon: Icons.wallpaper_rounded,
-                label: 'Change wallpaper',
-              ),
-              _menuItem(
-                context,
-                value: ChatMenuAction.settings,
-                icon: Icons.settings_outlined,
-                label: 'Chat settings',
-              ),
-              _menuItem(
-                context,
-                value: ChatMenuAction.clearChat,
-                icon: Icons.delete_sweep_outlined,
-                label: 'Clear chat',
-                destructive: true,
+                label: l10n.chat_change_wallpaper,
               ),
             ];
           },

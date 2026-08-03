@@ -1,14 +1,16 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/routing/app_nav.dart';
-import 'package:africaonlinestores/core/routing/app_nav_config.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/call_list_screen.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_list_screen.dart';
-// import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_story_template_strip.dart';
+import 'package:africaonlinestores/features/connect/conversations/application/providers/conversation_provider.dart';
 import 'package:africaonlinestores/features/connect/routing/connect_routes.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
+import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,95 +25,187 @@ class ConnectScreen extends ConsumerStatefulWidget {
 
 enum _ConnectTab { chats, calls }
 
+enum _ConnectMenuAction {
+  markAllRead,
+  starredMessages,
+  clearCallLog,
+  settings,
+}
+
 class _ConnectScreenState extends ConsumerState<ConnectScreen> {
-  final _searchCtrl = TextEditingController();
+  final TextEditingController _searchCtrl = TextEditingController();
   _ConnectTab _selectedTab = _ConnectTab.chats;
   bool _didResolveInitialTab = false;
+  bool _searchVisible = false;
+  bool _menuActionInFlight = false;
 
   @override
   void initState() {
     super.initState();
-
-    Future.microtask(() {
-      ref.read(callManagerProvider.notifier).loadCallLogs();
-    });
+    _searchCtrl.addListener(_onSearchChanged);
+    Future.microtask(() => ref.read(callManagerProvider.notifier).loadCallLogs());
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
     if (_didResolveInitialTab) return;
-
     final tab = GoRouterState.of(context).uri.queryParameters['tab'];
     _selectedTab = tab == 'calls' ? _ConnectTab.calls : _ConnectTab.chats;
     _didResolveInitialTab = true;
   }
 
+  void _onSearchChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
+    _searchCtrl.removeListener(_onSearchChanged);
     _searchCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _openNewConversation() async {
     await HapticFeedback.selectionClick();
-
     if (!mounted) return;
     ConnectScreenNavigation.toNewConversation(context);
   }
 
+  void _toggleSearch() {
+    setState(() {
+      _searchVisible = !_searchVisible;
+      if (!_searchVisible) _searchCtrl.clear();
+    });
+  }
+
   void _selectTab(_ConnectTab tab) {
     if (_selectedTab == tab) return;
-
     HapticFeedback.selectionClick();
-    setState(() => _selectedTab = tab);
-
+    setState(() {
+      _selectedTab = tab;
+      _searchCtrl.clear();
+    });
     if (tab == _ConnectTab.calls) {
-      ref.read(callManagerProvider.notifier).loadCallLogs();
+      unawaited(ref.read(callManagerProvider.notifier).loadCallLogs());
+    }
+  }
+
+  Future<void> _handleMenuAction(_ConnectMenuAction action) async {
+    if (_menuActionInFlight) return;
+    final l10n = AppLocalizations.of(context);
+
+    switch (action) {
+      case _ConnectMenuAction.starredMessages:
+        ConnectScreenNavigation.toStarredMessages(context);
+        return;
+      case _ConnectMenuAction.settings:
+        ConnectScreenNavigation.toChatSettings(context);
+        return;
+      case _ConnectMenuAction.markAllRead:
+      case _ConnectMenuAction.clearCallLog:
+        break;
+    }
+
+    _menuActionInFlight = true;
+    try {
+      if (action == _ConnectMenuAction.markAllRead) {
+        final ok = await ref
+            .read(conversationsControllerProvider.notifier)
+            .markAllRead();
+        if (!mounted) return;
+        if (ok) {
+          ShowSnack(context, l10n.chat_all_marked_read).success();
+        } else {
+          ShowSnack(context, l10n.chat_some_mark_read_failed).error();
+        }
+        return;
+      }
+
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.chat_clear_call_log_title),
+          content: Text(l10n.chat_clear_call_log_body),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.chat_cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.chat_clear),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+
+      final ok = await ref.read(callManagerProvider.notifier).clearCallHistory();
+      if (!mounted) return;
+      if (ok) {
+        ShowSnack(context, l10n.chat_call_log_cleared).success();
+      } else {
+        ShowSnack(context, l10n.chat_call_log_clear_failed).error();
+      }
+    } finally {
+      _menuActionInFlight = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
     final isChats = _selectedTab == _ConnectTab.chats;
     final unreadChats = ref.watch(chatUnreadCountProvider);
     final callState = ref.watch(callManagerProvider);
-    final missedCalls = callState.callLogs
-        .where((call) => call.isMissed)
-        .length;
+    final missedCalls = callState.callLogs.where((call) => call.isMissed).length;
+    final query = _searchCtrl.text;
 
     return Scaffold(
       backgroundColor: colors.surface,
       body: SafeArea(
         child: Column(
           children: [
-            _ConnectHeader(onNewConversation: _openNewConversation),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
-              child: AppSearchBar(
-                controller: _searchCtrl,
-                readOnly: true,
-                hintText: 'Search...',
-                margin: EdgeInsets.zero,
-                onTap: _openNewConversation,
-              ),
+            _ConnectHeader(
+              selectedTab: _selectedTab,
+              searchVisible: _searchVisible,
+              onSearchTap: _toggleSearch,
+              onMenuSelected: _handleMenuAction,
             ),
-            // ConnectStoryTemplateStrip(
-            //   onCreateStory: () =>
-            //       ConnectScreenNavigation.toCreateStory(context),
-            //   onStoryTap: (story) =>
-            //       ConnectScreenNavigation.toStoryViewer(context, story.id),
-            // ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              alignment: Alignment.topCenter,
+              child: !_searchVisible
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.fromLTRB(28, 8, 28, 10),
+                      child: AppSearchBar(
+                        controller: _searchCtrl,
+                        autofocus: true,
+                        hintText: isChats
+                            ? l10n.chat_search_chats_hint
+                            : l10n.chat_search_calls_hint,
+                        margin: EdgeInsets.zero,
+                      ),
+                    ),
+            ),
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 180),
                 switchInCurve: Curves.easeOut,
                 switchOutCurve: Curves.easeIn,
                 child: isChats
-                    ? const ChatListScreen(key: ValueKey('connect_chats'))
-                    : const CallListScreen(key: ValueKey('connect_calls')),
+                    ? ChatListScreen(
+                        key: const ValueKey('connect_chats'),
+                        searchQuery: query,
+                      )
+                    : CallListScreen(
+                        key: const ValueKey('connect_calls'),
+                        searchQuery: query,
+                      ),
               ),
             ),
           ],
@@ -128,88 +222,115 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
   }
 }
 
-class _ConnectHeader extends ConsumerWidget {
-  const _ConnectHeader({required this.onNewConversation});
+class _ConnectHeader extends StatelessWidget {
+  const _ConnectHeader({
+    required this.selectedTab,
+    required this.searchVisible,
+    required this.onSearchTap,
+    required this.onMenuSelected,
+  });
 
-  final VoidCallback onNewConversation;
+  final _ConnectTab selectedTab;
+  final bool searchVisible;
+  final VoidCallback onSearchTap;
+  final ValueChanged<_ConnectMenuAction> onMenuSelected;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 10, 28, 4),
+      padding: const EdgeInsets.fromLTRB(24, 10, 18, 4),
       child: Row(
         children: [
-          _HeaderIconButton(
-            icon: Icons.close_rounded,
-            onTap: () {
+          IconButton(
+            tooltip: l10n.chat_close_connect,
+            onPressed: () {
               if (Navigator.of(context).canPop()) {
                 Navigator.of(context).pop();
               } else {
                 context.goNamed(AppRoutes.nHome);
               }
             },
+            icon: const Icon(Icons.close_rounded, size: 34),
           ),
           Expanded(
             child: Text(
-              'AOS Connect',
+              l10n.chat_connect_title,
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.h4.copyWith(
-                fontSize: 26,
+                fontSize: 25,
                 fontWeight: FontWeight.w800,
               ),
             ),
           ),
-          PopupMenuButton<int>(
+          IconButton(
+            tooltip: searchVisible ? l10n.chat_close_search : l10n.chat_search,
+            onPressed: onSearchTap,
+            icon: Icon(
+              searchVisible ? Icons.search_off_rounded : Icons.search_rounded,
+              size: 31,
+            ),
+          ),
+          PopupMenuButton<_ConnectMenuAction>(
+            tooltip: l10n.chat_more_options,
             color: colors.elevated,
             surfaceTintColor: Colors.transparent,
-            shadowColor: colors.black.withValues(alpha: 0.18),
             elevation: 10,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
               side: BorderSide(color: colors.border),
             ),
-            offset: const Offset(0, 54),
-            onSelected: (index) => AppNavigation.goTo(context, ref, index),
+            offset: const Offset(0, 52),
+            onSelected: onMenuSelected,
             itemBuilder: (context) {
-              final items = AppNavConfig.items(context);
-              final location = GoRouterState.of(context).matchedLocation;
-
-              return List.generate(items.length, (i) {
-                final item = items[i];
-                final isActive = item.matchesLocation(location);
-                final itemColor = isActive
-                    ? colors.primary
-                    : colors.textPrimary;
-
-                return PopupMenuItem<int>(
-                  value: i,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          isActive ? item.activeIcon : item.icon,
-                          color: itemColor,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          item.label,
-                          style: context.p.copyWith(color: itemColor),
-                        ),
-                      ],
+              if (selectedTab == _ConnectTab.calls) {
+                return [
+                  PopupMenuItem(
+                    value: _ConnectMenuAction.clearCallLog,
+                    child: _MenuRow(
+                      icon: Icons.delete_sweep_outlined,
+                      label: l10n.chat_clear_call_log,
                     ),
                   ),
-                );
-              });
+                  PopupMenuItem(
+                    value: _ConnectMenuAction.settings,
+                    child: _MenuRow(
+                      icon: Icons.settings_outlined,
+                      label: l10n.chat_settings,
+                    ),
+                  ),
+                ];
+              }
+
+              return [
+                PopupMenuItem(
+                  value: _ConnectMenuAction.markAllRead,
+                  child: _MenuRow(
+                    icon: Icons.mark_chat_read_outlined,
+                    label: l10n.chat_mark_all_read,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: _ConnectMenuAction.starredMessages,
+                  child: _MenuRow(
+                    icon: Icons.star_border_rounded,
+                    label: l10n.chat_starred_messages,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: _ConnectMenuAction.settings,
+                  child: _MenuRow(
+                    icon: Icons.settings_outlined,
+                    label: l10n.chat_settings,
+                  ),
+                ),
+              ];
             },
-            child: const _HeaderIconButton(icon: Icons.menu_rounded),
+            icon: const Icon(Icons.more_vert_rounded, size: 31),
           ),
         ],
       ),
@@ -217,32 +338,19 @@ class _ConnectHeader extends ConsumerWidget {
   }
 }
 
-class _HeaderIconButton extends StatelessWidget {
-  const _HeaderIconButton({required this.icon, this.onTap});
-
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({required this.icon, required this.label});
   final IconData icon;
-  final VoidCallback? onTap;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.appColors;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Ink(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            color: colors.elevated,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: colors.border),
-          ),
-          child: Icon(icon, color: colors.textPrimary, size: 30),
-        ),
-      ),
+    return Row(
+      children: [
+        Icon(icon),
+        const SizedBox(width: 12),
+        Flexible(child: Text(label)),
+      ],
     );
   }
 }
@@ -265,82 +373,72 @@ class _ConnectBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
+    final barHeight = (80 + MediaQuery.textScalerOf(context).scale(14))
+        .clamp(92.0, 124.0)
+        .toDouble();
 
     return SafeArea(
       top: false,
-      child: SizedBox(
-        height: 104,
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.topCenter,
+      child: Container(
+        height: barHeight,
+        decoration: BoxDecoration(
+          color: colors.elevated,
+          border: Border(top: BorderSide(color: colors.border)),
+        ),
+        child: Row(
           children: [
-            Positioned(
-              left: 24,
-              right: 24,
-              bottom: 14,
-              child: Container(
-                height: 72,
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                decoration: BoxDecoration(
-                  color: colors.elevated,
-                  borderRadius: BorderRadius.circular(34),
-                  border: Border.all(color: colors.border),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colors.black.withValues(alpha: 0.18),
-                      blurRadius: 28,
-                      offset: const Offset(0, 12),
-                    ),
-                  ],
-                ),
-                child: Row(
+            Expanded(
+              child: _BottomBarItem(
+                label: l10n.chat_chats,
+                icon: Icons.chat_bubble_rounded,
+                badgeCount: unreadChats,
+                selected: selectedTab == _ConnectTab.chats,
+                onTap: () => onTabSelected(_ConnectTab.chats),
+              ),
+            ),
+            Semantics(
+              button: true,
+              label: l10n.chat_new_conversation,
+              child: InkResponse(
+                radius: 42,
+                onTap: onPlusTap,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: _BottomBarItem(
-                        label: 'Chats',
-                        icon: Icons.chat_bubble_rounded,
-                        badgeCount: unreadChats,
-                        selected: selectedTab == _ConnectTab.chats,
-                        onTap: () => onTabSelected(_ConnectTab.chats),
+                    Container(
+                      width: 62,
+                      height: 62,
+                      decoration: BoxDecoration(
+                        color: colors.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: colors.primary.withValues(alpha: 0.24),
+                            blurRadius: 18,
+                            offset: const Offset(0, 7),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.add_rounded,
+                        color: colors.white,
+                        size: 38,
                       ),
                     ),
-                    const SizedBox(width: 82),
-                    Expanded(
-                      child: _BottomBarItem(
-                        label: 'Calls',
-                        icon: Icons.call_rounded,
-                        badgeCount: missedCalls,
-                        selected: selectedTab == _ConnectTab.calls,
-                        onTap: () => onTabSelected(_ConnectTab.calls),
-                      ),
-                    ),
+                    const SizedBox(height: 2),
+                    Text(l10n.chat_new, style: context.small),
                   ],
                 ),
               ),
             ),
-            Positioned(
-              top: 0,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onPlusTap,
-                child: Container(
-                  width: 76,
-                  height: 76,
-                  decoration: BoxDecoration(
-                    color: colors.primary,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: colors.surface, width: 7),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colors.primary.withValues(alpha: 0.45),
-                        blurRadius: 28,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Icon(Icons.add_rounded, color: colors.white, size: 40),
-                ),
+            Expanded(
+              child: _BottomBarItem(
+                label: l10n.chat_calls,
+                icon: Icons.call_rounded,
+                badgeCount: missedCalls,
+                selected: selectedTab == _ConnectTab.calls,
+                onTap: () => onTabSelected(_ConnectTab.calls),
               ),
             ),
           ],
@@ -368,62 +466,60 @@ class _BottomBarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final activeColor = colors.primary;
-    final inactiveColor = colors.textMuted;
-    final color = selected ? activeColor : inactiveColor;
+    final color = selected ? colors.primary : colors.textMuted;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Icon(icon, color: color, size: 28),
-              if (badgeCount > 0)
-                Positioned(
-                  right: -10,
-                  top: -12,
-                  child: Container(
-                    constraints: const BoxConstraints(
-                      minWidth: 22,
-                      minHeight: 22,
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: colors.primary,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      badgeCount > 99 ? '99+' : '$badgeCount',
-                      style: context.small.copyWith(
-                        color: colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(icon, color: color, size: 30),
+                if (badgeCount > 0)
+                  Positioned(
+                    right: -13,
+                    top: -9,
+                    child: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 22,
+                        minHeight: 22,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: colors.primary,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        badgeCount > 99 ? '99+' : '$badgeCount',
+                        style: context.small.copyWith(
+                          color: colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Text(
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: context.p.copyWith(
+              style: context.small.copyWith(
                 color: color,
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

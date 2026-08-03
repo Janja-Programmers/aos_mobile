@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/chat_identity.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -15,11 +16,8 @@ class ChatTypingController extends StateNotifier<Map<String, bool>> {
   final Ref ref;
 
   ChatTypingController(this.ref) : super({}) {
-    _currentUser = ref.read(currentUserProvider) ?? '';
     _listenRealtime();
   }
-
-  late final String _currentUser;
 
   final Map<String, Timer> _timers = {};
   StreamSubscription<Object?>? _typingSub;
@@ -38,8 +36,13 @@ class ChatTypingController extends StateNotifier<Map<String, bool>> {
       if (conversationId == null) return;
 
       // 🔥 ignore own typing (IMPORTANT)
-      final fromUser = asNullableString(data['from']);
-      if (fromUser == _currentUser) return;
+      final fromUser = normalizeCanonicalUserId(
+        asNullableString(data['from']),
+      );
+      final currentUser = normalizeCanonicalUserId(
+        ref.read(currentCanonicalAccountIdProvider),
+      );
+      if (fromUser.isNotEmpty && fromUser == currentUser) return;
 
       final isTyping = asBool(data['is_typing']);
 

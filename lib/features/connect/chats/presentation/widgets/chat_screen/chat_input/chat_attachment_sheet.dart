@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class ChatAttachmentSheet extends StatelessWidget {
@@ -7,6 +8,8 @@ class ChatAttachmentSheet extends StatelessWidget {
     super.key,
     required this.onGallery,
     required this.onCamera,
+    required this.onVideoCall,
+    required this.onAudioCall,
     required this.onDocument,
     required this.onLocation,
     required this.onContact,
@@ -14,6 +17,8 @@ class ChatAttachmentSheet extends StatelessWidget {
 
   final VoidCallback onGallery;
   final VoidCallback onCamera;
+  final VoidCallback onVideoCall;
+  final VoidCallback onAudioCall;
   final VoidCallback onDocument;
   final VoidCallback onLocation;
   final VoidCallback onContact;
@@ -21,76 +26,74 @@ class ChatAttachmentSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
+    final items = <_AttachmentAction>[
+      _AttachmentAction(
+        icon: Icons.photo_library_outlined,
+        label: l10n.chat_gallery,
+        onTap: onGallery,
+      ),
+      _AttachmentAction(
+        icon: Icons.photo_camera_outlined,
+        label: l10n.chat_camera,
+        onTap: onCamera,
+      ),
+      _AttachmentAction(
+        icon: Icons.videocam_outlined,
+        label: l10n.chat_video_call,
+        onTap: onVideoCall,
+      ),
+      _AttachmentAction(
+        icon: Icons.call_outlined,
+        label: l10n.chat_voice_call,
+        onTap: onAudioCall,
+      ),
+      _AttachmentAction(
+        icon: Icons.location_on_outlined,
+        label: l10n.chat_location,
+        onTap: onLocation,
+      ),
+      _AttachmentAction(
+        icon: Icons.insert_drive_file_outlined,
+        label: l10n.chat_document,
+        onTap: onDocument,
+      ),
+      _AttachmentAction(
+        icon: Icons.person_outline_rounded,
+        label: l10n.chat_contact,
+        onTap: onContact,
+      ),
+    ];
 
     return SafeArea(
       top: false,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: colors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           border: Border(top: BorderSide(color: colors.border)),
-          boxShadow: [
-            BoxShadow(
-              color: colors.black.withValues(alpha: 0.18),
-              blurRadius: 24,
-              offset: const Offset(0, -8),
-            ),
-          ],
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 44,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: colors.border,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 28),
-              Wrap(
-                spacing: 24,
-                runSpacing: 26,
-                children: [
-                  _Item(
-                    icon: Icons.photo_library_outlined,
-                    label: 'Gallery',
-                    color: colors.purple,
-                    onTap: onGallery,
-                  ),
-                  _Item(
-                    icon: Icons.photo_camera_outlined,
-                    label: 'Camera',
-                    color: colors.primary,
-                    onTap: onCamera,
-                  ),
-                  _Item(
-                    icon: Icons.location_on_rounded,
-                    label: 'Location',
-                    color: colors.success,
-                    onTap: onLocation,
-                  ),
-                  _Item(
-                    icon: Icons.insert_drive_file_outlined,
-                    label: 'Document',
-                    color: colors.blue,
-                    onTap: onDocument,
-                  ),
-                  _Item(
-                    icon: Icons.person_rounded,
-                    label: 'Contact',
-                    color: colors.orange,
-                    onTap: onContact,
-                  ),
-                ],
-              ),
-            ],
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 520 ? 5 : 4;
+              const spacing = 12.0;
+              final itemWidth =
+                  (constraints.maxWidth - (columns - 1) * spacing) / columns;
+
+              return Wrap(
+                spacing: spacing,
+                runSpacing: 20,
+                children: items
+                    .map(
+                      (item) => SizedBox(
+                        width: itemWidth,
+                        child: _Item(action: item),
+                      ),
+                    )
+                    .toList(growable: false),
+              );
+            },
           ),
         ),
       ),
@@ -98,57 +101,62 @@ class ChatAttachmentSheet extends StatelessWidget {
   }
 }
 
-class _Item extends StatelessWidget {
-  const _Item({
+class _AttachmentAction {
+  const _AttachmentAction({
     required this.icon,
     required this.label,
-    required this.color,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
-  final Color color;
   final VoidCallback onTap;
+}
+
+class _Item extends StatelessWidget {
+  const _Item({required this.action});
+
+  final _AttachmentAction action;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: SizedBox(
-        width: 82,
+    return Semantics(
+      button: true,
+      label: action.label,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: action.onTap,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.24),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 64),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.elevated,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Icon(
+                      action.icon,
+                      size: 30,
+                      color: colors.textMuted,
+                    ),
                   ),
-                ],
+                ),
               ),
-              child: Icon(icon, size: 30, color: colors.white),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
-              label,
-              maxLines: 1,
+              action.label,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: context.p.copyWith(
-                fontSize: 13,
-                color: colors.textPrimary,
-                fontWeight: FontWeight.w700,
-              ),
+              textAlign: TextAlign.center,
+              style: context.small.copyWith(color: colors.textMuted),
             ),
           ],
         ),

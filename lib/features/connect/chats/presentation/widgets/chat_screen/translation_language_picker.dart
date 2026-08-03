@@ -1,120 +1,26 @@
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/translation_language.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
-class TranslationLanguagePicker extends StatefulWidget {
+class TranslationLanguagePicker extends StatelessWidget {
+  const TranslationLanguagePicker({
+    super.key,
+    required this.initialLanguage,
+  });
+
   final TranslationLanguage initialLanguage;
-
-  const TranslationLanguagePicker({super.key, required this.initialLanguage});
-
-  @override
-  State<TranslationLanguagePicker> createState() =>
-      _TranslationLanguagePickerState();
-}
-
-class _TranslationLanguagePickerState extends State<TranslationLanguagePicker> {
-  late TranslationLanguage _selectedLanguage;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedLanguage = widget.initialLanguage;
-  }
-
-  Future<void> _openLanguageList() async {
-    final selected = await showModalBottomSheet<TranslationLanguage>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        final colors = sheetContext.appColors;
-
-        return Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.72,
-          ),
-          decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 10),
-                Container(
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: colors.border,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Translate into',
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: chatTranslationLanguages.length,
-                    separatorBuilder: (_, _) => Divider(
-                      height: 1,
-                      color: colors.border.withValues(alpha: 0.55),
-                    ),
-                    itemBuilder: (context, index) {
-                      final language = chatTranslationLanguages[index];
-                      final selected = language.code == _selectedLanguage.code;
-
-                      return ListTile(
-                        title: Text(
-                          language.label,
-                          style: TextStyle(
-                            color: colors.textPrimary,
-                            fontWeight: selected
-                                ? FontWeight.w800
-                                : FontWeight.w500,
-                          ),
-                        ),
-                        trailing: selected
-                            ? Icon(Icons.check_rounded, color: colors.primary)
-                            : null,
-                        onTap: () => Navigator.of(context).pop(language),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    if (selected == null || !mounted) return;
-
-    setState(() {
-      _selectedLanguage = selected;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
+    final media = MediaQuery.of(context);
 
     return SafeArea(
       top: false,
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(30, 30, 30, 18),
+        constraints: BoxConstraints(maxHeight: media.size.height * 0.78),
         decoration: BoxDecoration(
           color: colors.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -122,80 +28,89 @@ class _TranslationLanguagePickerState extends State<TranslationLanguagePicker> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 5,
+              decoration: BoxDecoration(
+                color: colors.border,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+            const SizedBox(height: 22),
             Text(
-              'Display messages in your\npreferred language',
-              textAlign: TextAlign.center,
+              l10n.chat_translate_to,
               style: TextStyle(
                 color: colors.textPrimary,
                 fontSize: 22,
-                height: 1.2,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 30),
-            Material(
-              color: colors.elevated,
-              borderRadius: BorderRadius.circular(10),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(10),
-                onTap: _openLanguageList,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Translate into',
+            const SizedBox(height: 12),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
+                itemCount: chatTranslationLanguages.length,
+                itemBuilder: (context, index) {
+                  final language = chatTranslationLanguages[index];
+                  final languageLabel = _languageLabel(l10n, language.code);
+                  final selected = language.code == initialLanguage.code;
+
+                  return Semantics(
+                    button: true,
+                    selected: selected,
+                    label: l10n.chat_translate_to_language(languageLabel),
+                    child: ListTile(
+                      minTileHeight: 58,
+                      leading: Text(
+                        language.flag,
+                        style: const TextStyle(fontSize: 30),
+                      ),
+                      title: Text(
+                        languageLabel,
                         style: TextStyle(
                           color: colors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 17,
+                          fontWeight: selected
+                              ? FontWeight.w800
+                              : FontWeight.w500,
                         ),
                       ),
-                      const Spacer(),
-                      Text(
-                        _selectedLanguage.label,
-                        style: TextStyle(
-                          color: colors.textMuted,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        color: colors.textMuted,
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 28),
-            SizedBox(
-              width: double.infinity,
-              height: 46,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: colors.primary,
-                  foregroundColor: colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-                onPressed: () => Navigator.of(context).pop(_selectedLanguage),
-                child: const Text(
-                  'OK',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-                ),
+                      trailing: selected
+                          ? Icon(Icons.check_rounded, color: colors.primary)
+                          : null,
+                      onTap: () => Navigator.of(context).pop(language),
+                    ),
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _languageLabel(AppLocalizations l10n, String code) {
+    return switch (code) {
+      'eng_Latn' => l10n.chat_language_english,
+      'swh_Latn' => l10n.chat_language_swahili,
+      'fra_Latn' => l10n.chat_language_french,
+      'spa_Latn' => l10n.chat_language_spanish,
+      'deu_Latn' => l10n.chat_language_german,
+      'por_Latn' => l10n.chat_language_portuguese,
+      'arb_Arab' => l10n.chat_language_arabic,
+      'hau_Latn' => l10n.chat_language_hausa,
+      'yor_Latn' => l10n.chat_language_yoruba,
+      'ibo_Latn' => l10n.chat_language_igbo,
+      'amh_Ethi' => l10n.chat_language_amharic,
+      'som_Latn' => l10n.chat_language_somali,
+      'kin_Latn' => l10n.chat_language_kinyarwanda,
+      'lug_Latn' => l10n.chat_language_luganda,
+      'zul_Latn' => l10n.chat_language_zulu,
+      'xho_Latn' => l10n.chat_language_xhosa,
+      _ => code,
+    };
   }
 }

@@ -11,26 +11,28 @@ import 'package:africaonlinestores/features/connect/chats/application/controller
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_throttle.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/chat_identity.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_reply_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/translation_language.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/active_call_chat_banner.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_app_bar.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_clear_chat_dialog.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_composer_area.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_edit_message_dialog.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_forward_conversation_picker.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/chat_emoji_panel.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_messages_view.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_settings_sheet.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_wallpaper_sheet.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_actions_sheet.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/translation_language_picker.dart';
 import 'package:africaonlinestores/features/connect/chats/repository/chat_repository_impl.dart';
 import 'package:africaonlinestores/features/connect/conversations/application/providers/conversation_provider.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -76,6 +78,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _isSending = false;
   bool _isLoadingMoreMessages = false;
   bool _isStartingCall = false;
+  ProviderSubscription<String?>? _accountSubscription;
+  String _activeAccountId = '';
+  bool _accountInitialized = false;
   ChatMessage? _replyingTo;
   TranslationLanguage _selectedTranslationLanguage =
       chatTranslationLanguages.first;
@@ -89,6 +94,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       conversationId: widget.conversationId,
       sendTyping: ref.read(chatRepositoryProvider).sendTyping,
     );
+    _accountSubscription = ref.listenManual<String?>(
+      currentCanonicalAccountIdProvider,
+      _handleAccountChanged,
+      fireImmediately: true,
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _onChatOpened();
@@ -97,6 +107,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _onChatOpened() {
     _loadInitialMessageIntoInput();
+  }
+
+  void _handleAccountChanged(String? previous, String? next) {
+    final accountId = normalizeCanonicalUserId(next);
+    if (_accountInitialized && accountId == _activeAccountId) return;
+
+    final isAccountChange = _accountInitialized;
+    _accountInitialized = true;
+    _activeAccountId = accountId;
+    if (!isAccountChange) return;
+
+    _typingThrottle.update(false);
+    _inputController.clear();
+    if (!mounted) return;
+    setState(() {
+      _replyingTo = null;
+      _showAdPreview = false;
+      _isSending = false;
+    });
   }
 
   void _loadInitialMessageIntoInput() {
@@ -112,31 +141,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  void _appendQuickReply(String text) {
-    final current = _inputController.text.trim();
-    _inputController.text = current.isEmpty ? text : '$current $text';
-    _inputController.selection = TextSelection.fromPosition(
-      TextPosition(offset: _inputController.text.length),
-    );
-    setState(() {});
-  }
-
   void _handleTyping(bool hasText) {
     _typingThrottle.update(hasText);
   }
 
-  Future<void> _sendMessage({
+  Future<bool> _sendMessage({
     String? text,
     List<ChatInputAttachment> attachments = const [],
   }) async {
-    if (_isSending) return;
+    if (_isSending) return false;
 
     final messageText = text?.trim();
     final hasText = _hasText(messageText);
     final hasAttachments = attachments.isNotEmpty;
     final hasAdContext = _showAdPreview && _hasText(widget.adId);
 
-    if (!hasText && !hasAttachments && !hasAdContext) return;
+    if (!hasText && !hasAttachments && !hasAdContext) return false;
 
     final attachedAdId = hasAdContext ? widget.adId?.trim() : null;
     final attachedAdTitle = hasAdContext ? widget.adTitle : null;
@@ -165,8 +185,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         chatMessagesControllerProvider(widget.conversationId).notifier,
       );
 
-      final currentUserId = ref.read(currentUserProvider);
-
       final sent = await notifier.sendTempMessage(
         text: hasText ? messageText : null,
         attachments: effectiveAttachments,
@@ -174,7 +192,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         adTitle: attachedAdTitle,
         adPrice: attachedAdPrice,
         adImage: attachedAdImage,
-        senderId: currentUserId,
         fallbackUser: widget.otherUser,
         fallbackDisplayName: widget.displayName,
         fallbackAvatar: widget.otherUserAvatar,
@@ -188,10 +205,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           attachedAdId: attachedAdId,
           replyTarget: replyTarget,
         );
-        return;
+        return false;
       }
 
       _scrollToBottom();
+      return true;
     } catch (e) {
       appLogger.e('Send message failed: $e');
       _restoreFailedMessage(
@@ -199,6 +217,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         attachedAdId: attachedAdId,
         replyTarget: replyTarget,
       );
+      return false;
     } finally {
       _isSending = false;
     }
@@ -237,7 +256,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (!mounted) return;
 
     if (!ok) {
-      ShowSnack(context, 'Message still failed. Try again.').error();
+      ShowSnack(context, AppLocalizations.of(context).chat_message_still_failed).error();
     }
   }
 
@@ -261,27 +280,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ShowSnack(
       context,
       _hasText(attachedAdId)
-          ? 'Failed to send ad message. Please try again.'
-          : 'Failed to send message. Please try again.',
+          ? AppLocalizations.of(context).chat_send_ad_failed
+          : AppLocalizations.of(context).chat_send_failed,
     ).error();
-  }
-
-  Future<void> _confirmDeleteAllMessages() async {
-    final shouldDelete = await showChatClearChatDialog(context);
-
-    if (!mounted || shouldDelete != true) return;
-
-    final ok = await ref
-        .read(chatMessagesControllerProvider(widget.conversationId).notifier)
-        .clearChat();
-
-    if (!mounted) return;
-
-    if (ok) {
-      ShowSnack(context, 'Chat cleared.').success();
-    } else {
-      ShowSnack(context, 'Failed to clear chat.').error();
-    }
   }
 
   void _openMessageActions(ChatMessage message, bool isMe) {
@@ -308,6 +309,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               unawaited(_showEditDialog(message));
             },
 
+            onCopy: () {
+              Navigator.pop(sheetContext);
+              unawaited(_copyMessage(message));
+            },
+
             onToggleStar: () {
               Navigator.pop(sheetContext);
               unawaited(_toggleStar(message));
@@ -316,6 +322,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onToggleReaction: (emoji) {
               Navigator.pop(sheetContext);
               unawaited(_toggleReaction(message, emoji));
+            },
+
+            onChooseReaction: () {
+              Navigator.pop(sheetContext);
+              unawaited(_chooseReaction(message));
             },
 
             onTranslate: () {
@@ -343,13 +354,62 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
+  Future<void> _copyMessage(ChatMessage message) async {
+    final text = message.visibleText.trim();
+    if (text.isEmpty || message.isDeletedType) return;
+
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+
+    final colors = context.appColors;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          backgroundColor: colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          content: Semantics(
+            liveRegion: true,
+            label: AppLocalizations.of(context).chat_copied_to_clipboard,
+            child: Text(AppLocalizations.of(context).chat_copied_to_clipboard),
+          ),
+        ),
+      );
+  }
+
   Future<void> _toggleStar(ChatMessage message) async {
     final ok = await ref
         .read(chatMessagesControllerProvider(widget.conversationId).notifier)
         .toggleMessageStar(message.id);
 
     if (!mounted) return;
-    if (!ok) ShowSnack(context, 'Failed to update star.').error();
+    if (!ok) {
+      ShowSnack(context, AppLocalizations.of(context).chat_star_update_failed)
+          .error();
+    }
+  }
+
+
+  Future<void> _chooseReaction(ChatMessage message) async {
+    final emoji = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (sheetContext) {
+        return ChatEmojiPanel(
+          onEmojiSelected: (selected) {
+            Navigator.of(sheetContext).pop(selected);
+          },
+          onClose: () => Navigator.of(sheetContext).pop(),
+        );
+      },
+    );
+    if (!mounted || emoji == null || emoji.trim().isEmpty) return;
+    await _toggleReaction(message, emoji);
   }
 
   Future<void> _toggleReaction(ChatMessage message, String emoji) async {
@@ -360,7 +420,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         .toggleMessageReaction(messageId: message.id, emoji: selectedEmoji);
 
     if (!mounted) return;
-    if (!ok) ShowSnack(context, 'Failed to update reaction.').error();
+    if (!ok) {
+      ShowSnack(
+        context,
+        AppLocalizations.of(context).chat_reaction_update_failed,
+      ).error();
+    }
   }
 
   Future<void> _forwardMessage(ChatMessage message) async {
@@ -392,7 +457,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (!mounted) return;
 
     if (!ok) {
-      ShowSnack(context, 'Failed to forward message.').error();
+      ShowSnack(context, AppLocalizations.of(context).chat_forward_failed).error();
       return;
     }
 
@@ -403,7 +468,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final count = targetConversationIds.length;
     ShowSnack(
       context,
-      count == 1 ? 'Message forwarded.' : 'Message forwarded to $count chats.',
+      count == 1
+          ? AppLocalizations.of(context).chat_forwarded
+          : AppLocalizations.of(context).chat_forwarded_to_chats(count),
     ).success();
   }
 
@@ -431,7 +498,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (!mounted) return;
 
     if (!ok) {
-      ShowSnack(context, 'Failed to translate message.').error();
+      ShowSnack(context, AppLocalizations.of(context).chat_translate_failed)
+          .error();
     }
   }
 
@@ -445,15 +513,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (!mounted) return;
     if (!ok) {
-      ShowSnack(context, 'Failed to delete message.').error();
+      ShowSnack(context, AppLocalizations.of(context).chat_delete_failed).error();
       return;
     }
 
     ShowSnack(
       context,
       deleteScope == 'everyone'
-          ? 'Message deleted for everyone.'
-          : 'Message deleted for you.',
+          ? AppLocalizations.of(context).chat_deleted_for_everyone
+          : AppLocalizations.of(context).chat_deleted_for_you,
     ).success();
   }
 
@@ -469,11 +537,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         .editMessage(messageId: message.id, content: updated!);
 
     if (!mounted) return;
-    if (!ok) ShowSnack(context, 'Failed to edit message.').error();
+    if (!ok) {
+      ShowSnack(context, AppLocalizations.of(context).chat_edit_failed).error();
+    }
   }
 
-  void _closeToHome() {
-    context.goNamed(AppRoutes.nHome);
+  void _closeChat() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    context.goNamed(AppRoutes.nConnect);
   }
 
   void _openWallpaperSheet() {
@@ -485,32 +560,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  void _openSettingsSheet() {
-    unawaited(
-      showChatSettingsSheet(
-        context: context,
-        conversationId: widget.conversationId,
-        onAudioCall: () {
-          Navigator.of(context).pop();
-          unawaited(_startCallFromSettings(AOSCallType.audio));
-        },
-        onVideoCall: () {
-          Navigator.of(context).pop();
-          unawaited(_startCallFromSettings(AOSCallType.video));
-        },
-        onChangeWallpaper: () {
-          Navigator.of(context).pop();
-          _openWallpaperSheet();
-        },
-        onClearChat: () {
-          Navigator.of(context).pop();
-          unawaited(_confirmDeleteAllMessages());
-        },
-      ),
-    );
-  }
-
-  Future<void> _startCallFromSettings(AOSCallType type) async {
+  Future<void> _startCall(AOSCallType type) async {
     if (_isStartingCall) return;
 
     _isStartingCall = true;
@@ -529,12 +579,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       if (!mounted) return;
       if (!success) {
-        ShowSnack(context, 'Failed to start call').error();
+        ShowSnack(context, AppLocalizations.of(context).chat_failed_to_start_call)
+            .error();
       }
     } catch (e) {
       appLogger.e('Failed to start chat call: $e');
       if (mounted) {
-        ShowSnack(context, 'Failed to start call').error();
+        ShowSnack(context, AppLocalizations.of(context).chat_failed_to_start_call)
+            .error();
       }
     } finally {
       _isStartingCall = false;
@@ -547,7 +599,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       chatMessagesControllerProvider(widget.conversationId),
     );
     final typingMap = ref.watch(chatTypingControllerProvider);
-    final currentUserId = _normalizeUser(ref.watch(currentUserProvider));
+    final currentUserId = normalizeCanonicalUserId(
+      ref.watch(currentCanonicalAccountIdProvider),
+    );
     final isTyping = typingMap[widget.conversationId] ?? false;
     final colors = context.appColors;
     final preferences = ref.watch(
@@ -570,10 +624,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             avatar: widget.otherUserAvatar,
           );
         },
-        onDeleteAllMessages: _confirmDeleteAllMessages,
         onChangeWallpaper: _openWallpaperSheet,
-        onOpenSettings: _openSettingsSheet,
-        onCloseToHome: _closeToHome,
+        onBack: _closeChat,
       ),
       body: SafeArea(
         child: Column(
@@ -597,9 +649,32 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 onReply: _startReply,
                 onLongPress: _openMessageActions,
                 onRetry: _retryMessage,
+                onRetryInitial: () {
+                  unawaited(
+                    ref
+                        .read(
+                          chatMessagesControllerProvider(
+                            widget.conversationId,
+                          ).notifier,
+                        )
+                        .loadInitial(),
+                  );
+                },
+                onRetryOlder: () {
+                  unawaited(
+                    ref
+                        .read(
+                          chatMessagesControllerProvider(
+                            widget.conversationId,
+                          ).notifier,
+                        )
+                        .loadMore(),
+                  );
+                },
               ),
             ),
             ChatComposerArea(
+              key: ValueKey('chat-composer-$currentUserId'),
               isTyping: isTyping,
               showAdPreview: _showAdPreview,
               adId: widget.adId,
@@ -609,10 +684,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               replyingTo: _replyingTo,
               inputController: _inputController,
               preferences: preferences,
-              onQuickReplyTap: _appendQuickReply,
               onCloseAdPreview: () => setState(() => _showAdPreview = false),
               onCloseReplyPreview: () => setState(() => _replyingTo = null),
               onTyping: _handleTyping,
+              onAudioCall: () => unawaited(_startCall(AOSCallType.audio)),
+              onVideoCall: () => unawaited(_startCall(AOSCallType.video)),
               onSend: _sendMessage,
             ),
           ],
@@ -631,7 +707,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   ChatReplyPreview _buildReplyPreview(ChatMessage message) {
     return ChatReplyPreview(
       id: message.id,
-      sender: message.sender,
+      sender: message.senderCanonicalId,
       senderDisplayName: message.senderDisplayName,
       senderAvatar: message.senderAvatar,
       content: message.content,
@@ -650,28 +726,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  static String _normalizeUser(String? value) {
-    return value?.trim().toLowerCase() ?? '';
-  }
-
   static bool _hasText(String? value) {
     return value != null && value.trim().isNotEmpty;
   }
 
   void _scrollToBottom() {
-    unawaited(
-      Future<void>.delayed(const Duration(milliseconds: 100), () {
-        if (_scrollController.hasClients) {
-          unawaited(
-            _scrollController.animateTo(
-              0,
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-            ),
-          );
-        }
-      }),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      unawaited(
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        ),
+      );
+    });
   }
 
   void _startReply(ChatMessage message) {
@@ -684,6 +753,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   void dispose() {
+    _accountSubscription?.close();
     _typingThrottle.dispose();
     _scrollController.removeListener(_onScroll);
     _inputController.dispose();

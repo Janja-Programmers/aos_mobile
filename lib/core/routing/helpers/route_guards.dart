@@ -19,7 +19,6 @@ class RouteGuards {
     AppRoutes.passwordSecurity,
     AppRoutes.userVerification,
     AppRoutes.deleteAccount,
-    AppRoutes.restoreAccount,
     AppRoutes.activityCenter,
     AppRoutes.notifications,
     AppRoutes.notification,

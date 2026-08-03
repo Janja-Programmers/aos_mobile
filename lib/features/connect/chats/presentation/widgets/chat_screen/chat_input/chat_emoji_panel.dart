@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class ChatEmojiPanel extends StatefulWidget {
@@ -172,6 +173,7 @@ class _ChatEmojiPanelState extends State<ChatEmojiPanel> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
     final query = _searchController.text.trim().toLowerCase();
     final emojis = _filteredEmojis(query);
 
@@ -200,7 +202,7 @@ class _ChatEmojiPanelState extends State<ChatEmojiPanel> {
                       category.icon,
                       color: selected ? colors.primary : colors.textMuted,
                     ),
-                    tooltip: category.label,
+                    tooltip: _categoryLabel(index, l10n),
                   );
                 },
                 separatorBuilder: (context, index) => const SizedBox(width: 2),
@@ -213,14 +215,16 @@ class _ChatEmojiPanelState extends State<ChatEmojiPanel> {
                 controller: _searchController,
                 onChanged: (value) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: 'Search emoji',
+                  hintText: l10n.chat_search_emoji,
                   prefixIcon: const Icon(Icons.search_rounded),
                   suffixIcon: query.isEmpty
                       ? IconButton(
+                          tooltip: l10n.chat_close,
                           onPressed: widget.onClose,
                           icon: const Icon(Icons.close_rounded),
                         )
                       : IconButton(
+                          tooltip: l10n.chat_clear_search,
                           onPressed: () {
                             _searchController.clear();
                             setState(() {});
@@ -246,7 +250,12 @@ class _ChatEmojiPanelState extends State<ChatEmojiPanel> {
             ),
             Expanded(
               child: emojis.isEmpty
-                  ? Center(child: Text('No emoji found', style: context.pMuted))
+                  ? Center(
+                      child: Text(
+                        l10n.chat_no_emoji_found,
+                        style: context.pMuted,
+                      ),
+                    )
                   : GridView.builder(
                       padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
                       gridDelegate:
@@ -275,6 +284,16 @@ class _ChatEmojiPanelState extends State<ChatEmojiPanel> {
         ),
       ),
     );
+  }
+
+  String _categoryLabel(int index, AppLocalizations l10n) {
+    return switch (index) {
+      0 => l10n.chat_emoji_recent,
+      1 => l10n.chat_emoji_smileys,
+      2 => l10n.chat_emoji_animals,
+      3 => l10n.chat_emoji_food,
+      _ => l10n.chat_emoji_flags,
+    };
   }
 
   List<String> _filteredEmojis(String query) {

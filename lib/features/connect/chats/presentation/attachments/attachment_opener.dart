@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/viewers/image_viewer.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/viewers/video_viewer.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -41,7 +42,10 @@ class AttachmentOpener {
 
     if (!await canLaunchUrl(uri)) {
       if (ctx.mounted) {
-        ShowSnack(ctx, 'Cannot open this type of document').warning();
+        ShowSnack(
+          ctx,
+          AppLocalizations.of(ctx).chat_cannot_open_document,
+        ).warning();
       }
       return;
     }

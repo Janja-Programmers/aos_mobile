@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/utils/format_time.dart';
 import 'package:flutter/material.dart';
 
@@ -18,13 +19,14 @@ class PresenceLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
 
     final text = isTyping
-        ? 'Typing...'
+        ? l10n.chat_typing
         : isOnline
-        ? 'Online'
+        ? l10n.chat_online
         : lastSeen != null
-        ? 'Last seen ${formatTime(lastSeen!)}'
+        ? l10n.chat_last_seen_time(formatTime(lastSeen!))
         : null;
 
     if (text == null) return const SizedBox.shrink();

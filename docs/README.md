@@ -24,3 +24,7 @@ must not redefine backend contracts.
 - [Native application lock](features/native-app-lock.md)
 
 - [Shorts creation and publishing](features/shorts-creation-publishing.md)
+
+## Feature guides
+
+- [Connect Chat](features/connect-chat.md)

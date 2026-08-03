@@ -16,7 +16,7 @@ final chatRealtimeServiceProvider = Provider<ChatRealtimeService>((ref) {
 // CHATMESSAGES Controller
 //********************
 final chatMessagesControllerProvider =
-    StateNotifierProvider.family<
+    StateNotifierProvider.autoDispose.family<
       ChatMessagesController,
       ChatMessagesState,
       String

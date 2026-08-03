@@ -7,14 +7,11 @@ mixin ChatMessagesReadSync on ChatMessagesControllerBase {
 
   @override
   bool _isIncomingMessage(ChatMessage message) {
-    final currentUser =
-        ref.read(currentUserProvider)?.trim().toLowerCase() ?? '';
-
-    if (currentUser.isEmpty) {
-      return false;
-    }
-
-    return message.sender.trim().toLowerCase() != currentUser;
+    final currentUser = ref.read(currentCanonicalAccountIdProvider);
+    return !isMessageOwnedBy(
+      message: message,
+      authenticatedCanonicalId: currentUser,
+    );
   }
 
   @override
@@ -29,7 +26,8 @@ mixin ChatMessagesReadSync on ChatMessagesControllerBase {
 
   @override
   Future<void> _syncIncomingReadState() async {
-    if (_isSyncingReadState) return;
+    final generation = _sessionGeneration;
+    if (_isSyncingReadState || !_isCurrentSession(generation)) return;
 
     final incomingMessages = _messages.where(_isIncomingMessage).toList();
 
@@ -62,6 +60,7 @@ mixin ChatMessagesReadSync on ChatMessagesControllerBase {
 
       if (hasUndeliveredIncoming) {
         final deliveredRes = await repo.markDelivered(conversationId);
+        if (!_isCurrentSession(generation)) return;
         if (deliveredRes.isRight) {
           final update = deliveredRes.rightOrNull!;
           _applyDeliveredSyncResult(
@@ -73,6 +72,7 @@ mixin ChatMessagesReadSync on ChatMessagesControllerBase {
 
       if (hasUnreadIncoming) {
         final readRes = await repo.markRead(conversationId);
+        if (!_isCurrentSession(generation)) return;
         if (readRes.isRight) {
           final update = readRes.rightOrNull!;
           _applyReadSyncResult(
@@ -86,7 +86,9 @@ mixin ChatMessagesReadSync on ChatMessagesControllerBase {
         }
       }
     } finally {
-      _isSyncingReadState = false;
+      if (generation == _sessionGeneration) {
+        _isSyncingReadState = false;
+      }
     }
   }
 

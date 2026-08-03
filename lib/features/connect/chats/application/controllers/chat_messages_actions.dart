@@ -9,13 +9,19 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
     required String messageId,
     required String content,
   }) async {
+    final generation = _sessionGeneration;
+    if (!_isCurrentSession(generation)) return false;
+
     final cleanMessageId = messageId.trim();
     final cleanContent = content.trim();
 
-    if (cleanMessageId.isEmpty || cleanContent.isEmpty) {
+    if (cleanMessageId.isEmpty ||
+        cleanContent.isEmpty ||
+        _editingMessageIds.contains(cleanMessageId)) {
       return false;
     }
 
+    _editingMessageIds.add(cleanMessageId);
     try {
       final repo = ref.read(chatRepositoryProvider);
 
@@ -23,6 +29,7 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
         messageId: cleanMessageId,
         content: cleanContent,
       );
+      if (!_isCurrentSession(generation)) return false;
 
       if (res.isLeft) {
         _setActionError(res.leftOrNull ?? const Object());
@@ -41,6 +48,8 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
     } catch (error, stackTrace) {
       _setActionError(error, stackTrace);
       return false;
+    } finally {
+      _editingMessageIds.remove(cleanMessageId);
     }
   }
 
@@ -48,6 +57,9 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
     required List<String> messageIds,
     required String deleteScope,
   }) async {
+    final generation = _sessionGeneration;
+    if (!_isCurrentSession(generation)) return false;
+
     final ids = messageIds
         .map((id) => id.trim())
         .where((id) => id.isNotEmpty)
@@ -59,6 +71,9 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
       return false;
     }
 
+    final actionKey = '$scope:${ids.join(',')}';
+    if (!_deletingMessageKeys.add(actionKey)) return false;
+
     try {
       final repo = ref.read(chatRepositoryProvider);
 
@@ -66,6 +81,7 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
         messageIds: ids,
         deleteScope: scope,
       );
+      if (!_isCurrentSession(generation)) return false;
 
       if (res.isLeft) {
         _setActionError(res.leftOrNull ?? const Object());
@@ -89,19 +105,26 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
       }
 
       await ref.read(conversationsControllerProvider.notifier).load();
+      if (!_isCurrentSession(generation)) return false;
       _clearActionError();
       return true;
     } catch (error, stackTrace) {
       _setActionError(error, stackTrace);
       return false;
+    } finally {
+      _deletingMessageKeys.remove(actionKey);
     }
   }
 
   Future<bool> clearChat() async {
+    final generation = _sessionGeneration;
+    if (!_isCurrentSession(generation)) return false;
+
     try {
       final repo = ref.read(chatRepositoryProvider);
 
       final res = await repo.clearChat(conversationId);
+      if (!_isCurrentSession(generation)) return false;
 
       if (res.isLeft) {
         _setActionError(res.leftOrNull ?? const Object());
@@ -113,6 +136,7 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
       _emitMessages();
 
       await ref.read(conversationsControllerProvider.notifier).load();
+      if (!_isCurrentSession(generation)) return false;
       _clearActionError();
       return true;
     } catch (error, stackTrace) {
@@ -122,17 +146,25 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
   }
 
   Future<bool> toggleMessageStar(String messageId) async {
+    final generation = _sessionGeneration;
+    if (!_isCurrentSession(generation)) return false;
+
     final cleanMessageId = messageId.trim();
 
-    if (cleanMessageId.isEmpty) return false;
+    if (cleanMessageId.isEmpty ||
+        _starringMessageIds.contains(cleanMessageId)) {
+      return false;
+    }
 
     if (!_messages.any((message) => message.id == cleanMessageId)) {
       return false;
     }
 
+    _starringMessageIds.add(cleanMessageId);
     try {
       final repo = ref.read(chatRepositoryProvider);
       final res = await repo.toggleMessageStar(cleanMessageId);
+      if (!_isCurrentSession(generation)) return false;
 
       if (res.isLeft) {
         _setActionError(res.leftOrNull ?? const Object());
@@ -159,6 +191,8 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
     } catch (error, stackTrace) {
       _setActionError(error, stackTrace);
       return false;
+    } finally {
+      _starringMessageIds.remove(cleanMessageId);
     }
   }
 
@@ -166,10 +200,16 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
     required String messageId,
     required String? emoji,
   }) async {
+    final generation = _sessionGeneration;
+    if (!_isCurrentSession(generation)) return false;
+
     final cleanMessageId = messageId.trim();
     final cleanEmoji = emoji?.trim();
 
-    if (cleanMessageId.isEmpty) return false;
+    if (cleanMessageId.isEmpty ||
+        _reactingMessageIds.contains(cleanMessageId)) {
+      return false;
+    }
 
     final index = _messages.indexWhere(
       (message) => message.id == cleanMessageId,
@@ -177,6 +217,7 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
 
     if (index == -1) return false;
 
+    _reactingMessageIds.add(cleanMessageId);
     try {
       final repo = ref.read(chatRepositoryProvider);
 
@@ -184,6 +225,7 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
         messageId: cleanMessageId,
         emoji: cleanEmoji == null || cleanEmoji.isEmpty ? null : cleanEmoji,
       );
+      if (!_isCurrentSession(generation)) return false;
 
       if (res.isLeft) {
         _setActionError(res.leftOrNull ?? const Object());
@@ -191,28 +233,24 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
       }
 
       final payload = res.rightOrNull ?? <String, dynamic>{};
-
-      if (payload.isNotEmpty) {
-        _applyReactionPayload(payload);
-      } else {
-        // Keep the UI responsive even if the backend returns only an OK wrapper.
-        final currentIndex = _messages.indexWhere(
-          (message) => message.id == cleanMessageId,
+      if (payload.isEmpty || payload['message_id'] == null) {
+        _setActionError(
+          const Failure(
+            'Invalid reaction response from chat API',
+            type: FailureType.parse,
+          ),
         );
-        if (currentIndex != -1) {
-          final current = _messages[currentIndex];
-          _messages[currentIndex] = current.copyWith(
-            viewerState: current.viewerState.copyWith(myReaction: cleanEmoji),
-          );
-          _emitMessages();
-        }
+        return false;
       }
 
+      _applyReactionPayload(payload);
       _clearActionError();
       return true;
     } catch (error, stackTrace) {
       _setActionError(error, stackTrace);
       return false;
+    } finally {
+      _reactingMessageIds.remove(cleanMessageId);
     }
   }
 
@@ -220,6 +258,9 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
     required String messageId,
     required List<String> targetConversationIds,
   }) async {
+    final generation = _sessionGeneration;
+    if (!_isCurrentSession(generation)) return false;
+
     final cleanMessageId = messageId.trim();
 
     final cleanTargets = targetConversationIds
@@ -231,6 +272,7 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
     if (cleanMessageId.isEmpty || cleanTargets.isEmpty) {
       return false;
     }
+    if (!_forwardingMessageIds.add(cleanMessageId)) return false;
 
     final source = _messages.cast<ChatMessage?>().firstWhere(
       (message) => message?.id == cleanMessageId,
@@ -242,6 +284,7 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
         source.isLocalFailed ||
         source.isSystemMessage ||
         source.isDeletedType) {
+      _forwardingMessageIds.remove(cleanMessageId);
       return false;
     }
 
@@ -252,6 +295,7 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
         messageId: cleanMessageId,
         targetConversationIds: cleanTargets,
       );
+      if (!_isCurrentSession(generation)) return false;
 
       if (res.isLeft) {
         _setActionError(res.leftOrNull ?? const Object());
@@ -259,11 +303,14 @@ mixin ChatMessagesActions on ChatMessagesControllerBase {
       }
 
       await ref.read(conversationsControllerProvider.notifier).load();
+      if (!_isCurrentSession(generation)) return false;
       _clearActionError();
       return true;
     } catch (error, stackTrace) {
       _setActionError(error, stackTrace);
       return false;
+    } finally {
+      _forwardingMessageIds.remove(cleanMessageId);
     }
   }
 

@@ -17,6 +17,7 @@ import 'package:africaonlinestores/features/connect/chats/presentation/widgets/c
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/share_contact_picker_sheet.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/voice_record_button.dart';
 import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,10 +40,12 @@ class ChatInputBar extends ConsumerStatefulWidget {
     required this.onTyping,
     required this.preferences,
     this.adId,
+    required this.onAudioCall,
+    required this.onVideoCall,
   });
 
   final TextEditingController controller;
-  final Future<void> Function({
+  final Future<bool> Function({
     String? text,
     List<ChatInputAttachment> attachments,
   })
@@ -51,6 +54,8 @@ class ChatInputBar extends ConsumerStatefulWidget {
   final ValueChanged<bool> onTyping;
   final ChatLocalPreferencesState preferences;
   final String? adId;
+  final VoidCallback onAudioCall;
+  final VoidCallback onVideoCall;
 
   @override
   ConsumerState<ChatInputBar> createState() => _ChatInputBarState();
@@ -59,6 +64,7 @@ class ChatInputBar extends ConsumerStatefulWidget {
 class _ChatInputBarState extends ConsumerState<ChatInputBar> {
   final FocusNode _inputFocusNode = FocusNode();
   final List<ChatPendingAttachment> _attachments = [];
+  final Map<String, ChatInputAttachment> _uploadedAttachmentsByPath = {};
 
   bool _isSending = false;
   bool _showAttachmentPanel = false;
@@ -73,6 +79,10 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
 
   @override
   void dispose() {
+    for (final attachment in _attachments) {
+      unawaited(_deleteTemporaryVoiceFile(attachment));
+    }
+    _uploadedAttachmentsByPath.clear();
     _inputFocusNode.dispose();
     super.dispose();
   }
@@ -96,7 +106,9 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
       final uploadedAttachments = <ChatInputAttachment>[];
 
       for (final pending in pendingAttachments) {
+        final cached = _uploadedAttachmentsByPath[pending.path];
         final uploaded =
+            cached ??
             await ChatInputAttachmentHelper.uploadPendingAttachment(
               ref,
               pending,
@@ -108,15 +120,30 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
           );
         }
 
+        _uploadedAttachmentsByPath[pending.path] = uploaded;
         uploadedAttachments.add(uploaded);
       }
 
       if (!mounted) return;
 
-      await widget.onSend(
+      final sent = await widget.onSend(
         text: text.isNotEmpty ? text : null,
         attachments: uploadedAttachments,
       );
+      if (!mounted) return;
+      if (!sent) {
+        setState(() {
+          _attachments
+            ..clear()
+            ..addAll(pendingAttachments);
+        });
+        return;
+      }
+
+      for (final pending in pendingAttachments) {
+        _uploadedAttachmentsByPath.remove(pending.path);
+        unawaited(_deleteTemporaryVoiceFile(pending));
+      }
     } catch (error, stackTrace) {
       appLogger.w(
         'Failed to send chat attachment.',
@@ -131,7 +158,10 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
           ..addAll(pendingAttachments);
       });
 
-      ShowSnack(context, 'Attachment upload failed. Please try again.').error();
+      ShowSnack(
+        context,
+        AppLocalizations.of(context).chat_attachment_upload_failed,
+      ).error();
       return;
     } finally {
       if (mounted) {
@@ -220,7 +250,9 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
 
     final picked = await context.pushNamed<AOSPlace>(
       AppRoutes.nMapPicker,
-      queryParameters: {'title': 'Share location'},
+      queryParameters: {
+        'title': AppLocalizations.of(context).chat_share_location_title,
+      },
     );
 
     if (!mounted || picked == null) return;
@@ -238,24 +270,22 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
     );
   }
 
+  void _handleAudioCallTap() {
+    _closePanels();
+    widget.onAudioCall();
+  }
+
+  void _handleVideoCallTap() {
+    _closePanels();
+    widget.onVideoCall();
+  }
+
   Future<void> _handleVoiceRecorded(String path) async {
     if (_isSending) return;
 
     final file = File(path);
     final fileExists = file.existsSync();
     if (!fileExists) return;
-
-    final filename = file.path.split(Platform.pathSeparator).last;
-    final extension = filename.contains('.')
-        ? filename.split('.').last.toLowerCase()
-        : '';
-
-    appLogger.i('Audio path: ${file.path}');
-    appLogger.i('Audio filename: $filename');
-    appLogger.i('Audio extension: $extension');
-
-    final fileSize = file.lengthSync();
-    appLogger.i('Audio size: $fileSize bytes');
 
     if (!mounted) return;
 
@@ -264,6 +294,27 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
     });
 
     await _submit();
+  }
+
+  Future<void> _deleteTemporaryVoiceFile(
+    ChatPendingAttachment attachment,
+  ) async {
+    if (attachment.type != 'audio') return;
+    final filename = attachment.file.path.split(Platform.pathSeparator).last;
+    if (!filename.startsWith('voice_')) return;
+
+    try {
+      // ignore: avoid_slow_async_io
+      if (await attachment.file.exists()) {
+        await attachment.file.delete();
+      }
+    } catch (error, stackTrace) {
+      appLogger.w(
+        'Temporary voice recording cleanup failed.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   void _insertEmoji(String emoji) {
@@ -293,6 +344,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
     AppColorTokens colors,
     InputDecorationThemeData inputDecorationTheme,
   ) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
       child: Row(
@@ -342,7 +394,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                         setState(() {});
                       },
                       decoration: InputDecoration(
-                        hintText: 'Message',
+                        hintText: l10n.chat_message_hint,
                         isDense: true,
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
@@ -425,7 +477,10 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
             AttachmentPreviewBar(
               attachments: _attachments,
               onRemove: (index) {
+                final removed = _attachments[index];
+                _uploadedAttachmentsByPath.remove(removed.path);
                 setState(() => _attachments.removeAt(index));
+                unawaited(_deleteTemporaryVoiceFile(removed));
               },
             ),
           AnimatedSize(
@@ -443,6 +498,8 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                     onCamera: () {
                       unawaited(_handleCameraTap());
                     },
+                    onVideoCall: _handleVideoCallTap,
+                    onAudioCall: _handleAudioCallTap,
                     onDocument: () {
                       unawaited(_handleDocumentTap());
                     },

@@ -675,4 +675,769 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get unableToOpenShareOptions => 'تعذر فتح خيارات المشاركة.';
+
+  @override
+  String get chat_connect_title => 'AOS Connect';
+
+  @override
+  String get chat_close_connect => 'إغلاق Connect';
+
+  @override
+  String get chat_close_search => 'إغلاق البحث';
+
+  @override
+  String get chat_search => 'بحث';
+
+  @override
+  String get chat_more_options => 'خيارات إضافية';
+
+  @override
+  String get chat_search_chats_hint => 'البحث في الدردشات…';
+
+  @override
+  String get chat_search_calls_hint => 'البحث في المكالمات…';
+
+  @override
+  String get chat_all_marked_read => 'تم تعليم جميع الدردشات كمقروءة.';
+
+  @override
+  String get chat_some_mark_read_failed => 'تعذر تعليم بعض الدردشات كمقروءة.';
+
+  @override
+  String get chat_clear_call_log_title => 'مسح سجل المكالمات؟';
+
+  @override
+  String get chat_clear_call_log_body =>
+      'سيؤدي ذلك إلى إزالة سجل المكالمات الظاهر لديك، ولن يحذف سجلات المستخدمين الآخرين.';
+
+  @override
+  String get chat_cancel => 'إلغاء';
+
+  @override
+  String get chat_clear => 'مسح';
+
+  @override
+  String get chat_call_log_cleared => 'تم مسح سجل المكالمات.';
+
+  @override
+  String get chat_call_log_clear_failed => 'تعذر مسح سجل المكالمات.';
+
+  @override
+  String get chat_clear_call_log => 'مسح سجل المكالمات';
+
+  @override
+  String get chat_settings => 'الإعدادات';
+
+  @override
+  String get chat_mark_all_read => 'تعليم الكل كمقروء';
+
+  @override
+  String get chat_starred_messages => 'الرسائل المميزة بنجمة';
+
+  @override
+  String get chat_chats => 'الدردشات';
+
+  @override
+  String get chat_new_conversation => 'محادثة جديدة';
+
+  @override
+  String get chat_new => 'جديد';
+
+  @override
+  String get chat_calls => 'المكالمات';
+
+  @override
+  String get chat_back => 'رجوع';
+
+  @override
+  String get chat_call => 'اتصال';
+
+  @override
+  String get chat_video_call => 'مكالمة فيديو';
+
+  @override
+  String get chat_change_wallpaper => 'تغيير الخلفية';
+
+  @override
+  String get chat_user_might_be_offline => 'قد يكون المستخدم غير متصل';
+
+  @override
+  String get chat_failed_to_start_call => 'تعذر بدء المكالمة';
+
+  @override
+  String get chat_gallery => 'المعرض';
+
+  @override
+  String get chat_camera => 'الكاميرا';
+
+  @override
+  String get chat_voice_call => 'مكالمة صوتية';
+
+  @override
+  String get chat_location => 'الموقع';
+
+  @override
+  String get chat_document => 'مستند';
+
+  @override
+  String get chat_contact => 'جهة اتصال';
+
+  @override
+  String get chat_attachment_upload_failed => 'فشل رفع المرفق. حاول مرة أخرى.';
+
+  @override
+  String get chat_message_hint => 'رسالة';
+
+  @override
+  String get chat_share_location_title => 'مشاركة الموقع';
+
+  @override
+  String get chat_retry => 'إعادة المحاولة';
+
+  @override
+  String get chat_could_not_load_messages => 'تعذر تحميل الرسائل';
+
+  @override
+  String get chat_check_connection_try_again =>
+      'تحقق من اتصالك وحاول مرة أخرى.';
+
+  @override
+  String get chat_no_messages_yet => 'لا توجد رسائل بعد';
+
+  @override
+  String get chat_no_messages_hint => 'أرسل رسالة لبدء هذه المحادثة.';
+
+  @override
+  String get chat_older_messages_load_failed => 'تعذر تحميل الرسائل الأقدم.';
+
+  @override
+  String get chat_reply => 'رد';
+
+  @override
+  String get chat_edit => 'تعديل';
+
+  @override
+  String get chat_copy => 'نسخ';
+
+  @override
+  String get chat_forward => 'إعادة توجيه';
+
+  @override
+  String get chat_translate_again => 'ترجمة مرة أخرى';
+
+  @override
+  String get chat_translate => 'ترجمة';
+
+  @override
+  String get chat_unstar => 'إزالة النجمة';
+
+  @override
+  String get chat_star => 'تمييز بنجمة';
+
+  @override
+  String get chat_delete_for_me => 'حذف لدي';
+
+  @override
+  String get chat_delete_for_everyone => 'حذف لدى الجميع';
+
+  @override
+  String get chat_message_reactions => 'تفاعلات الرسالة';
+
+  @override
+  String get chat_choose_another_reaction => 'اختيار تفاعل آخر';
+
+  @override
+  String chat_react_with(Object emoji) {
+    return 'تفاعل باستخدام $emoji';
+  }
+
+  @override
+  String chat_remove_reaction(Object emoji) {
+    return 'إزالة تفاعل $emoji';
+  }
+
+  @override
+  String get chat_editing_message => 'تعديل الرسالة';
+
+  @override
+  String get chat_cancel_editing => 'إلغاء التعديل';
+
+  @override
+  String get chat_copied_to_clipboard => 'تم النسخ إلى الحافظة';
+
+  @override
+  String get chat_message_still_failed =>
+      'ما زال إرسال الرسالة متعذرًا. حاول مرة أخرى.';
+
+  @override
+  String get chat_send_ad_failed => 'تعذر إرسال رسالة الإعلان. حاول مرة أخرى.';
+
+  @override
+  String get chat_send_failed => 'تعذر إرسال الرسالة. حاول مرة أخرى.';
+
+  @override
+  String get chat_star_update_failed => 'تعذر تحديث النجمة.';
+
+  @override
+  String get chat_reaction_update_failed => 'تعذر تحديث التفاعل.';
+
+  @override
+  String get chat_forward_failed => 'تعذر إعادة توجيه الرسالة.';
+
+  @override
+  String get chat_forwarded => 'تمت إعادة توجيه الرسالة.';
+
+  @override
+  String chat_forwarded_to_chats(Object count) {
+    return 'تمت إعادة توجيه الرسالة إلى $count دردشات.';
+  }
+
+  @override
+  String get chat_translate_failed => 'تعذرت ترجمة الرسالة.';
+
+  @override
+  String get chat_delete_failed => 'تعذر حذف الرسالة.';
+
+  @override
+  String get chat_deleted_for_everyone => 'تم حذف الرسالة لدى الجميع.';
+
+  @override
+  String get chat_deleted_for_you => 'تم حذف الرسالة لديك.';
+
+  @override
+  String get chat_edit_failed => 'تعذر تعديل الرسالة.';
+
+  @override
+  String get chat_settings_title => 'إعدادات الدردشة';
+
+  @override
+  String get chat_privacy => 'الخصوصية';
+
+  @override
+  String get chat_read_receipts => 'إيصالات القراءة';
+
+  @override
+  String get chat_read_receipts_managed => 'تديرها AOS لتسليم الرسائل';
+
+  @override
+  String get chat_last_seen_online => 'آخر ظهور وحالة الاتصال';
+
+  @override
+  String get chat_no_backend_preference =>
+      'لا يوفر الخادم إعدادًا لهذا التفضيل';
+
+  @override
+  String get chat_blocked_contacts => 'جهات الاتصال المحظورة';
+
+  @override
+  String get chat_chats_section => 'الدردشات';
+
+  @override
+  String get chat_wallpaper => 'خلفية الدردشة';
+
+  @override
+  String get chat_wallpaper_description => 'تعيين خلفية افتراضية للدردشات';
+
+  @override
+  String get chat_enter_is_send => 'Enter للإرسال';
+
+  @override
+  String get chat_enter_is_send_description => 'يرسل مفتاح Enter رسالتك';
+
+  @override
+  String get chat_media_auto_download => 'التنزيل التلقائي للوسائط';
+
+  @override
+  String get chat_unavailable_backend => 'غير متاح في عقد الخادم الحالي';
+
+  @override
+  String get chat_notifications => 'الإشعارات';
+
+  @override
+  String get chat_message_notifications => 'إشعارات الرسائل';
+
+  @override
+  String get chat_call_notifications => 'إشعارات المكالمات';
+
+  @override
+  String get chat_system_notification_settings =>
+      'تتحكم بها إعدادات إشعارات النظام';
+
+  @override
+  String get chat_on => 'مفعّل';
+
+  @override
+  String get chat_off => 'متوقف';
+
+  @override
+  String get chat_starred_load_failed => 'تعذر تحميل الرسائل المميزة بنجمة';
+
+  @override
+  String get chat_no_starred_messages => 'لا توجد رسائل مميزة بنجمة';
+
+  @override
+  String get chat_no_starred_messages_hint =>
+      'ستظهر هنا الرسائل التي تميزها بنجمة.';
+
+  @override
+  String get chat_unstar_message => 'إزالة النجمة من الرسالة';
+
+  @override
+  String get chat_unstar_failed => 'تعذر إزالة النجمة من الرسالة.';
+
+  @override
+  String get chat_message_unstarred => 'تمت إزالة النجمة من الرسالة.';
+
+  @override
+  String get chat_attachment => 'مرفق';
+
+  @override
+  String get chat_you => 'أنت';
+
+  @override
+  String get chat_other_user => 'مستخدم آخر';
+
+  @override
+  String get chat_aos_user => 'مستخدم AOS';
+
+  @override
+  String get chat_sending => 'جارٍ الإرسال…';
+
+  @override
+  String get chat_edited => 'معدلة';
+
+  @override
+  String get chat_starred => 'مميزة بنجمة';
+
+  @override
+  String get chat_translated => 'مترجمة';
+
+  @override
+  String get chat_failed_to_send => 'فشل الإرسال';
+
+  @override
+  String get chat_read => 'مقروءة';
+
+  @override
+  String get chat_delivered => 'تم التسليم';
+
+  @override
+  String get chat_sent => 'تم الإرسال';
+
+  @override
+  String get chat_forwarded_label => 'معاد توجيهها';
+
+  @override
+  String get chat_deleted_message => 'تم حذف هذه الرسالة';
+
+  @override
+  String get chat_translating => 'جارٍ الترجمة…';
+
+  @override
+  String get chat_tap_to_retry => 'اضغط لإعادة المحاولة';
+
+  @override
+  String get chat_translate_to => 'الترجمة إلى';
+
+  @override
+  String chat_translate_to_language(Object language) {
+    return 'الترجمة إلى $language';
+  }
+
+  @override
+  String get chat_voice_release_cancel => 'حرر للإلغاء';
+
+  @override
+  String get chat_voice_recording_locked => 'تم تثبيت التسجيل';
+
+  @override
+  String get chat_voice_slide_cancel => 'اسحب لليسار للإلغاء';
+
+  @override
+  String chat_voice_recording_status(Object duration, Object instruction) {
+    return 'تسجيل صوتي $duration. $instruction';
+  }
+
+  @override
+  String chat_starred_message_from(Object sender) {
+    return 'رسالة مميزة بنجمة من $sender';
+  }
+
+  @override
+  String get chat_verified_sellers => 'البائعون الموثقون';
+
+  @override
+  String get chat_friends => 'الأصدقاء';
+
+  @override
+  String get chat_search_sellers_hint => 'البحث عن بائعين…';
+
+  @override
+  String get chat_search_friends_hint => 'البحث عن أصدقاء…';
+
+  @override
+  String get chat_loading_sellers => 'جارٍ تحميل البائعين';
+
+  @override
+  String get chat_loading_sellers_hint =>
+      'يرجى الانتظار بينما نعثر على البائعين الموثقين.';
+
+  @override
+  String get chat_could_not_load_sellers => 'تعذر تحميل البائعين';
+
+  @override
+  String get chat_no_verified_sellers => 'لا يوجد بائعون موثقون';
+
+  @override
+  String get chat_no_sellers_found => 'لم يتم العثور على بائعين';
+
+  @override
+  String get chat_no_verified_sellers_hint =>
+      'سيظهر البائعون الموثقون هنا عند توفرهم.';
+
+  @override
+  String get chat_no_sellers_found_hint =>
+      'جرّب اسم بائع أو فئة أو موقعًا آخر.';
+
+  @override
+  String get chat_refresh => 'تحديث';
+
+  @override
+  String get chat_loading_friends => 'جارٍ تحميل الأصدقاء';
+
+  @override
+  String get chat_loading_friends_hint =>
+      'يرجى الانتظار بينما نعثر على أصدقائك.';
+
+  @override
+  String get chat_could_not_load_friends => 'تعذر تحميل الأصدقاء';
+
+  @override
+  String get chat_try_again => 'يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get chat_no_friends_yet => 'لا يوجد أصدقاء بعد';
+
+  @override
+  String get chat_no_friends_found => 'لم يتم العثور على أصدقاء';
+
+  @override
+  String get chat_no_friends_yet_hint =>
+      'سيظهر الأصدقاء هنا عندما يتابع كل منكما الآخر.';
+
+  @override
+  String get chat_no_friends_found_hint =>
+      'جرّب البحث باسم أو بريد إلكتروني آخر.';
+
+  @override
+  String get chat_online => 'متصل';
+
+  @override
+  String get chat_last_seen_recently => 'ظهر مؤخرًا';
+
+  @override
+  String get chat_friend => 'صديق';
+
+  @override
+  String get chat_message_contact => 'مراسلة';
+
+  @override
+  String get chat_call_contact => 'اتصال';
+
+  @override
+  String get chat_all_chats => 'كل الدردشات';
+
+  @override
+  String get chat_unread => 'غير مقروءة';
+
+  @override
+  String get chat_loading_conversations => 'جارٍ تحميل المحادثات';
+
+  @override
+  String get chat_loading_conversations_hint =>
+      'يرجى الانتظار أثناء تحميل دردشاتك.';
+
+  @override
+  String get chat_could_not_load_chats => 'تعذر تحميل الدردشات';
+
+  @override
+  String get chat_no_chats_found => 'لم يتم العثور على دردشات';
+
+  @override
+  String get chat_no_chats_search_hint => 'جرّب اسمًا أو رسالة أخرى.';
+
+  @override
+  String get chat_no_read_chats => 'لا توجد دردشات مقروءة';
+
+  @override
+  String get chat_no_unread_chats => 'لا توجد دردشات غير مقروءة';
+
+  @override
+  String get chat_no_conversations_yet => 'لا توجد محادثات بعد';
+
+  @override
+  String get chat_no_read_chats_hint => 'ستظهر هنا الدردشات التي قرأتها.';
+
+  @override
+  String get chat_no_unread_chats_hint =>
+      'ستظهر الدردشات غير المقروءة هنا عند وصول رسائل جديدة.';
+
+  @override
+  String get chat_no_conversations_hint =>
+      'ستظهر محادثاتك هنا بعد بدء الدردشة.';
+
+  @override
+  String get chat_deleted_from_list => 'تم حذف الدردشة من قائمتك.';
+
+  @override
+  String get chat_delete_chat_failed => 'تعذر حذف الدردشة. حاول مرة أخرى.';
+
+  @override
+  String get chat_typing => 'يكتب…';
+
+  @override
+  String chat_last_seen_time(Object time) {
+    return 'آخر ظهور $time';
+  }
+
+  @override
+  String get chat_forward_to_title => 'إعادة توجيه إلى';
+
+  @override
+  String get chat_close => 'إغلاق';
+
+  @override
+  String get chat_search_conversations_hint => 'البحث في المحادثات';
+
+  @override
+  String get chat_clear_search => 'مسح البحث';
+
+  @override
+  String get chat_could_not_load_conversations => 'تعذر تحميل المحادثات';
+
+  @override
+  String get chat_no_other_conversations => 'لا توجد محادثات أخرى';
+
+  @override
+  String get chat_no_other_conversations_hint =>
+      'ابدأ محادثة أخرى أولاً، ثم يمكنك إعادة توجيه الرسائل إليها.';
+
+  @override
+  String get chat_no_conversations_found => 'لم يتم العثور على محادثات';
+
+  @override
+  String get chat_search_conversations_empty_hint =>
+      'جرّب البحث باسم أو رسالة أخرى.';
+
+  @override
+  String get chat_forward_to_one_chat => 'إعادة التوجيه إلى محادثة واحدة';
+
+  @override
+  String chat_forward_to_chats_count(Object count) {
+    return 'إعادة التوجيه إلى $count محادثات';
+  }
+
+  @override
+  String get chat_default_wallpaper_applied => 'تم تطبيق الخلفية الافتراضية.';
+
+  @override
+  String get chat_wallpaper_updated => 'تم تحديث الخلفية.';
+
+  @override
+  String chat_named_wallpaper_applied(Object name) {
+    return 'تم تطبيق خلفية $name.';
+  }
+
+  @override
+  String get chat_choose_conversation_background => 'اختر خلفية لهذه المحادثة';
+
+  @override
+  String get chat_default => 'افتراضي';
+
+  @override
+  String get chat_choose_from_gallery => 'اختيار من المعرض';
+
+  @override
+  String get chat_solid_colors => 'ألوان موحدة';
+
+  @override
+  String get chat_emoji_recent => 'الأخيرة';
+
+  @override
+  String get chat_emoji_smileys => 'وجوه';
+
+  @override
+  String get chat_emoji_animals => 'حيوانات';
+
+  @override
+  String get chat_emoji_food => 'طعام';
+
+  @override
+  String get chat_emoji_flags => 'أعلام';
+
+  @override
+  String get chat_search_emoji => 'البحث عن رمز تعبيري';
+
+  @override
+  String get chat_no_emoji_found => 'لم يتم العثور على رموز تعبيرية';
+
+  @override
+  String get chat_share_contact => 'مشاركة جهة اتصال';
+
+  @override
+  String get chat_search_aos_users => 'البحث عن مستخدمي AOS';
+
+  @override
+  String get chat_could_not_load_contacts => 'تعذر تحميل جهات الاتصال';
+
+  @override
+  String get chat_search_people_on_aos => 'البحث عن أشخاص على AOS';
+
+  @override
+  String get chat_search_people_hint =>
+      'اكتب حرفين على الأقل للعثور على جهة اتصال لمشاركتها.';
+
+  @override
+  String get chat_no_contacts_found => 'لم يتم العثور على جهات اتصال';
+
+  @override
+  String get chat_no_contacts_found_hint =>
+      'جرّب اسماً أو اسم مستخدم أو بريداً إلكترونياً آخر.';
+
+  @override
+  String get chat_unmute => 'إلغاء الكتم';
+
+  @override
+  String get chat_mute => 'كتم';
+
+  @override
+  String get chat_end_call => 'إنهاء المكالمة';
+
+  @override
+  String get chat_calling => 'جارٍ الاتصال';
+
+  @override
+  String get chat_ringing => 'يرن';
+
+  @override
+  String get chat_incoming_call => 'مكالمة واردة';
+
+  @override
+  String get chat_connecting => 'جارٍ الاتصال';
+
+  @override
+  String get chat_delete_chat_title => 'حذف المحادثة؟';
+
+  @override
+  String chat_delete_chat_description(Object name) {
+    return 'سيؤدي هذا إلى إزالة محادثتك مع $name من قائمتك، ولن تُحذف لدى المستخدم الآخر.';
+  }
+
+  @override
+  String get chat_this_user => 'هذا المستخدم';
+
+  @override
+  String get chat_delete => 'حذف';
+
+  @override
+  String get chat_view_profile => 'عرض الملف الشخصي';
+
+  @override
+  String get chat_view_contact => 'عرض جهة الاتصال';
+
+  @override
+  String get chat_cannot_open_document => 'لا يمكن فتح هذا النوع من المستندات';
+
+  @override
+  String get chat_failed_to_start_chat => 'تعذر بدء المحادثة. حاول مرة أخرى.';
+
+  @override
+  String get chat_invalid_conversation_response => 'استجابة محادثة غير صالحة';
+
+  @override
+  String get chat_voice_hold_to_record => 'اضغط مطولاً لتسجيل رسالة صوتية';
+
+  @override
+  String get chat_voice_release_to_finish => 'اترك لإنهاء التسجيل الصوتي';
+
+  @override
+  String get chat_microphone_permission_denied => 'تم رفض إذن الميكروفون.';
+
+  @override
+  String get chat_voice_record_start_failed => 'تعذر بدء التسجيل الصوتي.';
+
+  @override
+  String get chat_voice_record_finish_failed => 'تعذر إنهاء التسجيل الصوتي.';
+
+  @override
+  String get chat_language_english => 'الإنجليزية';
+
+  @override
+  String get chat_language_swahili => 'السواحيلية';
+
+  @override
+  String get chat_language_french => 'الفرنسية';
+
+  @override
+  String get chat_language_spanish => 'الإسبانية';
+
+  @override
+  String get chat_language_german => 'الألمانية';
+
+  @override
+  String get chat_language_portuguese => 'البرتغالية';
+
+  @override
+  String get chat_language_arabic => 'العربية';
+
+  @override
+  String get chat_language_hausa => 'الهوسا';
+
+  @override
+  String get chat_language_yoruba => 'اليوروبا';
+
+  @override
+  String get chat_language_igbo => 'الإيغبو';
+
+  @override
+  String get chat_language_amharic => 'الأمهرية';
+
+  @override
+  String get chat_language_somali => 'الصومالية';
+
+  @override
+  String get chat_language_kinyarwanda => 'الكينيارواندا';
+
+  @override
+  String get chat_language_luganda => 'اللوغندية';
+
+  @override
+  String get chat_language_zulu => 'الزولو';
+
+  @override
+  String get chat_language_xhosa => 'الخوسا';
+
+  @override
+  String get chat_wallpaper_midnight => 'منتصف الليل';
+
+  @override
+  String get chat_wallpaper_navy => 'كحلي';
+
+  @override
+  String get chat_wallpaper_forest => 'غابة';
+
+  @override
+  String get chat_wallpaper_plum => 'برقوقي';
+
+  @override
+  String get chat_wallpaper_charcoal => 'فحمي';
+
+  @override
+  String get chat_wallpaper_maroon => 'خمري';
+
+  @override
+  String get chat_wallpaper_teal => 'أزرق مخضر';
+
+  @override
+  String get chat_wallpaper_coffee => 'قهوة';
 }

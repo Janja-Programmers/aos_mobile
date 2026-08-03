@@ -7,22 +7,66 @@ mixin ChatMessagesStore on ChatMessagesControllerBase {
 
   @override
   void _replaceWithServerMessages(List<ChatMessage> serverMessages) {
+    final authoritative = dedupeChatMessagesPreservingOrder(serverMessages);
+    if (_messages.isEmpty) {
+      _messages.addAll(authoritative);
+      return;
+    }
+
+    // Realtime delivery starts before the initial request so no event is lost.
+    // Preserve messages received while that request was in flight, while using
+    // the server payload for duplicate IDs and reconciling matching optimistic
+    // messages in place.
+    final remaining = <String, ChatMessage>{
+      for (final message in authoritative) message.id: message,
+    };
+    final merged = <ChatMessage>[];
+
+    for (final existing in _messages) {
+      final sameId = remaining.remove(existing.id);
+      if (sameId != null) {
+        merged.add(sameId);
+        continue;
+      }
+
+      ChatMessage? matchingServerMessage;
+      String? matchingServerId;
+      if (existing.isLocalOnly) {
+        for (final entry in remaining.entries) {
+          if (_isSameTemp(existing, entry.value)) {
+            matchingServerId = entry.key;
+            matchingServerMessage = entry.value;
+            break;
+          }
+        }
+      }
+
+      if (matchingServerMessage != null && matchingServerId != null) {
+        remaining.remove(matchingServerId);
+        _pendingSends.remove(existing.id);
+        merged.add(matchingServerMessage);
+      } else {
+        merged.add(existing);
+      }
+    }
+
+    merged.addAll(remaining.values);
     _messages
       ..clear()
-      ..addAll(_dedupePreservingOrder(serverMessages));
+      ..addAll(dedupeChatMessagesPreservingOrder(merged));
   }
 
   @override
   void _appendOlderServerMessages(List<ChatMessage> olderMessages) {
     if (olderMessages.isEmpty) return;
 
-    final existingIds = _messages.map((message) => message.id).toSet();
-
-    for (final message in olderMessages) {
-      if (existingIds.add(message.id)) {
-        _messages.add(message);
-      }
-    }
+    final merged = appendUniqueOlderChatMessages(
+      existing: _messages,
+      older: olderMessages,
+    );
+    _messages
+      ..clear()
+      ..addAll(merged);
   }
 
   @override
@@ -51,11 +95,7 @@ mixin ChatMessagesStore on ChatMessagesControllerBase {
       return;
     }
 
-    if (message.id.startsWith('temp-')) {
-      _messages.insert(0, message);
-    } else {
-      _messages.insert(0, message);
-    }
+    _messages.insert(0, message);
 
     if (emit) _emitMessages();
   }
@@ -108,18 +148,5 @@ mixin ChatMessagesStore on ChatMessagesControllerBase {
           isLoadingMore: _isLoadingMore,
           hasMoreMessages: _hasMoreMessages,
         );
-  }
-
-  List<ChatMessage> _dedupePreservingOrder(List<ChatMessage> messages) {
-    final seen = <String>{};
-    final result = <ChatMessage>[];
-
-    for (final message in messages) {
-      if (seen.add(message.id)) {
-        result.add(message);
-      }
-    }
-
-    return result;
   }
 }

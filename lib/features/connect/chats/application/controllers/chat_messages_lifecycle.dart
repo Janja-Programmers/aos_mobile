@@ -5,12 +5,21 @@ mixin ChatMessagesLifecycle on ChatMessagesControllerBase {
   // chat_messages_lifecycle
   // ---------------------------------------------------------------------------
 
-  Future<void> _init() async {
+  @override
+  Future<void> _initializeAuthenticatedSession(int generation) async {
+    await _cancelRealtimeSubscriptions();
+    if (!_isCurrentSession(generation)) return;
+
     await _listenRealtime();
-    await loadInitial();
+    if (!_isCurrentSession(generation)) return;
+
+    await loadInitial(sessionGeneration: generation);
   }
 
-  Future<void> loadInitial() async {
+  Future<void> loadInitial({int? sessionGeneration}) async {
+    final generation = sessionGeneration ?? _sessionGeneration;
+    if (!_isCurrentSession(generation)) return;
+
     final repo = ref.read(chatRepositoryProvider);
 
     if (_messages.isEmpty) {
@@ -18,6 +27,7 @@ mixin ChatMessagesLifecycle on ChatMessagesControllerBase {
     }
 
     final res = await repo.getMessages(conversationId: conversationId);
+    if (!_isCurrentSession(generation)) return;
 
     if (res.isLeft) {
       if (_messages.isEmpty) {
@@ -37,6 +47,9 @@ mixin ChatMessagesLifecycle on ChatMessagesControllerBase {
   Future<void> loadMore() async {
     if (_messages.isEmpty || _isLoadingMore || !_hasMoreMessages) return;
 
+    final generation = _sessionGeneration;
+    if (!_isCurrentSession(generation)) return;
+
     _isLoadingMore = true;
     state = state.copyWith(isLoadingMore: true, clearError: true);
 
@@ -48,6 +61,7 @@ mixin ChatMessagesLifecycle on ChatMessagesControllerBase {
         conversationId: conversationId,
         before: oldest.id,
       );
+      if (!_isCurrentSession(generation)) return;
 
       if (res.isLeft) {
         state = state.copyWith(
@@ -74,7 +88,7 @@ mixin ChatMessagesLifecycle on ChatMessagesControllerBase {
       _emitMessages();
     } finally {
       _isLoadingMore = false;
-      if (mounted) {
+      if (_isCurrentSession(generation)) {
         state = state.copyWith(
           isLoadingMore: false,
           hasMoreMessages: _hasMoreMessages,

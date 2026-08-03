@@ -6,6 +6,7 @@ import 'package:africaonlinestores/features/connect/calls/application/state/call
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/navigation/call_routes.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -44,8 +45,9 @@ class ActiveCallChatBanner extends ConsumerWidget {
 
     final manager = ref.read(callManagerProvider.notifier);
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
     final isVideo = state.callMediaMode == CallMediaMode.video;
-    final statusText = _statusText(state);
+    final statusText = _statusText(state, l10n);
     final avatarUrl = normalizeMediaUrl(
       participant.avatarUrl ?? fallbackAvatarUrl,
     );
@@ -77,7 +79,7 @@ class ActiveCallChatBanner extends ConsumerWidget {
                   icon: state.isMuted
                       ? Icons.mic_off_rounded
                       : Icons.mic_none_rounded,
-                  tooltip: state.isMuted ? 'Unmute' : 'Mute',
+                  tooltip: state.isMuted ? l10n.chat_unmute : l10n.chat_mute,
                   onTap: state.hasActiveRoom ? manager.toggleMute : null,
                 ),
                 const SizedBox(width: 10),
@@ -137,7 +139,7 @@ class ActiveCallChatBanner extends ConsumerWidget {
 
                 _BannerRoundButton(
                   icon: Icons.call_end_rounded,
-                  tooltip: 'End call',
+                  tooltip: l10n.chat_end_call,
                   backgroundColor: colors.red,
                   foregroundColor: colors.white,
                   onTap: manager.endCurrentCall,
@@ -179,24 +181,24 @@ class ActiveCallChatBanner extends ConsumerWidget {
     return _equals(participantUserId, otherUserId);
   }
 
-  String _statusText(CallState state) {
+  String _statusText(CallState state, AppLocalizations l10n) {
     if (state.uiPhase == UiCallPhase.inCall && state.hasActiveRoom) {
       return _formatDuration(state.duration);
     }
 
     switch (state.uiPhase) {
       case UiCallPhase.outgoingStarting:
-        return 'Calling';
+        return l10n.chat_calling;
       case UiCallPhase.outgoingRinging:
-        return 'Ringing';
+        return l10n.chat_ringing;
       case UiCallPhase.incomingRinging:
-        return 'Incoming call';
+        return l10n.chat_incoming_call;
       case UiCallPhase.joiningRoom:
-        return 'Connecting';
+        return l10n.chat_connecting;
       case UiCallPhase.inCall:
         return state.backendStatus == BackendCallStatus.ongoing
             ? _formatDuration(state.duration)
-            : 'Connecting';
+            : l10n.chat_connecting;
       case UiCallPhase.idle:
       case UiCallPhase.finished:
       case UiCallPhase.cancelled:

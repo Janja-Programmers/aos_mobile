@@ -2,7 +2,7 @@ import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_list_screen.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/screens/chat_screen.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/screens/new_message_screen.dart';
+import 'package:africaonlinestores/features/connect/conversations/presentation/screens/new_conversation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,14 +10,14 @@ class ChatRoutes {
   const ChatRoutes._();
 
   static List<GoRoute> routes() => [
-    // ✅ NEW MESSAGE FIRST
+    // Preserve the legacy route while using the single new-conversation UI.
     GoRoute(
       name: AppRoutes.nNewMessage,
       path: AppRoutes.newMessage,
-      builder: (context, state) => const NewMessageScreen(),
+      builder: (context, state) => const NewConversationScreen(),
     ),
 
-    // CHATLIST
+    // Conversation list.
     GoRoute(
       name: AppRoutes.nChatsList,
       path: AppRoutes.chatsList,
@@ -27,7 +27,7 @@ class ChatRoutes {
       },
     ),
 
-    // ❗ DYNAMIC LAST
+    // Dynamic conversation route must remain last.
     GoRoute(
       name: AppRoutes.nMessages,
       path: AppRoutes.messages,

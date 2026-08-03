@@ -1,4 +1,7 @@
 import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/chat_identity.dart';
+
+const Object _unsetConversationField = Object();
 
 class ChatConversation {
   final String id;
@@ -36,14 +39,16 @@ class ChatConversation {
   factory ChatConversation.fromJson(Map<String, dynamic> json) {
     return ChatConversation(
       id: asString(json['id']),
-      user: asString(json['user']),
+      user: normalizeCanonicalUserId(asString(json['user'])),
       displayName: asString(json['display_name']),
       avatar: asNullableString(json['avatar']),
 
       lastMessage: asNullableString(json['last_message']),
       lastMessageAt: _parseDateTime(json['last_message_at']),
 
-      lastSender: asNullableString(json['last_sender']),
+      lastSender: normalizeCanonicalUserId(
+        asNullableString(json['last_sender']),
+      ),
       lastSenderDisplayName: asNullableString(json['last_sender_display_name']),
       lastSenderAvatar: asNullableString(json['last_sender_avatar']),
 
@@ -58,36 +63,55 @@ class ChatConversation {
     String? id,
     String? user,
     String? displayName,
-    String? avatar,
-    String? lastMessage,
-    DateTime? lastMessageAt,
-    String? lastSender,
-    String? lastSenderDisplayName,
-    String? lastSenderAvatar,
-    DateTime? lastMessageDeliveredAt,
-    DateTime? lastMessageReadAt,
+    Object? avatar = _unsetConversationField,
+    Object? lastMessage = _unsetConversationField,
+    Object? lastMessageAt = _unsetConversationField,
+    Object? lastSender = _unsetConversationField,
+    Object? lastSenderDisplayName = _unsetConversationField,
+    Object? lastSenderAvatar = _unsetConversationField,
+    Object? lastMessageDeliveredAt = _unsetConversationField,
+    Object? lastMessageReadAt = _unsetConversationField,
     int? unreadCount,
   }) {
     return ChatConversation(
       id: id ?? this.id,
       user: user ?? this.user,
       displayName: displayName ?? this.displayName,
-      avatar: avatar ?? this.avatar,
-      lastMessage: lastMessage ?? this.lastMessage,
-      lastMessageAt: lastMessageAt ?? this.lastMessageAt,
-      lastSender: lastSender ?? this.lastSender,
+      avatar: identical(avatar, _unsetConversationField)
+          ? this.avatar
+          : avatar as String?,
+      lastMessage: identical(lastMessage, _unsetConversationField)
+          ? this.lastMessage
+          : lastMessage as String?,
+      lastMessageAt: identical(lastMessageAt, _unsetConversationField)
+          ? this.lastMessageAt
+          : lastMessageAt as DateTime?,
+      lastSender: identical(lastSender, _unsetConversationField)
+          ? this.lastSender
+          : lastSender as String?,
       lastSenderDisplayName:
-          lastSenderDisplayName ?? this.lastSenderDisplayName,
-      lastSenderAvatar: lastSenderAvatar ?? this.lastSenderAvatar,
+          identical(lastSenderDisplayName, _unsetConversationField)
+          ? this.lastSenderDisplayName
+          : lastSenderDisplayName as String?,
+      lastSenderAvatar: identical(lastSenderAvatar, _unsetConversationField)
+          ? this.lastSenderAvatar
+          : lastSenderAvatar as String?,
       lastMessageDeliveredAt:
-          lastMessageDeliveredAt ?? this.lastMessageDeliveredAt,
-      lastMessageReadAt: lastMessageReadAt ?? this.lastMessageReadAt,
+          identical(lastMessageDeliveredAt, _unsetConversationField)
+          ? this.lastMessageDeliveredAt
+          : lastMessageDeliveredAt as DateTime?,
+      lastMessageReadAt:
+          identical(lastMessageReadAt, _unsetConversationField)
+          ? this.lastMessageReadAt
+          : lastMessageReadAt as DateTime?,
       unreadCount: unreadCount ?? this.unreadCount,
     );
   }
 
-  bool isLastMessageMine(String currentUserEmail) {
-    return lastSender != null && lastSender == currentUserEmail;
+  bool isLastMessageMine(String? authenticatedCanonicalId) {
+    final senderId = normalizeCanonicalUserId(lastSender);
+    final currentId = normalizeCanonicalUserId(authenticatedCanonicalId);
+    return senderId.isNotEmpty && currentId.isNotEmpty && senderId == currentId;
   }
 
   bool get isLastMessageRead {

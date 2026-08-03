@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class DeleteConversationSheet extends StatelessWidget {
@@ -10,10 +11,11 @@ class DeleteConversationSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
 
     final name = displayName.trim().isNotEmpty
         ? displayName.trim()
-        : 'this user';
+        : l10n.chat_this_user;
 
     return SafeArea(
       child: Container(
@@ -55,7 +57,7 @@ class DeleteConversationSheet extends StatelessWidget {
             const SizedBox(height: 14),
 
             Text(
-              'Delete chat?',
+              l10n.chat_delete_chat_title,
               textAlign: TextAlign.center,
               style: context.h4.copyWith(
                 color: colors.textPrimary,
@@ -66,7 +68,7 @@ class DeleteConversationSheet extends StatelessWidget {
             const SizedBox(height: 8),
 
             Text(
-              'This will remove your chat with $name from your conversation list. It will not delete it for the other user.',
+              l10n.chat_delete_chat_description(name),
               textAlign: TextAlign.center,
               style: context.pMuted.copyWith(height: 1.4),
             ),
@@ -86,7 +88,7 @@ class DeleteConversationSheet extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text('Cancel'),
+                    child: Text(l10n.chat_cancel),
                   ),
                 ),
 
@@ -104,7 +106,7 @@ class DeleteConversationSheet extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text('Delete'),
+                    child: Text(l10n.chat_delete),
                   ),
                 ),
               ],

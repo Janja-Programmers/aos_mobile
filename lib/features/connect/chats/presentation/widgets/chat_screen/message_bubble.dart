@@ -9,6 +9,7 @@ import 'package:africaonlinestores/features/connect/chats/presentation/widgets/c
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/reply_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/shared_contact_bubble.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/shared_location_bubble.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/utils/format_time.dart';
 import 'package:flutter/material.dart';
 
@@ -41,6 +42,7 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
 
     if (message.isCallType) {
       return CallMessageTile(
@@ -48,7 +50,7 @@ class MessageBubble extends StatelessWidget {
         isMe: isMe,
         conversationId: conversationId ?? '',
         otherUserId: otherUserId ?? '',
-        otherDisplayName: otherDisplayName ?? 'AOS user',
+        otherDisplayName: otherDisplayName ?? l10n.chat_aos_user,
         otherAvatarUrl: otherAvatarUrl,
       );
     }
@@ -86,121 +88,151 @@ class MessageBubble extends StatelessWidget {
         ? colors.white.withValues(alpha: 0.78)
         : colors.textMuted;
 
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onLongPress: onLongPress,
-        child: Container(
-          margin: EdgeInsets.only(
-            left: isMe ? 58 : 12,
-            right: isMe ? 12 : 58,
-            top: 5,
-            bottom: 5,
-          ),
-          constraints: const BoxConstraints(maxWidth: 340),
-          decoration: BoxDecoration(
-            color: isDeleted ? colors.elevated : bgColor,
-            borderRadius: _bubbleRadius(isMe),
-            border: Border.all(
-              color: isMe
-                  ? colors.primaryHover.withValues(alpha: 0.38)
-                  : colors.border,
+    return Semantics(
+      container: true,
+      label: _semanticLabel(l10n),
+      child: Align(
+        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onLongPress: onLongPress,
+          child: Container(
+            margin: EdgeInsets.only(
+              left: isMe ? 58 : 12,
+              right: isMe ? 12 : 58,
+              top: 5,
+              bottom: 5,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: colors.black.withValues(alpha: 0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+            constraints: const BoxConstraints(maxWidth: 340),
+            decoration: BoxDecoration(
+              color: isDeleted ? colors.elevated : bgColor,
+              borderRadius: _bubbleRadius(isMe),
+              border: Border.all(
+                color: isMe
+                    ? colors.primaryHover.withValues(alpha: 0.38)
+                    : colors.border,
               ),
-            ],
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(hasRichPayload ? 8 : 12),
-            child: Column(
-              crossAxisAlignment: isMe
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
-              children: [
-                if (message.isForwarded && !isDeleted) ...[
-                  _ForwardedLabel(isMe: isMe),
-                  const SizedBox(height: 6),
-                ],
-
-                if (message.replyTo != null && !isDeleted) ...[
-                  ReplyPreview(reply: message.replyTo!, isMe: isMe),
-                  const SizedBox(height: 8),
-                ],
-
-                if (isDeleted)
-                  _DeletedMessage(message: message, isMe: isMe)
-                else ...[
-                  if (contactPayload != null)
-                    SharedContactBubble(payload: contactPayload, isMe: isMe)
-                  else if (locationPayload != null)
-                    SharedLocationBubble(payload: locationPayload, isMe: isMe)
-                  else
-                    _MessageTextBlock(
-                      message: message,
-                      isMe: isMe,
-                      textColor: textColor,
-                      mutedTextColor: mutedTextColor,
-                    ),
-
-                  if (message.isTranslating) ...[
-                    if (message.hasText || message.hasTranslation)
-                      const SizedBox(height: 6),
-                    _TranslationLoading(color: mutedTextColor),
-                  ],
-
-                  if ((message.translationError ?? '').trim().isNotEmpty) ...[
-                    if (message.hasText ||
-                        message.hasTranslation ||
-                        message.isTranslating)
-                      const SizedBox(height: 6),
-                    _TranslationError(message: message, isMe: isMe),
-                  ],
-
-                  if (message.hasAd) ...[
-                    if (message.hasText || message.hasTranslation)
-                      const SizedBox(height: 8),
-                    MessageAdPreview(
-                      message: message,
-                      isMe: isMe,
-                      onTap: onAdTap,
-                    ),
-                  ],
-
-                  if (message.attachments.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    AttachmentGrid(attachments: message.attachments),
-                  ],
-                ],
-
-                if (message.reactions.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  ReactionChips(message: message, isMe: isMe),
-                ],
-
-                const SizedBox(height: 5),
-                _MessageMeta(message: message, isMe: isMe),
-
-                if (message.isLocalSending)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 3),
-                    child: Text(
-                      'Sending...',
-                      style: TextStyle(fontSize: 11, color: mutedTextColor),
-                    ),
-                  ),
-
-                if (message.isLocalFailed) _RetryRow(onRetry: onRetry),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.black.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
               ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(hasRichPayload ? 8 : 12),
+              child: Column(
+                crossAxisAlignment: isMe
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+                  if (message.isForwarded && !isDeleted) ...[
+                    _ForwardedLabel(isMe: isMe),
+                    const SizedBox(height: 6),
+                  ],
+
+                  if (message.replyTo != null && !isDeleted) ...[
+                    ReplyPreview(reply: message.replyTo!, isMe: isMe),
+                    const SizedBox(height: 8),
+                  ],
+
+                  if (isDeleted)
+                    _DeletedMessage(message: message, isMe: isMe)
+                  else ...[
+                    if (contactPayload != null)
+                      SharedContactBubble(payload: contactPayload, isMe: isMe)
+                    else if (locationPayload != null)
+                      SharedLocationBubble(payload: locationPayload, isMe: isMe)
+                    else
+                      _MessageTextBlock(
+                        message: message,
+                        isMe: isMe,
+                        textColor: textColor,
+                        mutedTextColor: mutedTextColor,
+                      ),
+
+                    if (message.isTranslating) ...[
+                      if (message.hasText || message.hasTranslation)
+                        const SizedBox(height: 6),
+                      _TranslationLoading(color: mutedTextColor),
+                    ],
+
+                    if ((message.translationError ?? '').trim().isNotEmpty) ...[
+                      if (message.hasText ||
+                          message.hasTranslation ||
+                          message.isTranslating)
+                        const SizedBox(height: 6),
+                      _TranslationError(message: message, isMe: isMe),
+                    ],
+
+                    if (message.hasAd) ...[
+                      if (message.hasText || message.hasTranslation)
+                        const SizedBox(height: 8),
+                      MessageAdPreview(
+                        message: message,
+                        isMe: isMe,
+                        onTap: onAdTap,
+                      ),
+                    ],
+
+                    if (message.attachments.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      AttachmentGrid(attachments: message.attachments),
+                    ],
+                  ],
+
+                  if (message.reactions.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    ReactionChips(message: message, isMe: isMe),
+                  ],
+
+                  const SizedBox(height: 5),
+                  _MessageMeta(message: message, isMe: isMe),
+
+                  if (message.isLocalSending)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Text(
+                        l10n.chat_sending,
+                        style: TextStyle(fontSize: 11, color: mutedTextColor),
+                      ),
+                    ),
+
+                  if (message.isLocalFailed) _RetryRow(onRetry: onRetry),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  String _semanticLabel(AppLocalizations l10n) {
+    final sender = isMe
+        ? l10n.chat_you
+        : (message.senderDisplayName ??
+              otherDisplayName ??
+              l10n.chat_other_user);
+    final parts = <String>[sender];
+    final text = message.visibleText.trim();
+    if (text.isNotEmpty) parts.add(text);
+    if (message.isEdited) parts.add(l10n.chat_edited);
+    if (message.isStarred) parts.add(l10n.chat_starred);
+    if (message.hasTranslation) parts.add(l10n.chat_translated);
+    if (message.isLocalSending) {
+      parts.add(l10n.chat_sending);
+    } else if (message.isLocalFailed) {
+      parts.add(l10n.chat_failed_to_send);
+    } else if (isMe && message.readAt != null) {
+      parts.add(l10n.chat_read);
+    } else if (isMe && message.deliveredAt != null) {
+      parts.add(l10n.chat_delivered);
+    } else if (isMe) {
+      parts.add(l10n.chat_sent);
+    }
+    return parts.join('. ');
   }
 
   BorderRadius _bubbleRadius(bool ownMessage) {
@@ -229,7 +261,7 @@ class _ForwardedLabel extends StatelessWidget {
         Icon(Icons.shortcut_rounded, size: 13, color: color),
         const SizedBox(width: 4),
         Text(
-          'Forwarded',
+          AppLocalizations.of(context).chat_forwarded_label,
           style: context.p.copyWith(
             fontSize: 11,
             color: color,
@@ -258,7 +290,9 @@ class _DeletedMessage extends StatelessWidget {
         const SizedBox(width: 6),
         Flexible(
           child: Text(
-            message.displayText?.trim() ?? 'This message was deleted',
+            (message.displayText?.trim().isNotEmpty ?? false)
+                ? message.displayText!.trim()
+                : AppLocalizations.of(context).chat_deleted_message,
             style: context.p.copyWith(
               color: colors.textMuted,
               fontStyle: FontStyle.italic,
@@ -286,11 +320,41 @@ class _MessageTextBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (message.hasTranslation) {
+      final l10n = AppLocalizations.of(context);
+      final language = message.translationLanguage?.trim();
+      final translationLabel = language == null || language.isEmpty
+          ? l10n.chat_translated
+          : '${l10n.chat_translated} · $language';
+
       return Column(
         crossAxisAlignment: isMe
             ? CrossAxisAlignment.end
             : CrossAxisAlignment.start,
         children: [
+          if (message.hasText) ...[
+            Text(
+              message.visibleText,
+              style: context.p.copyWith(color: mutedTextColor, fontSize: 13),
+            ),
+            const SizedBox(height: 7),
+          ],
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: textColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              child: Text(
+                translationLabel,
+                style: context.small.copyWith(
+                  color: mutedTextColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 7),
           Text(
             message.translatedText,
             style: context.p.copyWith(
@@ -298,13 +362,6 @@ class _MessageTextBlock extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          if (message.hasText) ...[
-            const SizedBox(height: 4),
-            Text(
-              message.visibleText,
-              style: context.p.copyWith(color: mutedTextColor, fontSize: 13),
-            ),
-          ],
         ],
       );
     }
@@ -335,7 +392,7 @@ class _TranslationLoading extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Text(
-          'Translating...',
+          AppLocalizations.of(context).chat_translating,
           style: context.p.copyWith(
             color: color,
             fontSize: 12,
@@ -403,7 +460,10 @@ class _MessageMeta extends StatelessWidget {
         ),
         if (message.isEdited && !isDeleted) ...[
           const SizedBox(width: 4),
-          Text('Edited', style: context.p.copyWith(fontSize: 10, color: color)),
+          Text(
+            AppLocalizations.of(context).chat_edited,
+            style: context.p.copyWith(fontSize: 10, color: color),
+          ),
         ],
         if (isMe) const SizedBox(width: 4),
         if (isMe) _StatusIcon(message: message),
@@ -453,7 +513,7 @@ class _RetryRow extends StatelessWidget {
             Icon(Icons.error_outline_rounded, size: 14, color: colors.red),
             const SizedBox(width: 4),
             Text(
-              'Tap to retry',
+              AppLocalizations.of(context).chat_tap_to_retry,
               style: TextStyle(
                 fontSize: 11,
                 color: colors.red,

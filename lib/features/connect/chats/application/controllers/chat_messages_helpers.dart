@@ -47,7 +47,10 @@ mixin ChatMessagesHelpers on ChatMessagesControllerBase {
   @override
   bool _isSameTemp(ChatMessage temp, ChatMessage real) {
     if (!temp.id.startsWith('temp-')) return false;
-    if (temp.sender != real.sender) return false;
+    if (normalizeCanonicalUserId(temp.senderCanonicalId) !=
+        normalizeCanonicalUserId(real.senderCanonicalId)) {
+      return false;
+    }
 
     final sameText = temp.content == real.content;
     final sameReply = temp.replyToMessage == real.replyToMessage;

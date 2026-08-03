@@ -45,18 +45,28 @@ class ChatApi {
       }
 
       return Either.right(conversationId.toString());
-    } on DioException catch (e) {
-      return Either.left(Failure(_friendlyOpenConversationError(e)));
-    } catch (_) {
+    } catch (error) {
       return Either.left(
-        const Failure('Failed to start chat. Please try again.'),
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to start chat. Please try again.',
+        ),
       );
     }
   }
 
-  Future<Either<Failure, List<ChatConversation>>> listConversations() async {
+  Future<Either<Failure, List<ChatConversation>>> listConversations({
+    int limit = 30,
+    int offset = 0,
+  }) async {
     try {
-      final res = await _client.get(ApiEndpoints.listConversationsEndpoint);
+      final res = await _client.get(
+        ApiEndpoints.listConversationsEndpoint,
+        queryParameters: <String, dynamic>{
+          'limit': limit.clamp(1, 50),
+          'offset': offset < 0 ? 0 : offset,
+        },
+      );
 
       final result = unwrapFrappe(res);
 
@@ -69,8 +79,13 @@ class ChatApi {
       ).map(ChatConversation.fromJson).toList(growable: false);
 
       return Either.right(conversations);
-    } catch (e) {
-      return Either.left(const Failure('Failed to load conversations'));
+    } catch (error) {
+      return Either.left(
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to load conversations',
+        ),
+      );
     }
   }
 
@@ -90,8 +105,13 @@ class ChatApi {
       }
 
       return Either.right(null);
-    } catch (e) {
-      return Either.left(const Failure('Failed to delete conversation'));
+    } catch (error) {
+      return Either.left(
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to delete conversation',
+        ),
+      );
     }
   }
 
@@ -102,27 +122,43 @@ class ChatApi {
     required String conversationId,
     String? before,
   }) async {
-    final queryParams = <String, dynamic>{'conversation_id': conversationId};
-    if (before != null) queryParams['before'] = before;
+    try {
+      final queryParams = <String, dynamic>{
+        'conversation_id': conversationId,
+      };
+      if (before != null) queryParams['before'] = before;
 
-    final res = await _client.get(
-      ApiEndpoints.listMessagesEndpoint,
-      queryParameters: queryParams,
-    );
+      final res = await _client.get(
+        ApiEndpoints.listMessagesEndpoint,
+        queryParameters: queryParams,
+      );
 
-    final result = unwrapFrappe(res);
-    if (result.isLeft) return Either.left(result.leftOrNull!);
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    final data = _extractDataPayload(result.rightOrNull);
-    final messages = asJsonMapList(
-      data,
-    ).map(ChatMessage.fromJson).toList(growable: false);
+      final data = _extractDataPayload(result.rightOrNull);
+      final messages = asJsonMapList(
+        data,
+      ).map(ChatMessage.fromJson).toList(growable: false);
 
-    if (messages.isEmpty && data is! List) {
-      return Either.left(const Failure('Empty response from chat API'));
+      if (messages.isEmpty && data is! List) {
+        return Either.left(
+          const Failure(
+            'Invalid messages response from chat API',
+            type: FailureType.parse,
+          ),
+        );
+      }
+
+      return Either.right(messages);
+    } catch (error) {
+      return Either.left(
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to load messages',
+        ),
+      );
     }
-
-    return Either.right(messages);
   }
 
   Future<Either<Failure, ChatMessage>> sendMessage({
@@ -173,11 +209,12 @@ class ChatApi {
       }
 
       return Either.right(message);
-    } on DioException catch (e) {
-      return Either.left(Failure(_friendlySendMessageError(e)));
-    } catch (_) {
+    } catch (error) {
       return Either.left(
-        const Failure('Failed to send message. Please try again.'),
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to send message. Please try again.',
+        ),
       );
     }
   }
@@ -201,8 +238,13 @@ class ChatApi {
       }
 
       return Either.right(ChatMessage.fromJson(asJsonMap(messageData)));
-    } catch (_) {
-      return Either.left(const Failure('Failed to edit message'));
+    } catch (error) {
+      return Either.left(
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to edit message',
+        ),
+      );
     }
   }
 
@@ -221,8 +263,13 @@ class ChatApi {
 
       final data = _extractDataPayload(result.rightOrNull);
       return Either.right(data is Map ? asJsonMap(data) : <String, dynamic>{});
-    } catch (_) {
-      return Either.left(const Failure('Failed to delete messages'));
+    } catch (error) {
+      return Either.left(
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to delete messages',
+        ),
+      );
     }
   }
 
@@ -237,8 +284,13 @@ class ChatApi {
       if (result.isLeft) return Either.left(result.leftOrNull!);
 
       return Either.right(null);
-    } catch (_) {
-      return Either.left(const Failure('Failed to clear chat'));
+    } catch (error) {
+      return Either.left(
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to clear chat',
+        ),
+      );
     }
   }
 
@@ -256,8 +308,13 @@ class ChatApi {
       final isStarred = asBool(data['is_starred']);
 
       return Either.right(isStarred);
-    } catch (_) {
-      return Either.left(const Failure('Failed to update star'));
+    } catch (error) {
+      return Either.left(
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to update star',
+        ),
+      );
     }
   }
 
@@ -289,8 +346,13 @@ class ChatApi {
       ).map(ChatMessage.fromJson).toList(growable: false);
 
       return Either.right(messages);
-    } catch (_) {
-      return Either.left(const Failure('Failed to load starred messages'));
+    } catch (error) {
+      return Either.left(
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to load starred messages',
+        ),
+      );
     }
   }
 
@@ -309,8 +371,13 @@ class ChatApi {
 
       final data = _extractDataPayload(result.rightOrNull);
       return Either.right(data is Map ? asJsonMap(data) : <String, dynamic>{});
-    } catch (_) {
-      return Either.left(const Failure('Failed to update reaction'));
+    } catch (error) {
+      return Either.left(
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to update reaction',
+        ),
+      );
     }
   }
 
@@ -340,8 +407,13 @@ class ChatApi {
           .toList(growable: false);
 
       return Either.right(messages);
-    } catch (_) {
-      return Either.left(const Failure('Failed to forward message'));
+    } catch (error) {
+      return Either.left(
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to forward message',
+        ),
+      );
     }
   }
 
@@ -360,9 +432,12 @@ class ChatApi {
 
       final data = _extractDataPayload(result.rightOrNull);
       return Either.right(data is Map ? asJsonMap(data) : <String, dynamic>{});
-    } catch (_) {
+    } catch (error) {
       return Either.left(
-        const Failure('Message translation is not available yet'),
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Message translation is not available yet',
+        ),
       );
     }
   }
@@ -373,39 +448,57 @@ class ChatApi {
   Future<Either<Failure, ChatMessageStatusUpdate>> markDelivered(
     String conversationId,
   ) async {
-    final res = await _client.post(
-      ApiEndpoints.markDeliveredEndpoint,
-      data: {'conversation_id': conversationId},
-    );
+    try {
+      final res = await _client.post(
+        ApiEndpoints.markDeliveredEndpoint,
+        data: {'conversation_id': conversationId},
+      );
 
-    final result = unwrapFrappe(res);
-    if (result.isLeft) return Either.left(result.leftOrNull!);
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    final data = _extractDataPayload(result.rightOrNull);
-    return Either.right(
-      data is Map
-          ? ChatMessageStatusUpdate.fromJson(asJsonMap(data))
-          : const ChatMessageStatusUpdate.empty(),
-    );
+      final data = _extractDataPayload(result.rightOrNull);
+      return Either.right(
+        data is Map
+            ? ChatMessageStatusUpdate.fromJson(asJsonMap(data))
+            : const ChatMessageStatusUpdate.empty(),
+      );
+    } catch (error) {
+      return Either.left(
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to mark messages as delivered',
+        ),
+      );
+    }
   }
 
   Future<Either<Failure, ChatMessageStatusUpdate>> markRead(
     String conversationId,
   ) async {
-    final res = await _client.post(
-      ApiEndpoints.markReadEndpoint,
-      data: {'conversation_id': conversationId},
-    );
+    try {
+      final res = await _client.post(
+        ApiEndpoints.markReadEndpoint,
+        data: {'conversation_id': conversationId},
+      );
 
-    final result = unwrapFrappe(res);
-    if (result.isLeft) return Either.left(result.leftOrNull!);
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    final data = _extractDataPayload(result.rightOrNull);
-    return Either.right(
-      data is Map
-          ? ChatMessageStatusUpdate.fromJson(asJsonMap(data))
-          : const ChatMessageStatusUpdate.empty(),
-    );
+      final data = _extractDataPayload(result.rightOrNull);
+      return Either.right(
+        data is Map
+            ? ChatMessageStatusUpdate.fromJson(asJsonMap(data))
+            : const ChatMessageStatusUpdate.empty(),
+      );
+    } catch (error) {
+      return Either.left(
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to mark messages as read',
+        ),
+      );
+    }
   }
 
   // -----------------------------
@@ -415,15 +508,27 @@ class ChatApi {
     required String conversationId,
     required bool isTyping,
   }) async {
-    final res = await _client.post(
-      ApiEndpoints.typingEndpoint,
-      data: {'conversation_id': conversationId, 'is_typing': isTyping ? 1 : 0},
-    );
+    try {
+      final res = await _client.post(
+        ApiEndpoints.typingEndpoint,
+        data: {
+          'conversation_id': conversationId,
+          'is_typing': isTyping ? 1 : 0,
+        },
+      );
 
-    final result = unwrapFrappe(res);
-    if (result.isLeft) return Either.left(result.leftOrNull!);
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
 
-    return Either.right(null);
+      return Either.right(null);
+    } catch (error) {
+      return Either.left(
+        _chatFailureFromException(
+          error,
+          fallbackMessage: 'Failed to update typing status',
+        ),
+      );
+    }
   }
 }
 
@@ -442,112 +547,54 @@ Object? _extractDataPayload(Map<String, dynamic>? raw) {
   return raw;
 }
 
-String _friendlyOpenConversationError(DioException e) {
-  final statusCode = e.response?.statusCode;
-  final data = e.response?.data;
-
-  final serverMessage = _extractServerMessage(data);
-
-  if (serverMessage != null && serverMessage.trim().isNotEmpty) {
-    return serverMessage;
+Failure _chatFailureFromException(
+  Object error, {
+  required String fallbackMessage,
+}) {
+  if (error is! DioException) {
+    return Failure(fallbackMessage, type: FailureType.unknown);
   }
 
-  switch (statusCode) {
-    case 400:
-      return 'Unable to start this chat.';
-    case 401:
-      return 'Please log in to start a chat.';
-    case 403:
-      return 'You are not allowed to start this chat.';
-    case 404:
-      return 'User not found.';
-    case 409:
-      return 'This conversation already exists.';
-    case 429:
-      return 'Too many chat attempts. Please try again shortly.';
-    case 500:
-    case 502:
-    case 503:
-      return 'Chat service is temporarily unavailable. Please try again.';
-    default:
-      return 'Failed to start chat. Please try again.';
+  final response = error.response;
+  final statusCode = response?.statusCode;
+  final raw = response?.data;
+  if (raw is Map<Object?, Object?>) {
+    final root = asJsonMap(raw);
+    final nestedMessage = root['message'];
+    final payload = nestedMessage is Map<Object?, Object?>
+        ? asJsonMap(nestedMessage)
+        : root;
+
+    return Failure.fromServerPayload(
+      payload,
+      statusCode: statusCode,
+      fallbackMessage: fallbackMessage,
+    );
   }
+
+  return Failure(
+    fallbackMessage,
+    statusCode: statusCode,
+    type: _failureTypeForDio(error),
+  );
 }
 
-String _friendlySendMessageError(DioException e) {
-  final statusCode = e.response?.statusCode;
-  final data = e.response?.data;
-
-  final serverMessage = _extractServerMessage(data);
-
-  if (serverMessage != null && serverMessage.trim().isNotEmpty) {
-    return serverMessage;
+FailureType _failureTypeForDio(DioException error) {
+  switch (error.type) {
+    case DioExceptionType.connectionTimeout:
+    case DioExceptionType.sendTimeout:
+    case DioExceptionType.receiveTimeout:
+      return FailureType.timeout;
+    case DioExceptionType.connectionError:
+      return FailureType.network;
+    case DioExceptionType.badResponse:
+      return failureTypeForAuthError(
+        null,
+        statusCode: error.response?.statusCode,
+      );
+    case DioExceptionType.cancel:
+    case DioExceptionType.badCertificate:
+    case DioExceptionType.unknown:
+      return error.response == null ? FailureType.network : FailureType.unknown;
   }
-
-  switch (statusCode) {
-    case 400:
-      return 'Message could not be sent. Please check the message or attachment.';
-    case 401:
-      return 'Please log in to send messages.';
-    case 403:
-      return 'You are not allowed to send messages in this conversation.';
-    case 404:
-      return 'Conversation not found.';
-    case 413:
-      return 'Attachment is too large.';
-    case 429:
-      return 'You are sending messages too quickly. Please try again shortly.';
-    case 500:
-    case 502:
-    case 503:
-      return 'Chat service is temporarily unavailable. Please try again.';
-    default:
-      return 'Failed to send message. Please try again.';
-  }
-}
-
-String? _extractServerMessage(dynamic data) {
-  if (data is! Map) return null;
-
-  final directMessage = data['message'];
-  if (directMessage is String && directMessage.trim().isNotEmpty) {
-    return directMessage;
-  }
-
-  final exception = data['exception'];
-  if (exception is String && exception.trim().isNotEmpty) {
-    return _cleanFrappeException(exception);
-  }
-
-  final exc = data['exc'];
-  if (exc is String && exc.trim().isNotEmpty) {
-    return _cleanFrappeException(exc);
-  }
-
-  final serverMessages = data['_server_messages'];
-  if (serverMessages is String && serverMessages.trim().isNotEmpty) {
-    return _cleanFrappeException(serverMessages);
-  }
-
-  return null;
-}
-
-String _cleanFrappeException(String raw) {
-  var message = raw;
-
-  // Remove common Python/Frappe exception prefixes.
-  if (message.contains(':')) {
-    message = message.split(':').last;
-  }
-
-  return message
-      .replaceAll(r'\"', '"')
-      .replaceAll('\\n', ' ')
-      .replaceAll('[', '')
-      .replaceAll(']', '')
-      .replaceAll('{', '')
-      .replaceAll('}', '')
-      .replaceAll('"message":', '')
-      .replaceAll('"', '')
-      .trim();
 }

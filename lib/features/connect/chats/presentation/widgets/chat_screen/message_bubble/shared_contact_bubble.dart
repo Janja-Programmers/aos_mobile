@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/payloads/chat_shared_payload.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
 import 'package:flutter/material.dart';
 
@@ -18,6 +19,7 @@ class SharedContactBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
     final cardColor = isMe
         ? colors.white.withValues(alpha: 0.15)
         : colors.elevated;
@@ -86,7 +88,7 @@ class SharedContactBubble extends StatelessWidget {
                       );
                     },
                     icon: Icon(Icons.person_outline_rounded, color: foreground),
-                    tooltip: 'View profile',
+                    tooltip: l10n.chat_view_profile,
                   ),
               ],
             ),
@@ -115,7 +117,7 @@ class SharedContactBubble extends StatelessWidget {
                     ),
                   ),
                   icon: const Icon(Icons.open_in_new_rounded, size: 17),
-                  label: const Text('View contact'),
+                  label: Text(l10n.chat_view_contact),
                 ),
               ),
             ],

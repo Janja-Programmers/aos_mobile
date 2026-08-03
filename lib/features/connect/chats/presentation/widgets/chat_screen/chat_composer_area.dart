@@ -3,7 +3,6 @@ import 'package:africaonlinestores/features/connect/chats/domain/chat_message.da
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_ad_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input_bar.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_quick_replies.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/reply_composer_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/typing_indicator.dart';
 import 'package:flutter/material.dart';
@@ -18,11 +17,12 @@ class ChatComposerArea extends StatelessWidget {
   final ChatMessage? replyingTo;
   final TextEditingController inputController;
   final ChatLocalPreferencesState preferences;
-  final ValueChanged<String> onQuickReplyTap;
   final VoidCallback onCloseAdPreview;
   final VoidCallback onCloseReplyPreview;
   final ValueChanged<bool> onTyping;
-  final Future<void> Function({
+  final VoidCallback onAudioCall;
+  final VoidCallback onVideoCall;
+  final Future<bool> Function({
     String? text,
     List<ChatInputAttachment> attachments,
   })
@@ -39,10 +39,11 @@ class ChatComposerArea extends StatelessWidget {
     required this.replyingTo,
     required this.inputController,
     required this.preferences,
-    required this.onQuickReplyTap,
     required this.onCloseAdPreview,
     required this.onCloseReplyPreview,
     required this.onTyping,
+    required this.onAudioCall,
+    required this.onVideoCall,
     required this.onSend,
   });
 
@@ -52,15 +53,6 @@ class ChatComposerArea extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (isTyping) const TypingIndicator(isTyping: true),
-        ChatQuickReplies(
-          replies: const [
-            'Is this still available?',
-            'What’s your best price?',
-            'Can you share your location?',
-            'Can I call you about this item?',
-          ],
-          onTap: onQuickReplyTap,
-        ),
         if (showAdPreview)
           ChatAdPreview(
             title: adTitle ?? '',
@@ -79,6 +71,8 @@ class ChatComposerArea extends StatelessWidget {
           onTyping: onTyping,
           preferences: preferences,
           adId: showAdPreview ? adId : null,
+          onAudioCall: onAudioCall,
+          onVideoCall: onVideoCall,
         ),
       ],
     );

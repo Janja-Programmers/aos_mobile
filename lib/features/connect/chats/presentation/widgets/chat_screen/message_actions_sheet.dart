@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/common/chat_action_tile.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class MessageActionsSheet extends StatelessWidget {
@@ -13,8 +13,10 @@ class MessageActionsSheet extends StatelessWidget {
     required this.canEdit,
     required this.onReply,
     required this.onEdit,
+    required this.onCopy,
     required this.onToggleStar,
     required this.onToggleReaction,
+    required this.onChooseReaction,
     required this.onTranslate,
     required this.onForward,
     required this.onDeleteForMe,
@@ -27,150 +29,269 @@ class MessageActionsSheet extends StatelessWidget {
 
   final VoidCallback onReply;
   final VoidCallback onEdit;
+  final VoidCallback onCopy;
   final VoidCallback onToggleStar;
   final ValueChanged<String> onToggleReaction;
+  final VoidCallback onChooseReaction;
   final VoidCallback onTranslate;
   final VoidCallback onForward;
   final VoidCallback onDeleteForMe;
   final VoidCallback onDeleteForEveryone;
 
+  static const List<String> _reactions = <String>[
+    '❤️',
+    '😂',
+    '😮',
+    '😢',
+    '🙏',
+    '👍',
+  ];
+
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
+    final l10n = AppLocalizations.of(context);
     final colors = context.appColors;
     final isDeleted = message.isDeletedType;
-
+    final isServerBacked = !message.isLocalOnly &&
+        !message.isLocalSending &&
+        !message.isLocalFailed;
+    final availableHeight = media.size.height -
+        media.padding.top -
+        media.viewInsets.bottom -
+        24;
     final maxHeight = math.max(
-      220.0,
-      media.size.height * 0.82 - media.viewInsets.bottom,
+      180.0,
+      math.min(media.size.height * 0.82, availableHeight),
     );
+
+    final actions = <_MessageAction>[
+      if (!isDeleted && isServerBacked)
+        _MessageAction(
+          icon: Icons.reply_rounded,
+          label: l10n.chat_reply,
+          onTap: onReply,
+        ),
+      if (isMe && !isDeleted && isServerBacked && canEdit)
+        _MessageAction(
+          icon: Icons.edit_outlined,
+          label: l10n.chat_edit,
+          onTap: onEdit,
+        ),
+      if (!isDeleted && message.visibleText.trim().isNotEmpty)
+        _MessageAction(
+          icon: Icons.content_copy_rounded,
+          label: l10n.chat_copy,
+          onTap: onCopy,
+        ),
+      if (!isDeleted && isServerBacked)
+        _MessageAction(
+          icon: Icons.shortcut_rounded,
+          label: l10n.chat_forward,
+          onTap: onForward,
+        ),
+      if (!isDeleted && isServerBacked)
+        _MessageAction(
+          icon: Icons.translate_rounded,
+          label: message.hasTranslation
+              ? l10n.chat_translate_again
+              : l10n.chat_translate,
+          onTap: onTranslate,
+        ),
+      if (!isDeleted && isServerBacked)
+        _MessageAction(
+          icon: message.isStarred
+              ? Icons.star_rounded
+              : Icons.star_border_rounded,
+          label: message.isStarred ? l10n.chat_unstar : l10n.chat_star,
+          onTap: onToggleStar,
+        ),
+      if (isServerBacked)
+        _MessageAction(
+          icon: Icons.delete_outline_rounded,
+          label: l10n.chat_delete_for_me,
+          onTap: onDeleteForMe,
+          destructive: true,
+        ),
+      if (isMe && !isDeleted && isServerBacked)
+        _MessageAction(
+          icon: Icons.delete_forever_outlined,
+          label: l10n.chat_delete_for_everyone,
+          onTap: onDeleteForEveryone,
+          destructive: true,
+        ),
+    ];
 
     return SafeArea(
       top: false,
       child: AnimatedPadding(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
-        padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: maxHeight),
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 8),
-
-                Container(
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: colors.border,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                if (!isDeleted)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    child: Wrap(
-                      alignment: WrapAlignment.spaceEvenly,
-                      runAlignment: WrapAlignment.center,
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: ['👍', '❤️', '😂', '😮', '🙏'].map((emoji) {
-                        final selected = message.myReaction == emoji;
-
-                        return InkWell(
-                          borderRadius: BorderRadius.circular(999),
-                          onTap: () => onToggleReaction(emoji),
-                          child: Container(
-                            width: 44,
-                            height: 44,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? colors.primary.withValues(alpha: 0.14)
-                                  : colors.elevated,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: selected
-                                    ? colors.primary
-                                    : colors.border,
+        padding: EdgeInsets.fromLTRB(
+          12,
+          12,
+          12,
+          math.max(12, media.viewInsets.bottom + 12),
+        ),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 620, maxHeight: maxHeight),
+            child: Material(
+              color: colors.elevated,
+              elevation: 12,
+              shadowColor: colors.black.withValues(alpha: 0.24),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(color: colors.border),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!isDeleted && isServerBacked) ...[
+                      Semantics(
+                        label: l10n.chat_message_reactions,
+                        child: Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 4,
+                          runSpacing: 8,
+                          children: [
+                            ..._reactions.map((emoji) {
+                              final selected = message.myReaction == emoji;
+                              return Semantics(
+                                button: true,
+                                selected: selected,
+                                label: selected
+                                    ? l10n.chat_remove_reaction(emoji)
+                                    : l10n.chat_react_with(emoji),
+                                child: InkResponse(
+                                  radius: 28,
+                                  onTap: () => onToggleReaction(emoji),
+                                  child: Container(
+                                    width: 48,
+                                    height: 48,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: selected
+                                          ? colors.primary.withValues(
+                                              alpha: 0.12,
+                                            )
+                                          : Colors.transparent,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Text(
+                                      emoji,
+                                      style: const TextStyle(fontSize: 26),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }),
+                            Semantics(
+                              button: true,
+                              label: l10n.chat_choose_another_reaction,
+                              child: InkResponse(
+                                radius: 28,
+                                onTap: onChooseReaction,
+                                child: Container(
+                                  width: 48,
+                                  height: 48,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: colors.surface,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.add_rounded),
+                                ),
                               ),
                             ),
-                            child: Text(
-                              emoji,
-                              style: const TextStyle(fontSize: 20),
-                            ),
-                          ),
+                          ],
+                        ),
+                      ),
+                      Divider(color: colors.border),
+                    ],
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final itemWidth = constraints.maxWidth >= 480
+                            ? (constraints.maxWidth - 32) / 4
+                            : (constraints.maxWidth - 24) / 3;
+                        return Wrap(
+                          spacing: 8,
+                          runSpacing: 12,
+                          children: actions
+                              .map(
+                                (action) => SizedBox(
+                                  width: itemWidth,
+                                  child: _ActionButton(action: action),
+                                ),
+                              )
+                              .toList(growable: false),
                         );
-                      }).toList(),
+                      },
                     ),
-                  ),
-
-                if (!isDeleted)
-                  ChatActionTile(
-                    icon: Icons.reply_rounded,
-                    label: 'Reply',
-                    onTap: onReply,
-                  ),
-
-                if (isMe && !isDeleted && canEdit)
-                  ChatActionTile(
-                    icon: Icons.edit_outlined,
-                    label: 'Edit',
-                    onTap: onEdit,
-                  ),
-
-                if (!isDeleted)
-                  ChatActionTile(
-                    icon: message.isStarred
-                        ? Icons.star_rounded
-                        : Icons.star_border_rounded,
-                    label: message.isStarred ? 'Unstar' : 'Star',
-                    onTap: onToggleStar,
-                  ),
-
-                if (!isDeleted)
-                  ChatActionTile(
-                    icon: Icons.translate_rounded,
-                    label: message.hasTranslation
-                        ? 'Translate again'
-                        : 'Translate',
-                    onTap: onTranslate,
-                  ),
-
-                if (!isDeleted)
-                  ChatActionTile(
-                    icon: Icons.shortcut_rounded,
-                    label: 'Forward',
-                    onTap: onForward,
-                  ),
-
-                ChatActionTile(
-                  icon: Icons.delete_outline_rounded,
-                  label: 'Delete for me',
-                  destructive: true,
-                  onTap: onDeleteForMe,
+                  ],
                 ),
-
-                if (isMe && !isDeleted)
-                  ChatActionTile(
-                    icon: Icons.delete_forever_outlined,
-                    label: 'Delete for everyone',
-                    destructive: true,
-                    onTap: onDeleteForEveryone,
-                  ),
-
-                const SizedBox(height: 8),
-              ],
+              ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MessageAction {
+  const _MessageAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.destructive = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool destructive;
+}
+
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({required this.action});
+
+  final _MessageAction action;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final foreground = action.destructive ? colors.red : colors.textPrimary;
+
+    return Semantics(
+      button: true,
+      label: action.label,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: action.onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(action.icon, color: foreground, size: 28),
+              const SizedBox(height: 7),
+              Text(
+                action.label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: foreground,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       ),

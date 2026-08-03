@@ -688,4 +688,789 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get unableToOpenShareOptions =>
       'Imeshindikana kufungua chaguo za kushiriki.';
+
+  @override
+  String get chat_connect_title => 'AOS Connect';
+
+  @override
+  String get chat_close_connect => 'Funga Connect';
+
+  @override
+  String get chat_close_search => 'Funga utafutaji';
+
+  @override
+  String get chat_search => 'Tafuta';
+
+  @override
+  String get chat_more_options => 'Chaguo zaidi';
+
+  @override
+  String get chat_search_chats_hint => 'Tafuta mazungumzo…';
+
+  @override
+  String get chat_search_calls_hint => 'Tafuta simu…';
+
+  @override
+  String get chat_all_marked_read =>
+      'Mazungumzo yote yametiwa alama kuwa yamesomwa.';
+
+  @override
+  String get chat_some_mark_read_failed =>
+      'Baadhi ya mazungumzo hayakuweza kutiwa alama kuwa yamesomwa.';
+
+  @override
+  String get chat_clear_call_log_title => 'Futa historia ya simu?';
+
+  @override
+  String get chat_clear_call_log_body =>
+      'Hii huondoa historia ya simu unayoiona. Haifuti rekodi za watumiaji wengine.';
+
+  @override
+  String get chat_cancel => 'Ghairi';
+
+  @override
+  String get chat_clear => 'Futa';
+
+  @override
+  String get chat_call_log_cleared => 'Historia ya simu imefutwa.';
+
+  @override
+  String get chat_call_log_clear_failed =>
+      'Imeshindikana kufuta historia ya simu.';
+
+  @override
+  String get chat_clear_call_log => 'Futa historia ya simu';
+
+  @override
+  String get chat_settings => 'Mipangilio';
+
+  @override
+  String get chat_mark_all_read => 'Tia zote alama kuwa zimesomwa';
+
+  @override
+  String get chat_starred_messages => 'Ujumbe wenye nyota';
+
+  @override
+  String get chat_chats => 'Mazungumzo';
+
+  @override
+  String get chat_new_conversation => 'Mazungumzo mapya';
+
+  @override
+  String get chat_new => 'Mpya';
+
+  @override
+  String get chat_calls => 'Simu';
+
+  @override
+  String get chat_back => 'Rudi';
+
+  @override
+  String get chat_call => 'Piga simu';
+
+  @override
+  String get chat_video_call => 'Simu ya video';
+
+  @override
+  String get chat_change_wallpaper => 'Badilisha mandhari';
+
+  @override
+  String get chat_user_might_be_offline => 'Huenda mtumiaji hayuko mtandaoni';
+
+  @override
+  String get chat_failed_to_start_call => 'Imeshindikana kuanzisha simu';
+
+  @override
+  String get chat_gallery => 'Matunzio';
+
+  @override
+  String get chat_camera => 'Kamera';
+
+  @override
+  String get chat_voice_call => 'Simu ya sauti';
+
+  @override
+  String get chat_location => 'Mahali';
+
+  @override
+  String get chat_document => 'Hati';
+
+  @override
+  String get chat_contact => 'Mwasiliani';
+
+  @override
+  String get chat_attachment_upload_failed =>
+      'Upakiaji wa kiambatisho umeshindikana. Jaribu tena.';
+
+  @override
+  String get chat_message_hint => 'Ujumbe';
+
+  @override
+  String get chat_share_location_title => 'Shiriki mahali';
+
+  @override
+  String get chat_retry => 'Jaribu tena';
+
+  @override
+  String get chat_could_not_load_messages => 'Imeshindikana kupakia ujumbe';
+
+  @override
+  String get chat_check_connection_try_again =>
+      'Angalia muunganisho wako kisha ujaribu tena.';
+
+  @override
+  String get chat_no_messages_yet => 'Bado hakuna ujumbe';
+
+  @override
+  String get chat_no_messages_hint => 'Tuma ujumbe ili kuanza mazungumzo haya.';
+
+  @override
+  String get chat_older_messages_load_failed =>
+      'Ujumbe wa zamani haukuweza kupakiwa.';
+
+  @override
+  String get chat_reply => 'Jibu';
+
+  @override
+  String get chat_edit => 'Hariri';
+
+  @override
+  String get chat_copy => 'Nakili';
+
+  @override
+  String get chat_forward => 'Sambaza';
+
+  @override
+  String get chat_translate_again => 'Tafsiri tena';
+
+  @override
+  String get chat_translate => 'Tafsiri';
+
+  @override
+  String get chat_unstar => 'Ondoa nyota';
+
+  @override
+  String get chat_star => 'Weka nyota';
+
+  @override
+  String get chat_delete_for_me => 'Futa kwangu';
+
+  @override
+  String get chat_delete_for_everyone => 'Futa kwa kila mtu';
+
+  @override
+  String get chat_message_reactions => 'Miitikio ya ujumbe';
+
+  @override
+  String get chat_choose_another_reaction => 'Chagua mwitikio mwingine';
+
+  @override
+  String chat_react_with(Object emoji) {
+    return 'Jibu kwa $emoji';
+  }
+
+  @override
+  String chat_remove_reaction(Object emoji) {
+    return 'Ondoa mwitikio wa $emoji';
+  }
+
+  @override
+  String get chat_editing_message => 'Inahariri ujumbe';
+
+  @override
+  String get chat_cancel_editing => 'Ghairi kuhariri';
+
+  @override
+  String get chat_copied_to_clipboard => 'Imenakiliwa kwenye ubao wa kunakili';
+
+  @override
+  String get chat_message_still_failed =>
+      'Ujumbe bado haujatumwa. Jaribu tena.';
+
+  @override
+  String get chat_send_ad_failed =>
+      'Imeshindikana kutuma ujumbe wa tangazo. Jaribu tena.';
+
+  @override
+  String get chat_send_failed => 'Imeshindikana kutuma ujumbe. Jaribu tena.';
+
+  @override
+  String get chat_star_update_failed => 'Imeshindikana kusasisha nyota.';
+
+  @override
+  String get chat_reaction_update_failed => 'Imeshindikana kusasisha mwitikio.';
+
+  @override
+  String get chat_forward_failed => 'Imeshindikana kusambaza ujumbe.';
+
+  @override
+  String get chat_forwarded => 'Ujumbe umesambazwa.';
+
+  @override
+  String chat_forwarded_to_chats(Object count) {
+    return 'Ujumbe umesambazwa kwenye mazungumzo $count.';
+  }
+
+  @override
+  String get chat_translate_failed => 'Imeshindikana kutafsiri ujumbe.';
+
+  @override
+  String get chat_delete_failed => 'Imeshindikana kufuta ujumbe.';
+
+  @override
+  String get chat_deleted_for_everyone => 'Ujumbe umefutwa kwa kila mtu.';
+
+  @override
+  String get chat_deleted_for_you => 'Ujumbe umefutwa kwako.';
+
+  @override
+  String get chat_edit_failed => 'Imeshindikana kuhariri ujumbe.';
+
+  @override
+  String get chat_settings_title => 'Mipangilio ya Mazungumzo';
+
+  @override
+  String get chat_privacy => 'Faragha';
+
+  @override
+  String get chat_read_receipts => 'Uthibitisho wa kusoma';
+
+  @override
+  String get chat_read_receipts_managed =>
+      'Inasimamiwa na AOS kwa uwasilishaji wa ujumbe';
+
+  @override
+  String get chat_last_seen_online => 'Mara ya mwisho kuonekana na mtandaoni';
+
+  @override
+  String get chat_no_backend_preference =>
+      'Seva haitoi mpangilio huu wa akaunti';
+
+  @override
+  String get chat_blocked_contacts => 'Watu waliozuiwa';
+
+  @override
+  String get chat_chats_section => 'Mazungumzo';
+
+  @override
+  String get chat_wallpaper => 'Mandhari ya mazungumzo';
+
+  @override
+  String get chat_wallpaper_description =>
+      'Weka mandhari chaguomsingi ya mazungumzo';
+
+  @override
+  String get chat_enter_is_send => 'Enter hutuma';
+
+  @override
+  String get chat_enter_is_send_description =>
+      'Kitufe cha Enter hutuma ujumbe wako';
+
+  @override
+  String get chat_media_auto_download => 'Upakuaji otomatiki wa media';
+
+  @override
+  String get chat_unavailable_backend =>
+      'Haipatikani katika mkataba wa sasa wa seva';
+
+  @override
+  String get chat_notifications => 'Arifa';
+
+  @override
+  String get chat_message_notifications => 'Arifa za ujumbe';
+
+  @override
+  String get chat_call_notifications => 'Arifa za simu';
+
+  @override
+  String get chat_system_notification_settings =>
+      'Inadhibitiwa na mipangilio ya arifa ya mfumo';
+
+  @override
+  String get chat_on => 'Imewashwa';
+
+  @override
+  String get chat_off => 'Imezimwa';
+
+  @override
+  String get chat_starred_load_failed =>
+      'Imeshindikana kupakia ujumbe wenye nyota';
+
+  @override
+  String get chat_no_starred_messages => 'Hakuna ujumbe wenye nyota';
+
+  @override
+  String get chat_no_starred_messages_hint =>
+      'Ujumbe unaoweka nyota utaonekana hapa.';
+
+  @override
+  String get chat_unstar_message => 'Ondoa nyota kwenye ujumbe';
+
+  @override
+  String get chat_unstar_failed => 'Imeshindikana kuondoa nyota kwenye ujumbe.';
+
+  @override
+  String get chat_message_unstarred => 'Nyota ya ujumbe imeondolewa.';
+
+  @override
+  String get chat_attachment => 'Kiambatisho';
+
+  @override
+  String get chat_you => 'Wewe';
+
+  @override
+  String get chat_other_user => 'Mtumiaji mwingine';
+
+  @override
+  String get chat_aos_user => 'Mtumiaji wa AOS';
+
+  @override
+  String get chat_sending => 'Inatuma…';
+
+  @override
+  String get chat_edited => 'Imehaririwa';
+
+  @override
+  String get chat_starred => 'Ina nyota';
+
+  @override
+  String get chat_translated => 'Imetafsiriwa';
+
+  @override
+  String get chat_failed_to_send => 'Imeshindikana kutuma';
+
+  @override
+  String get chat_read => 'Imesomwa';
+
+  @override
+  String get chat_delivered => 'Imefikishwa';
+
+  @override
+  String get chat_sent => 'Imetumwa';
+
+  @override
+  String get chat_forwarded_label => 'Imesambazwa';
+
+  @override
+  String get chat_deleted_message => 'Ujumbe huu ulifutwa';
+
+  @override
+  String get chat_translating => 'Inatafsiri…';
+
+  @override
+  String get chat_tap_to_retry => 'Gusa ujaribu tena';
+
+  @override
+  String get chat_translate_to => 'Tafsiri kwa';
+
+  @override
+  String chat_translate_to_language(Object language) {
+    return 'Tafsiri kwa $language';
+  }
+
+  @override
+  String get chat_voice_release_cancel => 'Achilia ili kughairi';
+
+  @override
+  String get chat_voice_recording_locked => 'Kurekodi kumefungwa';
+
+  @override
+  String get chat_voice_slide_cancel => 'Telezesha kushoto ili kughairi';
+
+  @override
+  String chat_voice_recording_status(Object duration, Object instruction) {
+    return 'Inarekodi sauti $duration. $instruction';
+  }
+
+  @override
+  String chat_starred_message_from(Object sender) {
+    return 'Ujumbe wenye nyota kutoka kwa $sender';
+  }
+
+  @override
+  String get chat_verified_sellers => 'Wauzaji Waliothibitishwa';
+
+  @override
+  String get chat_friends => 'Marafiki';
+
+  @override
+  String get chat_search_sellers_hint => 'Tafuta wauzaji…';
+
+  @override
+  String get chat_search_friends_hint => 'Tafuta marafiki…';
+
+  @override
+  String get chat_loading_sellers => 'Inapakia wauzaji';
+
+  @override
+  String get chat_loading_sellers_hint =>
+      'Tafadhali subiri tunapotafuta wauzaji waliothibitishwa.';
+
+  @override
+  String get chat_could_not_load_sellers => 'Imeshindwa kupakia wauzaji';
+
+  @override
+  String get chat_no_verified_sellers => 'Hakuna wauzaji waliothibitishwa';
+
+  @override
+  String get chat_no_sellers_found => 'Hakuna wauzaji waliopatikana';
+
+  @override
+  String get chat_no_verified_sellers_hint =>
+      'Wauzaji waliothibitishwa wataonekana hapa wakipatikana.';
+
+  @override
+  String get chat_no_sellers_found_hint =>
+      'Jaribu jina, aina au eneo jingine la muuzaji.';
+
+  @override
+  String get chat_refresh => 'Onyesha upya';
+
+  @override
+  String get chat_loading_friends => 'Inapakia marafiki';
+
+  @override
+  String get chat_loading_friends_hint =>
+      'Tafadhali subiri tunapotafuta marafiki zako.';
+
+  @override
+  String get chat_could_not_load_friends => 'Imeshindwa kupakia marafiki';
+
+  @override
+  String get chat_try_again => 'Tafadhali jaribu tena.';
+
+  @override
+  String get chat_no_friends_yet => 'Bado hakuna marafiki';
+
+  @override
+  String get chat_no_friends_found => 'Hakuna marafiki waliopatikana';
+
+  @override
+  String get chat_no_friends_yet_hint =>
+      'Marafiki wataonekana hapa mtakapofuatana.';
+
+  @override
+  String get chat_no_friends_found_hint =>
+      'Jaribu kutafuta kwa jina au barua pepe nyingine.';
+
+  @override
+  String get chat_online => 'Mtandaoni';
+
+  @override
+  String get chat_last_seen_recently => 'Alionekana hivi karibuni';
+
+  @override
+  String get chat_friend => 'Rafiki';
+
+  @override
+  String get chat_message_contact => 'Tuma ujumbe';
+
+  @override
+  String get chat_call_contact => 'Piga simu';
+
+  @override
+  String get chat_all_chats => 'Gumzo Zote';
+
+  @override
+  String get chat_unread => 'Hazijasomwa';
+
+  @override
+  String get chat_loading_conversations => 'Inapakia mazungumzo';
+
+  @override
+  String get chat_loading_conversations_hint =>
+      'Tafadhali subiri tunapopakia gumzo zako.';
+
+  @override
+  String get chat_could_not_load_chats => 'Imeshindwa kupakia gumzo';
+
+  @override
+  String get chat_no_chats_found => 'Hakuna gumzo zilizopatikana';
+
+  @override
+  String get chat_no_chats_search_hint => 'Jaribu jina au ujumbe mwingine.';
+
+  @override
+  String get chat_no_read_chats => 'Hakuna gumzo zilizosomwa';
+
+  @override
+  String get chat_no_unread_chats => 'Hakuna gumzo ambazo hazijasomwa';
+
+  @override
+  String get chat_no_conversations_yet => 'Bado hakuna mazungumzo';
+
+  @override
+  String get chat_no_read_chats_hint => 'Gumzo ulizosoma zitaonekana hapa.';
+
+  @override
+  String get chat_no_unread_chats_hint =>
+      'Gumzo ambazo hazijasomwa zitaonekana hapa ujumbe mpya ukifika.';
+
+  @override
+  String get chat_no_conversations_hint =>
+      'Mazungumzo yako yataonekana hapa ukianza kuzungumza.';
+
+  @override
+  String get chat_deleted_from_list => 'Gumzo imeondolewa kwenye orodha yako.';
+
+  @override
+  String get chat_delete_chat_failed => 'Imeshindwa kufuta gumzo. Jaribu tena.';
+
+  @override
+  String get chat_typing => 'Anaandika…';
+
+  @override
+  String chat_last_seen_time(Object time) {
+    return 'Alionekana $time';
+  }
+
+  @override
+  String get chat_forward_to_title => 'Sambaza kwa';
+
+  @override
+  String get chat_close => 'Funga';
+
+  @override
+  String get chat_search_conversations_hint => 'Tafuta mazungumzo';
+
+  @override
+  String get chat_clear_search => 'Futa utafutaji';
+
+  @override
+  String get chat_could_not_load_conversations =>
+      'Imeshindikana kupakia mazungumzo';
+
+  @override
+  String get chat_no_other_conversations => 'Hakuna mazungumzo mengine';
+
+  @override
+  String get chat_no_other_conversations_hint =>
+      'Anzisha gumzo jingine kwanza, kisha unaweza kusambaza ujumbe hapa.';
+
+  @override
+  String get chat_no_conversations_found => 'Hakuna mazungumzo yaliyopatikana';
+
+  @override
+  String get chat_search_conversations_empty_hint =>
+      'Jaribu kutafuta kwa jina au ujumbe mwingine.';
+
+  @override
+  String get chat_forward_to_one_chat => 'Sambaza kwa gumzo 1';
+
+  @override
+  String chat_forward_to_chats_count(Object count) {
+    return 'Sambaza kwa gumzo $count';
+  }
+
+  @override
+  String get chat_default_wallpaper_applied =>
+      'Mandhari chaguomsingi imetumika.';
+
+  @override
+  String get chat_wallpaper_updated => 'Mandhari imesasishwa.';
+
+  @override
+  String chat_named_wallpaper_applied(Object name) {
+    return 'Mandhari ya $name imetumika.';
+  }
+
+  @override
+  String get chat_choose_conversation_background =>
+      'Chagua mandharinyuma ya mazungumzo haya';
+
+  @override
+  String get chat_default => 'Chaguomsingi';
+
+  @override
+  String get chat_choose_from_gallery => 'Chagua kutoka kwenye ghala';
+
+  @override
+  String get chat_solid_colors => 'Rangi moja';
+
+  @override
+  String get chat_emoji_recent => 'Za hivi karibuni';
+
+  @override
+  String get chat_emoji_smileys => 'Nyuso';
+
+  @override
+  String get chat_emoji_animals => 'Wanyama';
+
+  @override
+  String get chat_emoji_food => 'Chakula';
+
+  @override
+  String get chat_emoji_flags => 'Bendera';
+
+  @override
+  String get chat_search_emoji => 'Tafuta emoji';
+
+  @override
+  String get chat_no_emoji_found => 'Hakuna emoji iliyopatikana';
+
+  @override
+  String get chat_share_contact => 'Shiriki anwani';
+
+  @override
+  String get chat_search_aos_users => 'Tafuta watumiaji wa AOS';
+
+  @override
+  String get chat_could_not_load_contacts => 'Imeshindikana kupakia anwani';
+
+  @override
+  String get chat_search_people_on_aos => 'Tafuta watu kwenye AOS';
+
+  @override
+  String get chat_search_people_hint =>
+      'Andika angalau herufi 2 ili kupata anwani ya kushiriki.';
+
+  @override
+  String get chat_no_contacts_found => 'Hakuna anwani zilizopatikana';
+
+  @override
+  String get chat_no_contacts_found_hint =>
+      'Jaribu jina, jina la mtumiaji au barua pepe nyingine.';
+
+  @override
+  String get chat_unmute => 'Washa sauti';
+
+  @override
+  String get chat_mute => 'Nyamazisha';
+
+  @override
+  String get chat_end_call => 'Maliza simu';
+
+  @override
+  String get chat_calling => 'Inapiga simu';
+
+  @override
+  String get chat_ringing => 'Inaita';
+
+  @override
+  String get chat_incoming_call => 'Simu inayoingia';
+
+  @override
+  String get chat_connecting => 'Inaunganisha';
+
+  @override
+  String get chat_delete_chat_title => 'Futa gumzo?';
+
+  @override
+  String chat_delete_chat_description(Object name) {
+    return 'Hii itaondoa gumzo lako na $name kwenye orodha yako. Haitalifuta kwa mtumiaji mwingine.';
+  }
+
+  @override
+  String get chat_this_user => 'mtumiaji huyu';
+
+  @override
+  String get chat_delete => 'Futa';
+
+  @override
+  String get chat_view_profile => 'Tazama wasifu';
+
+  @override
+  String get chat_view_contact => 'Tazama anwani';
+
+  @override
+  String get chat_cannot_open_document =>
+      'Haiwezekani kufungua aina hii ya hati';
+
+  @override
+  String get chat_failed_to_start_chat =>
+      'Imeshindikana kuanzisha gumzo. Jaribu tena.';
+
+  @override
+  String get chat_invalid_conversation_response =>
+      'Jibu la mazungumzo si sahihi';
+
+  @override
+  String get chat_voice_hold_to_record => 'Shikilia kurekodi ujumbe wa sauti';
+
+  @override
+  String get chat_voice_release_to_finish => 'Achilia kumaliza kurekodi sauti';
+
+  @override
+  String get chat_microphone_permission_denied =>
+      'Ruhusa ya maikrofoni imekataliwa.';
+
+  @override
+  String get chat_voice_record_start_failed =>
+      'Imeshindikana kuanza kurekodi sauti.';
+
+  @override
+  String get chat_voice_record_finish_failed =>
+      'Imeshindikana kumaliza kurekodi sauti.';
+
+  @override
+  String get chat_language_english => 'Kiingereza';
+
+  @override
+  String get chat_language_swahili => 'Kiswahili';
+
+  @override
+  String get chat_language_french => 'Kifaransa';
+
+  @override
+  String get chat_language_spanish => 'Kihispania';
+
+  @override
+  String get chat_language_german => 'Kijerumani';
+
+  @override
+  String get chat_language_portuguese => 'Kireno';
+
+  @override
+  String get chat_language_arabic => 'Kiarabu';
+
+  @override
+  String get chat_language_hausa => 'Kihausa';
+
+  @override
+  String get chat_language_yoruba => 'Kiyoruba';
+
+  @override
+  String get chat_language_igbo => 'Kiigbo';
+
+  @override
+  String get chat_language_amharic => 'Kiamhari';
+
+  @override
+  String get chat_language_somali => 'Kisomali';
+
+  @override
+  String get chat_language_kinyarwanda => 'Kinyarwanda';
+
+  @override
+  String get chat_language_luganda => 'Kiluganda';
+
+  @override
+  String get chat_language_zulu => 'Kizulu';
+
+  @override
+  String get chat_language_xhosa => 'Kixhosa';
+
+  @override
+  String get chat_wallpaper_midnight => 'Usiku wa manane';
+
+  @override
+  String get chat_wallpaper_navy => 'Bluu bahari';
+
+  @override
+  String get chat_wallpaper_forest => 'Msitu';
+
+  @override
+  String get chat_wallpaper_plum => 'Rangi ya plamu';
+
+  @override
+  String get chat_wallpaper_charcoal => 'Mkaa';
+
+  @override
+  String get chat_wallpaper_maroon => 'Maruni';
+
+  @override
+  String get chat_wallpaper_teal => 'Kijani-bahari';
+
+  @override
+  String get chat_wallpaper_coffee => 'Kahawa';
 }

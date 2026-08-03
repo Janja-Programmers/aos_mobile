@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
 import 'package:africaonlinestores/shared/utils/format_time.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/material.dart';
 class ConversationTile extends StatelessWidget {
   final ChatConversation conversation;
   final VoidCallback onTap;
+  final String? currentUserCanonicalId;
 
   final bool isOnline;
   final bool isTyping;
@@ -18,6 +20,7 @@ class ConversationTile extends StatelessWidget {
     super.key,
     required this.conversation,
     required this.onTap,
+    required this.currentUserCanonicalId,
     this.isOnline = false,
     this.isTyping = false,
     this.lastSeen,
@@ -39,10 +42,11 @@ class ConversationTile extends StatelessWidget {
 
   Widget _buildSubtitle(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
 
     if (isTyping) {
       return Text(
-        'Typing...',
+        l10n.chat_typing,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(color: colors.success, fontStyle: FontStyle.italic),
@@ -50,9 +54,7 @@ class ConversationTile extends StatelessWidget {
     }
 
     final message = conversation.lastMessage ?? '';
-    final isMine =
-        conversation.lastSender != conversation.user &&
-        conversation.lastSender != 'Administrator';
+    final isMine = conversation.isLastMessageMine(currentUserCanonicalId);
 
     if (!isMine) {
       return Text(
@@ -68,7 +70,7 @@ class ConversationTile extends StatelessWidget {
         _buildMessageStatusIcon(context),
         const SizedBox(width: 4),
         Text(
-          'You: ',
+          '${l10n.chat_you}: ',
           style: TextStyle(
             color: colors.textMuted,
             fontWeight: FontWeight.w600,

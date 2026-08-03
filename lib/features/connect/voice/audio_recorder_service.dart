@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
@@ -27,6 +28,23 @@ class AudioRecorderService {
   }
 
   Future<void> dispose() async {
-    await _recorder.dispose();
+    try {
+      await _recorder.cancel();
+    } catch (error, stackTrace) {
+      appLogger.w(
+        'Voice recorder cancellation during disposal failed: $error',
+      );
+      appLogger.d(stackTrace.toString());
+    }
+
+    try {
+      await _recorder.dispose();
+    } catch (error, stackTrace) {
+      appLogger.e(
+        'Voice recorder disposal failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 }

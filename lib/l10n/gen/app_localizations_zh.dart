@@ -648,4 +648,750 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get unableToOpenShareOptions => '无法打开分享选项。';
+
+  @override
+  String get chat_connect_title => 'AOS Connect';
+
+  @override
+  String get chat_close_connect => '关闭 Connect';
+
+  @override
+  String get chat_close_search => '关闭搜索';
+
+  @override
+  String get chat_search => '搜索';
+
+  @override
+  String get chat_more_options => '更多选项';
+
+  @override
+  String get chat_search_chats_hint => '搜索聊天…';
+
+  @override
+  String get chat_search_calls_hint => '搜索通话…';
+
+  @override
+  String get chat_all_marked_read => '所有聊天均已标记为已读。';
+
+  @override
+  String get chat_some_mark_read_failed => '部分聊天无法标记为已读。';
+
+  @override
+  String get chat_clear_call_log_title => '清除通话记录？';
+
+  @override
+  String get chat_clear_call_log_body => '这会删除您可见的通话历史，不会删除其他用户的记录。';
+
+  @override
+  String get chat_cancel => '取消';
+
+  @override
+  String get chat_clear => '清除';
+
+  @override
+  String get chat_call_log_cleared => '通话记录已清除。';
+
+  @override
+  String get chat_call_log_clear_failed => '无法清除通话记录。';
+
+  @override
+  String get chat_clear_call_log => '清除通话记录';
+
+  @override
+  String get chat_settings => '设置';
+
+  @override
+  String get chat_mark_all_read => '全部标为已读';
+
+  @override
+  String get chat_starred_messages => '已加星标的消息';
+
+  @override
+  String get chat_chats => '聊天';
+
+  @override
+  String get chat_new_conversation => '新建对话';
+
+  @override
+  String get chat_new => '新建';
+
+  @override
+  String get chat_calls => '通话';
+
+  @override
+  String get chat_back => '返回';
+
+  @override
+  String get chat_call => '通话';
+
+  @override
+  String get chat_video_call => '视频通话';
+
+  @override
+  String get chat_change_wallpaper => '更换壁纸';
+
+  @override
+  String get chat_user_might_be_offline => '用户可能不在线';
+
+  @override
+  String get chat_failed_to_start_call => '无法发起通话';
+
+  @override
+  String get chat_gallery => '图库';
+
+  @override
+  String get chat_camera => '相机';
+
+  @override
+  String get chat_voice_call => '语音通话';
+
+  @override
+  String get chat_location => '位置';
+
+  @override
+  String get chat_document => '文档';
+
+  @override
+  String get chat_contact => '联系人';
+
+  @override
+  String get chat_attachment_upload_failed => '附件上传失败，请重试。';
+
+  @override
+  String get chat_message_hint => '消息';
+
+  @override
+  String get chat_share_location_title => '共享位置';
+
+  @override
+  String get chat_retry => '重试';
+
+  @override
+  String get chat_could_not_load_messages => '无法加载消息';
+
+  @override
+  String get chat_check_connection_try_again => '请检查网络连接后重试。';
+
+  @override
+  String get chat_no_messages_yet => '暂无消息';
+
+  @override
+  String get chat_no_messages_hint => '发送消息以开始此对话。';
+
+  @override
+  String get chat_older_messages_load_failed => '无法加载更早的消息。';
+
+  @override
+  String get chat_reply => '回复';
+
+  @override
+  String get chat_edit => '编辑';
+
+  @override
+  String get chat_copy => '复制';
+
+  @override
+  String get chat_forward => '转发';
+
+  @override
+  String get chat_translate_again => '重新翻译';
+
+  @override
+  String get chat_translate => '翻译';
+
+  @override
+  String get chat_unstar => '取消星标';
+
+  @override
+  String get chat_star => '加星标';
+
+  @override
+  String get chat_delete_for_me => '为我删除';
+
+  @override
+  String get chat_delete_for_everyone => '为所有人删除';
+
+  @override
+  String get chat_message_reactions => '消息回应';
+
+  @override
+  String get chat_choose_another_reaction => '选择其他回应';
+
+  @override
+  String chat_react_with(Object emoji) {
+    return '使用 $emoji 回应';
+  }
+
+  @override
+  String chat_remove_reaction(Object emoji) {
+    return '移除 $emoji 回应';
+  }
+
+  @override
+  String get chat_editing_message => '正在编辑消息';
+
+  @override
+  String get chat_cancel_editing => '取消编辑';
+
+  @override
+  String get chat_copied_to_clipboard => '已复制到剪贴板';
+
+  @override
+  String get chat_message_still_failed => '消息仍未发送，请重试。';
+
+  @override
+  String get chat_send_ad_failed => '广告消息发送失败，请重试。';
+
+  @override
+  String get chat_send_failed => '消息发送失败，请重试。';
+
+  @override
+  String get chat_star_update_failed => '无法更新星标。';
+
+  @override
+  String get chat_reaction_update_failed => '无法更新回应。';
+
+  @override
+  String get chat_forward_failed => '无法转发消息。';
+
+  @override
+  String get chat_forwarded => '消息已转发。';
+
+  @override
+  String chat_forwarded_to_chats(Object count) {
+    return '消息已转发到 $count 个聊天。';
+  }
+
+  @override
+  String get chat_translate_failed => '无法翻译消息。';
+
+  @override
+  String get chat_delete_failed => '无法删除消息。';
+
+  @override
+  String get chat_deleted_for_everyone => '消息已为所有人删除。';
+
+  @override
+  String get chat_deleted_for_you => '消息已为您删除。';
+
+  @override
+  String get chat_edit_failed => '无法编辑消息。';
+
+  @override
+  String get chat_settings_title => '聊天设置';
+
+  @override
+  String get chat_privacy => '隐私';
+
+  @override
+  String get chat_read_receipts => '已读回执';
+
+  @override
+  String get chat_read_receipts_managed => '由 AOS 管理消息送达状态';
+
+  @override
+  String get chat_last_seen_online => '最后上线与在线状态';
+
+  @override
+  String get chat_no_backend_preference => '服务器未提供此账户偏好设置';
+
+  @override
+  String get chat_blocked_contacts => '已屏蔽的联系人';
+
+  @override
+  String get chat_chats_section => '聊天';
+
+  @override
+  String get chat_wallpaper => '聊天壁纸';
+
+  @override
+  String get chat_wallpaper_description => '设置默认聊天背景';
+
+  @override
+  String get chat_enter_is_send => '按 Enter 发送';
+
+  @override
+  String get chat_enter_is_send_description => '按 Enter 键发送消息';
+
+  @override
+  String get chat_media_auto_download => '媒体自动下载';
+
+  @override
+  String get chat_unavailable_backend => '当前服务器协议不支持';
+
+  @override
+  String get chat_notifications => '通知';
+
+  @override
+  String get chat_message_notifications => '消息通知';
+
+  @override
+  String get chat_call_notifications => '通话通知';
+
+  @override
+  String get chat_system_notification_settings => '由系统通知设置控制';
+
+  @override
+  String get chat_on => '开启';
+
+  @override
+  String get chat_off => '关闭';
+
+  @override
+  String get chat_starred_load_failed => '无法加载已加星标的消息';
+
+  @override
+  String get chat_no_starred_messages => '没有已加星标的消息';
+
+  @override
+  String get chat_no_starred_messages_hint => '您加星标的消息会显示在这里。';
+
+  @override
+  String get chat_unstar_message => '取消消息星标';
+
+  @override
+  String get chat_unstar_failed => '无法取消消息星标。';
+
+  @override
+  String get chat_message_unstarred => '已取消消息星标。';
+
+  @override
+  String get chat_attachment => '附件';
+
+  @override
+  String get chat_you => '您';
+
+  @override
+  String get chat_other_user => '其他用户';
+
+  @override
+  String get chat_aos_user => 'AOS 用户';
+
+  @override
+  String get chat_sending => '正在发送…';
+
+  @override
+  String get chat_edited => '已编辑';
+
+  @override
+  String get chat_starred => '已加星标';
+
+  @override
+  String get chat_translated => '已翻译';
+
+  @override
+  String get chat_failed_to_send => '发送失败';
+
+  @override
+  String get chat_read => '已读';
+
+  @override
+  String get chat_delivered => '已送达';
+
+  @override
+  String get chat_sent => '已发送';
+
+  @override
+  String get chat_forwarded_label => '已转发';
+
+  @override
+  String get chat_deleted_message => '此消息已删除';
+
+  @override
+  String get chat_translating => '正在翻译…';
+
+  @override
+  String get chat_tap_to_retry => '点按重试';
+
+  @override
+  String get chat_translate_to => '翻译为';
+
+  @override
+  String chat_translate_to_language(Object language) {
+    return '翻译为$language';
+  }
+
+  @override
+  String get chat_voice_release_cancel => '松开以取消';
+
+  @override
+  String get chat_voice_recording_locked => '录音已锁定';
+
+  @override
+  String get chat_voice_slide_cancel => '向左滑动以取消';
+
+  @override
+  String chat_voice_recording_status(Object duration, Object instruction) {
+    return '语音录制 $duration。$instruction';
+  }
+
+  @override
+  String chat_starred_message_from(Object sender) {
+    return '来自 $sender 的星标消息';
+  }
+
+  @override
+  String get chat_verified_sellers => '认证卖家';
+
+  @override
+  String get chat_friends => '好友';
+
+  @override
+  String get chat_search_sellers_hint => '搜索卖家…';
+
+  @override
+  String get chat_search_friends_hint => '搜索好友…';
+
+  @override
+  String get chat_loading_sellers => '正在加载卖家';
+
+  @override
+  String get chat_loading_sellers_hint => '正在查找认证卖家，请稍候。';
+
+  @override
+  String get chat_could_not_load_sellers => '无法加载卖家';
+
+  @override
+  String get chat_no_verified_sellers => '暂无认证卖家';
+
+  @override
+  String get chat_no_sellers_found => '未找到卖家';
+
+  @override
+  String get chat_no_verified_sellers_hint => '认证卖家可用时会显示在这里。';
+
+  @override
+  String get chat_no_sellers_found_hint => '请尝试其他卖家名称、类别或位置。';
+
+  @override
+  String get chat_refresh => '刷新';
+
+  @override
+  String get chat_loading_friends => '正在加载好友';
+
+  @override
+  String get chat_loading_friends_hint => '正在查找您的好友，请稍候。';
+
+  @override
+  String get chat_could_not_load_friends => '无法加载好友';
+
+  @override
+  String get chat_try_again => '请重试。';
+
+  @override
+  String get chat_no_friends_yet => '暂无好友';
+
+  @override
+  String get chat_no_friends_found => '未找到好友';
+
+  @override
+  String get chat_no_friends_yet_hint => '互相关注后，好友会显示在这里。';
+
+  @override
+  String get chat_no_friends_found_hint => '请尝试其他姓名或电子邮件。';
+
+  @override
+  String get chat_online => '在线';
+
+  @override
+  String get chat_last_seen_recently => '最近上线';
+
+  @override
+  String get chat_friend => '好友';
+
+  @override
+  String get chat_message_contact => '发消息';
+
+  @override
+  String get chat_call_contact => '通话';
+
+  @override
+  String get chat_all_chats => '全部聊天';
+
+  @override
+  String get chat_unread => '未读';
+
+  @override
+  String get chat_loading_conversations => '正在加载对话';
+
+  @override
+  String get chat_loading_conversations_hint => '正在获取您的聊天，请稍候。';
+
+  @override
+  String get chat_could_not_load_chats => '无法加载聊天';
+
+  @override
+  String get chat_no_chats_found => '未找到聊天';
+
+  @override
+  String get chat_no_chats_search_hint => '请尝试其他姓名或消息。';
+
+  @override
+  String get chat_no_read_chats => '没有已读聊天';
+
+  @override
+  String get chat_no_unread_chats => '没有未读聊天';
+
+  @override
+  String get chat_no_conversations_yet => '暂无对话';
+
+  @override
+  String get chat_no_read_chats_hint => '您已读的聊天会显示在这里。';
+
+  @override
+  String get chat_no_unread_chats_hint => '有新消息时，未读聊天会显示在这里。';
+
+  @override
+  String get chat_no_conversations_hint => '开始聊天后，您的对话会显示在这里。';
+
+  @override
+  String get chat_deleted_from_list => '聊天已从您的对话列表中删除。';
+
+  @override
+  String get chat_delete_chat_failed => '无法删除聊天，请重试。';
+
+  @override
+  String get chat_typing => '正在输入…';
+
+  @override
+  String chat_last_seen_time(Object time) {
+    return '最后上线 $time';
+  }
+
+  @override
+  String get chat_forward_to_title => '转发给';
+
+  @override
+  String get chat_close => '关闭';
+
+  @override
+  String get chat_search_conversations_hint => '搜索会话';
+
+  @override
+  String get chat_clear_search => '清除搜索';
+
+  @override
+  String get chat_could_not_load_conversations => '无法加载会话';
+
+  @override
+  String get chat_no_other_conversations => '没有其他会话';
+
+  @override
+  String get chat_no_other_conversations_hint => '请先开始另一个聊天，然后即可将消息转发到那里。';
+
+  @override
+  String get chat_no_conversations_found => '未找到会话';
+
+  @override
+  String get chat_search_conversations_empty_hint => '请尝试其他姓名或消息。';
+
+  @override
+  String get chat_forward_to_one_chat => '转发到 1 个聊天';
+
+  @override
+  String chat_forward_to_chats_count(Object count) {
+    return '转发到 $count 个聊天';
+  }
+
+  @override
+  String get chat_default_wallpaper_applied => '已应用默认壁纸。';
+
+  @override
+  String get chat_wallpaper_updated => '壁纸已更新。';
+
+  @override
+  String chat_named_wallpaper_applied(Object name) {
+    return '已应用$name壁纸。';
+  }
+
+  @override
+  String get chat_choose_conversation_background => '为此会话选择背景';
+
+  @override
+  String get chat_default => '默认';
+
+  @override
+  String get chat_choose_from_gallery => '从图库选择';
+
+  @override
+  String get chat_solid_colors => '纯色';
+
+  @override
+  String get chat_emoji_recent => '最近';
+
+  @override
+  String get chat_emoji_smileys => '表情';
+
+  @override
+  String get chat_emoji_animals => '动物';
+
+  @override
+  String get chat_emoji_food => '食物';
+
+  @override
+  String get chat_emoji_flags => '旗帜';
+
+  @override
+  String get chat_search_emoji => '搜索表情';
+
+  @override
+  String get chat_no_emoji_found => '未找到表情';
+
+  @override
+  String get chat_share_contact => '分享联系人';
+
+  @override
+  String get chat_search_aos_users => '搜索 AOS 用户';
+
+  @override
+  String get chat_could_not_load_contacts => '无法加载联系人';
+
+  @override
+  String get chat_search_people_on_aos => '在 AOS 上搜索用户';
+
+  @override
+  String get chat_search_people_hint => '输入至少 2 个字符以查找要分享的联系人。';
+
+  @override
+  String get chat_no_contacts_found => '未找到联系人';
+
+  @override
+  String get chat_no_contacts_found_hint => '请尝试其他姓名、用户名或电子邮件。';
+
+  @override
+  String get chat_unmute => '取消静音';
+
+  @override
+  String get chat_mute => '静音';
+
+  @override
+  String get chat_end_call => '结束通话';
+
+  @override
+  String get chat_calling => '正在呼叫';
+
+  @override
+  String get chat_ringing => '正在响铃';
+
+  @override
+  String get chat_incoming_call => '来电';
+
+  @override
+  String get chat_connecting => '正在连接';
+
+  @override
+  String get chat_delete_chat_title => '删除聊天？';
+
+  @override
+  String chat_delete_chat_description(Object name) {
+    return '这会从你的会话列表中移除与$name的聊天，但不会为对方删除。';
+  }
+
+  @override
+  String get chat_this_user => '此用户';
+
+  @override
+  String get chat_delete => '删除';
+
+  @override
+  String get chat_view_profile => '查看个人资料';
+
+  @override
+  String get chat_view_contact => '查看联系人';
+
+  @override
+  String get chat_cannot_open_document => '无法打开此类型的文档';
+
+  @override
+  String get chat_failed_to_start_chat => '无法开始聊天，请重试。';
+
+  @override
+  String get chat_invalid_conversation_response => '会话响应无效';
+
+  @override
+  String get chat_voice_hold_to_record => '长按录制语音消息';
+
+  @override
+  String get chat_voice_release_to_finish => '松开以结束语音录制';
+
+  @override
+  String get chat_microphone_permission_denied => '麦克风权限被拒绝。';
+
+  @override
+  String get chat_voice_record_start_failed => '无法开始语音录制。';
+
+  @override
+  String get chat_voice_record_finish_failed => '无法结束语音录制。';
+
+  @override
+  String get chat_language_english => '英语';
+
+  @override
+  String get chat_language_swahili => '斯瓦希里语';
+
+  @override
+  String get chat_language_french => '法语';
+
+  @override
+  String get chat_language_spanish => '西班牙语';
+
+  @override
+  String get chat_language_german => '德语';
+
+  @override
+  String get chat_language_portuguese => '葡萄牙语';
+
+  @override
+  String get chat_language_arabic => '阿拉伯语';
+
+  @override
+  String get chat_language_hausa => '豪萨语';
+
+  @override
+  String get chat_language_yoruba => '约鲁巴语';
+
+  @override
+  String get chat_language_igbo => '伊博语';
+
+  @override
+  String get chat_language_amharic => '阿姆哈拉语';
+
+  @override
+  String get chat_language_somali => '索马里语';
+
+  @override
+  String get chat_language_kinyarwanda => '卢旺达语';
+
+  @override
+  String get chat_language_luganda => '卢干达语';
+
+  @override
+  String get chat_language_zulu => '祖鲁语';
+
+  @override
+  String get chat_language_xhosa => '科萨语';
+
+  @override
+  String get chat_wallpaper_midnight => '午夜';
+
+  @override
+  String get chat_wallpaper_navy => '海军蓝';
+
+  @override
+  String get chat_wallpaper_forest => '森林';
+
+  @override
+  String get chat_wallpaper_plum => '梅子色';
+
+  @override
+  String get chat_wallpaper_charcoal => '炭灰色';
+
+  @override
+  String get chat_wallpaper_maroon => '栗色';
+
+  @override
+  String get chat_wallpaper_teal => '青绿色';
+
+  @override
+  String get chat_wallpaper_coffee => '咖啡色';
 }

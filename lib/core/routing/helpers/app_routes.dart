@@ -127,6 +127,12 @@ class AppRoutes {
   static const connectNewConversation = '/connect/new';
   static const nConnectNewConversation = 'connectNewConversation';
 
+  static const connectStarredMessages = '/connect/starred';
+  static const nConnectStarredMessages = 'connectStarredMessages';
+
+  static const connectChatSettings = '/connect/chat-settings';
+  static const nConnectChatSettings = 'connectChatSettings';
+
   static const connectStoryCreate = '/connect/story/create';
   static const nConnectStoryCreate = 'connectStoryCreate';
 

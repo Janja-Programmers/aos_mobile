@@ -1,5 +1,11 @@
 enum VoiceRecordStatus { idle, recording, locked, canceling, uploading, error }
 
+enum VoiceRecordError {
+  microphonePermissionDenied,
+  startFailed,
+  finishFailed,
+}
+
 class VoiceRecordState {
   const VoiceRecordState({
     this.status = VoiceRecordStatus.idle,
@@ -11,20 +17,21 @@ class VoiceRecordState {
 
   final VoiceRecordStatus status;
   final String? recordedFilePath;
-  final String? error;
+  final VoiceRecordError? error;
   final Duration duration;
   final double dragDx;
 
   bool get isRecording =>
       status == VoiceRecordStatus.recording ||
-      status == VoiceRecordStatus.locked;
+      status == VoiceRecordStatus.locked ||
+      status == VoiceRecordStatus.canceling;
 
   bool get isUploading => status == VoiceRecordStatus.uploading;
 
   VoiceRecordState copyWith({
     VoiceRecordStatus? status,
     String? recordedFilePath,
-    String? error,
+    VoiceRecordError? error,
     Duration? duration,
     double? dragDx,
     bool clearRecordedFilePath = false,

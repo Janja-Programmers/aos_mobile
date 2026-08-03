@@ -1,14 +1,34 @@
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/connect/chats/data/chat_api.dart';
 import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
+
+final chatConversationOpenControllerProvider =
+    StateNotifierProvider<ChatConversationOpenController, bool>((ref) {
+      return ChatConversationOpenController();
+    });
+
+class ChatConversationOpenController extends StateNotifier<bool> {
+  ChatConversationOpenController() : super(false);
+
+  bool tryBegin() {
+    if (state) return false;
+    state = true;
+    return true;
+  }
+
+  void finish() {
+    if (!state) return;
+    state = false;
+  }
+}
 
 class ChatActions {
   const ChatActions._();
-
-  static bool _isOpening = false;
 
   static Future<void> startChat({
     required BuildContext context,
@@ -23,8 +43,8 @@ class ChatActions {
     String? adImage,
     String? adImageFileId,
   }) async {
-    if (_isOpening) return;
-    _isOpening = true;
+    final guard = ref.read(chatConversationOpenControllerProvider.notifier);
+    if (!guard.tryBegin()) return;
 
     try {
       final api = ref.read(chatApiProvider);
@@ -36,7 +56,7 @@ class ChatActions {
       if (res.isLeft) {
         ShowSnack(
           context,
-          res.leftOrNull?.message ?? 'Failed to start chat. Please try again.',
+          AppLocalizations.of(context).chat_failed_to_start_chat,
         ).error();
         return;
       }
@@ -46,7 +66,10 @@ class ChatActions {
       appLogger.i('Opened conversation: $conversationId');
 
       if (conversationId == null || conversationId.trim().isEmpty) {
-        ShowSnack(context, 'Invalid conversation response').error();
+        ShowSnack(
+          context,
+          AppLocalizations.of(context).chat_invalid_conversation_response,
+        ).error();
         return;
       }
 
@@ -63,14 +86,21 @@ class ChatActions {
         adImage: adImage,
         adImageFileId: adImageFileId,
       );
-    } catch (e) {
+    } catch (error, stackTrace) {
       if (context.mounted) {
-        ShowSnack(context, 'Failed to start chat. Please try again.').error();
+        ShowSnack(
+          context,
+          AppLocalizations.of(context).chat_failed_to_start_chat,
+        ).error();
       }
 
-      appLogger.e('Failed to start chat: $e');
+      appLogger.e(
+        'Failed to start chat.',
+        error: error,
+        stackTrace: stackTrace,
+      );
     } finally {
-      _isOpening = false;
+      guard.finish();
     }
   }
 }

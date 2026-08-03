@@ -1,11 +1,16 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_attachment.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/chat_identity.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_local_message_status.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/chat_message_merge.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message_reaction.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message_viewer_state.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_reply_preview.dart';
@@ -41,7 +46,16 @@ abstract class ChatMessagesControllerBase
   final Map<String, PendingSendPayload> _pendingSends = {};
 
   final Set<String> _translatingMessageIds = {};
+  final Set<String> _editingMessageIds = {};
+  final Set<String> _starringMessageIds = {};
+  final Set<String> _reactingMessageIds = {};
+  final Set<String> _deletingMessageKeys = {};
+  final Set<String> _forwardingMessageIds = {};
   final Map<String, String> _translationErrors = {};
+
+  String? _activeSid;
+  String _activeCanonicalAccountId = '';
+  int _sessionGeneration = 0;
 
   bool _isLoadingMore = false;
   bool _hasMoreMessages = true;
@@ -54,6 +68,72 @@ abstract class ChatMessagesControllerBase
 
   Timer? _readSyncDebounce;
   bool _isSyncingReadState = false;
+
+  void _handleAuthChanged(AuthState? previous, AuthState next) {
+    if (next is AuthAuthenticated) {
+      final nextSid = next.sid.trim();
+      final nextAccountId = normalizeCanonicalUserId(next.user.accountId);
+      if (nextSid.isEmpty || nextAccountId.isEmpty) {
+        _resetForUnauthenticatedState();
+        return;
+      }
+      if (_activeSid == nextSid &&
+          _activeCanonicalAccountId == nextAccountId) {
+        return;
+      }
+
+      _activeSid = nextSid;
+      _activeCanonicalAccountId = nextAccountId;
+      final generation = ++_sessionGeneration;
+      _clearAccountOwnedState(showLoading: true);
+      unawaited(_initializeAuthenticatedSession(generation));
+      return;
+    }
+
+    if (next is AuthGuest || next is AuthRestorationFailure) {
+      _resetForUnauthenticatedState();
+    }
+  }
+
+  void _resetForUnauthenticatedState() {
+    _activeSid = null;
+    _activeCanonicalAccountId = '';
+    ++_sessionGeneration;
+    _clearAccountOwnedState(showLoading: false);
+    unawaited(_cancelRealtimeSubscriptions());
+  }
+
+  void _clearAccountOwnedState({required bool showLoading}) {
+    _readSyncDebounce?.cancel();
+    _readSyncDebounce = null;
+    _isSyncingReadState = false;
+    _isLoadingMore = false;
+    _hasMoreMessages = true;
+    _messages.clear();
+    _pendingSends.clear();
+    _translatingMessageIds.clear();
+    _editingMessageIds.clear();
+    _starringMessageIds.clear();
+    _reactingMessageIds.clear();
+    _deletingMessageKeys.clear();
+    _forwardingMessageIds.clear();
+    _translationErrors.clear();
+    state = showLoading
+        ? const ChatMessagesState.initial()
+        : const ChatMessagesState(
+            messages: [],
+            isInitialLoading: false,
+            isLoadingMore: false,
+            hasMoreMessages: true,
+          );
+  }
+
+  bool _isCurrentSession(int generation) {
+    return mounted &&
+        generation == _sessionGeneration &&
+        _activeSid != null &&
+        _activeCanonicalAccountId.isNotEmpty;
+  }
 
   @override
   void dispose() {
@@ -76,6 +156,8 @@ abstract class ChatMessagesControllerBase
   // ---------------------------------------------------------------------------
 
   Future<void> _listenRealtime();
+  Future<void> _cancelRealtimeSubscriptions();
+  Future<void> _initializeAuthenticatedSession(int generation);
   Future<void> _syncIncomingReadState();
 
   void _replaceWithServerMessages(List<ChatMessage> serverMessages);
@@ -115,6 +197,10 @@ class ChatMessagesController extends ChatMessagesControllerBase
         ChatMessagesReadSync,
         ChatMessagesHelpers {
   ChatMessagesController(super.ref, super.conversationId) {
-    unawaited(_init());
+    ref.listen<AuthState>(
+      authControllerProvider,
+      _handleAuthChanged,
+      fireImmediately: true,
+    );
   }
 }

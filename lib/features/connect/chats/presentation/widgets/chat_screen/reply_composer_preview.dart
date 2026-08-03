@@ -16,7 +16,7 @@ class ReplyComposerPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    final title = message.senderDisplayName ?? message.sender;
+    final title = message.senderDisplayName ?? message.senderCanonicalId;
 
     final body = message.hasText
         ? message.visibleText

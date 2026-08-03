@@ -5,6 +5,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/payloads/chat_shared_payload.dart';
 import 'package:africaonlinestores/features/social/safety/application/social_safety_controller.dart';
 import 'package:africaonlinestores/features/social/safety/data/social_safety_api.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -66,6 +67,7 @@ class _ShareContactPickerSheetState
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
     final state = ref.watch(socialUserSearchControllerProvider);
     final query = _searchController.text.trim();
@@ -104,14 +106,14 @@ class _ShareContactPickerSheetState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Share a contact', style: context.h5),
+                      Text(l10n.chat_share_contact, style: context.h5),
                       const SizedBox(height: 14),
                       TextField(
                         controller: _searchController,
                         onChanged: _onSearchChanged,
                         textInputAction: TextInputAction.search,
                         decoration: InputDecoration(
-                          hintText: 'Search AOS users',
+                          hintText: l10n.chat_search_aos_users,
                           prefixIcon: const Icon(Icons.search_rounded),
                           suffixIcon: state.loading
                               ? const Padding(
@@ -127,6 +129,7 @@ class _ShareContactPickerSheetState
                               : query.isEmpty
                               ? null
                               : IconButton(
+                                  tooltip: l10n.chat_clear_search,
                                   onPressed: () {
                                     _searchController.clear();
                                     _onSearchChanged('');
@@ -186,20 +189,21 @@ class _ContactResults extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context);
 
     if (state.error != null) {
       return _SheetStateMessage(
         icon: Icons.error_outline_rounded,
-        title: 'Could not load contacts',
+        title: l10n.chat_could_not_load_contacts,
         subtitle: state.error!,
       );
     }
 
     if (query.length < 2) {
-      return const _SheetStateMessage(
+      return _SheetStateMessage(
         icon: Icons.person_search_rounded,
-        title: 'Search people on AOS',
-        subtitle: 'Type at least 2 characters to find a contact to share.',
+        title: l10n.chat_search_people_on_aos,
+        subtitle: l10n.chat_search_people_hint,
       );
     }
 
@@ -208,10 +212,10 @@ class _ContactResults extends StatelessWidget {
     }
 
     if (state.items.isEmpty) {
-      return const _SheetStateMessage(
+      return _SheetStateMessage(
         icon: Icons.search_off_rounded,
-        title: 'No contacts found',
-        subtitle: 'Try another name, username, or email.',
+        title: l10n.chat_no_contacts_found,
+        subtitle: l10n.chat_no_contacts_found_hint,
       );
     }
 

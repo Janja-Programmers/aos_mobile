@@ -20,10 +20,12 @@ class SellerListController extends StateNotifier<SellerListState> {
   final SellerController _sellerController;
 
   Timer? _searchDebounce;
+  int _requestSerial = 0;
 
   static const int _limit = 20;
 
   Future<void> loadInitial() async {
+    final serial = ++_requestSerial;
     state = state.copyWith(
       isLoadingInitial: true,
       isLoadingMore: false,
@@ -32,10 +34,13 @@ class SellerListController extends StateNotifier<SellerListState> {
       hasMore: true,
     );
 
+    final search = state.search;
     final result = await _sellerController.listSellers(
-      search: state.search,
+      search: search,
       isVerified: 1,
     );
+
+    if (!mounted || serial != _requestSerial || search != state.search) return;
 
     result.fold(
       (failure) {
@@ -45,7 +50,7 @@ class SellerListController extends StateNotifier<SellerListState> {
         final parsed = _parseResponse(data);
 
         state = state.copyWith(
-          items: parsed.items,
+          items: _deduplicate(parsed.items),
           isLoadingInitial: false,
           offset: parsed.items.length,
           limit: parsed.limit,
@@ -59,14 +64,24 @@ class SellerListController extends StateNotifier<SellerListState> {
   Future<void> loadMore() async {
     if (!state.canLoadMore) return;
 
+    final serial = _requestSerial;
+    final search = state.search;
+    final offset = state.offset;
     state = state.copyWith(isLoadingMore: true, clearError: true);
 
     final result = await _sellerController.listSellers(
-      search: state.search,
+      search: search,
       isVerified: 1,
       limit: state.limit,
-      offset: state.offset,
+      offset: offset,
     );
+
+    if (!mounted ||
+        serial != _requestSerial ||
+        search != state.search ||
+        offset != state.offset) {
+      return;
+    }
 
     result.fold(
       (failure) {
@@ -75,12 +90,12 @@ class SellerListController extends StateNotifier<SellerListState> {
       (data) {
         final parsed = _parseResponse(data);
 
-        final nextItems = [...state.items, ...parsed.items];
+        final nextItems = _deduplicate([...state.items, ...parsed.items]);
 
         state = state.copyWith(
           items: nextItems,
           isLoadingMore: false,
-          offset: nextItems.length,
+          offset: offset + parsed.items.length,
           limit: parsed.limit,
           hasMore: parsed.items.length >= parsed.limit,
           clearError: true,
@@ -91,7 +106,9 @@ class SellerListController extends StateNotifier<SellerListState> {
 
   void updateSearch(String value) {
     final normalized = value.trim();
+    if (normalized == state.search) return;
 
+    ++_requestSerial;
     state = state.copyWith(search: normalized, clearError: true);
 
     _searchDebounce?.cancel();
@@ -100,6 +117,16 @@ class SellerListController extends StateNotifier<SellerListState> {
 
   Future<void> retry() {
     return loadInitial();
+  }
+
+  List<SellerListItem> _deduplicate(List<SellerListItem> items) {
+    final byUser = <String, SellerListItem>{};
+    for (final item in items) {
+      final key = item.user.trim();
+      if (key.isEmpty) continue;
+      byUser[key] = item;
+    }
+    return byUser.values.toList(growable: false);
   }
 
   _ParsedSellerListResponse _parseResponse(Map<String, dynamic> data) {

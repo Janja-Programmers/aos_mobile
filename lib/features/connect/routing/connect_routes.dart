@@ -1,4 +1,6 @@
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/screens/global_chat_settings_screen.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/screens/starred_messages_screen.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/connect_screen.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/screens/new_conversation_screen.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/screens/story_template_confirm_screen.dart';
@@ -12,6 +14,16 @@ class ConnectScreenRoutes {
 
   static List<RouteBase> routes() {
     return [
+      GoRoute(
+        name: AppRoutes.nConnectStarredMessages,
+        path: AppRoutes.connectStarredMessages,
+        builder: (context, state) => const StarredMessagesScreen(),
+      ),
+      GoRoute(
+        name: AppRoutes.nConnectChatSettings,
+        path: AppRoutes.connectChatSettings,
+        builder: (context, state) => const GlobalChatSettingsScreen(),
+      ),
       GoRoute(
         name: AppRoutes.nConnectNewConversation,
         path: AppRoutes.connectNewConversation,
@@ -61,6 +73,14 @@ class ConnectScreenNavigation {
 
   static void toNewConversation(BuildContext context) {
     context.pushNamed(AppRoutes.nConnectNewConversation);
+  }
+
+  static void toStarredMessages(BuildContext context) {
+    context.pushNamed(AppRoutes.nConnectStarredMessages);
+  }
+
+  static void toChatSettings(BuildContext context) {
+    context.pushNamed(AppRoutes.nConnectChatSettings);
   }
 
   static void toCreateStory(BuildContext context) {

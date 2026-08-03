@@ -1,14 +1,15 @@
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_presence_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
-import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes.dart';
 import 'package:africaonlinestores/features/connect/conversations/application/providers/conversation_provider.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_state_view.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/conversation_tile.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/delete_conversation_sheet.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,6 +25,7 @@ class ChatListScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatListScreenState extends ConsumerState<ChatListScreen> {
+  final ScrollController _scrollController = ScrollController();
   String selectedFilter = 'all';
   String _query = '';
 
@@ -31,6 +33,21 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
   void initState() {
     super.initState();
     _query = widget.searchQuery ?? '';
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels < position.maxScrollExtent - 260) return;
+    ref.read(conversationsControllerProvider.notifier).loadMore();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -65,9 +82,15 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
     if (!mounted) return;
 
     if (deleted) {
-      ShowSnack(context, 'Chat deleted from your conversation list.').success();
+      ShowSnack(
+        context,
+        AppLocalizations.of(context).chat_deleted_from_list,
+      ).success();
     } else {
-      ShowSnack(context, 'Failed to delete chat. Please try again.').error();
+      ShowSnack(
+        context,
+        AppLocalizations.of(context).chat_delete_chat_failed,
+      ).error();
     }
   }
 
@@ -77,7 +100,9 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final state = ref.watch(conversationsControllerProvider);
+    final currentUserCanonicalId = ref.watch(currentCanonicalAccountIdProvider);
 
     return Column(
       children: [
@@ -89,9 +114,9 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         ),
         Expanded(
           child: state.when(
-            loading: () => const ConnectStateView.loading(
-              title: 'Loading conversations',
-              message: 'Please wait while we fetch your chats.',
+            loading: () => ConnectStateView.loading(
+              title: l10n.chat_loading_conversations,
+              message: l10n.chat_loading_conversations_hint,
             ),
             error: (e, _) => RefreshIndicator(
               onRefresh: _refresh,
@@ -101,8 +126,8 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                   SizedBox(
                     height: MediaQuery.of(context).size.height * 0.5,
                     child: ConnectStateView.error(
-                      title: 'Could not load chats',
-                      message: 'Check your internet connection and try again.',
+                      title: l10n.chat_could_not_load_chats,
+                      message: l10n.chat_check_connection_try_again,
                       onAction: _refresh,
                     ),
                   ),
@@ -111,6 +136,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             ),
             data: (conversations) {
               final query = _query.trim().toLowerCase();
+              final conversationsNotifier = ref.read(
+                conversationsControllerProvider.notifier,
+              );
+              final isLoadingMore = conversationsNotifier.isLoadingMore;
 
               final filtered = conversations.where((conv) {
                 final matchesSearch =
@@ -136,11 +165,11 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                               ? Icons.search_off_rounded
                               : Icons.chat_bubble_outline_rounded,
                           title: hasSearch
-                              ? 'No chats found'
-                              : _emptyTitleForFilter(),
+                              ? l10n.chat_no_chats_found
+                              : _emptyTitleForFilter(l10n),
                           message: hasSearch
-                              ? 'Try searching with another name or message.'
-                              : _emptyMessageForFilter(),
+                              ? l10n.chat_no_chats_search_hint
+                              : _emptyMessageForFilter(l10n),
                         ),
                       ),
                     ],
@@ -151,10 +180,23 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               return RefreshIndicator(
                 onRefresh: _refresh,
                 child: ListView.builder(
+                  controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.only(bottom: 12),
-                  itemCount: filtered.length,
+                  itemCount: filtered.length + (isLoadingMore ? 1 : 0),
                   itemBuilder: (context, index) {
+                    if (index >= filtered.length) {
+                      return const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      );
+                    }
                     final conv = filtered[index];
 
                     final presence = ref.watch(
@@ -169,7 +211,9 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                       ),
                     );
 
-                    final subtitle = isTyping ? 'Typing...' : conv.lastMessage;
+                    final subtitle = isTyping
+                        ? l10n.chat_typing
+                        : conv.lastMessage;
 
                     final isOnline = ref
                         .read(chatPresenceControllerProvider.notifier)
@@ -177,6 +221,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
 
                     return ConversationTile(
                       conversation: conv.copyWith(lastMessage: subtitle),
+                      currentUserCanonicalId: currentUserCanonicalId,
                       isOnline: isOnline,
                       isTyping: isTyping,
                       lastSeen: presence?.lastSeen,
@@ -215,117 +260,98 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
   }
 
   Widget _buildFilters() {
-    final colors = context.appColors;
-    final unreadCount = ref.watch(chatUnreadCountProvider);
+    final l10n = AppLocalizations.of(context);
 
-    return Padding(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.fromLTRB(28, 6, 28, 10),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              _filterTitle(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: context.h4.copyWith(
-                fontWeight: FontWeight.w900,
-                fontSize: 23,
-              ),
-            ),
-          ),
-          PopupMenuButton<String>(
-            initialValue: selectedFilter,
-            color: colors.elevated,
-            surfaceTintColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-              side: BorderSide(color: colors.border),
-            ),
-            offset: const Offset(0, 42),
-            onSelected: (value) => setState(() => selectedFilter = value),
-            itemBuilder: (context) => [
-              _filterMenuItem('All', 'all'),
-              _filterMenuItem('Read', 'read'),
-              _filterMenuItem(
-                unreadCount > 0 ? 'Unread ($unreadCount)' : 'Unread',
-                'unread',
-              ),
-            ],
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.filter_list_rounded,
-                  color: colors.primary,
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Filter',
-                  style: context.p.copyWith(
-                    color: colors.primary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  PopupMenuItem<String> _filterMenuItem(String label, String value) {
-    final colors = context.appColors;
-    final selected = selectedFilter == value;
-
-    return PopupMenuItem<String>(
-      value: value,
-      child: Row(
-        children: [
-          Icon(
-            selected ? Icons.radio_button_checked : Icons.radio_button_off,
-            color: selected ? colors.primary : colors.textMuted,
-            size: 20,
+          _ChatFilterButton(
+            label: l10n.chat_all_chats,
+            selected: selectedFilter == 'all',
+            onTap: () => setState(() => selectedFilter = 'all'),
           ),
           const SizedBox(width: 10),
-          Text(label, style: context.p),
+          _ChatFilterButton(
+            label: l10n.chat_unread,
+            selected: selectedFilter == 'unread',
+            onTap: () => setState(() => selectedFilter = 'unread'),
+          ),
+          const SizedBox(width: 10),
+          _ChatFilterButton(
+            label: l10n.chat_read,
+            selected: selectedFilter == 'read',
+            onTap: () => setState(() => selectedFilter = 'read'),
+          ),
         ],
       ),
     );
   }
 
-  String _filterTitle() {
+  String _emptyTitleForFilter(AppLocalizations l10n) {
     switch (selectedFilter) {
       case 'read':
-        return 'Read Chats';
+        return l10n.chat_no_read_chats;
       case 'unread':
-        return 'Unread Chats';
+        return l10n.chat_no_unread_chats;
       default:
-        return 'All Chats';
+        return l10n.chat_no_conversations_yet;
     }
   }
 
-  String _emptyTitleForFilter() {
+  String _emptyMessageForFilter(AppLocalizations l10n) {
     switch (selectedFilter) {
       case 'read':
-        return 'No read chats';
+        return l10n.chat_no_read_chats_hint;
       case 'unread':
-        return 'No unread chats';
+        return l10n.chat_no_unread_chats_hint;
       default:
-        return 'No conversations yet';
+        return l10n.chat_no_conversations_hint;
     }
   }
+}
 
-  String _emptyMessageForFilter() {
-    switch (selectedFilter) {
-      case 'read':
-        return 'Chats you have already read will appear here.';
-      case 'unread':
-        return 'Unread chats will appear here as new messages arrive.';
-      default:
-        return 'Your conversations will appear here once you start chatting.';
-    }
+class _ChatFilterButton extends StatelessWidget {
+  const _ChatFilterButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Material(
+        color: selected
+            ? colors.primary.withValues(alpha: 0.14)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(999),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.p.copyWith(
+                color: selected ? colors.primary : colors.textMuted,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-const double _chatAppBarHeight = 78;
+const double _chatAppBarHeight = 64;
 
 enum ChatMenuAction { audioCall, videoCall, changeWallpaper }
 
@@ -60,8 +60,10 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
     final presence = presenceMap[widget.otherUserId];
 
     if (presence?.isOnline == false) {
-      ShowSnack(context, AppLocalizations.of(context).chat_user_might_be_offline)
-          .error();
+      ShowSnack(
+        context,
+        AppLocalizations.of(context).chat_user_might_be_offline,
+      ).error();
     }
 
     setState(() => _isCalling = true);
@@ -85,13 +87,17 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
       if (!mounted) return;
 
       if (!success) {
-        ShowSnack(context, AppLocalizations.of(context).chat_failed_to_start_call)
-            .error();
+        ShowSnack(
+          context,
+          AppLocalizations.of(context).chat_failed_to_start_call,
+        ).error();
       }
     } on Object {
       if (mounted) {
-        ShowSnack(context, AppLocalizations.of(context).chat_failed_to_start_call)
-            .error();
+        ShowSnack(
+          context,
+          AppLocalizations.of(context).chat_failed_to_start_call,
+        ).error();
       }
     } finally {
       if (mounted) {
@@ -137,9 +143,9 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
       backgroundColor: colors.surface,
       elevation: 0,
       scrolledUnderElevation: 0,
-      leadingWidth: 64,
+      leadingWidth: 54,
       leading: Padding(
-        padding: const EdgeInsets.only(left: 14),
+        padding: const EdgeInsets.only(left: 6),
         child: Center(
           child: _RoundIconButton(
             icon: Icons.arrow_back_rounded,
@@ -150,7 +156,7 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
         ),
       ),
       centerTitle: false,
-      titleSpacing: 4,
+      titleSpacing: 2,
       title: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: widget.onHeaderTap,
@@ -159,11 +165,11 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
             AppCircularAvatar(
               name: widget.displayName,
               imageUrl: widget.imageUrl,
-              radius: 28,
+              radius: 22,
               backgroundColor: colors.primary.withValues(alpha: 0.18),
               textColor: colors.primary,
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,7 +179,8 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
                     widget.displayName,
                     style: context.h5.copyWith(
                       color: foreground,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -196,9 +203,9 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
           surfaceTintColor: Colors.transparent,
           shadowColor: colors.black.withValues(alpha: 0.20),
           elevation: 12,
-          offset: const Offset(-8, 8),
+          offset: const Offset(-6, 4),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: colors.border),
           ),
           icon: _isCalling
@@ -207,7 +214,7 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Icon(Icons.more_vert_rounded, color: foreground, size: 30),
+              : Icon(Icons.more_vert_rounded, color: foreground, size: 26),
           onSelected: _handleMenuAction,
           itemBuilder: (context) {
             return [
@@ -232,7 +239,7 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
             ];
           },
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 2),
       ],
     );
   }
@@ -250,15 +257,15 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
     return PopupMenuItem<ChatMenuAction>(
       value: value,
       child: SizedBox(
-        width: 240,
+        width: 190,
         child: Row(
           children: [
-            Icon(icon, color: color, size: 26),
-            const SizedBox(width: 16),
+            Icon(icon, color: color, size: 22),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 label,
-                style: context.pStrong.copyWith(color: color, fontSize: 16),
+                style: context.pStrong.copyWith(color: color, fontSize: 14),
               ),
             ),
           ],
@@ -283,12 +290,10 @@ class _RoundIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.appColors;
-
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: colors.elevated,
+        color: Colors.transparent,
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
@@ -296,7 +301,7 @@ class _RoundIconButton extends StatelessWidget {
           child: SizedBox(
             width: 48,
             height: 48,
-            child: Icon(icon, color: color, size: 26),
+            child: Icon(icon, color: color, size: 24),
           ),
         ),
       ),

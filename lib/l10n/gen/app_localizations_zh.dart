@@ -1312,6 +1312,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chat_voice_hold_to_record => '长按录制语音消息';
 
   @override
+  String get chat_voice_tap_to_record => '点按录制语音消息';
+
+  @override
+  String get chat_voice_pause => '暂停录音';
+
+  @override
+  String get chat_voice_resume => '继续录音';
+
+  @override
+  String get chat_voice_delete_recording => '删除录音';
+
+  @override
+  String get chat_voice_send_recording => '发送语音消息';
+
+  @override
   String get chat_voice_release_to_finish => '松开以结束语音录制';
 
   @override

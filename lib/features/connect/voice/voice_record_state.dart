@@ -1,4 +1,12 @@
-enum VoiceRecordStatus { idle, recording, locked, canceling, uploading, error }
+enum VoiceRecordStatus {
+  idle,
+  recording,
+  paused,
+  locked,
+  canceling,
+  uploading,
+  error,
+}
 
 enum VoiceRecordError {
   microphonePermissionDenied,
@@ -13,6 +21,7 @@ class VoiceRecordState {
     this.error,
     this.duration = Duration.zero,
     this.dragDx = 0,
+    this.amplitudes = const <double>[],
   });
 
   final VoiceRecordStatus status;
@@ -20,12 +29,16 @@ class VoiceRecordState {
   final VoiceRecordError? error;
   final Duration duration;
   final double dragDx;
+  final List<double> amplitudes;
 
-  bool get isRecording =>
+  bool get isActive =>
       status == VoiceRecordStatus.recording ||
+      status == VoiceRecordStatus.paused ||
       status == VoiceRecordStatus.locked ||
       status == VoiceRecordStatus.canceling;
 
+  bool get isRecording => isActive;
+  bool get isPaused => status == VoiceRecordStatus.paused;
   bool get isUploading => status == VoiceRecordStatus.uploading;
 
   VoiceRecordState copyWith({
@@ -34,8 +47,10 @@ class VoiceRecordState {
     VoiceRecordError? error,
     Duration? duration,
     double? dragDx,
+    List<double>? amplitudes,
     bool clearRecordedFilePath = false,
     bool clearError = false,
+    bool clearAmplitudes = false,
   }) {
     return VoiceRecordState(
       status: status ?? this.status,
@@ -45,6 +60,9 @@ class VoiceRecordState {
       error: clearError ? null : (error ?? this.error),
       duration: duration ?? this.duration,
       dragDx: dragDx ?? this.dragDx,
+      amplitudes: clearAmplitudes
+          ? const <double>[]
+          : List<double>.unmodifiable(amplitudes ?? this.amplitudes),
     );
   }
 }

@@ -19,6 +19,18 @@ class AudioRecorderService {
     await _recorder.start(const RecordConfig(), path: path);
   }
 
+  Stream<Amplitude> onAmplitudeChanged(Duration interval) {
+    return _recorder.onAmplitudeChanged(interval);
+  }
+
+  Future<void> pause() async {
+    await _recorder.pause();
+  }
+
+  Future<void> resume() async {
+    await _recorder.resume();
+  }
+
   Future<String?> stop() async {
     return _recorder.stop();
   }
@@ -31,9 +43,7 @@ class AudioRecorderService {
     try {
       await _recorder.cancel();
     } catch (error, stackTrace) {
-      appLogger.w(
-        'Voice recorder cancellation during disposal failed: $error',
-      );
+      appLogger.w('Voice recorder cancellation during disposal failed: $error');
       appLogger.d(stackTrace.toString());
     }
 

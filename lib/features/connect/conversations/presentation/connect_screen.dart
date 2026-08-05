@@ -25,12 +25,7 @@ class ConnectScreen extends ConsumerStatefulWidget {
 
 enum _ConnectTab { chats, calls }
 
-enum _ConnectMenuAction {
-  markAllRead,
-  starredMessages,
-  clearCallLog,
-  settings,
-}
+enum _ConnectMenuAction { markAllRead, starredMessages, clearCallLog, settings }
 
 class _ConnectScreenState extends ConsumerState<ConnectScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
@@ -43,7 +38,9 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
   void initState() {
     super.initState();
     _searchCtrl.addListener(_onSearchChanged);
-    Future.microtask(() => ref.read(callManagerProvider.notifier).loadCallLogs());
+    Future.microtask(
+      () => ref.read(callManagerProvider.notifier).loadCallLogs(),
+    );
   }
 
   @override
@@ -141,7 +138,9 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
       );
       if (confirmed != true || !mounted) return;
 
-      final ok = await ref.read(callManagerProvider.notifier).clearCallHistory();
+      final ok = await ref
+          .read(callManagerProvider.notifier)
+          .clearCallHistory();
       if (!mounted) return;
       if (ok) {
         ShowSnack(context, l10n.chat_call_log_cleared).success();
@@ -160,7 +159,9 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
     final isChats = _selectedTab == _ConnectTab.chats;
     final unreadChats = ref.watch(chatUnreadCountProvider);
     final callState = ref.watch(callManagerProvider);
-    final missedCalls = callState.callLogs.where((call) => call.isMissed).length;
+    final missedCalls = callState.callLogs
+        .where((call) => call.isMissed)
+        .length;
     final query = _searchCtrl.text;
 
     return Scaffold(
@@ -181,10 +182,11 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
               child: !_searchVisible
                   ? const SizedBox.shrink()
                   : Padding(
-                      padding: const EdgeInsets.fromLTRB(28, 8, 28, 10),
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                       child: AppSearchBar(
                         controller: _searchCtrl,
                         autofocus: true,
+                        height: 48,
                         hintText: isChats
                             ? l10n.chat_search_chats_hint
                             : l10n.chat_search_calls_hint,
@@ -241,7 +243,7 @@ class _ConnectHeader extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 10, 18, 4),
+      padding: const EdgeInsets.fromLTRB(14, 4, 8, 2),
       child: Row(
         children: [
           IconButton(
@@ -253,7 +255,7 @@ class _ConnectHeader extends StatelessWidget {
                 context.goNamed(AppRoutes.nHome);
               }
             },
-            icon: const Icon(Icons.close_rounded, size: 34),
+            icon: const Icon(Icons.close_rounded, size: 28),
           ),
           Expanded(
             child: Text(
@@ -262,8 +264,8 @@ class _ConnectHeader extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.h4.copyWith(
-                fontSize: 25,
-                fontWeight: FontWeight.w800,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -272,7 +274,7 @@ class _ConnectHeader extends StatelessWidget {
             onPressed: onSearchTap,
             icon: Icon(
               searchVisible ? Icons.search_off_rounded : Icons.search_rounded,
-              size: 31,
+              size: 26,
             ),
           ),
           PopupMenuButton<_ConnectMenuAction>(
@@ -281,10 +283,10 @@ class _ConnectHeader extends StatelessWidget {
             surfaceTintColor: Colors.transparent,
             elevation: 10,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(16),
               side: BorderSide(color: colors.border),
             ),
-            offset: const Offset(0, 52),
+            offset: const Offset(0, 44),
             onSelected: onMenuSelected,
             itemBuilder: (context) {
               if (selectedTab == _ConnectTab.calls) {
@@ -330,7 +332,7 @@ class _ConnectHeader extends StatelessWidget {
                 ),
               ];
             },
-            icon: const Icon(Icons.more_vert_rounded, size: 31),
+            icon: const Icon(Icons.more_vert_rounded, size: 26),
           ),
         ],
       ),
@@ -347,9 +349,9 @@ class _MenuRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon),
-        const SizedBox(width: 12),
-        Flexible(child: Text(label)),
+        Icon(icon, size: 22),
+        const SizedBox(width: 10),
+        Flexible(child: Text(label, style: context.p.copyWith(fontSize: 14))),
       ],
     );
   }
@@ -374,8 +376,8 @@ class _ConnectBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final l10n = AppLocalizations.of(context);
-    final barHeight = (80 + MediaQuery.textScalerOf(context).scale(14))
-        .clamp(92.0, 124.0)
+    final barHeight = (52 + MediaQuery.textScalerOf(context).scale(12))
+        .clamp(66.0, 96.0)
         .toDouble();
 
     return SafeArea(
@@ -401,33 +403,36 @@ class _ConnectBottomBar extends StatelessWidget {
               button: true,
               label: l10n.chat_new_conversation,
               child: InkResponse(
-                radius: 42,
+                radius: 34,
                 onTap: onPlusTap,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 62,
-                      height: 62,
+                      width: 46,
+                      height: 46,
                       decoration: BoxDecoration(
                         color: colors.primary,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
                             color: colors.primary.withValues(alpha: 0.24),
-                            blurRadius: 18,
-                            offset: const Offset(0, 7),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
                       child: Icon(
                         Icons.add_rounded,
                         color: colors.white,
-                        size: 38,
+                        size: 28,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(l10n.chat_new, style: context.small),
+                    const SizedBox(height: 1),
+                    Text(
+                      l10n.chat_new,
+                      style: context.small.copyWith(fontSize: 12),
+                    ),
                   ],
                 ),
               ),
@@ -480,15 +485,15 @@ class _BottomBarItem extends StatelessWidget {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Icon(icon, color: color, size: 30),
+                Icon(icon, color: color, size: 26),
                 if (badgeCount > 0)
                   Positioned(
                     right: -13,
                     top: -9,
                     child: Container(
                       constraints: const BoxConstraints(
-                        minWidth: 22,
-                        minHeight: 22,
+                        minWidth: 20,
+                        minHeight: 20,
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 5),
                       alignment: Alignment.center,
@@ -500,7 +505,7 @@ class _BottomBarItem extends StatelessWidget {
                         badgeCount > 99 ? '99+' : '$badgeCount',
                         style: context.small.copyWith(
                           color: colors.white,
-                          fontSize: 11,
+                          fontSize: 10,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -508,13 +513,14 @@ class _BottomBarItem extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.small.copyWith(
                 color: color,
+                fontSize: 12,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
               ),
             ),

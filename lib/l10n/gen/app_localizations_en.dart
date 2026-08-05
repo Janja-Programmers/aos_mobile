@@ -1383,6 +1383,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chat_voice_hold_to_record => 'Hold to record a voice message';
 
   @override
+  String get chat_voice_tap_to_record => 'Tap to record a voice message';
+
+  @override
+  String get chat_voice_pause => 'Pause recording';
+
+  @override
+  String get chat_voice_resume => 'Resume recording';
+
+  @override
+  String get chat_voice_delete_recording => 'Delete recording';
+
+  @override
+  String get chat_voice_send_recording => 'Send voice message';
+
+  @override
   String get chat_voice_release_to_finish =>
       'Release to finish voice recording';
 

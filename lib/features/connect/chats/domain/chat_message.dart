@@ -440,7 +440,8 @@ class ChatMessage {
   }
 
   bool get isGenericSystemMessage {
-    return senderCanonicalId.trim().toLowerCase() == 'administrator' || isSystemType;
+    return senderCanonicalId.trim().toLowerCase() == 'administrator' ||
+        isSystemType;
   }
 
   bool get isLocalSending => localStatus == ChatLocalMessageStatus.sending;
@@ -448,7 +449,10 @@ class ChatMessage {
   bool get isLocalOnly => id.startsWith('temp-');
 }
 
-final DateTime _invalidServerTimestamp = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+final DateTime _invalidServerTimestamp = DateTime.fromMillisecondsSinceEpoch(
+  0,
+  isUtc: true,
+);
 
 String _normalizeSender(dynamic value) {
   final clean = value?.toString().trim() ?? '';

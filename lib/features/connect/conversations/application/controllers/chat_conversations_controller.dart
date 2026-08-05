@@ -156,9 +156,7 @@ class ConversationsController
 
     try {
       final repo = ref.read(chatRepositoryProvider);
-      final res = await repo.getConversations(
-        offset: _nextOffset,
-      );
+      final res = await repo.getConversations(offset: _nextOffset);
       if (!mounted || loadSerial != _loadSerial || activeSid != _activeSid) {
         return;
       }

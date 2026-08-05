@@ -2654,6 +2654,36 @@ abstract class AppLocalizations {
   /// **'Hold to record a voice message'**
   String get chat_voice_hold_to_record;
 
+  /// No description provided for @chat_voice_tap_to_record.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to record a voice message'**
+  String get chat_voice_tap_to_record;
+
+  /// No description provided for @chat_voice_pause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause recording'**
+  String get chat_voice_pause;
+
+  /// No description provided for @chat_voice_resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume recording'**
+  String get chat_voice_resume;
+
+  /// No description provided for @chat_voice_delete_recording.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete recording'**
+  String get chat_voice_delete_recording;
+
+  /// No description provided for @chat_voice_send_recording.
+  ///
+  /// In en, this message translates to:
+  /// **'Send voice message'**
+  String get chat_voice_send_recording;
+
   /// No description provided for @chat_voice_release_to_finish.
   ///
   /// In en, this message translates to:

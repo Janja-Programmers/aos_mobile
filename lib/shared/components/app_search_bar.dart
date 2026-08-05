@@ -14,6 +14,7 @@ class AppSearchBar extends StatefulWidget {
     this.autofocus = false,
     this.hintText = 'Search here...',
     this.margin = const EdgeInsets.symmetric(vertical: 4),
+    this.height = 54,
   });
 
   final TextEditingController controller;
@@ -26,6 +27,7 @@ class AppSearchBar extends StatefulWidget {
   final bool autofocus;
   final String hintText;
   final EdgeInsetsGeometry margin;
+  final double height;
 
   @override
   State<AppSearchBar> createState() => _AppSearchBarState();
@@ -65,7 +67,7 @@ class _AppSearchBarState extends State<AppSearchBar> {
     return Padding(
       padding: widget.margin,
       child: Container(
-        height: 54,
+        height: widget.height,
         decoration: BoxDecoration(
           color: colors.surface,
           borderRadius: BorderRadius.circular(16),

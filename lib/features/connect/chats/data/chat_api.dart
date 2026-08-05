@@ -123,9 +123,7 @@ class ChatApi {
     String? before,
   }) async {
     try {
-      final queryParams = <String, dynamic>{
-        'conversation_id': conversationId,
-      };
+      final queryParams = <String, dynamic>{'conversation_id': conversationId};
       if (before != null) queryParams['before'] = before;
 
       final res = await _client.get(

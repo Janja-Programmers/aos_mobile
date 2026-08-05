@@ -1406,6 +1406,22 @@ class AppLocalizationsFr extends AppLocalizations {
       'Maintenez pour enregistrer un message vocal';
 
   @override
+  String get chat_voice_tap_to_record =>
+      'Appuyez pour enregistrer un message vocal';
+
+  @override
+  String get chat_voice_pause => 'Mettre l’enregistrement en pause';
+
+  @override
+  String get chat_voice_resume => 'Reprendre l’enregistrement';
+
+  @override
+  String get chat_voice_delete_recording => 'Supprimer l’enregistrement';
+
+  @override
+  String get chat_voice_send_recording => 'Envoyer le message vocal';
+
+  @override
   String get chat_voice_release_to_finish =>
       'Relâchez pour terminer l’enregistrement vocal';
 

@@ -4,10 +4,7 @@ import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class TranslationLanguagePicker extends StatelessWidget {
-  const TranslationLanguagePicker({
-    super.key,
-    required this.initialLanguage,
-  });
+  const TranslationLanguagePicker({super.key, required this.initialLanguage});
 
   final TranslationLanguage initialLanguage;
 

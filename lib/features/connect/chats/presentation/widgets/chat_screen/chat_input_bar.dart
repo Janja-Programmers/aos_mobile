@@ -16,6 +16,9 @@ import 'package:africaonlinestores/features/connect/chats/presentation/widgets/c
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/input_icon_button.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/share_contact_picker_sheet.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/voice_record_button.dart';
+import 'package:africaonlinestores/features/connect/voice/voice_record_overlay.dart';
+import 'package:africaonlinestores/features/connect/voice/voice_record_provider.dart';
+import 'package:africaonlinestores/features/connect/voice/voice_record_state.dart';
 import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
 import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
@@ -66,7 +69,10 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
   final List<ChatPendingAttachment> _attachments = [];
   final Map<String, ChatInputAttachment> _uploadedAttachmentsByPath = {};
 
+  late final AppLifecycleListener _voiceLifecycleListener;
+
   bool _isSending = false;
+  bool _isFinalizingVoice = false;
   bool _showAttachmentPanel = false;
   bool _showEmojiPanel = false;
 
@@ -78,11 +84,30 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
   bool get _canSend => _hasText || _hasAttachments || _hasAdContext;
 
   @override
+  void initState() {
+    super.initState();
+    _voiceLifecycleListener = AppLifecycleListener(
+      onInactive: _cancelVoiceForLifecycle,
+      onPause: _cancelVoiceForLifecycle,
+      onDetach: _cancelVoiceForLifecycle,
+    );
+  }
+
+  void _cancelVoiceForLifecycle() {
+    final state = ref.read(voiceRecordControllerProvider);
+    if (!state.isActive) return;
+    unawaited(
+      ref.read(voiceRecordControllerProvider.notifier).cancelRecording(),
+    );
+  }
+
+  @override
   void dispose() {
     for (final attachment in _attachments) {
       unawaited(_deleteTemporaryVoiceFile(attachment));
     }
     _uploadedAttachmentsByPath.clear();
+    _voiceLifecycleListener.dispose();
     _inputFocusNode.dispose();
     super.dispose();
   }
@@ -280,6 +305,59 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
     widget.onVideoCall();
   }
 
+  String _formatVoiceDuration(Duration duration) {
+    final minutes = duration.inMinutes.remainder(60).toString();
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  Future<void> _startVoiceRecording() async {
+    if (_isSending || _isFinalizingVoice) return;
+    FocusScope.of(context).unfocus();
+    _closePanels();
+    await ref.read(voiceRecordControllerProvider.notifier).startRecording();
+  }
+
+  Future<void> _toggleVoicePause() async {
+    final controller = ref.read(voiceRecordControllerProvider.notifier);
+    final state = ref.read(voiceRecordControllerProvider);
+    if (state.isPaused) {
+      await controller.resumeRecording();
+      return;
+    }
+    await controller.pauseRecording();
+  }
+
+  Future<void> _cancelVoiceRecording() async {
+    if (_isFinalizingVoice) return;
+    await ref.read(voiceRecordControllerProvider.notifier).cancelRecording();
+  }
+
+  Future<void> _sendVoiceRecording() async {
+    if (_isSending || _isFinalizingVoice) return;
+
+    setState(() => _isFinalizingVoice = true);
+    final path = await ref
+        .read(voiceRecordControllerProvider.notifier)
+        .finishRecording();
+    if (!mounted) return;
+    setState(() => _isFinalizingVoice = false);
+    if (path == null) return;
+    await _handleVoiceRecorded(path);
+  }
+
+  String _voiceErrorMessage(
+    AppLocalizations l10n,
+    VoiceRecordError error,
+  ) {
+    return switch (error) {
+      VoiceRecordError.microphonePermissionDenied =>
+        l10n.chat_microphone_permission_denied,
+      VoiceRecordError.startFailed => l10n.chat_voice_record_start_failed,
+      VoiceRecordError.finishFailed => l10n.chat_voice_record_finish_failed,
+    };
+  }
+
   Future<void> _handleVoiceRecorded(String path) async {
     if (_isSending) return;
 
@@ -346,17 +424,17 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
   ) {
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+      padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
             child: Container(
-              constraints: const BoxConstraints(minHeight: 54),
-              padding: const EdgeInsets.only(left: 8, right: 6),
+              constraints: const BoxConstraints(minHeight: 48),
+              padding: const EdgeInsets.only(left: 6, right: 4),
               decoration: BoxDecoration(
                 color: colors.elevated,
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: colors.border),
               ),
               child: Row(
@@ -400,7 +478,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
-                          vertical: 15,
+                          vertical: 12,
                         ),
                         hintStyle: TextStyle(color: colors.textMuted),
                       ).applyDefaults(inputDecorationTheme),
@@ -422,7 +500,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           if (_canSend)
             GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -432,8 +510,8 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                       unawaited(_submit());
                     },
               child: Container(
-                width: 56,
-                height: 56,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: colors.primary,
                   shape: BoxShape.circle,
@@ -448,15 +526,14 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                             color: colors.white,
                           ),
                         )
-                      : Icon(Icons.send_rounded, color: colors.white, size: 24),
+                      : Icon(Icons.send_rounded, color: colors.white, size: 22),
                 ),
               ),
             )
           else
             VoiceRecordButton(
-              disabled: _isSending,
-              size: 56,
-              onRecorded: _handleVoiceRecorded,
+              disabled: _isSending || _isFinalizingVoice,
+              onStart: _startVoiceRecording,
             ),
         ],
       ),
@@ -467,6 +544,18 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final inputDecorationTheme = Theme.of(context).inputDecorationTheme;
+    final voiceState = ref.watch(voiceRecordControllerProvider);
+
+    ref.listen<VoiceRecordError?>(
+      voiceRecordControllerProvider.select((value) => value.error),
+      (previous, next) {
+        if (next == null || next == previous || !mounted) return;
+        ShowSnack(
+          context,
+          _voiceErrorMessage(AppLocalizations.of(context), next),
+        ).error();
+      },
+    );
 
     return ColoredBox(
       color: colors.surface,
@@ -490,32 +579,50 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (_showAttachmentPanel)
-                  ChatAttachmentSheet(
-                    onGallery: () {
-                      unawaited(_handleGalleryTap());
+                if (voiceState.isActive)
+                  VoiceRecordOverlay(
+                    durationText: _formatVoiceDuration(voiceState.duration),
+                    amplitudes: voiceState.amplitudes,
+                    isPaused: voiceState.isPaused,
+                    isSending: _isFinalizingVoice,
+                    onDelete: () {
+                      unawaited(_cancelVoiceRecording());
                     },
-                    onCamera: () {
-                      unawaited(_handleCameraTap());
+                    onTogglePause: () {
+                      unawaited(_toggleVoicePause());
                     },
-                    onVideoCall: _handleVideoCallTap,
-                    onAudioCall: _handleAudioCallTap,
-                    onDocument: () {
-                      unawaited(_handleDocumentTap());
+                    onSend: () {
+                      unawaited(_sendVoiceRecording());
                     },
-                    onLocation: () {
-                      unawaited(_handleLocationTap());
-                    },
-                    onContact: () {
-                      unawaited(_handleContactTap());
-                    },
-                  ),
-                if (_showEmojiPanel)
-                  ChatEmojiPanel(
-                    onEmojiSelected: _insertEmoji,
-                    onClose: _toggleEmojiPanel,
-                  ),
-                _buildInputRow(colors, inputDecorationTheme),
+                  )
+                else ...[
+                  if (_showAttachmentPanel)
+                    ChatAttachmentSheet(
+                      onGallery: () {
+                        unawaited(_handleGalleryTap());
+                      },
+                      onCamera: () {
+                        unawaited(_handleCameraTap());
+                      },
+                      onVideoCall: _handleVideoCallTap,
+                      onAudioCall: _handleAudioCallTap,
+                      onDocument: () {
+                        unawaited(_handleDocumentTap());
+                      },
+                      onLocation: () {
+                        unawaited(_handleLocationTap());
+                      },
+                      onContact: () {
+                        unawaited(_handleContactTap());
+                      },
+                    ),
+                  if (_showEmojiPanel)
+                    ChatEmojiPanel(
+                      onEmojiSelected: _insertEmoji,
+                      onClose: _toggleEmojiPanel,
+                    ),
+                  _buildInputRow(colors, inputDecorationTheme),
+                ],
               ],
             ),
           ),

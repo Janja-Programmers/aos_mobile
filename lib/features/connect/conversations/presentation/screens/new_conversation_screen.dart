@@ -222,10 +222,11 @@ class _NewConversationScreenState extends ConsumerState<NewConversationScreen> {
             _Header(onBack: () => Navigator.of(context).maybePop()),
             _SegmentedTabs(selectedTab: _selectedTab, onChanged: _changeTab),
             Padding(
-              padding: const EdgeInsets.fromLTRB(28, 16, 28, 16),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
               child: AppSearchBar(
                 controller: _searchController,
                 autofocus: true,
+                height: 48,
                 hintText: _selectedTab == _NewConversationTab.sellers
                     ? l10n.chat_search_sellers_hint
                     : l10n.chat_search_friends_hint,
@@ -271,7 +272,7 @@ class _Header extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 28, 18),
+      padding: const EdgeInsets.fromLTRB(12, 8, 20, 12),
       child: Row(
         children: [
           Semantics(
@@ -282,18 +283,24 @@ class _Header extends StatelessWidget {
               child: InkWell(
                 onTap: onBack,
                 borderRadius: BorderRadius.circular(14),
-                child: Ink(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: colors.elevated,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: colors.border),
-                  ),
-                  child: Icon(
-                    Icons.arrow_back_rounded,
-                    color: colors.textPrimary,
-                    size: 30,
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Center(
+                    child: Ink(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: colors.elevated,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: Icon(
+                        Icons.arrow_back_rounded,
+                        color: colors.textPrimary,
+                        size: 24,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -306,12 +313,12 @@ class _Header extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: context.h4.copyWith(
-                fontSize: 23,
+                fontSize: 20,
                 fontWeight: FontWeight.w800,
               ),
             ),
           ),
-          const SizedBox(width: 56),
+          const SizedBox(width: 48),
         ],
       ),
     );
@@ -330,11 +337,11 @@ class _SegmentedTabs extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 28),
-      padding: const EdgeInsets.all(5),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: colors.elevated,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(17),
         border: Border.all(color: colors.border),
       ),
       child: Row(
@@ -377,12 +384,12 @@ class _SegmentButton extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
-          constraints: const BoxConstraints(minHeight: 52),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: selected ? colors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
           ),
           child: Text(
             label,
@@ -390,7 +397,7 @@ class _SegmentButton extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: context.p.copyWith(
               color: selected ? colors.white : colors.textMuted,
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -453,12 +460,12 @@ class _SellerResults extends ConsumerWidget {
 
     return ListView.separated(
       controller: scrollController,
-      padding: const EdgeInsets.fromLTRB(28, 8, 28, 32),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
       physics: const BouncingScrollPhysics(
         parent: AlwaysScrollableScrollPhysics(),
       ),
       itemCount: state.items.length + (state.isLoadingMore ? 1 : 0),
-      separatorBuilder: (_, _) => const SizedBox(height: 14),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         if (index >= state.items.length) {
           return const Padding(
@@ -541,12 +548,12 @@ class _FriendResults extends ConsumerWidget {
 
     return ListView.separated(
       controller: scrollController,
-      padding: const EdgeInsets.fromLTRB(28, 8, 28, 32),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
       physics: const BouncingScrollPhysics(
         parent: AlwaysScrollableScrollPhysics(),
       ),
       itemCount: items.length + (state.isLoadingMore ? 1 : 0),
-      separatorBuilder: (_, _) => const SizedBox(height: 14),
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
         if (index >= items.length) {
           return const Padding(
@@ -570,10 +577,7 @@ class _FriendResults extends ConsumerWidget {
     );
   }
 
-  String _friendSubtitle(
-    SocialFriend friend,
-    AppLocalizations l10n,
-  ) {
+  String _friendSubtitle(SocialFriend friend, AppLocalizations l10n) {
     if (friend.isFriend) return l10n.chat_online;
     if (friend.followedBackAt != null) return l10n.chat_last_seen_recently;
     if (friend.followedAt != null) return l10n.chat_last_seen_recently;
@@ -607,107 +611,133 @@ class _ContactCard extends StatelessWidget {
     final colors = context.appColors;
     final l10n = AppLocalizations.of(context);
     final imageUrl = buildFileUrl(avatarUrl);
+    final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+    final useStackedLayout = textScale > 1.35;
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 92),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: colors.elevated,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: colors.border),
+    final avatar = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        CircleAvatar(
+          radius: 24,
+          backgroundColor: colors.primary.withValues(alpha: 0.16),
+          backgroundImage: imageUrl == null ? null : NetworkImage(imageUrl),
+          child: imageUrl == null
+              ? Text(
+                  initial,
+                  style: context.h5.copyWith(
+                    color: colors.primary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                  ),
+                )
+              : null,
         ),
-        child: Row(
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: colors.primary.withValues(alpha: 0.16),
-                  backgroundImage: imageUrl == null
-                      ? null
-                      : NetworkImage(imageUrl),
-                  child: imageUrl == null
-                      ? Text(
-                          initial,
-                          style: context.h5.copyWith(
-                            color: colors.primary,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        )
-                      : null,
-                ),
-                if (online)
-                  Positioned(
-                    right: 1,
-                    bottom: 1,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: colors.success,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: colors.elevated, width: 2),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.h5.copyWith(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      if (verified) ...[
-                        const SizedBox(width: 7),
-                        const VerifiedBadge(size: 22),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.pMuted.copyWith(fontSize: 15),
-                  ),
-                ],
+        if (online)
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: Container(
+              width: 13,
+              height: 13,
+              decoration: BoxDecoration(
+                color: colors.success,
+                shape: BoxShape.circle,
+                border: Border.all(color: colors.elevated, width: 2),
               ),
             ),
-            const SizedBox(width: 8),
-            _RoundActionButton(
-              semanticLabel: l10n.chat_message_contact,
-              icon: Icons.chat_bubble_rounded,
-              iconColor: colors.primary,
-              backgroundColor: colors.primary.withValues(alpha: 0.13),
-              onTap: onMessage,
+          ),
+      ],
+    );
+
+    final details = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                title,
+                maxLines: useStackedLayout ? 2 : 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.h5.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
-            const SizedBox(width: 8),
-            _RoundActionButton(
-              semanticLabel: l10n.chat_call_contact,
-              icon: Icons.call_rounded,
-              iconColor: colors.success,
-              backgroundColor: colors.success.withValues(alpha: 0.13),
-              onTap: onCall,
-            ),
+            if (verified) ...[
+              const SizedBox(width: 5),
+              const VerifiedBadge(),
+            ],
           ],
         ),
+        const SizedBox(height: 3),
+        Text(
+          subtitle,
+          maxLines: useStackedLayout ? 2 : 1,
+          overflow: TextOverflow.ellipsis,
+          style: context.pMuted.copyWith(fontSize: 14),
+        ),
+      ],
+    );
+
+    final actions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _RoundActionButton(
+          semanticLabel: l10n.chat_message_contact,
+          icon: Icons.chat_bubble_rounded,
+          iconColor: colors.primary,
+          backgroundColor: colors.primary.withValues(alpha: 0.13),
+          onTap: onMessage,
+        ),
+        const SizedBox(width: 4),
+        _RoundActionButton(
+          semanticLabel: l10n.chat_call_contact,
+          icon: Icons.call_rounded,
+          iconColor: colors.success,
+          backgroundColor: colors.success.withValues(alpha: 0.13),
+          onTap: onCall,
+        ),
+      ],
+    );
+
+    return Container(
+      constraints: const BoxConstraints(minHeight: 72),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: colors.elevated,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.border),
       ),
+      child: useStackedLayout
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    avatar,
+                    const SizedBox(width: 12),
+                    Expanded(child: details),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: actions,
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                avatar,
+                const SizedBox(width: 12),
+                Expanded(child: details),
+                const SizedBox(width: 6),
+                actions,
+              ],
+            ),
     );
   }
 }
@@ -732,18 +762,29 @@ class _RoundActionButton extends StatelessWidget {
     return Semantics(
       button: true,
       label: semanticLabel,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          width: 48,
-          height: 48,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            shape: BoxShape.circle,
+      child: Material(
+        color: Colors.transparent,
+        child: InkResponse(
+          onTap: onTap,
+          radius: 24,
+          containedInkWell: true,
+          customBorder: const CircleBorder(),
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Center(
+              child: Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: iconColor, size: 21),
+              ),
+            ),
           ),
-          child: Icon(icon, color: iconColor, size: 25),
         ),
       ),
     );

@@ -133,10 +133,7 @@ class _SectionTitle extends StatelessWidget {
     final colors = context.appColors;
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
-      child: Text(
-        label,
-        style: context.h5.copyWith(color: colors.primary),
-      ),
+      child: Text(label, style: context.h5.copyWith(color: colors.primary)),
     );
   }
 }
@@ -168,11 +165,7 @@ class _CardDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Divider(
-      height: 1,
-      indent: 64,
-      color: context.appColors.border,
-    );
+    return Divider(height: 1, indent: 64, color: context.appColors.border);
   }
 }
 

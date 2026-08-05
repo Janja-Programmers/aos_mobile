@@ -20,8 +20,7 @@ class StarredMessagesScreen extends ConsumerStatefulWidget {
       _StarredMessagesScreenState();
 }
 
-class _StarredMessagesScreenState
-    extends ConsumerState<StarredMessagesScreen> {
+class _StarredMessagesScreenState extends ConsumerState<StarredMessagesScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = <ChatMessage>[];
   final Set<String> _unstarInFlight = <String>{};
@@ -90,9 +89,11 @@ class _StarredMessagesScreenState
       setState(() => _loadingMore = true);
     }
 
-    final result = await ref.read(chatRepositoryProvider).listStarredMessages(
-      before: reset || _messages.isEmpty ? null : _messages.last.id,
-    );
+    final result = await ref
+        .read(chatRepositoryProvider)
+        .listStarredMessages(
+          before: reset || _messages.isEmpty ? null : _messages.last.id,
+        );
 
     if (!mounted ||
         generation != _accountGeneration ||
@@ -110,7 +111,8 @@ class _StarredMessagesScreenState
 
     final page = result.rightOrNull ?? const <ChatMessage>[];
     final byId = <String, ChatMessage>{
-      if (!reset) for (final message in _messages) message.id: message,
+      if (!reset)
+        for (final message in _messages) message.id: message,
       for (final message in page) message.id: message,
     };
 

@@ -77,8 +77,7 @@ abstract class ChatMessagesControllerBase
         _resetForUnauthenticatedState();
         return;
       }
-      if (_activeSid == nextSid &&
-          _activeCanonicalAccountId == nextAccountId) {
+      if (_activeSid == nextSid && _activeCanonicalAccountId == nextAccountId) {
         return;
       }
 

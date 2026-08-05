@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
@@ -35,7 +37,7 @@ class MessageBubble extends StatelessWidget {
   final String? otherUserId;
   final String? otherDisplayName;
   final String? otherAvatarUrl;
-  final VoidCallback? onLongPress;
+  final ValueChanged<Offset>? onLongPress;
   final VoidCallback? onRetry;
   final ValueChanged<String>? onAdTap;
 
@@ -43,6 +45,8 @@ class MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final l10n = AppLocalizations.of(context);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final maxBubbleWidth = math.min(336.0, screenWidth * 0.78);
 
     if (message.isCallType) {
       return CallMessageTile(
@@ -68,7 +72,7 @@ class MessageBubble extends StatelessWidget {
           child: Text(
             message.visibleText,
             textAlign: TextAlign.center,
-            style: context.p.copyWith(color: colors.textMuted, fontSize: 12),
+            style: context.p.copyWith(color: colors.textMuted, fontSize: 11.5),
           ),
         ),
       );
@@ -95,33 +99,35 @@ class MessageBubble extends StatelessWidget {
         alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onLongPress: onLongPress,
+          onLongPressStart: onLongPress == null
+              ? null
+              : (details) => onLongPress!(details.globalPosition),
           child: Container(
             margin: EdgeInsets.only(
-              left: isMe ? 58 : 12,
-              right: isMe ? 12 : 58,
-              top: 5,
-              bottom: 5,
+              left: isMe ? 46 : 14,
+              right: isMe ? 14 : 46,
+              top: 4,
+              bottom: 4,
             ),
-            constraints: const BoxConstraints(maxWidth: 340),
+            constraints: BoxConstraints(maxWidth: maxBubbleWidth),
             decoration: BoxDecoration(
               color: isDeleted ? colors.elevated : bgColor,
               borderRadius: _bubbleRadius(isMe),
               border: Border.all(
                 color: isMe
-                    ? colors.primaryHover.withValues(alpha: 0.38)
+                    ? colors.primaryHover.withValues(alpha: 0.22)
                     : colors.border,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: colors.black.withValues(alpha: 0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+                  color: colors.black.withValues(alpha: 0.06),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
                 ),
               ],
             ),
             child: Padding(
-              padding: EdgeInsets.all(hasRichPayload ? 8 : 12),
+              padding: EdgeInsets.all(hasRichPayload ? 7 : 9),
               child: Column(
                 crossAxisAlignment: isMe
                     ? CrossAxisAlignment.end
@@ -134,7 +140,7 @@ class MessageBubble extends StatelessWidget {
 
                   if (message.replyTo != null && !isDeleted) ...[
                     ReplyPreview(reply: message.replyTo!, isMe: isMe),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                   ],
 
                   if (isDeleted)
@@ -168,7 +174,7 @@ class MessageBubble extends StatelessWidget {
 
                     if (message.hasAd) ...[
                       if (message.hasText || message.hasTranslation)
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                       MessageAdPreview(
                         message: message,
                         isMe: isMe,
@@ -177,7 +183,7 @@ class MessageBubble extends StatelessWidget {
                     ],
 
                     if (message.attachments.isNotEmpty) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       AttachmentGrid(attachments: message.attachments),
                     ],
                   ],
@@ -187,7 +193,7 @@ class MessageBubble extends StatelessWidget {
                     ReactionChips(message: message, isMe: isMe),
                   ],
 
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
                   _MessageMeta(message: message, isMe: isMe),
 
                   if (message.isLocalSending)
@@ -237,10 +243,10 @@ class MessageBubble extends StatelessWidget {
 
   BorderRadius _bubbleRadius(bool ownMessage) {
     return BorderRadius.only(
-      topLeft: const Radius.circular(22),
-      topRight: const Radius.circular(22),
-      bottomLeft: Radius.circular(ownMessage ? 22 : 6),
-      bottomRight: Radius.circular(ownMessage ? 6 : 22),
+      topLeft: const Radius.circular(16),
+      topRight: const Radius.circular(16),
+      bottomLeft: Radius.circular(ownMessage ? 16 : 5),
+      bottomRight: Radius.circular(ownMessage ? 5 : 16),
     );
   }
 }
@@ -334,7 +340,11 @@ class _MessageTextBlock extends StatelessWidget {
           if (message.hasText) ...[
             Text(
               message.visibleText,
-              style: context.p.copyWith(color: mutedTextColor, fontSize: 13),
+              style: context.p.copyWith(
+                color: mutedTextColor,
+                fontSize: 12.5,
+                height: 1.3,
+              ),
             ),
             const SizedBox(height: 7),
           ],
@@ -359,6 +369,8 @@ class _MessageTextBlock extends StatelessWidget {
             message.translatedText,
             style: context.p.copyWith(
               color: textColor,
+              fontSize: 13.5,
+              height: 1.3,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -370,7 +382,7 @@ class _MessageTextBlock extends StatelessWidget {
 
     return Text(
       message.visibleText,
-      style: context.p.copyWith(color: textColor, height: 1.35),
+      style: context.p.copyWith(color: textColor, fontSize: 13.5, height: 1.3),
     );
   }
 }

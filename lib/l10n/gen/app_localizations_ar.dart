@@ -1358,6 +1358,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chat_voice_hold_to_record => 'اضغط مطولاً لتسجيل رسالة صوتية';
 
   @override
+  String get chat_voice_tap_to_record => 'اضغط لتسجيل رسالة صوتية';
+
+  @override
+  String get chat_voice_pause => 'إيقاف التسجيل مؤقتًا';
+
+  @override
+  String get chat_voice_resume => 'استئناف التسجيل';
+
+  @override
+  String get chat_voice_delete_recording => 'حذف التسجيل';
+
+  @override
+  String get chat_voice_send_recording => 'إرسال الرسالة الصوتية';
+
+  @override
   String get chat_voice_release_to_finish => 'اترك لإنهاء التسجيل الصوتي';
 
   @override

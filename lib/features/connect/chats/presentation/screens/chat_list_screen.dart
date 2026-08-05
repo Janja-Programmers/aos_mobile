@@ -264,7 +264,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(28, 6, 28, 10),
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 6),
       child: Row(
         children: [
           _ChatFilterButton(
@@ -272,13 +272,13 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
             selected: selectedFilter == 'all',
             onTap: () => setState(() => selectedFilter = 'all'),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 6),
           _ChatFilterButton(
             label: l10n.chat_unread,
             selected: selectedFilter == 'unread',
             onTap: () => setState(() => selectedFilter = 'unread'),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 6),
           _ChatFilterButton(
             label: l10n.chat_read,
             selected: selectedFilter == 'read',
@@ -339,12 +339,13 @@ class _ChatFilterButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.p.copyWith(
+                fontSize: 13,
                 color: selected ? colors.primary : colors.textMuted,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
               ),

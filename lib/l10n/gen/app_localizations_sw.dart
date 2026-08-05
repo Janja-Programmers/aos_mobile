@@ -1388,6 +1388,21 @@ class AppLocalizationsSw extends AppLocalizations {
   String get chat_voice_hold_to_record => 'Shikilia kurekodi ujumbe wa sauti';
 
   @override
+  String get chat_voice_tap_to_record => 'Gusa kurekodi ujumbe wa sauti';
+
+  @override
+  String get chat_voice_pause => 'Sitisha kurekodi';
+
+  @override
+  String get chat_voice_resume => 'Endelea kurekodi';
+
+  @override
+  String get chat_voice_delete_recording => 'Futa rekodi';
+
+  @override
+  String get chat_voice_send_recording => 'Tuma ujumbe wa sauti';
+
+  @override
   String get chat_voice_release_to_finish => 'Achilia kumaliza kurekodi sauti';
 
   @override

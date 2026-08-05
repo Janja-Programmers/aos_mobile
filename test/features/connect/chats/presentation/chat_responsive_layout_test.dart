@@ -87,7 +87,7 @@ void main() {
                       otherAvatarUrl: null,
                       preferences: preferences,
                       onReply: (_) {},
-                      onLongPress: (_, _) {},
+                      onLongPress: (_, _, _) {},
                       onRetry: (_) {},
                       onRetryInitial: () {},
                       onRetryOlder: () {},

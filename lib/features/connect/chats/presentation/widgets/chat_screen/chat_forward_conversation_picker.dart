@@ -283,7 +283,8 @@ class _ForwardConversationTile extends StatelessWidget {
         style: context.bodyStrong,
       ),
       subtitle: Text(
-        conversation.lastMessage ?? AppLocalizations.of(context).chat_no_messages_yet,
+        conversation.lastMessage ??
+            AppLocalizations.of(context).chat_no_messages_yet,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: context.p.copyWith(color: colors.textMuted),

@@ -100,8 +100,7 @@ class ChatConversation {
           identical(lastMessageDeliveredAt, _unsetConversationField)
           ? this.lastMessageDeliveredAt
           : lastMessageDeliveredAt as DateTime?,
-      lastMessageReadAt:
-          identical(lastMessageReadAt, _unsetConversationField)
+      lastMessageReadAt: identical(lastMessageReadAt, _unsetConversationField)
           ? this.lastMessageReadAt
           : lastMessageReadAt as DateTime?,
       unreadCount: unreadCount ?? this.unreadCount,

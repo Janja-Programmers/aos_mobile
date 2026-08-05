@@ -49,7 +49,11 @@ class ConversationTile extends StatelessWidget {
         l10n.chat_typing,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: colors.success, fontStyle: FontStyle.italic),
+        style: TextStyle(
+          color: colors.success,
+          fontSize: 13,
+          fontStyle: FontStyle.italic,
+        ),
       );
     }
 
@@ -61,7 +65,7 @@ class ConversationTile extends StatelessWidget {
         message,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: colors.textMuted),
+        style: TextStyle(color: colors.textMuted, fontSize: 13),
       );
     }
 
@@ -73,6 +77,7 @@ class ConversationTile extends StatelessWidget {
           '${l10n.chat_you}: ',
           style: TextStyle(
             color: colors.textMuted,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -81,7 +86,7 @@ class ConversationTile extends StatelessWidget {
             message,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: colors.textMuted),
+            style: TextStyle(color: colors.textMuted, fontSize: 13),
           ),
         ),
       ],
@@ -112,6 +117,10 @@ class ConversationTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       onLongPress: onLongPress,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      horizontalTitleGap: 12,
+      minVerticalPadding: 6,
+      visualDensity: const VisualDensity(vertical: -1),
 
       // -------------------------
       // AVATAR
@@ -150,7 +159,7 @@ class ConversationTile extends StatelessWidget {
         conversation.displayName,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: context.bodyStrong,
+        style: context.bodyStrong.copyWith(fontSize: 14),
       ),
 
       // -------------------------
@@ -169,7 +178,7 @@ class ConversationTile extends StatelessWidget {
             Text(
               formatTime(conversation.lastMessageAt!),
               style: context.p.copyWith(
-                fontSize: 12,
+                fontSize: 11,
                 color: conversation.unreadCount > 0
                     ? colors.primary
                     : colors.textMuted,
@@ -193,7 +202,7 @@ class ConversationTile extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: context.p.copyWith(
                   color: colors.white,
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),
               ),

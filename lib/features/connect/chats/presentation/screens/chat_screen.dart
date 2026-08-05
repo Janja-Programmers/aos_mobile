@@ -256,7 +256,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (!mounted) return;
 
     if (!ok) {
-      ShowSnack(context, AppLocalizations.of(context).chat_message_still_failed).error();
+      ShowSnack(
+        context,
+        AppLocalizations.of(context).chat_message_still_failed,
+      ).error();
     }
   }
 
@@ -285,69 +288,59 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ).error();
   }
 
-  void _openMessageActions(ChatMessage message, bool isMe) {
+  void _openMessageActions(ChatMessage message, bool isMe, Offset anchor) {
     if (message.isSystemMessage) return;
 
+    final l10n = AppLocalizations.of(context);
     unawaited(
-      showModalBottomSheet<void>(
+      showGeneralDialog<void>(
         context: context,
-        isScrollControlled: true,
-        useSafeArea: true,
-        builder: (sheetContext) {
+        barrierDismissible: true,
+        barrierLabel: l10n.chat_more_options,
+        barrierColor: Colors.black.withValues(alpha: 0.26),
+        transitionDuration: const Duration(milliseconds: 160),
+        pageBuilder: (dialogContext, _, _) {
+          void closeThen(VoidCallback action) {
+            Navigator.of(dialogContext).pop();
+            action();
+          }
+
           return MessageActionsSheet(
+            anchor: anchor,
             message: message,
             isMe: isMe,
             canEdit: _canEdit(message),
-
-            onReply: () {
-              Navigator.pop(sheetContext);
-              _startReply(message);
-            },
-
-            onEdit: () {
-              Navigator.pop(sheetContext);
-              unawaited(_showEditDialog(message));
-            },
-
-            onCopy: () {
-              Navigator.pop(sheetContext);
-              unawaited(_copyMessage(message));
-            },
-
-            onToggleStar: () {
-              Navigator.pop(sheetContext);
-              unawaited(_toggleStar(message));
-            },
-
-            onToggleReaction: (emoji) {
-              Navigator.pop(sheetContext);
-              unawaited(_toggleReaction(message, emoji));
-            },
-
-            onChooseReaction: () {
-              Navigator.pop(sheetContext);
-              unawaited(_chooseReaction(message));
-            },
-
-            onTranslate: () {
-              Navigator.pop(sheetContext);
-              unawaited(_translateMessageWithPicker(message));
-            },
-
-            onForward: () {
-              Navigator.pop(sheetContext);
-              unawaited(_forwardMessage(message));
-            },
-
-            onDeleteForMe: () {
-              Navigator.pop(sheetContext);
-              unawaited(_deleteMessage(message, deleteScope: 'me'));
-            },
-
-            onDeleteForEveryone: () {
-              Navigator.pop(sheetContext);
-              unawaited(_deleteMessage(message, deleteScope: 'everyone'));
-            },
+            onReply: () => closeThen(() => _startReply(message)),
+            onEdit: () => closeThen(() => unawaited(_showEditDialog(message))),
+            onCopy: () => closeThen(() => unawaited(_copyMessage(message))),
+            onToggleStar: () =>
+                closeThen(() => unawaited(_toggleStar(message))),
+            onToggleReaction: (emoji) =>
+                closeThen(() => unawaited(_toggleReaction(message, emoji))),
+            onChooseReaction: () =>
+                closeThen(() => unawaited(_chooseReaction(message))),
+            onTranslate: () => closeThen(
+              () => unawaited(_translateMessageWithPicker(message)),
+            ),
+            onForward: () =>
+                closeThen(() => unawaited(_forwardMessage(message))),
+            onDelete: () => closeThen(
+              () => unawaited(_handleDeleteFromActions(message, isMe)),
+            ),
+          );
+        },
+        transitionBuilder: (context, animation, _, child) {
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          );
+          return FadeTransition(
+            opacity: curved,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.96, end: 1).animate(curved),
+              child: child,
+            ),
           );
         },
       ),
@@ -388,11 +381,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (!mounted) return;
     if (!ok) {
-      ShowSnack(context, AppLocalizations.of(context).chat_star_update_failed)
-          .error();
+      ShowSnack(
+        context,
+        AppLocalizations.of(context).chat_star_update_failed,
+      ).error();
     }
   }
-
 
   Future<void> _chooseReaction(ChatMessage message) async {
     final emoji = await showModalBottomSheet<String>(
@@ -457,7 +451,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (!mounted) return;
 
     if (!ok) {
-      ShowSnack(context, AppLocalizations.of(context).chat_forward_failed).error();
+      ShowSnack(
+        context,
+        AppLocalizations.of(context).chat_forward_failed,
+      ).error();
       return;
     }
 
@@ -498,9 +495,52 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (!mounted) return;
 
     if (!ok) {
-      ShowSnack(context, AppLocalizations.of(context).chat_translate_failed)
-          .error();
+      ShowSnack(
+        context,
+        AppLocalizations.of(context).chat_translate_failed,
+      ).error();
     }
+  }
+
+  Future<void> _handleDeleteFromActions(
+    ChatMessage message,
+    bool isMe,
+  ) async {
+    if (!isMe) {
+      await _deleteMessage(message, deleteScope: 'me');
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context);
+    final deleteScope = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        final colors = dialogContext.appColors;
+        return AlertDialog(
+          backgroundColor: colors.elevated,
+          title: Text(l10n.chat_delete),
+          contentPadding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.delete_outline_rounded, color: colors.red),
+                title: Text(l10n.chat_delete_for_me),
+                onTap: () => Navigator.of(dialogContext).pop('me'),
+              ),
+              ListTile(
+                leading: Icon(Icons.delete_forever_outlined, color: colors.red),
+                title: Text(l10n.chat_delete_for_everyone),
+                onTap: () => Navigator.of(dialogContext).pop('everyone'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!mounted || deleteScope == null) return;
+    await _deleteMessage(message, deleteScope: deleteScope);
   }
 
   Future<void> _deleteMessage(
@@ -513,7 +553,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (!mounted) return;
     if (!ok) {
-      ShowSnack(context, AppLocalizations.of(context).chat_delete_failed).error();
+      ShowSnack(
+        context,
+        AppLocalizations.of(context).chat_delete_failed,
+      ).error();
       return;
     }
 
@@ -579,14 +622,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       if (!mounted) return;
       if (!success) {
-        ShowSnack(context, AppLocalizations.of(context).chat_failed_to_start_call)
-            .error();
+        ShowSnack(
+          context,
+          AppLocalizations.of(context).chat_failed_to_start_call,
+        ).error();
       }
     } catch (e) {
       appLogger.e('Failed to start chat call: $e');
       if (mounted) {
-        ShowSnack(context, AppLocalizations.of(context).chat_failed_to_start_call)
-            .error();
+        ShowSnack(
+          context,
+          AppLocalizations.of(context).chat_failed_to_start_call,
+        ).error();
       }
     } finally {
       _isStartingCall = false;
@@ -628,6 +675,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         onBack: _closeChat,
       ),
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             ActiveCallChatBanner(

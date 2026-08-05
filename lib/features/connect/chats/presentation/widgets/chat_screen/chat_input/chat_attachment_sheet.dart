@@ -141,11 +141,7 @@ class _Item extends StatelessWidget {
                       color: colors.elevated,
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    child: Icon(
-                      action.icon,
-                      size: 30,
-                      color: colors.textMuted,
-                    ),
+                    child: Icon(action.icon, size: 30, color: colors.textMuted),
                   ),
                 ),
               ),

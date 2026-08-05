@@ -15,12 +15,11 @@ final chatRealtimeServiceProvider = Provider<ChatRealtimeService>((ref) {
 //********************
 // CHATMESSAGES Controller
 //********************
-final chatMessagesControllerProvider =
-    StateNotifierProvider.autoDispose.family<
-      ChatMessagesController,
-      ChatMessagesState,
-      String
-    >((ref, conversationId) {
+final chatMessagesControllerProvider = StateNotifierProvider.autoDispose
+    .family<ChatMessagesController, ChatMessagesState, String>((
+      ref,
+      conversationId,
+    ) {
       return ChatMessagesController(ref, conversationId);
     });
 

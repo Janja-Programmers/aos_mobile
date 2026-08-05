@@ -22,7 +22,8 @@ class ChatMessagesView extends StatelessWidget {
   final String? otherAvatarUrl;
   final ChatLocalPreferencesState preferences;
   final ValueChanged<ChatMessage> onReply;
-  final void Function(ChatMessage message, bool isMe) onLongPress;
+  final void Function(ChatMessage message, bool isMe, Offset anchor)
+  onLongPress;
   final ValueChanged<ChatMessage> onRetry;
   final VoidCallback onRetryInitial;
   final VoidCallback onRetryOlder;
@@ -111,7 +112,8 @@ class ChatMessagesView extends StatelessWidget {
             final message = messages[index];
             final isSystem = message.isSystemMessage;
 
-            final isMe = !isSystem &&
+            final isMe =
+                !isSystem &&
                 isMessageOwnedBy(
                   message: message,
                   authenticatedCanonicalId: currentUserId,
@@ -155,7 +157,7 @@ class ChatMessagesView extends StatelessWidget {
                     otherUserId: otherUserId,
                     otherDisplayName: otherDisplayName,
                     otherAvatarUrl: otherAvatarUrl,
-                    onLongPress: () => onLongPress(message, isMe),
+                    onLongPress: (anchor) => onLongPress(message, isMe, anchor),
                     onRetry: message.isLocalFailed
                         ? () => onRetry(message)
                         : null,
@@ -262,10 +264,7 @@ class _MessageStateView extends StatelessWidget {
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 16),
-              FilledButton(
-                onPressed: onAction,
-                child: Text(actionLabel!),
-              ),
+              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
           ],
         ),

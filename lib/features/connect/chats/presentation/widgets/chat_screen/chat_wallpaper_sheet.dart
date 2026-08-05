@@ -58,10 +58,7 @@ class ChatWallpaperSheet extends ConsumerWidget {
         await controller.setWallpaper(option.id);
         if (!context.mounted) return;
         final label = _wallpaperLabel(l10n, option.id);
-        ShowSnack(
-          context,
-          l10n.chat_named_wallpaper_applied(label),
-        ).success();
+        ShowSnack(context, l10n.chat_named_wallpaper_applied(label)).success();
       }());
     }
 

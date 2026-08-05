@@ -36,9 +36,7 @@ class ChatTypingController extends StateNotifier<Map<String, bool>> {
       if (conversationId == null) return;
 
       // 🔥 ignore own typing (IMPORTANT)
-      final fromUser = normalizeCanonicalUserId(
-        asNullableString(data['from']),
-      );
+      final fromUser = normalizeCanonicalUserId(asNullableString(data['from']));
       final currentUser = normalizeCanonicalUserId(
         ref.read(currentCanonicalAccountIdProvider),
       );

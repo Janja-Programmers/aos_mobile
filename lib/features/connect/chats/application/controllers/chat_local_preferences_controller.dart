@@ -29,38 +29,26 @@ class ChatWallpaperOption {
   final Color? borderColor;
 }
 
-const List<ChatWallpaperOption> chatSolidWallpaperOptions =
-    <ChatWallpaperOption>[
-      ChatWallpaperOption(
-        id: 'midnight',
-        label: 'Midnight',
-        color: Color(0xFF0B1724),
-      ),
-      ChatWallpaperOption(id: 'navy', label: 'Navy', color: Color(0xFF182F40)),
-      ChatWallpaperOption(
-        id: 'forest',
-        label: 'Forest',
-        color: Color(0xFF183022),
-      ),
-      ChatWallpaperOption(id: 'plum', label: 'Plum', color: Color(0xFF321B31)),
-      ChatWallpaperOption(
-        id: 'charcoal',
-        label: 'Charcoal',
-        color: Color(0xFF151515),
-        borderColor: Color(0xFF303030),
-      ),
-      ChatWallpaperOption(
-        id: 'maroon',
-        label: 'Maroon',
-        color: Color(0xFF371E20),
-      ),
-      ChatWallpaperOption(id: 'teal', label: 'Teal', color: Color(0xFF172B2A)),
-      ChatWallpaperOption(
-        id: 'coffee',
-        label: 'Coffee',
-        color: Color(0xFF2C261F),
-      ),
-    ];
+const List<ChatWallpaperOption>
+chatSolidWallpaperOptions = <ChatWallpaperOption>[
+  ChatWallpaperOption(
+    id: 'midnight',
+    label: 'Midnight',
+    color: Color(0xFF0B1724),
+  ),
+  ChatWallpaperOption(id: 'navy', label: 'Navy', color: Color(0xFF182F40)),
+  ChatWallpaperOption(id: 'forest', label: 'Forest', color: Color(0xFF183022)),
+  ChatWallpaperOption(id: 'plum', label: 'Plum', color: Color(0xFF321B31)),
+  ChatWallpaperOption(
+    id: 'charcoal',
+    label: 'Charcoal',
+    color: Color(0xFF151515),
+    borderColor: Color(0xFF303030),
+  ),
+  ChatWallpaperOption(id: 'maroon', label: 'Maroon', color: Color(0xFF371E20)),
+  ChatWallpaperOption(id: 'teal', label: 'Teal', color: Color(0xFF172B2A)),
+  ChatWallpaperOption(id: 'coffee', label: 'Coffee', color: Color(0xFF2C261F)),
+];
 
 class ChatLocalPreferencesState {
   const ChatLocalPreferencesState({
@@ -132,12 +120,11 @@ class ChatLocalPreferencesState {
 
 const Object _unset = Object();
 
-final chatLocalPreferencesControllerProvider =
-    StateNotifierProvider.autoDispose.family<
-      ChatLocalPreferencesController,
-      ChatLocalPreferencesState,
-      String
-    >((ref, conversationId) {
+final chatLocalPreferencesControllerProvider = StateNotifierProvider.autoDispose
+    .family<ChatLocalPreferencesController, ChatLocalPreferencesState, String>((
+      ref,
+      conversationId,
+    ) {
       final accountScope = _storageAccountScope(
         ref.watch(currentCanonicalAccountIdProvider),
       );

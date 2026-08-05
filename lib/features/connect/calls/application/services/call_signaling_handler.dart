@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/core/utils/media_url.dart';
 import 'package:africaonlinestores/features/connect/calls/application/managers/call_manager.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
@@ -29,6 +30,11 @@ class CallSignalingHandler {
       final receiverAvatar = _cleanString(data['receiver_avatar']);
 
       if (callId == null || roomName == null || callTypeRaw == null) {
+        appLogger.w(
+          '📞 Incoming realtime payload rejected '
+          '(callId=${callId ?? 'none'}, roomPresent=${roomName != null}, '
+          'callTypePresent=${callTypeRaw != null})',
+        );
         return false;
       }
 
@@ -62,7 +68,8 @@ class CallSignalingHandler {
         caller: caller,
         receiver: receiver,
       );
-    } catch (_) {
+    } catch (error, stackTrace) {
+      _logFailure('incoming', data, error, stackTrace);
       return false;
     }
   }
@@ -77,7 +84,9 @@ class CallSignalingHandler {
       }
 
       await callManager.onCallRingingEvent(callId: callId);
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      _logFailure('ringing', data, error, stackTrace);
+    }
   }
 
   // ================= ACCEPTED =================
@@ -89,7 +98,9 @@ class CallSignalingHandler {
       }
 
       await callManager.onCallAcceptedEvent(callId: callId);
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      _logFailure('accepted', data, error, stackTrace);
+    }
   }
 
   // ================= REJECTED =================
@@ -102,7 +113,9 @@ class CallSignalingHandler {
       }
 
       await callManager.onCallRejectedEvent(callId: callId);
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      _logFailure('rejected', data, error, stackTrace);
+    }
   }
 
   // ================= ENDED =================
@@ -115,7 +128,9 @@ class CallSignalingHandler {
       }
 
       await callManager.onCallEndedEvent(callId: callId);
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      _logFailure('ended', data, error, stackTrace);
+    }
   }
 
   // ================= HANDLECALLNOTANSWERED =================
@@ -128,7 +143,9 @@ class CallSignalingHandler {
       }
 
       await callManager.onCallNotAnswered(callId: callId);
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      _logFailure('not_answered', data, error, stackTrace);
+    }
   }
 
   // ================= CANCELLED =================
@@ -141,7 +158,9 @@ class CallSignalingHandler {
       }
 
       await callManager.onCallCancelledEvent(callId: callId);
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      _logFailure('cancelled', data, error, stackTrace);
+    }
   }
 
   // ================= VIDEO UPGRADE REQUESTED =================
@@ -163,7 +182,9 @@ class CallSignalingHandler {
         callId: callId,
         requestedBy: requestedBy,
       );
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      _logFailure('video_upgrade_requested', data, error, stackTrace);
+    }
   }
 
   // ================= VIDEO UPGRADE ACCEPTED =================
@@ -176,7 +197,9 @@ class CallSignalingHandler {
       }
 
       await callManager.onVideoUpgradeAcceptedEvent(callId: callId);
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      _logFailure('video_upgrade_accepted', data, error, stackTrace);
+    }
   }
 
   // ================= VIDEO UPGRADE DECLINED =================
@@ -189,7 +212,9 @@ class CallSignalingHandler {
       }
 
       await callManager.onVideoUpgradeDeclinedEvent(callId: callId);
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      _logFailure('video_upgrade_declined', data, error, stackTrace);
+    }
   }
 
   // ================= VIDEO UPGRADE CANCELLED =================
@@ -202,10 +227,26 @@ class CallSignalingHandler {
       }
 
       await callManager.onVideoUpgradeCancelledEvent(callId: callId);
-    } catch (_) {}
+    } catch (error, stackTrace) {
+      _logFailure('video_upgrade_cancelled', data, error, stackTrace);
+    }
   }
 
   // ================= HELPERS =================
+
+  void _logFailure(
+    String action,
+    Map<String, dynamic> data,
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    appLogger.e(
+      '📞 Realtime call signaling failed '
+      '(action=$action, callId=${_extractCallId(data) ?? 'none'})',
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
 
   String? _extractCallId(Map<String, dynamic> data) {
     return _cleanString(data['call_id']) ??
@@ -214,7 +255,7 @@ class CallSignalingHandler {
         _cleanString(data['callID']);
   }
 
-  String? _cleanString(dynamic value) {
+  String? _cleanString(Object? value) {
     if (value == null) return null;
 
     final text = value.toString().trim();

@@ -222,10 +222,7 @@ class _VoiceWaveformPainter extends CustomPainter {
     var x = barWidth / 2;
     for (final sample in visibleSamples) {
       final normalized = sample.clamp(0.0, 1.0).toDouble();
-      final barHeight = math.max(
-        minimumBarHeight,
-        maxBarHeight * normalized,
-      );
+      final barHeight = math.max(minimumBarHeight, maxBarHeight * normalized);
       canvas.drawLine(
         Offset(x, centerY - barHeight / 2),
         Offset(x, centerY + barHeight / 2),

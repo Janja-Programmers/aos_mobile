@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/core/utils/media_url.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_media_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
@@ -45,6 +46,11 @@ class CallManager extends StateNotifier<CallState> {
 
   // ================= HISTORY =================
   Future<void> loadCallLogs({String? type}) async {
+    final normalizedType = type?.trim();
+    appLogger.i(
+      '📞 Call history load started (type=${normalizedType?.isNotEmpty ?? false ? normalizedType : 'all'})',
+    );
+
     try {
       state = state.copyWith(
         isLoadingHistory: true,
@@ -54,10 +60,16 @@ class CallManager extends StateNotifier<CallState> {
       final calls = await repository.listCalls(type: type);
 
       state = state.copyWith(callLogs: calls, isLoadingHistory: false);
-    } catch (e) {
+      appLogger.i('📞 Call history load completed (count=${calls.length})');
+    } catch (error, stackTrace) {
+      appLogger.e(
+        '📞 Call history load failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       state = state.copyWith(
         isLoadingHistory: false,
-        historyErrorMessage: e.toString(),
+        historyErrorMessage: error.toString(),
       );
     }
   }
@@ -220,6 +232,11 @@ class CallManager extends StateNotifier<CallState> {
 
       _callCancelled = false;
 
+      appLogger.i(
+        '📞 Outgoing call start requested '
+        '(receiver=$trimmedUserId, type=${callType.name})',
+      );
+
       state = state.copyWith(
         isBusy: true,
         direction: 'outgoing',
@@ -228,6 +245,9 @@ class CallManager extends StateNotifier<CallState> {
 
       final conversationId = await repository.openConversation(
         userId: trimmedUserId,
+      );
+      appLogger.i(
+        '📞 Outgoing call conversation ready (conversationId=$conversationId)',
       );
 
       final initiatedCall = await repository.initiateCall(
@@ -247,6 +267,11 @@ class CallManager extends StateNotifier<CallState> {
           receiver ??
           CallParticipant(userId: trimmedUserId, displayName: trimmedUserId);
 
+      appLogger.i(
+        '📞 Backend initiated outgoing call '
+        '(callId=${initiatedCall.id}, status=initiated)',
+      );
+
       _applyBackendState(
         BackendCallStatus.initiated,
         activeCall: initiatedCall,
@@ -260,8 +285,13 @@ class CallManager extends StateNotifier<CallState> {
       state = state.copyWith(isBusy: false);
 
       return true;
-    } catch (e) {
-      await _failCall(e);
+    } catch (error, stackTrace) {
+      appLogger.e(
+        '📞 Outgoing call start failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      await _failCall(error);
       return false;
     }
   }
@@ -277,17 +307,32 @@ class CallManager extends StateNotifier<CallState> {
     CallParticipant? caller,
     CallParticipant? receiver,
   }) async {
+    appLogger.i(
+      '📞 Incoming call event received '
+      '(callId=$callId, type=${callType.name}, roomPresent=${roomName.trim().isNotEmpty})',
+    );
+
     final activeCall = state.activeCall;
 
     if (activeCall?.id == callId) {
+      appLogger.i('📞 Duplicate incoming call event ignored (callId=$callId)');
       return false;
     }
 
     if (state.isCallInProgress) {
+      appLogger.w(
+        '📞 Incoming call rejected locally because another call is active '
+        '(callId=$callId, activeCallId=${state.activeCall?.id ?? 'none'})',
+      );
       try {
         await repository.rejectCall(callId: callId);
-      } catch (_) {
-        // Best effort only.
+      } catch (error, stackTrace) {
+        appLogger.w(
+          '📞 Busy-call rejection could not be sent to backend '
+          '(callId=$callId)',
+          error: error,
+          stackTrace: stackTrace,
+        );
       }
 
       return false;
@@ -320,8 +365,14 @@ class CallManager extends StateNotifier<CallState> {
 
       try {
         await repository.markCallRinging(callId: callId);
-      } catch (_) {
-        // Best effort only.
+        appLogger.i('📞 Backend call marked ringing (callId=$callId)');
+      } catch (error, stackTrace) {
+        appLogger.w(
+          '📞 Mark-ringing request failed; incoming UI will continue '
+          '(callId=$callId)',
+          error: error,
+          stackTrace: stackTrace,
+        );
       }
 
       _applyBackendState(
@@ -334,16 +385,22 @@ class CallManager extends StateNotifier<CallState> {
       );
 
       state = state.copyWith(isBusy: false);
+      appLogger.i('📞 Incoming call state ready (callId=$callId)');
 
       return true;
-    } catch (e) {
+    } catch (error, stackTrace) {
+      appLogger.e(
+        '📞 Incoming call event handling failed (callId=$callId)',
+        error: error,
+        stackTrace: stackTrace,
+      );
       state = state.copyWith(
         isBusy: false,
         activeCallBuilder: () => null,
         callerBuilder: () => null,
         clearDirection: true,
         hasIncomingCallUi: false,
-        errorMessage: e.toString(),
+        errorMessage: error.toString(),
       );
 
       return false;
@@ -352,6 +409,9 @@ class CallManager extends StateNotifier<CallState> {
 
   Future<bool> ensureIncomingCallHydrated({required String callId}) async {
     final normalizedCallId = callId.trim();
+    appLogger.i(
+      '📞 Incoming call hydration requested (callId=$normalizedCallId)',
+    );
 
     if (normalizedCallId.isEmpty) {
       return false;
@@ -369,6 +429,10 @@ class CallManager extends StateNotifier<CallState> {
       final backendStatus = _parseBackendStatus(statusPayload['status']);
 
       if (backendStatus == null || _isTerminalStatus(backendStatus)) {
+        appLogger.i(
+          '📞 Incoming call hydration ignored because backend is not actionable '
+          '(callId=$normalizedCallId, status=${statusPayload['status'] ?? 'unknown'})',
+        );
         return false;
       }
 
@@ -419,17 +483,34 @@ class CallManager extends StateNotifier<CallState> {
         hasIncomingCallUi: true,
       );
 
+      appLogger.i(
+        '📞 Incoming call hydration completed '
+        '(callId=$normalizedCallId, status=${backendStatus.name})',
+      );
       return true;
-    } catch (_) {
+    } catch (error, stackTrace) {
+      appLogger.e(
+        '📞 Incoming call hydration failed (callId=$normalizedCallId)',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return false;
     }
   }
 
   Future<void> acceptIncomingCall({String? expectedCallId}) async {
     final callId = _resolveActionCallId(expectedCallId);
-    if (callId == null) return;
+    if (callId == null) {
+      appLogger.w('📞 Accept ignored because no active call ID is available');
+      return;
+    }
 
-    if (!_callActionLocks.add(callId)) return;
+    if (!_callActionLocks.add(callId)) {
+      appLogger.i('📞 Duplicate accept ignored (callId=$callId)');
+      return;
+    }
+
+    appLogger.i('📞 Incoming call accept started (callId=$callId)');
 
     var backendAccepted = false;
 
@@ -530,9 +611,17 @@ class CallManager extends StateNotifier<CallState> {
 
   Future<void> rejectIncomingCall({String? expectedCallId}) async {
     final callId = _resolveActionCallId(expectedCallId);
-    if (callId == null) return;
+    if (callId == null) {
+      appLogger.w('📞 Decline ignored because no active call ID is available');
+      return;
+    }
 
-    if (!_callActionLocks.add(callId)) return;
+    if (!_callActionLocks.add(callId)) {
+      appLogger.i('📞 Duplicate decline ignored (callId=$callId)');
+      return;
+    }
+
+    appLogger.i('📞 Incoming call decline started (callId=$callId)');
 
     try {
       state = state.copyWith(isBusy: true, clearErrorMessage: true);
@@ -1572,6 +1661,15 @@ class CallManager extends StateNotifier<CallState> {
       return;
     }
 
+    final previousStatus = state.backendStatus;
+    final transitionCallId = activeCall?.id ?? state.activeCall?.id;
+    appLogger.i(
+      '📞 Call state transition '
+      '(callId=${transitionCallId ?? 'none'}, '
+      'from=${previousStatus?.name ?? 'none'}, to=${nextStatus.name}, '
+      'direction=${direction ?? state.direction ?? 'none'})',
+    );
+
     final nextDirection = direction ?? state.direction;
     final nextHasIncomingUi = hasIncomingCallUi ?? state.hasIncomingCallUi;
     final nextActiveCall = activeCall ?? state.activeCall;
@@ -1662,6 +1760,11 @@ class CallManager extends StateNotifier<CallState> {
   }
 
   Future<void> _failCall(Object error) async {
+    appLogger.e(
+      '📞 Call flow failed (callId=${state.activeCall?.id ?? 'none'})',
+      error: error,
+      stackTrace: StackTrace.current,
+    );
     await _leaveRoomInternal();
     _stopStatusReconciliation();
 
@@ -1704,8 +1807,15 @@ class CallManager extends StateNotifier<CallState> {
     final userId = receiver?.userId.trim();
 
     if (userId == null || userId.isEmpty) {
+      appLogger.w(
+        '📞 Call again ignored because receiver identity is unavailable',
+      );
       return false;
     }
+
+    appLogger.i(
+      '📞 Call again requested (receiver=$userId, type=${callType.name})',
+    );
 
     return startOutgoingCall(
       userId: userId,

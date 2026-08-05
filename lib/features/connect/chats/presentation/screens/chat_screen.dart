@@ -502,10 +502,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  Future<void> _handleDeleteFromActions(
-    ChatMessage message,
-    bool isMe,
-  ) async {
+  Future<void> _handleDeleteFromActions(ChatMessage message, bool isMe) async {
     if (!isMe) {
       await _deleteMessage(message, deleteScope: 'me');
       return;

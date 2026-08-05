@@ -24,6 +24,8 @@ void main() {
     expect(params.android?.ringtonePath, 'system_ringtone_default');
     expect(params.android?.incomingCallNotificationChannelName, 'AOS Calls');
     expect(params.android?.isShowFullLockedScreen, isTrue);
+    expect(params.missedCallNotification?.showNotification, isFalse);
+    expect(params.missedCallNotification?.isShowCallback, isFalse);
   });
 
   test('outgoing params start native call with callee and canonical id', () {

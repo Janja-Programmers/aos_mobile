@@ -22,97 +22,102 @@ class SocketCallListener {
 
   void attach() {
     unawaited(_sub?.cancel());
+    appLogger.i('📞 SocketCallListener attached');
 
-    _sub = eventStream.listen((event) async {
-      switch (event.type) {
-        case RealtimeEventType.aosIncomingCall:
-          appLogger.i('📞 incoming-call');
+    _sub = eventStream.listen(
+      (event) async {
+        final data = asJsonMap(event.data);
+        final callId = _extractCallId(data);
 
-          final data = asJsonMap(event.data);
+        switch (event.type) {
+          case RealtimeEventType.aosIncomingCall:
+            _logRealtimeEvent('incoming', callId);
+            await signalingHandler.handleIncomingCall(data);
+            break;
 
-          await signalingHandler.handleIncomingCall(data);
+          case RealtimeEventType.aosCallRinging:
+            _logRealtimeEvent('ringing', callId);
+            await signalingHandler.handleCallRinging(data);
+            break;
 
-          break;
+          case RealtimeEventType.aosCallAccepted:
+            _logRealtimeEvent('accepted', callId);
+            await signalingHandler.handleCallAccepted(data);
+            break;
 
-        case RealtimeEventType.aosCallRinging:
-          appLogger.i('📳 call-ringing');
-          await signalingHandler.handleCallRinging(asJsonMap(event.data));
-          break;
+          case RealtimeEventType.aosCallNotAnswered:
+            _logRealtimeEvent('not_answered', callId);
+            await signalingHandler.handleCallNotAnswered(data);
+            await _endNativeCallFromPayload(data);
+            break;
 
-        case RealtimeEventType.aosCallAccepted:
-          appLogger.i('✅ call-accepted');
-          await signalingHandler.handleCallAccepted(asJsonMap(event.data));
-          break;
+          case RealtimeEventType.aosCallRejected:
+            _logRealtimeEvent('rejected', callId);
+            await signalingHandler.handleCallRejected(data);
+            await _endNativeCallFromPayload(data);
+            break;
 
-        case RealtimeEventType.aosCallNotAnswered:
-          appLogger.i('📵 call-not-answered');
-          await signalingHandler.handleCallNotAnswered(asJsonMap(event.data));
+          case RealtimeEventType.aosCallEnded:
+            _logRealtimeEvent('ended', callId);
+            await signalingHandler.handleCallEnded(data);
+            await _endNativeCallFromPayload(data);
+            break;
 
-          await _endNativeCallFromPayload(asJsonMap(event.data));
-          break;
+          case RealtimeEventType.aosCallCancelled:
+            _logRealtimeEvent('cancelled', callId);
+            await signalingHandler.handleCallCancelled(data);
+            await _endNativeCallFromPayload(data);
+            break;
 
-        case RealtimeEventType.aosCallRejected:
-          appLogger.i('❌ call-rejected');
-          await signalingHandler.handleCallRejected(asJsonMap(event.data));
+          case RealtimeEventType.aosCallVideoUpgradeRequested:
+            _logRealtimeEvent('video_upgrade_requested', callId);
+            await signalingHandler.handleVideoUpgradeRequested(data);
+            break;
 
-          await _endNativeCallFromPayload(asJsonMap(event.data));
-          break;
+          case RealtimeEventType.aosCallVideoUpgradeAccepted:
+            _logRealtimeEvent('video_upgrade_accepted', callId);
+            await signalingHandler.handleVideoUpgradeAccepted(data);
+            break;
 
-        case RealtimeEventType.aosCallEnded:
-          appLogger.i('🔚 call-ended');
-          await signalingHandler.handleCallEnded(asJsonMap(event.data));
+          case RealtimeEventType.aosCallVideoUpgradeDeclined:
+            _logRealtimeEvent('video_upgrade_declined', callId);
+            await signalingHandler.handleVideoUpgradeDeclined(data);
+            break;
 
-          await _endNativeCallFromPayload(asJsonMap(event.data));
-          break;
+          case RealtimeEventType.aosCallVideoUpgradeCancelled:
+            _logRealtimeEvent('video_upgrade_cancelled', callId);
+            await signalingHandler.handleVideoUpgradeCancelled(data);
+            break;
 
-        case RealtimeEventType.aosCallCancelled:
-          appLogger.i('📴 call-cancelled');
-          await signalingHandler.handleCallCancelled(asJsonMap(event.data));
+          default:
+            break;
+        }
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        appLogger.e(
+          '📞 SocketCallListener stream failed',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      },
+    );
+  }
 
-          await _endNativeCallFromPayload(asJsonMap(event.data));
-          break;
-
-        case RealtimeEventType.aosCallVideoUpgradeRequested:
-          appLogger.i('📹 video-upgrade-requested');
-          await signalingHandler.handleVideoUpgradeRequested(
-            asJsonMap(event.data),
-          );
-          break;
-
-        case RealtimeEventType.aosCallVideoUpgradeAccepted:
-          appLogger.i('✅ video-upgrade-accepted');
-          await signalingHandler.handleVideoUpgradeAccepted(
-            asJsonMap(event.data),
-          );
-          break;
-
-        case RealtimeEventType.aosCallVideoUpgradeDeclined:
-          appLogger.i('🚫 video-upgrade-declined');
-          await signalingHandler.handleVideoUpgradeDeclined(
-            asJsonMap(event.data),
-          );
-          break;
-
-        case RealtimeEventType.aosCallVideoUpgradeCancelled:
-          appLogger.i('📵 video-upgrade-cancelled');
-          await signalingHandler.handleVideoUpgradeCancelled(
-            asJsonMap(event.data),
-          );
-          break;
-
-        default:
-          break;
-      }
-    });
+  void _logRealtimeEvent(String event, String? callId) {
+    appLogger.i(
+      '📞 Realtime call event (event=$event, callId=${callId ?? 'none'})',
+    );
   }
 
   Future<void> _endNativeCallFromPayload(Map<String, dynamic> data) async {
-    final callId =
-        _cleanString(data['call_id']) ??
+    await callKitService.endCall(callId: _extractCallId(data));
+  }
+
+  String? _extractCallId(Map<String, dynamic> data) {
+    return _cleanString(data['call_id']) ??
         _cleanString(data['id']) ??
         _cleanString(data['callId']) ??
         _cleanString(data['callID']);
-    await callKitService.endCall(callId: callId);
   }
 
   String? _cleanString(Object? value) {
@@ -126,6 +131,9 @@ class SocketCallListener {
   }
 
   void detach() {
+    if (_sub != null) {
+      appLogger.i('📞 SocketCallListener detached');
+    }
     unawaited(_sub?.cancel());
     _sub = null;
   }

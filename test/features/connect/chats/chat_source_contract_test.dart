@@ -35,7 +35,10 @@ void main() {
     expect(screen, contains('currentCanonicalAccountIdProvider'));
     expect(messagesView, contains('isMessageOwnedBy'));
     expect(messagesView, isNot(contains('senderDisplayName ==')));
-    expect(messagesView, isNot(contains('message.senderCanonicalId == currentUserId')));
+    expect(
+      messagesView,
+      isNot(contains('message.senderCanonicalId == currentUserId')),
+    );
     expect(accountProvider, contains("clean.startsWith('ACC-')"));
     expect(accountProvider, contains('auth is! AuthAuthenticated'));
     expect(screen, isNot(contains('currentUserProvider')));
@@ -81,5 +84,4 @@ void main() {
     expect(sending, isNot(contains('String? senderId')));
     expect(screen, isNot(contains('senderId: currentUserId')));
   });
-
 }

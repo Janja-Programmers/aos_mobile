@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
@@ -37,13 +38,30 @@ class _CallListScreenState extends ConsumerState<CallListScreen>
 
     _query = widget.searchQuery ?? '';
 
-    unawaited(_initializeScreen());
+    // Riverpod 3 rejects provider mutations while the widget tree is mounting.
+    // Defer history loading until the first frame has completed.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_initializeScreen());
+    });
   }
 
   Future<void> _initializeScreen() async {
-    await ref.read(callManagerProvider.notifier).loadCallLogs();
-    if (!mounted) return;
-    await _refreshFullScreenIntentStatus();
+    appLogger.i('📞 Calls screen initialization started');
+
+    try {
+      await ref.read(callManagerProvider.notifier).loadCallLogs();
+      if (!mounted) return;
+
+      await _refreshFullScreenIntentStatus();
+      appLogger.i('📞 Calls screen initialization completed');
+    } catch (error, stackTrace) {
+      appLogger.e(
+        '📞 Calls screen initialization failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   @override

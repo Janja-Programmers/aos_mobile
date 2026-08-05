@@ -66,7 +66,7 @@ void main() {
     expect(requestBody, contains('requestFullIntentPermission()'));
   });
 
-  test('notification permission is requested only while undecided', () {
+  test('Android 13 notification permission ambiguity is tracked', () {
     final source = File(
       'lib/features/notifications/application/services/'
       'push_notification_service.dart',
@@ -77,7 +77,9 @@ void main() {
 
     expect(requestBody, contains('getNotificationSettings()'));
     expect(requestBody, contains('AuthorizationStatus.denied'));
-    expect(requestBody, contains('requestPermission()'));
+    expect(requestBody, contains('_notificationPermissionRequestedKey'));
+    expect(requestBody, contains('SharedPreferences.getInstance()'));
+    expect(requestBody, contains('requestPermission('));
   });
 
   test('calls UI exposes explicit full-screen settings action', () {
@@ -103,5 +105,60 @@ void main() {
     expect(source, isNot(contains('CallEventActionCallDecline')));
     expect(source, isNot(contains('CallEventActionCallEnded')));
     expect(source, isNot(contains('CallEventActionCallTimeout')));
+  });
+
+  test('push token registration is independent of display permission', () {
+    final source = File(
+      'lib/features/notifications/application/services/'
+      'push_notification_service.dart',
+    ).readAsStringSync();
+    final initBody = source
+        .split('Future<void> init() async {')[1]
+        .split('Future<bool> _requestPermission()')[0];
+
+    expect(initBody, contains('await _setupToken();'));
+    expect(
+      initBody,
+      isNot(contains('if (permissionGranted) {\n        await _setupToken();')),
+    );
+    expect(source, contains('result.leftOrNull'));
+    expect(source, contains('result.rightOrNull != true'));
+  });
+
+  test('call and notification initial loads are deferred until post-frame', () {
+    final callsSource = File(
+      'lib/features/connect/calls/presentation/screens/call_list_screen.dart',
+    ).readAsStringSync();
+    final notificationsSource = File(
+      'lib/features/notifications/presentation/screens/'
+      'notification_screen.dart',
+    ).readAsStringSync();
+
+    expect(callsSource, contains('addPostFrameCallback'));
+    expect(notificationsSource, contains('addPostFrameCallback'));
+    expect(notificationsSource, isNot(contains('Future<void>.microtask(()')));
+  });
+
+  test('persistent missed-call action starts a real callback flow', () {
+    final source = File(
+      'lib/features/notifications/presentation/screens/'
+      'notification_screen.dart',
+    ).readAsStringSync();
+
+    expect(source, contains('missedCallCallbackServiceProvider'));
+    expect(source, contains('notification.payload.callId'));
+    expect(source, contains('callerUserId: callerUserId'));
+  });
+
+  test('Android call plugin configuration matches locked plugin docs', () {
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+    final proguard = File('android/app/proguard-rules.pro').readAsStringSync();
+
+    expect(manifest, contains('android:launchMode="singleInstance"'));
+    expect(manifest, contains('android.permission.ACCESS_NETWORK_STATE'));
+    expect(manifest, contains('android.permission.CHANGE_NETWORK_STATE'));
+    expect(proguard, contains('com.hiennv.flutter_callkit_incoming.**'));
   });
 }

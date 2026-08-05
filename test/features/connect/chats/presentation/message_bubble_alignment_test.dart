@@ -20,10 +20,7 @@ void main() {
 
   testWidgets('authenticated user message is aligned right', (tester) async {
     await tester.pumpTestApp(
-      MessageBubble(
-        message: message(sender: 'ACC-CURRENT'),
-        isMe: true,
-      ),
+      MessageBubble(message: message(sender: 'ACC-CURRENT'), isMe: true),
     );
 
     final align = tester.widget<Align>(
@@ -41,10 +38,7 @@ void main() {
 
   testWidgets('incoming user message is aligned left', (tester) async {
     await tester.pumpTestApp(
-      MessageBubble(
-        message: message(sender: 'ACC-OTHER'),
-        isMe: false,
-      ),
+      MessageBubble(message: message(sender: 'ACC-OTHER'), isMe: false),
     );
 
     final align = tester.widget<Align>(

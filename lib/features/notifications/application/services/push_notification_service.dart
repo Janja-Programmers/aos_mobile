@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/device/device_id.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/incoming_call_bootstrapper.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/call_runtime_log.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_pending_payload_store.dart';
 import 'package:africaonlinestores/features/notifications/application/controllers/notification_controller.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_notification_service.dart';
@@ -14,6 +17,7 @@ import 'package:africaonlinestores/features/notifications/domain/notification_ty
 import 'package:africaonlinestores/features/notifications/domain/push_token_device.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PushNotificationService {
   final FirebaseMessaging _messaging;
@@ -37,6 +41,8 @@ class PushNotificationService {
   static const int _maxTokenRetryAttempts = 8;
   static const Duration _apnsWaitTimeout = Duration(seconds: 10);
   static const Duration _apnsPollInterval = Duration(milliseconds: 500);
+  static const String _notificationPermissionRequestedKey =
+      'aos_notification_permission_requested_v1';
 
   PushNotificationService({
     required FirebaseMessaging messaging,
@@ -64,33 +70,43 @@ class PushNotificationService {
 
     appLogger.i('🔔 PushNotificationService init');
 
+    var permissionGranted = false;
     try {
-      final permissionGranted = await _requestPermission();
-      await _configureForegroundPresentation();
-
-      _listenTokenRefresh();
-      _listenForeground();
-      _listenNotificationTap();
-
-      await _handleTerminatedLaunch();
-      await _handlePendingCallkitPayload();
-
-      if (permissionGranted) {
-        await _setupToken();
-      } else {
-        appLogger.i(
-          '🔕 Notifications are disabled. Push token registration is deferred.',
-        );
-      }
-    } catch (e, s) {
+      permissionGranted = await _requestPermission();
+    } catch (error, stackTrace) {
+      // Permission inspection must not prevent FCM listeners or token
+      // registration from starting. Delivery and display are separate states.
       appLogger.w(
-        '⚠️ PushNotificationService init completed with non-fatal issue',
-        error: e,
-        stackTrace: s,
+        '⚠️ Notification permission inspection failed; continuing push setup',
+        error: error,
+        stackTrace: stackTrace,
       );
-
-      _scheduleTokenRetry();
     }
+
+    await _configureForegroundPresentation();
+
+    _listenTokenRefresh();
+    _listenForeground();
+    _listenNotificationTap();
+
+    await _handleTerminatedLaunch();
+    await _handlePendingCallkitPayload();
+
+    if (!permissionGranted) {
+      appLogger.w(
+        '🔕 Notification display permission is not granted. '
+        'FCM token registration will still continue so the backend can '
+        'target this device and diagnostics can distinguish delivery from '
+        'display-permission failures.',
+      );
+    }
+
+    // FCM token registration must not be gated by POST_NOTIFICATIONS. The
+    // backend needs a current token even when visible notifications are
+    // disabled, and Android data messages may still reach the application.
+    await _setupToken();
+
+    appLogger.i('🔔 PushNotificationService init completed');
   }
 
   // =====================================================
@@ -100,19 +116,44 @@ class PushNotificationService {
     final currentSettings = await _messaging.getNotificationSettings();
     final currentStatus = currentSettings.authorizationStatus;
 
+    appLogger.i(
+      '🔔 Notification permission before request: ${currentStatus.name}',
+    );
+
     if (currentStatus == AuthorizationStatus.authorized ||
         currentStatus == AuthorizationStatus.provisional) {
       return true;
     }
 
-    // A denied decision must not trigger another launch-time request. The user
-    // can change it later from Android/iOS application settings.
-    if (currentStatus == AuthorizationStatus.denied) {
+    // On Apple platforms, `denied` is an actual user decision and the app
+    // cannot prompt again. Android 13+ is different: Firebase reports `denied`
+    // both before the first request and after a refusal. Persist whether AOS has
+    // already requested permission so first launch is not mistaken for denial.
+    if (Platform.isIOS && currentStatus == AuthorizationStatus.denied) {
+      appLogger.w('🔕 Notification permission is denied on iOS');
+      return false;
+    }
+
+    final preferences = await SharedPreferences.getInstance();
+    final alreadyRequested =
+        preferences.getBool(_notificationPermissionRequestedKey) ?? false;
+
+    if (Platform.isAndroid &&
+        currentStatus == AuthorizationStatus.denied &&
+        alreadyRequested) {
+      appLogger.w(
+        '🔕 Notification permission was previously requested and remains denied',
+      );
       return false;
     }
 
     final requestedSettings = await _messaging.requestPermission();
+    await preferences.setBool(_notificationPermissionRequestedKey, true);
+
     final requestedStatus = requestedSettings.authorizationStatus;
+    appLogger.i(
+      '🔔 Notification permission after request: ${requestedStatus.name}',
+    );
 
     return requestedStatus == AuthorizationStatus.authorized ||
         requestedStatus == AuthorizationStatus.provisional;
@@ -178,6 +219,10 @@ class PushNotificationService {
         _scheduleTokenRetry();
         return;
       }
+
+      appLogger.i(
+        '🔔 FCM token obtained; length=${token.length}. Registering device.',
+      );
 
       await _registerToken(token);
 
@@ -268,15 +313,47 @@ class PushNotificationService {
   }
 
   Future<void> _registerToken(String token) async {
+    final normalizedToken = token.trim();
+    if (normalizedToken.isEmpty) {
+      throw const Failure(
+        'FCM returned an empty device token.',
+        error: 'EMPTY_PUSH_TOKEN',
+      );
+    }
+
     final deviceId = await DeviceId.get();
 
-    await _pushRepo.registerPushToken(
+    appLogger.i(
+      '🔔 Registering ${_deviceType.value} push token with backend '
+      '(tokenLength=${normalizedToken.length}, deviceIdReady=${deviceId.trim().isNotEmpty})',
+    );
+
+    final result = await _pushRepo.registerPushToken(
       PushTokenDevice(
-        token: token,
+        token: normalizedToken,
         deviceType: _deviceType,
         deviceId: deviceId,
       ),
     );
+
+    final failure = result.leftOrNull;
+    if (failure != null) {
+      appLogger.e(
+        '🔔 Backend push-token registration failed '
+        '(error=${failure.error ?? 'UNKNOWN'}, status=${failure.statusCode ?? 'none'})',
+        error: failure,
+      );
+      throw failure;
+    }
+
+    if (result.rightOrNull != true) {
+      throw const Failure(
+        'Backend did not acknowledge push-token registration.',
+        error: 'PUSH_TOKEN_NOT_ACKNOWLEDGED',
+      );
+    }
+
+    appLogger.i('🔔 Backend acknowledged push-token registration');
   }
 
   void _listenTokenRefresh() {
@@ -315,17 +392,40 @@ class PushNotificationService {
 
     _foregroundSub = FirebaseMessaging.onMessage.listen((message) async {
       try {
+        final data = asJsonMap(message.data);
+        final callId = _cleanValue(data['call_id']) ?? _cleanValue(data['id']);
+        final event = _messageEvent(data);
+
+        appLogger.i(
+          '🔔 Foreground FCM received '
+          '(event=${event ?? 'unknown'}, callId=${callId ?? 'none'}, '
+          'hasNotificationBlock=${message.notification != null}, '
+          'messageId=${message.messageId ?? 'none'})',
+        );
+
+        if (_isIncomingCallEvent(event)) {
+          CallRuntimeLog.write(
+            'fcm_foreground_received',
+            callId: callId,
+            details: <String, Object?>{
+              'has_notification_block': message.notification != null,
+            },
+          );
+        }
+
         final notification = _mapMessageToNotification(message);
         if (notification == null) return;
 
-        _controller.upsertNotification(notification);
-
         if (notification.type == NotificationType.incomingCall) {
+          // Incoming calls are transient backend events. They must not be
+          // inserted into the persistent notification state.
           await _incomingCallBootstrapper.handlePushPayload(
             notification.payload.extra,
           );
           return;
         }
+
+        _controller.upsertNotification(notification);
 
         _bannerService.show(
           id: notification.id,
@@ -349,7 +449,16 @@ class PushNotificationService {
 
     _tapSub = FirebaseMessaging.onMessageOpenedApp.listen((message) async {
       try {
-        appLogger.i('📲 Notification tapped (background): ${message.data}');
+        final data = asJsonMap(message.data);
+        final callId = _cleanValue(data['call_id']) ?? _cleanValue(data['id']);
+        final event = _messageEvent(data);
+
+        appLogger.i(
+          '📲 Background notification opened '
+          '(event=${event ?? 'unknown'}, callId=${callId ?? 'none'}, '
+          'hasNotificationBlock=${message.notification != null}, '
+          'messageId=${message.messageId ?? 'none'})',
+        );
 
         final notification = _mapMessageToNotification(message);
 
@@ -383,12 +492,21 @@ class PushNotificationService {
   // TERMINATED
   // =====================================================
   Future<void> _handleTerminatedLaunch() async {
-    final message = await _messaging.getInitialMessage();
-
-    if (message == null) return;
-
     try {
-      appLogger.i('🚀 App opened from terminated push');
+      final message = await _messaging.getInitialMessage();
+
+      if (message == null) return;
+
+      final data = asJsonMap(message.data);
+      final callId = _cleanValue(data['call_id']) ?? _cleanValue(data['id']);
+      final event = _messageEvent(data);
+
+      appLogger.i(
+        '🚀 App opened from terminated push '
+        '(event=${event ?? 'unknown'}, callId=${callId ?? 'none'}, '
+        'hasNotificationBlock=${message.notification != null}, '
+        'messageId=${message.messageId ?? 'none'})',
+      );
 
       final notification = _mapMessageToNotification(message);
 
@@ -419,15 +537,27 @@ class PushNotificationService {
       final payload = await store.read();
 
       if (payload == null || payload.isEmpty) {
+        appLogger.i('📞 No pending CallKit payload to recover');
         return;
       }
+
+      final callId =
+          _cleanValue(payload['call_id']) ?? _cleanValue(payload['id']);
+      appLogger.i(
+        '📞 Recovering pending CallKit payload (callId=${callId ?? 'none'})',
+      );
 
       final handled = await _incomingCallBootstrapper.handlePushPayload(
         payload,
       );
 
       if (!handled) {
+        appLogger.i(
+          '📞 Pending CallKit payload was not actionable and will be cleared',
+        );
         await store.clear();
+      } else {
+        appLogger.i('📞 Pending CallKit payload recovery completed');
       }
     } catch (e, s) {
       appLogger.w(
@@ -450,13 +580,13 @@ class PushNotificationService {
         return null;
       }
 
-      final event =
-          data['event']?.toString() ??
-          data['notification_type']?.toString() ??
-          data['type']?.toString();
+      final event = _messageEvent(data);
 
-      if (event == null || event.trim().isEmpty) {
-        appLogger.w('⚠️ Missing notification type/event: $data');
+      if (event == null) {
+        appLogger.w(
+          '⚠️ Push payload is missing event/type '
+          '(keys=${data.keys.toList(growable: false)})',
+        );
         return null;
       }
 
@@ -477,6 +607,32 @@ class PushNotificationService {
       appLogger.e('_mapMessageToNotification failed', error: e, stackTrace: s);
       return null;
     }
+  }
+
+  String? _messageEvent(Map<String, dynamic> data) {
+    return _cleanValue(data['event']) ??
+        _cleanValue(data['notification_type']) ??
+        _cleanValue(data['type']);
+  }
+
+  bool _isIncomingCallEvent(String? value) {
+    final event = value
+        ?.trim()
+        .toLowerCase()
+        .replaceAll('-', '_')
+        .replaceAll(' ', '_');
+
+    return event == 'aos_incoming_call' ||
+        event == 'incoming_call' ||
+        event == 'call';
+  }
+
+  String? _cleanValue(Object? value) {
+    final text = value?.toString().trim();
+    if (text == null || text.isEmpty || text.toLowerCase() == 'null') {
+      return null;
+    }
+    return text;
   }
 
   // =====================================================

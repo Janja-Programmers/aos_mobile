@@ -346,10 +346,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
     await _handleVoiceRecorded(path);
   }
 
-  String _voiceErrorMessage(
-    AppLocalizations l10n,
-    VoiceRecordError error,
-  ) {
+  String _voiceErrorMessage(AppLocalizations l10n, VoiceRecordError error) {
     return switch (error) {
       VoiceRecordError.microphonePermissionDenied =>
         l10n.chat_microphone_permission_denied,

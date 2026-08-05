@@ -34,10 +34,16 @@ class RealtimeService {
   }) {
     // 🔥 Prevent duplicate connections
     if (_socket != null && _isConnected) {
+      appLogger.i('[Realtime] Connect ignored: socket already connected');
       return;
     }
 
     final url = '$baseUrl/$siteName';
+    appLogger.i(
+      '[Realtime] Connect requested '
+      '(host=${Uri.tryParse(baseUrl)?.host ?? 'unknown'}, site=$siteName, '
+      'identityPresent=${email.trim().isNotEmpty})',
+    );
 
     _socket = IO.io(
       url,
@@ -57,23 +63,38 @@ class RealtimeService {
     _socket!.onConnect((_) {
       _isConnected = true;
 
-      appLogger.i('[Realtime] ✅ Connected');
+      appLogger.i('[Realtime] ✅ Connected (site=$siteName)');
     });
 
     _socket!.onDisconnect((reason) {
       _isConnected = false;
+      final reasonText = reason is String && reason.trim().isNotEmpty
+          ? reason.trim()
+          : 'unspecified';
+      appLogger.w('[Realtime] Disconnected (reason=$reasonText)');
     });
 
-    _socket!.onReconnect((_) {
+    _socket!.onReconnect((attempt) {
       _isConnected = true;
+      appLogger.i('[Realtime] Reconnected (attempt=$attempt)');
     });
 
-    _socket!.onConnectError((err) {
+    _socket!.onConnectError((error) {
       _isConnected = false;
+      appLogger.e(
+        '[Realtime] Connection failed',
+        error: error,
+        stackTrace: StackTrace.current,
+      );
     });
 
-    _socket!.onError((err) {
+    _socket!.onError((error) {
       _isConnected = false;
+      appLogger.e(
+        '[Realtime] Socket error',
+        error: error,
+        stackTrace: StackTrace.current,
+      );
     });
 
     // -----------------------------
@@ -114,6 +135,9 @@ class RealtimeService {
   // Disconnect
   // -----------------------------
   void disconnect() {
+    if (_socket != null || _isConnected) {
+      appLogger.i('[Realtime] Disconnect requested');
+    }
     _socket?.dispose();
     _socket = null;
     _isConnected = false;

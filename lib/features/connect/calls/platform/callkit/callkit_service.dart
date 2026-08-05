@@ -78,7 +78,7 @@ class CallKitService {
     } catch (error, stackTrace) {
       CallRuntimeLog.write(
         'callkit_full_screen_intent_status_failed',
-        details: <String, Object?>{'error_type': error.runtimeType.toString()},
+        details: const <String, Object?>{'failure': 'native_error'},
       );
       appLogger.w(
         '⚠️ Could not read full-screen incoming-call access',
@@ -109,7 +109,7 @@ class CallKitService {
     } catch (error, stackTrace) {
       CallRuntimeLog.write(
         'callkit_full_screen_intent_request_failed',
-        details: <String, Object?>{'error_type': error.runtimeType.toString()},
+        details: const <String, Object?>{'failure': 'native_error'},
       );
       appLogger.w(
         '⚠️ Could not open full-screen incoming-call settings',
@@ -149,15 +149,29 @@ class CallKitService {
     _shownIncomingCallIds.add(normalizedCallId);
     _currentCallId = normalizedCallId;
 
-    await pendingPayloadStore.save(
-      asJsonMap(
-        params.extra ??
-            <String, dynamic>{
-              'call_id': normalizedCallId,
-              'callkit_uuid': callkitUuid,
-            },
-      ),
-    );
+    try {
+      await pendingPayloadStore.save(
+        asJsonMap(
+          params.extra ??
+              <String, dynamic>{
+                'call_id': normalizedCallId,
+                'callkit_uuid': callkitUuid,
+              },
+        ),
+      );
+      appLogger.i(
+        '📞 Pending CallKit mapping persisted (callId=$normalizedCallId)',
+      );
+    } catch (error, stackTrace) {
+      // Persistence supports recovery, but must never block the live incoming
+      // call surface while the app is already running.
+      appLogger.w(
+        '📞 Could not persist CallKit mapping; showing incoming UI anyway '
+        '(callId=$normalizedCallId)',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
 
     await _showIncoming(params, backendCallId: normalizedCallId);
   }
@@ -185,7 +199,7 @@ class CallKitService {
       CallRuntimeLog.write(
         'callkit_show_failed',
         callId: backendCallId,
-        details: <String, Object?>{'error_type': error.runtimeType.toString()},
+        details: const <String, Object?>{'failure': 'native_error'},
       );
       appLogger.e(
         '❌ Failed to show CallKit incoming call',
@@ -233,7 +247,7 @@ class CallKitService {
       CallRuntimeLog.write(
         'callkit_outgoing_start_failed',
         callId: normalizedCallId,
-        details: <String, Object?>{'error_type': error.runtimeType.toString()},
+        details: const <String, Object?>{'failure': 'native_error'},
       );
       appLogger.e(
         '❌ Failed to start outgoing CallKit call',
@@ -264,7 +278,7 @@ class CallKitService {
       CallRuntimeLog.write(
         'callkit_connected_failed',
         callId: normalizedCallId,
-        details: <String, Object?>{'error_type': error.runtimeType.toString()},
+        details: const <String, Object?>{'failure': 'native_error'},
       );
       appLogger.w(
         '⚠️ Failed to mark CallKit call connected: $normalizedCallId',
@@ -368,6 +382,10 @@ class CallKitService {
 
     final callId = _currentCallId;
     final eventName = event.event.toString();
+    appLogger.i(
+      '📞 CallKit event received '
+      '(event=$eventName, callId=${callId ?? 'none'})',
+    );
     CallRuntimeLog.write(
       'callkit_event',
       callId: callId,
@@ -375,6 +393,10 @@ class CallKitService {
     );
 
     if (callId == null || callId.isEmpty || _endedCallIds.contains(callId)) {
+      appLogger.i(
+        '📞 CallKit event ignored because no actionable backend call mapping exists '
+        '(event=$eventName, callId=${callId ?? 'none'})',
+      );
       return;
     }
 
@@ -392,6 +414,10 @@ class CallKitService {
         await _handleTimeout(callId);
         return;
       default:
+        appLogger.i(
+          '📞 CallKit event has no AOS lifecycle action '
+          '(event=$eventName, callId=$callId)',
+        );
         return;
     }
   }

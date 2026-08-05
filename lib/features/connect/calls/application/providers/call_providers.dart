@@ -10,6 +10,7 @@ import 'package:africaonlinestores/features/connect/calls/application/services/c
 import 'package:africaonlinestores/features/connect/calls/application/services/call_signaling_handler.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_starter_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/incoming_call_bootstrapper.dart';
+import 'package:africaonlinestores/features/connect/calls/application/services/missed_call_callback_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/data/call_api.dart';
 import 'package:africaonlinestores/features/connect/calls/integrations/socket_call_listener.dart';
@@ -129,6 +130,18 @@ final callStarterServiceProvider = Provider<CallStarterService>((ref) {
   return CallStarterService(
     callManager: ref.read(callManagerProvider.notifier),
     callKitService: ref.read(callKitServiceProvider),
+  );
+});
+
+final missedCallCallbackServiceProvider = Provider<MissedCallCallbackService>((
+  ref,
+) {
+  final repository = ref.read(callRepositoryProvider);
+  final starter = ref.read(callStarterServiceProvider);
+
+  return MissedCallCallbackService(
+    readCallStatus: repository.getCallStatus,
+    startOutgoingCall: starter.startOutgoingCall,
   );
 });
 

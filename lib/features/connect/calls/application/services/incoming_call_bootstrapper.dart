@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_signaling_handler.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/call_runtime_log.dart';
 import 'package:africaonlinestores/features/connect/calls/repository/call_repository_impl.dart';
 
 class IncomingCallBootstrapper {
@@ -14,6 +15,9 @@ class IncomingCallBootstrapper {
   Future<bool> handlePushPayload(Map<String, dynamic> payload) async {
     try {
       if (!_isIncomingCallPayload(payload)) {
+        appLogger.i(
+          '📞 Push payload ignored because it is not an incoming call',
+        );
         return false;
       }
 
@@ -25,11 +29,25 @@ class IncomingCallBootstrapper {
         return false;
       }
 
+      appLogger.i('📞 Incoming call push bootstrap started (callId=$callId)');
+      CallRuntimeLog.write('incoming_bootstrap_started', callId: callId);
+
       final status = await repository.getCallStatus(callId: callId);
+      appLogger.i(
+        '📞 Incoming call backend status resolved '
+        '(callId=$callId, status=${status['status'] ?? 'unknown'}, '
+        'canShow=${status['can_show_incoming_ui'] ?? 'unspecified'})',
+      );
 
       if (!_canShowIncomingUi(status)) {
         appLogger.i(
-          '📞 Incoming call push ignored: stale call status=${status['status']} callId=$callId',
+          '📞 Incoming call push ignored: stale call '
+          '(status=${status['status']}, callId=$callId)',
+        );
+        CallRuntimeLog.write(
+          'incoming_bootstrap_stale',
+          callId: callId,
+          details: <String, Object?>{'status': status['status']?.toString()},
         );
         return true;
       }
@@ -45,7 +63,12 @@ class IncomingCallBootstrapper {
       final handled = await signalingHandler.handleIncomingCall(mergedPayload);
 
       appLogger.i(
-        '📞 Incoming call push bootstrap ${handled ? 'handled' : 'ignored'}: $callId',
+        '📞 Incoming call push bootstrap ${handled ? 'handled' : 'ignored'} '
+        '(callId=$callId)',
+      );
+      CallRuntimeLog.write(
+        handled ? 'incoming_bootstrap_handled' : 'incoming_bootstrap_ignored',
+        callId: callId,
       );
 
       return handled;
@@ -83,7 +106,7 @@ class IncomingCallBootstrapper {
     return isActive && (callStatus == 'initiated' || callStatus == 'ringing');
   }
 
-  bool _parseBool(dynamic value) {
+  bool _parseBool(Object? value) {
     if (value is bool) return value;
     if (value is int) return value == 1;
 
@@ -91,7 +114,7 @@ class IncomingCallBootstrapper {
     return text == '1' || text == 'true' || text == 'yes';
   }
 
-  String? _cleanString(dynamic value) {
+  String? _cleanString(Object? value) {
     final text = value?.toString().trim();
 
     if (text == null || text.isEmpty || text.toLowerCase() == 'null') {

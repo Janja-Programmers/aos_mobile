@@ -33,6 +33,13 @@ class CallKitParamsMapper {
       duration: 30000,
       textAccept: 'Accept',
       textDecline: 'Decline',
+      // The backend owns persistent missed-call notifications and their
+      // callback action. Disable the plugin's duplicate notification so there
+      // is one callback owner and one canonical caller identity path.
+      missedCallNotification: const NotificationParams(
+        showNotification: false,
+        isShowCallback: false,
+      ),
       extra: <String, dynamic>{
         'event': 'aos_incoming_call',
         'type': 'incoming_call',

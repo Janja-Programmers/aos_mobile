@@ -8,11 +8,7 @@ enum VoiceRecordStatus {
   error,
 }
 
-enum VoiceRecordError {
-  microphonePermissionDenied,
-  startFailed,
-  finishFailed,
-}
+enum VoiceRecordError { microphonePermissionDenied, startFailed, finishFailed }
 
 class VoiceRecordState {
   const VoiceRecordState({

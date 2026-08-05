@@ -666,10 +666,7 @@ class _ContactCard extends StatelessWidget {
                 ),
               ),
             ),
-            if (verified) ...[
-              const SizedBox(width: 5),
-              const VerifiedBadge(),
-            ],
+            if (verified) ...[const SizedBox(width: 5), const VerifiedBadge()],
           ],
         ),
         const SizedBox(height: 3),

@@ -54,24 +54,48 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+  } catch (error, stackTrace) {
+    appLogger.e(
+      '📞 FCM background isolate could not initialize Firebase',
+      error: error,
+      stackTrace: stackTrace,
+    );
+    return;
+  }
 
   final data = asJsonMap(message.data);
-
-  CallRuntimeLog.write(
-    'fcm_background_received',
-    callId: data['call_id']?.toString(),
-    details: <String, Object?>{
-      'has_notification_block': message.notification != null,
-      'event': data['event']?.toString(),
-      'type': data['type']?.toString(),
-    },
-  );
-
+  final callId =
+      _cleanBackgroundValue(data['call_id']) ??
+      _cleanBackgroundValue(data['id']);
   final event = _normalizePushType(data['event']);
   final type = _normalizePushType(data['type']);
   final notificationType = _normalizePushType(data['notification_type']);
   final action = _normalizePushType(data['action']);
+
+  appLogger.i(
+    '📞 FCM background message received '
+    '(event=${event ?? 'none'}, type=${type ?? 'none'}, '
+    'notificationType=${notificationType ?? 'none'}, '
+    'callId=${callId ?? 'none'}, '
+    'hasNotificationBlock=${message.notification != null}, '
+    'messageId=${message.messageId ?? 'none'})',
+  );
+
+  CallRuntimeLog.write(
+    'fcm_background_received',
+    callId: callId,
+    details: <String, Object?>{
+      'has_notification_block': message.notification != null,
+      'event': event,
+      'type': type,
+    },
+  );
 
   final isIncomingCall =
       event == 'aos_incoming_call' ||
@@ -86,32 +110,58 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   if (!isIncomingCall) {
     CallRuntimeLog.write('fcm_background_not_call');
+    appLogger.i('📞 Background FCM ignored because it is not an incoming call');
     return;
   }
 
-  final callId = data['call_id']?.toString().trim();
-  if (callId == null || callId.isEmpty || callId.toLowerCase() == 'null') {
+  if (callId == null) {
     CallRuntimeLog.write('fcm_background_missing_call_id');
+    appLogger.w('📞 Incoming-call FCM ignored because call_id is missing');
     return;
   }
-
-  final params = const CallKitPayloadMapper().fromPushData(data);
-  final pendingPayload = asJsonMap(params.extra ?? data);
-
-  await const CallKitPendingPayloadStore().save(pendingPayload);
 
   try {
+    final params = const CallKitPayloadMapper().fromPushData(data);
+    final pendingPayload = asJsonMap(params.extra ?? data);
+
+    try {
+      await const CallKitPendingPayloadStore().save(pendingPayload);
+      appLogger.i('📞 Pending CallKit payload persisted (callId=$callId)');
+    } catch (error, stackTrace) {
+      // Recovery metadata is secondary to presenting the live call. Continue
+      // to native CallKit even if local persistence is temporarily unavailable.
+      appLogger.w(
+        '📞 Pending CallKit payload could not be persisted; '
+        'showing incoming UI anyway (callId=$callId)',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
     CallRuntimeLog.write('callkit_show_requested', callId: callId);
     await FlutterCallkitIncoming.showCallkitIncoming(params);
     CallRuntimeLog.write('callkit_show_completed', callId: callId);
-  } catch (error) {
+    appLogger.i('📞 Native incoming-call UI requested (callId=$callId)');
+  } catch (error, stackTrace) {
     CallRuntimeLog.write(
       'callkit_show_failed',
       callId: callId,
-      details: <String, Object?>{'error_type': error.runtimeType.toString()},
+      details: const <String, Object?>{'failure': 'native_error'},
     );
-    rethrow;
+    appLogger.e(
+      '📞 Failed to show native incoming-call UI (callId=$callId)',
+      error: error,
+      stackTrace: stackTrace,
+    );
   }
+}
+
+String? _cleanBackgroundValue(Object? value) {
+  final text = value?.toString().trim();
+  if (text == null || text.isEmpty || text.toLowerCase() == 'null') {
+    return null;
+  }
+  return text;
 }
 
 String? _normalizePushType(Object? value) {

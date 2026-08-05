@@ -31,9 +31,6 @@ void main() {
       older: <ChatMessage>[message('MSG-2', 2), message('MSG-1', 1)],
     );
 
-    expect(
-      result.map((item) => item.id),
-      <String>['MSG-3', 'MSG-2', 'MSG-1'],
-    );
+    expect(result.map((item) => item.id), <String>['MSG-3', 'MSG-2', 'MSG-1']);
   });
 }

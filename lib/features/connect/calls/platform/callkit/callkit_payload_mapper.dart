@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/utils/media_url.dart';
 import 'package:flutter_callkit_incoming/entities/android_params.dart';
 import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/entities/ios_params.dart';
+import 'package:flutter_callkit_incoming/entities/notification_params.dart';
 import 'package:uuid/uuid.dart';
 
 class CallKitPayloadMapper {
@@ -42,6 +43,12 @@ class CallKitPayloadMapper {
       duration: 30000,
       textAccept: 'Accept',
       textDecline: 'Decline',
+      // Persistent missed-call notifications are owned by the backend. The
+      // plugin must not create a second callback notification after timeout.
+      missedCallNotification: const NotificationParams(
+        showNotification: false,
+        isShowCallback: false,
+      ),
       extra: {
         ...data,
         'call_id': callId,

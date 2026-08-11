@@ -1,11 +1,41 @@
 import 'package:africaonlinestores/core/media/livekit_service.dart';
+import 'package:africaonlinestores/core/media/livekit_track_events.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/live/domain/live_role.dart';
+import 'package:livekit_client/livekit_client.dart' as lk;
 import 'package:permission_handler/permission_handler.dart';
 
 class LiveMediaService {
+  LiveMediaService(this.liveKit);
+
   final LiveKitService liveKit;
 
-  LiveMediaService(this.liveKit);
+  lk.LocalVideoTrack? _ownedVideoTrack;
+  bool _videoTrackPublished = false;
+
+  Stream<MediaTrackEvent> get events => liveKit.events;
+  lk.LocalVideoTrack? get preparedVideoTrack => _ownedVideoTrack;
+
+  Future<lk.LocalVideoTrack> prepareCamera({required bool frontCamera}) async {
+    final existing = _ownedVideoTrack;
+    if (existing != null) return existing;
+
+    final cameraStatus = await Permission.camera.request();
+    if (!cameraStatus.isGranted) {
+      throw StateError('Camera permission is required.');
+    }
+
+    final track = await lk.LocalVideoTrack.createCameraTrack(
+      lk.CameraCaptureOptions(
+        cameraPosition: frontCamera
+            ? lk.CameraPosition.front
+            : lk.CameraPosition.back,
+      ),
+    );
+    _ownedVideoTrack = track;
+    _videoTrackPublished = false;
+    return track;
+  }
 
   Future<void> joinLive({
     required String wsUrl,
@@ -18,52 +48,55 @@ class LiveMediaService {
     final shouldPublish =
         role == AOSLiveRole.host || role == AOSLiveRole.cohost;
 
-    if (shouldPublish) {
-      final allowed = await _requestBroadcastPermissions();
-
-      if (!allowed) {
-        throw Exception('Camera and microphone permissions are required');
-      }
-    }
-
-    final uri = Uri.tryParse(wsUrl);
-
-    if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
-      throw Exception('Invalid LiveKit URL: $wsUrl');
-    }
-
-    if (uri.scheme != 'ws' && uri.scheme != 'wss') {
-      throw Exception(
-        'LiveKit URL must start with ws:// or wss://. Got: $wsUrl',
-      );
-    }
-
-    await liveKit.connect(wsUrl: wsUrl, token: token);
+    _validateWebSocketUrl(wsUrl);
 
     if (shouldPublish) {
+      await _ensureMicrophonePermission(needed: micEnabled);
+    }
+
+    try {
+      await liveKit.connect(wsUrl: wsUrl, token: token);
+      await _preferSpeakerOutput();
+
+      if (!shouldPublish) return;
+
       await liveKit.enableMicrophone(micEnabled);
-      await liveKit.enableCamera(cameraEnabled, frontCamera: frontCamera);
-      return;
-    }
 
-    await liveKit.enableMicrophone(false);
-    await liveKit.enableCamera(false);
+      if (!cameraEnabled) return;
+
+      final track =
+          _ownedVideoTrack ?? await prepareCamera(frontCamera: frontCamera);
+      await liveKit.publishVideoTrack(track);
+      _ownedVideoTrack = track;
+      _videoTrackPublished = true;
+    } on Object {
+      await liveKit.disconnect(silent: true);
+      await releaseCamera();
+      rethrow;
+    }
   }
 
   Future<void> leaveLive() async {
     await liveKit.disconnect();
+    await releaseCamera();
   }
 
-  Future<bool> _requestBroadcastPermissions() async {
-    final statuses = await [Permission.microphone, Permission.camera].request();
+  Future<void> releasePreparedCamera() async {
+    if (_videoTrackPublished) return;
+    await releaseCamera();
+  }
 
-    final micAllowed = statuses[Permission.microphone]?.isGranted ?? false;
-    final cameraAllowed = statuses[Permission.camera]?.isGranted ?? false;
-
-    return micAllowed && cameraAllowed;
+  Future<void> releaseCamera() async {
+    final track = _ownedVideoTrack;
+    _ownedVideoTrack = null;
+    _videoTrackPublished = false;
+    await track?.stop();
   }
 
   Future<void> setMicrophoneEnabled(bool enabled) async {
+    if (enabled) {
+      await _ensureMicrophonePermission(needed: true);
+    }
     await liveKit.enableMicrophone(enabled);
   }
 
@@ -71,14 +104,71 @@ class LiveMediaService {
     required bool enabled,
     required bool frontCamera,
   }) async {
-    await liveKit.enableCamera(enabled, frontCamera: frontCamera);
+    if (!enabled) {
+      await liveKit.enableCamera(false);
+      await releaseCamera();
+      return;
+    }
+
+    final track =
+        _ownedVideoTrack ?? await prepareCamera(frontCamera: frontCamera);
+    await liveKit.publishVideoTrack(track);
+    _ownedVideoTrack = track;
+    _videoTrackPublished = true;
   }
 
   Future<bool> flipCamera() async {
-    return liveKit.switchCamera();
+    final ownedTrack = _ownedVideoTrack;
+    if (ownedTrack == null) return liveKit.switchCamera();
+
+    final devices = await lk.Hardware.instance.enumerateDevices();
+    final cameras = devices
+        .where((device) => device.kind == 'videoinput')
+        .toList(growable: false);
+    if (cameras.length < 2) return false;
+
+    final currentDeviceId = ownedTrack.currentOptions.deviceId;
+    final currentIndex = cameras.indexWhere(
+      (camera) => camera.deviceId == currentDeviceId,
+    );
+    final nextIndex = currentIndex < 0
+        ? 0
+        : (currentIndex + 1) % cameras.length;
+    await ownedTrack.switchCamera(cameras[nextIndex].deviceId);
+    return true;
   }
 
   List<LiveKitViewerParticipant> getViewerParticipants() {
     return liveKit.getViewerParticipants();
+  }
+
+  Future<void> _ensureMicrophonePermission({required bool needed}) async {
+    if (!needed) return;
+    final status = await Permission.microphone.request();
+    if (!status.isGranted) {
+      throw StateError('Microphone permission is required.');
+    }
+  }
+
+  void _validateWebSocketUrl(String value) {
+    final uri = Uri.tryParse(value);
+    if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
+      throw const FormatException('Invalid LiveKit URL.');
+    }
+    if (uri.scheme != 'ws' && uri.scheme != 'wss') {
+      throw const FormatException('LiveKit URL must use ws or wss.');
+    }
+  }
+
+  Future<void> _preferSpeakerOutput() async {
+    try {
+      await liveKit.switchSpeaker(true);
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'Could not select speaker output for Live',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 }

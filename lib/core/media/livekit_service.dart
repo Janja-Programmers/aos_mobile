@@ -6,14 +6,14 @@ import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
 
 class LiveKitViewerParticipant {
-  final String user;
-  final String sessionId;
+  final String livekitIdentity;
+  final String accountId;
   final String displayName;
   final String? avatar;
 
   const LiveKitViewerParticipant({
-    required this.user,
-    required this.sessionId,
+    required this.livekitIdentity,
+    required this.accountId,
     required this.displayName,
     this.avatar,
   });
@@ -95,8 +95,7 @@ class LiveKitService {
         final track = event.track;
 
         if (track.kind == lk.TrackType.AUDIO) {
-          (track as lk.RemoteAudioTrack).start();
-          _controller.add(RemoteAudioTrackEvent(track));
+          _controller.add(RemoteAudioTrackEvent(track as lk.RemoteAudioTrack));
         }
 
         if (track.kind == lk.TrackType.VIDEO) {
@@ -107,11 +106,21 @@ class LiveKitService {
       if (event is lk.TrackUnsubscribedEvent) {
         if (event.track.kind == lk.TrackType.VIDEO) {
           _controller.add(const RemoteVideoRemovedEvent());
+          _emitExistingRemoteVideoTrack();
         }
       }
 
       if (event is lk.RoomDisconnectedEvent) {
         _controller.add(const RoomDisconnectedEvent());
+      }
+
+      if (event is lk.RoomReconnectingEvent) {
+        _controller.add(const RoomReconnectingEvent());
+      }
+
+      if (event is lk.RoomReconnectedEvent) {
+        _controller.add(const RoomReconnectedEvent());
+        emitCurrentTracks();
       }
     });
 
@@ -121,8 +130,7 @@ class LiveKitService {
         if (track == null) continue;
 
         if (track.kind == lk.TrackType.AUDIO) {
-          (track as lk.RemoteAudioTrack).start();
-          _controller.add(RemoteAudioTrackEvent(track));
+          _controller.add(RemoteAudioTrackEvent(track as lk.RemoteAudioTrack));
         }
 
         if (track.kind == lk.TrackType.VIDEO) {
@@ -134,6 +142,16 @@ class LiveKitService {
 
   Future<void> enableMicrophone(bool enabled) async {
     await _room?.localParticipant?.setMicrophoneEnabled(enabled);
+  }
+
+  Future<void> publishVideoTrack(lk.LocalVideoTrack track) async {
+    final participant = _room?.localParticipant;
+    if (participant == null) {
+      throw StateError('LiveKit room is not connected.');
+    }
+
+    await participant.publishVideoTrack(track);
+    _controller.add(LocalVideoTrackEvent(track));
   }
 
   Future<void> enableCamera(bool enabled, {bool frontCamera = true}) async {
@@ -152,12 +170,6 @@ class LiveKitService {
       ),
     );
     _emitExistingLocalVideoTrack();
-    unawaited(
-      Future<void>.delayed(
-        const Duration(milliseconds: 250),
-        _emitExistingLocalVideoTrack,
-      ),
-    );
   }
 
   Future<void> switchSpeaker(bool enabled) async {
@@ -219,7 +231,7 @@ class LiveKitService {
       );
 
       if (parsed == null) continue;
-      if (!seen.add('${parsed.user}:${parsed.sessionId}')) continue;
+      if (!seen.add(parsed.livekitIdentity)) continue;
 
       participants.add(parsed);
     }
@@ -233,45 +245,25 @@ class LiveKitService {
     required String identity,
     required String? metadata,
   }) {
-    const userPrefix = 'user:';
-    const sessionSeparator = ':session:';
-
     final metadataMap = _decodeMetadata(metadata);
     final role = metadataMap['role']?.toString().trim().toLowerCase();
     final isGuest = _metadataBool(metadataMap['is_guest']);
 
-    if (role != null && role != 'viewer') return null;
+    if (role != 'viewer') return null;
     if (isGuest) return null;
 
-    final metadataUser = metadataMap['user']?.toString().trim() ?? '';
-    final metadataSessionId =
-        metadataMap['session_id']?.toString().trim() ?? '';
-
-    String user = metadataUser;
-    String sessionId = metadataSessionId;
-
-    if (user.isEmpty || sessionId.isEmpty) {
-      if (!identity.startsWith(userPrefix) ||
-          !identity.contains(sessionSeparator)) {
-        return null;
-      }
-
-      final separatorIndex = identity.indexOf(sessionSeparator);
-      user = identity.substring(userPrefix.length, separatorIndex).trim();
-      sessionId = identity
-          .substring(separatorIndex + sessionSeparator.length)
-          .trim();
+    final accountId = metadataMap['account_id']?.toString().trim() ?? '';
+    if (!identity.startsWith('aos:participant:') || accountId.isEmpty) {
+      return null;
     }
-
-    if (user.isEmpty || sessionId.isEmpty) return null;
 
     final displayName = metadataMap['display_name']?.toString().trim();
     final avatar = metadataMap['avatar']?.toString().trim();
 
     return LiveKitViewerParticipant(
-      user: user,
-      sessionId: sessionId,
-      displayName: displayName?.isNotEmpty ?? false ? displayName! : user,
+      livekitIdentity: identity,
+      accountId: accountId,
+      displayName: displayName?.isNotEmpty ?? false ? displayName! : accountId,
       avatar: avatar?.isNotEmpty ?? false ? avatar : null,
     );
   }
@@ -288,7 +280,7 @@ class LiveKitService {
 
     try {
       final decoded = jsonDecode(metadata);
-      if (decoded is! Map) return const {};
+      if (decoded is! Map<Object?, Object?>) return const {};
       return Map<String, Object?>.from(decoded);
     } on Object {
       return const {};

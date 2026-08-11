@@ -1,4 +1,6 @@
 import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/live/domain/live_bootstrap.dart';
+import 'package:africaonlinestores/features/live/domain/live_cohost.dart';
 import 'package:africaonlinestores/features/live/domain/live_host.dart';
 import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
 import 'package:africaonlinestores/features/live/domain/live_role.dart';
@@ -17,13 +19,13 @@ AOSLiveStatus _parseStatus(String? status) {
   }
 }
 
-int _parseInt(dynamic value) {
+int _parseInt(Object? value) {
   if (value is int) return value;
   if (value is num) return value.toInt();
   return int.tryParse(value?.toString() ?? '') ?? 0;
 }
 
-bool _parseBool(dynamic value) {
+bool _parseBool(Object? value) {
   if (value is bool) return value;
   if (value is int) return value == 1;
   if (value is String) {
@@ -33,12 +35,12 @@ bool _parseBool(dynamic value) {
   return false;
 }
 
-LiveHost _parseHost(dynamic json) {
+LiveHost _parseHost(Object? json) {
   if (json == null) {
     return const LiveHost(userId: '', displayName: '');
   }
 
-  if (json is Map) {
+  if (json is Map<Object?, Object?>) {
     final map = asJsonMap(json);
 
     return LiveHost(
@@ -56,6 +58,8 @@ LiveHost _parseHost(dynamic json) {
           map['avatar_url']?.toString() ??
           map['avatar']?.toString() ??
           map['host_avatar']?.toString(),
+      isVerified: _parseBool(map['is_verified']),
+      totalFollowers: _parseInt(map['total_followers']),
     );
   }
 
@@ -83,6 +87,8 @@ LiveStream mapLiveStream(Map<String, dynamic> json) {
 
     viewerCount: _parseInt(json['viewer_count']),
     totalViews: _parseInt(json['total_views']),
+    totalJoins: _parseInt(json['total_joins']),
+    uniqueViewers: _parseInt(json['unique_viewers']),
     peakViewers: _parseInt(json['peak_viewers']),
     likeCount: _parseInt(json['like_count']),
     reactionCount: _parseInt(json['reaction_count']),
@@ -107,8 +113,13 @@ LiveStream mapLiveStream(Map<String, dynamic> json) {
     hostAvatar: json['host_avatar']?.toString(),
 
     viewerState: LiveViewerState.fromJson(
-      json['viewer_state'] is Map ? asJsonMap(json['viewer_state']) : null,
+      json['viewer_state'] is Map<Object?, Object?>
+          ? asJsonMap(json['viewer_state'])
+          : null,
     ),
+    activeCohost: json['active_cohost'] is Map<Object?, Object?>
+        ? LiveCohost.fromJson(asJsonMap(json['active_cohost']))
+        : null,
   );
 }
 
@@ -133,6 +144,32 @@ LiveJoinSession mapJoinSession(Map<String, dynamic> json, {AOSLiveRole? role}) {
     token: json['token']?.toString() ?? '',
     wsUrl: json['ws_url']?.toString() ?? '',
     role: parsedRole,
+    identity: json['identity']?.toString() ?? '',
     sessionId: json['session_id']?.toString(),
   );
+}
+
+LiveBootstrap mapLiveBootstrap(Map<String, dynamic> data) {
+  final rawLive = data['live'];
+  final rawSession = data['session'];
+
+  if (rawLive is! Map<Object?, Object?> ||
+      rawSession is! Map<Object?, Object?>) {
+    throw const FormatException('Invalid Live bootstrap response.');
+  }
+
+  final live = mapLiveStream(asJsonMap(rawLive));
+  final session = mapJoinSession(asJsonMap(rawSession));
+
+  if (live.id.isEmpty ||
+      session.liveId.isEmpty ||
+      session.liveId != live.id ||
+      session.roomName.isEmpty ||
+      session.token.isEmpty ||
+      session.wsUrl.isEmpty ||
+      session.identity.isEmpty) {
+    throw const FormatException('Incomplete Live bootstrap response.');
+  }
+
+  return LiveBootstrap(live: live, session: session);
 }

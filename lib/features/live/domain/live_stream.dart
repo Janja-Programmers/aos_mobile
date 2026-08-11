@@ -1,3 +1,4 @@
+import 'package:africaonlinestores/features/live/domain/live_cohost.dart';
 import 'package:africaonlinestores/features/live/domain/live_host.dart';
 import 'package:africaonlinestores/features/live/domain/live_status.dart';
 import 'package:africaonlinestores/features/live/domain/live_viewer_state.dart';
@@ -13,6 +14,8 @@ class LiveStream {
 
   final int viewerCount;
   final int totalViews;
+  final int totalJoins;
+  final int uniqueViewers;
   final int peakViewers;
   final int likeCount;
   final int reactionCount;
@@ -33,6 +36,7 @@ class LiveStream {
   final String? hostAvatar;
 
   final LiveViewerState viewerState;
+  final LiveCohost? activeCohost;
 
   const LiveStream({
     required this.id,
@@ -42,6 +46,8 @@ class LiveStream {
     required this.host,
     required this.viewerCount,
     required this.totalViews,
+    required this.totalJoins,
+    required this.uniqueViewers,
     required this.peakViewers,
     required this.likeCount,
     required this.reactionCount,
@@ -52,6 +58,7 @@ class LiveStream {
     required this.hostUser,
     required this.hostDisplayName,
     required this.viewerState,
+    this.activeCohost,
     this.startedAt,
     this.endedAt,
     this.coverImage,
@@ -68,6 +75,8 @@ class LiveStream {
       host: const LiveHost(userId: '', displayName: ''),
       viewerCount: 0,
       totalViews: 0,
+      totalJoins: 0,
+      uniqueViewers: 0,
       peakViewers: 0,
       likeCount: 0,
       reactionCount: 0,
@@ -89,6 +98,8 @@ class LiveStream {
     LiveHost? host,
     int? viewerCount,
     int? totalViews,
+    int? totalJoins,
+    int? uniqueViewers,
     int? peakViewers,
     int? likeCount,
     int? reactionCount,
@@ -104,6 +115,8 @@ class LiveStream {
     String? hostDisplayName,
     String? hostAvatar,
     LiveViewerState? viewerState,
+    LiveCohost? activeCohost,
+    bool clearActiveCohost = false,
   }) {
     return LiveStream(
       id: id ?? this.id,
@@ -113,6 +126,8 @@ class LiveStream {
       host: host ?? this.host,
       viewerCount: viewerCount ?? this.viewerCount,
       totalViews: totalViews ?? this.totalViews,
+      totalJoins: totalJoins ?? this.totalJoins,
+      uniqueViewers: uniqueViewers ?? this.uniqueViewers,
       peakViewers: peakViewers ?? this.peakViewers,
       likeCount: likeCount ?? this.likeCount,
       reactionCount: reactionCount ?? this.reactionCount,
@@ -129,6 +144,9 @@ class LiveStream {
       hostDisplayName: hostDisplayName ?? this.hostDisplayName,
       hostAvatar: hostAvatar ?? this.hostAvatar,
       viewerState: viewerState ?? this.viewerState,
+      activeCohost: clearActiveCohost
+          ? null
+          : activeCohost ?? this.activeCohost,
     );
   }
 }

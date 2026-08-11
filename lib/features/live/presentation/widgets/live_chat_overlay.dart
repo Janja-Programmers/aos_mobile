@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 class LiveChatOverlay extends StatefulWidget {
-  final List<LiveChatMessage> messages;
+  const LiveChatOverlay({super.key, required this.messages, this.bottom = 122});
 
-  const LiveChatOverlay({super.key, required this.messages});
+  final List<LiveChatMessage> messages;
+  final double bottom;
 
   @override
   State<LiveChatOverlay> createState() => _LiveChatOverlayState();
@@ -33,13 +34,21 @@ class _LiveChatOverlayState extends State<LiveChatOverlay> {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final visibleMessages = widget.messages.take(10).toList(growable: false);
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final idealHeight = (screenHeight * .34).clamp(56.0, 260.0).toDouble();
+    final availableHeight = (screenHeight - widget.bottom - 96)
+        .clamp(56.0, 260.0)
+        .toDouble();
+    final overlayHeight = idealHeight < availableHeight
+        ? idealHeight
+        : availableHeight;
 
-    return Positioned(
-      left: 12,
-      right: 78,
-      bottom: 122,
+    return PositionedDirectional(
+      start: 12,
+      end: 78,
+      bottom: widget.bottom,
       child: SizedBox(
-        height: 260,
+        height: overlayHeight,
         child: ListView.builder(
           scrollCacheExtent: const ScrollCacheExtent.pixels(120),
           controller: _scrollController,
@@ -51,7 +60,7 @@ class _LiveChatOverlayState extends State<LiveChatOverlay> {
 
             return RepaintBoundary(
               child: Align(
-                alignment: Alignment.centerLeft,
+                alignment: AlignmentDirectional.centerStart,
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 5),
                   padding: const EdgeInsets.symmetric(

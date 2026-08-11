@@ -6,6 +6,7 @@ import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/live/data/live_mapper.dart';
 import 'package:africaonlinestores/features/live/domain/live_cohost.dart';
 import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
@@ -33,13 +34,11 @@ class LiveCohostApi {
 
   Future<Either<Failure, LiveCohost>> inviteCohost({
     required String liveId,
-    required String targetUser,
-    String? sessionId,
+    required String livekitIdentity,
   }) {
     return _cohostPost(ApiEndpoints.inviteLiveCohost, {
       'live_id': liveId,
-      'target_user': targetUser,
-      if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
+      'livekit_identity': livekitIdentity,
     });
   }
 
@@ -65,6 +64,16 @@ class LiveCohostApi {
     });
   }
 
+  Future<Either<Failure, LiveCohost>> cancelCohost({
+    required String cohostId,
+    String? reason,
+  }) {
+    return _cohostPost(ApiEndpoints.cancelLiveCohost, {
+      'cohost_id': cohostId,
+      if (reason?.trim().isNotEmpty ?? false) 'reason': reason!.trim(),
+    });
+  }
+
   Future<Either<Failure, void>> endCohost({required String cohostId}) async {
     try {
       final res = await _client.post(
@@ -74,9 +83,14 @@ class LiveCohostApi {
       final unwrapped = unwrapFrappe(res);
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
       return Either.right(null);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'endCohost response failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return Either.left(const Failure('Failed to end co-host.'));
     }
   }
@@ -100,9 +114,14 @@ class LiveCohostApi {
       return Either.right(
         items.map(LiveCohost.fromJson).toList(growable: false),
       );
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'listCohosts response failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return Either.left(const Failure('Failed to load co-hosts.'));
     }
   }
@@ -123,13 +142,18 @@ class LiveCohostApi {
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
       final data = asJsonMap(asJsonMap(unwrapped.rightOrNull)['data']);
       final session = data['session'] ?? data;
-      if (session is! Map) {
+      if (session is! Map<Object?, Object?>) {
         return Either.left(const Failure('Invalid co-host token response.'));
       }
       return Either.right(mapJoinSession(asJsonMap(session)));
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'getCohostToken response failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return Either.left(const Failure('Failed to get co-host token.'));
     }
   }
@@ -144,13 +168,18 @@ class LiveCohostApi {
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
       final payload = asJsonMap(asJsonMap(unwrapped.rightOrNull)['data']);
       final raw = payload['cohost'];
-      if (raw is! Map) {
+      if (raw is! Map<Object?, Object?>) {
         return Either.left(const Failure('Invalid co-host response.'));
       }
       return Either.right(LiveCohost.fromJson(asJsonMap(raw)));
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'Cohost mutation response failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return Either.left(const Failure('Failed to update co-host.'));
     }
   }

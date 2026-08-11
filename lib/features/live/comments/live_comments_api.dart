@@ -6,6 +6,7 @@ import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/live/comments/live_comment.dart';
 import 'package:africaonlinestores/features/live/comments/live_comment_mapper.dart';
 import 'package:africaonlinestores/features/live/comments/live_comment_model.dart';
@@ -46,9 +47,14 @@ class LiveCommentsApi {
 
         return Either.right(items);
       });
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'listComments response failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return Either.left(
         const Failure('Unexpected error fetching live comments'),
       );
@@ -84,9 +90,14 @@ class LiveCommentsApi {
 
         return Either.right(items);
       });
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'listReplies response failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return Either.left(
         const Failure('Unexpected error fetching live replies'),
       );
@@ -97,6 +108,7 @@ class LiveCommentsApi {
     required String liveId,
     required String comment,
     String? sessionId,
+    String? idempotencyKey,
   }) async {
     try {
       final res = await _client.post(
@@ -105,6 +117,8 @@ class LiveCommentsApi {
           'live_id': liveId,
           'content': comment,
           if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
+          if (idempotencyKey?.isNotEmpty ?? false)
+            'idempotency_key': idempotencyKey,
         },
       );
 
@@ -114,7 +128,7 @@ class LiveCommentsApi {
         final data = asJsonMap(json['data']);
         final raw = data['message'];
 
-        if (raw is! Map) {
+        if (raw is! Map<Object?, Object?>) {
           return Either.left(const Failure('Invalid live comment response'));
         }
 
@@ -130,9 +144,14 @@ class LiveCommentsApi {
 
         return Either.right(LiveCommentMapper.toDomain(model));
       });
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'addComment response failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return Either.left(const Failure('Unexpected error adding live comment'));
     }
   }
@@ -160,7 +179,7 @@ class LiveCommentsApi {
         final data = asJsonMap(json['data']);
         final raw = data['message'];
 
-        if (raw is! Map) {
+        if (raw is! Map<Object?, Object?>) {
           return Either.left(
             const Failure('Invalid reply response', type: FailureType.parse),
           );
@@ -170,9 +189,14 @@ class LiveCommentsApi {
           LiveCommentMapper.toDomain(LiveCommentModel.fromJson(asJsonMap(raw))),
         );
       });
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'replyComment response failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return Either.left(
         const Failure('Unexpected error replying to live comment'),
       );
@@ -191,9 +215,14 @@ class LiveCommentsApi {
       final unwrapped = unwrapFrappe(res);
 
       return unwrapped.fold(Either.left, (_) => Either.right(null));
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (_) {
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'deleteComment response failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return Either.left(
         const Failure('Unexpected error deleting live comment'),
       );

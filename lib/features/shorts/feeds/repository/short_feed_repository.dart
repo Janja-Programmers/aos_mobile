@@ -91,19 +91,15 @@ class ShortsRepository {
 
   /// LIVE FEED
   Future<LiveFeedPage> fetchLive({int limit = 20, String? cursor}) async {
-    final start = int.tryParse(cursor ?? '') ?? 0;
+    final result = await _liveApi.listLives(limit: limit, cursor: cursor);
 
-    final result = await _liveApi.listLives(start: start, limit: limit);
-
-    return result.fold((failure) => throw Exception(failure.message), (items) {
-      final nextStart = start + items.length;
-      final hasMore = items.length == limit;
-
-      return LiveFeedPage(
-        items: items,
-        nextCursor: hasMore ? nextStart.toString() : null,
-        hasMore: hasMore,
-      );
-    });
+    return result.fold(
+      (failure) => throw failure,
+      (page) => LiveFeedPage(
+        items: page.items,
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
+      ),
+    );
   }
 }

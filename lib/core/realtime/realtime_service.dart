@@ -3,13 +3,12 @@ import 'dart:async';
 import 'package:africaonlinestores/core/realtime/realtime_event.dart';
 import 'package:africaonlinestores/core/realtime/realtime_event_type.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
-// ignore: library_prefixes
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class RealtimeService {
   RealtimeService(/* deps */);
 
-  IO.Socket? _socket;
+  io.Socket? _socket;
 
   // -----------------------------
   // Connection State
@@ -22,6 +21,8 @@ class RealtimeService {
   // -----------------------------
   final _controller = StreamController<RealtimeEvent>.broadcast();
   Stream<RealtimeEvent> get events => _controller.stream;
+  final _connectionController = StreamController<void>.broadcast();
+  Stream<void> get connections => _connectionController.stream;
 
   // -----------------------------
   // Connect
@@ -45,9 +46,9 @@ class RealtimeService {
       'identityPresent=${email.trim().isNotEmpty})',
     );
 
-    _socket = IO.io(
+    _socket = io.io(
       url,
-      IO.OptionBuilder()
+      io.OptionBuilder()
           .setPath('/socket.io')
           .setTransports(['websocket'])
           .disableAutoConnect()
@@ -62,6 +63,7 @@ class RealtimeService {
     // -----------------------------
     _socket!.onConnect((_) {
       _isConnected = true;
+      _connectionController.add(null);
 
       appLogger.i('[Realtime] ✅ Connected (site=$siteName)');
     });
@@ -76,6 +78,7 @@ class RealtimeService {
 
     _socket!.onReconnect((attempt) {
       _isConnected = true;
+      _connectionController.add(null);
       appLogger.i('[Realtime] Reconnected (attempt=$attempt)');
     });
 
@@ -149,5 +152,6 @@ class RealtimeService {
   void dispose() {
     disconnect();
     unawaited(_controller.close());
+    unawaited(_connectionController.close());
   }
 }

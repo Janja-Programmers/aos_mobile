@@ -77,8 +77,9 @@ class _ShortListScreenState extends State<ShortListScreen> {
                                 contentMode: _selectedContentMode,
                                 categoryLabel: _selectedCategoryLabel,
                               ),
-                              const ShortsFeedTab(
+                              ShortsFeedTab(
                                 feedType: ShortsFeedType.live,
+                                isActive: isLiveTab,
                               ),
                             ],
                           ),

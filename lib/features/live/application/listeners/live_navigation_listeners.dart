@@ -23,11 +23,8 @@ class _LiveNavigationListenerState
   void initState() {
     super.initState();
 
-    appLogger.i('init socketLiveListenerProvider');
-
-    Future.microtask(() {
-      ref.read(socketLiveListenerProvider);
-    });
+    appLogger.i('Initializing Live realtime coordinator');
+    ref.read(liveRealtimeCoordinatorProvider);
   }
 
   @override
@@ -61,9 +58,7 @@ class _LiveNavigationListenerState
 
       router.goNamed(AppRoutes.nLiveRoom);
 
-      Future.microtask(() {
-        _isNavigating = false;
-      });
+      _isNavigating = false;
 
       return;
     }
@@ -74,9 +69,7 @@ class _LiveNavigationListenerState
 
       router.goNamed(AppRoutes.nHome);
 
-      Future.microtask(() {
-        _isNavigating = false;
-      });
+      _isNavigating = false;
     }
   }
 }

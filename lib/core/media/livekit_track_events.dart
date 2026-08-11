@@ -39,6 +39,14 @@ class RoomConnectedEvent extends MediaTrackEvent {
   const RoomConnectedEvent();
 }
 
+class RoomReconnectingEvent extends MediaTrackEvent {
+  const RoomReconnectingEvent();
+}
+
+class RoomReconnectedEvent extends MediaTrackEvent {
+  const RoomReconnectedEvent();
+}
+
 class RoomDisconnectedEvent extends MediaTrackEvent {
   const RoomDisconnectedEvent();
 }

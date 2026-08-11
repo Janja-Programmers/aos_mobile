@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/media/livekit_track_events.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
 import 'package:africaonlinestores/features/live/domain/live_stream.dart';
 import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
@@ -17,17 +19,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:livekit_client/livekit_client.dart' as lk;
 
 class ShortsFeedTab extends ConsumerStatefulWidget {
   final ShortsFeedType feedType;
   final String? contentMode;
   final String? categoryLabel;
+  final bool isActive;
 
   const ShortsFeedTab({
     super.key,
     required this.feedType,
     this.contentMode,
     this.categoryLabel,
+    this.isActive = true,
   });
 
   @override
@@ -36,6 +41,7 @@ class ShortsFeedTab extends ConsumerStatefulWidget {
 
 class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
   final _scrollController = ScrollController();
+  final _pageController = PageController();
 
   late final ShortsRepository _repository;
 
@@ -45,7 +51,12 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
   bool _hasMore = true;
   bool _isLoading = false;
   bool _isLoadingMore = false;
+  String? _errorMessage;
   int _requestGeneration = 0;
+  StreamSubscription<MediaTrackEvent>? _mediaSubscription;
+  lk.RemoteVideoTrack? _remoteVideoTrack;
+  String? _activeLiveId;
+  int _activeLiveIndex = 0;
 
   bool get _canLoadMore {
     return !_isLoading &&
@@ -65,6 +76,11 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
 
     unawaited(_loadInitial());
     _scrollController.addListener(_onScroll);
+    if (widget.feedType == ShortsFeedType.live) {
+      final liveKit = ref.read(liveKitCoreProvider);
+      _mediaSubscription = liveKit.events.listen(_onMediaEvent);
+      liveKit.emitCurrentTracks();
+    }
   }
 
   @override
@@ -72,6 +88,16 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
+    _pageController.dispose();
+    unawaited(_mediaSubscription?.cancel());
+    final activeLiveId = _activeLiveId;
+    if (activeLiveId != null) {
+      unawaited(
+        ref
+            .read(liveManagerProvider.notifier)
+            .leaveBackgroundLive(activeLiveId),
+      );
+    }
 
     super.dispose();
   }
@@ -82,10 +108,20 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
 
     if (oldWidget.contentMode != widget.contentMode ||
         oldWidget.feedType != widget.feedType) {
+      _deactivateVisibleLive();
       unawaited(_loadInitial());
 
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(0);
+      }
+    }
+
+    if (oldWidget.isActive != widget.isActive &&
+        widget.feedType == ShortsFeedType.live) {
+      if (widget.isActive) {
+        unawaited(_activateVisibleLive(_activeLiveIndex));
+      } else {
+        _deactivateVisibleLive();
       }
     }
   }
@@ -139,6 +175,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
       _items.clear();
       _nextCursor = null;
       _hasMore = true;
+      _errorMessage = null;
     });
 
     try {
@@ -154,13 +191,22 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
         _nextCursor = page.nextCursor;
         _hasMore = page.hasMore;
       });
-    } catch (_) {
+      if (feedType == ShortsFeedType.live && widget.isActive) {
+        await _activateVisibleLive(0);
+      }
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'Feed initial load failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted || generation != _requestGeneration) return;
 
       setState(() {
         _items.clear();
         _nextCursor = null;
         _hasMore = false;
+        _errorMessage = 'Could not load this feed.';
       });
     } finally {
       if (mounted && generation == _requestGeneration) {
@@ -196,7 +242,12 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
         _nextCursor = page.nextCursor;
         _hasMore = page.hasMore;
       });
-    } catch (_) {
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'Feed pagination failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
     } finally {
       if (mounted && generation == _requestGeneration) {
         setState(() => _isLoadingMore = false);
@@ -213,6 +264,78 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     if (extentAfter < 700) {
       unawaited(_loadMore());
     }
+  }
+
+  void _onMediaEvent(MediaTrackEvent event) {
+    if (!mounted || widget.feedType != ShortsFeedType.live) return;
+    if (event is RemoteVideoTrackEvent) {
+      if (_remoteVideoTrack == null) {
+        setState(() => _remoteVideoTrack = event.track);
+      }
+      return;
+    }
+    if (event is RemoteVideoRemovedEvent || event is TrackClearedEvent) {
+      setState(() => _remoteVideoTrack = null);
+    }
+  }
+
+  Future<void> _activateVisibleLive(int index) async {
+    if (!mounted ||
+        !widget.isActive ||
+        widget.feedType != ShortsFeedType.live ||
+        index < 0 ||
+        index >= _items.length) {
+      return;
+    }
+
+    final live = _items[index];
+    if (live is! LiveStream ||
+        !live.isActive ||
+        live.viewerState.isHost ||
+        !live.viewerState.canWatch ||
+        !live.viewerState.canJoin) {
+      _deactivateVisibleLive();
+      return;
+    }
+
+    _activeLiveIndex = index;
+    if (_activeLiveId != live.id) {
+      setState(() {
+        _activeLiveId = live.id;
+        _remoteVideoTrack = null;
+      });
+    }
+
+    final joined = await ref
+        .read(liveManagerProvider.notifier)
+        .joinLive(liveId: live.id, showLiveUi: false);
+    if (!mounted || _activeLiveId != live.id || !widget.isActive) {
+      return;
+    }
+    if (!joined) {
+      setState(() {
+        _activeLiveId = null;
+        _remoteVideoTrack = null;
+      });
+      return;
+    }
+    ref.read(liveKitCoreProvider).emitCurrentTracks();
+  }
+
+  void _deactivateVisibleLive() {
+    final liveId = _activeLiveId;
+    _activeLiveId = null;
+    _remoteVideoTrack = null;
+    if (liveId == null) return;
+    unawaited(
+      ref.read(liveManagerProvider.notifier).leaveBackgroundLive(liveId),
+    );
+  }
+
+  void _onLivePageChanged(int index) {
+    _activeLiveIndex = index;
+    unawaited(_activateVisibleLive(index));
+    if (index >= _items.length - 3) unawaited(_loadMore());
   }
 
   void _openDetail(int index) {
@@ -246,6 +369,9 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
         key: ValueKey('live_${item.id}'),
         child: LiveCard(
           live: item,
+          isActive: _activeLiveId == item.id,
+          remoteVideoTrack: _activeLiveId == item.id ? _remoteVideoTrack : null,
+          fullScreen: widget.feedType == ShortsFeedType.live,
           onTap: () {
             LiveNavigation.toLiveRoom(context, liveId: item.id);
           },
@@ -268,6 +394,28 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     }
 
     if (!_isLoading && _items.isEmpty) {
+      if (_errorMessage != null) {
+        return Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: context.p,
+                ),
+                const SizedBox(height: 12),
+                FilledButton.tonal(
+                  onPressed: () => unawaited(_loadInitial()),
+                  child: const Text('Try again'),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
       return EmptyShortsView(
         feedType: widget.feedType,
         categoryLabel: widget.categoryLabel,
@@ -307,6 +455,26 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
               ),
             ],
           ),
+        ],
+      );
+    }
+
+    if (widget.feedType == ShortsFeedType.live) {
+      return Stack(
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            scrollDirection: Axis.vertical,
+            itemCount: _items.length,
+            onPageChanged: _onLivePageChanged,
+            itemBuilder: _buildShortItem,
+          ),
+          if (_isLoadingMore)
+            const PositionedDirectional(
+              end: 16,
+              bottom: 16,
+              child: SafeArea(child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
         ],
       );
     }

@@ -4,16 +4,28 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/live/domain/live_stream.dart';
+import 'package:africaonlinestores/features/live/presentation/widgets/live_video_stage.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/bottom_caption_overlay.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/right_metrics_overlay.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/feed/short_card/short_thumbnail.dart';
 import 'package:flutter/material.dart';
+import 'package:livekit_client/livekit_client.dart' as lk;
 
 class LiveCard extends StatelessWidget {
   final LiveStream live;
   final VoidCallback onTap;
+  final bool isActive;
+  final bool fullScreen;
+  final lk.RemoteVideoTrack? remoteVideoTrack;
 
-  const LiveCard({super.key, required this.live, required this.onTap});
+  const LiveCard({
+    super.key,
+    required this.live,
+    required this.onTap,
+    this.isActive = false,
+    this.fullScreen = false,
+    this.remoteVideoTrack,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,26 +36,46 @@ class LiveCard extends StatelessWidget {
     final imageUrl =
         _safeFileUrl(live.thumbnail) ?? _safeFileUrl(live.coverImage) ?? '';
 
-    final sellerName = live.hostDisplayName.trim().isNotEmpty
-        ? live.hostDisplayName.trim()
+    final sellerName = live.host.displayName.trim().isNotEmpty
+        ? live.host.displayName.trim()
         : 'Live';
 
-    final avatarUrl = _safeFileUrl(live.hostAvatar);
+    final avatarUrl = _safeFileUrl(live.host.avatarUrl);
+
+    final borderRadius = fullScreen
+        ? BorderRadius.zero
+        : BorderRadius.circular(16);
 
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: borderRadius,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.border.withValues(alpha: .55)),
+            color: colors.black,
+            borderRadius: borderRadius,
+            border: fullScreen
+                ? null
+                : Border.all(color: colors.border.withValues(alpha: .55)),
           ),
           child: Stack(
+            fit: fullScreen ? StackFit.expand : StackFit.loose,
             children: [
-              ShortThumbnail(imageUrl: imageUrl),
+              if (isActive && remoteVideoTrack != null)
+                LiveVideoStage(
+                  track: remoteVideoTrack,
+                  emptyLabel: 'Connecting…',
+                )
+              else
+                ShortThumbnail(imageUrl: imageUrl, fit: BoxFit.cover),
+              if (isActive && remoteVideoTrack == null)
+                const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                ),
 
               Positioned.fill(
                 child: IgnorePointer(
@@ -63,23 +95,27 @@ class LiveCard extends StatelessWidget {
                 ),
               ),
 
-              const Positioned(top: 8, left: 8, child: _LiveBadge()),
+              const PositionedDirectional(
+                top: 8,
+                start: 8,
+                child: _LiveBadge(),
+              ),
 
-              Positioned(
-                right: 7,
+              PositionedDirectional(
+                end: 7,
                 bottom: 12,
                 child: RightMetricsOverlay(
                   avatarUrl: avatarUrl,
                   sellerName: sellerName,
-                  likeCount: live.likeCount,
+                  likeCount: live.reactionCount,
                   commentCount: live.commentCount,
                   isLiked: false,
                 ),
               ),
 
-              Positioned(
-                left: 9,
-                right: 48,
+              PositionedDirectional(
+                start: 9,
+                end: 48,
                 bottom: 10,
                 child: BottomCaptionOverlay(
                   caption: caption,

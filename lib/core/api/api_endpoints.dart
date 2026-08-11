@@ -222,6 +222,8 @@ class ApiEndpoints {
       '/api/method/aos.api.v1.live.delete_live_message';
   static const String sendLiveReaction =
       '/api/method/aos.api.v1.live.send_reaction';
+  static const String shareLiveToChat =
+      '/api/method/aos.api.v1.live.share_live_to_chat';
 
   // ───────────── SHORTS ─────────────
 

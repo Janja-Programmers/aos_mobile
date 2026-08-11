@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/features/live/application/state/live_status_enum.dart';
 import 'package:africaonlinestores/features/live/application/state/room_state_enum.dart';
 import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
+import 'package:africaonlinestores/features/live/domain/live_reaction.dart';
 import 'package:africaonlinestores/features/live/domain/live_role.dart';
 import 'package:africaonlinestores/features/live/domain/live_stream.dart';
 import 'package:flutter/foundation.dart';
@@ -29,9 +30,14 @@ class LiveState {
 
   // Metrics
   final int viewerCount;
+  final int reactionTrigger;
+  final LiveReactionType lastReactionType;
 
   // UI
   final bool hasLiveUi;
+  final bool isEnding;
+  final bool isReacting;
+  final String? activeCohostId;
 
   // Error
   final String? errorMessage;
@@ -49,7 +55,12 @@ class LiveState {
     required this.isCameraEnabled,
     required this.isFrontCamera,
     required this.viewerCount,
+    required this.reactionTrigger,
+    required this.lastReactionType,
     required this.hasLiveUi,
+    required this.isEnding,
+    required this.isReacting,
+    required this.activeCohostId,
     required this.errorMessage,
   });
 
@@ -67,7 +78,12 @@ class LiveState {
       isCameraEnabled: true,
       isFrontCamera: true,
       viewerCount: 0,
+      reactionTrigger: 0,
+      lastReactionType: LiveReactionType.like,
       hasLiveUi: false,
+      isEnding: false,
+      isReacting: false,
+      activeCohostId: null,
       errorMessage: null,
     );
   }
@@ -88,7 +104,13 @@ class LiveState {
     bool? isCameraEnabled,
     bool? isFrontCamera,
     int? viewerCount,
+    int? reactionTrigger,
+    LiveReactionType? lastReactionType,
     bool? hasLiveUi,
+    bool? isEnding,
+    bool? isReacting,
+    String? activeCohostId,
+    bool clearActiveCohostId = false,
     String? errorMessage,
     bool clearError = false,
   }) {
@@ -105,7 +127,14 @@ class LiveState {
       isCameraEnabled: isCameraEnabled ?? this.isCameraEnabled,
       isFrontCamera: isFrontCamera ?? this.isFrontCamera,
       viewerCount: viewerCount ?? this.viewerCount,
+      reactionTrigger: reactionTrigger ?? this.reactionTrigger,
+      lastReactionType: lastReactionType ?? this.lastReactionType,
       hasLiveUi: hasLiveUi ?? this.hasLiveUi,
+      isEnding: isEnding ?? this.isEnding,
+      isReacting: isReacting ?? this.isReacting,
+      activeCohostId: clearActiveCohostId
+          ? null
+          : activeCohostId ?? this.activeCohostId,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
@@ -124,7 +153,12 @@ class LiveState {
       isCameraEnabled: true,
       isFrontCamera: true,
       viewerCount: 0,
+      reactionTrigger: reactionTrigger,
+      lastReactionType: lastReactionType,
       hasLiveUi: false,
+      isEnding: false,
+      isReacting: false,
+      activeCohostId: null,
       errorMessage: null,
     );
   }
@@ -143,7 +177,12 @@ class LiveState {
       isCameraEnabled: true,
       isFrontCamera: true,
       viewerCount: 0,
+      reactionTrigger: reactionTrigger,
+      lastReactionType: lastReactionType,
       hasLiveUi: false,
+      isEnding: false,
+      isReacting: false,
+      activeCohostId: null,
       errorMessage: null,
     );
   }

@@ -1,46 +1,39 @@
-// ✅ CORE
+import 'dart:async';
+
 import 'package:africaonlinestores/core/media/livekit_service.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
-// MANAGER
+import 'package:africaonlinestores/features/live/application/controllers/live_cohost_controller.dart';
 import 'package:africaonlinestores/features/live/application/managers/live_manager.dart';
 import 'package:africaonlinestores/features/live/application/services/live_media_service.dart';
-// SERVICES
-import 'package:africaonlinestores/features/live/application/services/live_signaling_handler.dart';
-// STATE
+import 'package:africaonlinestores/features/live/application/services/live_realtime_coordinator.dart';
+import 'package:africaonlinestores/features/live/application/services/live_sharing_service.dart';
 import 'package:africaonlinestores/features/live/application/state/live_state.dart';
-// DATA
+import 'package:africaonlinestores/features/live/comments/live_comments_controller.dart';
 import 'package:africaonlinestores/features/live/data/live_api.dart';
-// INTEGRATIONS
-import 'package:africaonlinestores/features/live/integrations/socket_live_listener.dart';
+import 'package:africaonlinestores/features/live/data/live_cohost_api.dart';
 import 'package:africaonlinestores/features/live/repository/live_repository_impl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-// ================= API =================
 final liveApiProvider = Provider<LiveApi>((ref) {
-  final apiClient = ref.watch(apiClientProvider);
-  return LiveApi(apiClient);
+  return LiveApi(ref.watch(apiClientProvider));
 });
 
-// ================= REPOSITORY =================
 final liveRepositoryProvider = Provider<LiveRepository>((ref) {
-  final api = ref.watch(liveApiProvider);
-  return LiveRepositoryImpl(api);
+  return LiveRepositoryImpl(ref.watch(liveApiProvider));
 });
 
-// ================= CORE =================
 final liveKitCoreProvider = Provider<LiveKitService>((ref) {
-  return LiveKitService();
+  final service = LiveKitService();
+  ref.onDispose(() => unawaited(service.dispose()));
+  return service;
 });
 
-// ================= MEDIA =================
 final liveMediaServiceProvider = Provider<LiveMediaService>((ref) {
-  final liveKit = ref.watch(liveKitCoreProvider);
-  return LiveMediaService(liveKit);
+  return LiveMediaService(ref.watch(liveKitCoreProvider));
 });
 
-// ================= MANAGER =================
 final liveManagerProvider = StateNotifierProvider<LiveManager, LiveState>((
   ref,
 ) {
@@ -51,26 +44,28 @@ final liveManagerProvider = StateNotifierProvider<LiveManager, LiveState>((
   );
 });
 
-// ================= SIGNALING =================
-final liveSignalingHandlerProvider = Provider<LiveSignalingHandler>((ref) {
-  final manager = ref.read(liveManagerProvider.notifier);
+final liveCohostControllerProvider =
+    StateNotifierProvider<LiveCohostController, LiveCohostState>((ref) {
+      return LiveCohostController(
+        ref.read(liveCohostApiProvider),
+        ref.read(liveManagerProvider.notifier),
+      );
+    });
 
-  return LiveSignalingHandler(liveManager: manager);
+final liveSharingServiceProvider = Provider<LiveSharingService>((ref) {
+  return LiveSharingService(ref.read(liveRepositoryProvider));
 });
 
-// ================= SOCKET LISTENER =================
-final socketLiveListenerProvider = Provider<SocketLiveListener>((ref) {
-  final realtime = ref.watch(realtimeServiceProvider);
-  final handler = ref.watch(liveSignalingHandlerProvider);
-
-  final listener = SocketLiveListener(
-    eventStream: realtime.events,
-    signalingHandler: handler,
+final liveRealtimeCoordinatorProvider = Provider<LiveRealtimeCoordinator>((
+  ref,
+) {
+  final coordinator = LiveRealtimeCoordinator(
+    realtime: ref.read(realtimeServiceProvider),
+    liveManager: ref.read(liveManagerProvider.notifier),
+    commentsController: ref.read(liveCommentsControllerProvider.notifier),
+    cohostController: ref.read(liveCohostControllerProvider.notifier),
   );
-
-  listener.attach();
-
-  ref.onDispose(listener.dispose);
-
-  return listener;
+  coordinator.start();
+  ref.onDispose(() => unawaited(coordinator.dispose()));
+  return coordinator;
 });

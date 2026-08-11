@@ -6,13 +6,13 @@ import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
 import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_video_stage.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
-import 'package:permission_handler/permission_handler.dart';
 
 class GoLiveScreen extends ConsumerStatefulWidget {
   const GoLiveScreen({super.key});
@@ -37,6 +37,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
 
   bool _isFlippingCamera = false;
   bool _isFrontCamera = true;
+  bool _previewTransferred = false;
 
   @override
   void initState() {
@@ -44,42 +45,18 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     unawaited(_startCameraPreview());
   }
 
-  Future<lk.LocalVideoTrack> _createPreviewTrack({required bool frontCamera}) {
-    return lk.LocalVideoTrack.createCameraTrack(
-      lk.CameraCaptureOptions(
-        cameraPosition: frontCamera
-            ? lk.CameraPosition.front
-            : lk.CameraPosition.back,
-      ),
-    );
-  }
-
   Future<void> _startCameraPreview() async {
     if (_isStartingPreview || _previewTrack != null) return;
 
     setState(() => _isStartingPreview = true);
 
-    final statuses = await [Permission.camera, Permission.microphone].request();
-    final cameraAllowed = statuses[Permission.camera]?.isGranted ?? false;
-    final micAllowed = statuses[Permission.microphone]?.isGranted ?? false;
-
-    if (!cameraAllowed || !micAllowed) {
-      if (mounted) {
-        ShowSnack(
-          context,
-          'Camera and microphone permissions are required.',
-        ).error();
-
-        setState(() => _isStartingPreview = false);
-      }
-      return;
-    }
-
     try {
-      final track = await _createPreviewTrack(frontCamera: _isFrontCamera);
+      final track = await ref
+          .read(liveMediaServiceProvider)
+          .prepareCamera(frontCamera: _isFrontCamera);
 
       if (!mounted) {
-        await track.stop();
+        await ref.read(liveMediaServiceProvider).releasePreparedCamera();
         return;
       }
 
@@ -87,7 +64,12 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
         _previewTrack = track;
         _isStartingPreview = false;
       });
-    } catch (_) {
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'Live camera preview failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
 
       setState(() => _isStartingPreview = false);
@@ -96,58 +78,28 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
   }
 
   Future<void> _flipPreviewCamera() async {
-    final oldTrack = _previewTrack;
-
-    if (oldTrack == null || _isFlippingCamera || _isStartingPreview) {
+    if (_previewTrack == null || _isFlippingCamera || _isStartingPreview) {
       return;
     }
 
     setState(() => _isFlippingCamera = true);
 
-    final nextIsFrontCamera = !_isFrontCamera;
-
     try {
-      setState(() => _previewTrack = null);
-
-      await oldTrack.stop();
-
-      // Some Android camera stacks, especially MIUI/Xiaomi, need a tiny
-      // release window before opening the opposite camera.
-      await Future<void>.delayed(const Duration(milliseconds: 180));
-
-      final newTrack = await _createPreviewTrack(
-        frontCamera: nextIsFrontCamera,
-      );
-
-      if (!mounted) {
-        await newTrack.stop();
+      final switched = await ref.read(liveMediaServiceProvider).flipCamera();
+      if (!mounted) return;
+      if (!switched) {
+        ShowSnack(context, 'No alternate camera is available.').error();
         return;
       }
-
-      setState(() {
-        _previewTrack = newTrack;
-        _isFrontCamera = nextIsFrontCamera;
-      });
-    } catch (_) {
+      setState(() => _isFrontCamera = !_isFrontCamera);
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'Live preview camera flip failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       if (!mounted) return;
-
       ShowSnack(context, 'Could not flip camera.').error();
-
-      try {
-        final fallbackTrack = await _createPreviewTrack(
-          frontCamera: _isFrontCamera,
-        );
-
-        if (!mounted) {
-          await fallbackTrack.stop();
-          return;
-        }
-
-        setState(() => _previewTrack = fallbackTrack);
-      } catch (_) {
-        if (!mounted) return;
-        setState(() => _previewTrack = null);
-      }
     } finally {
       if (mounted) {
         setState(() => _isFlippingCamera = false);
@@ -157,10 +109,12 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
 
   Future<void> _pickAndUploadImage() async {
     final file = await MediaHelper.pickImageFromGallery();
-    if (file == null) return;
+    if (file == null || !mounted) return;
 
     setState(() {
       _selectedImage = file;
+      _uploadedImageUrl = null;
+      _uploadedCoverMediaId = null;
       _isUploading = true;
     });
 
@@ -177,18 +131,24 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
 
     if (!mounted) return;
 
+    if (uploaded == null) {
+      setState(() => _isUploading = false);
+      ShowSnack(context, 'Could not upload the Live cover.').error();
+      return;
+    }
+
     setState(() {
       _isUploading = false;
-      _uploadedImageUrl = uploaded?.url;
-      _uploadedCoverMediaId = uploaded?.mediaId;
+      _uploadedImageUrl = uploaded.url;
+      _uploadedCoverMediaId = uploaded.mediaId;
     });
   }
 
   Future<void> _startLive() async {
     final title = _titleController.text.trim();
 
-    if (_uploadedCoverMediaId == null || title.isEmpty) {
-      ShowSnack(context, 'Add cover image and title').error();
+    if (title.isEmpty) {
+      ShowSnack(context, 'Add a live title.').error();
       return;
     }
 
@@ -212,30 +172,35 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     final hadPreviewCamera = _previewTrack != null;
     final micEnabled = !_isMicMuted;
     final frontCamera = _isFrontCamera;
+    _previewTransferred = true;
 
-    await _previewTrack?.stop();
-    _previewTrack = null;
-
-    await ref
+    final started = await ref
         .read(liveManagerProvider.notifier)
         .startLive(
           title: title,
-          coverImage: _uploadedImageUrl ?? '',
-          coverMediaId: _uploadedCoverMediaId!,
+          coverImage: _uploadedImageUrl,
+          coverMediaId: _uploadedCoverMediaId,
           micEnabled: micEnabled,
           cameraEnabled: hadPreviewCamera,
           frontCamera: frontCamera,
         );
 
     if (mounted) {
-      setState(() => _isCountingDown = false);
+      setState(() {
+        _isCountingDown = false;
+        _previewTransferred = started;
+        if (!started) _previewTrack = null;
+      });
+      if (!started) unawaited(_startCameraPreview());
     }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
-    _previewTrack?.stop();
+    if (!_previewTransferred) {
+      unawaited(ref.read(liveMediaServiceProvider).releasePreparedCamera());
+    }
     super.dispose();
   }
 
@@ -272,57 +237,85 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
             ),
           ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      IconButton.filled(
-                        style: IconButton.styleFrom(
-                          backgroundColor: colors.black.withValues(alpha: .45),
-                        ),
-                        onPressed: () => Navigator.of(context).maybePop(),
-                        icon: const Icon(Icons.close, color: Colors.white),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight > 32
+                          ? constraints.maxHeight - 32
+                          : 0,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              IconButton.filled(
+                                tooltip: 'Close',
+                                style: IconButton.styleFrom(
+                                  backgroundColor: colors.black.withValues(
+                                    alpha: .45,
+                                  ),
+                                ),
+                                onPressed: _close,
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const Spacer(),
+                              IconButton.filled(
+                                tooltip: 'Flip camera',
+                                onPressed: _isFlippingCamera
+                                    ? null
+                                    : _flipPreviewCamera,
+                                icon: const Icon(Icons.cameraswitch_outlined),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton.filled(
+                                tooltip: _isMicMuted
+                                    ? 'Unmute'
+                                    : 'Mute microphone',
+                                onPressed: _isFlippingCamera
+                                    ? null
+                                    : () => setState(
+                                        () => _isMicMuted = !_isMicMuted,
+                                      ),
+                                icon: Icon(
+                                  _isMicMuted
+                                      ? Icons.mic_off_outlined
+                                      : Icons.mic_none_outlined,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          _buildSetupCard(context),
+                        ],
                       ),
-                      const Spacer(),
-                      _roundAction(
-                        icon: Icons.cameraswitch_outlined,
-                        label: _isFlippingCamera ? 'Flipping' : 'Flip',
-                        onTap: _isFlippingCamera ? null : _flipPreviewCamera,
-                      ),
-                      const SizedBox(width: 10),
-                      _roundAction(
-                        icon: _isMicMuted
-                            ? Icons.mic_off_outlined
-                            : Icons.mic_none_outlined,
-                        label: _isMicMuted ? 'Muted' : 'Mic',
-                        onTap: _isFlippingCamera
-                            ? null
-                            : () => setState(() => _isMicMuted = !_isMicMuted),
-                      ),
-                    ],
+                    ),
                   ),
-                  const Spacer(),
-                  _buildSetupCard(context),
-                ],
-              ),
+                );
+              },
             ),
           ),
           if (_countdown != null)
             Positioned.fill(
-              child: Container(
+              child: ColoredBox(
                 color: colors.black.withValues(alpha: .42),
-                alignment: Alignment.center,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  child: Text(
-                    '$_countdown',
-                    key: ValueKey(_countdown),
-                    style: context.display.copyWith(
-                      color: Colors.white,
-                      fontSize: 92,
-                      fontWeight: FontWeight.w900,
+                child: Center(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    child: Text(
+                      '$_countdown',
+                      key: ValueKey(_countdown),
+                      style: context.display.copyWith(
+                        color: Colors.white,
+                        fontSize: 92,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
                 ),
@@ -353,35 +346,37 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                 onTap: _isUploading ? null : _pickAndUploadImage,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(18),
-                  child: Container(
+                  child: SizedBox(
                     width: 86,
                     height: 112,
-                    color: Colors.white.withValues(alpha: .12),
-                    child: _selectedImage == null
-                        ? const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add_photo_alternate_outlined,
-                                color: Colors.white,
-                              ),
-                              SizedBox(height: 6),
-                              Text(
-                                'Cover',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
-                          )
-                        : Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              Image.file(_selectedImage!, fit: BoxFit.cover),
-                              if (_isUploading)
-                                const Center(
-                                  child: CircularProgressIndicator(),
+                    child: ColoredBox(
+                      color: Colors.white.withValues(alpha: .12),
+                      child: _selectedImage == null
+                          ? const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add_photo_alternate_outlined,
+                                  color: Colors.white,
                                 ),
-                            ],
-                          ),
+                                SizedBox(height: 6),
+                                Text(
+                                  'Cover',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            )
+                          : Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Image.file(_selectedImage!, fit: BoxFit.cover),
+                                if (_isUploading)
+                                  const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                              ],
+                            ),
+                    ),
                   ),
                 ),
               ),
@@ -413,10 +408,11 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
-            height: 52,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.primary,
+                minimumSize: const Size.fromHeight(52),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
@@ -436,7 +432,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Preview your camera, set your cover, then go live.',
+            'Preview your camera, add a title, and optionally choose a cover.',
             style: AppTextStylesX(
               context,
             ).caption.copyWith(color: Colors.white70),
@@ -446,34 +442,11 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     );
   }
 
-  Widget _roundAction({
-    required IconData icon,
-    required String label,
-    required VoidCallback? onTap,
-  }) {
-    final enabled = onTap != null;
+  void _close() {
+    unawaited(_closeAsync());
+  }
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Opacity(
-        opacity: enabled ? 1 : .55,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: .45),
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Colors.white.withValues(alpha: .16)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: Colors.white, size: 18),
-              const SizedBox(width: 6),
-              Text(label, style: const TextStyle(color: Colors.white)),
-            ],
-          ),
-        ),
-      ),
-    );
+  Future<void> _closeAsync() async {
+    await Navigator.of(context).maybePop();
   }
 }

@@ -8,6 +8,7 @@ class LiveJoinSession {
   final String token;
   final String wsUrl;
   final AOSLiveRole role;
+  final String identity;
   final String? sessionId;
 
   const LiveJoinSession({
@@ -16,6 +17,7 @@ class LiveJoinSession {
     required this.token,
     required this.wsUrl,
     required this.role,
+    required this.identity,
     this.sessionId,
   });
 
@@ -25,6 +27,7 @@ class LiveJoinSession {
     String? token,
     String? wsUrl,
     AOSLiveRole? role,
+    String? identity,
     String? sessionId,
   }) {
     return LiveJoinSession(
@@ -33,6 +36,7 @@ class LiveJoinSession {
       token: token ?? this.token,
       wsUrl: wsUrl ?? this.wsUrl,
       role: role ?? this.role,
+      identity: identity ?? this.identity,
       sessionId: sessionId ?? this.sessionId,
     );
   }

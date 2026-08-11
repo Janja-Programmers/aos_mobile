@@ -105,19 +105,24 @@ class GoRouterProtectedNavigationExecutor
 
   Future<void> _joinLiveWithFallback(String liveId) async {
     try {
-      await _liveManager.joinLive(liveId: liveId);
+      final joined = await _liveManager.joinLive(liveId: liveId);
+      if (!joined) _openLiveRoute(liveId);
     } catch (error, stackTrace) {
       appLogger.w(
         'Live manager navigation failed; using the live route',
         error: error,
         stackTrace: stackTrace,
       );
-      _router
-          .pushNamed<void>(
-            AppRoutes.nLiveRoom,
-            queryParameters: <String, String>{'live_id': liveId},
-          )
-          .ignore();
+      _openLiveRoute(liveId);
     }
+  }
+
+  void _openLiveRoute(String liveId) {
+    _router
+        .pushNamed<void>(
+          AppRoutes.nLiveRoom,
+          queryParameters: <String, String>{'live_id': liveId},
+        )
+        .ignore();
   }
 }

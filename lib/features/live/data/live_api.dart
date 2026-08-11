@@ -7,182 +7,171 @@ import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/live/data/live_mapper.dart';
-import 'package:africaonlinestores/features/live/domain/live_join_session.dart';
+import 'package:africaonlinestores/features/live/domain/live_bootstrap.dart';
+import 'package:africaonlinestores/features/live/domain/live_list_page.dart';
+import 'package:africaonlinestores/features/live/domain/live_reaction.dart';
 import 'package:africaonlinestores/features/live/domain/live_stream.dart';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 
 class LiveApi {
-  final ApiClient _client;
-
-  static const _uuid = Uuid();
-
   LiveApi(this._client);
 
-  // ================= START LIVE =================
+  static const Uuid _uuid = Uuid();
 
-  Future<Either<Failure, LiveJoinSession>> startLive({
+  final ApiClient _client;
+
+  Future<Either<Failure, LiveBootstrap>> startLive({
     required String title,
-    required String coverImage,
-    required String coverMediaId,
+    String? coverImage,
+    String? coverMediaId,
   }) async {
+    final cleanTitle = title.trim();
+    final cleanMediaId = coverMediaId?.trim() ?? '';
+    final cleanCoverImage = coverImage?.trim() ?? '';
+
     try {
-      final res = await _client.post(
+      final response = await _client.post(
         ApiEndpoints.startLiveEndpoint,
-        data: {
-          'title': title,
-          'cover_image': coverImage,
-          'live_cover_media': coverMediaId,
+        data: <String, dynamic>{
+          'title': cleanTitle,
+          if (cleanMediaId.isNotEmpty) 'live_cover_media': cleanMediaId,
+          if (cleanMediaId.isEmpty && cleanCoverImage.isNotEmpty)
+            'cover_image': cleanCoverImage,
         },
       );
+      final unwrapped = unwrapFrappe(response);
 
-      final result = unwrapFrappe(res);
-
-      if (result.isLeft) {
-        return Either.left(result.leftOrNull!);
-      }
-
-      final payload = asJsonMap(result.rightOrNull);
-
-      final data = payload['data'];
-
-      if (data == null || data is! Map) {
-        return Either.left(
-          const Failure('Invalid start live response: missing data'),
-        );
-      }
-
-      final sessionJson = data['session'];
-
-      if (sessionJson == null || sessionJson is! Map) {
-        return Either.left(
-          const Failure('Invalid start live response: missing session'),
-        );
-      }
-
-      final sessionMap = asJsonMap(sessionJson);
-      final session = mapJoinSession(sessionMap);
-
-      return Either.right(session);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (e) {
-      return Either.left(Failure(e.toString(), type: FailureType.unknown));
+      return unwrapped.fold(
+        Either.left,
+        (payload) => _parseBootstrap(payload, operation: 'start'),
+      );
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'startLive response parsing failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return Either.left(
+        const Failure('Invalid start Live response.', type: FailureType.parse),
+      );
     }
   }
 
-  // ================= JOIN LIVE =================
-
-  Future<Either<Failure, LiveJoinSession>> joinLive({
+  Future<Either<Failure, LiveBootstrap>> joinLive({
     required String liveId,
+    String? sessionId,
   }) async {
+    final clientSessionId = sessionId?.trim().isNotEmpty ?? false
+        ? sessionId!.trim()
+        : _uuid.v4();
+
     try {
-      final clientSessionId = _uuid.v4();
-      final res = await _client.post(
+      final response = await _client.post(
         ApiEndpoints.joinLiveEndpoint,
-        data: {'live_id': liveId, 'session_id': clientSessionId},
+        data: <String, dynamic>{
+          'live_id': liveId,
+          'session_id': clientSessionId,
+        },
       );
+      final unwrapped = unwrapFrappe(response);
 
-      final result = unwrapFrappe(res);
-
-      if (result.isLeft) {
-        return Either.left(result.leftOrNull!);
-      }
-
-      final payload = asJsonMap(result.rightOrNull);
-
-      final data = payload['data'];
-      if (data == null || data is! Map) {
-        return Either.left(
-          const Failure('Invalid join live response: missing data'),
-        );
-      }
-
-      final sessionJson = data['session'];
-      if (sessionJson == null || sessionJson is! Map) {
-        return Either.left(
-          const Failure('Invalid join live response: missing session'),
-        );
-      }
-
-      final sessionMap = asJsonMap(sessionJson);
-      sessionMap['session_id'] ??= clientSessionId;
-
-      final session = mapJoinSession(sessionMap);
-
-      return Either.right(session);
-    } catch (e) {
-      return Either.left(Failure(e.toString()));
-    }
-  }
-
-  // ================= END LIVE =================
-
-  Future<Either<Failure, void>> endLive({required String liveId}) async {
-    appLogger.i('endLive API');
-
-    try {
-      final res = await _client.post(
-        ApiEndpoints.endLiveEndpoint,
-        data: {'live_id': liveId},
+      return unwrapped.fold(Either.left, (payload) {
+        final data = asJsonMap(payload['data']);
+        final rawSession = data['session'];
+        if (rawSession is Map<Object?, Object?>) {
+          final session = asJsonMap(rawSession);
+          session['session_id'] ??= clientSessionId;
+          data['session'] = session;
+        }
+        return _parseBootstrapData(data, operation: 'join');
+      });
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'joinLive response parsing failed',
+        error: error,
+        stackTrace: stackTrace,
       );
-
-      final result = unwrapFrappe(res);
-      if (result.isLeft) return Either.left(result.leftOrNull!);
-
-      return Either.right(null);
-    } catch (e) {
-      return Either.left(Failure(e.toString()));
+      return Either.left(
+        const Failure('Invalid join Live response.', type: FailureType.parse),
+      );
     }
   }
 
-  // ================= GET LIVE =================
-
-  Future<Either<Failure, LiveStream>> getLive({required String liveId}) async {
-    appLogger.i('getLive API');
-
-    final res = await _client.get(
-      ApiEndpoints.getLiveEndpoint,
-      queryParameters: {'live_id': liveId},
-    );
-
-    final result = unwrapFrappe(res);
-    if (result.isLeft) return Either.left(result.leftOrNull!);
-
-    final data = asJsonMap(result.rightOrNull)['data'];
-    if (data == null) {
-      return Either.left(const Failure('Invalid live response'));
-    }
-
-    return Either.right(mapLiveStream(asJsonMap(data)));
-  }
-
-  // ================= LIST LIVE STREAMS =================
-
-  Future<Either<Failure, List<LiveStream>>> listLives({
-    int start = 0,
-    int limit = 20,
+  Future<Either<Failure, LiveStream>> getLive({
+    required String liveId,
+    String? sessionId,
   }) async {
     try {
-      final res = await _client.get(
-        ApiEndpoints.listLiveStreamsEndpoint,
-        queryParameters: {'start': start, 'limit': limit},
+      final response = await _client.get(
+        ApiEndpoints.getLiveEndpoint,
+        queryParameters: <String, dynamic>{
+          'live_id': liveId,
+          if (sessionId?.trim().isNotEmpty ?? false)
+            'session_id': sessionId!.trim(),
+        },
       );
+      final unwrapped = unwrapFrappe(response);
 
-      final result = unwrapFrappe(res);
-      if (result.isLeft) return Either.left(result.leftOrNull!);
+      return unwrapped.fold(Either.left, (payload) {
+        final data = asJsonMap(payload['data']);
+        final rawLive = data['live'];
+        if (rawLive is! Map<Object?, Object?>) {
+          return Either.left(
+            const Failure(
+              'Invalid Live detail response.',
+              type: FailureType.parse,
+            ),
+          );
+        }
+        return Either.right(mapLiveStream(asJsonMap(rawLive)));
+      });
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object {
+      return Either.left(
+        const Failure('Invalid Live detail response.', type: FailureType.parse),
+      );
+    }
+  }
 
-      final data = asJsonMap(asJsonMap(result.rightOrNull)['data']);
-      final items = asJsonMapList(data['items']);
+  Future<Either<Failure, LiveListPage>> listLives({
+    int limit = 20,
+    String? cursor,
+  }) async {
+    try {
+      final response = await _client.get(
+        ApiEndpoints.listLiveStreamsEndpoint,
+        queryParameters: <String, dynamic>{
+          'limit': limit,
+          if (cursor?.trim().isNotEmpty ?? false) 'cursor': cursor!.trim(),
+        },
+      );
+      final unwrapped = unwrapFrappe(response);
 
-      final lives = items.map(mapLiveStream).toList(growable: false);
+      return unwrapped.fold(Either.left, (payload) {
+        final data = asJsonMap(payload['data']);
+        final pagination = asJsonMap(data['pagination']);
+        final items = asJsonMapList(
+          data['items'],
+        ).map(mapLiveStream).toList(growable: false);
 
-      return Either.right(lives);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (e, s) {
-      appLogger.e('listLives failed', error: e, stackTrace: s);
-
+        return Either.right(
+          LiveListPage(
+            items: items,
+            nextCursor: asNullableString(pagination['next_cursor']),
+            hasMore: pagination['has_more'] == true,
+          ),
+        );
+      });
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object catch (error, stackTrace) {
+      appLogger.e('listLives failed', error: error, stackTrace: stackTrace);
       return Either.left(
         const Failure(
           'Failed to fetch live streams.',
@@ -192,99 +181,172 @@ class LiveApi {
     }
   }
 
-  /* METRICS  */
-
-  // ================= TRACK JOIN =================
-
-  Future<Either<Failure, String?>> trackJoin({
+  Future<Either<Failure, LiveStream?>> trackJoin({
     required String liveId,
-    String? sessionId,
-  }) async {
-    try {
-      final res = await _client.post(
-        ApiEndpoints.trackLiveJoinEndpoint,
-        data: {
-          'live_id': liveId,
-          if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
-        },
-      );
-
-      final result = unwrapFrappe(res);
-      if (result.isLeft) return Either.left(result.leftOrNull!);
-
-      final data = asJsonMap(asJsonMap(result.rightOrNull)['data']);
-      final viewId = asNullableString(data['view_id']);
-
-      return Either.right(viewId);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (e, s) {
-      appLogger.e('trackJoin failed', error: e, stackTrace: s);
-      return Either.left(
-        const Failure('Failed to track live join.', type: FailureType.unknown),
-      );
-    }
+    required String sessionId,
+  }) {
+    return _track(
+      endpoint: ApiEndpoints.trackLiveJoinEndpoint,
+      liveId: liveId,
+      sessionId: sessionId,
+      operation: 'join',
+    );
   }
 
-  // ================= TRACK LEAVE =================
-
-  Future<Either<Failure, void>> trackLeave({
+  Future<Either<Failure, LiveStream?>> trackLeave({
     required String liveId,
-    String? sessionId,
-  }) async {
-    try {
-      final res = await _client.post(
-        ApiEndpoints.trackLiveLeaveEndpoint,
-        data: {
-          'live_id': liveId,
-          if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
-        },
-      );
-
-      final result = unwrapFrappe(res);
-      if (result.isLeft) return Either.left(result.leftOrNull!);
-
-      return Either.right(null);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (e, s) {
-      appLogger.e('trackLeave failed', error: e, stackTrace: s);
-      return Either.left(
-        const Failure('Failed to track live leave.', type: FailureType.unknown),
-      );
-    }
+    required String sessionId,
+  }) {
+    return _track(
+      endpoint: ApiEndpoints.trackLiveLeaveEndpoint,
+      liveId: liveId,
+      sessionId: sessionId,
+      operation: 'leave',
+    );
   }
 
-  /* REACTIONS */
-  // ================= SEND REACTION =================
-
-  Future<Either<Failure, void>> sendReaction({
+  Future<Either<Failure, LiveReaction>> sendReaction({
     required String liveId,
-    required String reactionType,
+    required LiveReactionType reactionType,
     String? sessionId,
   }) async {
     try {
-      final res = await _client.post(
+      final response = await _client.post(
         ApiEndpoints.sendLiveReaction,
-        data: {
+        data: <String, dynamic>{
           'live_id': liveId,
-          'reaction_type': reactionType,
-          if (sessionId?.isNotEmpty ?? false) 'session_id': sessionId,
+          'reaction_type': reactionType.apiValue,
+          if (sessionId?.trim().isNotEmpty ?? false)
+            'session_id': sessionId!.trim(),
         },
       );
+      final unwrapped = unwrapFrappe(response);
 
-      final result = unwrapFrappe(res);
-      if (result.isLeft) return Either.left(result.leftOrNull!);
-
-      return Either.right(null);
-    } on DioException catch (e) {
-      return Either.left(mapDioException(e));
-    } catch (e, s) {
-      appLogger.e('sendReaction failed', error: e, stackTrace: s);
-
+      return unwrapped.fold(Either.left, (payload) {
+        final data = asJsonMap(payload['data']);
+        final rawReaction = data['reaction'];
+        if (rawReaction is! Map<Object?, Object?>) {
+          return Either.left(
+            const Failure(
+              'Invalid Live reaction response.',
+              type: FailureType.parse,
+            ),
+          );
+        }
+        final reaction = LiveReaction.fromJson(asJsonMap(rawReaction));
+        if (reaction.id.isEmpty || reaction.liveId != liveId) {
+          return Either.left(
+            const Failure(
+              'Invalid Live reaction response.',
+              type: FailureType.parse,
+            ),
+          );
+        }
+        return Either.right(reaction);
+      });
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object {
       return Either.left(
         const Failure('Failed to send reaction.', type: FailureType.unknown),
       );
+    }
+  }
+
+  Future<Either<Failure, void>> endLive({required String liveId}) async {
+    try {
+      final response = await _client.post(
+        ApiEndpoints.endLiveEndpoint,
+        data: <String, dynamic>{'live_id': liveId},
+      );
+      final unwrapped = unwrapFrappe(response);
+      return unwrapped.fold(Either.left, (_) => Either.right(null));
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object {
+      return Either.left(const Failure('Failed to end Live.'));
+    }
+  }
+
+  Future<Either<Failure, void>> shareLiveToChat({
+    required String liveId,
+    required String conversationId,
+    String? message,
+    String? idempotencyKey,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiEndpoints.shareLiveToChat,
+        data: <String, dynamic>{
+          'live_id': liveId,
+          'conversation_id': conversationId,
+          if (message?.trim().isNotEmpty ?? false) 'message': message!.trim(),
+          if (idempotencyKey?.trim().isNotEmpty ?? false)
+            'idempotency_key': idempotencyKey!.trim(),
+        },
+      );
+      final unwrapped = unwrapFrappe(response);
+      return unwrapped.fold(Either.left, (_) => Either.right(null));
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object {
+      return Either.left(const Failure('Failed to share Live to chat.'));
+    }
+  }
+
+  Either<Failure, LiveBootstrap> _parseBootstrap(
+    Map<String, dynamic> payload, {
+    required String operation,
+  }) {
+    return _parseBootstrapData(
+      asJsonMap(payload['data']),
+      operation: operation,
+    );
+  }
+
+  Either<Failure, LiveBootstrap> _parseBootstrapData(
+    Map<String, dynamic> data, {
+    required String operation,
+  }) {
+    try {
+      return Either.right(mapLiveBootstrap(data));
+    } on Object {
+      return Either.left(
+        Failure('Invalid $operation Live response.', type: FailureType.parse),
+      );
+    }
+  }
+
+  Future<Either<Failure, LiveStream?>> _track({
+    required String endpoint,
+    required String liveId,
+    required String sessionId,
+    required String operation,
+  }) async {
+    try {
+      final response = await _client.post(
+        endpoint,
+        data: <String, dynamic>{'live_id': liveId, 'session_id': sessionId},
+      );
+      final unwrapped = unwrapFrappe(response);
+
+      return unwrapped.fold(Either.left, (payload) {
+        final data = asJsonMap(payload['data']);
+        final rawLive = data['live'];
+        if (rawLive is! Map<Object?, Object?>) {
+          return Either.right(null);
+        }
+        return Either.right(mapLiveStream(asJsonMap(rawLive)));
+      });
+    } on DioException catch (error) {
+      return Either.left(mapDioException(error));
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'track Live $operation failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return Either.left(Failure('Failed to track Live $operation.'));
     }
   }
 }

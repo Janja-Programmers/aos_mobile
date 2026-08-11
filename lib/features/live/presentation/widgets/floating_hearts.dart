@@ -1,22 +1,24 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/live/domain/live_reaction.dart';
 import 'package:flutter/material.dart';
 
 class FloatingHearts extends StatefulWidget {
-  final int trigger;
-  final String reactionType;
-
   const FloatingHearts({
     super.key,
     required this.trigger,
-    this.reactionType = 'like',
+    this.reactionType = LiveReactionType.like,
   });
+
+  final int trigger;
+  final LiveReactionType reactionType;
 
   @override
   State<FloatingHearts> createState() => _FloatingHeartsState();
 }
 
-class _FloatingHeartsState extends State<FloatingHearts>
-    with SingleTickerProviderStateMixin {
+class _FloatingHeartsState extends State<FloatingHearts> {
   final List<_ReactionItem> reactions = [];
 
   @override
@@ -28,26 +30,28 @@ class _FloatingHeartsState extends State<FloatingHearts>
     }
   }
 
-  void _addReaction(String reactionType) {
+  void _addReaction(LiveReactionType reactionType) {
     final id = DateTime.now().microsecondsSinceEpoch.toString();
 
     setState(() {
       reactions.add(_ReactionItem(id: id, reactionType: reactionType));
     });
 
-    Future<void>.delayed(const Duration(milliseconds: 1600), () {
-      if (!mounted) return;
+    unawaited(
+      Future<void>.delayed(const Duration(milliseconds: 1600), () {
+        if (!mounted) return;
 
-      setState(() {
-        reactions.removeWhere((item) => item.id == id);
-      });
-    });
+        setState(() {
+          reactions.removeWhere((item) => item.id == id);
+        });
+      }),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      right: 28,
+    return PositionedDirectional(
+      end: 28,
       bottom: 190,
       child: IgnorePointer(
         child: Stack(
@@ -101,38 +105,38 @@ class _FloatingHeartsState extends State<FloatingHearts>
     );
   }
 
-  IconData _iconFor(String reactionType) {
+  IconData _iconFor(LiveReactionType reactionType) {
     switch (reactionType) {
-      case 'fire':
+      case LiveReactionType.fire:
         return Icons.local_fire_department_rounded;
-      case 'clap':
+      case LiveReactionType.clap:
         return Icons.front_hand_rounded;
-      case 'love':
-      case 'like':
+      case LiveReactionType.love:
+      case LiveReactionType.like:
         return Icons.favorite_rounded;
-      case 'wow':
+      case LiveReactionType.wow:
         return Icons.emoji_emotions_rounded;
-      default:
-        return Icons.favorite_rounded;
     }
   }
 
-  Color _colorFor(BuildContext context, String reactionType) {
+  Color _colorFor(BuildContext context, LiveReactionType reactionType) {
     switch (reactionType) {
-      case 'fire':
-      case 'wow':
+      case LiveReactionType.fire:
+      case LiveReactionType.wow:
         return context.appColors.amber;
-      default:
+      case LiveReactionType.like:
+      case LiveReactionType.clap:
+      case LiveReactionType.love:
         return context.appColors.primary;
     }
   }
 }
 
 class _ReactionItem {
-  final String id;
-  final String reactionType;
-  final double xOffset;
-
   _ReactionItem({required this.id, required this.reactionType})
-    : xOffset = (DateTime.now().millisecond % 54) - 27;
+    : xOffset = ((DateTime.now().millisecond % 54) - 27).toDouble();
+
+  final String id;
+  final LiveReactionType reactionType;
+  final double xOffset;
 }

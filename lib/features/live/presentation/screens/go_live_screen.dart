@@ -267,14 +267,19 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                               ),
                               const Spacer(),
                               IconButton.filled(
+                                key: const Key('go_live_flip_camera'),
                                 tooltip: 'Flip camera',
                                 onPressed: _isFlippingCamera
                                     ? null
                                     : _flipPreviewCamera,
-                                icon: const Icon(Icons.cameraswitch_outlined),
+                                icon: Icon(
+                                  Icons.cameraswitch_outlined,
+                                  color: colors.btnText,
+                                ),
                               ),
                               const SizedBox(width: 8),
                               IconButton.filled(
+                                key: const Key('go_live_mute'),
                                 tooltip: _isMicMuted
                                     ? 'Unmute'
                                     : 'Mute microphone',
@@ -287,6 +292,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                                   _isMicMuted
                                       ? Icons.mic_off_outlined
                                       : Icons.mic_none_outlined,
+                                  color: colors.btnText,
                                 ),
                               ),
                             ],
@@ -383,6 +389,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: TextField(
+                  key: const Key('go_live_title_field'),
                   controller: _titleController,
                   maxLength: 120,
                   minLines: 2,
@@ -408,26 +415,34 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colors.primary,
-                minimumSize: const Size.fromHeight(52),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              onPressed:
-                  _isUploading ||
-                      _isCountingDown ||
-                      _isFlippingCamera ||
-                      _isStartingPreview
-                  ? null
-                  : _startLive,
-              child: Text(
-                _isCountingDown ? 'Starting...' : 'Go LIVE',
-                style: AppTextStylesX(context).button,
-              ),
+            child: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _titleController,
+              builder: (context, titleValue, _) {
+                final hasTitle = titleValue.text.trim().isNotEmpty;
+                final blocked =
+                    !hasTitle ||
+                    _isUploading ||
+                    _isCountingDown ||
+                    _isFlippingCamera ||
+                    _isStartingPreview;
+
+                return ElevatedButton(
+                  key: const Key('go_live_button'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colors.primary,
+                    minimumSize: const Size.fromHeight(52),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  onPressed: blocked ? null : _startLive,
+                  child: Text(
+                    _isCountingDown ? 'Starting...' : 'Go LIVE',
+                    style: AppTextStylesX(context).button,
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 8),

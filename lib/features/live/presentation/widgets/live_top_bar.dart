@@ -15,6 +15,10 @@ class LiveTopBar extends StatelessWidget {
     this.hostAvatar,
     this.title = '',
     this.isEnding = false,
+    this.showFollow = false,
+    this.isFollowInFlight = false,
+    this.followLabel = 'Follow',
+    this.onFollow,
   });
 
   final int viewerCount;
@@ -25,6 +29,10 @@ class LiveTopBar extends StatelessWidget {
   final String? hostAvatar;
   final String title;
   final bool isEnding;
+  final bool showFollow;
+  final bool isFollowInFlight;
+  final String followLabel;
+  final VoidCallback? onFollow;
 
   @override
   Widget build(BuildContext context) {
@@ -115,12 +123,43 @@ class LiveTopBar extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (showFollow) ...[
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    key: const Key('live_follow_host_button'),
+                    onPressed: isFollowInFlight ? null : onFollow,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: colors.primary,
+                      foregroundColor: colors.btnText,
+                      disabledBackgroundColor: colors.primary.withValues(
+                        alpha: .72,
+                      ),
+                      disabledForegroundColor: colors.btnText,
+                      minimumSize: const Size(72, 44),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      textStyle: AppTextStylesX(context).button,
+                    ),
+                    child: Text(
+                      isFollowInFlight
+                          ? '${_cleanFollowLabel()}…'
+                          : _cleanFollowLabel(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStylesX(context).button,
+                    ),
+                  ),
+                ],
               ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _cleanFollowLabel() {
+    final clean = followLabel.trim();
+    return clean.isEmpty ? 'Follow' : clean;
   }
 
   Widget _liveBadge(BuildContext context) {

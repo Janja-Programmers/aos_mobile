@@ -75,6 +75,19 @@ class SocialApi {
   // -----------------------------
   Future<Either<Failure, SocialRelationship>> toggleFollow({
     required String targetUser,
+  }) {
+    return _updateFollow(targetUser: targetUser);
+  }
+
+  Future<Either<Failure, SocialRelationship>> followUser({
+    required String targetUser,
+  }) {
+    return _updateFollow(targetUser: targetUser, action: 'follow');
+  }
+
+  Future<Either<Failure, SocialRelationship>> _updateFollow({
+    required String targetUser,
+    String? action,
   }) async {
     try {
       final cleanTarget = targetUser.trim();
@@ -90,7 +103,7 @@ class SocialApi {
 
       final res = await _apiClient.post(
         ApiEndpoints.toggleFollowEndpoint,
-        data: {'target_user': cleanTarget},
+        data: {'target_user': cleanTarget, 'action': ?action},
       );
 
       final result = unwrapFrappe(res);

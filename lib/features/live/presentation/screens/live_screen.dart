@@ -23,6 +23,7 @@ import 'package:africaonlinestores/features/live/presentation/widgets/live_input
 import 'package:africaonlinestores/features/live/presentation/widgets/live_right_actions.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_top_bar.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_video_stage.dart';
+import 'package:africaonlinestores/features/social/application/providers/social_providers.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
@@ -48,6 +49,8 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
   lk.RemoteVideoTrack? _remoteVideoTrack;
   String? _preparedLiveId;
   bool _isInitializing = true;
+  bool _isFollowInFlight = false;
+  String? _followedHostUser;
   int _initializationGeneration = 0;
 
   @override
@@ -154,6 +157,57 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
       context,
       comments.errorMessage ?? 'Could not send comment.',
     ).error();
+  }
+
+  Future<void> _followHost() async {
+    final live = ref.read(liveManagerProvider).live;
+    final viewerState = live?.viewerState;
+    final targetUser = viewerState?.targetUser?.trim() ?? '';
+
+    if (_isFollowInFlight ||
+        live == null ||
+        targetUser.isEmpty ||
+        viewerState == null ||
+        viewerState.isFollowing ||
+        !viewerState.canFollow ||
+        _followedHostUser == targetUser) {
+      return;
+    }
+
+    final liveId = live.id;
+    setState(() => _isFollowInFlight = true);
+
+    try {
+      final result = await ref
+          .read(socialRepositoryProvider)
+          .followUser(targetUser: targetUser);
+      if (!mounted || ref.read(liveManagerProvider).live?.id != liveId) return;
+
+      if (result.isLeft) {
+        ShowSnack(
+          context,
+          result.leftOrNull?.message ?? 'Failed to follow this host.',
+        ).error();
+        return;
+      }
+
+      final relationship = result.rightOrNull;
+      if (relationship == null || !relationship.isFollowing) {
+        ShowSnack(context, 'Follow status was not updated.').error();
+        return;
+      }
+
+      setState(() => _followedHostUser = targetUser);
+      final confirmation = relationship.actionLabel.trim();
+      ShowSnack(
+        context,
+        confirmation.isEmpty ? 'Following' : confirmation,
+      ).success();
+
+      await ref.read(liveManagerProvider.notifier).refreshActiveLive();
+    } finally {
+      if (mounted) setState(() => _isFollowInFlight = false);
+    }
   }
 
   Future<void> _confirmEndOrLeave() async {
@@ -393,6 +447,14 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
             viewerState.cohostWorkflow != null ||
             cohostState.currentWorkflow != null);
     final canShareToChat = canComment || (viewerState?.isHost ?? false);
+    final followTarget = viewerState?.targetUser?.trim() ?? '';
+    final showFollow =
+        viewerState != null &&
+        !viewerState.isHost &&
+        viewerState.canFollow &&
+        !viewerState.isFollowing &&
+        followTarget.isNotEmpty &&
+        _followedHostUser != followTarget;
 
     return PopScope<Object?>(
       canPop: state.session == null,
@@ -415,6 +477,10 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
                 title: live.title,
                 isHost: viewerState?.canEnd ?? false,
                 isEnding: state.isEnding,
+                showFollow: showFollow,
+                isFollowInFlight: _isFollowInFlight,
+                followLabel: viewerState?.actionLabel ?? 'Follow',
+                onFollow: () => unawaited(_followHost()),
                 onEnd: () => unawaited(_confirmEndOrLeave()),
               ),
               FloatingHearts(

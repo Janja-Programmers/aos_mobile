@@ -27,6 +27,10 @@ abstract class SocialRepository {
     required String targetUser,
   });
 
+  Future<Either<Failure, SocialRelationship>> followUser({
+    required String targetUser,
+  });
+
   Future<Either<Failure, SocialRelationship>> getRelationshipStatus({
     required String targetUser,
   });
@@ -69,6 +73,13 @@ class SocialRepositoryImpl implements SocialRepository {
     required String targetUser,
   }) {
     return api.toggleFollow(targetUser: targetUser);
+  }
+
+  @override
+  Future<Either<Failure, SocialRelationship>> followUser({
+    required String targetUser,
+  }) {
+    return api.followUser(targetUser: targetUser);
   }
 
   @override

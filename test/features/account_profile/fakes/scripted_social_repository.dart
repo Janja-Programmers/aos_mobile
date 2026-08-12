@@ -35,6 +35,13 @@ class ScriptedSocialRepository implements SocialRepository {
   }
 
   @override
+  Future<Either<Failure, SocialRelationship>> followUser({
+    required String targetUser,
+  }) {
+    return toggleFollow(targetUser: targetUser);
+  }
+
+  @override
   Future<Either<Failure, SocialRelationship>> getRelationshipStatus({
     required String targetUser,
   }) {

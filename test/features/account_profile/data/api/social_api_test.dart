@@ -59,6 +59,31 @@ void main() {
     });
   });
 
+  test('explicit follow posts the idempotent backend action', () async {
+    final Map<String, dynamic> fixture = await loadAccountProfileMessageFixture(
+      'follow_success.json',
+    );
+    final RecordingHttpClientAdapter adapter = RecordingHttpClientAdapter(
+      (RequestOptions options) =>
+          jsonResponse(<String, dynamic>{'message': fixture}),
+    );
+    final AccountProfileApiHarness harness =
+        await buildAccountProfileApiHarness(adapter);
+    addTearDown(harness.container.dispose);
+
+    final result = await harness.socialApi.followUser(
+      targetUser: ' public@example.invalid ',
+    );
+
+    expect(result.isRight, isTrue);
+    expect(adapter.singleRequest.method, 'POST');
+    expect(adapter.singleRequest.path, ApiEndpoints.toggleFollowEndpoint);
+    expect(adapter.singleRequest.data, <String, dynamic>{
+      'target_user': 'public@example.invalid',
+      'action': 'follow',
+    });
+  });
+
   test(
     'connection lists send only supported paging and search fields',
     () async {

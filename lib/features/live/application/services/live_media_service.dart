@@ -127,14 +127,15 @@ class LiveMediaService {
         .toList(growable: false);
     if (cameras.length < 2) return false;
 
-    final currentDeviceId = ownedTrack.currentOptions.deviceId;
-    final currentIndex = cameras.indexWhere(
-      (camera) => camera.deviceId == currentDeviceId,
-    );
-    final nextIndex = currentIndex < 0
-        ? 0
-        : (currentIndex + 1) % cameras.length;
-    await ownedTrack.switchCamera(cameras[nextIndex].deviceId);
+    final currentOptions = ownedTrack.currentOptions;
+    final currentPosition = currentOptions is lk.CameraCaptureOptions
+        ? currentOptions.cameraPosition
+        : lk.CameraPosition.front;
+    final nextPosition = currentPosition == lk.CameraPosition.front
+        ? lk.CameraPosition.back
+        : lk.CameraPosition.front;
+
+    await ownedTrack.setCameraPosition(nextPosition);
     return true;
   }
 

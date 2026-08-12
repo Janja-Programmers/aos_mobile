@@ -27,5 +27,6 @@ must not redefine backend contracts.
 
 ## Feature guides
 
+- [AOS Live](features/live/README.md)
 - [AOS Calls](features/calls/README.md)
 - [Connect Chat](features/connect-chat.md)

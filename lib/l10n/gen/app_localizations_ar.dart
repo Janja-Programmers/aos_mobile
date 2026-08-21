@@ -405,6 +405,20 @@ class AppLocalizationsAr extends AppLocalizations {
       'يحدد الإعلانات القريبة وأين تظهر إعلاناتك.';
 
   @override
+  String get settings_seller_country_locked_description =>
+      'يتم قفل البلد لحسابات البائعين لحماية بيانات السوق.';
+
+  @override
+  String get settings_seller_country_locked =>
+      'لا يمكن تغيير البلد لحساب بائع.';
+
+  @override
+  String get common_locked => 'مقفل';
+
+  @override
+  String get settings_preference_updated => 'تم تحديث التفضيل.';
+
+  @override
   String get settings_currency => 'العملة';
 
   @override

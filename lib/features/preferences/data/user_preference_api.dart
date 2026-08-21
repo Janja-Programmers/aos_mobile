@@ -5,6 +5,7 @@ import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
+import 'package:africaonlinestores/features/preferences/models/user_preference_field.dart';
 import 'package:dio/dio.dart';
 
 class UserPreferenceApi {
@@ -23,24 +24,56 @@ class UserPreferenceApi {
     }
   }
 
-  Future<Either<Failure, Map<String, dynamic>>> updateMyPreferences(
-    Map<String, dynamic> data,
-  ) async {
+  Future<Either<Failure, Map<String, dynamic>>> updateMyPreference({
+    required UserPreferenceField field,
+    required String canonicalId,
+  }) async {
+    final value = canonicalId.trim();
+    if (value.isEmpty) {
+      return Either.left(
+        const Failure(
+          'A preference value is required.',
+          type: FailureType.validation,
+        ),
+      );
+    }
+
     try {
       final res = await _client.dio.post<Map<String, dynamic>>(
         ApiEndpoints.updatePreferencesEndpoint,
-        data: data,
+        data: <String, dynamic>{field.wireName: value},
       );
 
       final unwrapped = unwrapFrappe(res);
       if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
 
-      final payload = unwrapped.rightOrNull ?? const <String, dynamic>{};
-      if (payload['ok'] == false || payload['error'] != null) {
-        return Either.left(Failure.fromServerPayload(payload));
+      final response = unwrapped.rightOrNull ?? const <String, dynamic>{};
+      final nested = asJsonMap(response['data']);
+      final payload = nested.containsKey('ok') || nested.containsKey('error')
+          ? nested
+          : response;
+
+      if (payload['ok'] != true) {
+        return Either.left(
+          Failure.fromServerPayload(
+            payload,
+            statusCode: res.statusCode,
+            fallbackMessage: 'Failed to update preferences.',
+          ),
+        );
       }
 
-      return Either.right(asJsonMap(payload['data']));
+      final preferences = asJsonMap(payload['data']);
+      if (preferences.isEmpty) {
+        return Either.left(
+          const Failure(
+            'The updated preferences are missing from the response.',
+            type: FailureType.parse,
+          ),
+        );
+      }
+
+      return Either.right(preferences);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {

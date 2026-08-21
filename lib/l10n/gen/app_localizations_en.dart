@@ -408,6 +408,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Determines nearby listings and where your ads appear.';
 
   @override
+  String get settings_seller_country_locked_description =>
+      'Country is locked for seller accounts to protect marketplace data.';
+
+  @override
+  String get settings_seller_country_locked =>
+      'Country cannot be changed for a seller account.';
+
+  @override
+  String get common_locked => 'Locked';
+
+  @override
+  String get settings_preference_updated => 'Preference updated.';
+
+  @override
   String get settings_currency => 'Currency';
 
   @override

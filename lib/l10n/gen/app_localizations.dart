@@ -866,6 +866,30 @@ abstract class AppLocalizations {
   /// **'Determines nearby listings and where your ads appear.'**
   String get settings_country_description;
 
+  /// No description provided for @settings_seller_country_locked_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Country is locked for seller accounts to protect marketplace data.'**
+  String get settings_seller_country_locked_description;
+
+  /// No description provided for @settings_seller_country_locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Country cannot be changed for a seller account.'**
+  String get settings_seller_country_locked;
+
+  /// No description provided for @common_locked.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get common_locked;
+
+  /// No description provided for @settings_preference_updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Preference updated.'**
+  String get settings_preference_updated;
+
   /// No description provided for @settings_currency.
   ///
   /// In en, this message translates to:

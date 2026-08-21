@@ -27,6 +27,7 @@ must not redefine backend contracts.
 
 ## Feature guides
 
+- [Localization, onboarding, and active preferences](frontend/localization_onboarding.md)
 - [AOS Live](features/live/README.md)
 - [AOS Calls](features/calls/README.md)
 - [Connect Chat](features/connect-chat.md)

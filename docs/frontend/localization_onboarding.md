@@ -110,6 +110,36 @@ widgets still have only one active read path.
 On logout, the account snapshot is removed from active use and the last valid
 guest snapshot is restored. The backend account preference remains durable.
 
+## Authenticated preference updates
+
+The Account Preferences screen submits one canonical backend ID at a time:
+`country`, `currency`, or `language`. The request model is typed, so Flutter
+cannot append arbitrary preference fields.
+
+The update calls the existing whitelisted
+`aos.api.v1.accounts.update_my_preference` method through Frappe RPC v2. This
+transport is available in the backend's Frappe 17 runtime and forwards only the
+client-supplied method arguments. It avoids RPC v1's internal `cmd` transport
+argument reaching the backend's strict unknown-field validation. This changes
+only the Frappe transport path; the AOS method, authentication, request field
+names, validation, rate limit, stable errors, and response contract remain
+backend-owned and unchanged.
+
+After success, Flutter atomically replaces the active authenticated snapshot
+with the complete preference object returned by the backend and updates the
+authenticated session view. Language and market context consumers therefore
+observe the same canonical state without a competing store.
+
+Country locking follows both pieces of authenticated backend state:
+
+- the account is a seller; and
+- `preferences.is_country_locked` is true.
+
+Only the Country card becomes read-only. Language and Currency always remain
+editable and continue to submit independent partial updates. The client still
+handles `COUNTRY_LOCKED` as authoritative if server state changes while the
+screen is open.
+
 ## Supported UI languages
 
 The current Flutter assets support:
@@ -150,6 +180,10 @@ Focused tests cover:
 - invalid completion prevention;
 - legacy restoration;
 - independent guest changes;
+- RPC v2 preference payloads with no `cmd` field;
+- country, currency, and language partial-update response parsing;
+- stable backend error preservation;
+- seller-only country-lock policy;
 - no fabricated onboarding initial state;
 - high-text-scale picker layout.
 

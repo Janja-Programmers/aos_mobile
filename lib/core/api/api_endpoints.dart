@@ -129,7 +129,7 @@ class ApiEndpoints {
   static const String getMyPreferencesEndpoint =
       '/api/method/aos.api.v1.accounts.get_my_preference';
   static const String updatePreferencesEndpoint =
-      '/api/method/aos.api.v1.accounts.update_my_preference';
+      '/api/v2/method/aos.api.v1.accounts.update_my_preference';
 
   // Chat Endpoints
   static const String openConversationEndpoint =

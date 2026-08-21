@@ -9,6 +9,8 @@ import 'package:africaonlinestores/features/localization/models/localization_mod
 import 'package:africaonlinestores/features/preferences/controllers/user_preference_controller.dart';
 import 'package:africaonlinestores/features/preferences/data/preferences_api_provider.dart';
 import 'package:africaonlinestores/features/preferences/models/active_preference_snapshot.dart';
+import 'package:africaonlinestores/features/preferences/models/preference_access_policy.dart';
+import 'package:africaonlinestores/features/preferences/models/user_preference_field.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/locale_picker_page.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
@@ -30,8 +32,10 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
     final localization = ref.watch(localizationControllerProvider);
     final preferences = ref.watch(userPreferenceControllerProvider);
     final auth = ref.watch(authControllerProvider);
-    final accountPreferences = auth.asAuthenticated?.preferences;
-    final countryLocked = accountPreferences?['is_country_locked'] == true;
+    final countryLocked = !PreferenceAccessPolicy.canEdit(
+      UserPreferenceField.country,
+      auth,
+    );
     final snapshot = preferences.snapshot;
 
     if (localization.isLoading) {
@@ -90,10 +94,10 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
               title: l10n.settings_country,
               value: snapshot?.country.displayName ?? '—',
               description: countryLocked
-                  ? 'Seller country is locked to protect marketplace data.'
+                  ? l10n.settings_seller_country_locked_description
                   : l10n.settings_country_description,
               enabled: !countryLocked,
-              readOnlyLabel: countryLocked ? 'Locked' : null,
+              readOnlyLabel: countryLocked ? l10n.common_locked : null,
               onTap: () => _openPicker<CountryOption>(
                 title: l10n.settings_country,
                 items: localization.countries,
@@ -146,10 +150,17 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
     LocaleOption option,
   ) async {
     final auth = ref.read(authControllerProvider);
-    final countryLocked =
-        auth.asAuthenticated?.preferences['is_country_locked'] == true;
+    final countryLocked = !PreferenceAccessPolicy.canEdit(
+      UserPreferenceField.country,
+      auth,
+    );
+    final sellerCountryLockedMessage =
+        context.l10n.settings_seller_country_locked;
+    final preferenceErrorMessage = context.l10n.onboarding_preference_error;
+    final preferenceUpdatedMessage = context.l10n.settings_preference_updated;
+
     if (countryLocked && type == _PreferenceType.country) {
-      ShowSnack(context, 'Seller country is locked.').error();
+      ShowSnack(context, sellerCountryLockedMessage).error();
       return;
     }
 
@@ -170,17 +181,17 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
     }
 
     final field = switch (type) {
-      _PreferenceType.language => 'language',
-      _PreferenceType.country => 'country',
-      _PreferenceType.currency => 'currency',
+      _PreferenceType.language => UserPreferenceField.language,
+      _PreferenceType.country => UserPreferenceField.country,
+      _PreferenceType.currency => UserPreferenceField.currency,
     };
     final api = ref.read(userPreferenceApiProvider);
-    final result = await api.updateMyPreferences(<String, dynamic>{
-      field: option.canonicalId,
-    });
+    final result = await api.updateMyPreference(
+      field: field,
+      canonicalId: option.canonicalId,
+    );
     if (result.isLeft) {
-      final message =
-          result.leftOrNull?.message ?? 'Failed to update preference.';
+      final message = result.leftOrNull?.message ?? preferenceErrorMessage;
       if (mounted) ShowSnack(context, message).error();
       throw StateError(message);
     }
@@ -194,7 +205,9 @@ class _PreferenceScreenState extends ConsumerState<PreferenceScreen> {
         .read(authControllerProvider.notifier)
         .setPreferencesFromMap(serverPreferences);
 
-    if (mounted) ShowSnack(context, 'Preference updated.').success();
+    if (mounted) {
+      ShowSnack(context, preferenceUpdatedMessage).success();
+    }
   }
 }
 

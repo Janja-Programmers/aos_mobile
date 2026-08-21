@@ -392,6 +392,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_country_description => '决定附近的列表以及您的广告显示的位置。';
 
   @override
+  String get settings_seller_country_locked_description =>
+      '卖家账户的国家/地区已锁定，以保护市场数据。';
+
+  @override
+  String get settings_seller_country_locked => '卖家账户无法更改国家/地区。';
+
+  @override
+  String get common_locked => '已锁定';
+
+  @override
+  String get settings_preference_updated => '偏好设置已更新。';
+
+  @override
   String get settings_currency => '货币';
 
   @override

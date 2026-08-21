@@ -412,6 +412,20 @@ class AppLocalizationsFr extends AppLocalizations {
       'Détermine les annonces proches et où vos annonces apparaissent.';
 
   @override
+  String get settings_seller_country_locked_description =>
+      'Le pays est verrouillé pour les comptes vendeurs afin de protéger les données de la place de marché.';
+
+  @override
+  String get settings_seller_country_locked =>
+      'Le pays ne peut pas être modifié pour un compte vendeur.';
+
+  @override
+  String get common_locked => 'Verrouillé';
+
+  @override
+  String get settings_preference_updated => 'Préférence mise à jour.';
+
+  @override
   String get settings_currency => 'Devise';
 
   @override

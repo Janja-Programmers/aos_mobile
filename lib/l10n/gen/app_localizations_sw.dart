@@ -411,6 +411,20 @@ class AppLocalizationsSw extends AppLocalizations {
       'Huamua matangazo yaliyo karibu na mahali matangazo yako yataonekana.';
 
   @override
+  String get settings_seller_country_locked_description =>
+      'Nchi imefungwa kwa akaunti za wauzaji ili kulinda data ya soko.';
+
+  @override
+  String get settings_seller_country_locked =>
+      'Nchi haiwezi kubadilishwa kwa akaunti ya muuzaji.';
+
+  @override
+  String get common_locked => 'Imefungwa';
+
+  @override
+  String get settings_preference_updated => 'Mapendeleo yamesasishwa.';
+
+  @override
   String get settings_currency => 'Sarafu';
 
   @override

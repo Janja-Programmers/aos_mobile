@@ -644,6 +644,69 @@ class AppLocalizationsZh extends AppLocalizations {
   String get liveFlipCameraAction => '切换摄像头';
 
   @override
+  String get liveGoLiveAction => '开始直播';
+
+  @override
+  String get liveStartingAction => '正在开始...';
+
+  @override
+  String get liveDetailsTitle => '直播详情';
+
+  @override
+  String get liveEditDetailsAction => '编辑直播详情';
+
+  @override
+  String get liveEditDetailsHint => '点按以编辑标题或封面';
+
+  @override
+  String get liveCoverLabel => '封面照片';
+
+  @override
+  String get liveChangeCoverAction => '更换封面';
+
+  @override
+  String get liveChooseCoverFromGallery => '从图库选择';
+
+  @override
+  String get liveTakeCoverPhoto => '拍摄照片';
+
+  @override
+  String get liveTitleLabel => '直播标题';
+
+  @override
+  String get liveTitleHint => '添加直播标题';
+
+  @override
+  String get liveTitleRequired => '请添加直播标题以继续。';
+
+  @override
+  String get liveCoverRequired => '请添加封面照片以继续。';
+
+  @override
+  String get liveUploadingCover => '正在上传封面...';
+
+  @override
+  String get liveCameraStarting => '正在启动摄像头...';
+
+  @override
+  String get liveCameraUnavailable => '摄像头预览不可用';
+
+  @override
+  String get liveCameraStartError => '无法启动摄像头预览。';
+
+  @override
+  String get liveNoAlternateCameraError => '没有可用的其他摄像头。';
+
+  @override
+  String get liveCameraFlipError => '无法切换摄像头。';
+
+  @override
+  String get liveCoverUploadError => '无法上传直播封面。';
+
+  @override
+  String get liveCoverSelectionError => '无法选择直播封面。';
+
+  @override
   String get watchThisLiveOnAos => '在 AOS 上观看此直播';
 
   @override

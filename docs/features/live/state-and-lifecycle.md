@@ -136,6 +136,12 @@ The full-screen screen may reuse an active Feed room. Explicit Leave and system
 back both run the manager cleanup path. Widgets must not navigate immediately
 after `start_live`; they wait for the manager's successful media result.
 
+The Go Live screen watches the existing account-profile controller rather than
+creating another profile store. Untouched title/cover defaults update when the
+profile arrives. Opening the edit-details bottom sheet creates only a temporary
+UI draft; Save returns the trimmed title and optional local cover selection to
+the screen. A selected cover is uploaded before Start becomes available.
+
 ## Errors and UI states
 
 | State | Required presentation |

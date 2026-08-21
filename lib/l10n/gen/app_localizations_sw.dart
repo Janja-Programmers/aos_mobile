@@ -683,6 +683,73 @@ class AppLocalizationsSw extends AppLocalizations {
   String get liveFlipCameraAction => 'Geuza kamera';
 
   @override
+  String get liveGoLiveAction => 'ANZA MUBASHARA';
+
+  @override
+  String get liveStartingAction => 'Inaanza...';
+
+  @override
+  String get liveDetailsTitle => 'Maelezo ya mubashara';
+
+  @override
+  String get liveEditDetailsAction => 'Hariri maelezo ya mubashara';
+
+  @override
+  String get liveEditDetailsHint => 'Gusa kuhariri kichwa au jalada';
+
+  @override
+  String get liveCoverLabel => 'Picha ya jalada';
+
+  @override
+  String get liveChangeCoverAction => 'Badilisha jalada';
+
+  @override
+  String get liveChooseCoverFromGallery => 'Chagua kutoka kwenye matunzio';
+
+  @override
+  String get liveTakeCoverPhoto => 'Piga picha';
+
+  @override
+  String get liveTitleLabel => 'Kichwa cha mubashara';
+
+  @override
+  String get liveTitleHint => 'Weka kichwa cha mubashara';
+
+  @override
+  String get liveTitleRequired => 'Weka kichwa cha mubashara ili kuendelea.';
+
+  @override
+  String get liveCoverRequired => 'Weka picha ya jalada ili kuendelea.';
+
+  @override
+  String get liveUploadingCover => 'Inapakia jalada...';
+
+  @override
+  String get liveCameraStarting => 'Kamera inaanza...';
+
+  @override
+  String get liveCameraUnavailable => 'Onyesho la kamera halipatikani';
+
+  @override
+  String get liveCameraStartError =>
+      'Imeshindikana kuanzisha onyesho la kamera.';
+
+  @override
+  String get liveNoAlternateCameraError =>
+      'Hakuna kamera nyingine inayopatikana.';
+
+  @override
+  String get liveCameraFlipError => 'Imeshindikana kugeuza kamera.';
+
+  @override
+  String get liveCoverUploadError =>
+      'Imeshindikana kupakia jalada la mubashara.';
+
+  @override
+  String get liveCoverSelectionError =>
+      'Imeshindikana kuchagua jalada la mubashara.';
+
+  @override
   String get watchThisLiveOnAos => 'Tazama mubashara huu kwenye AOS';
 
   @override

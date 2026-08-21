@@ -1,5 +1,7 @@
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 
+const Object _unsetCategorySelection = Object();
+
 class CategoriesState {
   const CategoriesState({
     this.loading = false,
@@ -16,14 +18,16 @@ class CategoriesState {
   CategoriesState copyWith({
     bool? loading,
     List<CategoryNode>? parents,
-    String? selectedParentId,
+    Object? selectedParentId = _unsetCategorySelection,
     String? errorMessage,
     bool clearError = false,
   }) {
     return CategoriesState(
       loading: loading ?? this.loading,
       parents: parents ?? this.parents,
-      selectedParentId: selectedParentId ?? this.selectedParentId,
+      selectedParentId: selectedParentId == _unsetCategorySelection
+          ? this.selectedParentId
+          : selectedParentId as String?,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }

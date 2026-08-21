@@ -29,6 +29,15 @@ errors, pagination, duplicate suppression, debounce, and stale-response
 protection. The picker requests the next page near the end of the scroll view.
 “All Locations” appears only for an empty query.
 
+## Category navigation
+
+Opening Category from the Basic Step starts at the public root-category list,
+including when the draft already has a selected leaf. Selecting a backend
+`is_group` category pushes its child list. Back navigation therefore follows
+child list → parent list → Ad form instead of leaving the picker directly from
+the child list. The current draft category is changed only after a leaf is
+selected and returned to the form.
+
 ## Failure behavior
 
 - Initial location failures show a scroll-safe retry state.
@@ -46,6 +55,8 @@ Focused coverage:
 - `test/features/ads/data/ads_api_locations_test.dart`
 - `test/features/ads/data/ads_api_mutation_contract_test.dart`
 - `test/features/ads/ads_form/application/location_search_controller_test.dart`
+- `test/features/catalog/regression/category_picker_navigation_source_test.dart`
 
 These tests protect the backend field allowlist, pagination parameters,
-response parsing, lazy loading, deduplication, and stale-response handling.
+response parsing, lazy loading, deduplication, stale-response handling, and the
+parent/child category-picker navigation stack.

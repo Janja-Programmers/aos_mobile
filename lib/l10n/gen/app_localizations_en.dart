@@ -681,6 +681,69 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveFlipCameraAction => 'Flip camera';
 
   @override
+  String get liveGoLiveAction => 'Go LIVE';
+
+  @override
+  String get liveStartingAction => 'Starting...';
+
+  @override
+  String get liveDetailsTitle => 'Live details';
+
+  @override
+  String get liveEditDetailsAction => 'Edit live details';
+
+  @override
+  String get liveEditDetailsHint => 'Tap to edit title or cover';
+
+  @override
+  String get liveCoverLabel => 'Cover photo';
+
+  @override
+  String get liveChangeCoverAction => 'Change cover';
+
+  @override
+  String get liveChooseCoverFromGallery => 'Choose from gallery';
+
+  @override
+  String get liveTakeCoverPhoto => 'Take a photo';
+
+  @override
+  String get liveTitleLabel => 'Live title';
+
+  @override
+  String get liveTitleHint => 'Add a live title';
+
+  @override
+  String get liveTitleRequired => 'Add a live title to continue.';
+
+  @override
+  String get liveCoverRequired => 'Add a cover photo to continue.';
+
+  @override
+  String get liveUploadingCover => 'Uploading cover...';
+
+  @override
+  String get liveCameraStarting => 'Starting camera...';
+
+  @override
+  String get liveCameraUnavailable => 'Camera preview unavailable';
+
+  @override
+  String get liveCameraStartError => 'Could not start camera preview.';
+
+  @override
+  String get liveNoAlternateCameraError => 'No alternate camera is available.';
+
+  @override
+  String get liveCameraFlipError => 'Could not flip camera.';
+
+  @override
+  String get liveCoverUploadError => 'Could not upload the Live cover.';
+
+  @override
+  String get liveCoverSelectionError => 'Could not select a Live cover.';
+
+  @override
   String get watchThisLiveOnAos => 'Watch this live on AOS';
 
   @override

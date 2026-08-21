@@ -103,7 +103,17 @@ class _AppCarouselState extends State<AppCarousel> {
                         decoration: BoxDecoration(gradient: item.gradient),
                       )
                     else if (item.imageUrl != null)
-                      Image.network(item.imageUrl!, fit: BoxFit.cover)
+                      Image.network(
+                        item.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => ColoredBox(
+                          color: colors.surface,
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      )
                     else
                       Container(color: colors.surface),
 

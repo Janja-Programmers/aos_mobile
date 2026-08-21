@@ -3,9 +3,10 @@ import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/features/catalog/data/categories_api.dart';
+import 'package:africaonlinestores/features/catalog/domain/categories_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final categoriesApiProvider = Provider<CategoriesApi>((ref) {
+final categoriesRepositoryProvider = Provider<CategoriesRepository>((ref) {
   return CategoriesApi(ref.watch(apiClientProvider));
 });
 

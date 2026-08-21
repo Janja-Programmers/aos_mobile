@@ -31,10 +31,7 @@ void main() {
       final session = data['session']! as Map<String, dynamic>;
       session['live_id'] = secondTestLiveId;
 
-      expect(
-        () => mapLiveBootstrap(data),
-        throwsA(isA<FormatException>()),
-      );
+      expect(() => mapLiveBootstrap(data), throwsA(isA<FormatException>()));
     });
 
     test('rejects incomplete private media credentials', () {
@@ -42,10 +39,7 @@ void main() {
       final session = data['session']! as Map<String, dynamic>;
       session['token'] = '';
 
-      expect(
-        () => mapLiveBootstrap(data),
-        throwsA(isA<FormatException>()),
-      );
+      expect(() => mapLiveBootstrap(data), throwsA(isA<FormatException>()));
     });
   });
 

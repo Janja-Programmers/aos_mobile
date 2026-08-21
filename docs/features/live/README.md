@@ -22,7 +22,7 @@ the behavior represented by the current Flutter sources.
 
 | Entry | Behavior |
 | --- | --- |
-| Go Live | Prepares local camera, keeps Start disabled until the required title is nonblank, accepts an optional cover, starts through `start_live`, then opens the room only after LiveKit publication succeeds |
+| Go Live | Loads the authenticated account profile, seeds title from the display name/username and cover from the profile avatar, exposes both values in a native edit-details sheet, and keeps Start disabled until both are ready |
 | Feed → Live tab | Lists active Lives and silently joins the visible eligible item with viewer media disabled |
 | Tap visible Live | Reuses the tracked manager/session and opens the full-screen Live route |
 | Notification/deep link | Resolves the canonical `LIVE-*` identifier and joins through the backend before showing Live UI |
@@ -45,6 +45,8 @@ The backend owns:
 Flutter owns:
 
 - camera/microphone permission prompts and local track preparation;
+- profile-derived Go Live defaults, the editable draft, and the stricter mobile
+  requirement that both a title and cover are ready before Start;
 - LiveKit connect, publish, subscribe, reconnect presentation, and cleanup;
 - screen state, navigation, Feed visibility activation, and keyboard-safe UI;
 - duplicate-tap suppression and stale async-result rejection;
@@ -97,7 +99,10 @@ from the archive.
 ### Host start
 
 ```text
-prepare camera
+load current account profile
+→ seed title + profile-avatar cover
+→ optionally edit title or select/upload another cover
+→ prepare camera
 → start_live
 → hydrate data.live + data.session
 → join LiveKit with server token
@@ -107,6 +112,9 @@ prepare camera
 
 If backend start succeeds but media startup fails, Flutter attempts `end_live`
 and releases local media. Navigation occurs only after the connection succeeds.
+Profile refreshes may improve untouched defaults, but never overwrite a title
+the user has edited. A failed replacement-cover upload restores the last valid
+cover instead of leaving an unusable local-only selection.
 
 ### Viewer join
 
@@ -160,7 +168,10 @@ LiveKit. Hosts call `end_live` first and then perform local cleanup. A backend
 
 ## Current limitations
 
-- Backend validation currently requires a nonblank title; cover is optional.
+- Backend validation requires a nonblank title up to 140 characters and accepts
+  an optional cover. The mobile preparation screen deliberately applies the
+  stricter requested product rule that both title and cover must be ready; an
+  account without an avatar must choose a cover before starting.
 - Replies are represented by API/model code but are not exposed in the current
   Live screen.
 - Comment history currently loads a bounded first page using offset parameters;
@@ -168,9 +179,9 @@ LiveKit. Hosts call `end_live` first and then perform local cleanup. A backend
 - The inspected backend has no Live-level comments toggle, report-comment API,
   persisted moderator role, or public recording/share URL; Flutter does not
   invent them.
-- Several existing Live presentation strings remain English literals. Complete
-  localization and RTL copy review is still required before claiming full
-  localization readiness.
+- The Go Live preparation screen is localized in all five existing app locales.
+  Several other existing Live presentation strings remain English literals, so
+  complete feature-wide localization and RTL copy review is still required.
 - Automated tests use fakes and cannot prove camera, microphone, audio routing,
   background socket behavior, or real LiveKit publication. Device testing is
   required.

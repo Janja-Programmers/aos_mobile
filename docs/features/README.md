@@ -23,6 +23,7 @@ The first recommended feature is **authentication and session** because it estab
 
 - [Connect Chat](connect-chat.md)
 - [Calls](calls/README.md)
+- [Catalog](catalog/README.md)
 - [Live](live/README.md)
 - [Wishlist](wishlist/README.md)
 

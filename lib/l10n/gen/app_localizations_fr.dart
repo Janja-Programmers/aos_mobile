@@ -686,6 +686,75 @@ class AppLocalizationsFr extends AppLocalizations {
   String get liveFlipCameraAction => 'Changer de caméra';
 
   @override
+  String get liveGoLiveAction => 'PASSER EN DIRECT';
+
+  @override
+  String get liveStartingAction => 'Démarrage...';
+
+  @override
+  String get liveDetailsTitle => 'Détails du direct';
+
+  @override
+  String get liveEditDetailsAction => 'Modifier les détails du direct';
+
+  @override
+  String get liveEditDetailsHint =>
+      'Touchez pour modifier le titre ou la couverture';
+
+  @override
+  String get liveCoverLabel => 'Photo de couverture';
+
+  @override
+  String get liveChangeCoverAction => 'Changer la couverture';
+
+  @override
+  String get liveChooseCoverFromGallery => 'Choisir dans la galerie';
+
+  @override
+  String get liveTakeCoverPhoto => 'Prendre une photo';
+
+  @override
+  String get liveTitleLabel => 'Titre du direct';
+
+  @override
+  String get liveTitleHint => 'Ajoutez un titre au direct';
+
+  @override
+  String get liveTitleRequired => 'Ajoutez un titre au direct pour continuer.';
+
+  @override
+  String get liveCoverRequired =>
+      'Ajoutez une photo de couverture pour continuer.';
+
+  @override
+  String get liveUploadingCover => 'Importation de la couverture...';
+
+  @override
+  String get liveCameraStarting => 'Démarrage de la caméra...';
+
+  @override
+  String get liveCameraUnavailable => 'Aperçu de la caméra indisponible';
+
+  @override
+  String get liveCameraStartError =>
+      'Impossible de démarrer l’aperçu de la caméra.';
+
+  @override
+  String get liveNoAlternateCameraError =>
+      'Aucune autre caméra n’est disponible.';
+
+  @override
+  String get liveCameraFlipError => 'Impossible de changer de caméra.';
+
+  @override
+  String get liveCoverUploadError =>
+      'Impossible d’importer la couverture du direct.';
+
+  @override
+  String get liveCoverSelectionError =>
+      'Impossible de sélectionner une couverture pour le direct.';
+
+  @override
   String get watchThisLiveOnAos => 'Regardez ce direct sur AOS';
 
   @override

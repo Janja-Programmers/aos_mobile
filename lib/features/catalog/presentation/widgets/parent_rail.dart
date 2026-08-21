@@ -75,6 +75,10 @@ class ParentsRail extends StatelessWidget {
                               fit: BoxFit.cover,
                               width: double.infinity,
                               height: double.infinity,
+                              errorBuilder: (_, _, _) => Icon(
+                                Icons.category_outlined,
+                                color: colors.textMuted,
+                              ),
                             ),
                           ),
                   ),

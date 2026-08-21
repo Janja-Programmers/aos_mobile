@@ -51,10 +51,9 @@ void main() {
     await first;
 
     expect(controller.state.liveId, secondTestLiveId);
-    expect(
-      controller.state.comments.map((item) => item.id),
-      <String>['MESSAGE-002'],
-    );
+    expect(controller.state.comments.map((item) => item.id), <String>[
+      'MESSAGE-002',
+    ]);
     expect(controller.state.isLoading, isFalse);
   });
 
@@ -157,15 +156,9 @@ class _ScriptedLiveCommentsApi extends LiveCommentsApi {
   _ScriptedLiveCommentsApi(super.client);
 
   final Map<String, Completer<Either<Failure, List<LiveComment>>>>
-  listResponses =
-      <String, Completer<Either<Failure, List<LiveComment>>>>{};
+  listResponses = <String, Completer<Either<Failure, List<LiveComment>>>>{};
   final List<
-    ({
-      String liveId,
-      String comment,
-      String? sessionId,
-      String idempotencyKey,
-    })
+    ({String liveId, String comment, String? sessionId, String idempotencyKey})
   >
   addRequests =
       <

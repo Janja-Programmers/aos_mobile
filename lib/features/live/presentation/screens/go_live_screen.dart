@@ -7,8 +7,14 @@ import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/core/utils/media_url.dart';
+import 'package:africaonlinestores/features/account/domain/account_profile_snapshot.dart';
+import 'package:africaonlinestores/features/account/domain/account_state.dart';
+import 'package:africaonlinestores/features/account/shared/providers/accounts_controller.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
+import 'package:africaonlinestores/features/live/presentation/widgets/go_live_details_sheet.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_video_stage.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,10 +29,13 @@ class GoLiveScreen extends ConsumerStatefulWidget {
 
 class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
   final _titleController = TextEditingController();
+  late final ProviderSubscription<AccountState> _accountSubscription;
 
   File? _selectedImage;
   String? _uploadedImageUrl;
   String? _uploadedCoverMediaId;
+  String? _profileCoverImageUrl;
+  String _profileDisplayName = '';
   lk.LocalVideoTrack? _previewTrack;
 
   bool _isUploading = false;
@@ -38,11 +47,71 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
   bool _isFlippingCamera = false;
   bool _isFrontCamera = true;
   bool _previewTransferred = false;
+  bool _isApplyingTitleDefault = false;
+  bool _titleWasEdited = false;
 
   @override
   void initState() {
     super.initState();
+    _titleController.addListener(_onTitleChanged);
+    _applyProfileDefaults(ref.read(accountsControllerProvider), notify: false);
+    _accountSubscription = ref.listenManual<AccountState>(
+      accountsControllerProvider,
+      (_, next) => _applyProfileDefaults(next),
+    );
     unawaited(_startCameraPreview());
+  }
+
+  void _onTitleChanged() {
+    if (!_isApplyingTitleDefault) _titleWasEdited = true;
+  }
+
+  void _applyProfileDefaults(AccountState accountState, {bool notify = true}) {
+    final profile = AccountProfileSnapshot.fromJson(accountState.profile);
+    final displayName = _firstText(<Object?>[
+      profile.fullName,
+      accountState.profile['username'],
+      accountState.profile['user_name'],
+      _usernameFromEmail(profile.email),
+    ]);
+    final coverImageUrl = normalizeMediaUrl(profile.userImage);
+
+    if (!_titleWasEdited && displayName.isNotEmpty) {
+      final defaultTitle = String.fromCharCodes(
+        displayName.runes.take(goLiveTitleMaxLength),
+      );
+      _isApplyingTitleDefault = true;
+      _titleController.value = TextEditingValue(
+        text: defaultTitle,
+        selection: TextSelection.collapsed(offset: defaultTitle.length),
+      );
+      _isApplyingTitleDefault = false;
+    }
+
+    final nextDisplayName = displayName.isEmpty
+        ? _profileDisplayName
+        : displayName;
+    final changed =
+        nextDisplayName != _profileDisplayName ||
+        coverImageUrl != _profileCoverImageUrl;
+    _profileDisplayName = nextDisplayName;
+    _profileCoverImageUrl = coverImageUrl;
+
+    if (notify && mounted && changed) setState(() {});
+  }
+
+  static String _firstText(Iterable<Object?> values) {
+    for (final value in values) {
+      final clean = value?.toString().trim() ?? '';
+      if (clean.isNotEmpty && clean.toLowerCase() != 'null') return clean;
+    }
+    return '';
+  }
+
+  static String _usernameFromEmail(String? email) {
+    final clean = email?.trim() ?? '';
+    final separator = clean.indexOf('@');
+    return separator > 0 ? clean.substring(0, separator) : '';
   }
 
   Future<void> _startCameraPreview() async {
@@ -73,7 +142,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
       if (!mounted) return;
 
       setState(() => _isStartingPreview = false);
-      ShowSnack(context, 'Could not start camera preview.').error();
+      ShowSnack(context, context.l10n.liveCameraStartError).error();
     }
   }
 
@@ -88,7 +157,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
       final switched = await ref.read(liveMediaServiceProvider).flipCamera();
       if (!mounted) return;
       if (!switched) {
-        ShowSnack(context, 'No alternate camera is available.').error();
+        ShowSnack(context, context.l10n.liveNoAlternateCameraError).error();
         return;
       }
       setState(() => _isFrontCamera = !_isFrontCamera);
@@ -99,7 +168,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
         stackTrace: stackTrace,
       );
       if (!mounted) return;
-      ShowSnack(context, 'Could not flip camera.').error();
+      ShowSnack(context, context.l10n.liveCameraFlipError).error();
     } finally {
       if (mounted) {
         setState(() => _isFlippingCamera = false);
@@ -107,9 +176,64 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     }
   }
 
-  Future<void> _pickAndUploadImage() async {
-    final file = await MediaHelper.pickImageFromGallery();
-    if (file == null || !mounted) return;
+  Future<void> _showDetailsEditor() async {
+    if (_isUploading || _isCountingDown) return;
+
+    final draft = await showModalBottomSheet<GoLiveDetailsDraft>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => GoLiveDetailsSheet(
+        initialTitle: _titleController.text,
+        displayName: _profileDisplayName,
+        coverImageUrl: _effectiveCoverImageUrl,
+        coverImage: _selectedImage,
+        pickCover: _pickCover,
+      ),
+    );
+
+    if (!mounted || draft == null) return;
+
+    _titleWasEdited = true;
+    _titleController.value = TextEditingValue(
+      text: draft.title,
+      selection: TextSelection.collapsed(offset: draft.title.length),
+    );
+
+    final nextImage = draft.coverImage;
+    if (nextImage != null && nextImage.path != _selectedImage?.path) {
+      await _uploadCoverImage(nextImage);
+    }
+  }
+
+  Future<File?> _pickCover(BuildContext pickerContext) async {
+    try {
+      return await MediaHelper.pickImageWithChoice(
+        pickerContext,
+        galleryLabel: pickerContext.l10n.liveChooseCoverFromGallery,
+        cameraLabel: pickerContext.l10n.liveTakeCoverPhoto,
+      );
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'Live cover selection failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (pickerContext.mounted) {
+        ShowSnack(
+          pickerContext,
+          pickerContext.l10n.liveCoverSelectionError,
+        ).error();
+      }
+      return null;
+    }
+  }
+
+  Future<void> _uploadCoverImage(File file) async {
+    final previousImage = _selectedImage;
+    final previousUrl = _uploadedImageUrl;
+    final previousMediaId = _uploadedCoverMediaId;
 
     setState(() {
       _selectedImage = file;
@@ -119,7 +243,6 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     });
 
     final mediaApi = ref.read(mediaUploadApiProvider);
-
     final uploaded = await MediaHelper.uploadSingle(
       ref: ref,
       file: file,
@@ -131,24 +254,48 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
 
     if (!mounted) return;
 
-    if (uploaded == null) {
-      setState(() => _isUploading = false);
-      ShowSnack(context, 'Could not upload the Live cover.').error();
+    if (uploaded == null || uploaded.mediaId.trim().isEmpty) {
+      setState(() {
+        _selectedImage = previousImage;
+        _uploadedImageUrl = previousUrl;
+        _uploadedCoverMediaId = previousMediaId;
+        _isUploading = false;
+      });
+      ShowSnack(context, context.l10n.liveCoverUploadError).error();
       return;
     }
 
     setState(() {
       _isUploading = false;
-      _uploadedImageUrl = uploaded.url;
-      _uploadedCoverMediaId = uploaded.mediaId;
+      _uploadedImageUrl = normalizeMediaUrl(uploaded.url);
+      _uploadedCoverMediaId = uploaded.mediaId.trim();
     });
+  }
+
+  String? get _effectiveCoverImageUrl {
+    final uploaded = _uploadedImageUrl?.trim() ?? '';
+    if (uploaded.isNotEmpty) return uploaded;
+    return _profileCoverImageUrl;
+  }
+
+  bool get _hasReadyCover {
+    if (_isUploading) return false;
+    if (_selectedImage != null) {
+      return _uploadedCoverMediaId?.trim().isNotEmpty ?? false;
+    }
+    return _effectiveCoverImageUrl?.trim().isNotEmpty ?? false;
   }
 
   Future<void> _startLive() async {
     final title = _titleController.text.trim();
 
     if (title.isEmpty) {
-      ShowSnack(context, 'Add a live title.').error();
+      ShowSnack(context, context.l10n.liveTitleRequired).error();
+      return;
+    }
+
+    if (!_hasReadyCover) {
+      ShowSnack(context, context.l10n.liveCoverRequired).error();
       return;
     }
 
@@ -178,7 +325,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
         .read(liveManagerProvider.notifier)
         .startLive(
           title: title,
-          coverImage: _uploadedImageUrl,
+          coverImage: _effectiveCoverImageUrl,
           coverMediaId: _uploadedCoverMediaId,
           micEnabled: micEnabled,
           cameraEnabled: hadPreviewCamera,
@@ -197,6 +344,8 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
 
   @override
   void dispose() {
+    _accountSubscription.close();
+    _titleController.removeListener(_onTitleChanged);
     _titleController.dispose();
     if (!_previewTransferred) {
       unawaited(ref.read(liveMediaServiceProvider).releasePreparedCamera());
@@ -216,8 +365,8 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
             child: LiveVideoStage(
               track: _previewTrack,
               emptyLabel: _isStartingPreview || _isFlippingCamera
-                  ? 'Starting camera...'
-                  : 'Camera preview unavailable',
+                  ? context.l10n.liveCameraStarting
+                  : context.l10n.liveCameraUnavailable,
               mirror: _isFrontCamera,
             ),
           ),
@@ -253,7 +402,9 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                           Row(
                             children: [
                               IconButton.filled(
-                                tooltip: 'Close',
+                                tooltip: MaterialLocalizations.of(
+                                  context,
+                                ).closeButtonTooltip,
                                 style: IconButton.styleFrom(
                                   backgroundColor: colors.black.withValues(
                                     alpha: .45,
@@ -268,7 +419,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                               const Spacer(),
                               IconButton.filled(
                                 key: const Key('go_live_flip_camera'),
-                                tooltip: 'Flip camera',
+                                tooltip: context.l10n.liveFlipCameraAction,
                                 onPressed: _isFlippingCamera
                                     ? null
                                     : _flipPreviewCamera,
@@ -281,8 +432,8 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                               IconButton.filled(
                                 key: const Key('go_live_mute'),
                                 tooltip: _isMicMuted
-                                    ? 'Unmute'
-                                    : 'Mute microphone',
+                                    ? context.l10n.liveUnmuteAction
+                                    : context.l10n.liveMuteAction,
                                 onPressed: _isFlippingCamera
                                     ? null
                                     : () => setState(
@@ -335,101 +486,134 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
   Widget _buildSetupCard(BuildContext context) {
     final colors = context.appColors;
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: colors.black.withValues(alpha: .48),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: .16)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: _titleController,
+      builder: (context, titleValue, _) {
+        final title = titleValue.text.trim();
+        final hasTitle = title.isNotEmpty;
+        final blocked =
+            !hasTitle ||
+            !_hasReadyCover ||
+            _isUploading ||
+            _isCountingDown ||
+            _isFlippingCamera ||
+            _isStartingPreview;
+        final String subtitle;
+        if (_isUploading) {
+          subtitle = context.l10n.liveUploadingCover;
+        } else if (!hasTitle) {
+          subtitle = context.l10n.liveTitleRequired;
+        } else if (!_hasReadyCover) {
+          subtitle = context.l10n.liveCoverRequired;
+        } else {
+          subtitle = context.l10n.liveEditDetailsHint;
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: colors.black.withValues(alpha: .54),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: Colors.white.withValues(alpha: .16)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              GestureDetector(
-                onTap: _isUploading ? null : _pickAndUploadImage,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: SizedBox(
-                    width: 86,
-                    height: 112,
-                    child: ColoredBox(
-                      color: Colors.white.withValues(alpha: .12),
-                      child: _selectedImage == null
-                          ? const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.add_photo_alternate_outlined,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(height: 6),
-                                Text(
-                                  'Cover',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ],
-                            )
-                          : Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Image.file(_selectedImage!, fit: BoxFit.cover),
-                                if (_isUploading)
-                                  const Center(
-                                    child: CircularProgressIndicator(),
+              Semantics(
+                button: true,
+                enabled: !_isUploading && !_isCountingDown,
+                label: context.l10n.liveEditDetailsAction,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    key: const Key('go_live_edit_details'),
+                    borderRadius: BorderRadius.circular(18),
+                    onTap: _isUploading || _isCountingDown
+                        ? null
+                        : _showDetailsEditor,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        children: [
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              LiveCoverPreview(
+                                key: const Key('go_live_cover_preview'),
+                                width: 56,
+                                height: 56,
+                                imageFile: _selectedImage,
+                                imageUrl: _effectiveCoverImageUrl,
+                                displayName: _profileDisplayName.isEmpty
+                                    ? title
+                                    : _profileDisplayName,
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              if (_isUploading)
+                                const SizedBox.square(
+                                  dimension: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
                                   ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  hasTitle
+                                      ? title
+                                      : context.l10n.liveTitleLabel,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: context.pStrong.copyWith(
+                                    color: colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  subtitle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStylesX(
+                                    context,
+                                  ).caption.copyWith(color: Colors.white70),
+                                ),
                               ],
                             ),
+                          ),
+                          const SizedBox(width: 8),
+                          Tooltip(
+                            message: context.l10n.liveEditDetailsAction,
+                            child: Icon(
+                              Icons.edit_outlined,
+                              color: colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  key: const Key('go_live_title_field'),
-                  controller: _titleController,
-                  maxLength: 120,
-                  minLines: 2,
-                  maxLines: 3,
-                  style: context.pStrong.copyWith(color: colors.white),
-                  decoration: InputDecoration(
-                    counterStyle: AppTextStylesX(
-                      context,
-                    ).caption.copyWith(color: colors.white),
-                    hintText: 'Add a live title...',
-                    hintStyle: context.p.copyWith(color: colors.white),
-                    filled: true,
-                    fillColor: colors.white.withValues(alpha: .10),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(18),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: ValueListenableBuilder<TextEditingValue>(
-              valueListenable: _titleController,
-              builder: (context, titleValue, _) {
-                final hasTitle = titleValue.text.trim().isNotEmpty;
-                final blocked =
-                    !hasTitle ||
-                    _isUploading ||
-                    _isCountingDown ||
-                    _isFlippingCamera ||
-                    _isStartingPreview;
-
-                return ElevatedButton(
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
                   key: const Key('go_live_button'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.primary,
+                    foregroundColor: colors.btnText,
+                    disabledBackgroundColor: colors.primary.withValues(
+                      alpha: .45,
+                    ),
+                    disabledForegroundColor: colors.btnText.withValues(
+                      alpha: .75,
+                    ),
                     minimumSize: const Size.fromHeight(52),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -438,22 +622,19 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                   ),
                   onPressed: blocked ? null : _startLive,
                   child: Text(
-                    _isCountingDown ? 'Starting...' : 'Go LIVE',
-                    style: AppTextStylesX(context).button,
+                    _isCountingDown
+                        ? context.l10n.liveStartingAction
+                        : context.l10n.liveGoLiveAction,
+                    style: AppTextStylesX(
+                      context,
+                    ).button.copyWith(color: colors.btnText),
                   ),
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Preview your camera, add a title, and optionally choose a cover.',
-            style: AppTextStylesX(
-              context,
-            ).caption.copyWith(color: Colors.white70),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

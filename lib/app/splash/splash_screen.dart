@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 
-import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
@@ -10,16 +10,25 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-const List<IconData> _kWheelIcons = [
-  Icons.public,
-  Icons.shopping_cart_outlined,
-  Icons.local_shipping_outlined,
-  Icons.flight_takeoff,
-  Icons.location_on_outlined,
-  Icons.storefront_outlined,
-  Icons.language,
-  Icons.inventory_2_outlined,
-];
+const Color _kPrimaryRed = Color(0xFFC1121F);
+const Color _kKenyaGreen = Color(0xFF0B7A3B);
+const int _kProgressDurationMs = 2080;
+
+const SystemUiOverlayStyle _kSplashSystemUiStyle = SystemUiOverlayStyle(
+  statusBarColor: Colors.transparent,
+  statusBarIconBrightness: Brightness.light,
+  statusBarBrightness: Brightness.dark,
+  systemNavigationBarColor: Color(0xFF08090C),
+  systemNavigationBarIconBrightness: Brightness.light,
+);
+
+const SystemUiOverlayStyle _kErrorSystemUiStyle = SystemUiOverlayStyle(
+  statusBarColor: Colors.transparent,
+  statusBarIconBrightness: Brightness.dark,
+  statusBarBrightness: Brightness.light,
+  systemNavigationBarColor: Colors.white,
+  systemNavigationBarIconBrightness: Brightness.dark,
+);
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -30,155 +39,38 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
-  late final AnimationController _entryController;
-  late final AnimationController _ringController;
-  late final AnimationController _textController;
-
-  late final Animation<double> _logoScale;
-  late final Animation<double> _logoOpacity;
-  late final Animation<double> _ringScale;
-  late final Animation<double> _ringOpacity;
-  late final Animation<double> _ringRotation;
-  late final Animation<double> _textOpacity;
-  late final Animation<Offset> _textOffset;
-
-  bool _showRing = false;
-  bool _showText = false;
+  late final AnimationController _revealController;
+  late final AnimationController _progressController;
+  late final AnimationController _ambientController;
 
   @override
   void initState() {
     super.initState();
-
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-    );
-
-    _setupAnimations();
-    _play();
-  }
-
-  void _setupAnimations() {
-    _entryController = AnimationController(
+    _revealController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 820),
+      duration: const Duration(milliseconds: 720),
     );
-
-    _logoScale = Tween<double>(begin: .72, end: 1).animate(
-      CurvedAnimation(
-        parent: _entryController,
-        curve: const Cubic(.20, 1.35, .35, 1),
-      ),
-    );
-
-    _logoOpacity = CurvedAnimation(
-      parent: _entryController,
-      curve: Curves.easeOut,
-    );
-
-    _ringController = AnimationController(
+    _progressController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2600),
+      duration: const Duration(milliseconds: _kProgressDurationMs),
     );
-
-    _ringScale = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(
-          begin: .15,
-          end: 1.04,
-        ).chain(CurveTween(curve: Curves.easeOutBack)),
-        weight: 34,
-      ),
-      TweenSequenceItem(
-        tween: Tween(
-          begin: 1.04,
-          end: .96,
-        ).chain(CurveTween(curve: Curves.easeInOut)),
-        weight: 18,
-      ),
-      TweenSequenceItem(
-        tween: Tween(
-          begin: .96,
-          end: 1.02,
-        ).chain(CurveTween(curve: Curves.easeInOut)),
-        weight: 18,
-      ),
-      TweenSequenceItem(
-        tween: Tween(
-          begin: 1.02,
-          end: .72,
-        ).chain(CurveTween(curve: Curves.easeInCubic)),
-        weight: 30,
-      ),
-    ]).animate(_ringController);
-
-    _ringOpacity = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(
-          begin: 0.0,
-          end: 1.0,
-        ).chain(CurveTween(curve: Curves.easeOut)),
-        weight: 22,
-      ),
-      TweenSequenceItem(tween: ConstantTween(1), weight: 54),
-      TweenSequenceItem(
-        tween: Tween(
-          begin: 1.0,
-          end: 0.0,
-        ).chain(CurveTween(curve: Curves.easeIn)),
-        weight: 24,
-      ),
-    ]).animate(_ringController);
-
-    _ringRotation = Tween<double>(begin: 0, end: math.pi * .42).animate(
-      CurvedAnimation(parent: _ringController, curve: Curves.easeInOutCubic),
-    );
-
-    _textController = AnimationController(
+    _ambientController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 760),
-    );
+      duration: const Duration(seconds: 10),
+    )..repeat();
 
-    _textOpacity = CurvedAnimation(
-      parent: _textController,
-      curve: Curves.easeOutCubic,
-    );
-
-    _textOffset = Tween<Offset>(begin: const Offset(0, .20), end: Offset.zero)
-        .animate(
-          CurvedAnimation(parent: _textController, curve: Curves.easeOutCubic),
-        );
-  }
-
-  Future<void> _play() async {
-    await Future<void>.delayed(const Duration(milliseconds: 220));
-    if (!mounted) return;
-
-    await _entryController.forward();
-
-    await Future<void>.delayed(const Duration(milliseconds: 180));
-    if (!mounted) return;
-
-    setState(() => _showRing = true);
-    await _ringController.forward();
-
-    if (!mounted) return;
-    setState(() => _showText = true);
-    await _textController.forward();
-
-    // Do not navigate here.
-    // GoRouter.redirect owns routing once bootstrap/auth becomes ready.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_revealController.forward());
+      unawaited(_progressController.forward());
+    });
   }
 
   @override
   void dispose() {
-    _entryController.dispose();
-    _ringController.dispose();
-    _textController.dispose();
+    _revealController.dispose();
+    _progressController.dispose();
+    _ambientController.dispose();
     super.dispose();
   }
 
@@ -189,46 +81,296 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       return _SessionRestorationUnavailable(reason: authState.reason);
     }
 
-    final double width = MediaQuery.sizeOf(context).width;
-    final double ringRadius = (width * .34).clamp(118.0, 164.0);
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: RepaintBoundary(
-        child: AnimatedBuilder(
-          animation: Listenable.merge([
-            _entryController,
-            _ringController,
-            _textController,
-          ]),
-          builder: (context, _) {
-            return Stack(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: _kSplashSystemUiStyle,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF08090C),
+        body: RepaintBoundary(
+          child: DecoratedBox(
+            decoration: const BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment(0, -0.24),
+                radius: 1.2,
+                colors: [
+                  Color(0xFF1B1C22),
+                  Color(0xFF101116),
+                  Color(0xFF08090C),
+                ],
+                stops: [0, 0.55, 1],
+              ),
+            ),
+            child: Stack(
               fit: StackFit.expand,
               children: [
-                const _SplashBackground(),
-                if (_showRing)
-                  Center(
-                    child: Opacity(
-                      opacity: _ringOpacity.value.clamp(0, 1),
-                      child: Transform.rotate(
-                        angle: _ringRotation.value,
-                        child: Transform.scale(
-                          scale: _ringScale.value,
-                          child: _OrbitWheel(radius: ringRadius),
+                _AmbientBlobs(animation: _ambientController),
+                _CenterBrand(
+                  revealAnimation: _revealController,
+                  ambientAnimation: _ambientController,
+                ),
+                _SplashProgress(animation: _progressController),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AmbientBlobs extends StatelessWidget {
+  const _AmbientBlobs({required this.animation});
+
+  final Animation<double> animation;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, _) {
+        final double phase = animation.value * 2 * math.pi;
+        return IgnorePointer(
+          child: Stack(
+            children: [
+              Positioned(
+                top: -80 + 12 * math.sin(phase),
+                left: -70 + 16 * math.sin(phase + 1.2),
+                child: const _BlurredBlob(
+                  size: 360,
+                  color: _kPrimaryRed,
+                  alpha: 0x2E,
+                ),
+              ),
+              Positioned(
+                right: -90 + 12 * math.sin(phase + 0.6),
+                bottom: -110 + 12 * math.sin(phase + 2.1),
+                child: const _BlurredBlob(
+                  size: 340,
+                  color: _kKenyaGreen,
+                  alpha: 0x26,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _BlurredBlob extends StatelessWidget {
+  const _BlurredBlob({
+    required this.size,
+    required this.color,
+    required this.alpha,
+  });
+
+  final double size;
+  final Color color;
+  final int alpha;
+
+  @override
+  Widget build(BuildContext context) {
+    return ImageFiltered(
+      imageFilter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [color.withAlpha(alpha), color.withAlpha(0)],
+            stops: const [0, 0.62],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CenterBrand extends StatelessWidget {
+  const _CenterBrand({
+    required this.revealAnimation,
+    required this.ambientAnimation,
+  });
+
+  final Animation<double> revealAnimation;
+  final Animation<double> ambientAnimation;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: AnimatedBuilder(
+        animation: Listenable.merge([revealAnimation, ambientAnimation]),
+        builder: (context, _) {
+          final double reveal = Curves.easeOut.transform(revealAnimation.value);
+          final double revealScale = 0.9 + 0.1 * reveal;
+          final double blur = (1 - reveal) * 10;
+          final double pulse =
+              0.5 + 0.5 * math.sin(ambientAnimation.value * 2 * math.pi);
+          final double glowOpacity = (0.55 + 0.25 * pulse) * reveal;
+          final double glowScale = 1 + 0.06 * pulse;
+
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 88),
+              child: Semantics(
+                image: true,
+                label: 'Africa Online Stores. Brings people together.',
+                child: ExcludeSemantics(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 168,
+                        height: 168,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          alignment: Alignment.center,
+                          children: [
+                            Opacity(
+                              opacity: glowOpacity.clamp(0, 1),
+                              child: Transform.scale(
+                                scale: glowScale,
+                                child: const _LogoGlow(),
+                              ),
+                            ),
+                            Opacity(
+                              opacity: reveal.clamp(0, 1),
+                              child: Transform.scale(
+                                scale: revealScale,
+                                child: ImageFiltered(
+                                  imageFilter: ImageFilter.blur(
+                                    sigmaX: blur,
+                                    sigmaY: blur,
+                                  ),
+                                  child: Image.asset(
+                                    'assets/images/logo_redone.png',
+                                    width: 168,
+                                    height: 168,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, _, _) {
+                                      return Image.asset(
+                                        'assets/images/aos_logo.png',
+                                        width: 168,
+                                        height: 168,
+                                        fit: BoxFit.contain,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ),
-                Center(
-                  child: _CenterBrand(
-                    logoScale: _logoScale.value,
-                    logoOpacity: _logoOpacity.value,
-                    showText: _showText,
-                    textOpacity: _textOpacity.value,
-                    textOffset: _textOffset.value,
+                      const SizedBox(height: 26),
+                      Opacity(
+                        opacity: reveal.clamp(0, 1),
+                        child: Transform.translate(
+                          offset: Offset(0, 10 * (1 - reveal)),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 340),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'BRINGS PEOPLE TOGETHER',
+                                maxLines: 1,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 4,
+                                  color: Colors.white.withValues(alpha: 0.72),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _LogoGlow extends StatelessWidget {
+  const _LogoGlow();
+
+  @override
+  Widget build(BuildContext context) {
+    return OverflowBox(
+      maxWidth: 220,
+      maxHeight: 220,
+      child: Container(
+        width: 220,
+        height: 220,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [_kPrimaryRed.withAlpha(0x3A), _kPrimaryRed.withAlpha(0)],
+            stops: const [0, 0.68],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SplashProgress extends StatelessWidget {
+  const _SplashProgress({required this.animation});
+
+  final Animation<double> animation;
+
+  @override
+  Widget build(BuildContext context) {
+    final double bottom = (MediaQuery.sizeOf(context).height * 0.09).clamp(
+      48,
+      120,
+    );
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: SafeArea(
+        minimum: EdgeInsets.only(bottom: bottom),
+        child: AnimatedBuilder(
+          animation: animation,
+          builder: (context, _) {
+            return Semantics(
+              label: 'Loading',
+              value: '${(animation.value * 100).round()}%',
+              child: SizedBox(
+                width: 132,
+                height: 3,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: Stack(
+                    children: [
+                      ColoredBox(
+                        color: Colors.white.withValues(alpha: 0.10),
+                        child: const SizedBox.expand(),
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: Curves.easeInOut.transform(
+                          animation.value,
+                        ),
+                        alignment: Alignment.centerLeft,
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [_kPrimaryRed, Color(0xFFE63946)],
+                            ),
+                          ),
+                          child: SizedBox.expand(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             );
           },
         ),
@@ -256,353 +398,71 @@ class _SessionRestorationUnavailable extends ConsumerWidget {
         : localizations.session_restore_unavailable_message;
     final ThemeData theme = Theme.of(context);
 
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: math.max(0, constraints.maxHeight - 48),
-                ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 480),
-                    child: Semantics(
-                      container: true,
-                      liveRegion: true,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            isConnectivityIssue
-                                ? Icons.cloud_off_outlined
-                                : Icons.sync_problem_outlined,
-                            size: 64,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            title,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: _kErrorSystemUiStyle,
+      child: Scaffold(
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: math.max(0, constraints.maxHeight - 48),
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 480),
+                      child: Semantics(
+                        container: true,
+                        liveRegion: true,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isConnectivityIssue
+                                  ? Icons.cloud_off_outlined
+                                  : Icons.sync_problem_outlined,
+                              size: 64,
+                              color: theme.colorScheme.primary,
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            message,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyLarge,
-                          ),
-                          const SizedBox(height: 28),
-                          FilledButton.icon(
-                            onPressed: () {
-                              unawaited(
-                                ref
-                                    .read(authControllerProvider.notifier)
-                                    .retrySessionRestoration(),
-                              );
-                            },
-                            icon: const Icon(Icons.refresh),
-                            label: Text(localizations.common_try_again),
-                          ),
-                        ],
+                            const SizedBox(height: 24),
+                            Text(
+                              title,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              message,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyLarge,
+                            ),
+                            const SizedBox(height: 28),
+                            FilledButton.icon(
+                              onPressed: () {
+                                unawaited(
+                                  ref
+                                      .read(authControllerProvider.notifier)
+                                      .retrySessionRestoration(),
+                                );
+                              },
+                              icon: const Icon(Icons.refresh),
+                              label: Text(localizations.common_try_again),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _CenterBrand extends StatelessWidget {
-  final double logoScale;
-  final double logoOpacity;
-  final bool showText;
-  final double textOpacity;
-  final Offset textOffset;
-
-  const _CenterBrand({
-    required this.logoScale,
-    required this.logoOpacity,
-    required this.showText,
-    required this.textOpacity,
-    required this.textOffset,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Opacity(
-          opacity: logoOpacity.clamp(0, 1),
-          child: Transform.scale(
-            scale: logoScale,
-            child: Container(
-              width: 116,
-              height: 116,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: colors.primary.withAlpha(28),
-                    blurRadius: 30,
-                    spreadRadius: 5,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Image.asset(
-                'assets/images/logo_redone.png',
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) {
-                  return Image.asset(
-                    'assets/images/aos_logo.png',
-                    fit: BoxFit.contain,
-                  );
-                },
-              ),
-            ),
+              );
+            },
           ),
         ),
-        if (showText) ...[
-          const SizedBox(height: 30),
-          Opacity(
-            opacity: textOpacity.clamp(0, 1),
-            child: FractionalTranslation(
-              translation: textOffset,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'AOS',
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 52,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF171717),
-                      letterSpacing: 15,
-                      height: 1,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'AFRICA ONLINE STORES',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF777777),
-                      letterSpacing: 4.6,
-                      height: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _OrbitWheel extends StatelessWidget {
-  final double radius;
-
-  const _OrbitWheel({required this.radius});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final size = radius * 2 + 104;
-
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(
-        painter: _WheelPainter(
-          ringRadius: radius,
-          iconCount: _kWheelIcons.length,
-          primaryColor: colors.primary,
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: List.generate(_kWheelIcons.length, (index) {
-            final angle =
-                -math.pi / 2 + (2 * math.pi * index / _kWheelIcons.length);
-            final dx = radius * math.cos(angle);
-            final dy = radius * math.sin(angle);
-
-            return Transform.translate(
-              offset: Offset(dx, dy),
-              child: Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .96),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: colors.primary.withAlpha(26),
-                      blurRadius: 12,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  _kWheelIcons[index],
-                  color: colors.primary,
-                  size: 21,
-                ),
-              ),
-            );
-          }),
-        ),
       ),
     );
-  }
-}
-
-class _SplashBackground extends StatelessWidget {
-  const _SplashBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return const DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFFFF6F6),
-            Color(0xFFFBF1F1),
-            Color(0xFFF5FAF5),
-            Color(0xFFFFFFFF),
-          ],
-          stops: [0, .36, .72, 1],
-        ),
-      ),
-      child: CustomPaint(painter: _KenyanAccentPainter()),
-    );
-  }
-}
-
-class _KenyanAccentPainter extends CustomPainter {
-  const _KenyanAccentPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final w = size.width;
-    final h = size.height;
-
-    paint.shader = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        const Color(0xFF000000).withAlpha(58),
-        const Color(0xFF000000).withAlpha(0),
-      ],
-    ).createShader(Rect.fromLTWH(0, 0, w, h * .30));
-    canvas.drawRect(Rect.fromLTWH(0, 0, w, h * .30), paint);
-
-    paint.shader = null;
-    paint.color = Colors.white.withAlpha(118);
-    canvas.drawRect(Rect.fromLTWH(0, h * .265, w, h * .022), paint);
-
-    paint.shader = RadialGradient(
-      radius: .82,
-      colors: [
-        const Color(0xFFC1121F).withAlpha(70),
-        const Color(0xFFC1121F).withAlpha(0),
-      ],
-    ).createShader(Rect.fromLTWH(0, 0, w, h));
-    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), paint);
-
-    paint.shader = null;
-    paint.color = Colors.white.withAlpha(110);
-    canvas.drawRect(Rect.fromLTWH(0, h * .712, w, h * .022), paint);
-
-    paint.shader = LinearGradient(
-      begin: Alignment.bottomCenter,
-      end: Alignment.topCenter,
-      colors: [
-        const Color(0xFF006600).withAlpha(62),
-        const Color(0xFF006600).withAlpha(0),
-      ],
-    ).createShader(Rect.fromLTWH(0, h * .70, w, h * .30));
-    canvas.drawRect(Rect.fromLTWH(0, h * .70, w, h * .30), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _WheelPainter extends CustomPainter {
-  final double ringRadius;
-  final int iconCount;
-  final Color primaryColor;
-
-  const _WheelPainter({
-    required this.ringRadius,
-    required this.iconCount,
-    required this.primaryColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-
-    final ringPaint = Paint()
-      ..color = primaryColor.withAlpha(86)
-      ..strokeWidth = 1.25
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawCircle(center, ringRadius, ringPaint);
-
-    final spokePaint = Paint()
-      ..color = primaryColor.withAlpha(42)
-      ..strokeWidth = .85
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    const innerRadius = 58.0;
-    final outerRadius = ringRadius - 24;
-
-    for (var i = 0; i < iconCount; i++) {
-      final angle = -math.pi / 2 + (2 * math.pi * i / iconCount);
-
-      canvas.drawLine(
-        Offset(
-          center.dx + innerRadius * math.cos(angle),
-          center.dy + innerRadius * math.sin(angle),
-        ),
-        Offset(
-          center.dx + outerRadius * math.cos(angle),
-          center.dy + outerRadius * math.sin(angle),
-        ),
-        spokePaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _WheelPainter oldDelegate) {
-    return oldDelegate.ringRadius != ringRadius ||
-        oldDelegate.iconCount != iconCount ||
-        oldDelegate.primaryColor != primaryColor;
   }
 }

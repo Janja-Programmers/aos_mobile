@@ -19,7 +19,11 @@ class MediaHelper {
   // PICKERS
   // -------------------------
 
-  static Future<File?> pickImageWithChoice(BuildContext context) async {
+  static Future<File?> pickImageWithChoice(
+    BuildContext context, {
+    String galleryLabel = 'Choose from gallery',
+    String cameraLabel = 'Take a photo',
+  }) async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       builder: (sheetContext) {
@@ -31,12 +35,12 @@ class MediaHelper {
               children: [
                 ListTile(
                   leading: const Icon(Icons.photo_library_outlined),
-                  title: const Text('Choose from gallery'),
+                  title: Text(galleryLabel),
                   onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
                 ),
                 ListTile(
                   leading: const Icon(Icons.photo_camera_outlined),
-                  title: const Text('Take a photo'),
+                  title: Text(cameraLabel),
                   onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
                 ),
               ],

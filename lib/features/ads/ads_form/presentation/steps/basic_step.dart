@@ -6,8 +6,6 @@ import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/basi
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/section_tile.dart';
 import 'package:africaonlinestores/features/ads/ads_form/utils/ad_form_validator.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
-import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
-import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
 import 'package:africaonlinestores/shared/components/picker_field.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
 import 'package:flutter/material.dart';
@@ -129,25 +127,8 @@ class _BasicStepState extends ConsumerState<BasicStep> {
           leading: const Icon(Icons.category_outlined),
           placeholder: 'Select a category',
           onTap: () async {
-            final categoriesState = ref.read(categoriesControllerProvider);
-
-            CategoryNode? parentNode;
-
-            if (draft.categoryId != null) {
-              for (final p in categoriesState.parents) {
-                for (final c in p.children) {
-                  if (c.id == draft.categoryId) {
-                    parentNode = p;
-                    break;
-                  }
-                }
-                if (parentNode != null) break;
-              }
-            }
-
             final res = await context.pushNamed<Map<String, dynamic>>(
               AppRoutes.nSelectCategory,
-              extra: parentNode,
             );
 
             if (res == null) return;

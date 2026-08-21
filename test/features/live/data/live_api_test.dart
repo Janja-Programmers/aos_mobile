@@ -11,9 +11,7 @@ void main() {
   group('LiveApi start and join', () {
     test('start sends only normalized backend-supported fields', () async {
       final adapter = RecordingHttpClientAdapter((RequestOptions options) {
-        return jsonResponse(
-          successEnvelope(bootstrapData(role: 'host')),
-        );
+        return jsonResponse(successEnvelope(bootstrapData(role: 'host')));
       });
       final harness = await buildLiveApiHarness(adapter);
 
@@ -34,9 +32,7 @@ void main() {
 
     test('start omits an absent optional cover', () async {
       final adapter = RecordingHttpClientAdapter((RequestOptions options) {
-        return jsonResponse(
-          successEnvelope(bootstrapData(role: 'host')),
-        );
+        return jsonResponse(successEnvelope(bootstrapData(role: 'host')));
       });
       final harness = await buildLiveApiHarness(adapter);
 
@@ -47,26 +43,29 @@ void main() {
       });
     });
 
-    test('join preserves caller session and fills a missing response value', () async {
-      final adapter = RecordingHttpClientAdapter((RequestOptions options) {
-        return jsonResponse(
-          successEnvelope(bootstrapData(includeSessionId: false)),
+    test(
+      'join preserves caller session and fills a missing response value',
+      () async {
+        final adapter = RecordingHttpClientAdapter((RequestOptions options) {
+          return jsonResponse(
+            successEnvelope(bootstrapData(includeSessionId: false)),
+          );
+        });
+        final harness = await buildLiveApiHarness(adapter);
+
+        final result = await harness.liveApi.joinLive(
+          liveId: testLiveId,
+          sessionId: ' existing-session ',
         );
-      });
-      final harness = await buildLiveApiHarness(adapter);
 
-      final result = await harness.liveApi.joinLive(
-        liveId: testLiveId,
-        sessionId: ' existing-session ',
-      );
-
-      expect(adapter.singleRequest.path, ApiEndpoints.joinLiveEndpoint);
-      expect(adapter.singleRequest.data, <String, dynamic>{
-        'live_id': testLiveId,
-        'session_id': 'existing-session',
-      });
-      expect(result.rightOrNull?.session.sessionId, 'existing-session');
-    });
+        expect(adapter.singleRequest.path, ApiEndpoints.joinLiveEndpoint);
+        expect(adapter.singleRequest.data, <String, dynamic>{
+          'live_id': testLiveId,
+          'session_id': 'existing-session',
+        });
+        expect(result.rightOrNull?.session.sessionId, 'existing-session');
+      },
+    );
 
     test('malformed bootstrap becomes a typed parse failure', () async {
       final adapter = RecordingHttpClientAdapter((RequestOptions options) {

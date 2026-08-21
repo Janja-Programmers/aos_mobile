@@ -671,6 +671,69 @@ class AppLocalizationsAr extends AppLocalizations {
   String get liveFlipCameraAction => 'تبديل الكاميرا';
 
   @override
+  String get liveGoLiveAction => 'بدء البث المباشر';
+
+  @override
+  String get liveStartingAction => 'جارٍ البدء...';
+
+  @override
+  String get liveDetailsTitle => 'تفاصيل البث المباشر';
+
+  @override
+  String get liveEditDetailsAction => 'تعديل تفاصيل البث المباشر';
+
+  @override
+  String get liveEditDetailsHint => 'اضغط لتعديل العنوان أو الغلاف';
+
+  @override
+  String get liveCoverLabel => 'صورة الغلاف';
+
+  @override
+  String get liveChangeCoverAction => 'تغيير الغلاف';
+
+  @override
+  String get liveChooseCoverFromGallery => 'الاختيار من المعرض';
+
+  @override
+  String get liveTakeCoverPhoto => 'التقاط صورة';
+
+  @override
+  String get liveTitleLabel => 'عنوان البث المباشر';
+
+  @override
+  String get liveTitleHint => 'أضف عنوانًا للبث المباشر';
+
+  @override
+  String get liveTitleRequired => 'أضف عنوانًا للبث المباشر للمتابعة.';
+
+  @override
+  String get liveCoverRequired => 'أضف صورة غلاف للمتابعة.';
+
+  @override
+  String get liveUploadingCover => 'جارٍ رفع الغلاف...';
+
+  @override
+  String get liveCameraStarting => 'جارٍ تشغيل الكاميرا...';
+
+  @override
+  String get liveCameraUnavailable => 'معاينة الكاميرا غير متاحة';
+
+  @override
+  String get liveCameraStartError => 'تعذر تشغيل معاينة الكاميرا.';
+
+  @override
+  String get liveNoAlternateCameraError => 'لا تتوفر كاميرا بديلة.';
+
+  @override
+  String get liveCameraFlipError => 'تعذر تبديل الكاميرا.';
+
+  @override
+  String get liveCoverUploadError => 'تعذر رفع غلاف البث المباشر.';
+
+  @override
+  String get liveCoverSelectionError => 'تعذر اختيار غلاف للبث المباشر.';
+
+  @override
   String get watchThisLiveOnAos => 'شاهد هذا البث المباشر على AOS';
 
   @override

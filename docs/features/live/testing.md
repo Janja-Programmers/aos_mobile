@@ -11,7 +11,7 @@
 | `data/live_cohost_api_test.dart` | Opaque identity invitation, response normalization, private co-host token mapping |
 | `application/live_manager_test.dart` | Duplicate joins, stale Live switching, reaction deduplication, repeated-submit lock, tracked end cleanup |
 | `comments/live_comments_controller_test.dart` | Stale fetch rejection, realtime deduplication, deletion tombstones, duplicate submit suppression, optimistic rollback |
-| `presentation/go_live_screen_test.dart` | Blank/whitespace title gating and button-token icon colors |
+| `presentation/go_live_screen_test.dart` | Profile title/avatar defaults, editable 140-character details sheet, missing-cover gating, edited-title preservation, 320px/200%-text scrolling, and button-token icon colors |
 | `presentation/live_right_actions_test.dart` | Share action, complete long-press picker, small-screen/200% text overflow guard |
 | `presentation/live_top_bar_test.dart` | Single reaction aggregate, viewer count, host/viewer actions, Follow colors/action, small-screen/200% text overflow guard |
 | `regression/live_source_contract_test.dart` | Retired listeners absent, one coordinator, no comment polling, Feed tracked join/leave ownership, physical-position camera flip, explicit host follow and refresh |
@@ -46,8 +46,8 @@ least Android foreground/background and iOS foreground when available.
 | ID | Short steps | Expected result | Evidence if it fails |
 | --- | --- | --- | --- |
 | LIVE-01 | Open Go Live, deny camera | Start is blocked safely; no backend Live or leaked preview track | Screen recording, permission state, sanitized logs |
-| LIVE-02 | Allow camera, leave title blank/whitespace, then enter a title | Go Live stays disabled until a nonblank title exists; no request is sent while disabled | Recording and sanitized request count |
-| LIVE-03 | Flip the camera twice on Go Live, then start without a cover | Preview changes front→back→front; one Live starts and the prepared track continues without freeze | Recording and sanitized start/LiveKit timeline |
+| LIVE-02 | Open Go Live with a profile name/avatar, then tap the details card | Current name and avatar are prefilled; the keyboard-safe sheet permits title and cover changes; title counter is `/140` | Recording, profile payload fields, screenshots |
+| LIVE-03 | Clear the title, test an account without an avatar, then select a cover and flip the camera twice | Save/Go Live stay disabled until title and cover are ready; camera changes front→back→front; one Live starts with the prepared track | Recording and sanitized start/upload/LiveKit timeline |
 | LIVE-04 | Repeatedly tap Start on slow network | One backend start and one room join | Network trace with credentials redacted |
 | LIVE-05 | Viewer opens Feed Live tab and vertically scrolls | Visible eligible Live auto-plays; previous session leaves before next joins | Recording plus sanitized join/leave IDs |
 | LIVE-06 | Tap Feed Live into full screen | Existing room/session is reused; no playback reset or duplicate viewer count | Recording and request counts |
@@ -89,5 +89,4 @@ observed UI, and a short sanitized request/event sequence.
 - LiveKit publication/subscription quality and reconnect under packet loss;
 - multi-device backend concurrency and rate-limit enforcement;
 - hosted HTTPS universal/app-link fallback;
-- reply UI, cursor history pagination, and full localization, which are not yet
-  implemented in the current Flutter screen.
+- reply UI, cursor history pagination, and full feature-wide localization.

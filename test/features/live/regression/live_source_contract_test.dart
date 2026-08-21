@@ -11,7 +11,11 @@ void main() {
     ];
 
     for (final path in retiredPaths) {
-      expect(File(path).existsSync(), isFalse, reason: '$path must stay retired');
+      expect(
+        File(path).existsSync(),
+        isFalse,
+        reason: '$path must stay retired',
+      );
     }
   });
 
@@ -63,6 +67,25 @@ void main() {
     expect(source, contains('lk.CameraPosition.back'));
     expect(source, isNot(contains('currentOptions.deviceId')));
   });
+
+  test(
+    'Go Live details use account profile defaults and backend title bound',
+    () {
+      final screen = File(
+        'lib/features/live/presentation/screens/go_live_screen.dart',
+      ).readAsStringSync();
+      final details = File(
+        'lib/features/live/presentation/widgets/go_live_details_sheet.dart',
+      ).readAsStringSync();
+
+      expect(screen, contains('accountsControllerProvider'));
+      expect(screen, contains('AccountProfileSnapshot.fromJson'));
+      expect(screen, contains('_titleWasEdited'));
+      expect(screen, contains('_hasReadyCover'));
+      expect(details, contains('goLiveTitleMaxLength = 140'));
+      expect(details, contains("Key('go_live_change_cover')"));
+    },
+  );
 
   test('Live host follow is explicit, locked, and canonically refreshed', () {
     final source = File(

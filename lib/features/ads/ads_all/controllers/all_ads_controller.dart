@@ -30,7 +30,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
   bool get isWishlist => params.mode == AllAdsMode.wishlist;
 
-  List<Map<String, dynamic>> _allCategories = [];
+  List<CategoryNode> _allCategories = <CategoryNode>[];
 
   /// Initialize controller from screen navigation
   Future<void> _init() async {
@@ -45,9 +45,15 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     if (!isWishlist) {
       await _loadAllCategories();
+      if (!mounted) {
+        return;
+      }
       _resolveChildren();
     }
 
+    if (!mounted) {
+      return;
+    }
     await load(initial: true);
   }
 
@@ -60,24 +66,15 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
       // 🔥 FIX: if parent is ALSO null → show root categories
       if (parentId == null) {
-        state = state.copyWith(
-          children: _allCategories.map(CategoryNode.fromJson).toList(),
-        );
+        state = state.copyWith(children: _allCategories);
         return;
       }
 
       // Normal parent → show its children
-      final parentNode = _allCategories.firstWhere(
-        (Map<String, dynamic> item) => item['id'] == parentId,
-        orElse: () => <String, dynamic>{},
-      );
+      final CategoryNode? parentNode = _rootById(parentId);
 
-      if (parentNode.isNotEmpty) {
-        final children = asJsonMapList(parentNode['children']);
-
-        state = state.copyWith(
-          children: children.map(CategoryNode.fromJson).toList(),
-        );
+      if (parentNode != null) {
+        state = state.copyWith(children: parentNode.children);
       } else {
         state = state.copyWith(children: []);
       }
@@ -86,33 +83,21 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     }
 
     // ✅ CASE 2: Selected is a parent → show its children
-    final parent = _allCategories.firstWhere(
-      (Map<String, dynamic> item) => item['id'] == selected,
-      orElse: () => <String, dynamic>{},
-    );
+    final CategoryNode? parent = _rootById(selected);
 
-    if (parent.isNotEmpty) {
-      final children = asJsonMapList(parent['children']);
-
-      state = state.copyWith(
-        children: children.map(CategoryNode.fromJson).toList(),
-      );
+    if (parent != null) {
+      state = state.copyWith(children: parent.children);
       return;
     }
 
     // ✅ CASE 3: Selected is a child → show siblings
-    for (final p in _allCategories) {
-      final children = asJsonMapList(p['children']);
-
-      final match = children.firstWhere(
-        (Map<String, dynamic> child) => child['id'] == selected,
-        orElse: () => <String, dynamic>{},
+    for (final CategoryNode root in _allCategories) {
+      final bool containsSelected = root.children.any(
+        (CategoryNode child) => child.id == selected,
       );
 
-      if (match.isNotEmpty) {
-        state = state.copyWith(
-          children: children.map(CategoryNode.fromJson).toList(),
-        );
+      if (containsSelected) {
+        state = state.copyWith(children: root.children);
         return;
       }
     }
@@ -122,13 +107,27 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   }
 
   Future<void> _loadAllCategories() async {
-    final api = ref.read(categoriesApiProvider);
+    final repository = ref.read(categoriesRepositoryProvider);
 
-    final res = await api.getCategories();
+    final res = await repository.getCategories();
 
-    res.fold((_) {}, (data) {
-      _allCategories = asJsonMapList(data['data']);
-    });
+    if (!mounted) {
+      return;
+    }
+
+    final List<CategoryNode>? categories = res.rightOrNull;
+    if (categories != null) {
+      _allCategories = categories;
+    }
+  }
+
+  CategoryNode? _rootById(String id) {
+    for (final CategoryNode root in _allCategories) {
+      if (root.id == id) {
+        return root;
+      }
+    }
+    return null;
   }
 
   Future<void> load({bool initial = false}) async {

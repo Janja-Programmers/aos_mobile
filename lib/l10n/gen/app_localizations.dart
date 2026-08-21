@@ -1358,6 +1358,132 @@ abstract class AppLocalizations {
   /// **'Flip camera'**
   String get liveFlipCameraAction;
 
+  /// No description provided for @liveGoLiveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Go LIVE'**
+  String get liveGoLiveAction;
+
+  /// No description provided for @liveStartingAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting...'**
+  String get liveStartingAction;
+
+  /// No description provided for @liveDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live details'**
+  String get liveDetailsTitle;
+
+  /// No description provided for @liveEditDetailsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit live details'**
+  String get liveEditDetailsAction;
+
+  /// No description provided for @liveEditDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to edit title or cover'**
+  String get liveEditDetailsHint;
+
+  /// No description provided for @liveCoverLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover photo'**
+  String get liveCoverLabel;
+
+  /// No description provided for @liveChangeCoverAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Change cover'**
+  String get liveChangeCoverAction;
+
+  /// No description provided for @liveChooseCoverFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get liveChooseCoverFromGallery;
+
+  /// No description provided for @liveTakeCoverPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get liveTakeCoverPhoto;
+
+  /// No description provided for @liveTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Live title'**
+  String get liveTitleLabel;
+
+  /// No description provided for @liveTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a live title'**
+  String get liveTitleHint;
+
+  /// No description provided for @liveTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a live title to continue.'**
+  String get liveTitleRequired;
+
+  /// No description provided for @liveCoverRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a cover photo to continue.'**
+  String get liveCoverRequired;
+
+  /// No description provided for @liveUploadingCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading cover...'**
+  String get liveUploadingCover;
+
+  /// No description provided for @liveCameraStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting camera...'**
+  String get liveCameraStarting;
+
+  /// No description provided for @liveCameraUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera preview unavailable'**
+  String get liveCameraUnavailable;
+
+  /// No description provided for @liveCameraStartError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start camera preview.'**
+  String get liveCameraStartError;
+
+  /// No description provided for @liveNoAlternateCameraError.
+  ///
+  /// In en, this message translates to:
+  /// **'No alternate camera is available.'**
+  String get liveNoAlternateCameraError;
+
+  /// No description provided for @liveCameraFlipError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not flip camera.'**
+  String get liveCameraFlipError;
+
+  /// No description provided for @liveCoverUploadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not upload the Live cover.'**
+  String get liveCoverUploadError;
+
+  /// No description provided for @liveCoverSelectionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not select a Live cover.'**
+  String get liveCoverSelectionError;
+
   /// No description provided for @watchThisLiveOnAos.
   ///
   /// In en, this message translates to:

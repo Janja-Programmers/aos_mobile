@@ -76,6 +76,11 @@ class SubcategoriesGrid extends StatelessWidget {
                                 fit: BoxFit.cover,
                                 width: double.infinity,
                                 height: double.infinity,
+                                errorBuilder: (_, _, _) => Icon(
+                                  Icons.grid_view_outlined,
+                                  size: 26,
+                                  color: colors.textMuted,
+                                ),
                               ),
                             ),
                     ),

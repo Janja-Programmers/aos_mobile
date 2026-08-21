@@ -40,25 +40,28 @@ void main() {
     await realtime.close();
   });
 
-  test('duplicate joins for the same Live share one backend operation', () async {
-    final response = Completer<LiveBootstrap>();
-    repository.joinResponses[testLiveId] = response;
+  test(
+    'duplicate joins for the same Live share one backend operation',
+    () async {
+      final response = Completer<LiveBootstrap>();
+      repository.joinResponses[testLiveId] = response;
 
-    final first = manager.joinLive(liveId: testLiveId);
-    final second = manager.joinLive(liveId: testLiveId);
-    await Future<void>.delayed(Duration.zero);
+      final first = manager.joinLive(liveId: testLiveId);
+      final second = manager.joinLive(liveId: testLiveId);
+      await Future<void>.delayed(Duration.zero);
 
-    expect(repository.joinRequests, <String>[testLiveId]);
+      expect(repository.joinRequests, <String>[testLiveId]);
 
-    response.complete(testBootstrap());
-    expect(await first, isTrue);
-    expect(await second, isTrue);
-    expect(repository.joinRequests, hasLength(1));
-    expect(repository.trackJoinRequests, hasLength(1));
-    expect(liveKit.connectCalls, 1);
-    expect(manager.currentState.session?.liveId, testLiveId);
-    expect(manager.currentState.hasActiveRoom, isTrue);
-  });
+      response.complete(testBootstrap());
+      expect(await first, isTrue);
+      expect(await second, isTrue);
+      expect(repository.joinRequests, hasLength(1));
+      expect(repository.trackJoinRequests, hasLength(1));
+      expect(liveKit.connectCalls, 1);
+      expect(manager.currentState.session?.liveId, testLiveId);
+      expect(manager.currentState.hasActiveRoom, isTrue);
+    },
+  );
 
   test('a later Live supersedes an in-flight stale join', () async {
     final firstResponse = Completer<LiveBootstrap>();
@@ -167,10 +170,7 @@ class _ScriptedLiveRepository implements LiveRepository {
   Completer<LiveReaction>? reactionResponse;
 
   @override
-  Future<LiveBootstrap> joinLive({
-    required String liveId,
-    String? sessionId,
-  }) {
+  Future<LiveBootstrap> joinLive({required String liveId, String? sessionId}) {
     joinRequests.add(liveId);
     final response = joinResponses[liveId];
     if (response == null) {

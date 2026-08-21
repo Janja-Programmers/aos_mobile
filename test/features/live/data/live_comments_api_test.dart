@@ -7,32 +7,35 @@ import '../helpers/live_api_harness.dart';
 import '../helpers/live_fixtures.dart';
 
 void main() {
-  test('comment submission sends content, session, and idempotency key', () async {
-    final adapter = RecordingHttpClientAdapter((RequestOptions options) {
-      return jsonResponse(
-        successEnvelope(<String, dynamic>{
-          'message': _messageJson(id: 'MESSAGE-001'),
-        }),
+  test(
+    'comment submission sends content, session, and idempotency key',
+    () async {
+      final adapter = RecordingHttpClientAdapter((RequestOptions options) {
+        return jsonResponse(
+          successEnvelope(<String, dynamic>{
+            'message': _messageJson(id: 'MESSAGE-001'),
+          }),
+        );
+      });
+      final harness = await buildLiveApiHarness(adapter);
+
+      final result = await harness.commentsApi.addComment(
+        liveId: testLiveId,
+        comment: 'Hello Live',
+        sessionId: testViewerSessionId,
+        idempotencyKey: 'idempotency-001',
       );
-    });
-    final harness = await buildLiveApiHarness(adapter);
 
-    final result = await harness.commentsApi.addComment(
-      liveId: testLiveId,
-      comment: 'Hello Live',
-      sessionId: testViewerSessionId,
-      idempotencyKey: 'idempotency-001',
-    );
-
-    expect(result.rightOrNull?.id, 'MESSAGE-001');
-    expect(adapter.singleRequest.path, ApiEndpoints.addLiveComment);
-    expect(adapter.singleRequest.data, <String, dynamic>{
-      'live_id': testLiveId,
-      'content': 'Hello Live',
-      'session_id': testViewerSessionId,
-      'idempotency_key': 'idempotency-001',
-    });
-  });
+      expect(result.rightOrNull?.id, 'MESSAGE-001');
+      expect(adapter.singleRequest.path, ApiEndpoints.addLiveComment);
+      expect(adapter.singleRequest.data, <String, dynamic>{
+        'live_id': testLiveId,
+        'content': 'Hello Live',
+        'session_id': testViewerSessionId,
+        'idempotency_key': 'idempotency-001',
+      });
+    },
+  );
 
   test('comment history filters server-deleted rows', () async {
     final adapter = RecordingHttpClientAdapter((RequestOptions options) {

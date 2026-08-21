@@ -43,6 +43,13 @@ Base path: `/api/method/aos.api.v1.live`.
 | React | POST `send_reaction` | `live_id`, `reaction_type`; optional `session_id` for host compatibility | `data.reaction` |
 | Chat share | POST `share_live_to_chat` | `live_id`, `conversation_id`; optional `message`, `idempotency_key` | Success envelope |
 
+`start_live.title` is required and bounded to 140 Unicode characters by the
+backend. The transport permits an omitted cover. The mobile preparation screen
+uses the current profile avatar as `cover_image` when available and applies a
+stricter presentation rule that a cover must be ready before Start. A newly
+selected cover is uploaded with purpose `live_cover` and sent as
+`live_cover_media`; Flutter does not send conflicting cover aliases.
+
 `mapLiveBootstrap` rejects a response when the Live/session IDs differ or the
 server-controlled room name, token, WebSocket URL, or identity is missing. The
 client never fabricates private credentials.

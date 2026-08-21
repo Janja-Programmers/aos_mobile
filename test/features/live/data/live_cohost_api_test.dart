@@ -30,8 +30,9 @@ void main() {
       'livekit_identity': 'aos:participant:opaque-viewer',
     });
     expect(
-      (adapter.singleRequest.data! as Map<String, dynamic>)
-          .containsKey('session_id'),
+      (adapter.singleRequest.data! as Map<String, dynamic>).containsKey(
+        'session_id',
+      ),
       isFalse,
     );
   });

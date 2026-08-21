@@ -50,7 +50,7 @@ class SelectCategoryScreen extends ConsumerWidget {
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, i) {
           final n = nodes[i];
-          final hasChildren = n.children.isNotEmpty;
+          final isGroup = n.isGroup;
           final iconUrl = buildCategoryIconUrl(n.icon);
 
           return Material(
@@ -58,7 +58,7 @@ class SelectCategoryScreen extends ConsumerWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () async {
-                if (hasChildren) {
+                if (isGroup) {
                   final result = await context.push<Map<String, dynamic>>(
                     AppRoutes.selectCategory,
                     extra: n,
@@ -111,7 +111,7 @@ class SelectCategoryScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(n.name, style: context.pStrong),
-                          if (hasChildren) ...[
+                          if (isGroup) ...[
                             const SizedBox(height: 2),
                             Text(
                               '${n.children.length} subcategories',
@@ -122,10 +122,11 @@ class SelectCategoryScreen extends ConsumerWidget {
                       ),
                     ),
 
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: colors.textPrimary,
-                    ),
+                    if (isGroup)
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: colors.textPrimary,
+                      ),
                   ],
                 ),
               ),

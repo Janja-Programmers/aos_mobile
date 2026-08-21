@@ -1,6 +1,6 @@
-import 'package:africaonlinestores/core/api/failure.dart';
-import 'package:africaonlinestores/core/utils/json_utils.dart';
-import 'package:africaonlinestores/features/catalog/data/categories_api.dart';
+import 'dart:async';
+
+import 'package:africaonlinestores/features/catalog/domain/categories_repository.dart';
 import 'package:africaonlinestores/features/catalog/domain/categories_state.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/category_ads_provider.dart';
@@ -13,49 +13,41 @@ final categoriesControllerProvider =
     );
 
 class CategoriesController extends StateNotifier<CategoriesState> {
-  CategoriesController(this.ref) : super(const CategoriesState(loading: true)) {
-    _api = ref.read(categoriesApiProvider);
-    _loadCategories();
+  CategoriesController(Ref ref)
+    : _repository = ref.read(categoriesRepositoryProvider),
+      super(const CategoriesState(loading: true)) {
+    unawaited(_loadCategories());
   }
 
-  final Ref ref;
-  late final CategoriesApi _api;
+  final CategoriesRepository _repository;
+  int _requestGeneration = 0;
 
   Future<void> _loadCategories() async {
+    final int generation = ++_requestGeneration;
     state = state.copyWith(loading: true, clearError: true);
 
-    final res = await _api.getCategories();
+    final res = await _repository.getCategories();
 
-    if (res.isLeft) {
-      final f = res.leftOrNull ?? const Failure('Failed to load categories.');
-      state = state.copyWith(loading: false, errorMessage: f.message);
+    if (!mounted || generation != _requestGeneration) {
       return;
     }
 
-    final payload = res.rightOrNull ?? <String, dynamic>{};
-    final ok = payload['ok'] == true;
-
-    if (!ok) {
+    if (res.isLeft) {
       state = state.copyWith(
         loading: false,
-        errorMessage: (payload['message'] ?? 'Failed to load categories.')
-            .toString(),
+        errorMessage: res.leftOrNull?.message ?? 'Failed to load categories.',
       );
       return;
     }
 
-    final dataRaw = payload['data'];
-    final parents = <CategoryNode>[];
-
-    if (dataRaw is List) {
-      for (final e in dataRaw) {
-        if (e is Map) {
-          parents.add(CategoryNode.fromJson(asJsonMap(e)));
-        }
-      }
-    }
-
-    final selected = parents.isNotEmpty ? parents.first.id : null;
+    final List<CategoryNode> parents = res.rightOrNull ?? <CategoryNode>[];
+    final String? currentSelection = state.selectedParentId;
+    final bool selectionStillExists =
+        currentSelection != null &&
+        parents.any((CategoryNode item) => item.id == currentSelection);
+    final String? selected = selectionStillExists
+        ? currentSelection
+        : (parents.isEmpty ? null : parents.first.id);
 
     state = state.copyWith(
       loading: false,

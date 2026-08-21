@@ -116,11 +116,7 @@ LiveBootstrap testBootstrap({
 }) {
   return LiveBootstrap(
     live: testLive(liveId: liveId, isHost: isHost),
-    session: testSession(
-      liveId: liveId,
-      role: role,
-      sessionId: sessionId,
-    ),
+    session: testSession(liveId: liveId, role: role, sessionId: sessionId),
   );
 }
 
@@ -145,10 +141,6 @@ Map<String, dynamic> bootstrapData({
 
 Map<String, dynamic> successEnvelope(Map<String, dynamic> data) {
   return <String, dynamic>{
-    'message': <String, dynamic>{
-      'ok': true,
-      'message': 'OK',
-      'data': data,
-    },
+    'message': <String, dynamic>{'ok': true, 'message': 'OK', 'data': data},
   };
 }

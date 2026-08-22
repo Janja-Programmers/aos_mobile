@@ -84,4 +84,75 @@ void main() {
     expect(sending, isNot(contains('String? senderId')));
     expect(screen, isNot(contains('senderId: currentUserId')));
   });
+
+  test('conversation ticks correlate realtime status to last message id', () {
+    final conversation = File(
+      'lib/features/connect/chats/domain/chat_conversation.dart',
+    ).readAsStringSync();
+    final controller = File(
+      'lib/features/connect/conversations/application/controllers/'
+      'chat_conversations_controller.dart',
+    ).readAsStringSync();
+
+    expect(conversation, contains("json['last_message_id']"));
+    expect(conversation, contains('messageIds.contains(messageId)'));
+    expect(controller, contains('realtime.messageStatus.listen'));
+    expect(controller, contains('applyLastMessageStatus'));
+  });
+
+  test('chat menu, reply navigation and attachment sheet match UX contract', () {
+    final appBar = File(
+      'lib/features/connect/chats/presentation/widgets/chat_screen/'
+      'chat_app_bar.dart',
+    ).readAsStringSync();
+    final screen = File(
+      'lib/features/connect/chats/presentation/screens/chat_screen.dart',
+    ).readAsStringSync();
+    final attachmentSheet = File(
+      'lib/features/connect/chats/presentation/widgets/chat_screen/chat_input/'
+      'chat_attachment_sheet.dart',
+    ).readAsStringSync();
+    final actions = File(
+      'lib/features/connect/chats/presentation/widgets/chat_screen/'
+      'message_actions_sheet.dart',
+    ).readAsStringSync();
+
+    expect(appBar, contains('chat_audio_call'));
+    expect(appBar, contains('chat_clear_chat'));
+    expect(appBar, isNot(contains('changeWallpaper')));
+    expect(screen, contains('ensureMessageLoaded'));
+    expect(screen, contains('Scrollable.ensureVisible'));
+    expect(attachmentSheet, contains('chat_gallery'));
+    expect(attachmentSheet, contains('chat_camera'));
+    expect(attachmentSheet, contains('chat_document'));
+    expect(attachmentSheet, contains('chat_audio'));
+    expect(attachmentSheet, isNot(contains('onLocation')));
+    expect(attachmentSheet, isNot(contains('onContact')));
+    expect(actions, contains('final Rect anchor'));
+    expect(actions, contains('gap: 0'));
+    expect(actions, contains('BoxConstraints getConstraintsForChild'));
+  });
+
+  test('conversation long press enters bulk selection before destructive work', () {
+    final connect = File(
+      'lib/features/connect/conversations/presentation/connect_screen.dart',
+    ).readAsStringSync();
+    final list = File(
+      'lib/features/connect/chats/presentation/screens/chat_list_screen.dart',
+    ).readAsStringSync();
+    final controller = File(
+      'lib/features/connect/conversations/application/controllers/'
+      'chat_conversations_controller.dart',
+    ).readAsStringSync();
+
+    expect(connect, contains('selectConversations'));
+    expect(connect, contains('markSelectedRead'));
+    expect(connect, contains('clearSelectedChats'));
+    expect(connect, contains('deleteSelectedConversations'));
+    expect(list, contains('onSelectionChanged?.call(conv.id, true)'));
+    expect(list, isNot(contains('_showDeleteConversationSheet')));
+    expect(controller, contains('markConversationsRead'));
+    expect(controller, contains('clearConversations'));
+    expect(controller, contains('deleteConversations'));
+  });
 }

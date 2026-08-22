@@ -106,8 +106,6 @@ void main() {
                     onCloseAdPreview: () {},
                     onCloseReplyPreview: () {},
                     onTyping: (_) {},
-                    onAudioCall: () {},
-                    onVideoCall: () {},
                     onSend: send,
                   ),
                 ],

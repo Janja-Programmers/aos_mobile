@@ -5,6 +5,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/payloads/chat_shared_payload.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/attachment_grid.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_message_status_icon.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/call_message_tile.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/message_ad_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/message_bubble/reaction_chips.dart';
@@ -26,6 +27,7 @@ class MessageBubble extends StatelessWidget {
     this.otherDisplayName,
     this.otherAvatarUrl,
     this.onLongPress,
+    this.onReplyTap,
     this.onRetry,
     this.onAdTap,
   });
@@ -37,7 +39,8 @@ class MessageBubble extends StatelessWidget {
   final String? otherUserId;
   final String? otherDisplayName;
   final String? otherAvatarUrl;
-  final ValueChanged<Offset>? onLongPress;
+  final ValueChanged<Rect>? onLongPress;
+  final VoidCallback? onReplyTap;
   final VoidCallback? onRetry;
   final ValueChanged<String>? onAdTap;
 
@@ -97,12 +100,27 @@ class MessageBubble extends StatelessWidget {
       label: _semanticLabel(l10n),
       child: Align(
         alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onLongPressStart: onLongPress == null
-              ? null
-              : (details) => onLongPress!(details.globalPosition),
-          child: Container(
+        child: Builder(
+          builder: (bubbleContext) => GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onLongPressStart: onLongPress == null
+                ? null
+                : (_) {
+                    final renderBox =
+                        bubbleContext.findRenderObject() as RenderBox?;
+                    if (renderBox == null || !renderBox.attached) return;
+                    final origin = renderBox.localToGlobal(Offset.zero);
+                    final bounds = origin & renderBox.size;
+                    onLongPress!(
+                      Rect.fromLTRB(
+                        bounds.left,
+                        bounds.top + 4,
+                        bounds.right,
+                        bounds.bottom - 4,
+                      ),
+                    );
+                  },
+            child: Container(
             margin: EdgeInsets.only(
               left: isMe ? 46 : 14,
               right: isMe ? 14 : 46,
@@ -139,7 +157,11 @@ class MessageBubble extends StatelessWidget {
                   ],
 
                   if (message.replyTo != null && !isDeleted) ...[
-                    ReplyPreview(reply: message.replyTo!, isMe: isMe),
+                    ReplyPreview(
+                      reply: message.replyTo!,
+                      isMe: isMe,
+                      onTap: onReplyTap,
+                    ),
                     const SizedBox(height: 6),
                   ],
 
@@ -208,6 +230,7 @@ class MessageBubble extends StatelessWidget {
                   if (message.isLocalFailed) _RetryRow(onRetry: onRetry),
                 ],
               ),
+            ),
             ),
           ),
         ),
@@ -478,30 +501,16 @@ class _MessageMeta extends StatelessWidget {
           ),
         ],
         if (isMe) const SizedBox(width: 4),
-        if (isMe) _StatusIcon(message: message),
+        if (isMe)
+          ChatMessageStatusIcon(
+            deliveredAt: message.deliveredAt,
+            readAt: message.readAt,
+            sentColor: colors.white,
+            deliveredColor: colors.white,
+            readColor: colors.blue,
+          ),
       ],
     );
-  }
-}
-
-class _StatusIcon extends StatelessWidget {
-  const _StatusIcon({required this.message});
-
-  final ChatMessage message;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-
-    if (message.readAt != null) {
-      return Icon(Icons.done_all, size: 14, color: colors.blue);
-    }
-
-    if (message.deliveredAt != null) {
-      return Icon(Icons.done_all, size: 14, color: colors.white);
-    }
-
-    return Icon(Icons.done, size: 14, color: colors.white);
   }
 }
 

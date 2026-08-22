@@ -42,7 +42,7 @@ void main() {
             onDelete: () {},
             onTranslate: () {},
             onForward: () {},
-            anchor: Offset.zero,
+            anchor: const Rect.fromLTWH(90, 260, 140, 60),
           ),
         ),
       ),

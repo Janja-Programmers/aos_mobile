@@ -17,6 +17,7 @@ Calls remain a separate state domain. Shared Connect navigation and badges must 
 | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | Authenticated identity                                                              | `authControllerProvider` and `currentCanonicalAccountIdProvider` |
 | Conversation list and unread counts                                                 | `ConversationsController`                                        |
+| Conversation multi-selection                                                        | Ephemeral `ConnectScreen` state                                  |
 | One active conversation's messages, pagination, actions, and realtime subscriptions | `ChatMessagesController` family, keyed by conversation ID        |
 | Typing and presence                                                                 | Existing Chat typing/presence controllers                        |
 | Composer, reply, edit, and attachment selection                                     | Active `ChatScreen` state and focused composer helpers           |
@@ -83,13 +84,28 @@ The Connect screen supports loading, empty, populated, error, offline/retry, loc
 
 New Conversation uses backend-backed verified seller and friend lists. Search is debounced, stale result generations are ignored, pagination deduplicates canonical user IDs, repeated open/call taps are guarded, and no display name is used as participant identity.
 
-The screenshot-driven menus remain context-specific:
+The menus remain context-specific:
 
-- Chats: Mark all read, Starred messages, Settings.
+- Chats: Select conversations, Mark all read, Starred messages, Settings.
+- Selected conversations: Mark as read, Clear chats, Delete conversations.
 - Calls: Clear call log, Settings.
-- Active Chat: Call, Video call, Change wallpaper.
+- Active Chat: Audio call, Video call, Clear chat.
 
 Mark all read composes the available conversation-list and per-conversation `mark_read` contracts. Partial failures remain failures and are not represented as complete success.
+
+Long-pressing a conversation enters selection mode and selects that row. The
+same mode is discoverable from Select conversations. Circular selectors are
+visible only while selection mode is active; unchecking the last row exits the
+mode. Bulk actions call the existing per-conversation backend endpoints,
+preserve failed IDs as selected after partial failure, and never treat a
+partial mutation as full success. Delete remains confirmation-gated.
+
+For the authenticated sender's conversation preview, tick state uses the same
+mapping as a message bubble: one tick when neither timestamp exists, two ticks
+when `last_message_delivered_at` exists, and two blue ticks when
+`last_message_read_at` exists. Realtime status events update a conversation
+only when `message_ids` contains its exact `last_message_id`; an older-message
+status cannot overwrite the newest preview.
 
 ## Messages, pagination, and realtime
 
@@ -100,10 +116,19 @@ The active controller owns one set of message subscriptions. Initialization canc
 - Optimistic failures remain retryable and keep canonical ownership.
 - Incoming-message read synchronization compares canonical sender IDs.
 - Edits, deletes, status changes, and reactions update the matching stable message ID without changing its owner or order.
+- Tapping a reply preview loads older pages until the referenced message is found, then scrolls it into view without timestamp guesses or fixed delays.
+- The long-press action card is anchored to the pressed bubble rectangle. Its pointer touches the bubble edge and the card chooses the safer side of the available viewport.
 
 ## Attachments
 
-Existing media/upload infrastructure remains authoritative. The attachment sheet exposes only implemented paths and call shortcuts. A selected file moves through selection/upload/send/failure/retry or cancellation before a backend message is considered sent. Upload/message duplicate-submit guards remain required.
+Existing media/upload infrastructure remains authoritative. The attachment
+sheet exposes only the backend-supported send paths: Gallery, Camera, Document,
+and Audio. Location and contact models/renderers remain available for future
+backend support, but no composer action exposes them. Call shortcuts live in
+the Chat top menu instead of the attachment sheet. A selected file moves
+through selection/upload/send/failure/retry or cancellation before a backend
+message is considered sent. Upload/message duplicate-submit guards remain
+required.
 
 Backend attachment identifiers and URLs are stored separately from local preview paths. Missing media is rendered as a recoverable placeholder rather than causing layout failure.
 
@@ -111,7 +136,10 @@ Backend attachment identifiers and URLs are stored separately from local preview
 
 Voice recording uses the existing `record` and media upload flow. Microphone permission is requested before recording. Start, finish, cancel, disposal, and lifecycle interruption clean up the recorder and temporary file flow.
 
-The backend does not persist waveform samples. The UI therefore displays real duration/playback progress only and does not fabricate waveform data.
+The backend does not persist waveform samples. The UI therefore displays real
+duration/playback progress only and does not fabricate waveform data. Backend
+attachment types `audio`, `voice`, and `voice_note` all use the same inline
+audio player so recorded voice notes and uploaded audio have one bubble UI.
 
 ## Reactions, stars, edits, deletion, and forwarding
 
@@ -167,6 +195,10 @@ Focused tests cover:
 - copy snackbar source contract;
 - Quick Messages removal;
 - responsive message actions at 320 px, RTL, and 200% text scale.
+- conversation `last_message_id` status correlation and read/delivery mapping;
+- circular conversation selection dispatch;
+- the four supported attachment-sheet actions;
+- reply-preview tap dispatch and voice/audio attachment aliases.
 
 Run:
 

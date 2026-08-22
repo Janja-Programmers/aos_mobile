@@ -5,7 +5,7 @@ import 'package:africaonlinestores/features/notifications/domain/notification_pa
 import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
 
 class NotificationNavigationHandler {
-  const NotificationNavigationHandler({
+  NotificationNavigationHandler({
     required ProtectedNavigationCoordinator coordinator,
     NotificationDestinationParser parser =
         const NotificationDestinationParser(),
@@ -15,15 +15,34 @@ class NotificationNavigationHandler {
   final ProtectedNavigationCoordinator _coordinator;
   final NotificationDestinationParser _parser;
 
+  static const Duration _tapDebounce = Duration(milliseconds: 700);
+  String? _lastTappedNotificationId;
+  DateTime? _lastTapAt;
+  int _tapSerial = 0;
+
   bool handleNotificationTap(NotificationItem notification) {
+    final payload = _payloadWithNotificationActor(notification);
     final destination = _parser.parse(
       type: notification.type,
-      payload: notification.payload,
+      payload: payload,
     );
     if (destination == null) return false;
 
+    final notificationId = notification.id.trim();
+    final now = DateTime.now();
+    final previousTapAt = _lastTapAt;
+    if (_lastTappedNotificationId == notificationId &&
+        previousTapAt != null &&
+        now.difference(previousTapAt) < _tapDebounce) {
+      return true;
+    }
+
+    _lastTappedNotificationId = notificationId;
+    _lastTapAt = now;
+    final tapSerial = ++_tapSerial;
+
     return _coordinator.submit(
-      sourceKey: 'notification:${notification.id}',
+      sourceKey: 'notification:$notificationId:tap:$tapSerial',
       destination: destination,
     );
   }
@@ -48,6 +67,30 @@ class NotificationNavigationHandler {
 
     return _coordinator.submit(sourceKey: sourceKey, destination: destination);
   }
+}
+
+NotificationPayload _payloadWithNotificationActor(
+  NotificationItem notification,
+) {
+  final payload = notification.payload;
+  final actorId = notification.actorId?.trim();
+  final actorName = notification.actorName?.trim();
+  final hasDisplayName =
+      actorName != null &&
+      actorName.isNotEmpty &&
+      (actorId == null || actorName.toLowerCase() != actorId.toLowerCase());
+
+  return NotificationPayload.fromJson(<String, dynamic>{
+    ...payload.toJson(),
+    if (payload.userId == null && actorId != null && actorId.isNotEmpty)
+      'actor_id': actorId,
+    if (payload.actorName == null &&
+        payload.otherUserName == null &&
+        hasDisplayName)
+      'actor_name': actorName,
+    if (payload.actorAvatar == null && notification.actorAvatar != null)
+      'actor_avatar': notification.actorAvatar,
+  });
 }
 
 String? _read(Map<String, dynamic> json, String key) {

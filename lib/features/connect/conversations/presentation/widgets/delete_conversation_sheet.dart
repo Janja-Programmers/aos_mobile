@@ -4,17 +4,24 @@ import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class DeleteConversationSheet extends StatelessWidget {
-  final String displayName;
+  final String? displayName;
+  final int selectedCount;
 
-  const DeleteConversationSheet({super.key, required this.displayName});
+  const DeleteConversationSheet({
+    super.key,
+    this.displayName,
+    this.selectedCount = 1,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final l10n = AppLocalizations.of(context);
 
-    final name = displayName.trim().isNotEmpty
-        ? displayName.trim()
+    final normalizedCount = selectedCount < 1 ? 1 : selectedCount;
+    final cleanDisplayName = displayName?.trim();
+    final name = cleanDisplayName != null && cleanDisplayName.isNotEmpty
+        ? cleanDisplayName
         : l10n.chat_this_user;
 
     return SafeArea(
@@ -49,7 +56,7 @@ class DeleteConversationSheet extends StatelessWidget {
               ),
               child: Icon(
                 Icons.delete_outline_rounded,
-                color: colors.textPrimary,
+                color: colors.white,
                 size: 30,
               ),
             ),
@@ -57,7 +64,9 @@ class DeleteConversationSheet extends StatelessWidget {
             const SizedBox(height: 14),
 
             Text(
-              l10n.chat_delete_chat_title,
+              normalizedCount == 1
+                  ? l10n.chat_delete_chat_title
+                  : l10n.chat_delete_conversations_title,
               textAlign: TextAlign.center,
               style: context.h4.copyWith(
                 color: colors.textPrimary,
@@ -68,7 +77,11 @@ class DeleteConversationSheet extends StatelessWidget {
             const SizedBox(height: 8),
 
             Text(
-              l10n.chat_delete_chat_description(name),
+              normalizedCount == 1
+                  ? l10n.chat_delete_chat_description(name)
+                  : l10n.chat_delete_selected_conversations_description(
+                      normalizedCount,
+                    ),
               textAlign: TextAlign.center,
               style: context.pMuted.copyWith(height: 1.4),
             ),

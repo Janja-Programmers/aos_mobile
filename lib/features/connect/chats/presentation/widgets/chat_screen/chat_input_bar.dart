@@ -1,30 +1,25 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_local_preferences_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_pending_attachment.dart';
-import 'package:africaonlinestores/features/connect/chats/domain/payloads/chat_shared_payload.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/attachment_preview.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/chat_attachment_sheet.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/chat_emoji_panel.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/chat_input_attachment_helper.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/input_icon_button.dart';
-import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/share_contact_picker_sheet.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_input/voice_record_button.dart';
 import 'package:africaonlinestores/features/connect/voice/voice_record_overlay.dart';
 import 'package:africaonlinestores/features/connect/voice/voice_record_provider.dart';
 import 'package:africaonlinestores/features/connect/voice/voice_record_state.dart';
-import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
 import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 class ChatAttachmentUploadException implements Exception {
   const ChatAttachmentUploadException(this.message);
@@ -43,8 +38,6 @@ class ChatInputBar extends ConsumerStatefulWidget {
     required this.onTyping,
     required this.preferences,
     this.adId,
-    required this.onAudioCall,
-    required this.onVideoCall,
   });
 
   final TextEditingController controller;
@@ -57,8 +50,6 @@ class ChatInputBar extends ConsumerStatefulWidget {
   final ValueChanged<bool> onTyping;
   final ChatLocalPreferencesState preferences;
   final String? adId;
-  final VoidCallback onAudioCall;
-  final VoidCallback onVideoCall;
 
   @override
   ConsumerState<ChatInputBar> createState() => _ChatInputBarState();
@@ -216,6 +207,13 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
     setState(() => _attachments.add(attachment));
   }
 
+  Future<void> _pickAudio() async {
+    final attachment = await ChatInputAttachmentHelper.pickAudioOnly();
+    if (!mounted || attachment == null) return;
+
+    setState(() => _attachments.add(attachment));
+  }
+
   void _toggleAttachmentPanel() {
     FocusScope.of(context).unfocus();
 
@@ -258,51 +256,9 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
     await _pickDocument();
   }
 
-  Future<void> _handleContactTap() async {
+  Future<void> _handleAudioTap() async {
     _closePanels();
-
-    final contact = await showShareContactPickerSheet(context: context);
-    if (!mounted || contact == null) return;
-
-    await widget.onSend(
-      text: contact.toMessageContent(),
-      attachments: const [],
-    );
-  }
-
-  Future<void> _handleLocationTap() async {
-    _closePanels();
-
-    final picked = await context.pushNamed<AOSPlace>(
-      AppRoutes.nMapPicker,
-      queryParameters: {
-        'title': AppLocalizations.of(context).chat_share_location_title,
-      },
-    );
-
-    if (!mounted || picked == null) return;
-
-    final payload = ChatLocationPayload(
-      name: picked.shortLabel,
-      address: picked.displayAddress,
-      latitude: picked.latitude,
-      longitude: picked.longitude,
-    );
-
-    await widget.onSend(
-      text: payload.toMessageContent(),
-      attachments: const [],
-    );
-  }
-
-  void _handleAudioCallTap() {
-    _closePanels();
-    widget.onAudioCall();
-  }
-
-  void _handleVideoCallTap() {
-    _closePanels();
-    widget.onVideoCall();
+    await _pickAudio();
   }
 
   String _formatVoiceDuration(Duration duration) {
@@ -601,16 +557,11 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                       onCamera: () {
                         unawaited(_handleCameraTap());
                       },
-                      onVideoCall: _handleVideoCallTap,
-                      onAudioCall: _handleAudioCallTap,
                       onDocument: () {
                         unawaited(_handleDocumentTap());
                       },
-                      onLocation: () {
-                        unawaited(_handleLocationTap());
-                      },
-                      onContact: () {
-                        unawaited(_handleContactTap());
+                      onAudio: () {
+                        unawaited(_handleAudioTap());
                       },
                     ),
                   if (_showEmojiPanel)

@@ -13,6 +13,19 @@ import 'package:africaonlinestores/features/connect/chats/repository/chat_reposi
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+class ConversationBulkActionResult {
+  const ConversationBulkActionResult({
+    required this.succeededIds,
+    required this.failedIds,
+  });
+
+  final Set<String> succeededIds;
+  final Set<String> failedIds;
+
+  bool get isComplete => failedIds.isEmpty;
+  int get succeededCount => succeededIds.length;
+}
+
 class ConversationsController
     extends StateNotifier<AsyncValue<List<ChatConversation>>> {
   final Ref ref;
@@ -31,6 +44,7 @@ class ConversationsController
   bool get isLoadingMore => _isLoadingMore;
 
   StreamSubscription<Object?>? _messageSub;
+  StreamSubscription<Object?>? _messageStatusSub;
   StreamSubscription<Object?>? _messageEditedSub;
   StreamSubscription<Object?>? _messagesDeletedSub;
 
@@ -235,6 +249,152 @@ class ConversationsController
     return allSucceeded;
   }
 
+  Future<ConversationBulkActionResult> markConversationsRead(
+    Iterable<String> conversationIds,
+  ) async {
+    final ids = _cleanConversationIds(conversationIds);
+    final auth = ref.read(authControllerProvider);
+    if (auth is! AuthAuthenticated || ids.isEmpty) {
+      return ConversationBulkActionResult(
+        succeededIds: const <String>{},
+        failedIds: ids,
+      );
+    }
+
+    final activeSid = _activeSid;
+    final loadSerial = _loadSerial;
+    final repo = ref.read(chatRepositoryProvider);
+    final succeeded = <String>{};
+    final failed = <String>{};
+    final conversations = <String, ChatConversation>{
+      for (final conversation in state.value ?? const <ChatConversation>[])
+        conversation.id: conversation,
+    };
+
+    for (final id in ids) {
+      if (!_isSameListSession(activeSid, loadSerial)) {
+        failed.addAll(ids.difference(succeeded));
+        break;
+      }
+
+      if ((conversations[id]?.unreadCount ?? 0) == 0) {
+        succeeded.add(id);
+        continue;
+      }
+
+      final result = await repo.markRead(id);
+      if (!_isSameListSession(activeSid, loadSerial)) {
+        failed.addAll(ids.difference(succeeded));
+        break;
+      }
+      if (result.isLeft) {
+        failed.add(id);
+        continue;
+      }
+
+      succeeded.add(id);
+      markConversationAsReadLocally(id);
+    }
+
+    return ConversationBulkActionResult(
+      succeededIds: Set.unmodifiable(succeeded),
+      failedIds: Set.unmodifiable(failed),
+    );
+  }
+
+  Future<ConversationBulkActionResult> clearConversations(
+    Iterable<String> conversationIds,
+  ) async {
+    final ids = _cleanConversationIds(conversationIds);
+    final auth = ref.read(authControllerProvider);
+    if (auth is! AuthAuthenticated || ids.isEmpty) {
+      return ConversationBulkActionResult(
+        succeededIds: const <String>{},
+        failedIds: ids,
+      );
+    }
+
+    final activeSid = _activeSid;
+    final loadSerial = _loadSerial;
+    final repo = ref.read(chatRepositoryProvider);
+    final succeeded = <String>{};
+    final failed = <String>{};
+
+    for (final id in ids) {
+      if (!_isSameListSession(activeSid, loadSerial)) {
+        failed.addAll(ids.difference(succeeded));
+        break;
+      }
+      final result = await repo.clearChat(id);
+      if (!_isSameListSession(activeSid, loadSerial)) {
+        failed.addAll(ids.difference(succeeded));
+        break;
+      }
+      if (result.isLeft) {
+        failed.add(id);
+        continue;
+      }
+
+      succeeded.add(id);
+      _markConversationClearedLocally(id);
+    }
+
+    if (succeeded.isNotEmpty && _isSameListSession(activeSid, loadSerial)) {
+      await load();
+    }
+
+    return ConversationBulkActionResult(
+      succeededIds: Set.unmodifiable(succeeded),
+      failedIds: Set.unmodifiable(failed),
+    );
+  }
+
+  Future<ConversationBulkActionResult> deleteConversations(
+    Iterable<String> conversationIds,
+  ) async {
+    final ids = _cleanConversationIds(conversationIds);
+    final auth = ref.read(authControllerProvider);
+    if (auth is! AuthAuthenticated || ids.isEmpty) {
+      return ConversationBulkActionResult(
+        succeededIds: const <String>{},
+        failedIds: ids,
+      );
+    }
+
+    final activeSid = _activeSid;
+    final loadSerial = _loadSerial;
+    final repo = ref.read(chatRepositoryProvider);
+    final succeeded = <String>{};
+    final failed = <String>{};
+
+    for (final id in ids) {
+      if (!_isSameListSession(activeSid, loadSerial)) {
+        failed.addAll(ids.difference(succeeded));
+        break;
+      }
+      final result = await repo.deleteConversation(id);
+      if (!_isSameListSession(activeSid, loadSerial)) {
+        failed.addAll(ids.difference(succeeded));
+        break;
+      }
+      if (result.isLeft) {
+        failed.add(id);
+        continue;
+      }
+      succeeded.add(id);
+      state = state.whenData(
+        (conversations) => conversations
+            .where((conversation) => conversation.id != id)
+            .toList(growable: false),
+      );
+    }
+
+    return ConversationBulkActionResult(
+      succeededIds: Set.unmodifiable(succeeded),
+      failedIds: Set.unmodifiable(failed),
+    );
+  }
+
   Future<void> refresh() async {
     final auth = ref.read(authControllerProvider);
 
@@ -312,6 +472,7 @@ class ConversationsController
     _upsertConversationPreview(
       conversationId: conversationId,
       lastMessage: preview,
+      lastMessageId: message.id,
       lastMessageAt: message.createdAt,
       lastSender: message.senderCanonicalId,
       lastSenderDisplayName: message.senderDisplayName,
@@ -356,6 +517,35 @@ class ConversationsController
       );
     });
 
+    _messageStatusSub = realtime.messageStatus.listen((Object? data) {
+      final payload = asJsonMap(data);
+      final conversationId = payload['conversation_id']?.toString().trim();
+      final messageIds = asJsonList(payload['message_ids'])
+          .map((id) => id.toString().trim())
+          .where((id) => id.isNotEmpty)
+          .toSet();
+      if (conversationId == null ||
+          conversationId.isEmpty ||
+          messageIds.isEmpty) {
+        return;
+      }
+
+      final deliveredAt = _parseRealtimeDate(payload['delivered_at']);
+      final readAt = _parseRealtimeDate(payload['read_at']);
+      if (deliveredAt == null && readAt == null) return;
+
+      state = state.whenData((conversations) {
+        return conversations.map((conversation) {
+          if (conversation.id != conversationId) return conversation;
+          return conversation.applyLastMessageStatus(
+            messageIds: messageIds,
+            deliveredAt: deliveredAt,
+            readAt: readAt,
+          );
+        }).toList(growable: false);
+      });
+    });
+
     _messageEditedSub = realtime.messageEdited.listen((Object? data) {
       final payload = asJsonMap(data);
       final conversationId = payload['conversation_id']?.toString();
@@ -365,6 +555,11 @@ class ConversationsController
       if (rawMessage is! Map) return;
 
       final message = ChatMessage.fromJson(asJsonMap(rawMessage));
+      final conversation = state.value?.cast<ChatConversation?>().firstWhere(
+        (item) => item?.id == conversationId,
+        orElse: () => null,
+      );
+      if (conversation?.lastMessageId != message.id) return;
 
       syncConversationWithMessage(
         conversationId: conversationId,
@@ -379,10 +574,12 @@ class ConversationsController
 
   Future<void> _cancelRealtimeSubscriptions() async {
     await _messageSub?.cancel();
+    await _messageStatusSub?.cancel();
     await _messageEditedSub?.cancel();
     await _messagesDeletedSub?.cancel();
 
     _messageSub = null;
+    _messageStatusSub = null;
     _messageEditedSub = null;
     _messagesDeletedSub = null;
   }
@@ -393,6 +590,7 @@ class ConversationsController
   void _upsertConversationPreview({
     required String conversationId,
     required String lastMessage,
+    required String lastMessageId,
     required DateTime lastMessageAt,
     required String lastSender,
     String? lastSenderDisplayName,
@@ -416,6 +614,7 @@ class ConversationsController
 
       final updatedConversation = existing.copyWith(
         lastMessage: lastMessage,
+        lastMessageId: lastMessageId,
         lastMessageAt: lastMessageAt,
         lastSender: normalizeCanonicalUserId(lastSender),
         lastSenderDisplayName: _safeText(lastSenderDisplayName),
@@ -450,6 +649,7 @@ class ConversationsController
               : conversationId),
       avatar: _safeText(fallbackAvatar),
       lastMessage: lastMessage,
+      lastMessageId: lastMessageId,
       lastMessageAt: lastMessageAt,
       lastSender: canonicalLastSender,
       lastSenderDisplayName: _safeText(lastSenderDisplayName),
@@ -511,6 +711,44 @@ class ConversationsController
     }
 
     return clean;
+  }
+
+  Set<String> _cleanConversationIds(Iterable<String> conversationIds) {
+    return conversationIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet();
+  }
+
+  bool _isSameListSession(String? activeSid, int loadSerial) {
+    return mounted && activeSid == _activeSid && loadSerial == _loadSerial;
+  }
+
+  void _markConversationClearedLocally(String conversationId) {
+    state = state.whenData((conversations) {
+      return conversations.map((conversation) {
+        if (conversation.id != conversationId) return conversation;
+        return conversation.copyWith(
+          lastMessage: null,
+          lastMessageId: null,
+          lastMessageAt: null,
+          lastSender: null,
+          lastSenderDisplayName: null,
+          lastSenderAvatar: null,
+          lastMessageDeliveredAt: null,
+          lastMessageReadAt: null,
+          unreadCount: 0,
+        );
+      }).toList(growable: false);
+    });
+  }
+
+  DateTime? _parseRealtimeDate(Object? value) {
+    final raw = value?.toString().trim();
+    if (raw == null || raw.isEmpty || raw.toLowerCase() == 'null') {
+      return null;
+    }
+    return DateTime.tryParse(raw.replaceFirst(' ', 'T'));
   }
 
   // -----------------------------

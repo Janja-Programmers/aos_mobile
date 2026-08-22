@@ -1485,4 +1485,85 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_wallpaper_coffee => '咖啡色';
+
+  @override
+  String get chat_audio_call => '语音通话';
+
+  @override
+  String get chat_clear_chat => '清空聊天';
+
+  @override
+  String get chat_audio => '音频';
+
+  @override
+  String get chat_view_replied_message => '查看被回复的消息';
+
+  @override
+  String get chat_replied_message_unavailable => '被回复的消息已不可用。';
+
+  @override
+  String get chat_clear_chat_title => '清空聊天？';
+
+  @override
+  String get chat_clear_chats_title => '清空聊天？';
+
+  @override
+  String get chat_clear_chat_description => '这只会为你清空此聊天中可见的所有消息。其他参与者仍会保留其副本。';
+
+  @override
+  String chat_clear_selected_chats_description(Object count) {
+    return '仅为你清空所选 $count 个聊天中的可见消息？其他参与者仍会保留其副本。';
+  }
+
+  @override
+  String get chat_chat_cleared => '聊天已清空。';
+
+  @override
+  String get chat_clear_chat_failed => '无法清空聊天。';
+
+  @override
+  String get chat_select_conversations => '选择聊天';
+
+  @override
+  String chat_selected_conversations(Object count) {
+    return '已选择 $count 个';
+  }
+
+  @override
+  String get chat_cancel_selection => '取消选择';
+
+  @override
+  String get chat_mark_as_read => '标为已读';
+
+  @override
+  String get chat_clear_chats => '清空聊天';
+
+  @override
+  String get chat_delete_conversations => '删除聊天';
+
+  @override
+  String get chat_delete_conversations_title => '删除聊天？';
+
+  @override
+  String chat_delete_selected_conversations_description(Object count) {
+    return '这会从你的聊天列表中移除所选 $count 个聊天，但不会为其他参与者删除。';
+  }
+
+  @override
+  String chat_selected_marked_read(Object count) {
+    return '已将所选 $count 个聊天标为已读。';
+  }
+
+  @override
+  String chat_selected_chats_cleared(Object count) {
+    return '已清空所选 $count 个聊天。';
+  }
+
+  @override
+  String chat_selected_chats_deleted(Object count) {
+    return '已删除所选 $count 个聊天。';
+  }
+
+  @override
+  String get chat_selected_action_partial_failure => '部分所选聊天无法更新。';
 }

@@ -8,20 +8,14 @@ class ChatAttachmentSheet extends StatelessWidget {
     super.key,
     required this.onGallery,
     required this.onCamera,
-    required this.onVideoCall,
-    required this.onAudioCall,
     required this.onDocument,
-    required this.onLocation,
-    required this.onContact,
+    required this.onAudio,
   });
 
   final VoidCallback onGallery;
   final VoidCallback onCamera;
-  final VoidCallback onVideoCall;
-  final VoidCallback onAudioCall;
   final VoidCallback onDocument;
-  final VoidCallback onLocation;
-  final VoidCallback onContact;
+  final VoidCallback onAudio;
 
   @override
   Widget build(BuildContext context) {
@@ -39,29 +33,14 @@ class ChatAttachmentSheet extends StatelessWidget {
         onTap: onCamera,
       ),
       _AttachmentAction(
-        icon: Icons.videocam_outlined,
-        label: l10n.chat_video_call,
-        onTap: onVideoCall,
-      ),
-      _AttachmentAction(
-        icon: Icons.call_outlined,
-        label: l10n.chat_voice_call,
-        onTap: onAudioCall,
-      ),
-      _AttachmentAction(
-        icon: Icons.location_on_outlined,
-        label: l10n.chat_location,
-        onTap: onLocation,
-      ),
-      _AttachmentAction(
         icon: Icons.insert_drive_file_outlined,
         label: l10n.chat_document,
         onTap: onDocument,
       ),
       _AttachmentAction(
-        icon: Icons.person_outline_rounded,
-        label: l10n.chat_contact,
-        onTap: onContact,
+        icon: Icons.audio_file_outlined,
+        label: l10n.chat_audio,
+        onTap: onAudio,
       ),
     ];
 

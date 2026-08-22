@@ -1561,4 +1561,88 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chat_wallpaper_coffee => 'Coffee';
+
+  @override
+  String get chat_audio_call => 'Audio call';
+
+  @override
+  String get chat_clear_chat => 'Clear chat';
+
+  @override
+  String get chat_audio => 'Audio';
+
+  @override
+  String get chat_view_replied_message => 'View replied message';
+
+  @override
+  String get chat_replied_message_unavailable =>
+      'The replied message is no longer available.';
+
+  @override
+  String get chat_clear_chat_title => 'Clear chat?';
+
+  @override
+  String get chat_clear_chats_title => 'Clear chats?';
+
+  @override
+  String get chat_clear_chat_description =>
+      'This clears all visible messages in this chat for you only. The other participant will keep their copy.';
+
+  @override
+  String chat_clear_selected_chats_description(Object count) {
+    return 'Clear the visible messages in $count selected chats for you only? Other participants will keep their copies.';
+  }
+
+  @override
+  String get chat_chat_cleared => 'Chat cleared.';
+
+  @override
+  String get chat_clear_chat_failed => 'Could not clear the chat.';
+
+  @override
+  String get chat_select_conversations => 'Select conversations';
+
+  @override
+  String chat_selected_conversations(Object count) {
+    return '$count selected';
+  }
+
+  @override
+  String get chat_cancel_selection => 'Cancel selection';
+
+  @override
+  String get chat_mark_as_read => 'Mark as read';
+
+  @override
+  String get chat_clear_chats => 'Clear chats';
+
+  @override
+  String get chat_delete_conversations => 'Delete conversation';
+
+  @override
+  String get chat_delete_conversations_title => 'Delete conversations?';
+
+  @override
+  String chat_delete_selected_conversations_description(Object count) {
+    return 'This will remove $count selected conversations from your conversation list. It will not delete them for the other participants.';
+  }
+
+  @override
+  String chat_selected_marked_read(Object count) {
+    return '$count selected chats marked as read.';
+  }
+
+  @override
+  String chat_selected_chats_cleared(Object count) {
+    return '$count selected chats cleared.';
+  }
+
+  @override
+  String chat_selected_chats_deleted(Object count) {
+    return '$count selected conversations deleted.';
+  }
+
+  @override
+  String get chat_selected_action_partial_failure =>
+      'Some selected conversations could not be updated.';
 }

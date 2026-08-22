@@ -22,8 +22,10 @@ class ChatMessagesView extends StatelessWidget {
   final String? otherAvatarUrl;
   final ChatLocalPreferencesState preferences;
   final ValueChanged<ChatMessage> onReply;
-  final void Function(ChatMessage message, bool isMe, Offset anchor)
+  final void Function(ChatMessage message, bool isMe, Rect anchor)
   onLongPress;
+  final GlobalKey Function(String messageId)? messageKeyFor;
+  final ValueChanged<String>? onReplyPreviewTap;
   final ValueChanged<ChatMessage> onRetry;
   final VoidCallback onRetryInitial;
   final VoidCallback onRetryOlder;
@@ -40,6 +42,8 @@ class ChatMessagesView extends StatelessWidget {
     required this.preferences,
     required this.onReply,
     required this.onLongPress,
+    this.messageKeyFor,
+    this.onReplyPreviewTap,
     required this.onRetry,
     required this.onRetryInitial,
     required this.onRetryOlder,
@@ -124,7 +128,7 @@ class ChatMessagesView extends StatelessWidget {
               index: index,
             );
 
-            return Column(
+            final messageContent = Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (showDateSeparator)
@@ -158,6 +162,10 @@ class ChatMessagesView extends StatelessWidget {
                     otherDisplayName: otherDisplayName,
                     otherAvatarUrl: otherAvatarUrl,
                     onLongPress: (anchor) => onLongPress(message, isMe, anchor),
+                    onReplyTap: message.replyTo == null ||
+                            onReplyPreviewTap == null
+                        ? null
+                        : () => onReplyPreviewTap!(message.replyTo!.id),
                     onRetry: message.isLocalFailed
                         ? () => onRetry(message)
                         : null,
@@ -168,6 +176,11 @@ class ChatMessagesView extends StatelessWidget {
                 ),
               ],
             );
+
+            final key = messageKeyFor?.call(message.id);
+            return key == null
+                ? messageContent
+                : KeyedSubtree(key: key, child: messageContent);
           },
         ),
         if (messagesState.hasError)

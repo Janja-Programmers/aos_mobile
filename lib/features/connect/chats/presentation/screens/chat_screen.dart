@@ -4,13 +4,11 @@ import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
-import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call.dart';
-import 'package:africaonlinestores/features/connect/calls/domain/call_participant.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_local_preferences_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_typing_throttle.dart';
 import 'package:africaonlinestores/features/connect/chats/application/providers/chat_providers.dart';
+import 'package:africaonlinestores/features/connect/chats/domain/chat_conversation.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_identity.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_reply_preview.dart';
@@ -18,6 +16,7 @@ import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_in
 import 'package:africaonlinestores/features/connect/chats/domain/translation_language.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/active_call_chat_banner.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_app_bar.dart';
+import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_clear_chat_dialog.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_composer_area.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_edit_message_dialog.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_forward_conversation_picker.dart';
@@ -32,6 +31,7 @@ import 'package:africaonlinestores/features/social/navigation/social_navigation.
 import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -71,13 +71,14 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _inputController = TextEditingController();
+  final Map<String, GlobalKey> _messageKeys = <String, GlobalKey>{};
 
   bool _loadedInitialIntoInput = false;
   bool _showAdPreview = false;
   late final ChatTypingThrottle _typingThrottle;
   bool _isSending = false;
   bool _isLoadingMoreMessages = false;
-  bool _isStartingCall = false;
+  bool _isClearingChat = false;
   ProviderSubscription<String?>? _accountSubscription;
   String _activeAccountId = '';
   bool _accountInitialized = false;
@@ -184,6 +185,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final notifier = ref.read(
         chatMessagesControllerProvider(widget.conversationId).notifier,
       );
+      final conversation = _matchingConversation(
+        ref.read(conversationsControllerProvider),
+      );
+      final displayName = _resolvedDisplayName(conversation);
 
       final sent = await notifier.sendTempMessage(
         text: hasText ? messageText : null,
@@ -192,9 +197,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         adTitle: attachedAdTitle,
         adPrice: attachedAdPrice,
         adImage: attachedAdImage,
-        fallbackUser: widget.otherUser,
-        fallbackDisplayName: widget.displayName,
-        fallbackAvatar: widget.otherUserAvatar,
+        fallbackUser: _preferText(conversation?.user, widget.otherUser),
+        fallbackDisplayName: displayName,
+        fallbackAvatar: _preferNullableText(
+          conversation?.avatar,
+          widget.otherUserAvatar,
+        ),
         replyToMessage: replyTarget?.id,
         replyTo: replyPreview,
       );
@@ -288,7 +296,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ).error();
   }
 
-  void _openMessageActions(ChatMessage message, bool isMe, Offset anchor) {
+  void _openMessageActions(ChatMessage message, bool isMe, Rect anchor) {
     if (message.isSystemMessage) return;
 
     final l10n = AppLocalizations.of(context);
@@ -600,40 +608,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Future<void> _startCall(AOSCallType type) async {
-    if (_isStartingCall) return;
-
-    _isStartingCall = true;
+  Future<void> _clearChat() async {
+    if (_isClearingChat) return;
+    _isClearingChat = true;
     try {
-      final success = await ref
-          .read(callStarterServiceProvider)
-          .startOutgoingCall(
-            userId: widget.otherUser,
-            callType: type,
-            receiver: CallParticipant(
-              userId: widget.otherUser,
-              displayName: widget.displayName,
-              avatarUrl: widget.otherUserAvatar,
-            ),
-          );
+      final confirmed = await showChatClearChatDialog(context);
+      if (confirmed != true || !mounted) return;
 
+      final cleared = await ref
+          .read(chatMessagesControllerProvider(widget.conversationId).notifier)
+          .clearChat();
       if (!mounted) return;
-      if (!success) {
+
+      if (cleared) {
         ShowSnack(
           context,
-          AppLocalizations.of(context).chat_failed_to_start_call,
-        ).error();
-      }
-    } catch (e) {
-      appLogger.e('Failed to start chat call: $e');
-      if (mounted) {
+          AppLocalizations.of(context).chat_chat_cleared,
+        ).success();
+      } else {
         ShowSnack(
           context,
-          AppLocalizations.of(context).chat_failed_to_start_call,
+          AppLocalizations.of(context).chat_clear_chat_failed,
         ).error();
       }
     } finally {
-      _isStartingCall = false;
+      _isClearingChat = false;
     }
   }
 
@@ -651,24 +650,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final preferences = ref.watch(
       chatLocalPreferencesControllerProvider(widget.conversationId),
     );
+    final conversation = _matchingConversation(
+      ref.watch(conversationsControllerProvider),
+    );
+    final otherUser = _preferText(conversation?.user, widget.otherUser);
+    final displayName = _resolvedDisplayName(conversation);
+    final otherUserAvatar = _preferNullableText(
+      conversation?.avatar,
+      widget.otherUserAvatar,
+    );
 
     return Scaffold(
       backgroundColor: colors.surface.withValues(alpha: .55),
       appBar: ChatAppBar(
         conversationId: widget.conversationId,
-        displayName: widget.displayName,
-        otherUserId: widget.otherUser,
-        imageUrl: widget.otherUserAvatar,
+        displayName: displayName,
+        otherUserId: otherUser,
+        imageUrl: otherUserAvatar,
         lastSeen: widget.lastSeen,
         onHeaderTap: () {
           SocialNavigation.toProfileScreen(
             context,
-            user: widget.otherUser,
-            displayName: widget.displayName,
-            avatar: widget.otherUserAvatar,
+            user: otherUser,
+            displayName: displayName,
+            avatar: otherUserAvatar,
           );
         },
         onChangeWallpaper: _openWallpaperSheet,
+        onClearChat: () => unawaited(_clearChat()),
         onBack: _closeChat,
       ),
       body: SafeArea(
@@ -677,9 +686,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           children: [
             ActiveCallChatBanner(
               conversationId: widget.conversationId,
-              otherUserId: widget.otherUser,
-              fallbackDisplayName: widget.displayName,
-              fallbackAvatarUrl: widget.otherUserAvatar,
+              otherUserId: otherUser,
+              fallbackDisplayName: displayName,
+              fallbackAvatarUrl: otherUserAvatar,
             ),
             Expanded(
               child: ChatMessagesView(
@@ -687,12 +696,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 scrollController: _scrollController,
                 currentUserId: currentUserId,
                 conversationId: widget.conversationId,
-                otherUserId: widget.otherUser,
-                otherDisplayName: widget.displayName,
-                otherAvatarUrl: widget.otherUserAvatar,
+                otherUserId: otherUser,
+                otherDisplayName: displayName,
+                otherAvatarUrl: otherUserAvatar,
                 preferences: preferences,
                 onReply: _startReply,
                 onLongPress: _openMessageActions,
+                messageKeyFor: _messageKeyFor,
+                onReplyPreviewTap: (messageId) {
+                  unawaited(_scrollToRepliedMessage(messageId));
+                },
                 onRetry: _retryMessage,
                 onRetryInitial: () {
                   unawaited(
@@ -732,8 +745,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               onCloseAdPreview: () => setState(() => _showAdPreview = false),
               onCloseReplyPreview: () => setState(() => _replyingTo = null),
               onTyping: _handleTyping,
-              onAudioCall: () => unawaited(_startCall(AOSCallType.audio)),
-              onVideoCall: () => unawaited(_startCall(AOSCallType.video)),
               onSend: _sendMessage,
             ),
           ],
@@ -788,6 +799,134 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
   }
 
+  ChatConversation? _matchingConversation(
+    AsyncValue<List<ChatConversation>> conversations,
+  ) {
+    final conversationId = widget.conversationId.trim();
+    if (conversationId.isEmpty) return null;
+
+    for (final conversation
+        in conversations.value ?? const <ChatConversation>[]) {
+      if (conversation.id.trim() == conversationId) return conversation;
+    }
+    return null;
+  }
+
+  String _preferText(String? authoritative, String fallback) {
+    final value = authoritative?.trim();
+    return value == null || value.isEmpty ? fallback.trim() : value;
+  }
+
+  String _resolvedDisplayName(ChatConversation? conversation) {
+    final authoritative = conversation?.displayName.trim();
+    if (authoritative != null && authoritative.isNotEmpty) {
+      return authoritative;
+    }
+
+    final fallback = widget.displayName.trim();
+    final fallbackAccountId = normalizeCanonicalUserId(fallback);
+    if (fallbackAccountId.isNotEmpty) {
+      return AppLocalizations.of(context).chat_loading_conversations;
+    }
+    return fallback;
+  }
+
+  String? _preferNullableText(String? authoritative, String? fallback) {
+    final value = authoritative?.trim();
+    if (value != null && value.isNotEmpty) return value;
+
+    final fallbackValue = fallback?.trim();
+    return fallbackValue == null || fallbackValue.isEmpty
+        ? null
+        : fallbackValue;
+  }
+
+  GlobalKey _messageKeyFor(String messageId) {
+    return _messageKeys.putIfAbsent(
+      messageId,
+      () => GlobalKey(debugLabel: 'chat-message-$messageId'),
+    );
+  }
+
+  Future<void> _scrollToRepliedMessage(String messageId) async {
+    final targetId = messageId.trim();
+    if (targetId.isEmpty) return;
+
+    final provider = chatMessagesControllerProvider(widget.conversationId);
+    final notifier = ref.read(provider.notifier);
+    final found = await notifier.ensureMessageLoaded(targetId);
+    if (!mounted) return;
+
+    if (!found) {
+      ShowSnack(
+        context,
+        AppLocalizations.of(context).chat_replied_message_unavailable,
+      ).error();
+      return;
+    }
+
+    final messages = ref.read(provider).messages;
+    final targetIndex = messages.indexWhere(
+      (message) => message.id == targetId,
+    );
+    if (targetIndex < 0 || !_scrollController.hasClients) return;
+
+    final targetKey = _messageKeyFor(targetId);
+    await SchedulerBinding.instance.endOfFrame;
+    if (!mounted) return;
+
+    if (await _ensureMessageVisible(targetKey)) return;
+
+    final position = _scrollController.position;
+    final fraction = messages.length <= 1
+        ? 0.0
+        : targetIndex / (messages.length - 1);
+    final estimatedOffset = (position.maxScrollExtent * fraction)
+        .clamp(position.minScrollExtent, position.maxScrollExtent)
+        .toDouble();
+    _scrollController.jumpTo(estimatedOffset);
+    await SchedulerBinding.instance.endOfFrame;
+    if (!mounted || await _ensureMessageVisible(targetKey)) return;
+
+    for (var attempt = 0; attempt < 12; attempt++) {
+      final builtIndices = <int>[];
+      for (var index = 0; index < messages.length; index++) {
+        if (_messageKeys[messages[index].id]?.currentContext != null) {
+          builtIndices.add(index);
+        }
+      }
+      if (builtIndices.isEmpty) break;
+
+      final minBuilt = builtIndices.reduce((a, b) => a < b ? a : b);
+      final maxBuilt = builtIndices.reduce((a, b) => a > b ? a : b);
+      if (targetIndex >= minBuilt && targetIndex <= maxBuilt) break;
+
+      final delta = position.viewportDimension * 0.8;
+      final nextOffset = targetIndex > maxBuilt
+          ? position.pixels + delta
+          : position.pixels - delta;
+      _scrollController.jumpTo(
+        nextOffset
+            .clamp(position.minScrollExtent, position.maxScrollExtent)
+            .toDouble(),
+      );
+      await SchedulerBinding.instance.endOfFrame;
+      if (!mounted || await _ensureMessageVisible(targetKey)) return;
+    }
+  }
+
+  Future<bool> _ensureMessageVisible(GlobalKey key) async {
+    final targetContext = key.currentContext;
+    if (targetContext == null) return false;
+    await Scrollable.ensureVisible(
+      targetContext,
+      alignment: 0.5,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+    );
+    return true;
+  }
+
   void _startReply(ChatMessage message) {
     if (message.isSystemMessage || message.isDeletedType) return;
 
@@ -803,6 +942,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _scrollController.removeListener(_onScroll);
     _inputController.dispose();
     _scrollController.dispose();
+    _messageKeys.clear();
     super.dispose();
   }
 }

@@ -30,7 +30,8 @@ class ChatInputAttachment {
   }
 
   bool get isImage => type == 'image';
-  bool get isAudio => type == 'audio';
+  bool get isAudio =>
+      type == 'audio' || type == 'voice' || type == 'voice_note';
   bool get isVideo => type == 'video';
   bool get isDocument => type == 'document';
 }

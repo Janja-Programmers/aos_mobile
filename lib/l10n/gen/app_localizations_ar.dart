@@ -1532,4 +1532,88 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get chat_wallpaper_coffee => 'قهوة';
+
+  @override
+  String get chat_audio_call => 'مكالمة صوتية';
+
+  @override
+  String get chat_clear_chat => 'مسح الدردشة';
+
+  @override
+  String get chat_audio => 'صوت';
+
+  @override
+  String get chat_view_replied_message => 'عرض الرسالة المُجاب عنها';
+
+  @override
+  String get chat_replied_message_unavailable =>
+      'الرسالة المُجاب عنها لم تعد متاحة.';
+
+  @override
+  String get chat_clear_chat_title => 'مسح الدردشة؟';
+
+  @override
+  String get chat_clear_chats_title => 'مسح الدردشات؟';
+
+  @override
+  String get chat_clear_chat_description =>
+      'يؤدي هذا إلى مسح جميع الرسائل الظاهرة في هذه الدردشة لديك فقط. سيحتفظ المشارك الآخر بنسخته.';
+
+  @override
+  String chat_clear_selected_chats_description(Object count) {
+    return 'هل تريد مسح الرسائل الظاهرة في $count دردشات محددة لديك فقط؟ سيحتفظ المشاركون الآخرون بنسخهم.';
+  }
+
+  @override
+  String get chat_chat_cleared => 'تم مسح الدردشة.';
+
+  @override
+  String get chat_clear_chat_failed => 'تعذر مسح الدردشة.';
+
+  @override
+  String get chat_select_conversations => 'تحديد الدردشات';
+
+  @override
+  String chat_selected_conversations(Object count) {
+    return 'تم تحديد $count';
+  }
+
+  @override
+  String get chat_cancel_selection => 'إلغاء التحديد';
+
+  @override
+  String get chat_mark_as_read => 'تحديد كمقروء';
+
+  @override
+  String get chat_clear_chats => 'مسح الدردشات';
+
+  @override
+  String get chat_delete_conversations => 'حذف الدردشة';
+
+  @override
+  String get chat_delete_conversations_title => 'حذف الدردشات؟';
+
+  @override
+  String chat_delete_selected_conversations_description(Object count) {
+    return 'سيؤدي هذا إلى إزالة $count دردشات محددة من قائمتك. لن تُحذف لدى المشاركين الآخرين.';
+  }
+
+  @override
+  String chat_selected_marked_read(Object count) {
+    return 'تم تحديد $count دردشات كمقروءة.';
+  }
+
+  @override
+  String chat_selected_chats_cleared(Object count) {
+    return 'تم مسح $count دردشات محددة.';
+  }
+
+  @override
+  String chat_selected_chats_deleted(Object count) {
+    return 'تم حذف $count دردشات محددة.';
+  }
+
+  @override
+  String get chat_selected_action_partial_failure =>
+      'تعذر تحديث بعض الدردشات المحددة.';
 }

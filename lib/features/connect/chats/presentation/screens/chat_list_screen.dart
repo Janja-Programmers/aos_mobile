@@ -8,17 +8,26 @@ import 'package:africaonlinestores/features/connect/chats/navigation/chat_routes
 import 'package:africaonlinestores/features/connect/conversations/application/providers/conversation_provider.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_state_view.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/conversation_tile.dart';
-import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/delete_conversation_sheet.dart';
 import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
-import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
   final String? searchQuery;
   final bool hideFilters;
+  final bool selectionMode;
+  final Set<String> selectedConversationIds;
+  final void Function(String conversationId, bool selected)?
+  onSelectionChanged;
 
-  const ChatListScreen({super.key, this.searchQuery, this.hideFilters = false});
+  const ChatListScreen({
+    super.key,
+    this.searchQuery,
+    this.hideFilters = false,
+    this.selectionMode = false,
+    this.selectedConversationIds = const <String>{},
+    this.onSelectionChanged,
+  });
 
   @override
   ConsumerState<ChatListScreen> createState() => _ChatListScreenState();
@@ -58,39 +67,6 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
       setState(() {
         _query = widget.searchQuery ?? '';
       });
-    }
-  }
-
-  Future<void> _showDeleteConversationSheet(
-    ChatConversation conversation,
-  ) async {
-    final shouldDelete = await showModalBottomSheet<bool>(
-      context: context,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) {
-        return DeleteConversationSheet(displayName: conversation.displayName);
-      },
-    );
-
-    if (shouldDelete != true) return;
-
-    final deleted = await ref
-        .read(conversationsControllerProvider.notifier)
-        .deleteConversation(conversation.id);
-
-    if (!mounted) return;
-
-    if (deleted) {
-      ShowSnack(
-        context,
-        AppLocalizations.of(context).chat_deleted_from_list,
-      ).success();
-    } else {
-      ShowSnack(
-        context,
-        AppLocalizations.of(context).chat_delete_chat_failed,
-      ).error();
     }
   }
 
@@ -225,6 +201,13 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                       isOnline: isOnline,
                       isTyping: isTyping,
                       lastSeen: presence?.lastSeen,
+                      selectionMode: widget.selectionMode,
+                      isSelected: widget.selectedConversationIds.contains(
+                        conv.id,
+                      ),
+                      onSelectionChanged: (selected) {
+                        widget.onSelectionChanged?.call(conv.id, selected);
+                      },
                       onTap: () {
                         ChatNavigation.toMessage(
                           context: context,
@@ -235,7 +218,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                         );
                       },
                       onLongPress: () {
-                        _showDeleteConversationSheet(conv);
+                        widget.onSelectionChanged?.call(conv.id, true);
                       },
                     );
                   },

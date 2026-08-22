@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
@@ -12,31 +14,45 @@ class InlineAudioPlayer extends StatefulWidget {
 }
 
 class _InlineAudioPlayerState extends State<InlineAudioPlayer> {
-  final player = AudioPlayer();
+  final AudioPlayer player = AudioPlayer();
 
   Duration duration = Duration.zero;
   Duration position = Duration.zero;
+  StreamSubscription<Duration?>? _durationSubscription;
+  StreamSubscription<Duration>? _positionSubscription;
+  StreamSubscription<PlayerState>? _playerStateSubscription;
 
   @override
   void initState() {
     super.initState();
 
-    player.setUrl(widget.url);
+    unawaited(_loadAudio());
 
-    player.durationStream.listen((d) {
-      if (d != null) {
+    _durationSubscription = player.durationStream.listen((d) {
+      if (mounted && d != null) {
         setState(() => duration = d);
       }
     });
 
-    player.positionStream.listen((p) {
-      setState(() => position = p);
+    _positionSubscription = player.positionStream.listen((p) {
+      if (mounted) setState(() => position = p);
     });
+
+    _playerStateSubscription = player.playerStateStream.listen((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  Future<void> _loadAudio() async {
+    await player.setUrl(widget.url);
   }
 
   @override
   void dispose() {
-    player.dispose();
+    unawaited(_durationSubscription?.cancel());
+    unawaited(_positionSubscription?.cancel());
+    unawaited(_playerStateSubscription?.cancel());
+    unawaited(player.dispose());
     super.dispose();
   }
 
@@ -57,7 +73,11 @@ class _InlineAudioPlayerState extends State<InlineAudioPlayer> {
           IconButton(
             icon: Icon(player.playing ? Icons.pause : Icons.play_arrow),
             onPressed: () {
-              player.playing ? player.pause() : player.play();
+              if (player.playing) {
+                unawaited(player.pause());
+              } else {
+                unawaited(player.play());
+              }
               setState(() {});
             },
           ),
@@ -71,7 +91,9 @@ class _InlineAudioPlayerState extends State<InlineAudioPlayer> {
                 duration.inSeconds.toDouble(),
               ),
               onChanged: (value) {
-                player.seek(Duration(seconds: value.toInt()));
+                unawaited(
+                  player.seek(Duration(seconds: value.toInt())),
+                );
               },
             ),
           ),

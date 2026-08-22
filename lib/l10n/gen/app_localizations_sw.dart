@@ -1569,4 +1569,88 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get chat_wallpaper_coffee => 'Kahawa';
+
+  @override
+  String get chat_audio_call => 'Simu ya sauti';
+
+  @override
+  String get chat_clear_chat => 'Safisha gumzo';
+
+  @override
+  String get chat_audio => 'Sauti';
+
+  @override
+  String get chat_view_replied_message => 'Tazama ujumbe uliojibiwa';
+
+  @override
+  String get chat_replied_message_unavailable =>
+      'Ujumbe uliojibiwa haupatikani tena.';
+
+  @override
+  String get chat_clear_chat_title => 'Safisha gumzo?';
+
+  @override
+  String get chat_clear_chats_title => 'Safisha gumzo?';
+
+  @override
+  String get chat_clear_chat_description =>
+      'Hii itafuta ujumbe wote unaoonekana kwenye gumzo hili kwako pekee. Mshiriki mwingine atabaki na nakala yake.';
+
+  @override
+  String chat_clear_selected_chats_description(Object count) {
+    return 'Ufute ujumbe unaoonekana katika gumzo $count ulizochagua kwako pekee? Washiriki wengine watabaki na nakala zao.';
+  }
+
+  @override
+  String get chat_chat_cleared => 'Gumzo limesafishwa.';
+
+  @override
+  String get chat_clear_chat_failed => 'Imeshindikana kusafisha gumzo.';
+
+  @override
+  String get chat_select_conversations => 'Chagua gumzo';
+
+  @override
+  String chat_selected_conversations(Object count) {
+    return '$count zimechaguliwa';
+  }
+
+  @override
+  String get chat_cancel_selection => 'Ghairi uteuzi';
+
+  @override
+  String get chat_mark_as_read => 'Weka kama zimesomwa';
+
+  @override
+  String get chat_clear_chats => 'Safisha gumzo';
+
+  @override
+  String get chat_delete_conversations => 'Futa gumzo';
+
+  @override
+  String get chat_delete_conversations_title => 'Ufute gumzo?';
+
+  @override
+  String chat_delete_selected_conversations_description(Object count) {
+    return 'Hii itaondoa gumzo $count ulizochagua kwenye orodha yako. Haitazifuta kwa washiriki wengine.';
+  }
+
+  @override
+  String chat_selected_marked_read(Object count) {
+    return 'Gumzo $count ulizochagua zimewekwa kama zimesomwa.';
+  }
+
+  @override
+  String chat_selected_chats_cleared(Object count) {
+    return 'Gumzo $count ulizochagua zimesafishwa.';
+  }
+
+  @override
+  String chat_selected_chats_deleted(Object count) {
+    return 'Gumzo $count ulizochagua zimefutwa.';
+  }
+
+  @override
+  String get chat_selected_action_partial_failure =>
+      'Baadhi ya gumzo ulizochagua hazikuweza kusasishwa.';
 }

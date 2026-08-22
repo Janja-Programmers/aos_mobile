@@ -23,7 +23,7 @@ class MessageActionsSheet extends StatelessWidget {
     required this.onDelete,
   });
 
-  final Offset anchor;
+  final Rect anchor;
   final ChatMessage message;
   final bool isMe;
   final bool canEdit;
@@ -122,9 +122,14 @@ class MessageActionsSheet extends StatelessWidget {
             media.padding.bottom -
             media.viewInsets.bottom -
             10;
-        final availableHeight = math.max(180.0, safeBottom - safeTop);
-        final showAbove = anchor.dy > (safeTop + safeBottom) / 2;
-        final left = (anchor.dx - cardWidth / 2)
+        final spaceAbove = math.max(0.0, anchor.top - safeTop);
+        final spaceBelow = math.max(0.0, safeBottom - anchor.bottom);
+        final showAbove = spaceAbove >= spaceBelow;
+        final availableHeight = math.max(
+          96.0,
+          showAbove ? spaceAbove : spaceBelow,
+        );
+        final left = (anchor.center.dx - cardWidth / 2)
             .clamp(
               horizontalMargin,
               math.max(
@@ -133,18 +138,18 @@ class MessageActionsSheet extends StatelessWidget {
               ),
             )
             .toDouble();
-        final pointerCenter = (anchor.dx - left)
+        final pointerCenter = (anchor.center.dx - left)
             .clamp(28.0, math.max(28.0, cardWidth - 28.0))
             .toDouble();
 
         return CustomSingleChildLayout(
           delegate: _AnchoredActionsLayoutDelegate(
             left: left,
-            anchorY: anchor.dy,
+            anchorY: showAbove ? anchor.top : anchor.bottom,
             showAbove: showAbove,
             safeTop: safeTop,
             safeBottom: safeBottom,
-            gap: 8,
+            gap: 0,
           ),
           child: SizedBox(
             width: cardWidth,
@@ -228,6 +233,11 @@ class _AnchoredActionsLayoutDelegate extends SingleChildLayoutDelegate {
   final double safeTop;
   final double safeBottom;
   final double gap;
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
+    return BoxConstraints.loose(constraints.biggest);
+  }
 
   @override
   Offset getPositionForChild(Size size, Size childSize) {

@@ -20,8 +20,6 @@ class ChatComposerArea extends StatelessWidget {
   final VoidCallback onCloseAdPreview;
   final VoidCallback onCloseReplyPreview;
   final ValueChanged<bool> onTyping;
-  final VoidCallback onAudioCall;
-  final VoidCallback onVideoCall;
   final Future<bool> Function({
     String? text,
     List<ChatInputAttachment> attachments,
@@ -42,8 +40,6 @@ class ChatComposerArea extends StatelessWidget {
     required this.onCloseAdPreview,
     required this.onCloseReplyPreview,
     required this.onTyping,
-    required this.onAudioCall,
-    required this.onVideoCall,
     required this.onSend,
   });
 
@@ -71,8 +67,6 @@ class ChatComposerArea extends StatelessWidget {
           onTyping: onTyping,
           preferences: preferences,
           adId: showAdPreview ? adId : null,
-          onAudioCall: onAudioCall,
-          onVideoCall: onVideoCall,
         ),
       ],
     );

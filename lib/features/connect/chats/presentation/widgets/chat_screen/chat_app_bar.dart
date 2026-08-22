@@ -17,7 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const double _chatAppBarHeight = 64;
 
-enum ChatMenuAction { audioCall, videoCall, changeWallpaper }
+enum ChatMenuAction { audioCall, videoCall, changeWallpaper, clearChat }
 
 class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
   const ChatAppBar({
@@ -30,6 +30,7 @@ class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
     this.textColor,
     this.onHeaderTap,
     this.onChangeWallpaper,
+    this.onClearChat,
     this.onBack,
   });
 
@@ -40,6 +41,7 @@ class ChatAppBar extends ConsumerStatefulWidget implements PreferredSizeWidget {
   final DateTime? lastSeen;
   final Color? textColor;
   final VoidCallback? onChangeWallpaper;
+  final VoidCallback? onClearChat;
   final VoidCallback? onBack;
   final VoidCallback? onHeaderTap;
 
@@ -116,6 +118,9 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
         break;
       case ChatMenuAction.changeWallpaper:
         widget.onChangeWallpaper?.call();
+        break;
+      case ChatMenuAction.clearChat:
+        widget.onClearChat?.call();
         break;
     }
   }
@@ -222,13 +227,20 @@ class _ChatAppBarState extends ConsumerState<ChatAppBar> {
                 context,
                 value: ChatMenuAction.audioCall,
                 icon: Icons.call_outlined,
-                label: l10n.chat_call,
+                label: l10n.chat_audio_call,
               ),
               _menuItem(
                 context,
                 value: ChatMenuAction.videoCall,
                 icon: Icons.videocam_outlined,
                 label: l10n.chat_video_call,
+              ),
+              _menuItem(
+                context,
+                value: ChatMenuAction.clearChat,
+                icon: Icons.cleaning_services_outlined,
+                label: l10n.chat_clear_chat,
+                destructive: true,
               ),
               _menuItem(
                 context,

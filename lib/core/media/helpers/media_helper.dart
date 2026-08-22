@@ -189,6 +189,17 @@ class MediaHelper {
     return pickAnyFile();
   }
 
+  static Future<File?> pickAudioFile() async {
+    final result = await FilePicker.pickFiles(type: FileType.audio);
+
+    if (result == null || result.files.isEmpty) return null;
+    final path = result.files.single.path;
+    if (path == null) return null;
+
+    final file = File(path);
+    return _validateFileSize(file) ? file : null;
+  }
+
   static Future<List<File>> pickImagesFromGallery({
     int imageQuality = 80,
   }) async {

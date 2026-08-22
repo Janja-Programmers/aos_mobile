@@ -34,6 +34,13 @@ class ChatInputAttachmentHelper {
     return ChatPendingAttachment(file: file, type: _inferType(file.path));
   }
 
+  static Future<ChatPendingAttachment?> pickAudioOnly() async {
+    final file = await MediaHelper.pickAudioFile();
+    if (file == null) return null;
+
+    return ChatPendingAttachment(file: file, type: 'audio');
+  }
+
   static Future<ChatInputAttachment?> uploadPendingAttachment(
     WidgetRef ref,
     ChatPendingAttachment pending,

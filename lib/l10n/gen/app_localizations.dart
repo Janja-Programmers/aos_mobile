@@ -3001,6 +3001,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Coffee'**
   String get chat_wallpaper_coffee;
+
+  /// No description provided for @chat_audio_call.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio call'**
+  String get chat_audio_call;
+
+  /// No description provided for @chat_clear_chat.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear chat'**
+  String get chat_clear_chat;
+
+  /// No description provided for @chat_audio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get chat_audio;
+
+  /// No description provided for @chat_view_replied_message.
+  ///
+  /// In en, this message translates to:
+  /// **'View replied message'**
+  String get chat_view_replied_message;
+
+  /// No description provided for @chat_replied_message_unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The replied message is no longer available.'**
+  String get chat_replied_message_unavailable;
+
+  /// No description provided for @chat_clear_chat_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear chat?'**
+  String get chat_clear_chat_title;
+
+  /// No description provided for @chat_clear_chats_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear chats?'**
+  String get chat_clear_chats_title;
+
+  /// No description provided for @chat_clear_chat_description.
+  ///
+  /// In en, this message translates to:
+  /// **'This clears all visible messages in this chat for you only. The other participant will keep their copy.'**
+  String get chat_clear_chat_description;
+
+  /// No description provided for @chat_clear_selected_chats_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the visible messages in {count} selected chats for you only? Other participants will keep their copies.'**
+  String chat_clear_selected_chats_description(Object count);
+
+  /// No description provided for @chat_chat_cleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat cleared.'**
+  String get chat_chat_cleared;
+
+  /// No description provided for @chat_clear_chat_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not clear the chat.'**
+  String get chat_clear_chat_failed;
+
+  /// No description provided for @chat_select_conversations.
+  ///
+  /// In en, this message translates to:
+  /// **'Select conversations'**
+  String get chat_select_conversations;
+
+  /// No description provided for @chat_selected_conversations.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String chat_selected_conversations(Object count);
+
+  /// No description provided for @chat_cancel_selection.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel selection'**
+  String get chat_cancel_selection;
+
+  /// No description provided for @chat_mark_as_read.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as read'**
+  String get chat_mark_as_read;
+
+  /// No description provided for @chat_clear_chats.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear chats'**
+  String get chat_clear_chats;
+
+  /// No description provided for @chat_delete_conversations.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete conversation'**
+  String get chat_delete_conversations;
+
+  /// No description provided for @chat_delete_conversations_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete conversations?'**
+  String get chat_delete_conversations_title;
+
+  /// No description provided for @chat_delete_selected_conversations_description.
+  ///
+  /// In en, this message translates to:
+  /// **'This will remove {count} selected conversations from your conversation list. It will not delete them for the other participants.'**
+  String chat_delete_selected_conversations_description(Object count);
+
+  /// No description provided for @chat_selected_marked_read.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected chats marked as read.'**
+  String chat_selected_marked_read(Object count);
+
+  /// No description provided for @chat_selected_chats_cleared.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected chats cleared.'**
+  String chat_selected_chats_cleared(Object count);
+
+  /// No description provided for @chat_selected_chats_deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected conversations deleted.'**
+  String chat_selected_chats_deleted(Object count);
+
+  /// No description provided for @chat_selected_action_partial_failure.
+  ///
+  /// In en, this message translates to:
+  /// **'Some selected conversations could not be updated.'**
+  String get chat_selected_action_partial_failure;
 }
 
 class _AppLocalizationsDelegate

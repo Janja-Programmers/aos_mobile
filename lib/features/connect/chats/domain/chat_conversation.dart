@@ -10,6 +10,7 @@ class ChatConversation {
   final String? avatar;
 
   final String? lastMessage;
+  final String? lastMessageId;
   final DateTime? lastMessageAt;
 
   final String? lastSender;
@@ -27,6 +28,7 @@ class ChatConversation {
     required this.displayName,
     this.avatar,
     this.lastMessage,
+    this.lastMessageId,
     this.lastMessageAt,
     this.lastSender,
     this.lastSenderDisplayName,
@@ -44,6 +46,7 @@ class ChatConversation {
       avatar: asNullableString(json['avatar']),
 
       lastMessage: asNullableString(json['last_message']),
+      lastMessageId: asNullableString(json['last_message_id']),
       lastMessageAt: _parseDateTime(json['last_message_at']),
 
       lastSender: normalizeCanonicalUserId(
@@ -65,6 +68,7 @@ class ChatConversation {
     String? displayName,
     Object? avatar = _unsetConversationField,
     Object? lastMessage = _unsetConversationField,
+    Object? lastMessageId = _unsetConversationField,
     Object? lastMessageAt = _unsetConversationField,
     Object? lastSender = _unsetConversationField,
     Object? lastSenderDisplayName = _unsetConversationField,
@@ -83,6 +87,9 @@ class ChatConversation {
       lastMessage: identical(lastMessage, _unsetConversationField)
           ? this.lastMessage
           : lastMessage as String?,
+      lastMessageId: identical(lastMessageId, _unsetConversationField)
+          ? this.lastMessageId
+          : lastMessageId as String?,
       lastMessageAt: identical(lastMessageAt, _unsetConversationField)
           ? this.lastMessageAt
           : lastMessageAt as DateTime?,
@@ -119,6 +126,25 @@ class ChatConversation {
 
   bool get isLastMessageDelivered {
     return lastMessageDeliveredAt != null;
+  }
+
+  ChatConversation applyLastMessageStatus({
+    required Set<String> messageIds,
+    DateTime? deliveredAt,
+    DateTime? readAt,
+  }) {
+    final messageId = lastMessageId?.trim();
+    if (messageId == null ||
+        messageId.isEmpty ||
+        !messageIds.contains(messageId)) {
+      return copyWith();
+    }
+
+    return copyWith(
+      lastMessageDeliveredAt:
+          readAt ?? deliveredAt ?? lastMessageDeliveredAt,
+      lastMessageReadAt: readAt ?? lastMessageReadAt,
+    );
   }
 
   static DateTime? _parseDateTime(dynamic value) {

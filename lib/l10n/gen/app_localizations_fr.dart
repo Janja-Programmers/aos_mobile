@@ -1591,4 +1591,88 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chat_wallpaper_coffee => 'Café';
+
+  @override
+  String get chat_audio_call => 'Appel audio';
+
+  @override
+  String get chat_clear_chat => 'Effacer la discussion';
+
+  @override
+  String get chat_audio => 'Audio';
+
+  @override
+  String get chat_view_replied_message => 'Voir le message cité';
+
+  @override
+  String get chat_replied_message_unavailable =>
+      'Le message cité n’est plus disponible.';
+
+  @override
+  String get chat_clear_chat_title => 'Effacer la discussion ?';
+
+  @override
+  String get chat_clear_chats_title => 'Effacer les discussions ?';
+
+  @override
+  String get chat_clear_chat_description =>
+      'Cette action efface tous les messages visibles de cette discussion uniquement pour vous. L’autre participant conservera sa copie.';
+
+  @override
+  String chat_clear_selected_chats_description(Object count) {
+    return 'Effacer les messages visibles de $count discussions sélectionnées uniquement pour vous ? Les autres participants conserveront leurs copies.';
+  }
+
+  @override
+  String get chat_chat_cleared => 'Discussion effacée.';
+
+  @override
+  String get chat_clear_chat_failed => 'Impossible d’effacer la discussion.';
+
+  @override
+  String get chat_select_conversations => 'Sélectionner des discussions';
+
+  @override
+  String chat_selected_conversations(Object count) {
+    return '$count sélectionnées';
+  }
+
+  @override
+  String get chat_cancel_selection => 'Annuler la sélection';
+
+  @override
+  String get chat_mark_as_read => 'Marquer comme lu';
+
+  @override
+  String get chat_clear_chats => 'Effacer les discussions';
+
+  @override
+  String get chat_delete_conversations => 'Supprimer la discussion';
+
+  @override
+  String get chat_delete_conversations_title => 'Supprimer les discussions ?';
+
+  @override
+  String chat_delete_selected_conversations_description(Object count) {
+    return 'Cette action retirera $count discussions sélectionnées de votre liste. Elles ne seront pas supprimées pour les autres participants.';
+  }
+
+  @override
+  String chat_selected_marked_read(Object count) {
+    return '$count discussions sélectionnées marquées comme lues.';
+  }
+
+  @override
+  String chat_selected_chats_cleared(Object count) {
+    return '$count discussions sélectionnées effacées.';
+  }
+
+  @override
+  String chat_selected_chats_deleted(Object count) {
+    return '$count discussions sélectionnées supprimées.';
+  }
+
+  @override
+  String get chat_selected_action_partial_failure =>
+      'Certaines discussions sélectionnées n’ont pas pu être mises à jour.';
 }

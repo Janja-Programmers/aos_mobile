@@ -96,4 +96,20 @@ mixin ChatMessagesLifecycle on ChatMessagesControllerBase {
       }
     }
   }
+
+  Future<bool> ensureMessageLoaded(String messageId) async {
+    final targetId = messageId.trim();
+    if (targetId.isEmpty) return false;
+    if (_messages.any((message) => message.id == targetId)) return true;
+
+    while (_hasMoreMessages) {
+      if (_isLoadingMore) return false;
+      final previousCount = _messages.length;
+      await loadMore();
+      if (_messages.any((message) => message.id == targetId)) return true;
+      if (state.hasError || _messages.length <= previousCount) break;
+    }
+
+    return false;
+  }
 }

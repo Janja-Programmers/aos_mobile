@@ -1,19 +1,26 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_reply_preview.dart';
+import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class ReplyPreview extends StatelessWidget {
-  const ReplyPreview({super.key, required this.reply, required this.isMe});
+  const ReplyPreview({
+    super.key,
+    required this.reply,
+    required this.isMe,
+    this.onTap,
+  });
 
   final ChatReplyPreview reply;
   final bool isMe;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return Container(
+    final preview = Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
       decoration: BoxDecoration(
@@ -51,6 +58,18 @@ class ReplyPreview extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+
+    if (onTap == null) return preview;
+
+    return Semantics(
+      button: true,
+      label: AppLocalizations.of(context).chat_view_replied_message,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: preview,
       ),
     );
   }

@@ -26,7 +26,10 @@ class ChatOutgoingAttachment {
   }
 
   bool get isImage => fileType == 'image';
-  bool get isAudio => fileType == 'audio';
+  bool get isAudio =>
+      fileType == 'audio' ||
+      fileType == 'voice' ||
+      fileType == 'voice_note';
   bool get isVideo => fileType == 'video';
   bool get isDocument => fileType == 'document';
 }

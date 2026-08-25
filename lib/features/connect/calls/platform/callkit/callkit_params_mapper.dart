@@ -56,7 +56,9 @@ class CallKitParamsMapper {
         isCustomNotification: true,
         isShowLogo: false,
         isShowCallID: false,
-        isShowFullLockedScreen: true,
+        // Play policy: AOS uses the incoming-call notification surface
+        // rather than privileged full-screen intent.
+        isShowFullLockedScreen: false,
         isImportant: true,
         ringtonePath: 'system_ringtone_default',
         backgroundColor: '#FFFFFF',

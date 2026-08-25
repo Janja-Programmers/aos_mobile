@@ -23,7 +23,7 @@ void main() {
     expect(params.textDecline, 'Decline');
     expect(params.android?.ringtonePath, 'system_ringtone_default');
     expect(params.android?.incomingCallNotificationChannelName, 'AOS Calls');
-    expect(params.android?.isShowFullLockedScreen, isTrue);
+    expect(params.android?.isShowFullLockedScreen, isFalse);
     expect(params.missedCallNotification?.showNotification, isFalse);
     expect(params.missedCallNotification?.isShowCallback, isFalse);
   });

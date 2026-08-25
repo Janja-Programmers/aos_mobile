@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
@@ -45,10 +44,9 @@ class CallKitService {
   Future<void> init() async {
     if (_initialized) return;
 
-    // Permission dialogs and Android special-access settings must never be
-    // opened as an application-startup side effect. Notification permission is
-    // owned by PushNotificationService, while full-screen intent access is
-    // requested only from an explicit calls UI action.
+    // Notification permission is owned by PushNotificationService. AOS does
+    // not request Android full-screen-intent special access; incoming calls use
+    // the native call notification surface and explicit user actions instead.
     await _hydratePendingCallkitMapping();
 
     await _sub?.cancel();
@@ -57,67 +55,6 @@ class CallKitService {
 
     CallRuntimeLog.write('callkit_service_initialized');
     appLogger.i('📞 CallKitService initialized');
-  }
-
-  /// Returns whether Android may display full-screen incoming-call intents.
-  ///
-  /// Android 14+ treats this as special access. Reading the state is safe at
-  /// startup; requesting it opens system settings and must be user initiated.
-  Future<bool> canUseFullScreenIntent() async {
-    if (!Platform.isAndroid) return true;
-
-    try {
-      final Object? result =
-          await FlutterCallkitIncoming.canUseFullScreenIntent();
-      final allowed = result == true;
-      CallRuntimeLog.write(
-        'callkit_full_screen_intent_status',
-        details: <String, Object?>{'allowed': allowed},
-      );
-      return allowed;
-    } catch (error, stackTrace) {
-      CallRuntimeLog.write(
-        'callkit_full_screen_intent_status_failed',
-        details: const <String, Object?>{'failure': 'native_error'},
-      );
-      appLogger.w(
-        '⚠️ Could not read full-screen incoming-call access',
-        error: error,
-        stackTrace: stackTrace,
-      );
-      return false;
-    }
-  }
-
-  /// Opens Android's full-screen-intent settings only after a user action.
-  ///
-  /// This method first checks the current state so an already-authorized app
-  /// never reopens the settings page.
-  Future<bool> requestFullScreenIntentPermission() async {
-    if (!Platform.isAndroid) return true;
-    if (await canUseFullScreenIntent()) return true;
-
-    try {
-      CallRuntimeLog.write('callkit_full_screen_intent_request_started');
-      await FlutterCallkitIncoming.requestFullIntentPermission();
-      final allowed = await canUseFullScreenIntent();
-      CallRuntimeLog.write(
-        'callkit_full_screen_intent_request_completed',
-        details: <String, Object?>{'allowed': allowed},
-      );
-      return allowed;
-    } catch (error, stackTrace) {
-      CallRuntimeLog.write(
-        'callkit_full_screen_intent_request_failed',
-        details: const <String, Object?>{'failure': 'native_error'},
-      );
-      appLogger.w(
-        '⚠️ Could not open full-screen incoming-call settings',
-        error: error,
-        stackTrace: stackTrace,
-      );
-      return false;
-    }
   }
 
   Future<void> showIncomingCall({

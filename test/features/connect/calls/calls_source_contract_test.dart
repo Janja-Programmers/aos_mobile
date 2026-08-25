@@ -45,25 +45,34 @@ void main() {
     ).readAsStringSync();
     final initBody = source
         .split('Future<void> init() async {')[1]
-        .split('Future<bool> canUseFullScreenIntent()')[0];
+        .split('Future<void> showIncomingCall')[0];
 
-    expect(initBody, isNot(contains('requestFullIntentPermission')));
     expect(initBody, isNot(contains('requestNotificationPermission')));
   });
 
-  test('full-screen settings are guarded by an availability check', () {
-    final source = File(
+  test('full-screen-intent runtime APIs are absent from AOS call code', () {
+    final serviceSource = File(
       'lib/features/connect/calls/platform/callkit/callkit_service.dart',
     ).readAsStringSync();
-    final requestBody = source
-        .split('Future<bool> requestFullScreenIntentPermission() async {')[1]
-        .split('Future<void> showIncomingCall')[0];
+    final callsUiSource = File(
+      'lib/features/connect/calls/presentation/screens/call_list_screen.dart',
+    ).readAsStringSync();
 
-    expect(
-      requestBody,
-      contains('if (await canUseFullScreenIntent()) return true;'),
-    );
-    expect(requestBody, contains('requestFullIntentPermission()'));
+    for (final source in <String>[serviceSource, callsUiSource]) {
+      expect(source, isNot(contains('canUseFullScreenIntent')));
+      expect(source, isNot(contains('requestFullIntentPermission')));
+      expect(source, isNot(contains('requestFullScreenIntentPermission')));
+    }
+  });
+
+  test('Android manifest removes dependency-provided full-screen intent', () {
+    final manifest = File(
+      'android/app/src/main/AndroidManifest.xml',
+    ).readAsStringSync();
+
+    expect(manifest, contains('xmlns:tools="http://schemas.android.com/tools"'));
+    expect(manifest, contains('android.permission.USE_FULL_SCREEN_INTENT'));
+    expect(manifest, contains('tools:node="remove"'));
   });
 
   test('Android 13 notification permission ambiguity is tracked', () {
@@ -82,14 +91,14 @@ void main() {
     expect(requestBody, contains('requestPermission('));
   });
 
-  test('calls UI exposes explicit full-screen settings action', () {
+  test('calls UI does not expose full-screen-intent settings', () {
     final source = File(
       'lib/features/connect/calls/presentation/screens/call_list_screen.dart',
     ).readAsStringSync();
 
-    expect(source, contains('Enable full-screen incoming calls'));
-    expect(source, contains('_requestFullScreenIntentPermission'));
-    expect(source, contains('AppLifecycleState.resumed'));
+    expect(source, isNot(contains('Enable full-screen incoming calls')));
+    expect(source, isNot(contains('Open settings')));
+    expect(source, isNot(contains('Full-screen incoming calls are disabled')));
   });
 
   test('3.0.0 background handler uses the legacy CallEvent API', () {

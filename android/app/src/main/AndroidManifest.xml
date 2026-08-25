@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- ================= BASIC ================= -->
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -26,7 +27,12 @@
 
     <!-- ================= LOCKSCREEN / CALL UI ================= -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
+    <!-- AOS is not eligible for Play pre-granted full-screen intent.
+         flutter_callkit_incoming 3.0.0 declares this transitively, so remove
+         it from the merged release manifest while keeping CallStyle/FGS calls. -->
+    <uses-permission
+        android:name="android.permission.USE_FULL_SCREEN_INTENT"
+        tools:node="remove" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <application
@@ -41,7 +47,7 @@
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="aos_notifications" />
 
-        <!-- REQUIRED FOR FULL SCREEN CALLKIT BEHAVIOR -->
+        <!-- Compatibility library used by the native call integration. -->
         <uses-library
             android:name="org.apache.http.legacy"
             android:required="false"/>

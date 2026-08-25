@@ -16,6 +16,7 @@ void main() {
     expect(params.type, 1);
     expect(params.nameCaller, 'AOS Caller');
     expect(params.android?.ringtonePath, 'system_ringtone_default');
+    expect(params.android?.isShowFullLockedScreen, isFalse);
     expect(params.missedCallNotification?.showNotification, isFalse);
     expect(params.missedCallNotification?.isShowCallback, isFalse);
   });

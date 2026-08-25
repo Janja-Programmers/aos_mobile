@@ -1,41 +1,67 @@
-import 'dart:io';
+import 'dart:async';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_asset.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ImageSearchSheet extends StatefulWidget {
+class ImageSearchSheet extends ConsumerStatefulWidget {
   const ImageSearchSheet({super.key});
 
   @override
-  State<ImageSearchSheet> createState() => _ImageSearchSheetState();
+  ConsumerState<ImageSearchSheet> createState() => _ImageSearchSheetState();
 }
 
-class _ImageSearchSheetState extends State<ImageSearchSheet> {
-  File? _file;
-  ImageSource? _selectedSource;
+class _ImageSearchSheetState extends ConsumerState<ImageSearchSheet> {
+  AcquiredMedia? _media;
+  MediaAcquisitionSource? _selectedSource;
+  bool _transferred = false;
+  bool _picking = false;
 
-  bool get _hasPickedImage => _file != null;
+  bool get _hasPickedImage => _media != null;
 
-  Future<void> _pick(ImageSource source) async {
-    final picker = ImagePicker();
-
-    final picked = await picker.pickImage(source: source, imageQuality: 85);
-
-    if (picked == null) return;
-
-    setState(() {
-      _file = File(picked.path);
-      _selectedSource = source;
-    });
+  Future<void> _pick(MediaAcquisitionSource source) async {
+    if (_picking) return;
+    setState(() => _picking = true);
+    try {
+      final acquisition = ref.read(mediaAcquisitionServiceProvider);
+      final picked = source == MediaAcquisitionSource.camera
+          ? await acquisition.captureImage(
+              context,
+              useCase: MediaUseCase.searchImage,
+            )
+          : await acquisition.pickImage(useCase: MediaUseCase.searchImage);
+      if (picked == null) return;
+      if (!mounted) {
+        await picked.discard();
+        return;
+      }
+      final previous = _media;
+      setState(() {
+        _media = picked;
+        _selectedSource = source;
+      });
+      await previous?.discard();
+    } finally {
+      if (mounted) setState(() => _picking = false);
+    }
   }
 
   void _submit() {
-    final file = _file;
-    if (file == null) return;
+    final media = _media;
+    if (media == null) return;
 
-    Navigator.pop(context, file);
+    _transferred = true;
+    Navigator.pop(context, media);
+  }
+
+  @override
+  void dispose() {
+    if (!_transferred) unawaited(_media?.discard());
+    super.dispose();
   }
 
   @override
@@ -89,11 +115,11 @@ class _ImageSearchSheetState extends State<ImageSearchSheet> {
             _ImageOptionTile(
               icon: Icons.camera_alt_outlined,
               title: 'Take a Photo',
-              subtitle: _selectedSource == ImageSource.camera
+              subtitle: _selectedSource == MediaAcquisitionSource.camera
                   ? 'Photo selected. Ready to search'
                   : 'Use your camera to capture\nan item',
-              selected: _selectedSource == ImageSource.camera,
-              onTap: () => _pick(ImageSource.camera),
+              selected: _selectedSource == MediaAcquisitionSource.camera,
+              onTap: () => _pick(MediaAcquisitionSource.camera),
             ),
 
             const SizedBox(height: 16),
@@ -101,16 +127,16 @@ class _ImageSearchSheetState extends State<ImageSearchSheet> {
             _ImageOptionTile(
               icon: Icons.photo_library_outlined,
               title: 'Choose from Gallery',
-              subtitle: _selectedSource == ImageSource.gallery
+              subtitle: _selectedSource == MediaAcquisitionSource.gallery
                   ? 'Image selected. Ready to search'
                   : 'Select an existing photo\nfrom your device',
-              selected: _selectedSource == ImageSource.gallery,
-              onTap: () => _pick(ImageSource.gallery),
+              selected: _selectedSource == MediaAcquisitionSource.gallery,
+              onTap: () => _pick(MediaAcquisitionSource.gallery),
             ),
 
             if (_hasPickedImage) ...[
               const SizedBox(height: 18),
-              _SelectedImagePreview(file: _file!),
+              _SelectedImagePreview(media: _media!),
             ],
 
             const SizedBox(height: 34),
@@ -154,7 +180,7 @@ class _ImageSearchSheetState extends State<ImageSearchSheet> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _hasPickedImage ? _submit : null,
+                    onPressed: _hasPickedImage && !_picking ? _submit : null,
                     child: Text(
                       _hasPickedImage ? 'Search' : 'Pick Image',
                       style: AppTextStylesX(context).button,
@@ -241,9 +267,9 @@ class _ImageOptionTile extends StatelessWidget {
 }
 
 class _SelectedImagePreview extends StatelessWidget {
-  const _SelectedImagePreview({required this.file});
+  const _SelectedImagePreview({required this.media});
 
-  final File file;
+  final AcquiredMedia media;
 
   @override
   Widget build(BuildContext context) {
@@ -260,7 +286,14 @@ class _SelectedImagePreview extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Image.file(file, width: 52, height: 52, fit: BoxFit.cover),
+            child: Image.file(
+              media.file,
+              width: 52,
+              height: 52,
+              fit: BoxFit.cover,
+              cacheWidth: 208,
+              cacheHeight: 208,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(

@@ -768,24 +768,54 @@
   "chat_clear_chats_title": "مسح الدردشات؟",
   "chat_clear_chat_description": "يؤدي هذا إلى مسح جميع الرسائل الظاهرة في هذه الدردشة لديك فقط. سيحتفظ المشارك الآخر بنسخته.",
   "chat_clear_selected_chats_description": "هل تريد مسح الرسائل الظاهرة في {count} دردشات محددة لديك فقط؟ سيحتفظ المشاركون الآخرون بنسخهم.",
-  "@chat_clear_selected_chats_description": {"placeholders": {"count": {}}},
+  "@chat_clear_selected_chats_description": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_chat_cleared": "تم مسح الدردشة.",
   "chat_clear_chat_failed": "تعذر مسح الدردشة.",
   "chat_select_conversations": "تحديد الدردشات",
   "chat_selected_conversations": "تم تحديد {count}",
-  "@chat_selected_conversations": {"placeholders": {"count": {}}},
+  "@chat_selected_conversations": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_cancel_selection": "إلغاء التحديد",
   "chat_mark_as_read": "تحديد كمقروء",
   "chat_clear_chats": "مسح الدردشات",
   "chat_delete_conversations": "حذف الدردشة",
   "chat_delete_conversations_title": "حذف الدردشات؟",
   "chat_delete_selected_conversations_description": "سيؤدي هذا إلى إزالة {count} دردشات محددة من قائمتك. لن تُحذف لدى المشاركين الآخرين.",
-  "@chat_delete_selected_conversations_description": {"placeholders": {"count": {}}},
+  "@chat_delete_selected_conversations_description": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_selected_marked_read": "تم تحديد {count} دردشات كمقروءة.",
-  "@chat_selected_marked_read": {"placeholders": {"count": {}}},
+  "@chat_selected_marked_read": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_selected_chats_cleared": "تم مسح {count} دردشات محددة.",
-  "@chat_selected_chats_cleared": {"placeholders": {"count": {}}},
+  "@chat_selected_chats_cleared": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_selected_chats_deleted": "تم حذف {count} دردشات محددة.",
-  "@chat_selected_chats_deleted": {"placeholders": {"count": {}}},
-  "chat_selected_action_partial_failure": "تعذر تحديث بعض الدردشات المحددة."
+  "@chat_selected_chats_deleted": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "chat_selected_action_partial_failure": "تعذر تحديث بعض الدردشات المحددة.",
+  "profilePhotoRemoveAction": "إزالة الصورة",
+  "profilePhotoRemoved": "تمت إزالة صورة الملف الشخصي.",
+  "sellerBannerChangeAction": "تغيير اللافتة",
+  "sellerBannerRemoveAction": "إزالة اللافتة",
+  "sellerBannerUpdated": "تم تحديث لافتة المتجر.",
+  "sellerBannerRemoved": "تمت إزالة لافتة المتجر."
 }

@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_recorder_controller.dart';
 import 'package:africaonlinestores/features/shorts/create_short/domain/short_creation_models.dart';
-import 'package:camera/camera.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -36,6 +36,10 @@ void main() {
       expect(output, driver.outputPath);
       expect(controller.state.phase, ShortRecorderPhase.recorded);
       expect(driver.stopCalls, 1);
+
+      await controller.suspendCamera();
+      expect(controller.state.phase, ShortRecorderPhase.recorded);
+      expect(driver.disposeCalls, 1);
     },
   );
 
@@ -61,9 +65,13 @@ final class _FakeCameraDriver implements ShortCameraDriver {
   bool _recording = false;
   int startCalls = 0;
   int stopCalls = 0;
+  int disposeCalls = 0;
 
   @override
-  CameraController? get cameraController => null;
+  Widget? get previewWidget => null;
+
+  @override
+  Size? get previewSize => null;
 
   @override
   int get cameraCount => 2;
@@ -73,6 +81,7 @@ final class _FakeCameraDriver implements ShortCameraDriver {
 
   @override
   Future<void> dispose() async {
+    disposeCalls += 1;
     _recording = false;
   }
 

@@ -22,15 +22,15 @@ class SellerController {
   Future<Either<Failure, Map<String, dynamic>>> updateSellerProfile({
     String? businessCategory,
     String? aboutBusiness,
-    String? businessAddress,
     String? shopBanner,
+    bool clearShopBanner = false,
     List<Map<String, dynamic>>? operatingHours,
   }) async {
     return _api.updateSeller(
       businessCategory: businessCategory,
       aboutBusiness: aboutBusiness,
-      businessAddress: businessAddress,
       shopBanner: shopBanner,
+      clearShopBanner: clearShopBanner,
       operatingHours: operatingHours,
     );
   }

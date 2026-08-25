@@ -44,9 +44,7 @@ Base path: `/api/method/aos.api.v1.live`.
 | Chat share | POST `share_live_to_chat` | `live_id`, `conversation_id`; optional `message`, `idempotency_key` | Success envelope |
 
 `start_live.title` is required and bounded to 140 Unicode characters by the
-backend. The transport permits an omitted cover. The mobile preparation screen
-uses the current profile avatar as `cover_image` when available and applies a
-stricter presentation rule that a cover must be ready before Start. A newly
+backend. The transport permits an omitted cover. The mobile preparation screen uses the current profile avatar as `cover_image` when available, but does not require a cover because the backend contract makes it optional. A newly
 selected cover is uploaded with purpose `live_cover` and sent as
 `live_cover_media`; Flutter does not send conflicting cover aliases.
 

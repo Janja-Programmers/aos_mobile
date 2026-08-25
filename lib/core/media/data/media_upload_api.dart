@@ -30,13 +30,14 @@ class MediaUploadApi {
   Future<Either<Failure, MediaUploadResult>> uploadMedia({
     required File file,
     required String purpose,
+    String? contentType,
     String? idempotencyKey,
     CancelToken? cancelToken,
     void Function(MediaUploadStage stage)? onStage,
     void Function(int sent, int total)? onSendProgress,
   }) async {
     try {
-      final prepared = _prepareFile(file);
+      final prepared = _prepareFile(file, contentType: contentType);
       if (prepared == null) {
         return Either.left(const Failure('File does not exist.'));
       }
@@ -275,19 +276,22 @@ class MediaUploadApi {
   }
 }
 
-_PreparedUploadFile? _prepareFile(File file) {
+_PreparedUploadFile? _prepareFile(File file, {String? contentType}) {
   if (!file.existsSync()) {
     return null;
   }
 
   final filename = _filenameFromPath(file.path);
   final sizeBytes = file.lengthSync();
-  final contentType = _contentTypeForFilename(filename);
+  final requestedContentType = contentType?.trim() ?? '';
+  final effectiveContentType = requestedContentType.isNotEmpty
+      ? requestedContentType
+      : _contentTypeForFilename(filename);
 
   return _PreparedUploadFile(
     filename: filename,
     sizeBytes: sizeBytes,
-    contentType: contentType,
+    contentType: effectiveContentType,
   );
 }
 

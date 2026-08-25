@@ -45,9 +45,9 @@ least Android foreground/background and iOS foreground when available.
 
 | ID | Short steps | Expected result | Evidence if it fails |
 | --- | --- | --- | --- |
-| LIVE-01 | Open Go Live, deny camera | Start is blocked safely; no backend Live or leaked preview track | Screen recording, permission state, sanitized logs |
+| LIVE-01 | Open Go Live, deny camera | Title remains the only required field; Live may start without a prepared camera track and no preview track leaks | Screen recording, permission state, sanitized logs |
 | LIVE-02 | Open Go Live with a profile name/avatar, then tap the details card | Current name and avatar are prefilled; the keyboard-safe sheet permits title and cover changes; title counter is `/140` | Recording, profile payload fields, screenshots |
-| LIVE-03 | Clear the title, test an account without an avatar, then select a cover and flip the camera twice | Save/Go Live stay disabled until title and cover are ready; camera changes front→back→front; one Live starts with the prepared track | Recording and sanitized start/upload/LiveKit timeline |
+| LIVE-03 | Clear the title, test an account without an avatar, then optionally select a cover and flip the camera twice | Save/Go Live are disabled only while title is blank or another local action is in flight; an avatar/cover is optional; camera changes front→back→front | Recording and sanitized start/upload/LiveKit timeline |
 | LIVE-04 | Repeatedly tap Start on slow network | One backend start and one room join | Network trace with credentials redacted |
 | LIVE-05 | Viewer opens Feed Live tab and vertically scrolls | Visible eligible Live auto-plays; previous session leaves before next joins | Recording plus sanitized join/leave IDs |
 | LIVE-06 | Tap Feed Live into full screen | Existing room/session is reused; no playback reset or duplicate viewer count | Recording and request counts |

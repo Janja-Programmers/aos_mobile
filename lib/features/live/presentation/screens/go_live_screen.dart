@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
-import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
-import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_asset.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
@@ -12,6 +12,7 @@ import 'package:africaonlinestores/features/account/domain/account_profile_snaps
 import 'package:africaonlinestores/features/account/domain/account_state.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_controller.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
+import 'package:africaonlinestores/features/live/application/services/live_media_service.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/go_live_details_sheet.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_video_stage.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
@@ -30,8 +31,11 @@ class GoLiveScreen extends ConsumerStatefulWidget {
 class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
   final _titleController = TextEditingController();
   late final ProviderSubscription<AccountState> _accountSubscription;
+  late final AppLifecycleListener _lifecycleListener;
+  late final LiveMediaService _liveMediaService;
 
-  File? _selectedImage;
+  AcquiredMedia? _selectedCoverMedia;
+  AcquiredMedia? _pendingCoverMedia;
   String? _uploadedImageUrl;
   String? _uploadedCoverMediaId;
   String? _profileCoverImageUrl;
@@ -49,16 +53,36 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
   bool _previewTransferred = false;
   bool _isApplyingTitleDefault = false;
   bool _titleWasEdited = false;
+  int _previewGeneration = 0;
+
+  File? get _selectedImage => _selectedCoverMedia?.file;
 
   @override
   void initState() {
     super.initState();
+    _liveMediaService = ref.read(liveMediaServiceProvider);
     _titleController.addListener(_onTitleChanged);
     _applyProfileDefaults(ref.read(accountsControllerProvider), notify: false);
     _accountSubscription = ref.listenManual<AccountState>(
       accountsControllerProvider,
       (_, next) => _applyProfileDefaults(next),
     );
+    _lifecycleListener = AppLifecycleListener(
+      onInactive: _pausePreviewForLifecycle,
+      onPause: _pausePreviewForLifecycle,
+      onDetach: _pausePreviewForLifecycle,
+      onResume: _resumePreviewForLifecycle,
+    );
+    unawaited(_startCameraPreview());
+  }
+
+  void _pausePreviewForLifecycle() {
+    if (_previewTransferred) return;
+    unawaited(_suspendCameraPreview());
+  }
+
+  void _resumePreviewForLifecycle() {
+    if (_previewTransferred || _isCountingDown) return;
     unawaited(_startCameraPreview());
   }
 
@@ -68,12 +92,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
 
   void _applyProfileDefaults(AccountState accountState, {bool notify = true}) {
     final profile = AccountProfileSnapshot.fromJson(accountState.profile);
-    final displayName = _firstText(<Object?>[
-      profile.fullName,
-      accountState.profile['username'],
-      accountState.profile['user_name'],
-      _usernameFromEmail(profile.email),
-    ]);
+    final displayName = profile.fullName.trim();
     final coverImageUrl = normalizeMediaUrl(profile.userImage);
 
     if (!_titleWasEdited && displayName.isNotEmpty) {
@@ -100,32 +119,19 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     if (notify && mounted && changed) setState(() {});
   }
 
-  static String _firstText(Iterable<Object?> values) {
-    for (final value in values) {
-      final clean = value?.toString().trim() ?? '';
-      if (clean.isNotEmpty && clean.toLowerCase() != 'null') return clean;
-    }
-    return '';
-  }
-
-  static String _usernameFromEmail(String? email) {
-    final clean = email?.trim() ?? '';
-    final separator = clean.indexOf('@');
-    return separator > 0 ? clean.substring(0, separator) : '';
-  }
-
   Future<void> _startCameraPreview() async {
     if (_isStartingPreview || _previewTrack != null) return;
+    final generation = ++_previewGeneration;
 
     setState(() => _isStartingPreview = true);
 
     try {
-      final track = await ref
-          .read(liveMediaServiceProvider)
-          .prepareCamera(frontCamera: _isFrontCamera);
+      final track = await _liveMediaService.prepareCamera(
+        frontCamera: _isFrontCamera,
+      );
 
-      if (!mounted) {
-        await ref.read(liveMediaServiceProvider).releasePreparedCamera();
+      if (!mounted || generation != _previewGeneration) {
+        await _liveMediaService.releasePreparedCamera();
         return;
       }
 
@@ -146,6 +152,20 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     }
   }
 
+  Future<void> _suspendCameraPreview() async {
+    _previewGeneration += 1;
+    if (mounted) {
+      setState(() {
+        _previewTrack = null;
+        _isStartingPreview = false;
+      });
+    } else {
+      _previewTrack = null;
+      _isStartingPreview = false;
+    }
+    await _liveMediaService.releasePreparedCamera();
+  }
+
   Future<void> _flipPreviewCamera() async {
     if (_previewTrack == null || _isFlippingCamera || _isStartingPreview) {
       return;
@@ -154,7 +174,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     setState(() => _isFlippingCamera = true);
 
     try {
-      final switched = await ref.read(liveMediaServiceProvider).flipCamera();
+      final switched = await _liveMediaService.flipCamera();
       if (!mounted) return;
       if (!switched) {
         ShowSnack(context, context.l10n.liveNoAlternateCameraError).error();
@@ -193,7 +213,11 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
       ),
     );
 
-    if (!mounted || draft == null) return;
+    if (!mounted || draft == null) {
+      await _pendingCoverMedia?.discard();
+      _pendingCoverMedia = null;
+      return;
+    }
 
     _titleWasEdited = true;
     _titleController.value = TextEditingValue(
@@ -203,17 +227,57 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
 
     final nextImage = draft.coverImage;
     if (nextImage != null && nextImage.path != _selectedImage?.path) {
-      await _uploadCoverImage(nextImage);
+      final selected = _pendingCoverMedia?.path == nextImage.path
+          ? _pendingCoverMedia
+          : AcquiredMedia.external(file: nextImage, kind: MediaKind.image);
+      _pendingCoverMedia = null;
+      if (selected != null) await _uploadCoverImage(selected);
     }
   }
 
   Future<File?> _pickCover(BuildContext pickerContext) async {
+    final source = await showModalBottomSheet<MediaAcquisitionSource>(
+      context: pickerContext,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(sheetContext.l10n.liveChooseCoverFromGallery),
+                onTap: () =>
+                    Navigator.pop(sheetContext, MediaAcquisitionSource.gallery),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: Text(sheetContext.l10n.liveTakeCoverPhoto),
+                onTap: () =>
+                    Navigator.pop(sheetContext, MediaAcquisitionSource.camera),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (source == null || !pickerContext.mounted) return null;
+
     try {
-      return await MediaHelper.pickImageWithChoice(
-        pickerContext,
-        galleryLabel: pickerContext.l10n.liveChooseCoverFromGallery,
-        cameraLabel: pickerContext.l10n.liveTakeCoverPhoto,
-      );
+      final acquisition = ref.read(mediaAcquisitionServiceProvider);
+      if (source == MediaAcquisitionSource.camera) {
+        await _suspendCameraPreview();
+        if (!pickerContext.mounted) return null;
+      }
+      final media = source == MediaAcquisitionSource.camera
+          ? await acquisition.captureImage(
+              pickerContext,
+              useCase: MediaUseCase.liveCover,
+            )
+          : await acquisition.pickImage(useCase: MediaUseCase.liveCover);
+      if (media == null) return null;
+      await _pendingCoverMedia?.discard();
+      _pendingCoverMedia = media;
+      return media.file;
     } on Object catch (error, stackTrace) {
       appLogger.e(
         'Live cover selection failed',
@@ -227,40 +291,43 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
         ).error();
       }
       return null;
+    } finally {
+      if (source == MediaAcquisitionSource.camera &&
+          mounted &&
+          !_previewTransferred) {
+        unawaited(_startCameraPreview());
+      }
     }
   }
 
-  Future<void> _uploadCoverImage(File file) async {
-    final previousImage = _selectedImage;
+  Future<void> _uploadCoverImage(AcquiredMedia media) async {
+    final previousMedia = _selectedCoverMedia;
     final previousUrl = _uploadedImageUrl;
     final previousMediaId = _uploadedCoverMediaId;
 
     setState(() {
-      _selectedImage = file;
+      _selectedCoverMedia = media;
       _uploadedImageUrl = null;
       _uploadedCoverMediaId = null;
       _isUploading = true;
     });
 
-    final mediaApi = ref.read(mediaUploadApiProvider);
-    final uploaded = await MediaHelper.uploadSingle(
-      ref: ref,
-      file: file,
-      uploadFn: (pickedFile) => mediaApi.uploadMedia(
-        file: pickedFile,
-        purpose: MediaUploadPurpose.liveCover,
-      ),
-    );
+    final upload = await ref
+        .read(mediaUploadCoordinatorProvider)
+        .upload(media: media, useCase: MediaUseCase.liveCover);
+    final uploaded = upload.rightOrNull;
 
     if (!mounted) return;
 
     if (uploaded == null || uploaded.mediaId.trim().isEmpty) {
       setState(() {
-        _selectedImage = previousImage;
+        _selectedCoverMedia = previousMedia;
         _uploadedImageUrl = previousUrl;
         _uploadedCoverMediaId = previousMediaId;
         _isUploading = false;
       });
+      if (!identical(media, previousMedia)) await media.discard();
+      if (!mounted) return;
       ShowSnack(context, context.l10n.liveCoverUploadError).error();
       return;
     }
@@ -270,6 +337,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
       _uploadedImageUrl = normalizeMediaUrl(uploaded.url);
       _uploadedCoverMediaId = uploaded.mediaId.trim();
     });
+    if (!identical(previousMedia, media)) await previousMedia?.discard();
   }
 
   String? get _effectiveCoverImageUrl {
@@ -278,24 +346,11 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
     return _profileCoverImageUrl;
   }
 
-  bool get _hasReadyCover {
-    if (_isUploading) return false;
-    if (_selectedImage != null) {
-      return _uploadedCoverMediaId?.trim().isNotEmpty ?? false;
-    }
-    return _effectiveCoverImageUrl?.trim().isNotEmpty ?? false;
-  }
-
   Future<void> _startLive() async {
     final title = _titleController.text.trim();
 
     if (title.isEmpty) {
       ShowSnack(context, context.l10n.liveTitleRequired).error();
-      return;
-    }
-
-    if (!_hasReadyCover) {
-      ShowSnack(context, context.l10n.liveCoverRequired).error();
       return;
     }
 
@@ -345,10 +400,15 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
   @override
   void dispose() {
     _accountSubscription.close();
+    _lifecycleListener.dispose();
     _titleController.removeListener(_onTitleChanged);
     _titleController.dispose();
+    unawaited(_pendingCoverMedia?.discard());
+    if (!identical(_pendingCoverMedia, _selectedCoverMedia)) {
+      unawaited(_selectedCoverMedia?.discard());
+    }
     if (!_previewTransferred) {
-      unawaited(ref.read(liveMediaServiceProvider).releasePreparedCamera());
+      unawaited(_liveMediaService.releasePreparedCamera());
     }
     super.dispose();
   }
@@ -492,19 +552,12 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
         final title = titleValue.text.trim();
         final hasTitle = title.isNotEmpty;
         final blocked =
-            !hasTitle ||
-            !_hasReadyCover ||
-            _isUploading ||
-            _isCountingDown ||
-            _isFlippingCamera ||
-            _isStartingPreview;
+            !hasTitle || _isUploading || _isCountingDown || _isFlippingCamera;
         final String subtitle;
         if (_isUploading) {
           subtitle = context.l10n.liveUploadingCover;
         } else if (!hasTitle) {
           subtitle = context.l10n.liveTitleRequired;
-        } else if (!_hasReadyCover) {
-          subtitle = context.l10n.liveCoverRequired;
         } else {
           subtitle = context.l10n.liveEditDetailsHint;
         }

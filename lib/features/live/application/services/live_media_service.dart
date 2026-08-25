@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:africaonlinestores/core/media/application/media_camera_resource_coordinator.dart';
+import 'package:africaonlinestores/core/media/domain/media_asset.dart';
 import 'package:africaonlinestores/core/media/livekit_service.dart';
 import 'package:africaonlinestores/core/media/livekit_track_events.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
@@ -6,17 +10,29 @@ import 'package:livekit_client/livekit_client.dart' as lk;
 import 'package:permission_handler/permission_handler.dart';
 
 class LiveMediaService {
-  LiveMediaService(this.liveKit);
+  LiveMediaService(
+    this.liveKit, {
+    MediaCameraResourceCoordinator? cameraResources,
+  }) : _cameraResources = cameraResources ?? MediaCameraResourceCoordinator();
 
   final LiveKitService liveKit;
+  final MediaCameraResourceCoordinator _cameraResources;
 
   lk.LocalVideoTrack? _ownedVideoTrack;
+  MediaCameraLease? _cameraLease;
   bool _videoTrackPublished = false;
+  Future<void> _cameraTransitionTail = Future<void>.value();
 
   Stream<MediaTrackEvent> get events => liveKit.events;
   lk.LocalVideoTrack? get preparedVideoTrack => _ownedVideoTrack;
 
-  Future<lk.LocalVideoTrack> prepareCamera({required bool frontCamera}) async {
+  Future<lk.LocalVideoTrack> prepareCamera({required bool frontCamera}) {
+    return _enqueueCameraTransition(
+      () => _prepareCamera(frontCamera: frontCamera),
+    );
+  }
+
+  Future<lk.LocalVideoTrack> _prepareCamera({required bool frontCamera}) async {
     final existing = _ownedVideoTrack;
     if (existing != null) return existing;
 
@@ -25,16 +41,23 @@ class LiveMediaService {
       throw StateError('Camera permission is required.');
     }
 
-    final track = await lk.LocalVideoTrack.createCameraTrack(
-      lk.CameraCaptureOptions(
-        cameraPosition: frontCamera
-            ? lk.CameraPosition.front
-            : lk.CameraPosition.back,
-      ),
-    );
-    _ownedVideoTrack = track;
-    _videoTrackPublished = false;
-    return track;
+    _cameraLease ??= _cameraResources.acquire(MediaCameraOwner.live);
+    try {
+      final track = await lk.LocalVideoTrack.createCameraTrack(
+        lk.CameraCaptureOptions(
+          cameraPosition: frontCamera
+              ? lk.CameraPosition.front
+              : lk.CameraPosition.back,
+        ),
+      );
+      _ownedVideoTrack = track;
+      _videoTrackPublished = false;
+      return track;
+    } on Object {
+      _cameraLease?.release();
+      _cameraLease = null;
+      rethrow;
+    }
   }
 
   Future<void> joinLive({
@@ -81,16 +104,27 @@ class LiveMediaService {
     await releaseCamera();
   }
 
-  Future<void> releasePreparedCamera() async {
-    if (_videoTrackPublished) return;
-    await releaseCamera();
+  Future<void> releasePreparedCamera() {
+    return _enqueueCameraTransition(() async {
+      if (_videoTrackPublished) return;
+      await _releaseCamera();
+    });
   }
 
-  Future<void> releaseCamera() async {
+  Future<void> releaseCamera() {
+    return _enqueueCameraTransition(_releaseCamera);
+  }
+
+  Future<void> _releaseCamera() async {
     final track = _ownedVideoTrack;
     _ownedVideoTrack = null;
     _videoTrackPublished = false;
-    await track?.stop();
+    try {
+      await track?.stop();
+    } finally {
+      _cameraLease?.release();
+      _cameraLease = null;
+    }
   }
 
   Future<void> setMicrophoneEnabled(bool enabled) async {
@@ -117,7 +151,11 @@ class LiveMediaService {
     _videoTrackPublished = true;
   }
 
-  Future<bool> flipCamera() async {
+  Future<bool> flipCamera() {
+    return _enqueueCameraTransition(_flipCamera);
+  }
+
+  Future<bool> _flipCamera() async {
     final ownedTrack = _ownedVideoTrack;
     if (ownedTrack == null) return liveKit.switchCamera();
 
@@ -137,6 +175,18 @@ class LiveMediaService {
 
     await ownedTrack.setCameraPosition(nextPosition);
     return true;
+  }
+
+  Future<T> _enqueueCameraTransition<T>(Future<T> Function() operation) {
+    final completer = Completer<T>();
+    _cameraTransitionTail = _cameraTransitionTail.then<void>((_) async {
+      try {
+        completer.complete(await operation());
+      } on Object catch (error, stackTrace) {
+        completer.completeError(error, stackTrace);
+      }
+    });
+    return completer.future;
   }
 
   List<LiveKitViewerParticipant> getViewerParticipants() {

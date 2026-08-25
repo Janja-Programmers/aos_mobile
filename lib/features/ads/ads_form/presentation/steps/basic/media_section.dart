@@ -1,5 +1,8 @@
 import 'dart:io';
 
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_asset.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/action_media_card.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/edit_image_screen.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/media_image_tile.dart';
@@ -9,7 +12,6 @@ import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_contro
 import 'package:africaonlinestores/shared/utils/url_to_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 class MediaSection extends ConsumerStatefulWidget {
   const MediaSection({super.key});
@@ -24,22 +26,25 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
 
   final Map<String, File> _localEditedPreviews = {};
 
-  final picker = ImagePicker();
-
   // ---------------- UPLOAD IMAGE CORE ----------------
-  Future<void> _upload(File file) async {
-    if (_uploadingImage) return;
+  Future<void> _upload(AcquiredMedia media) async {
+    if (_uploadingImage) {
+      await media.discard();
+      return;
+    }
 
     final draft = ref.read(adDraftControllerProvider).value;
-    if (draft == null) return;
-    if (draft.images.length >= 4) return;
+    if (draft == null || draft.images.length >= 4) {
+      await media.discard();
+      return;
+    }
 
     setState(() => _uploadingImage = true);
 
     try {
       await ref
           .read(adDraftControllerProvider.notifier)
-          .uploadAndAddImage(file);
+          .uploadAndAddImage(media);
     } finally {
       if (mounted) {
         setState(() => _uploadingImage = false);
@@ -52,14 +57,16 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
     final draft = ref.read(adDraftControllerProvider).value;
     if (draft == null || draft.images.length >= 4) return;
 
-    final x = await picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 80,
-    );
+    final media = await ref
+        .read(mediaAcquisitionServiceProvider)
+        .captureImage(context, useCase: MediaUseCase.adImage);
+    if (media == null) return;
+    if (!mounted) {
+      await media.discard();
+      return;
+    }
 
-    if (x == null) return;
-
-    await _upload(File(x.path));
+    await _upload(media);
   }
 
   // ---------------- UPLOAD MULTIPLE ----------------
@@ -67,11 +74,22 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
     final draft = ref.read(adDraftControllerProvider).value;
     if (draft == null || draft.images.length >= 4) return;
 
-    final files = await picker.pickMultiImage(imageQuality: 80);
+    final files = await ref
+        .read(mediaAcquisitionServiceProvider)
+        .pickImages(
+          useCase: MediaUseCase.adImage,
+          maxItems: 4 - draft.images.length,
+        );
     if (files.isEmpty) return;
+    if (!mounted) {
+      for (final file in files) {
+        await file.discard();
+      }
+      return;
+    }
 
-    for (final f in files.take(4 - draft.images.length)) {
-      await _upload(File(f.path));
+    for (final file in files) {
+      await _upload(file);
     }
   }
 
@@ -99,10 +117,16 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
     if (draft == null) return;
     if (draft.videoUrl != null) return;
 
-    final x = await picker.pickVideo(source: ImageSource.camera);
-    if (x == null) return;
+    final media = await ref
+        .read(mediaAcquisitionServiceProvider)
+        .captureVideo(context, useCase: MediaUseCase.adVideo);
+    if (media == null) return;
+    if (!mounted) {
+      await media.discard();
+      return;
+    }
 
-    await _uploadVideoFile(File(x.path));
+    await _uploadVideoFile(media);
   }
 
   Future<void> _uploadVideoFromGallery() async {
@@ -110,18 +134,27 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
     if (draft == null) return;
     if (draft.videoUrl != null) return;
 
-    final x = await picker.pickVideo(source: ImageSource.gallery);
-    if (x == null) return;
+    final media = await ref
+        .read(mediaAcquisitionServiceProvider)
+        .pickVideo(useCase: MediaUseCase.adVideo);
+    if (media == null) return;
+    if (!mounted) {
+      await media.discard();
+      return;
+    }
 
-    await _uploadVideoFile(File(x.path));
+    await _uploadVideoFile(media);
   }
 
-  Future<void> _uploadVideoFile(File file) async {
-    if (_uploadingVideo) return;
+  Future<void> _uploadVideoFile(AcquiredMedia media) async {
+    if (_uploadingVideo) {
+      await media.discard();
+      return;
+    }
 
     setState(() => _uploadingVideo = true);
 
-    await ref.read(adDraftControllerProvider.notifier).uploadAndSetVideo(file);
+    await ref.read(adDraftControllerProvider.notifier).uploadAndSetVideo(media);
 
     if (mounted) {
       setState(() => _uploadingVideo = false);

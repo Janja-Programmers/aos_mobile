@@ -11,9 +11,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
-            extensions: const <ThemeExtension<dynamic>>[
-              AppColorTokens.light,
-            ],
+            extensions: const <ThemeExtension<dynamic>>[AppColorTokens.light],
           ),
           home: Scaffold(
             body: ChatMessageStatusIcon(

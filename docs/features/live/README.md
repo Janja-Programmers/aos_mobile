@@ -22,7 +22,7 @@ the behavior represented by the current Flutter sources.
 
 | Entry | Behavior |
 | --- | --- |
-| Go Live | Loads the authenticated account profile, seeds title from the display name/username and cover from the profile avatar, exposes both values in a native edit-details sheet, and keeps Start disabled until both are ready |
+| Go Live | Loads the authenticated account profile, seeds title from `display_name` and cover from the profile avatar when available, exposes both values in the edit-details sheet, and requires only the backend-mandated title before Start |
 | Feed → Live tab | Lists active Lives and silently joins the visible eligible item with viewer media disabled |
 | Tap visible Live | Reuses the tracked manager/session and opens the full-screen Live route |
 | Notification/deep link | Resolves the canonical `LIVE-*` identifier and joins through the backend before showing Live UI |
@@ -45,8 +45,7 @@ The backend owns:
 Flutter owns:
 
 - camera/microphone permission prompts and local track preparation;
-- profile-derived Go Live defaults, the editable draft, and the stricter mobile
-  requirement that both a title and cover are ready before Start;
+- profile-derived Go Live defaults and the editable draft; the cover remains optional exactly as the backend contract specifies;
 - LiveKit connect, publish, subscribe, reconnect presentation, and cleanup;
 - screen state, navigation, Feed visibility activation, and keyboard-safe UI;
 - duplicate-tap suppression and stale async-result rejection;
@@ -168,10 +167,7 @@ LiveKit. Hosts call `end_live` first and then perform local cleanup. A backend
 
 ## Current limitations
 
-- Backend validation requires a nonblank title up to 140 characters and accepts
-  an optional cover. The mobile preparation screen deliberately applies the
-  stricter requested product rule that both title and cover must be ready; an
-  account without an avatar must choose a cover before starting.
+- Backend validation requires a nonblank title up to 140 characters and accepts an optional cover. The mobile preparation screen now matches that contract: an account without an avatar may start without selecting a cover.
 - Replies are represented by API/model code but are not exposed in the current
   Live screen.
 - Comment history currently loads a bounded first page using offset parameters;

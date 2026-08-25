@@ -768,24 +768,54 @@
   "chat_clear_chats_title": "Effacer les discussions ?",
   "chat_clear_chat_description": "Cette action efface tous les messages visibles de cette discussion uniquement pour vous. L’autre participant conservera sa copie.",
   "chat_clear_selected_chats_description": "Effacer les messages visibles de {count} discussions sélectionnées uniquement pour vous ? Les autres participants conserveront leurs copies.",
-  "@chat_clear_selected_chats_description": {"placeholders": {"count": {}}},
+  "@chat_clear_selected_chats_description": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_chat_cleared": "Discussion effacée.",
   "chat_clear_chat_failed": "Impossible d’effacer la discussion.",
   "chat_select_conversations": "Sélectionner des discussions",
   "chat_selected_conversations": "{count} sélectionnées",
-  "@chat_selected_conversations": {"placeholders": {"count": {}}},
+  "@chat_selected_conversations": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_cancel_selection": "Annuler la sélection",
   "chat_mark_as_read": "Marquer comme lu",
   "chat_clear_chats": "Effacer les discussions",
   "chat_delete_conversations": "Supprimer la discussion",
   "chat_delete_conversations_title": "Supprimer les discussions ?",
   "chat_delete_selected_conversations_description": "Cette action retirera {count} discussions sélectionnées de votre liste. Elles ne seront pas supprimées pour les autres participants.",
-  "@chat_delete_selected_conversations_description": {"placeholders": {"count": {}}},
+  "@chat_delete_selected_conversations_description": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_selected_marked_read": "{count} discussions sélectionnées marquées comme lues.",
-  "@chat_selected_marked_read": {"placeholders": {"count": {}}},
+  "@chat_selected_marked_read": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_selected_chats_cleared": "{count} discussions sélectionnées effacées.",
-  "@chat_selected_chats_cleared": {"placeholders": {"count": {}}},
+  "@chat_selected_chats_cleared": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_selected_chats_deleted": "{count} discussions sélectionnées supprimées.",
-  "@chat_selected_chats_deleted": {"placeholders": {"count": {}}},
-  "chat_selected_action_partial_failure": "Certaines discussions sélectionnées n’ont pas pu être mises à jour."
+  "@chat_selected_chats_deleted": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "chat_selected_action_partial_failure": "Certaines discussions sélectionnées n’ont pas pu être mises à jour.",
+  "profilePhotoRemoveAction": "Supprimer la photo",
+  "profilePhotoRemoved": "Photo de profil supprimée.",
+  "sellerBannerChangeAction": "Modifier la bannière",
+  "sellerBannerRemoveAction": "Supprimer la bannière",
+  "sellerBannerUpdated": "Bannière de la boutique mise à jour.",
+  "sellerBannerRemoved": "Bannière de la boutique supprimée."
 }

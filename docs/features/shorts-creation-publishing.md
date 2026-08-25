@@ -7,6 +7,7 @@ This frontend implements the mobile Shorts workflow from camera/import through l
 ## Architecture and state ownership
 
 - `ShortRecorderController` owns camera permission, initialization, duration, start/stop, elapsed time, interruption handling, flash, camera switching, and imported media.
+- The plugin recorder adapter owns the `camera` import and holds the shared `shorts` camera lease; gallery import uses `MediaAcquisitionService` and app-owned staging.
 - `ShortEditorController` owns source media, trim range, selected sound, overlays, draft state, unsaved changes, playback, and export progress.
 - `SoundPickerController` and `ShortsSoundsApi` are the single sound-picker path used before recording and from the editor.
 - `ShortDraftRepository` owns typed, versioned local drafts and durable app-owned source media.
@@ -20,7 +21,7 @@ Widgets render explicit controller states and do not own backend workflows.
 
 The client follows the current backend sequence:
 
-1. Initialize a media upload using purpose `short_video_raw` and an idempotency key.
+1. Prepare through the shared media coordinator, then initialize a media upload using purpose `short_video_raw` and an idempotency key.
 2. Upload the video directly to the provided MinIO URL while reporting real byte progress.
 3. Confirm the media upload.
 4. Create the Short using the confirmed raw media ID, audience, comment permission, and download permission.
@@ -35,6 +36,11 @@ Stable backend error identifiers are preserved by `unwrapFrappe`; HTTP-successfu
 The recorder exposes `initializing`, `ready`, `starting`, `recording`, `stopping`, `recorded`, `permissionDenied`, `unavailable`, and `error` states. Supported design durations are 15 seconds, 60 seconds, and 3 minutes. Progress comes from a `Stopwatch`, recording stops at the selected duration, and duplicate start/stop operations are guarded. Backgrounding stops an active recording and disposes the camera deterministically; resuming reinitializes when appropriate.
 
 Camera and microphone denial, unavailable camera, initialization error, and import fallback each have a reachable UI state.
+
+The recorder UI remains specialized. Its adapter releases the shared camera
+lease whenever the controller disposes it on pause, detach, camera switch
+failure, or route disposal. It does not change Calls lifecycle or native launch
+mode.
 
 ## Sound selection
 
@@ -122,8 +128,14 @@ flutter test test/features/shorts
 flutter build apk --debug
 ```
 
-`flutter pub get` must regenerate `pubspec.lock` for the added camera and video-export plugin graph before analysis/build.
+The camera and video-export plugins already belong to the supplied dependency
+graph. This media-boundary migration does not change `pubspec.yaml` or
+`pubspec.lock`.
 
 ## Delivery and rollback
 
-This change requires a Play Store/App Store build because the dependency graph adds native camera and video-export plugins. It is not a Shorebird-only release. Draft and pending-publication files are versioned and can be ignored safely by an older build, but rolling back during an active local edit can leave app-support media for later pruning.
+This migration changes Dart, tests, and documentation only and is therefore a
+**Shorebird OTA candidate**, subject to analyzer, test, and device validation on
+the exact release baseline. Draft and pending-publication files remain versioned
+and can be ignored safely by an older build, but rolling back during an active
+local edit can leave app-support media for later pruning.

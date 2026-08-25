@@ -1653,4 +1653,22 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get chat_selected_action_partial_failure =>
       'Baadhi ya gumzo ulizochagua hazikuweza kusasishwa.';
+
+  @override
+  String get profilePhotoRemoveAction => 'Ondoa picha';
+
+  @override
+  String get profilePhotoRemoved => 'Picha ya wasifu imeondolewa.';
+
+  @override
+  String get sellerBannerChangeAction => 'Badilisha bango';
+
+  @override
+  String get sellerBannerRemoveAction => 'Ondoa bango';
+
+  @override
+  String get sellerBannerUpdated => 'Bango la duka limesasishwa.';
+
+  @override
+  String get sellerBannerRemoved => 'Bango la duka limeondolewa.';
 }

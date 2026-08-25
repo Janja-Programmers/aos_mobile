@@ -1675,4 +1675,22 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get chat_selected_action_partial_failure =>
       'Certaines discussions sélectionnées n’ont pas pu être mises à jour.';
+
+  @override
+  String get profilePhotoRemoveAction => 'Supprimer la photo';
+
+  @override
+  String get profilePhotoRemoved => 'Photo de profil supprimée.';
+
+  @override
+  String get sellerBannerChangeAction => 'Modifier la bannière';
+
+  @override
+  String get sellerBannerRemoveAction => 'Supprimer la bannière';
+
+  @override
+  String get sellerBannerUpdated => 'Bannière de la boutique mise à jour.';
+
+  @override
+  String get sellerBannerRemoved => 'Bannière de la boutique supprimée.';
 }

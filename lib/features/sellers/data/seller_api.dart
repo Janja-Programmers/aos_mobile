@@ -57,8 +57,8 @@ class SellerApi {
   Future<Either<Failure, Map<String, dynamic>>> updateSeller({
     String? businessCategory,
     String? aboutBusiness,
-    String? businessAddress,
     String? shopBanner,
+    bool clearShopBanner = false,
     List<Map<String, dynamic>>? operatingHours,
   }) async {
     try {
@@ -69,12 +69,9 @@ class SellerApi {
         if (aboutBusiness != null && aboutBusiness.trim().isNotEmpty)
           'about_business': aboutBusiness.trim(),
 
-        if (businessAddress != null && businessAddress.trim().isNotEmpty)
-          'business_address': businessAddress.trim(),
-
         if (shopBanner != null && shopBanner.trim().isNotEmpty)
           'shop_banner_media': shopBanner.trim(),
-
+        if (clearShopBanner) 'clear_shop_banner': true,
         'operating_hours': ?operatingHours,
       };
 

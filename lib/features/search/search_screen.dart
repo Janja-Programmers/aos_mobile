@@ -1,8 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
 import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_asset.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
@@ -112,7 +114,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Future<void> _openCameraSearch() async {
     appLogger.i('IMAGE SEARCH SHEET OPENING');
 
-    final file = await showModalBottomSheet<File>(
+    final media = await showModalBottomSheet<AcquiredMedia>(
       context: context,
       useRootNavigator: true,
       isScrollControlled: true,
@@ -120,9 +122,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       builder: (_) => const ImageSearchSheet(),
     );
 
-    appLogger.i('IMAGE SEARCH SHEET CLOSED: $file');
+    appLogger.i('IMAGE SEARCH SHEET CLOSED');
 
-    if (file == null) return;
+    if (media == null) return;
+    if (!mounted) {
+      await media.discard();
+      return;
+    }
     _debounce?.cancel();
 
     setState(() {
@@ -133,35 +139,52 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       _visualSearchSubtitle = 'Searching similar products...';
     });
 
-    final res = await ref
-        .read(mediaUploadApiProvider)
-        .searchAdByImage(file: file);
+    PreparedMedia? prepared;
+    try {
+      prepared = await ref
+          .read(mediaPreparationServiceProvider)
+          .prepare(media: media, useCase: MediaUseCase.searchImage);
+      final res = await ref
+          .read(mediaUploadApiProvider)
+          .searchAdByImage(file: prepared.file);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    res.fold(
-      (f) {
-        setState(() {
-          _status = SearchStatus.error;
-          _error = f.message;
-          _results = [];
-          _visualSearchSubtitle = null;
-        });
-      },
-      (body) {
-        final data = asJsonMap(body['data']);
-        final list = asJsonMapList(
-          data['items'],
-        ).map(AOSAdListItem.fromJson).toList();
+      res.fold(
+        (f) {
+          setState(() {
+            _status = SearchStatus.error;
+            _error = f.message;
+            _results = [];
+            _visualSearchSubtitle = null;
+          });
+        },
+        (body) {
+          final data = asJsonMap(body['data']);
+          final list = asJsonMapList(
+            data['items'],
+          ).map(AOSAdListItem.fromJson).toList();
 
-        setState(() {
-          _results = list;
-          _error = null;
-          _status = list.isEmpty ? SearchStatus.empty : SearchStatus.data;
-          _visualSearchSubtitle = '${list.length} similar products found';
-        });
-      },
-    );
+          setState(() {
+            _results = list;
+            _error = null;
+            _status = list.isEmpty ? SearchStatus.empty : SearchStatus.data;
+            _visualSearchSubtitle = '${list.length} similar products found';
+          });
+        },
+      );
+    } on MediaPolicyException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _status = SearchStatus.error;
+        _error = error.message;
+        _results = <AOSAdListItem>[];
+        _visualSearchSubtitle = null;
+      });
+    } finally {
+      await prepared?.discard();
+      await media.discard();
+    }
   }
 
   Future<void> _loadRecent() async {

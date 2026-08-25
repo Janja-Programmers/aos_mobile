@@ -117,6 +117,11 @@ release. Host end failure keeps the session active and exposes a retryable error
 - Prepared and published local camera tracks switch using LiveKit's physical
   `CameraPosition` API. The client does not select a device from a nullable
   current device ID, which could select the already-active camera.
+- `LiveMediaService` holds the shared `live` camera lease while a prepared or
+  published local camera track exists and releases it in the same cleanup path.
+- Go Live suspends its prepared LiveKit preview before the shared cover-photo
+  camera opens, then reacquires the specialized preview after capture. App
+  inactive/pause/detach also releases an untransferred preview.
 
 ## Host follow presentation
 

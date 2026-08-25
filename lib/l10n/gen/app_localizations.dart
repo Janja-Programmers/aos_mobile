@@ -3139,6 +3139,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Some selected conversations could not be updated.'**
   String get chat_selected_action_partial_failure;
+
+  /// No description provided for @profilePhotoRemoveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get profilePhotoRemoveAction;
+
+  /// No description provided for @profilePhotoRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo removed.'**
+  String get profilePhotoRemoved;
+
+  /// No description provided for @sellerBannerChangeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Change banner'**
+  String get sellerBannerChangeAction;
+
+  /// No description provided for @sellerBannerRemoveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove banner'**
+  String get sellerBannerRemoveAction;
+
+  /// No description provided for @sellerBannerUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Store banner updated.'**
+  String get sellerBannerUpdated;
+
+  /// No description provided for @sellerBannerRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Store banner removed.'**
+  String get sellerBannerRemoved;
 }
 
 class _AppLocalizationsDelegate

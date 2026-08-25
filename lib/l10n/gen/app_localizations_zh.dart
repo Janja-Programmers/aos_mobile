@@ -1566,4 +1566,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get chat_selected_action_partial_failure => '部分所选聊天无法更新。';
+
+  @override
+  String get profilePhotoRemoveAction => '移除照片';
+
+  @override
+  String get profilePhotoRemoved => '个人资料照片已移除。';
+
+  @override
+  String get sellerBannerChangeAction => '更换横幅';
+
+  @override
+  String get sellerBannerRemoveAction => '移除横幅';
+
+  @override
+  String get sellerBannerUpdated => '店铺横幅已更新。';
+
+  @override
+  String get sellerBannerRemoved => '店铺横幅已移除。';
 }

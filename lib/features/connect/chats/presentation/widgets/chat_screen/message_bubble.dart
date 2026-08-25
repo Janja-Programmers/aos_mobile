@@ -121,116 +121,121 @@ class MessageBubble extends StatelessWidget {
                     );
                   },
             child: Container(
-            margin: EdgeInsets.only(
-              left: isMe ? 46 : 14,
-              right: isMe ? 14 : 46,
-              top: 4,
-              bottom: 4,
-            ),
-            constraints: BoxConstraints(maxWidth: maxBubbleWidth),
-            decoration: BoxDecoration(
-              color: isDeleted ? colors.elevated : bgColor,
-              borderRadius: _bubbleRadius(isMe),
-              border: Border.all(
-                color: isMe
-                    ? colors.primaryHover.withValues(alpha: 0.22)
-                    : colors.border,
+              margin: EdgeInsets.only(
+                left: isMe ? 46 : 14,
+                right: isMe ? 14 : 46,
+                top: 4,
+                bottom: 4,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: colors.black.withValues(alpha: 0.06),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
+              constraints: BoxConstraints(maxWidth: maxBubbleWidth),
+              decoration: BoxDecoration(
+                color: isDeleted ? colors.elevated : bgColor,
+                borderRadius: _bubbleRadius(isMe),
+                border: Border.all(
+                  color: isMe
+                      ? colors.primaryHover.withValues(alpha: 0.22)
+                      : colors.border,
                 ),
-              ],
-            ),
-            child: Padding(
-              padding: EdgeInsets.all(hasRichPayload ? 7 : 9),
-              child: Column(
-                crossAxisAlignment: isMe
-                    ? CrossAxisAlignment.end
-                    : CrossAxisAlignment.start,
-                children: [
-                  if (message.isForwarded && !isDeleted) ...[
-                    _ForwardedLabel(isMe: isMe),
-                    const SizedBox(height: 6),
-                  ],
-
-                  if (message.replyTo != null && !isDeleted) ...[
-                    ReplyPreview(
-                      reply: message.replyTo!,
-                      isMe: isMe,
-                      onTap: onReplyTap,
-                    ),
-                    const SizedBox(height: 6),
-                  ],
-
-                  if (isDeleted)
-                    _DeletedMessage(message: message, isMe: isMe)
-                  else ...[
-                    if (contactPayload != null)
-                      SharedContactBubble(payload: contactPayload, isMe: isMe)
-                    else if (locationPayload != null)
-                      SharedLocationBubble(payload: locationPayload, isMe: isMe)
-                    else
-                      _MessageTextBlock(
-                        message: message,
-                        isMe: isMe,
-                        textColor: textColor,
-                        mutedTextColor: mutedTextColor,
-                      ),
-
-                    if (message.isTranslating) ...[
-                      if (message.hasText || message.hasTranslation)
-                        const SizedBox(height: 6),
-                      _TranslationLoading(color: mutedTextColor),
-                    ],
-
-                    if ((message.translationError ?? '').trim().isNotEmpty) ...[
-                      if (message.hasText ||
-                          message.hasTranslation ||
-                          message.isTranslating)
-                        const SizedBox(height: 6),
-                      _TranslationError(message: message, isMe: isMe),
-                    ],
-
-                    if (message.hasAd) ...[
-                      if (message.hasText || message.hasTranslation)
-                        const SizedBox(height: 6),
-                      MessageAdPreview(
-                        message: message,
-                        isMe: isMe,
-                        onTap: onAdTap,
-                      ),
-                    ],
-
-                    if (message.attachments.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      AttachmentGrid(attachments: message.attachments),
-                    ],
-                  ],
-
-                  if (message.reactions.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    ReactionChips(message: message, isMe: isMe),
-                  ],
-
-                  const SizedBox(height: 4),
-                  _MessageMeta(message: message, isMe: isMe),
-
-                  if (message.isLocalSending)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 3),
-                      child: Text(
-                        l10n.chat_sending,
-                        style: TextStyle(fontSize: 11, color: mutedTextColor),
-                      ),
-                    ),
-
-                  if (message.isLocalFailed) _RetryRow(onRetry: onRetry),
+                boxShadow: [
+                  BoxShadow(
+                    color: colors.black.withValues(alpha: 0.06),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
                 ],
               ),
-            ),
+              child: Padding(
+                padding: EdgeInsets.all(hasRichPayload ? 7 : 9),
+                child: Column(
+                  crossAxisAlignment: isMe
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
+                  children: [
+                    if (message.isForwarded && !isDeleted) ...[
+                      _ForwardedLabel(isMe: isMe),
+                      const SizedBox(height: 6),
+                    ],
+
+                    if (message.replyTo != null && !isDeleted) ...[
+                      ReplyPreview(
+                        reply: message.replyTo!,
+                        isMe: isMe,
+                        onTap: onReplyTap,
+                      ),
+                      const SizedBox(height: 6),
+                    ],
+
+                    if (isDeleted)
+                      _DeletedMessage(message: message, isMe: isMe)
+                    else ...[
+                      if (contactPayload != null)
+                        SharedContactBubble(payload: contactPayload, isMe: isMe)
+                      else if (locationPayload != null)
+                        SharedLocationBubble(
+                          payload: locationPayload,
+                          isMe: isMe,
+                        )
+                      else
+                        _MessageTextBlock(
+                          message: message,
+                          isMe: isMe,
+                          textColor: textColor,
+                          mutedTextColor: mutedTextColor,
+                        ),
+
+                      if (message.isTranslating) ...[
+                        if (message.hasText || message.hasTranslation)
+                          const SizedBox(height: 6),
+                        _TranslationLoading(color: mutedTextColor),
+                      ],
+
+                      if ((message.translationError ?? '')
+                          .trim()
+                          .isNotEmpty) ...[
+                        if (message.hasText ||
+                            message.hasTranslation ||
+                            message.isTranslating)
+                          const SizedBox(height: 6),
+                        _TranslationError(message: message, isMe: isMe),
+                      ],
+
+                      if (message.hasAd) ...[
+                        if (message.hasText || message.hasTranslation)
+                          const SizedBox(height: 6),
+                        MessageAdPreview(
+                          message: message,
+                          isMe: isMe,
+                          onTap: onAdTap,
+                        ),
+                      ],
+
+                      if (message.attachments.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        AttachmentGrid(attachments: message.attachments),
+                      ],
+                    ],
+
+                    if (message.reactions.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      ReactionChips(message: message, isMe: isMe),
+                    ],
+
+                    const SizedBox(height: 4),
+                    _MessageMeta(message: message, isMe: isMe),
+
+                    if (message.isLocalSending)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: Text(
+                          l10n.chat_sending,
+                          style: TextStyle(fontSize: 11, color: mutedTextColor),
+                        ),
+                      ),
+
+                    if (message.isLocalFailed) _RetryRow(onRetry: onRetry),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

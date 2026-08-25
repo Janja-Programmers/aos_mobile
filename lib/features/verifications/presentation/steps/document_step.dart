@@ -1,6 +1,5 @@
-import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
-import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
-import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/verifications/controllers/verification_controller_provider.dart';
@@ -82,7 +81,7 @@ class DocumentsStep extends ConsumerWidget {
           _uploadCard(
             context: context,
             title: 'Upload registration certificate',
-            subtitle: 'PDF, JPG, or PNG (max 5MB)',
+            subtitle: 'PDF, JPG, or PNG (max 20MB)',
             file: getDoc('registration_certificate')?.attachment,
             isUploading: state.uploadingDocs.contains(
               'registration_certificate',
@@ -92,22 +91,22 @@ class DocumentsStep extends ConsumerWidget {
 
               if (state.uploadingDocs.contains(type)) return;
 
-              final file = await MediaHelper.pickDocument();
-              if (file == null) return;
+              final media = await ref
+                  .read(mediaAcquisitionServiceProvider)
+                  .pickDocument(useCase: MediaUseCase.verificationDocument);
+              if (media == null) return;
 
               controller.setUploading(type, true);
 
               try {
-                final uploaded = await MediaHelper.uploadSingle(
-                  ref: ref,
-                  file: file,
-                  uploadFn: (f) => ref
-                      .read(mediaUploadApiProvider)
-                      .uploadMedia(
-                        file: f,
-                        purpose: MediaUploadPurpose.verificationDocument,
-                      ),
-                );
+                final result = await ref
+                    .read(mediaUploadCoordinatorProvider)
+                    .upload(
+                      media: media,
+                      useCase: MediaUseCase.verificationDocument,
+                      discardSourceWhenDone: true,
+                    );
+                final uploaded = result.rightOrNull;
 
                 if (uploaded == null) {
                   if (context.mounted) {
@@ -135,6 +134,7 @@ class DocumentsStep extends ConsumerWidget {
                   controller.updateDocument(index, doc);
                 }
               } finally {
+                await media.discard();
                 controller.setUploading(type, false);
               }
             },
@@ -154,7 +154,7 @@ class DocumentsStep extends ConsumerWidget {
           _uploadCard(
             context: context,
             title: 'Upload KRA',
-            subtitle: 'PDF, JPG, or PNG (max 5MB)',
+            subtitle: 'PDF, JPG, or PNG (max 20MB)',
             file: getDoc('tax_id')?.attachment,
             isUploading: state.uploadingDocs.contains('tax_id'),
             onTap: () async {
@@ -162,22 +162,22 @@ class DocumentsStep extends ConsumerWidget {
 
               if (state.uploadingDocs.contains(type)) return;
 
-              final file = await MediaHelper.pickDocument();
-              if (file == null) return;
+              final media = await ref
+                  .read(mediaAcquisitionServiceProvider)
+                  .pickDocument(useCase: MediaUseCase.verificationDocument);
+              if (media == null) return;
 
               controller.setUploading(type, true);
 
               try {
-                final uploaded = await MediaHelper.uploadSingle(
-                  ref: ref,
-                  file: file,
-                  uploadFn: (f) => ref
-                      .read(mediaUploadApiProvider)
-                      .uploadMedia(
-                        file: f,
-                        purpose: MediaUploadPurpose.verificationDocument,
-                      ),
-                );
+                final result = await ref
+                    .read(mediaUploadCoordinatorProvider)
+                    .upload(
+                      media: media,
+                      useCase: MediaUseCase.verificationDocument,
+                      discardSourceWhenDone: true,
+                    );
+                final uploaded = result.rightOrNull;
 
                 if (uploaded == null) {
                   if (context.mounted) {
@@ -205,6 +205,7 @@ class DocumentsStep extends ConsumerWidget {
                   controller.updateDocument(index, doc);
                 }
               } finally {
+                await media.discard();
                 controller.setUploading(type, false);
               }
             },

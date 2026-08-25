@@ -18,7 +18,7 @@ The backend also supports avatar fields through the dedicated avatar workflow. G
 `ProfileUpdateRequest` mirrors backend constraints:
 
 - full name: required when supplied, 2–80 characters
-- bio: optional, maximum 300 trimmed characters
+- bio: optional, maximum 500 trimmed characters
 - repeated full-name whitespace is collapsed
 - repeated spaces/tabs and excessive blank lines in bio are normalized
 
@@ -32,7 +32,7 @@ The save button uses `_saving` to prevent duplicate submissions. Backend/Dio fai
 
 ## Preserving unchanged data
 
-Nullable request fields are omitted. The sheet submits both displayed fields because they are prefilled with current values. Avatar updates use a separate request containing only `profile_image_media`.
+Nullable request fields are omitted. The sheet submits both displayed fields because they are prefilled with current values. Avatar replacement uses a separate request containing canonical `avatar_media_id`; avatar removal uses `remove_avatar=true`.
 
 ## Extension rule
 

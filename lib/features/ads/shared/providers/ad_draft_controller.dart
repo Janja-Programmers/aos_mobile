@@ -2,7 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:africaonlinestores/core/api/failure.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
 import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_asset.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
@@ -333,16 +336,13 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
   // ----------------- EDIT IMAGE -----------------
   Future<void> replaceImageAt(int index, File file) async {
-    final api = _ref.read(mediaUploadApiProvider);
-
     if (index < 0 || index >= _draft.images.length) return;
 
     final old = _draft.images[index];
 
-    final res = await api.uploadMedia(
-      file: file,
-      purpose: MediaUploadPurpose.adImage,
-    );
+    final res = await _ref
+        .read(mediaUploadCoordinatorProvider)
+        .uploadFile(file: file, useCase: MediaUseCase.adImage);
     if (res.isLeft) return;
 
     final uploadedFile = res.rightOrNull!;
@@ -361,40 +361,53 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     }
   }
 
-  Future<Either<Failure, String>> uploadAndAddImage(File file) async {
-    final api = _ref.read(mediaUploadApiProvider);
-
-    final res = await api.uploadMedia(
-      file: file,
-      purpose: MediaUploadPurpose.adImage,
-    );
-    if (res.isLeft) return Either.left(res.leftOrNull!);
+  Future<Either<Failure, String>> uploadAndAddImage(
+    AcquiredMedia acquired,
+  ) async {
+    final res = await _ref
+        .read(mediaUploadCoordinatorProvider)
+        .upload(
+          media: acquired,
+          useCase: MediaUseCase.adImage,
+          discardSourceWhenDone: true,
+        );
+    if (res.isLeft) {
+      await acquired.discard();
+      return Either.left(res.leftOrNull!);
+    }
 
     final uploadedFile = res.rightOrNull!;
-    final media = AdMediaImage.fromUpload(uploadedFile);
+    final image = AdMediaImage.fromUpload(uploadedFile);
 
     final next = List<AdMediaImage>.from(_draft.images);
 
-    next.add(media.copyWith(isPrimary: next.isEmpty));
+    next.add(image.copyWith(isPrimary: next.isEmpty));
 
     replaceImages(next);
 
-    return Either.right(media.url);
+    return Either.right(image.url);
   }
 
-  Future<Either<Failure, String>> uploadAndSetVideo(File file) async {
-    final api = _ref.read(mediaUploadApiProvider);
-    final res = await api.uploadMedia(
-      file: file,
-      purpose: MediaUploadPurpose.adVideo,
-    );
+  Future<Either<Failure, String>> uploadAndSetVideo(
+    AcquiredMedia acquired,
+  ) async {
+    final res = await _ref
+        .read(mediaUploadCoordinatorProvider)
+        .upload(
+          media: acquired,
+          useCase: MediaUseCase.adVideo,
+          discardSourceWhenDone: true,
+        );
 
-    if (res.isLeft) return Either.left(res.leftOrNull!);
+    if (res.isLeft) {
+      await acquired.discard();
+      return Either.left(res.leftOrNull!);
+    }
 
-    final media = res.rightOrNull!;
+    final uploaded = res.rightOrNull!;
 
-    final url = media.url;
-    final mediaId = media.mediaId;
+    final url = uploaded.url;
+    final mediaId = uploaded.mediaId;
 
     _setDraft(_draft.copyWith(videoUrl: url, videoFileId: mediaId));
 

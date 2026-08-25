@@ -41,7 +41,7 @@ flowchart LR
 
 - `AccountsApi` maps `get_profile` and `update_profile` envelopes using the shared Frappe response unwrapping and Dio failure mapper.
 - `AccountProfileSnapshot` is the backend-profile DTO boundary. It handles nullable fields, count coercion, block/deletion flags, and exact relationship labels.
-- `ProfileUpdateRequest` is the request serializer and frontend validation boundary for `full_name`, `bio`, `user_image`, and `profile_image_media`.
+- `ProfileUpdateRequest` is the request serializer and frontend validation boundary for `full_name`, `bio`, avatar replacement via `avatar_media_id`, and avatar removal via `remove_avatar`.
 - `SocialApi` maps follow/list/status operations. `get_relationship_status` is GET; `toggle_follow` is POST.
 
 ## Shared dependencies

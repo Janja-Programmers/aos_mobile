@@ -95,7 +95,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
   @override
   void dispose() {
     for (final attachment in _attachments) {
-      unawaited(_deleteTemporaryVoiceFile(attachment));
+      unawaited(_deleteTemporaryAttachment(attachment));
     }
     _uploadedAttachmentsByPath.clear();
     _voiceLifecycleListener.dispose();
@@ -158,7 +158,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
 
       for (final pending in pendingAttachments) {
         _uploadedAttachmentsByPath.remove(pending.path);
-        unawaited(_deleteTemporaryVoiceFile(pending));
+        unawaited(_deleteTemporaryAttachment(pending));
       }
     } catch (error, stackTrace) {
       appLogger.w(
@@ -180,36 +180,61 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
       ).error();
       return;
     } finally {
-      if (mounted) {
+      if (!mounted) {
+        for (final pending in pendingAttachments) {
+          await _deleteTemporaryAttachment(pending);
+        }
+      } else {
         setState(() => _isSending = false);
       }
     }
   }
 
   Future<void> _pickGallery() async {
-    final attachments = await ChatInputAttachmentHelper.pickImagesOnly();
-    if (!mounted || attachments.isEmpty) return;
+    final attachments = await ChatInputAttachmentHelper.pickImagesOnly(ref);
+    if (attachments.isEmpty) return;
+    if (!mounted) {
+      for (final attachment in attachments) {
+        await _deleteTemporaryAttachment(attachment);
+      }
+      return;
+    }
 
     setState(() => _attachments.addAll(attachments));
   }
 
   Future<void> _pickCameraImage() async {
-    final attachment = await ChatInputAttachmentHelper.pickCameraImageOnly();
-    if (!mounted || attachment == null) return;
+    final attachment = await ChatInputAttachmentHelper.pickCameraImageOnly(
+      ref,
+      context,
+    );
+    if (attachment == null) return;
+    if (!mounted) {
+      await _deleteTemporaryAttachment(attachment);
+      return;
+    }
 
     setState(() => _attachments.add(attachment));
   }
 
   Future<void> _pickDocument() async {
-    final attachment = await ChatInputAttachmentHelper.pickDocumentOnly();
-    if (!mounted || attachment == null) return;
+    final attachment = await ChatInputAttachmentHelper.pickDocumentOnly(ref);
+    if (attachment == null) return;
+    if (!mounted) {
+      await _deleteTemporaryAttachment(attachment);
+      return;
+    }
 
     setState(() => _attachments.add(attachment));
   }
 
   Future<void> _pickAudio() async {
-    final attachment = await ChatInputAttachmentHelper.pickAudioOnly();
-    if (!mounted || attachment == null) return;
+    final attachment = await ChatInputAttachmentHelper.pickAudioOnly(ref);
+    if (attachment == null) return;
+    if (!mounted) {
+      await _deleteTemporaryAttachment(attachment);
+      return;
+    }
 
     setState(() => _attachments.add(attachment));
   }
@@ -327,12 +352,13 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
     await _submit();
   }
 
-  Future<void> _deleteTemporaryVoiceFile(
+  Future<void> _deleteTemporaryAttachment(
     ChatPendingAttachment attachment,
   ) async {
-    if (attachment.type != 'audio') return;
     final filename = attachment.file.path.split(Platform.pathSeparator).last;
-    if (!filename.startsWith('voice_')) return;
+    final isTemporaryVoice =
+        attachment.type == 'audio' && filename.startsWith('voice_');
+    if (!attachment.deleteAfterUse && !isTemporaryVoice) return;
 
     try {
       // ignore: avoid_slow_async_io
@@ -341,7 +367,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
       }
     } catch (error, stackTrace) {
       appLogger.w(
-        'Temporary voice recording cleanup failed.',
+        'Temporary chat attachment cleanup failed.',
         error: error,
         stackTrace: stackTrace,
       );
@@ -522,7 +548,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                 final removed = _attachments[index];
                 _uploadedAttachmentsByPath.remove(removed.path);
                 setState(() => _attachments.removeAt(index));
-                unawaited(_deleteTemporaryVoiceFile(removed));
+                unawaited(_deleteTemporaryAttachment(removed));
               },
             ),
           AnimatedSize(

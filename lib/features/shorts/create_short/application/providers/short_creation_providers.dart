@@ -1,6 +1,8 @@
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_editor_controller.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_mentions_controller.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_recorder_controller.dart';
+import 'package:africaonlinestores/features/shorts/create_short/data/plugin_short_camera_driver.dart';
 import 'package:africaonlinestores/features/shorts/create_short/data/short_video_exporter.dart';
 import 'package:africaonlinestores/features/shorts/create_short/domain/short_creation_models.dart';
 import 'package:africaonlinestores/features/shorts/music/application/sound_picker_controller.dart';
@@ -19,8 +21,13 @@ final shortRecorderControllerProvider =
       ShortRecorderState
     >((ref) {
       return ShortRecorderController(
-        cameraDriver: PluginShortCameraDriver(),
-        videoPicker: ImagePickerShortVideoPicker(),
+        cameraDriver: PluginShortCameraDriver(
+          cameraResources: ref.read(mediaCameraResourceCoordinatorProvider),
+          staging: ref.read(mediaFileStagingServiceProvider),
+        ),
+        videoPicker: SharedShortVideoPicker(
+          ref.read(mediaAcquisitionServiceProvider),
+        ),
         permissionGate: const PluginShortPermissionGate(),
       );
     });

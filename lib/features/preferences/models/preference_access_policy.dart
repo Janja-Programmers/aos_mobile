@@ -4,8 +4,7 @@ import 'package:africaonlinestores/features/preferences/models/user_preference_f
 
 abstract final class PreferenceAccessPolicy {
   static bool canEdit(UserPreferenceField field, AuthState authState) {
-    return field != UserPreferenceField.country ||
-        !isCountryLocked(authState);
+    return field != UserPreferenceField.country || !isCountryLocked(authState);
   }
 
   static bool isCountryLocked(AuthState authState) {

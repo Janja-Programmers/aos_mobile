@@ -1,7 +1,8 @@
-import 'dart:io';
-
-import 'package:africaonlinestores/core/media/helpers/review_media_helper.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_asset.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ReviewImageSelection {
   const ReviewImageSelection({
@@ -10,7 +11,7 @@ class ReviewImageSelection {
     required this.availableSlots,
   });
 
-  final List<File> files;
+  final List<AcquiredMedia> files;
   final int selectedCount;
   final int availableSlots;
 
@@ -21,6 +22,7 @@ enum _ReviewImageSource { camera, gallery }
 
 Future<ReviewImageSelection?> showImageSourcePicker(
   BuildContext context, {
+  required WidgetRef ref,
   required int availableSlots,
 }) async {
   if (availableSlots <= 0) return null;
@@ -56,10 +58,12 @@ Future<ReviewImageSelection?> showImageSourcePicker(
     },
   );
 
-  if (source == null) return null;
+  if (source == null || !context.mounted) return null;
 
   if (source == _ReviewImageSource.camera) {
-    final file = await ReviewMediaHelper.takePhoto();
+    final file = await ref
+        .read(mediaAcquisitionServiceProvider)
+        .captureImage(context, useCase: MediaUseCase.reviewImage);
     if (file == null) return null;
 
     return ReviewImageSelection(
@@ -69,7 +73,9 @@ Future<ReviewImageSelection?> showImageSourcePicker(
     );
   }
 
-  final selectedFiles = await ReviewMediaHelper.pickFromGallery();
+  final selectedFiles = await ref
+      .read(mediaAcquisitionServiceProvider)
+      .pickImages(useCase: MediaUseCase.reviewImage, maxItems: availableSlots);
   if (selectedFiles.isEmpty) return null;
 
   return ReviewImageSelection(

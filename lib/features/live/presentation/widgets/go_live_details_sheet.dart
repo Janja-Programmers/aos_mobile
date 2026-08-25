@@ -41,11 +41,8 @@ class _GoLiveDetailsSheetState extends State<GoLiveDetailsSheet> {
   File? _coverImage;
   bool _isPickingCover = false;
 
-  bool get _hasCover =>
-      _coverImage != null || (widget.coverImageUrl?.trim().isNotEmpty ?? false);
-
   bool get _canSave =>
-      !_isPickingCover && _titleController.text.trim().isNotEmpty && _hasCover;
+      !_isPickingCover && _titleController.text.trim().isNotEmpty;
 
   @override
   void initState() {
@@ -162,17 +159,6 @@ class _GoLiveDetailsSheetState extends State<GoLiveDetailsSheet> {
                     label: Text(context.l10n.liveChangeCoverAction),
                   ),
                 ),
-                if (!_hasCover)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      context.l10n.liveCoverRequired,
-                      textAlign: TextAlign.center,
-                      style: AppTextStylesX(
-                        context,
-                      ).caption.copyWith(color: colors.error),
-                    ),
-                  ),
                 const SizedBox(height: 8),
                 TextField(
                   key: const Key('go_live_title_field'),
@@ -261,6 +247,8 @@ class LiveCoverPreview extends StatelessWidget {
         width: width,
         height: height,
         fit: BoxFit.cover,
+        cacheWidth: (width * 3).round(),
+        cacheHeight: (height * 3).round(),
         errorBuilder: (_, _, _) =>
             _CoverFallback(width: width, height: height, initial: _initial),
       );

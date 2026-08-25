@@ -102,7 +102,7 @@ void main() {
       expect(adapter.singleRequest.data, <String, dynamic>{
         'full_name': 'Updated Owner',
         'bio': 'Updated bio.',
-        'profile_image_media': 'MEDIA-TEST-PROFILE-002',
+        'avatar_media_id': 'MEDIA-TEST-PROFILE-002',
       });
     });
 

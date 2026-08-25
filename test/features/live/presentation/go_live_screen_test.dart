@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:africaonlinestores/core/media/livekit_service.dart';
@@ -94,7 +95,7 @@ void main() {
     expect(goLiveButton().onPressed, isNotNull);
   });
 
-  testWidgets('missing profile cover keeps Go Live blocked with edit path', (
+  testWidgets('missing profile cover stays optional with edit path', (
     tester,
   ) async {
     final liveKit = LiveKitService();
@@ -120,8 +121,8 @@ void main() {
     final button = tester.widget<ElevatedButton>(
       find.byKey(const Key('go_live_button')),
     );
-    expect(button.onPressed, isNull);
-    expect(find.text('Add a cover photo to continue.'), findsOneWidget);
+    expect(button.onPressed, isNotNull);
+    expect(find.text('Add a cover photo to continue.'), findsNothing);
     expect(find.byKey(const Key('go_live_edit_details')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('go_live_edit_details')));
@@ -130,7 +131,7 @@ void main() {
     final save = tester.widget<ElevatedButton>(
       find.byKey(const Key('go_live_save_details')),
     );
-    expect(save.onPressed, isNull);
+    expect(save.onPressed, isNotNull);
     expect(find.byKey(const Key('go_live_change_cover')), findsOneWidget);
   });
 
@@ -164,7 +165,7 @@ void main() {
     accountsController.replace(
       const AccountState(
         profile: <String, dynamic>{
-          'full_name': 'Loaded Profile',
+          'display_name': 'Loaded Profile',
           'user_image': 'https://example.invalid/loaded-profile.jpg',
         },
       ),
@@ -275,11 +276,12 @@ class _UnusedAccountsApi extends Fake implements AccountsApi {}
 class _UnavailablePreviewMediaService extends LiveMediaService {
   _UnavailablePreviewMediaService(super.liveKit);
 
+  final Completer<lk.LocalVideoTrack> _pendingTrack =
+      Completer<lk.LocalVideoTrack>();
+
   @override
   Future<lk.LocalVideoTrack> prepareCamera({required bool frontCamera}) {
-    return Future<lk.LocalVideoTrack>.error(
-      StateError('Camera intentionally unavailable in this widget test.'),
-    );
+    return _pendingTrack.future;
   }
 }
 

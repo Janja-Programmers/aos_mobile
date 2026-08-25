@@ -81,6 +81,8 @@ class _AttachmentPreview extends StatelessWidget {
       return Image.file(
         attachment.file,
         fit: BoxFit.cover,
+        cacheWidth: 320,
+        cacheHeight: 320,
         errorBuilder: (_, _, _) {
           return Icon(Icons.broken_image_outlined, color: colors.textMuted);
         },

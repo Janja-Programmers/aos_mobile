@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_asset.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
-import 'package:africaonlinestores/core/utils/normalize_image.dart';
 import 'package:africaonlinestores/features/verifications/domain/verification_type.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/application/user_verification_provider.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/presentation/steps/identity_document_step.dart';
@@ -19,7 +19,6 @@ import 'package:africaonlinestores/shared/components/buttons/primary_button.dart
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 class UserVerificationScreen extends ConsumerStatefulWidget {
   const UserVerificationScreen({
@@ -186,10 +185,11 @@ class _UserVerificationScreenState
     if (_isPreparingImage || verificationState.isBusy) return;
 
     var isPreparing = false;
+    AcquiredMedia? media;
 
     try {
-      final file = await MediaHelper.pickImageWithChoice(context);
-      if (!mounted || file == null) return;
+      media = await _pickVerificationDocumentPhoto();
+      if (!mounted || media == null) return;
 
       isPreparing = true;
       setState(() {
@@ -201,12 +201,9 @@ class _UserVerificationScreenState
       });
       await WidgetsBinding.instance.endOfFrame;
 
-      final fixed = await normalizeImageOrientation(file);
-      if (!mounted) return;
-
       final result = await ref
           .read(userVerificationControllerProvider.notifier)
-          .uploadDocument(file: fixed, front: front);
+          .uploadDocument(file: media.file, front: front);
 
       if (!mounted) return;
 
@@ -222,6 +219,7 @@ class _UserVerificationScreenState
         ShowSnack(context, 'Unable to add this document photo.').error();
       }
     } finally {
+      await media?.discard();
       if (mounted && isPreparing) {
         setState(() {
           if (front) {
@@ -238,28 +236,31 @@ class _UserVerificationScreenState
     final verificationState = ref.read(userVerificationControllerProvider);
     if (_isPreparingImage || verificationState.isBusy) return;
 
+    AcquiredMedia? media;
     try {
       final source = await showSelfieSourceBottomSheet(context);
       if (!mounted || source == null) return;
 
-      final File? file = switch (source) {
-        SelfieSource.camera => await MediaHelper.pickImageFromCamera(
-          preferredCameraDevice: CameraDevice.front,
+      final acquisition = ref.read(mediaAcquisitionServiceProvider);
+      media = switch (source) {
+        SelfieSource.camera => await acquisition.captureImage(
+          context,
+          useCase: MediaUseCase.verificationSelfie,
+          facing: MediaCameraFacing.front,
         ),
-        SelfieSource.gallery => await MediaHelper.pickImageFromGallery(),
+        SelfieSource.gallery => await acquisition.pickImage(
+          useCase: MediaUseCase.verificationSelfie,
+        ),
       };
 
-      if (!mounted || file == null) return;
+      if (!mounted || media == null) return;
 
       setState(() => _isPreparingSelfie = true);
       await WidgetsBinding.instance.endOfFrame;
 
-      final fixed = await normalizeImageOrientation(file);
-      if (!mounted) return;
-
       final result = await ref
           .read(userVerificationControllerProvider.notifier)
-          .uploadSelfie(fixed);
+          .uploadSelfie(media.file);
 
       if (!mounted) return;
 
@@ -275,10 +276,48 @@ class _UserVerificationScreenState
         ).error();
       }
     } finally {
+      await media?.discard();
       if (mounted && _isPreparingSelfie) {
         setState(() => _isPreparingSelfie = false);
       }
     }
+  }
+
+  Future<AcquiredMedia?> _pickVerificationDocumentPhoto() async {
+    final source = await showModalBottomSheet<MediaAcquisitionSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('Take photo'),
+                onTap: () =>
+                    Navigator.pop(sheetContext, MediaAcquisitionSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Choose from gallery'),
+                onTap: () =>
+                    Navigator.pop(sheetContext, MediaAcquisitionSource.gallery),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    if (source == null || !mounted) return null;
+
+    final acquisition = ref.read(mediaAcquisitionServiceProvider);
+    return source == MediaAcquisitionSource.camera
+        ? acquisition.captureImage(
+            context,
+            useCase: MediaUseCase.verificationDocument,
+          )
+        : acquisition.pickImage(useCase: MediaUseCase.verificationDocument);
   }
 
   Future<void> _showSubmittedDialog() async {

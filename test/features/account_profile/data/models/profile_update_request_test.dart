@@ -13,7 +13,7 @@ void main() {
       expect(request.toJson(), <String, dynamic>{
         'full_name': 'Test Owner',
         'bio': 'First line. \n\n Second line.',
-        'profile_image_media': 'MEDIA-TEST-001',
+        'avatar_media_id': 'MEDIA-TEST-001',
       });
       expect(request.toJson().containsKey('display_name'), isFalse);
       expect(request.toJson().containsKey('email'), isFalse);

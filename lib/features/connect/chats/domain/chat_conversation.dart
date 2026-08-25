@@ -141,8 +141,7 @@ class ChatConversation {
     }
 
     return copyWith(
-      lastMessageDeliveredAt:
-          readAt ?? deliveredAt ?? lastMessageDeliveredAt,
+      lastMessageDeliveredAt: readAt ?? deliveredAt ?? lastMessageDeliveredAt,
       lastMessageReadAt: readAt ?? lastMessageReadAt,
     );
   }

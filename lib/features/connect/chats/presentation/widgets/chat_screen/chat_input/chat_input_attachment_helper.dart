@@ -1,9 +1,7 @@
 import 'dart:io';
 
-import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
-import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
-import 'package:africaonlinestores/core/media/domain/media_upload_result.dart';
-import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_input_controller.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_pending_attachment.dart';
 import 'package:flutter/material.dart';
@@ -12,100 +10,113 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class ChatInputAttachmentHelper {
   const ChatInputAttachmentHelper._();
 
-  static Future<List<ChatPendingAttachment>> pickImagesOnly() async {
-    final files = await MediaHelper.pickImagesFromGallery();
+  static Future<List<ChatPendingAttachment>> pickImagesOnly(
+    WidgetRef ref,
+  ) async {
+    final media = await ref
+        .read(mediaAcquisitionServiceProvider)
+        .pickImages(useCase: MediaUseCase.chatImage);
 
-    return files
-        .map((file) => ChatPendingAttachment(file: file, type: 'image'))
-        .toList();
+    return media
+        .map(
+          (item) => ChatPendingAttachment(
+            file: item.file,
+            type: 'image',
+            deleteAfterUse: item.ownedByApp,
+          ),
+        )
+        .toList(growable: false);
   }
 
-  static Future<ChatPendingAttachment?> pickCameraImageOnly() async {
-    final file = await MediaHelper.pickImageFromCamera();
-    if (file == null) return null;
+  static Future<ChatPendingAttachment?> pickCameraImageOnly(
+    WidgetRef ref,
+    BuildContext context,
+  ) async {
+    final media = await ref
+        .read(mediaAcquisitionServiceProvider)
+        .captureImage(context, useCase: MediaUseCase.chatImage);
+    if (media == null) return null;
 
-    return ChatPendingAttachment(file: file, type: 'image');
+    return ChatPendingAttachment(
+      file: media.file,
+      type: 'image',
+      deleteAfterUse: media.ownedByApp,
+    );
   }
 
-  static Future<ChatPendingAttachment?> pickDocumentOnly() async {
-    final file = await MediaHelper.pickAnyFile();
-    if (file == null) return null;
+  static Future<ChatPendingAttachment?> pickDocumentOnly(WidgetRef ref) async {
+    final media = await ref
+        .read(mediaAcquisitionServiceProvider)
+        .pickAnyFile(useCase: MediaUseCase.chatFile);
+    if (media == null) return null;
 
-    return ChatPendingAttachment(file: file, type: _inferType(file.path));
+    return ChatPendingAttachment(
+      file: media.file,
+      type: _inferType(media.path),
+      deleteAfterUse: media.ownedByApp,
+    );
   }
 
-  static Future<ChatPendingAttachment?> pickAudioOnly() async {
-    final file = await MediaHelper.pickAudioFile();
-    if (file == null) return null;
+  static Future<ChatPendingAttachment?> pickAudioOnly(WidgetRef ref) async {
+    final media = await ref
+        .read(mediaAcquisitionServiceProvider)
+        .pickAudio(useCase: MediaUseCase.chatAudio);
+    if (media == null) return null;
 
-    return ChatPendingAttachment(file: file, type: 'audio');
+    return ChatPendingAttachment(
+      file: media.file,
+      type: 'audio',
+      deleteAfterUse: media.ownedByApp,
+    );
   }
 
   static Future<ChatInputAttachment?> uploadPendingAttachment(
     WidgetRef ref,
     ChatPendingAttachment pending,
   ) async {
-    return _upload(ref, pending.file, fallbackType: pending.type);
+    final useCase = switch (pending.type) {
+      'image' => MediaUseCase.chatImage,
+      'video' => MediaUseCase.chatVideo,
+      'audio' || 'voice' || 'voice_note' => MediaUseCase.chatAudio,
+      _ => MediaUseCase.chatFile,
+    };
+    final result = await ref
+        .read(mediaUploadCoordinatorProvider)
+        .uploadFile(file: pending.file, useCase: useCase);
+
+    return result.fold((_) => null, (data) {
+      if (data.mediaId.isEmpty) return null;
+      return ChatInputAttachment(
+        fileId: data.mediaId,
+        type: pending.type,
+        previewUrl: data.url.isNotEmpty ? data.url : pending.file.path,
+      );
+    });
   }
 
-  static Future<ChatInputAttachment?> pickAndUploadImage(
-    WidgetRef ref,
-    BuildContext context,
-  ) async {
-    final file = await MediaHelper.pickImageFromGallery();
-    if (file == null) return null;
-
-    return _upload(ref, file, fallbackType: 'image');
-  }
-
-  static Future<List<ChatInputAttachment>> pickAndUploadImages(
-    WidgetRef ref,
-  ) async {
-    final files = await MediaHelper.pickImagesFromGallery();
-    if (files.isEmpty) return [];
-
-    final attachments = <ChatInputAttachment>[];
-
-    for (final file in files) {
-      final uploaded = await _upload(ref, file, fallbackType: 'image');
-      if (uploaded != null) attachments.add(uploaded);
+  static String _inferType(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.webp') ||
+        lower.endsWith('.heic') ||
+        lower.endsWith('.heif')) {
+      return 'image';
     }
-
-    return attachments;
-  }
-
-  static Future<ChatInputAttachment?> pickAndUploadCameraImage(
-    WidgetRef ref,
-  ) async {
-    final file = await MediaHelper.pickImageFromCamera();
-    if (file == null) return null;
-
-    return _upload(ref, file, fallbackType: 'image');
-  }
-
-  static Future<ChatInputAttachment?> pickAndUploadVideo(WidgetRef ref) async {
-    final file = await MediaHelper.pickVideoFromGallery();
-    if (file == null) return null;
-
-    return _upload(ref, file, fallbackType: 'video');
-  }
-
-  static Future<ChatInputAttachment?> recordAndUploadVideo(
-    WidgetRef ref,
-  ) async {
-    final file = await MediaHelper.recordVideoFromCamera();
-    if (file == null) return null;
-
-    return _upload(ref, file, fallbackType: 'video');
-  }
-
-  static Future<ChatInputAttachment?> pickAndUploadDocument(
-    WidgetRef ref,
-  ) async {
-    final file = await MediaHelper.pickAnyFile();
-    if (file == null) return null;
-
-    return _upload(ref, file, fallbackType: _inferType(file.path));
+    if (lower.endsWith('.mp4') ||
+        lower.endsWith('.mov') ||
+        lower.endsWith('.m4v')) {
+      return 'video';
+    }
+    if (lower.endsWith('.mp3') ||
+        lower.endsWith('.m4a') ||
+        lower.endsWith('.aac') ||
+        lower.endsWith('.wav') ||
+        lower.endsWith('.ogg')) {
+      return 'audio';
+    }
+    return 'document';
   }
 
   static Future<ChatInputAttachment?> uploadAudio(
@@ -113,43 +124,11 @@ class ChatInputAttachmentHelper {
     String path,
   ) async {
     final file = File(path);
-
-    if (!file.existsSync()) return null;
-
-    return _upload(ref, file, fallbackType: 'audio');
-  }
-
-  static Future<ChatInputAttachment?> _upload(
-    WidgetRef ref,
-    File file, {
-    required String fallbackType,
-  }) async {
-    final res = await ref
-        .read(mediaUploadApiProvider)
-        .uploadMedia(file: file, purpose: MediaUploadPurpose.chatAttachment);
-
-    return res.fold((_) => null, (MediaUploadResult data) {
-      if (data.mediaId.isEmpty) return null;
-
-      return ChatInputAttachment(
-        fileId: data.mediaId,
-        type: fallbackType,
-        previewUrl: data.url.isNotEmpty ? data.url : file.path,
-      );
-    });
-  }
-
-  static String _inferType(String path) {
-    final ext = path.split('.').last.toLowerCase();
-
-    const imageExts = {'jpg', 'jpeg', 'png', 'webp', 'gif', 'heic'};
-    const videoExts = {'mp4', 'mov', 'avi', 'mkv', 'webm'};
-    const audioExts = {'mp3', 'm4a', 'aac', 'wav', 'ogg', 'opus'};
-
-    if (imageExts.contains(ext)) return 'image';
-    if (videoExts.contains(ext)) return 'video';
-    if (audioExts.contains(ext)) return 'audio';
-
-    return 'document';
+    // ignore: avoid_slow_async_io
+    if (!await file.exists()) return null;
+    return uploadPendingAttachment(
+      ref,
+      ChatPendingAttachment(file: file, type: 'audio'),
+    );
   }
 }

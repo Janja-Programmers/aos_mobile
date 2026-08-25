@@ -91,9 +91,7 @@ class _InlineAudioPlayerState extends State<InlineAudioPlayer> {
                 duration.inSeconds.toDouble(),
               ),
               onChanged: (value) {
-                unawaited(
-                  player.seek(Duration(seconds: value.toInt())),
-                );
+                unawaited(player.seek(Duration(seconds: value.toInt())));
               },
             ),
           ),

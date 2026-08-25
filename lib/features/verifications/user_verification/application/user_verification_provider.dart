@@ -2,10 +2,9 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:africaonlinestores/core/api/failure.dart';
-import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
-import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/media/domain/media_upload_result.dart';
-import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/verifications/domain/verification_status.dart';
@@ -274,7 +273,10 @@ class UserVerificationController extends StateNotifier<UserVerificationState> {
     );
 
     try {
-      final uploaded = await _uploadVerificationImage(file);
+      final uploaded = await _uploadVerificationImage(
+        file,
+        useCase: MediaUseCase.verificationDocument,
+      );
 
       if (uploaded == null) {
         return Either.left(const Failure('Upload failed. Please try again.'));
@@ -303,7 +305,10 @@ class UserVerificationController extends StateNotifier<UserVerificationState> {
     state = state.copyWith(isUploadingSelfie: true);
 
     try {
-      final uploaded = await _uploadVerificationImage(file);
+      final uploaded = await _uploadVerificationImage(
+        file,
+        useCase: MediaUseCase.verificationSelfie,
+      );
 
       if (uploaded == null) {
         return Either.left(const Failure('Upload failed. Please try again.'));
@@ -322,17 +327,14 @@ class UserVerificationController extends StateNotifier<UserVerificationState> {
     }
   }
 
-  Future<MediaUploadResult?> _uploadVerificationImage(File file) {
-    return MediaHelper.uploadSingle(
-      ref: ref,
-      file: file,
-      uploadFn: (uploadFile) => ref
-          .read(mediaUploadApiProvider)
-          .uploadMedia(
-            file: uploadFile,
-            purpose: MediaUploadPurpose.verificationDocument,
-          ),
-    );
+  Future<MediaUploadResult?> _uploadVerificationImage(
+    File file, {
+    required MediaUseCase useCase,
+  }) async {
+    final result = await ref
+        .read(mediaUploadCoordinatorProvider)
+        .uploadFile(file: file, useCase: useCase);
+    return result.rightOrNull;
   }
 
   Future<Either<Failure, void>> submit() async {

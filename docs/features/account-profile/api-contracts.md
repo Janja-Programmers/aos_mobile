@@ -8,11 +8,11 @@ All responses use the shared Frappe envelope unwrapping. Backend paths listed he
 | ------------------ | ----------------------------------------- | -------- | -------------------------------------------------------------- | ---------------------------------------------------- |
 | Get own profile    | GET `aos.api.v1.accounts.get_profile`     | Required | no target                                                      | serializer fields into account/profile state         |
 | Get public profile | GET same endpoint                         | Required | optional `target_user`                                         | public-safe serializer plus relationship/block state |
-| Update profile     | POST `aos.api.v1.accounts.update_profile` | Required | any of `full_name`, `bio`, `user_image`, `profile_image_media` | updated profile data; auth/profile refresh           |
+| Update profile     | POST `aos.api.v1.accounts.update_profile` | Required | any supported profile field; avatar replacement uses canonical `avatar_media_id`, removal uses `remove_avatar` | updated private profile data; auth/profile refresh |
 
-Aliases accepted by backend for uploaded profile media are `user_image_media`, `profile_image_media`, and `media_id`; Flutter emits canonical `profile_image_media`.
+Backend also accepts compatibility aliases `user_image_media`, `profile_image_media`, and `media_id`, but Flutter emits canonical `avatar_media_id` for replacement and `remove_avatar=true` for removal.
 
-Validation: full name 2–80, bio maximum 300, and a valid media record is required to assign a new uploaded profile image. Profile errors include `NOT_FOUND`, `PROFILE_NOT_FOUND`, and `PROFILE_UNAVAILABLE`.
+Validation: display/full name 2–80, bio maximum 500, and a valid media record is required to assign a new uploaded profile image. Profile errors include `NOT_FOUND`, `PROFILE_NOT_FOUND`, and `PROFILE_UNAVAILABLE`.
 
 ### Serializer fields consumed
 

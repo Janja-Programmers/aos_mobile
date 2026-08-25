@@ -23,10 +23,7 @@ void main() {
       ),
       isFalse,
     );
-    expect(
-      PreferenceAccessPolicy.isCountryLocked(const AuthGuest()),
-      isFalse,
-    );
+    expect(PreferenceAccessPolicy.isCountryLocked(const AuthGuest()), isFalse);
   });
 
   test('language and currency remain editable for seller accounts', () {

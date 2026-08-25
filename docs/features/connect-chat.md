@@ -121,7 +121,7 @@ The active controller owns one set of message subscriptions. Initialization canc
 
 ## Attachments
 
-Existing media/upload infrastructure remains authoritative. The attachment
+The shared media acquisition, preparation, and upload layers remain authoritative. The attachment
 sheet exposes only the backend-supported send paths: Gallery, Camera, Document,
 and Audio. Location and contact models/renderers remain available for future
 backend support, but no composer action exposes them. Call shortcuts live in
@@ -129,6 +129,13 @@ the Chat top menu instead of the attachment sheet. A selected file moves
 through selection/upload/send/failure/retry or cancellation before a backend
 message is considered sent. Upload/message duplicate-submit guards remain
 required.
+
+Camera capture stays inside Flutter and releases its shared camera lease on
+pause/disposal; gallery, document, and audio results are copied into app-owned
+staging immediately. Pending staged files are deleted after a successful send,
+explicit removal, or composer disposal. A failed send keeps them available for
+retry. Calls/CallKit lifecycle ownership and Android launch mode are not changed
+by Chat media acquisition.
 
 Backend attachment identifiers and URLs are stored separately from local preview paths. Missing media is rendered as a recoverable placeholder rather than causing layout failure.
 

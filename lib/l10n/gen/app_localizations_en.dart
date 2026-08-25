@@ -1645,4 +1645,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chat_selected_action_partial_failure =>
       'Some selected conversations could not be updated.';
+
+  @override
+  String get profilePhotoRemoveAction => 'Remove photo';
+
+  @override
+  String get profilePhotoRemoved => 'Profile photo removed.';
+
+  @override
+  String get sellerBannerChangeAction => 'Change banner';
+
+  @override
+  String get sellerBannerRemoveAction => 'Remove banner';
+
+  @override
+  String get sellerBannerUpdated => 'Store banner updated.';
+
+  @override
+  String get sellerBannerRemoved => 'Store banner removed.';
 }

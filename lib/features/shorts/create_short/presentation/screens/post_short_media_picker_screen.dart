@@ -9,7 +9,6 @@ import 'package:africaonlinestores/features/shorts/create_short/presentation/scr
 import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/music/presentation/music_picker_sheet.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -92,7 +91,11 @@ class _PostShortMediaPickerScreenState
           child: Stack(
             fit: StackFit.expand,
             children: <Widget>[
-              _preview(state, controller.cameraController),
+              _preview(
+                state,
+                controller.cameraPreview,
+                controller.cameraPreviewSize,
+              ),
               _topBar(state),
               if (state.phase == ShortRecorderPhase.ready ||
                   state.phase == ShortRecorderPhase.recording)
@@ -110,13 +113,17 @@ class _PostShortMediaPickerScreenState
     );
   }
 
-  Widget _preview(ShortRecorderState state, CameraController? camera) {
+  Widget _preview(
+    ShortRecorderState state,
+    Widget? cameraPreview,
+    Size? previewSize,
+  ) {
     if (state.phase == ShortRecorderPhase.permissionDenied ||
         state.phase == ShortRecorderPhase.unavailable ||
         state.phase == ShortRecorderPhase.error) {
       return _errorState(state);
     }
-    if (camera == null || !camera.value.isInitialized) {
+    if (cameraPreview == null || previewSize == null) {
       return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -134,9 +141,9 @@ class _PostShortMediaPickerScreenState
           child: FittedBox(
             fit: BoxFit.cover,
             child: SizedBox(
-              width: camera.value.previewSize?.height ?? 1,
-              height: camera.value.previewSize?.width ?? 1,
-              child: CameraPreview(camera),
+              width: previewSize.height,
+              height: previewSize.width,
+              child: cameraPreview,
             ),
           ),
         ),
@@ -455,6 +462,8 @@ class _PostShortMediaPickerScreenState
       sound: _selectedSound,
       ownerId: owner,
     );
+    await ref.read(shortRecorderControllerProvider.notifier).suspendCamera();
+    if (!mounted) return;
     await Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => ShortEditorScreen(seed: seed)),
     );
@@ -505,11 +514,16 @@ class _PostShortMediaPickerScreenState
       ),
     );
     if ((resume ?? false) && mounted) {
+      await ref.read(shortRecorderControllerProvider.notifier).suspendCamera();
+      if (!mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => ShortEditorScreen(seed: draft.toSeed()),
         ),
       );
+      if (mounted) {
+        await ref.read(shortRecorderControllerProvider.notifier).initialize();
+      }
     }
   }
 

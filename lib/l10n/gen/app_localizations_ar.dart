@@ -1616,4 +1616,22 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get chat_selected_action_partial_failure =>
       'تعذر تحديث بعض الدردشات المحددة.';
+
+  @override
+  String get profilePhotoRemoveAction => 'إزالة الصورة';
+
+  @override
+  String get profilePhotoRemoved => 'تمت إزالة صورة الملف الشخصي.';
+
+  @override
+  String get sellerBannerChangeAction => 'تغيير اللافتة';
+
+  @override
+  String get sellerBannerRemoveAction => 'إزالة اللافتة';
+
+  @override
+  String get sellerBannerUpdated => 'تم تحديث لافتة المتجر.';
+
+  @override
+  String get sellerBannerRemoved => 'تمت إزالة لافتة المتجر.';
 }

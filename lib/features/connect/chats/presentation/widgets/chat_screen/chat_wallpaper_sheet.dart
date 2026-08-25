@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_asset.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_local_preferences_controller.dart';
@@ -47,7 +50,23 @@ class ChatWallpaperSheet extends ConsumerWidget {
 
     void chooseGalleryWallpaper() {
       unawaited(() async {
-        final changed = await controller.chooseGalleryWallpaper();
+        final media = await ref
+            .read(mediaAcquisitionServiceProvider)
+            .pickImage(useCase: MediaUseCase.chatWallpaper);
+        if (media == null) return;
+        PreparedMedia? prepared;
+        var changed = false;
+        try {
+          prepared = await ref
+              .read(mediaPreparationServiceProvider)
+              .prepare(media: media, useCase: MediaUseCase.chatWallpaper);
+          changed = await controller.setGalleryWallpaperFromFile(
+            prepared.file.path,
+          );
+        } finally {
+          await prepared?.discard();
+          await media.discard();
+        }
         if (!context.mounted || !changed) return;
         ShowSnack(context, l10n.chat_wallpaper_updated).success();
       }());

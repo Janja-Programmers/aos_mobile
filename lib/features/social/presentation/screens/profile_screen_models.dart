@@ -1,6 +1,6 @@
 part of 'profile_screen.dart';
 
-enum _AvatarPhotoAction { gallery, camera }
+enum _AvatarPhotoAction { gallery, camera, remove }
 
 enum _ProfilePanel { posts, privateShorts, reposted, saved, liked }
 

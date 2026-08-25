@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
+import 'package:africaonlinestores/core/media/data/media_upload_api.dart';
 import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
-import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/sellers/application/controllers/operating_hours_form.dart';
@@ -31,6 +35,8 @@ class _StoreCustomizationScreenState
   final _descCtrl = TextEditingController();
   late final OperatingHoursForm _hoursForm;
 
+  late final MediaUploadApi _mediaUploadApi;
+
   String? _uploadedShopBannerMediaId;
   String? _uploadedShopBannerPreview;
 
@@ -44,6 +50,7 @@ class _StoreCustomizationScreenState
     super.initState();
 
     _hoursForm = OperatingHoursForm();
+    _mediaUploadApi = ref.read(mediaUploadApiProvider);
 
     final seller = ref.read(sellerStateProvider(widget.sellerId)).seller;
     if (seller != null) {
@@ -57,6 +64,11 @@ class _StoreCustomizationScreenState
 
   @override
   void dispose() {
+    final stagedBannerId = _uploadedShopBannerMediaId?.trim() ?? '';
+    if (!_saving && stagedBannerId.isNotEmpty) {
+      unawaited(_mediaUploadApi.deleteMedia(mediaId: stagedBannerId));
+    }
+
     _categoryCtrl
       ..removeListener(_markChanged)
       ..dispose();
@@ -100,31 +112,49 @@ class _StoreCustomizationScreenState
   Future<void> _pickAndUploadBanner() async {
     if (_saving || _uploading) return;
 
-    final file = await showStoreImageSourceSheet(context);
-    if (!mounted || file == null) return;
+    final media = await showStoreImageSourceSheet(context, ref: ref);
+    if (media == null) return;
+    if (!mounted) {
+      await media.discard();
+      return;
+    }
 
     setState(() => _uploading = true);
 
     final uploaded = await ref
-        .read(mediaUploadApiProvider)
-        .uploadMedia(file: file, purpose: MediaUploadPurpose.sellerBanner);
+        .read(mediaUploadCoordinatorProvider)
+        .upload(media: media, useCase: MediaUseCase.sellerBanner);
+    await media.discard();
 
-    if (!mounted) return;
+    final uploadedMedia = uploaded.rightOrNull;
+    final newMediaId = uploadedMedia?.mediaId.trim() ?? '';
+    if (!mounted) {
+      if (newMediaId.isNotEmpty) {
+        unawaited(_mediaUploadApi.deleteMedia(mediaId: newMediaId));
+      }
+      return;
+    }
 
-    uploaded.fold(
-      (failure) {
-        setState(() => _uploading = false);
-        ShowSnack(context, failure.message).error();
-      },
-      (media) {
-        setState(() {
-          _uploadedShopBannerMediaId = media.mediaId;
-          _uploadedShopBannerPreview = media.url;
-          _changed = true;
-          _uploading = false;
-        });
-      },
-    );
+    if (uploaded.isLeft || uploadedMedia == null || newMediaId.isEmpty) {
+      setState(() => _uploading = false);
+      ShowSnack(
+        context,
+        uploaded.leftOrNull?.message ?? 'Failed to upload store banner.',
+      ).error();
+      return;
+    }
+
+    final previousStagedId = _uploadedShopBannerMediaId?.trim() ?? '';
+    if (previousStagedId.isNotEmpty && previousStagedId != newMediaId) {
+      unawaited(_mediaUploadApi.deleteMedia(mediaId: previousStagedId));
+    }
+
+    setState(() {
+      _uploadedShopBannerMediaId = newMediaId;
+      _uploadedShopBannerPreview = uploadedMedia.url;
+      _changed = true;
+      _uploading = false;
+    });
   }
 
   Future<void> _pickOpenTime(String day) async {
@@ -178,6 +208,8 @@ class _StoreCustomizationScreenState
 
     setState(() => _saving = true);
 
+    final stagedBannerId = _uploadedShopBannerMediaId?.trim() ?? '';
+
     try {
       final error = await ref
           .read(sellerStateProvider(widget.sellerId).notifier)
@@ -188,7 +220,12 @@ class _StoreCustomizationScreenState
             operatingHours: _hoursForm.toApiPayload(),
           );
 
-      if (!mounted) return;
+      if (!mounted) {
+        if (error != null && stagedBannerId.isNotEmpty) {
+          unawaited(_mediaUploadApi.deleteMedia(mediaId: stagedBannerId));
+        }
+        return;
+      }
 
       if (error != null) {
         ShowSnack(context, error).error();
@@ -203,9 +240,7 @@ class _StoreCustomizationScreenState
         _uploadedShopBannerPreview = null;
       });
 
-      await Future<void>.delayed(const Duration(milliseconds: 300));
-
-      if (mounted) Navigator.pop(context, true);
+      Navigator.pop(context, true);
     } finally {
       if (mounted) {
         setState(() => _saving = false);

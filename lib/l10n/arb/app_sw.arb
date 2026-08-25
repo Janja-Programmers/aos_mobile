@@ -768,24 +768,54 @@
   "chat_clear_chats_title": "Safisha gumzo?",
   "chat_clear_chat_description": "Hii itafuta ujumbe wote unaoonekana kwenye gumzo hili kwako pekee. Mshiriki mwingine atabaki na nakala yake.",
   "chat_clear_selected_chats_description": "Ufute ujumbe unaoonekana katika gumzo {count} ulizochagua kwako pekee? Washiriki wengine watabaki na nakala zao.",
-  "@chat_clear_selected_chats_description": {"placeholders": {"count": {}}},
+  "@chat_clear_selected_chats_description": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_chat_cleared": "Gumzo limesafishwa.",
   "chat_clear_chat_failed": "Imeshindikana kusafisha gumzo.",
   "chat_select_conversations": "Chagua gumzo",
   "chat_selected_conversations": "{count} zimechaguliwa",
-  "@chat_selected_conversations": {"placeholders": {"count": {}}},
+  "@chat_selected_conversations": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_cancel_selection": "Ghairi uteuzi",
   "chat_mark_as_read": "Weka kama zimesomwa",
   "chat_clear_chats": "Safisha gumzo",
   "chat_delete_conversations": "Futa gumzo",
   "chat_delete_conversations_title": "Ufute gumzo?",
   "chat_delete_selected_conversations_description": "Hii itaondoa gumzo {count} ulizochagua kwenye orodha yako. Haitazifuta kwa washiriki wengine.",
-  "@chat_delete_selected_conversations_description": {"placeholders": {"count": {}}},
+  "@chat_delete_selected_conversations_description": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_selected_marked_read": "Gumzo {count} ulizochagua zimewekwa kama zimesomwa.",
-  "@chat_selected_marked_read": {"placeholders": {"count": {}}},
+  "@chat_selected_marked_read": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_selected_chats_cleared": "Gumzo {count} ulizochagua zimesafishwa.",
-  "@chat_selected_chats_cleared": {"placeholders": {"count": {}}},
+  "@chat_selected_chats_cleared": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_selected_chats_deleted": "Gumzo {count} ulizochagua zimefutwa.",
-  "@chat_selected_chats_deleted": {"placeholders": {"count": {}}},
-  "chat_selected_action_partial_failure": "Baadhi ya gumzo ulizochagua hazikuweza kusasishwa."
+  "@chat_selected_chats_deleted": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "chat_selected_action_partial_failure": "Baadhi ya gumzo ulizochagua hazikuweza kusasishwa.",
+  "profilePhotoRemoveAction": "Ondoa picha",
+  "profilePhotoRemoved": "Picha ya wasifu imeondolewa.",
+  "sellerBannerChangeAction": "Badilisha bango",
+  "sellerBannerRemoveAction": "Ondoa bango",
+  "sellerBannerUpdated": "Bango la duka limesasishwa.",
+  "sellerBannerRemoved": "Bango la duka limeondolewa."
 }

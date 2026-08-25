@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
 import 'package:africaonlinestores/core/media/livekit_service.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
@@ -31,7 +32,10 @@ final liveKitCoreProvider = Provider<LiveKitService>((ref) {
 });
 
 final liveMediaServiceProvider = Provider<LiveMediaService>((ref) {
-  return LiveMediaService(ref.watch(liveKitCoreProvider));
+  return LiveMediaService(
+    ref.watch(liveKitCoreProvider),
+    cameraResources: ref.read(mediaCameraResourceCoordinatorProvider),
+  );
 });
 
 final liveManagerProvider = StateNotifierProvider<LiveManager, LiveState>((

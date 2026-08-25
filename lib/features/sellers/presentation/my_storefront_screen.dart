@@ -1,5 +1,8 @@
+import 'dart:async';
+
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
 import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
-import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
@@ -10,11 +13,14 @@ import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dar
 import 'package:africaonlinestores/features/sellers/presentation/sections/seller_products_section.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/seller_banner_header.dart';
 import 'package:africaonlinestores/features/sellers/presentation/widgets/store_customization/store_image_source_sheet.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:africaonlinestores/shared/components/verified_badge.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+enum _StoreBannerAction { change, remove }
 
 class MyStorefrontScreen extends ConsumerStatefulWidget {
   const MyStorefrontScreen({super.key, required this.sellerId});
@@ -33,17 +39,87 @@ class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
     ref.invalidate(sellerAdsProvider(widget.sellerId));
   }
 
+  Future<void> _showBannerActions() async {
+    if (_uploadingBanner) return;
+
+    final seller = ref.read(sellerStateProvider(widget.sellerId)).seller;
+    final hasBanner = seller?.shopBanner?.trim().isNotEmpty ?? false;
+    if (!hasBanner) {
+      await _pickAndUpdateBanner();
+      return;
+    }
+
+    final action = await showModalBottomSheet<_StoreBannerAction>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: Text(sheetContext.l10n.sellerBannerChangeAction),
+              onTap: () =>
+                  Navigator.pop(sheetContext, _StoreBannerAction.change),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline_rounded),
+              title: Text(sheetContext.l10n.sellerBannerRemoveAction),
+              onTap: () =>
+                  Navigator.pop(sheetContext, _StoreBannerAction.remove),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || action == null) return;
+
+    switch (action) {
+      case _StoreBannerAction.change:
+        await _pickAndUpdateBanner();
+        break;
+      case _StoreBannerAction.remove:
+        await _removeBanner();
+        break;
+    }
+  }
+
+  Future<void> _removeBanner() async {
+    if (_uploadingBanner) return;
+    setState(() => _uploadingBanner = true);
+
+    final error = await ref
+        .read(sellerStateProvider(widget.sellerId).notifier)
+        .updateSellerProfile(clearShopBanner: true);
+
+    if (!mounted) return;
+    setState(() => _uploadingBanner = false);
+
+    if (error != null) {
+      ShowSnack(context, error).error();
+      return;
+    }
+    ShowSnack(context, context.l10n.sellerBannerRemoved).success();
+  }
+
   Future<void> _pickAndUpdateBanner() async {
     if (_uploadingBanner) return;
 
-    final file = await showStoreImageSourceSheet(context);
-    if (!mounted || file == null) return;
+    final media = await showStoreImageSourceSheet(context, ref: ref);
+    if (media == null) return;
+    if (!mounted) {
+      await media.discard();
+      return;
+    }
 
     setState(() => _uploadingBanner = true);
 
-    final uploaded = await ref
-        .read(mediaUploadApiProvider)
-        .uploadMedia(file: file, purpose: MediaUploadPurpose.sellerBanner);
+    final uploadCoordinator = ref.read(mediaUploadCoordinatorProvider);
+    final mediaUploadApi = ref.read(mediaUploadApiProvider);
+    final uploaded = await uploadCoordinator.upload(
+      media: media,
+      useCase: MediaUseCase.sellerBanner,
+    );
+    await media.discard();
 
     if (!mounted) return;
 
@@ -66,11 +142,12 @@ class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
     setState(() => _uploadingBanner = false);
 
     if (error != null) {
+      unawaited(mediaUploadApi.deleteMedia(mediaId: mediaId));
       ShowSnack(context, error).error();
       return;
     }
 
-    ShowSnack(context, 'Store banner updated.').success();
+    ShowSnack(context, context.l10n.sellerBannerUpdated).success();
   }
 
   Future<void> _openCustomize() async {
@@ -131,7 +208,7 @@ class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
                 _MyStorefrontHeader(
                   seller: seller,
                   uploadingBanner: _uploadingBanner,
-                  onEditBanner: _pickAndUpdateBanner,
+                  onEditBanner: _showBannerActions,
                   onCustomize: _openCustomize,
                   onPreview: () {
                     SellerNavigation.toSellerStore(

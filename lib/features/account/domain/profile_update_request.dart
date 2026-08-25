@@ -59,7 +59,7 @@ class ProfileUpdateRequest {
       if (bio != null) 'bio': _normalizeBio(bio!),
       if (userImage != null && userImage!.trim().isEmpty) 'remove_avatar': true,
       if (userImageMedia != null && userImageMedia!.trim().isNotEmpty)
-        'profile_image_media': userImageMedia!.trim(),
+        'avatar_media_id': userImageMedia!.trim(),
     };
   }
 

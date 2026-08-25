@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:africaonlinestores/core/media/data/media_upload_api.dart';
-import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
+import 'package:africaonlinestores/core/media/application/media_upload_coordinator.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_publishing_coordinator.dart';
@@ -21,7 +21,7 @@ class PostShortController extends StateNotifier<UploadState> {
   PostShortController({
     required this.uploadApi,
     required this.managementApi,
-    required this.mediaUploadApi,
+    required this.mediaUploadCoordinator,
     required this.localMediaSaver,
     required this.publishingCoordinator,
     required this.sessionId,
@@ -30,7 +30,7 @@ class PostShortController extends StateNotifier<UploadState> {
 
   final ShortsUploadApi uploadApi;
   final ShortsManagementApi managementApi;
-  final MediaUploadApi mediaUploadApi;
+  final MediaUploadCoordinator mediaUploadCoordinator;
   final ShortLocalMediaSaver localMediaSaver;
   final ShortPublishingCoordinator publishingCoordinator;
   final String sessionId;
@@ -168,18 +168,19 @@ class PostShortController extends StateNotifier<UploadState> {
       }
 
       appLogger.i('Starting Short upload for session $sessionId.');
-      final uploaded = await mediaUploadApi.uploadMedia(
+      final uploaded = await mediaUploadCoordinator.uploadFile(
         file: file,
-        purpose: MediaUploadPurpose.shortVideoRaw,
+        useCase: MediaUseCase.shortVideo,
         idempotencyKey: 'short-raw:$sessionId:v1',
         cancelToken: _uploadCancelToken,
-        onStage: (MediaUploadStage stage) {
+        onStage: (ManagedMediaUploadStage stage) {
           if (_disposed) return;
           state = state.copyWith(
             status: switch (stage) {
-              MediaUploadStage.initializing => UploadStatus.initializing,
-              MediaUploadStage.uploading => UploadStatus.uploading,
-              MediaUploadStage.confirming => UploadStatus.confirming,
+              ManagedMediaUploadStage.preparing => UploadStatus.initializing,
+              ManagedMediaUploadStage.initializing => UploadStatus.initializing,
+              ManagedMediaUploadStage.uploading => UploadStatus.uploading,
+              ManagedMediaUploadStage.confirming => UploadStatus.confirming,
             },
           );
         },

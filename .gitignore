@@ -1,48 +1,45 @@
-# Secrets and signing
-.env
-.env.*
-*.jks
-*.keystore
-*.p12
-*.pfx
-*.pem
-*.cer
-*.mobileprovision
-**/key.properties
-
-# Local machine configuration
-**/local.properties
+# OS / editors
 .DS_Store
 Thumbs.db
-*.iml
 .idea/
 .vscode/
+*.iml
+*.ipr
+*.iws
 
-# Flutter and Dart
+# Dart / Flutter
 .dart_tool/
 .packages
 .pub/
 .pub-cache/
-.flutter-plugins
-.flutter-plugins-dependencies
 build/
 coverage/
-**/doc/api/
+.flutter-plugins
+.flutter-plugins-dependencies
 
-# Android
+# Android local/generated
 android/.gradle/
 android/.kotlin/
 android/build/
-android/app/build/
-android/hs_err_pid*
+android/local.properties
+android/key.properties
+android/*.iml
+android/hs_err_pid*.log
+*.jks
+*.keystore
 
-# iOS/macOS generated files
+# iOS local/generated
 ios/Pods/
 ios/.symlinks/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
 ios/Flutter/ephemeral/
-macos/Pods/
-macos/Flutter/ephemeral/
 
-# Logs and crash output
-*.log
-hs_err_pid*
+# Local secrets/config
+.env
+.env.*
+*.p12
+*.pem
+*.key
+*.cer
+*.mobileprovision

@@ -883,24 +883,54 @@
   "chat_clear_chats_title": "Clear chats?",
   "chat_clear_chat_description": "This clears all visible messages in this chat for you only. The other participant will keep their copy.",
   "chat_clear_selected_chats_description": "Clear the visible messages in {count} selected chats for you only? Other participants will keep their copies.",
-  "@chat_clear_selected_chats_description": {"placeholders": {"count": {}}},
+  "@chat_clear_selected_chats_description": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_chat_cleared": "Chat cleared.",
   "chat_clear_chat_failed": "Could not clear the chat.",
   "chat_select_conversations": "Select conversations",
   "chat_selected_conversations": "{count} selected",
-  "@chat_selected_conversations": {"placeholders": {"count": {}}},
+  "@chat_selected_conversations": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_cancel_selection": "Cancel selection",
   "chat_mark_as_read": "Mark as read",
   "chat_clear_chats": "Clear chats",
   "chat_delete_conversations": "Delete conversation",
   "chat_delete_conversations_title": "Delete conversations?",
   "chat_delete_selected_conversations_description": "This will remove {count} selected conversations from your conversation list. It will not delete them for the other participants.",
-  "@chat_delete_selected_conversations_description": {"placeholders": {"count": {}}},
+  "@chat_delete_selected_conversations_description": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_selected_marked_read": "{count} selected chats marked as read.",
-  "@chat_selected_marked_read": {"placeholders": {"count": {}}},
+  "@chat_selected_marked_read": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_selected_chats_cleared": "{count} selected chats cleared.",
-  "@chat_selected_chats_cleared": {"placeholders": {"count": {}}},
+  "@chat_selected_chats_cleared": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "chat_selected_chats_deleted": "{count} selected conversations deleted.",
-  "@chat_selected_chats_deleted": {"placeholders": {"count": {}}},
-  "chat_selected_action_partial_failure": "Some selected conversations could not be updated."
+  "@chat_selected_chats_deleted": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "chat_selected_action_partial_failure": "Some selected conversations could not be updated.",
+  "profilePhotoRemoveAction": "Remove photo",
+  "profilePhotoRemoved": "Profile photo removed.",
+  "sellerBannerChangeAction": "Change banner",
+  "sellerBannerRemoveAction": "Remove banner",
+  "sellerBannerUpdated": "Store banner updated.",
+  "sellerBannerRemoved": "Store banner removed."
 }

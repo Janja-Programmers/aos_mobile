@@ -26,3 +26,13 @@ import '../helpers/test_harness.dart';
 ```
 
 Use a path appropriate to the test file. Do not copy these helpers into feature folders.
+
+## Media architecture contracts
+
+`test/core/media` verifies policy mappings, acquisition caps/cleanup, signature
+detection, camera lease exclusion, in-app still-camera enforcement, deletion of
+retired picker helpers, feature upload-boundary enforcement, and the
+plugin-import allowlist.
+Any new `image_picker`, `file_picker`, `camera`, or
+`flutter_image_compress` import must be implemented as an explicitly reviewed
+media adapter and added to the narrow source-contract allowlist.

@@ -22,8 +22,7 @@ class ChatMessagesView extends StatelessWidget {
   final String? otherAvatarUrl;
   final ChatLocalPreferencesState preferences;
   final ValueChanged<ChatMessage> onReply;
-  final void Function(ChatMessage message, bool isMe, Rect anchor)
-  onLongPress;
+  final void Function(ChatMessage message, bool isMe, Rect anchor) onLongPress;
   final GlobalKey Function(String messageId)? messageKeyFor;
   final ValueChanged<String>? onReplyPreviewTap;
   final ValueChanged<ChatMessage> onRetry;
@@ -162,8 +161,8 @@ class ChatMessagesView extends StatelessWidget {
                     otherDisplayName: otherDisplayName,
                     otherAvatarUrl: otherAvatarUrl,
                     onLongPress: (anchor) => onLongPress(message, isMe, anchor),
-                    onReplyTap: message.replyTo == null ||
-                            onReplyPreviewTap == null
+                    onReplyTap:
+                        message.replyTo == null || onReplyPreviewTap == null
                         ? null
                         : () => onReplyPreviewTap!(message.replyTo!.id),
                     onRetry: message.isLocalFailed

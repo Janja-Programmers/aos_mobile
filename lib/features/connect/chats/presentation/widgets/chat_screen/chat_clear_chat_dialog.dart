@@ -18,9 +18,7 @@ Future<bool?> showChatClearChatDialog(
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          count == 1
-              ? l10n.chat_clear_chat_title
-              : l10n.chat_clear_chats_title,
+          count == 1 ? l10n.chat_clear_chat_title : l10n.chat_clear_chats_title,
           style: TextStyle(color: colors.textPrimary),
         ),
         content: Text(

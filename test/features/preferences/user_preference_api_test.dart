@@ -13,27 +13,24 @@ import '../../helpers/test_preferences.dart';
 import '../../test_config/test_environment.dart';
 
 void main() {
-  for (final testCase in <({
-    UserPreferenceField field,
-    String wireName,
-    String canonicalId,
-  })>[
-    (
-      field: UserPreferenceField.language,
-      wireName: 'language',
-      canonicalId: 'sw',
-    ),
-    (
-      field: UserPreferenceField.country,
-      wireName: 'country',
-      canonicalId: 'Uganda',
-    ),
-    (
-      field: UserPreferenceField.currency,
-      wireName: 'currency',
-      canonicalId: 'UGX',
-    ),
-  ]) {
+  for (final testCase
+      in <({UserPreferenceField field, String wireName, String canonicalId})>[
+        (
+          field: UserPreferenceField.language,
+          wireName: 'language',
+          canonicalId: 'sw',
+        ),
+        (
+          field: UserPreferenceField.country,
+          wireName: 'country',
+          canonicalId: 'Uganda',
+        ),
+        (
+          field: UserPreferenceField.currency,
+          wireName: 'currency',
+          canonicalId: 'UGX',
+        ),
+      ]) {
     test(
       '${testCase.wireName} update uses RPC v2 and sends only its field',
       () async {
@@ -61,10 +58,9 @@ void main() {
           harness.adapter.singleRequest.path,
           '/api/v2/method/aos.api.v1.accounts.update_my_preference',
         );
-        expect(
-          harness.adapter.singleRequest.data,
-          <String, dynamic>{testCase.wireName: testCase.canonicalId},
-        );
+        expect(harness.adapter.singleRequest.data, <String, dynamic>{
+          testCase.wireName: testCase.canonicalId,
+        });
         expect(
           (harness.adapter.singleRequest.data as Map<String, dynamic>)
               .containsKey('cmd'),
@@ -149,10 +145,7 @@ Map<String, dynamic> _preferenceFixture({
 }
 
 class _UserPreferenceApiHarness {
-  const _UserPreferenceApiHarness({
-    required this.api,
-    required this.adapter,
-  });
+  const _UserPreferenceApiHarness({required this.api, required this.adapter});
 
   final UserPreferenceApi api;
   final RecordingHttpClientAdapter adapter;

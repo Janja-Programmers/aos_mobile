@@ -451,9 +451,7 @@ class _ConnectHeader extends StatelessWidget {
                   : l10n.chat_search,
               onPressed: onSearchTap,
               icon: Icon(
-                searchVisible
-                    ? Icons.search_off_rounded
-                    : Icons.search_rounded,
+                searchVisible ? Icons.search_off_rounded : Icons.search_rounded,
                 size: 26,
               ),
             ),

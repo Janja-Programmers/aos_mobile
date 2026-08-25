@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:africaonlinestores/core/media/application/media_acquisition_service.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/features/shorts/create_short/domain/short_creation_models.dart';
-import 'package:camera/camera.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 abstract interface class ShortPermissionGate {
@@ -32,7 +32,8 @@ class PluginShortPermissionGate implements ShortPermissionGate {
 }
 
 abstract interface class ShortCameraDriver {
-  CameraController? get cameraController;
+  Widget? get previewWidget;
+  Size? get previewSize;
   bool get isRecording;
   int get cameraCount;
   Future<void> initialize(int cameraIndex);
@@ -42,87 +43,33 @@ abstract interface class ShortCameraDriver {
   Future<void> dispose();
 }
 
-class PluginShortCameraDriver implements ShortCameraDriver {
-  List<CameraDescription> _cameras = const <CameraDescription>[];
-  CameraController? _controller;
+class ShortCameraDriverException implements Exception {
+  const ShortCameraDriverException({
+    required this.message,
+    this.permissionDenied = false,
+  });
+
+  final String message;
+  final bool permissionDenied;
 
   @override
-  CameraController? get cameraController => _controller;
-
-  @override
-  bool get isRecording => _controller?.value.isRecordingVideo ?? false;
-
-  @override
-  int get cameraCount => _cameras.length;
-
-  @override
-  Future<void> initialize(int cameraIndex) async {
-    _cameras = await availableCameras();
-    if (_cameras.isEmpty) throw StateError('No camera is available.');
-    final boundedIndex = cameraIndex.clamp(0, _cameras.length - 1).toInt();
-    final previous = _controller;
-    _controller = null;
-    await previous?.dispose();
-
-    final controller = CameraController(
-      _cameras[boundedIndex],
-      ResolutionPreset.high,
-    );
-    _controller = controller;
-    await controller.initialize();
-  }
-
-  @override
-  Future<String> startRecording() async {
-    final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) {
-      throw StateError('Camera is not ready.');
-    }
-    if (controller.value.isRecordingVideo) {
-      throw StateError('A recording is already active.');
-    }
-    await controller.startVideoRecording();
-    return '';
-  }
-
-  @override
-  Future<String> stopRecording() async {
-    final controller = _controller;
-    if (controller == null || !controller.value.isRecordingVideo) {
-      throw StateError('No recording is active.');
-    }
-    final file = await controller.stopVideoRecording();
-    return file.path;
-  }
-
-  @override
-  Future<void> setFlash(bool enabled) async {
-    final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) return;
-    await controller.setFlashMode(enabled ? FlashMode.torch : FlashMode.off);
-  }
-
-  @override
-  Future<void> dispose() async {
-    final controller = _controller;
-    _controller = null;
-    await controller?.dispose();
-  }
+  String toString() => message;
 }
 
 abstract interface class ShortVideoPicker {
   Future<String?> pickVideo();
 }
 
-class ImagePickerShortVideoPicker implements ShortVideoPicker {
-  ImagePickerShortVideoPicker({ImagePicker? picker})
-    : _picker = picker ?? ImagePicker();
+class SharedShortVideoPicker implements ShortVideoPicker {
+  const SharedShortVideoPicker(this._acquisition);
 
-  final ImagePicker _picker;
+  final MediaAcquisitionService _acquisition;
 
   @override
   Future<String?> pickVideo() async {
-    final selected = await _picker.pickVideo(source: ImageSource.gallery);
+    final selected = await _acquisition.pickVideo(
+      useCase: MediaUseCase.shortVideo,
+    );
     return selected?.path;
   }
 }
@@ -146,7 +93,8 @@ class ShortRecorderController extends StateNotifier<ShortRecorderState> {
   bool _disposed = false;
   int _operationGeneration = 0;
 
-  CameraController? get cameraController => _cameraDriver.cameraController;
+  Widget? get cameraPreview => _cameraDriver.previewWidget;
+  Size? get cameraPreviewSize => _cameraDriver.previewSize;
 
   Future<void> initialize() async {
     if (_operationInProgress || _disposed) return;
@@ -179,13 +127,13 @@ class ShortRecorderController extends StateNotifier<ShortRecorderState> {
           clearError: true,
         );
       }
-    } on CameraException catch (error) {
+    } on ShortCameraDriverException catch (error) {
       if (!_disposed && generation == _operationGeneration) {
         state = state.copyWith(
-          phase: _isPermissionError(error)
+          phase: error.permissionDenied
               ? ShortRecorderPhase.permissionDenied
               : ShortRecorderPhase.error,
-          errorMessage: error.description ?? 'Could not initialize the camera.',
+          errorMessage: error.message,
         );
       }
     } catch (_) {
@@ -350,12 +298,7 @@ class ShortRecorderController extends StateNotifier<ShortRecorderState> {
     if (lifecycle == AppLifecycleState.inactive ||
         lifecycle == AppLifecycleState.paused ||
         lifecycle == AppLifecycleState.detached) {
-      _operationGeneration++;
-      if (state.isRecording) await stopRecording();
-      await _cameraDriver.dispose();
-      if (!_disposed && state.phase != ShortRecorderPhase.recorded) {
-        state = state.copyWith(phase: ShortRecorderPhase.initializing);
-      }
+      await suspendCamera();
       return;
     }
     if (lifecycle == AppLifecycleState.resumed &&
@@ -364,13 +307,18 @@ class ShortRecorderController extends StateNotifier<ShortRecorderState> {
     }
   }
 
-  Future<void> openSettings() async {
-    await _permissionGate.openSettings();
+  Future<void> suspendCamera() async {
+    if (_disposed) return;
+    _operationGeneration++;
+    if (state.isRecording) await stopRecording();
+    await _cameraDriver.dispose();
+    if (!_disposed && state.phase != ShortRecorderPhase.recorded) {
+      state = state.copyWith(phase: ShortRecorderPhase.initializing);
+    }
   }
 
-  bool _isPermissionError(CameraException error) {
-    final code = error.code.toLowerCase();
-    return code.contains('accessdenied') || code.contains('permission');
+  Future<void> openSettings() async {
+    await _permissionGate.openSettings();
   }
 
   @override

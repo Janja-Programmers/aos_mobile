@@ -157,9 +157,9 @@ class _ProfileHeader extends StatelessWidget {
                       : null,
                 ),
               ),
-              if (isOwnProfile && !isLive)
+              if (isOwnProfile)
                 Positioned(
-                  right: -3,
+                  left: -3,
                   bottom: -3,
                   child: Container(
                     width: 34,
@@ -175,8 +175,8 @@ class _ProfileHeader extends StatelessWidget {
                       size: 18,
                     ),
                   ),
-                )
-              else if (isLive && (liveId?.trim().isNotEmpty ?? false))
+                ),
+              if (isLive && (liveId?.trim().isNotEmpty ?? false))
                 Positioned(
                   right: -2,
                   bottom: 2,

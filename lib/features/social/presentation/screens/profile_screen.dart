@@ -3,14 +3,13 @@ import 'dart:async';
 import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
 import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
-import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
-import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
-import 'package:africaonlinestores/core/utils/normalize_image.dart';
 import 'package:africaonlinestores/features/account/presentation/widgets/profile_edit_sheet.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_controller.dart';
 import 'package:africaonlinestores/features/account/shared/providers/accounts_provider.dart';
@@ -20,6 +19,7 @@ import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/connect/chats/utils/chat_actions.dart';
 import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
+import 'package:africaonlinestores/features/sellers/application/providers/seller_state_controller_provider.dart';
 import 'package:africaonlinestores/features/sellers/navigation/seller_routes.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/mappers/short_mapper.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
@@ -29,6 +29,7 @@ import 'package:africaonlinestores/features/social/application/providers/social_
 import 'package:africaonlinestores/features/social/application/state/social_connections_state.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/features/social/safety/presentation/widgets/user_safety_sheet.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/verified_badge.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
@@ -285,22 +286,30 @@ class ProfileScreen extends ConsumerWidget {
     _ProfileViewData data,
     _ProfileRequest request,
   ) async {
-    final liveId = data.liveId?.trim() ?? '';
-    if (data.isLive && liveId.isNotEmpty) {
-      LiveNavigation.toLiveRoom(context, liveId: liveId);
+    if (data.isOwnProfile) {
+      await _showAvatarPhotoPicker(
+        context,
+        ref,
+        request,
+        hasAvatar: data.avatarUrl?.trim().isNotEmpty ?? false,
+        sellerId: data.sellerId,
+      );
       return;
     }
 
-    if (!data.isOwnProfile) return;
-
-    await _showAvatarPhotoPicker(context, ref, request);
+    final liveId = data.liveId?.trim() ?? '';
+    if (data.isLive && liveId.isNotEmpty) {
+      LiveNavigation.toLiveRoom(context, liveId: liveId);
+    }
   }
 
   static Future<void> _showAvatarPhotoPicker(
     BuildContext context,
     WidgetRef ref,
-    _ProfileRequest request,
-  ) async {
+    _ProfileRequest request, {
+    required bool hasAvatar,
+    String? sellerId,
+  }) async {
     final action = await showModalBottomSheet<_AvatarPhotoAction>(
       context: context,
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -342,6 +351,16 @@ class ProfileScreen extends ConsumerWidget {
                   onTap: () =>
                       Navigator.pop(sheetContext, _AvatarPhotoAction.camera),
                 ),
+                if (hasAvatar)
+                  ListTile(
+                    leading: Icon(
+                      Icons.delete_outline_rounded,
+                      color: colors.primary,
+                    ),
+                    title: Text(sheetContext.l10n.profilePhotoRemoveAction),
+                    onTap: () =>
+                        Navigator.pop(sheetContext, _AvatarPhotoAction.remove),
+                  ),
               ],
             ),
           ),
@@ -351,19 +370,40 @@ class ProfileScreen extends ConsumerWidget {
 
     if (action == null || !context.mounted) return;
 
-    final picked = action == _AvatarPhotoAction.camera
-        ? await MediaHelper.pickImageFromCamera()
-        : await MediaHelper.pickImageFromGallery();
+    if (action == _AvatarPhotoAction.remove) {
+      await _removeAvatar(context, ref, request, sellerId: sellerId);
+      return;
+    }
 
-    if (picked == null || !context.mounted) return;
+    final acquisition = ref.read(mediaAcquisitionServiceProvider);
+    final picked = switch (action) {
+      _AvatarPhotoAction.camera => await acquisition.captureImage(
+        context,
+        useCase: MediaUseCase.profileImage,
+      ),
+      _AvatarPhotoAction.gallery => await acquisition.pickImage(
+        useCase: MediaUseCase.profileImage,
+      ),
+      _AvatarPhotoAction.remove => null,
+    };
+
+    if (picked == null) return;
+    if (!context.mounted) {
+      await picked.discard();
+      return;
+    }
 
     ShowSnack(context, 'Uploading profile photo…').info();
 
+    final uploadCoordinator = ref.read(mediaUploadCoordinatorProvider);
+    final accountsApi = ref.read(accountsApiProvider);
+    final mediaUploadApi = ref.read(mediaUploadApiProvider);
+
     try {
-      final fixed = await normalizeImageOrientation(picked);
-      final uploaded = await ref
-          .read(mediaUploadApiProvider)
-          .uploadMedia(file: fixed, purpose: MediaUploadPurpose.profileImage);
+      final uploaded = await uploadCoordinator.upload(
+        media: picked,
+        useCase: MediaUseCase.profileImage,
+      );
 
       if (!context.mounted) return;
 
@@ -381,19 +421,21 @@ class ProfileScreen extends ConsumerWidget {
         return;
       }
 
-      final update = await ref
-          .read(accountsApiProvider)
-          .updateProfile(userImageMedia: media.mediaId);
-
-      if (!context.mounted) return;
+      final update = await accountsApi.updateProfile(
+        userImageMedia: media.mediaId,
+      );
 
       if (update.isLeft) {
+        unawaited(mediaUploadApi.deleteMedia(mediaId: media.mediaId));
+        if (!context.mounted) return;
         ShowSnack(
           context,
           update.leftOrNull?.message ?? 'Failed to update profile photo.',
         ).error();
         return;
       }
+
+      if (!context.mounted) return;
 
       final payload = update.rightOrNull ?? <String, dynamic>{};
       final message = asJsonMap(payload['message']);
@@ -402,12 +444,52 @@ class ProfileScreen extends ConsumerWidget {
       ref.read(authControllerProvider.notifier).setUserFromMap(data);
       ref.invalidate(_profileViewDataProvider(request));
       ref.invalidate(accountsControllerProvider);
+      final cleanSellerId = sellerId?.trim() ?? '';
+      if (cleanSellerId.isNotEmpty) {
+        ref.invalidate(sellerStateProvider(cleanSellerId));
+      }
 
       ShowSnack(context, 'Profile photo updated.').success();
     } catch (_) {
       if (!context.mounted) return;
       ShowSnack(context, 'Failed to update profile photo.').error();
+    } finally {
+      await picked.discard();
     }
+  }
+
+  static Future<void> _removeAvatar(
+    BuildContext context,
+    WidgetRef ref,
+    _ProfileRequest request, {
+    String? sellerId,
+  }) async {
+    final update = await ref
+        .read(accountsApiProvider)
+        .updateProfile(userImage: '');
+    if (!context.mounted) return;
+
+    if (update.isLeft) {
+      ShowSnack(
+        context,
+        update.leftOrNull?.message ?? 'Failed to remove profile photo.',
+      ).error();
+      return;
+    }
+
+    final payload = update.rightOrNull ?? <String, dynamic>{};
+    final message = asJsonMap(payload['message']);
+    final data = asJsonMap(payload['data'] ?? message['data'] ?? payload);
+
+    ref.read(authControllerProvider.notifier).setUserFromMap(data);
+    ref.invalidate(_profileViewDataProvider(request));
+    ref.invalidate(accountsControllerProvider);
+    final cleanSellerId = sellerId?.trim() ?? '';
+    if (cleanSellerId.isNotEmpty) {
+      ref.invalidate(sellerStateProvider(cleanSellerId));
+    }
+
+    ShowSnack(context, context.l10n.profilePhotoRemoved).success();
   }
 
   static void _showSafetySheet(BuildContext context, _ProfileViewData data) {

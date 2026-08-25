@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
@@ -161,7 +161,7 @@ final postShortControllerProvider =
       return PostShortController(
         uploadApi: ref.read(shortsUploadApiProvider),
         managementApi: ref.read(shortsManagementApiProvider),
-        mediaUploadApi: ref.read(mediaUploadApiProvider),
+        mediaUploadCoordinator: ref.read(mediaUploadCoordinatorProvider),
         localMediaSaver: ref.read(shortLocalMediaSaverProvider),
         publishingCoordinator: ref.read(shortPublishingCoordinatorProvider),
         sessionId: sessionId,

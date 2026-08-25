@@ -46,6 +46,8 @@ class MediaImageTile extends StatelessWidget {
                     fit: BoxFit.cover,
                     width: 110,
                     height: 110,
+                    cacheWidth: 440,
+                    cacheHeight: 440,
                   )
                 : url == null
                 ? ColoredBox(

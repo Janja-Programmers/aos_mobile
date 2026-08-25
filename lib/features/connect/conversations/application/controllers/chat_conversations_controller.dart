@@ -520,10 +520,9 @@ class ConversationsController
     _messageStatusSub = realtime.messageStatus.listen((Object? data) {
       final payload = asJsonMap(data);
       final conversationId = payload['conversation_id']?.toString().trim();
-      final messageIds = asJsonList(payload['message_ids'])
-          .map((id) => id.toString().trim())
-          .where((id) => id.isNotEmpty)
-          .toSet();
+      final messageIds = asJsonList(
+        payload['message_ids'],
+      ).map((id) => id.toString().trim()).where((id) => id.isNotEmpty).toSet();
       if (conversationId == null ||
           conversationId.isEmpty ||
           messageIds.isEmpty) {
@@ -535,14 +534,16 @@ class ConversationsController
       if (deliveredAt == null && readAt == null) return;
 
       state = state.whenData((conversations) {
-        return conversations.map((conversation) {
-          if (conversation.id != conversationId) return conversation;
-          return conversation.applyLastMessageStatus(
-            messageIds: messageIds,
-            deliveredAt: deliveredAt,
-            readAt: readAt,
-          );
-        }).toList(growable: false);
+        return conversations
+            .map((conversation) {
+              if (conversation.id != conversationId) return conversation;
+              return conversation.applyLastMessageStatus(
+                messageIds: messageIds,
+                deliveredAt: deliveredAt,
+                readAt: readAt,
+              );
+            })
+            .toList(growable: false);
       });
     });
 
@@ -726,20 +727,22 @@ class ConversationsController
 
   void _markConversationClearedLocally(String conversationId) {
     state = state.whenData((conversations) {
-      return conversations.map((conversation) {
-        if (conversation.id != conversationId) return conversation;
-        return conversation.copyWith(
-          lastMessage: null,
-          lastMessageId: null,
-          lastMessageAt: null,
-          lastSender: null,
-          lastSenderDisplayName: null,
-          lastSenderAvatar: null,
-          lastMessageDeliveredAt: null,
-          lastMessageReadAt: null,
-          unreadCount: 0,
-        );
-      }).toList(growable: false);
+      return conversations
+          .map((conversation) {
+            if (conversation.id != conversationId) return conversation;
+            return conversation.copyWith(
+              lastMessage: null,
+              lastMessageId: null,
+              lastMessageAt: null,
+              lastSender: null,
+              lastSenderDisplayName: null,
+              lastSenderAvatar: null,
+              lastMessageDeliveredAt: null,
+              lastMessageReadAt: null,
+              unreadCount: 0,
+            );
+          })
+          .toList(growable: false);
     });
   }
 

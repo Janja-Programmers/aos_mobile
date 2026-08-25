@@ -17,8 +17,7 @@ class ChatListScreen extends ConsumerStatefulWidget {
   final bool hideFilters;
   final bool selectionMode;
   final Set<String> selectedConversationIds;
-  final void Function(String conversationId, bool selected)?
-  onSelectionChanged;
+  final void Function(String conversationId, bool selected)? onSelectionChanged;
 
   const ChatListScreen({
     super.key,

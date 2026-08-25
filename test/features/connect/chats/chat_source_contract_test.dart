@@ -119,7 +119,7 @@ void main() {
 
     expect(appBar, contains('chat_audio_call'));
     expect(appBar, contains('chat_clear_chat'));
-    expect(appBar, isNot(contains('changeWallpaper')));
+    expect(appBar, contains('changeWallpaper'));
     expect(screen, contains('ensureMessageLoaded'));
     expect(screen, contains('Scrollable.ensureVisible'));
     expect(attachmentSheet, contains('chat_gallery'));
@@ -133,26 +133,29 @@ void main() {
     expect(actions, contains('BoxConstraints getConstraintsForChild'));
   });
 
-  test('conversation long press enters bulk selection before destructive work', () {
-    final connect = File(
-      'lib/features/connect/conversations/presentation/connect_screen.dart',
-    ).readAsStringSync();
-    final list = File(
-      'lib/features/connect/chats/presentation/screens/chat_list_screen.dart',
-    ).readAsStringSync();
-    final controller = File(
-      'lib/features/connect/conversations/application/controllers/'
-      'chat_conversations_controller.dart',
-    ).readAsStringSync();
+  test(
+    'conversation long press enters bulk selection before destructive work',
+    () {
+      final connect = File(
+        'lib/features/connect/conversations/presentation/connect_screen.dart',
+      ).readAsStringSync();
+      final list = File(
+        'lib/features/connect/chats/presentation/screens/chat_list_screen.dart',
+      ).readAsStringSync();
+      final controller = File(
+        'lib/features/connect/conversations/application/controllers/'
+        'chat_conversations_controller.dart',
+      ).readAsStringSync();
 
-    expect(connect, contains('selectConversations'));
-    expect(connect, contains('markSelectedRead'));
-    expect(connect, contains('clearSelectedChats'));
-    expect(connect, contains('deleteSelectedConversations'));
-    expect(list, contains('onSelectionChanged?.call(conv.id, true)'));
-    expect(list, isNot(contains('_showDeleteConversationSheet')));
-    expect(controller, contains('markConversationsRead'));
-    expect(controller, contains('clearConversations'));
-    expect(controller, contains('deleteConversations'));
-  });
+      expect(connect, contains('selectConversations'));
+      expect(connect, contains('markSelectedRead'));
+      expect(connect, contains('clearSelectedChats'));
+      expect(connect, contains('deleteSelectedConversations'));
+      expect(list, contains('onSelectionChanged?.call(conv.id, true)'));
+      expect(list, isNot(contains('_showDeleteConversationSheet')));
+      expect(controller, contains('markConversationsRead'));
+      expect(controller, contains('clearConversations'));
+      expect(controller, contains('deleteConversations'));
+    },
+  );
 }

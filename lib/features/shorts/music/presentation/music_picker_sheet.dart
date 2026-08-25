@@ -1,13 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
-import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/providers/short_creation_providers.dart';
 import 'package:africaonlinestores/features/shorts/music/application/sound_picker_controller.dart';
 import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
@@ -300,25 +298,36 @@ class _MusicPickerSheetState extends ConsumerState<MusicPickerSheet> {
   }
 
   Future<void> _uploadSound() async {
-    final picked = await FilePicker.pickFiles(type: FileType.audio);
-    final path = picked?.files.single.path;
-    if (path == null || path.trim().isEmpty || !mounted) return;
-    final details = await _askUploadDetails(picked!.files.single.name);
-    if (details == null || !mounted) return;
+    final picked = await ref
+        .read(mediaAcquisitionServiceProvider)
+        .pickAudio(useCase: MediaUseCase.soundUpload);
+    if (picked == null) return;
+    if (!mounted) {
+      await picked.discard();
+      return;
+    }
+    final details = await _askUploadDetails(picked.originalName);
+    if (details == null || !mounted) {
+      await picked.discard();
+      return;
+    }
 
     setState(() => _uploading = true);
     try {
-      final file = File(path);
       Duration? duration;
       final probe = AudioPlayer();
       try {
-        duration = await probe.setFilePath(path);
+        duration = await probe.setFilePath(picked.path);
       } finally {
         await probe.dispose();
       }
       final upload = await ref
-          .read(mediaUploadApiProvider)
-          .uploadMedia(file: file, purpose: MediaUploadPurpose.soundUpload);
+          .read(mediaUploadCoordinatorProvider)
+          .upload(
+            media: picked,
+            useCase: MediaUseCase.soundUpload,
+            discardSourceWhenDone: true,
+          );
       final media = upload.rightOrNull;
       if (media == null) {
         _showMessage(upload.leftOrNull?.message ?? 'Could not upload sound.');
@@ -343,6 +352,7 @@ class _MusicPickerSheetState extends ConsumerState<MusicPickerSheet> {
       }
       if (mounted) Navigator.of(context).pop(sound);
     } finally {
+      await picked.discard();
       if (mounted) setState(() => _uploading = false);
     }
   }

@@ -82,8 +82,8 @@ class SellerStateController extends StateNotifier<SellerState> {
   Future<String?> updateSellerProfile({
     String? businessCategory,
     String? aboutBusiness,
-    String? businessAddress,
     String? shopBanner,
+    bool clearShopBanner = false,
     List<Map<String, dynamic>>? operatingHours,
   }) async {
     if (state.updating) return null;
@@ -94,8 +94,6 @@ class SellerStateController extends StateNotifier<SellerState> {
     final optimisticSeller = previousSeller?.copyWith(
       businessCategory: businessCategory,
       aboutBusiness: aboutBusiness,
-      businessAddress: businessAddress,
-      shopBanner: shopBanner,
       operatingHours: operatingHours,
     );
 
@@ -108,8 +106,8 @@ class SellerStateController extends StateNotifier<SellerState> {
     final res = await controller.updateSellerProfile(
       businessCategory: businessCategory,
       aboutBusiness: aboutBusiness,
-      businessAddress: businessAddress,
       shopBanner: shopBanner,
+      clearShopBanner: clearShopBanner,
       operatingHours: operatingHours,
     );
 

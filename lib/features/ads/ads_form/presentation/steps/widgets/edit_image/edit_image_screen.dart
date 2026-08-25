@@ -1,6 +1,9 @@
 import 'dart:io';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_asset.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/utils/background_colors.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/background_removal_await_dialog.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/background_removal_confirm_dialog.dart';
@@ -9,7 +12,6 @@ import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_contro
 import 'package:africaonlinestores/shared/utils/url_to_file.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_cropper/image_cropper.dart';
@@ -136,23 +138,20 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
   Future<void> _compress() async {
     if (_selectedBgColor == null) return;
 
-    final dir = await getTemporaryDirectory();
+    final prepared = await ref
+        .read(mediaPreparationServiceProvider)
+        .prepare(
+          media: AcquiredMedia.external(file: _file, kind: MediaKind.image),
+          useCase: MediaUseCase.adImage,
+        );
 
-    final target =
-        '${dir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    if (prepared.ownedByPreparation) {
+      _tempFiles.add(prepared.file);
 
-    final result = await FlutterImageCompress.compressAndGetFile(
-      _file.path,
-      target,
-      quality: 80,
-    );
-
-    if (result != null) {
-      final file = File(result.path);
-
-      _tempFiles.add(file);
-
-      setState(() => _file = file);
+      if (!mounted) return;
+      setState(() => _file = prepared.file);
+    } else {
+      await prepared.discard();
     }
   }
 

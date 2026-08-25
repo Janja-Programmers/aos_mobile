@@ -7,7 +7,6 @@ import 'package:africaonlinestores/features/account/shared/providers/account_use
 import 'package:africaonlinestores/features/connect/chats/domain/chat_identity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -216,21 +215,14 @@ class ChatLocalPreferencesController
     state = state.copyWith(saving: false);
   }
 
-  Future<bool> chooseGalleryWallpaper() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 88,
-    );
-
-    if (image == null || !mounted) return false;
-
+  Future<bool> setGalleryWallpaperFromFile(String sourcePath) async {
+    if (sourcePath.trim().isEmpty || !mounted) return false;
     final previousWallpaperId = state.wallpaperId;
     final previousImagePath = state.wallpaperImagePath;
     state = state.copyWith(saving: true);
 
     try {
-      final persistedPath = await _persistGalleryWallpaper(image.path);
+      final persistedPath = await _persistGalleryWallpaper(sourcePath);
       final prefs = await SharedPreferences.getInstance();
       await Future.wait([
         prefs.setString(

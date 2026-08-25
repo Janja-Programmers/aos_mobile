@@ -1,9 +1,8 @@
-import 'dart:io';
+import 'dart:async';
 
-import 'package:africaonlinestores/core/media/data/media_upload_api_provider.dart';
-import 'package:africaonlinestores/core/media/domain/media_upload_purpose.dart';
-import 'package:africaonlinestores/core/media/helpers/media_helper.dart';
-import 'package:africaonlinestores/core/media/helpers/review_media_helper.dart';
+import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
+import 'package:africaonlinestores/core/media/domain/media_asset.dart';
+import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/reviews/application/controllers/review_create_controller.dart';
@@ -26,7 +25,7 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _commentCtrl = TextEditingController();
-  final List<File> _images = [];
+  final List<AcquiredMedia> _images = <AcquiredMedia>[];
 
   double _rating = 0.0;
   bool _uploading = false;
@@ -43,28 +42,36 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
   }
 
   Future<void> _pickImages() async {
-    final availableSlots = ReviewMediaHelper.maxImages - _images.length;
+    final availableSlots = _maxImages - _images.length;
 
     if (availableSlots <= 0) {
-      ShowSnack(
-        context,
-        'Maximum ${ReviewMediaHelper.maxImages} images allowed',
-      ).error();
+      ShowSnack(context, 'Maximum $_maxImages images allowed').error();
       return;
     }
 
     final selection = await showImageSourcePicker(
       context,
+      ref: ref,
       availableSlots: availableSlots,
     );
 
-    if (!mounted || selection == null) return;
+    if (selection == null) return;
+    if (!mounted) {
+      for (final media in selection.files) {
+        await media.discard();
+      }
+      return;
+    }
 
-    final existingPaths = _images.map((file) => file.path).toSet();
+    final existingPaths = _images.map((media) => media.path).toSet();
     final uniqueFiles = selection.files.where((file) {
       return existingPaths.add(file.path);
     }).toList();
     final filesToAdd = uniqueFiles.take(availableSlots).toList();
+    final acceptedPaths = filesToAdd.map((media) => media.path).toSet();
+    for (final media in selection.files) {
+      if (!acceptedPaths.contains(media.path)) unawaited(media.discard());
+    }
 
     if (filesToAdd.isNotEmpty) {
       setState(() => _images.addAll(filesToAdd));
@@ -74,7 +81,7 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
         uniqueFiles.length > availableSlots) {
       ShowSnack(
         context,
-        'Only $availableSlots more ${availableSlots == 1 ? 'image was' : 'images were'} added. The maximum is ${ReviewMediaHelper.maxImages}.',
+        'Only $availableSlots more ${availableSlots == 1 ? 'image was' : 'images were'} added. The maximum is $_maxImages.',
       ).error();
     } else if (filesToAdd.length < selection.files.length) {
       ShowSnack(context, 'Duplicate images were not added.').error();
@@ -91,35 +98,30 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
 
     if (!_formKey.currentState!.validate()) return;
 
-    if (_images.length > ReviewMediaHelper.maxImages) {
-      ShowSnack(
-        context,
-        'Maximum ${ReviewMediaHelper.maxImages} images allowed',
-      ).error();
+    if (_images.length > _maxImages) {
+      ShowSnack(context, 'Maximum $_maxImages images allowed').error();
       return;
     }
 
     setState(() => _uploading = true);
 
     try {
-      final uploadedFiles = await MediaHelper.uploadMultiple(
-        ref: ref,
-        files: _images,
-        uploadFn: (file) {
-          return ref
-              .read(mediaUploadApiProvider)
-              .uploadMedia(file: file, purpose: MediaUploadPurpose.reviewImage);
-        },
-      );
+      final batch = await ref
+          .read(mediaUploadCoordinatorProvider)
+          .uploadBatch(
+            media: _images,
+            useCase: MediaUseCase.reviewImage,
+            discardSourcesOnSuccess: false,
+          );
 
       if (!mounted) return;
 
-      final imageMediaIds = uploadedFiles
+      final imageMediaIds = batch.uploads
           .map((file) => file.mediaId.trim())
           .where((mediaId) => mediaId.isNotEmpty)
           .toList();
 
-      if (imageMediaIds.length != _images.length) {
+      if (!batch.isSuccess || imageMediaIds.length != _images.length) {
         ShowSnack(
           context,
           'Some images could not be uploaded. Please try again.',
@@ -143,6 +145,9 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
       final createState = ref.read(reviewCreateControllerProvider(widget.adId));
 
       if (success) {
+        for (final media in _images) {
+          unawaited(media.discard());
+        }
         ShowSnack(context, 'Review submitted successfully').success();
         Navigator.pop(context, true);
       } else {
@@ -182,6 +187,9 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
         _commentCtrl.text.trim().isNotEmpty;
   }
 
+  int get _maxImages =>
+      MediaPolicies.forUseCase(MediaUseCase.reviewImage).maxItems;
+
   InputDecoration _dec(BuildContext context, {required String hint}) {
     return InputDecoration(
       hintText: hint,
@@ -217,12 +225,19 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: _images.map((file) {
+      children: _images.map((media) {
         return Stack(
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.file(file, width: 80, height: 80, fit: BoxFit.cover),
+              child: Image.file(
+                media.file,
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+                cacheWidth: 240,
+                cacheHeight: 240,
+              ),
             ),
             Positioned(
               right: 2,
@@ -232,7 +247,10 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
                 shape: const CircleBorder(),
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  onTap: () => setState(() => _images.remove(file)),
+                  onTap: () {
+                    setState(() => _images.remove(media));
+                    unawaited(media.discard());
+                  },
                   child: Padding(
                     padding: const EdgeInsets.all(7),
                     child: Icon(Icons.close, size: 16, color: colors.white),
@@ -320,7 +338,7 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
                               const Icon(Icons.camera_alt_outlined),
                               const SizedBox(width: 8),
                               Text(
-                                'Add photos (${_images.length}/${ReviewMediaHelper.maxImages})',
+                                'Add photos (${_images.length}/$_maxImages)',
                                 style: context.p,
                               ),
                             ],
@@ -354,6 +372,9 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
 
   @override
   void dispose() {
+    for (final media in _images) {
+      unawaited(media.discard());
+    }
     _titleCtrl.removeListener(_refreshFormState);
     _commentCtrl.removeListener(_refreshFormState);
     _titleCtrl.dispose();

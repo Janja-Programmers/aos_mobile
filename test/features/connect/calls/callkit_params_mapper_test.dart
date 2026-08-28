@@ -19,8 +19,10 @@ void main() {
     );
 
     expect(params.extra?['call_id'], 'CALL-2026-00001');
-    expect(params.textAccept, 'Accept');
-    expect(params.textDecline, 'Decline');
+    expect(params.android?.textAccept, 'Accept');
+    expect(params.android?.textDecline, 'Decline');
+    expect(params.android?.isFullScreen, isFalse);
+    expect(params.android?.isCustomNotification, isFalse);
     expect(params.android?.ringtonePath, 'system_ringtone_default');
     expect(params.android?.incomingCallNotificationChannelName, 'AOS Calls');
     expect(params.android?.isShowFullLockedScreen, isFalse);

@@ -5,6 +5,8 @@ import 'package:africaonlinestores/features/connect/calls/application/state/call
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/session/call_control_dock.dart';
+import 'package:africaonlinestores/features/connect/calls/presentation/widgets/session/incoming_call_action_bar.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 class AudioCallView extends StatelessWidget {
@@ -39,7 +41,7 @@ class AudioCallView extends StatelessWidget {
               children: [
                 _AudioCallTopBar(
                   name: participant.displayName,
-                  statusText: _statusText(callState),
+                  statusText: _statusText(context, callState),
                   onMinimize: () => _minimize(context),
                 ),
                 Expanded(
@@ -52,9 +54,9 @@ class AudioCallView extends StatelessWidget {
                 ),
                 _VideoUpgradePrompt(callState: callState, manager: manager),
                 if (showIncomingActions)
-                  _IncomingAudioActions(
-                    onReject: manager.rejectIncomingCall,
-                    onAccept: manager.acceptIncomingCall,
+                  IncomingCallActionBar(
+                    onDecline: manager.rejectIncomingCall,
+                    onAnswer: manager.acceptIncomingCall,
                   )
                 else
                   CallControlDock(
@@ -92,7 +94,8 @@ class AudioCallView extends StatelessWidget {
     }
   }
 
-  static String _statusText(CallState state) {
+  static String _statusText(BuildContext context, CallState state) {
+    final l10n = context.l10n;
     final isActuallyInCall =
         state.uiPhase == UiCallPhase.inCall && state.hasActiveRoom;
 
@@ -100,28 +103,20 @@ class AudioCallView extends StatelessWidget {
       return _formatDuration(state.duration);
     }
 
-    switch (state.uiPhase) {
-      case UiCallPhase.outgoingStarting:
-        return 'Calling';
-      case UiCallPhase.outgoingRinging:
-        return 'Ringing';
-      case UiCallPhase.joiningRoom:
-        return 'Connecting';
-      case UiCallPhase.inCall:
-        return 'Connecting';
-      case UiCallPhase.incomingRinging:
-        return state.callMediaMode == CallMediaMode.video
-            ? 'Incoming video call'
-            : 'Incoming voice call';
-      case UiCallPhase.finished:
-        return 'Call ended';
-      case UiCallPhase.cancelled:
-        return 'Call cancelled';
-      case UiCallPhase.error:
-        return 'Call failed';
-      case UiCallPhase.idle:
-        return 'AOS Call';
-    }
+    return switch (state.uiPhase) {
+      UiCallPhase.outgoingStarting => l10n.chat_calling,
+      UiCallPhase.outgoingRinging => l10n.chat_ringing,
+      UiCallPhase.joiningRoom => l10n.chat_connecting,
+      UiCallPhase.inCall => l10n.chat_connecting,
+      UiCallPhase.incomingRinging =>
+        state.callMediaMode == CallMediaMode.video
+            ? l10n.chat_incoming_video_call
+            : l10n.chat_incoming_voice_call,
+      UiCallPhase.finished => l10n.chat_call_ended,
+      UiCallPhase.cancelled => l10n.chat_call_cancelled,
+      UiCallPhase.error => l10n.chat_call_failed,
+      UiCallPhase.idle => l10n.chat_audio_call,
+    };
   }
 
   static String _formatDuration(Duration duration) {
@@ -154,21 +149,18 @@ class _AudioCallTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-      child: SizedBox(
-        height: 78,
-        child: Stack(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 78),
+        child: Row(
           children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: _TopCircleButton(
-                icon: Icons.keyboard_arrow_down_rounded,
-                semanticLabel: 'Minimize call',
-                onTap: onMinimize,
-              ),
+            _TopCircleButton(
+              icon: Icons.keyboard_arrow_down_rounded,
+              semanticLabel: context.l10n.chat_minimize_call,
+              onTap: onMinimize,
             ),
-            Align(
+            Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 68),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -188,7 +180,7 @@ class _AudioCallTopBar extends StatelessWidget {
                     Text(
                       statusText,
                       textAlign: TextAlign.center,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.74),
@@ -201,6 +193,7 @@ class _AudioCallTopBar extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(width: 48, height: 48),
           ],
         ),
       ),
@@ -239,9 +232,9 @@ class _AudioCallBody extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: const Color(0x1AFFFFFF)),
               ),
-              child: const Text(
-                'Waiting for video...',
-                style: TextStyle(
+              child: Text(
+                context.l10n.chat_waiting_for_video,
+                style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -373,10 +366,10 @@ class _VideoUpgradePrompt extends StatelessWidget {
   Widget build(BuildContext context) {
     if (callState.hasIncomingVideoUpgradeRequest) {
       return _UpgradeCard(
-        title: 'Switch to video call?',
+        title: context.l10n.chat_switch_to_video_call,
         message: null,
-        primaryLabel: 'Switch',
-        secondaryLabel: 'Cancel',
+        primaryLabel: context.l10n.chat_switch_to_video,
+        secondaryLabel: context.l10n.chat_cancel,
         onPrimary: manager.acceptVideoUpgrade,
         onSecondary: manager.declineVideoUpgrade,
         errorMessage: callState.videoUpgradeErrorMessage,
@@ -385,7 +378,7 @@ class _VideoUpgradePrompt extends StatelessWidget {
 
     if (callState.videoUpgradeErrorMessage != null) {
       return _UpgradeCard(
-        title: 'Video upgrade failed',
+        title: context.l10n.chat_video_upgrade_failed,
         message: callState.videoUpgradeErrorMessage,
         primaryLabel: null,
         secondaryLabel: null,
@@ -497,83 +490,6 @@ class _UpgradeCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _IncomingAudioActions extends StatelessWidget {
-  final VoidCallback onReject;
-  final VoidCallback onAccept;
-
-  const _IncomingAudioActions({required this.onReject, required this.onAccept});
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      minimum: const EdgeInsets.fromLTRB(28, 0, 28, 28),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _LargeActionButton(
-            icon: Icons.call_end,
-            label: 'Decline',
-            color: const Color(0xFFE91E4D),
-            onTap: onReject,
-          ),
-          _LargeActionButton(
-            icon: Icons.call,
-            label: 'Answer',
-            color: const Color(0xFF25D366),
-            onTap: onAccept,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LargeActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _LargeActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Material(
-          color: color,
-          shape: const CircleBorder(),
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onTap,
-            child: SizedBox(
-              width: 64,
-              height: 64,
-              child: Icon(icon, color: Colors.white, size: 30),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
     );
   }
 }

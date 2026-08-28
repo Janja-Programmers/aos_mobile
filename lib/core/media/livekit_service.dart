@@ -1,3 +1,5 @@
+// ignore_for_file: experimental_member_use
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -33,6 +35,8 @@ class LiveKitService {
 
   bool _isConnecting = false;
   bool _isDisconnecting = false;
+  bool _externalCallAudioConfigured = false;
+  bool _externalCallAudioActive = false;
 
   Future<lk.Room> connect({
     required String wsUrl,
@@ -172,8 +176,59 @@ class LiveKitService {
     _emitExistingLocalVideoTrack();
   }
 
+  /// Uses LiveKit 2.10 routing so wired/Bluetooth headsets keep priority
+  /// unless the caller explicitly forces speaker output.
   Future<void> switchSpeaker(bool enabled) async {
-    await lk.Hardware.instance.setSpeakerphoneOn(enabled);
+    await lk.AudioManager.instance.setSpeakerOutputPreferred(enabled);
+  }
+
+  /// Configures LiveKit for an external telephony owner such as iOS CallKit.
+  /// `setEngineAvailability` is documented as an Apple-only no-op elsewhere,
+  /// so this remains safe for Android while Android keeps automatic routing.
+  Future<void> prepareExternalCallAudioLifecycle() async {
+    if (!_externalCallAudioConfigured) {
+      await lk.AudioManager.instance.setAudioSessionManagementMode(
+        lk.AudioSessionManagementMode.externalCallSystem,
+      );
+      _externalCallAudioConfigured = true;
+    }
+
+    if (!_externalCallAudioActive) {
+      await lk.AudioManager.instance.setEngineAvailability(
+        lk.AudioEngineAvailability.none,
+      );
+    }
+  }
+
+  /// Gates the WebRTC audio engine to CallKit's didActivate/didDeactivate
+  /// window on Apple platforms. The LiveKit API is a no-op elsewhere.
+  Future<void> setExternalCallAudioSessionActive(bool active) async {
+    if (!_externalCallAudioConfigured) {
+      await lk.AudioManager.instance.setAudioSessionManagementMode(
+        lk.AudioSessionManagementMode.externalCallSystem,
+      );
+      _externalCallAudioConfigured = true;
+    }
+
+    _externalCallAudioActive = active;
+    await lk.AudioManager.instance.setEngineAvailability(
+      active
+          ? lk.AudioEngineAvailability.defaultAvailability
+          : lk.AudioEngineAvailability.none,
+    );
+  }
+
+  Future<void> restoreAutomaticAudioLifecycle() async {
+    if (!_externalCallAudioConfigured) return;
+
+    _externalCallAudioActive = false;
+    await lk.AudioManager.instance.setEngineAvailability(
+      lk.AudioEngineAvailability.defaultAvailability,
+    );
+    await lk.AudioManager.instance.setAudioSessionManagementMode(
+      lk.AudioSessionManagementMode.automatic,
+    );
+    _externalCallAudioConfigured = false;
   }
 
   Future<bool> switchCamera() async {
@@ -318,6 +373,7 @@ class LiveKitService {
 
   Future<void> dispose() async {
     await disconnect(silent: true);
+    await restoreAutomaticAudioLifecycle();
     await _controller.close();
   }
 }

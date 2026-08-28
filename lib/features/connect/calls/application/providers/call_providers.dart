@@ -9,6 +9,7 @@ import 'package:africaonlinestores/features/connect/calls/application/services/c
 import 'package:africaonlinestores/features/connect/calls/application/services/call_media_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_signaling_handler.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/call_starter_service.dart';
+import 'package:africaonlinestores/features/connect/calls/application/services/callkit_recovery_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/incoming_call_bootstrapper.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/missed_call_callback_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
@@ -17,6 +18,7 @@ import 'package:africaonlinestores/features/connect/calls/integrations/socket_ca
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_action_handler.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_params_mapper.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_service.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/pending_callkit_action_replayer.dart';
 import 'package:africaonlinestores/features/connect/calls/repository/call_repository_impl.dart';
 import 'package:africaonlinestores/features/connect/calls/utils/call_timer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -107,6 +109,9 @@ final callKitServiceProvider = Provider<CallKitService>((ref) {
   final service = CallKitService(
     actionHandler: actionHandler,
     paramsMapper: paramsMapper,
+    onAudioSessionChanged: ref
+        .read(callMediaServiceProvider)
+        .handleExternalAudioSessionChanged,
   );
 
   unawaited(service.init());
@@ -114,6 +119,19 @@ final callKitServiceProvider = Provider<CallKitService>((ref) {
   ref.onDispose(service.dispose);
 
   return service;
+});
+
+final pendingCallKitActionReplayerProvider =
+    Provider<PendingCallKitActionReplayer>((ref) {
+      return PendingCallKitActionReplayer(
+        actionHandler: ref.read(callKitActionHandlerProvider),
+      );
+    });
+final callKitRecoveryServiceProvider = Provider<CallKitRecoveryService>((ref) {
+  return CallKitRecoveryService(
+    actionReplayer: ref.read(pendingCallKitActionReplayerProvider),
+    incomingCallBootstrapper: ref.read(incomingCallBootstrapperProvider),
+  );
 });
 
 final callAudioFeedbackServiceProvider = Provider<CallAudioFeedbackService>((

@@ -1634,4 +1634,52 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sellerBannerRemoved => 'تمت إزالة لافتة المتجر.';
+
+  @override
+  String get chat_answer_call => 'رد';
+
+  @override
+  String get chat_decline_call => 'رفض';
+
+  @override
+  String get chat_incoming_voice_call => 'مكالمة صوتية واردة';
+
+  @override
+  String get chat_incoming_video_call => 'مكالمة فيديو واردة';
+
+  @override
+  String get chat_minimize_call => 'تصغير المكالمة';
+
+  @override
+  String get chat_call_ended => 'انتهت المكالمة';
+
+  @override
+  String get chat_call_cancelled => 'أُلغيت المكالمة';
+
+  @override
+  String get chat_call_failed => 'فشلت المكالمة';
+
+  @override
+  String get chat_waiting_for_video => 'في انتظار الفيديو…';
+
+  @override
+  String get chat_waiting_for_connection => 'في انتظار الاتصال…';
+
+  @override
+  String get chat_camera_starting => 'جارٍ تشغيل الكاميرا…';
+
+  @override
+  String get chat_camera_off => 'الكاميرا متوقفة';
+
+  @override
+  String get chat_switch_camera => 'تبديل الكاميرا';
+
+  @override
+  String get chat_switch_to_video_call => 'التبديل إلى مكالمة فيديو؟';
+
+  @override
+  String get chat_switch_to_video => 'التبديل إلى الفيديو';
+
+  @override
+  String get chat_video_upgrade_failed => 'فشل التبديل إلى الفيديو';
 }

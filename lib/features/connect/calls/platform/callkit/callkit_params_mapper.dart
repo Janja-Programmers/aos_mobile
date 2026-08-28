@@ -31,8 +31,6 @@ class CallKitParamsMapper {
       avatar: callerAvatar,
       type: isVideo ? 1 : 0,
       duration: 30000,
-      textAccept: 'Accept',
-      textDecline: 'Decline',
       // The backend owns persistent missed-call notifications and their
       // callback action. Disable the plugin's duplicate notification so there
       // is one callback owner and one canonical caller identity path.
@@ -53,9 +51,12 @@ class CallKitParamsMapper {
         'room_name': cleanRoomName,
       },
       android: const AndroidParams(
-        isCustomNotification: true,
+        isCustomNotification: false,
         isShowLogo: false,
         isShowCallID: false,
+        textAccept: 'Accept',
+        textDecline: 'Decline',
+        isFullScreen: false,
         // Play policy: AOS uses the incoming-call notification surface
         // rather than privileged full-screen intent.
         isShowFullLockedScreen: false,
@@ -68,6 +69,7 @@ class CallKitParamsMapper {
         missedCallNotificationChannelName: 'Missed Calls',
       ),
       ios: IOSParams(
+        iconName: 'CallKitLogo',
         handleType: 'generic',
         supportsVideo: isVideo,
         maximumCallGroups: 1,
@@ -102,8 +104,6 @@ class CallKitParamsMapper {
       avatar: receiverAvatar,
       type: isVideo ? 1 : 0,
       duration: 30000,
-      textAccept: 'Accept',
-      textDecline: 'Decline',
       callingNotification: const NotificationParams(
         showNotification: true,
         isShowCallback: true,
@@ -121,9 +121,13 @@ class CallKitParamsMapper {
         'receiver_avatar': receiverAvatar,
       },
       android: const AndroidParams(
-        isCustomNotification: true,
+        isCustomNotification: false,
         isShowLogo: false,
         isShowCallID: false,
+        textAccept: 'Accept',
+        textDecline: 'Decline',
+        isFullScreen: false,
+        isShowFullLockedScreen: false,
         isImportant: true,
         ringtonePath: 'system_ringtone_default',
         backgroundColor: '#FFFFFF',
@@ -133,6 +137,7 @@ class CallKitParamsMapper {
         missedCallNotificationChannelName: 'Missed Calls',
       ),
       ios: IOSParams(
+        iconName: 'CallKitLogo',
         handleType: 'generic',
         supportsVideo: isVideo,
         maximumCallGroups: 1,

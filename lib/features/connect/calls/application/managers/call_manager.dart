@@ -408,17 +408,24 @@ class CallManager extends StateNotifier<CallState> {
   }
 
   Future<bool> ensureIncomingCallHydrated({required String callId}) async {
+    return await ensureIncomingCallHydrationOutcome(callId: callId) ==
+        IncomingCallHydrationOutcome.hydrated;
+  }
+
+  Future<IncomingCallHydrationOutcome> ensureIncomingCallHydrationOutcome({
+    required String callId,
+  }) async {
     final normalizedCallId = callId.trim();
     appLogger.i(
       '📞 Incoming call hydration requested (callId=$normalizedCallId)',
     );
 
     if (normalizedCallId.isEmpty) {
-      return false;
+      return IncomingCallHydrationOutcome.unavailable;
     }
 
     if (state.isCallInProgress && state.activeCall?.id != normalizedCallId) {
-      return false;
+      return IncomingCallHydrationOutcome.conflict;
     }
 
     try {
@@ -428,12 +435,20 @@ class CallManager extends StateNotifier<CallState> {
 
       final backendStatus = _parseBackendStatus(statusPayload['status']);
 
-      if (backendStatus == null || _isTerminalStatus(backendStatus)) {
-        appLogger.i(
-          '📞 Incoming call hydration ignored because backend is not actionable '
-          '(callId=$normalizedCallId, status=${statusPayload['status'] ?? 'unknown'})',
+      if (backendStatus == null) {
+        appLogger.w(
+          '📞 Incoming call hydration could not resolve backend status '
+          '(callId=$normalizedCallId)',
         );
-        return false;
+        return IncomingCallHydrationOutcome.unavailable;
+      }
+
+      if (_isTerminalStatus(backendStatus)) {
+        appLogger.i(
+          '📞 Incoming call hydration found terminal backend state '
+          '(callId=$normalizedCallId, status=${backendStatus.name})',
+        );
+        return IncomingCallHydrationOutcome.terminal;
       }
 
       final callType = _parseCallType(statusPayload['call_type']);
@@ -487,14 +502,14 @@ class CallManager extends StateNotifier<CallState> {
         '📞 Incoming call hydration completed '
         '(callId=$normalizedCallId, status=${backendStatus.name})',
       );
-      return true;
+      return IncomingCallHydrationOutcome.hydrated;
     } catch (error, stackTrace) {
       appLogger.e(
         '📞 Incoming call hydration failed (callId=$normalizedCallId)',
         error: error,
         stackTrace: stackTrace,
       );
-      return false;
+      return IncomingCallHydrationOutcome.unavailable;
     }
   }
 
@@ -513,6 +528,7 @@ class CallManager extends StateNotifier<CallState> {
     appLogger.i('📞 Incoming call accept started (callId=$callId)');
 
     var backendAccepted = false;
+    var mediaPrepared = false;
 
     try {
       state = state.copyWith(isBusy: true, clearErrorMessage: true);
@@ -544,6 +560,7 @@ class CallManager extends StateNotifier<CallState> {
       await mediaService.prepareForCall(
         isVideo: activeIncomingCall.callType == AOSCallType.video,
       );
+      mediaPrepared = true;
 
       final ongoingCall = await repository.acceptCall(callId: callId);
       backendAccepted = true;
@@ -573,11 +590,17 @@ class CallManager extends StateNotifier<CallState> {
         hasIncomingCallUi: false,
       );
 
-      await _joinRoomInternal(mergedCall);
+      await _joinRoomInternal(
+        mergedCall,
+        permissionsAlreadyPrepared: mediaPrepared,
+      );
 
       state = state.copyWith(isBusy: false);
     } catch (e) {
-      final joinedExisting = await _joinAlreadyOngoingIncomingCall(callId);
+      final joinedExisting = await _joinAlreadyOngoingIncomingCall(
+        callId,
+        permissionsAlreadyPrepared: mediaPrepared,
+      );
       if (joinedExisting) {
         state = state.copyWith(isBusy: false);
         return;
@@ -715,7 +738,10 @@ class CallManager extends StateNotifier<CallState> {
     );
   }
 
-  Future<bool> _joinAlreadyOngoingIncomingCall(String callId) async {
+  Future<bool> _joinAlreadyOngoingIncomingCall(
+    String callId, {
+    bool permissionsAlreadyPrepared = false,
+  }) async {
     final backendStatus = await _readBackendStatus(callId);
     if (backendStatus != BackendCallStatus.ongoing) {
       return false;
@@ -743,7 +769,10 @@ class CallManager extends StateNotifier<CallState> {
         hasIncomingCallUi: false,
       );
 
-      await _joinRoomInternal(mergedCall);
+      await _joinRoomInternal(
+        mergedCall,
+        permissionsAlreadyPrepared: permissionsAlreadyPrepared,
+      );
       return true;
     } catch (_) {
       return false;
@@ -927,7 +956,10 @@ class CallManager extends StateNotifier<CallState> {
   }
 
   // ================= ROOM =================
-  Future<void> _joinRoomInternal(Call call) async {
+  Future<void> _joinRoomInternal(
+    Call call, {
+    bool permissionsAlreadyPrepared = false,
+  }) async {
     if (_isJoining || state.hasActiveRoom) return;
 
     if (call.wsUrl.isEmpty || call.token.isEmpty) {
@@ -947,6 +979,7 @@ class CallManager extends StateNotifier<CallState> {
         wsUrl: call.wsUrl,
         token: call.token,
         isVideo: call.callType == AOSCallType.video,
+        permissionsAlreadyPrepared: permissionsAlreadyPrepared,
       );
 
       final activeCallId = state.activeCall?.id;

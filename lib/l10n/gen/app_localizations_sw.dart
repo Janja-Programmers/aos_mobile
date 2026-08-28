@@ -1671,4 +1671,53 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get sellerBannerRemoved => 'Bango la duka limeondolewa.';
+
+  @override
+  String get chat_answer_call => 'Jibu';
+
+  @override
+  String get chat_decline_call => 'Kataa';
+
+  @override
+  String get chat_incoming_voice_call => 'Simu ya sauti inayoingia';
+
+  @override
+  String get chat_incoming_video_call => 'Simu ya video inayoingia';
+
+  @override
+  String get chat_minimize_call => 'Punguza simu';
+
+  @override
+  String get chat_call_ended => 'Simu imeisha';
+
+  @override
+  String get chat_call_cancelled => 'Simu imeghairiwa';
+
+  @override
+  String get chat_call_failed => 'Simu imeshindikana';
+
+  @override
+  String get chat_waiting_for_video => 'Inasubiri video…';
+
+  @override
+  String get chat_waiting_for_connection => 'Inasubiri muunganisho…';
+
+  @override
+  String get chat_camera_starting => 'Kamera inaanza…';
+
+  @override
+  String get chat_camera_off => 'Kamera imezimwa';
+
+  @override
+  String get chat_switch_camera => 'Badilisha kamera';
+
+  @override
+  String get chat_switch_to_video_call => 'Badilisha kuwa simu ya video?';
+
+  @override
+  String get chat_switch_to_video => 'Badilisha kuwa video';
+
+  @override
+  String get chat_video_upgrade_failed =>
+      'Kubadilisha kuwa video kumeshindikana';
 }

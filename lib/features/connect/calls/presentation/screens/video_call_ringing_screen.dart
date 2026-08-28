@@ -2,6 +2,8 @@ import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/screens/video_call_screen.dart';
+import 'package:africaonlinestores/features/connect/calls/presentation/widgets/session/incoming_call_action_bar.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,7 +26,7 @@ class _VideoRingingScreenState extends ConsumerState<VideoRingingScreen> {
 
       final state = ref.read(callManagerProvider);
 
-      if (state.direction == 'outgoing' || state.direction == 'incoming') {
+      if (state.direction == 'outgoing') {
         _callManager.startLocalVideoPreview();
       }
     });
@@ -52,42 +54,13 @@ class _VideoRingingScreenState extends ConsumerState<VideoRingingScreen> {
           bottom: 40,
           child: SafeArea(
             child: isIncoming
-                ? _IncomingVideoActions(
-                    onAccept: _callManager.acceptIncomingCall,
-                    onReject: _callManager.rejectIncomingCall,
+                ? IncomingCallActionBar(
+                    onAnswer: _callManager.acceptIncomingCall,
+                    onDecline: _callManager.rejectIncomingCall,
+                    answerWithVideo: true,
                   )
                 : _OutgoingVideoActions(onCancel: _callManager.endCurrentCall),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _IncomingVideoActions extends StatelessWidget {
-  final VoidCallback onAccept;
-  final VoidCallback onReject;
-
-  const _IncomingVideoActions({required this.onAccept, required this.onReject});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _CallActionButton(
-          icon: Icons.call_end,
-          label: 'Decline',
-          color: colors.primary,
-          onTap: onReject,
-        ),
-        _CallActionButton(
-          icon: Icons.videocam,
-          label: 'Accept',
-          color: colors.success,
-          onTap: onAccept,
         ),
       ],
     );
@@ -106,7 +79,7 @@ class _OutgoingVideoActions extends StatelessWidget {
     return Center(
       child: _CallActionButton(
         icon: Icons.call_end,
-        label: 'Cancel',
+        label: context.l10n.chat_cancel,
         color: colors.primary,
         onTap: onCancel,
       ),

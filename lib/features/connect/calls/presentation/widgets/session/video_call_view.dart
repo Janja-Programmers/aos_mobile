@@ -6,6 +6,7 @@ import 'package:africaonlinestores/features/connect/calls/application/state/call
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/session/call_control_dock.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 
@@ -73,7 +74,7 @@ class _VideoCallViewState extends State<VideoCallView> {
                   top: 0,
                   child: _VideoCallTopBar(
                     name: widget.participant.displayName,
-                    statusText: _statusText(widget.callState),
+                    statusText: _statusText(context, widget.callState),
                     onMinimize: () => _minimize(context),
                   ),
                 ),
@@ -209,11 +210,16 @@ class _VideoCallViewState extends State<VideoCallView> {
     required bool hasLocalVideo,
     required bool hasRemoteVideo,
   }) {
+    final l10n = context.l10n;
     if (hasRemoteVideo) return '';
-    if (hasLocalVideo) return 'Waiting for video...';
-    if (!widget.callState.hasActiveRoom) return 'Waiting for connection...';
-    if (widget.callState.isLocalVideoEnabled) return 'Camera is starting...';
-    return 'Camera is off';
+    if (hasLocalVideo) return l10n.chat_waiting_for_video;
+    if (!widget.callState.hasActiveRoom) {
+      return l10n.chat_waiting_for_connection;
+    }
+    if (widget.callState.isLocalVideoEnabled) {
+      return l10n.chat_camera_starting;
+    }
+    return l10n.chat_camera_off;
   }
 
   static void _minimize(BuildContext context) {
@@ -223,7 +229,8 @@ class _VideoCallViewState extends State<VideoCallView> {
     }
   }
 
-  static String _statusText(CallState state) {
+  static String _statusText(BuildContext context, CallState state) {
+    final l10n = context.l10n;
     final isActuallyInCall =
         state.uiPhase == UiCallPhase.inCall && state.hasActiveRoom;
 
@@ -231,26 +238,17 @@ class _VideoCallViewState extends State<VideoCallView> {
       return _formatDuration(state.duration);
     }
 
-    switch (state.uiPhase) {
-      case UiCallPhase.outgoingStarting:
-        return 'Calling';
-      case UiCallPhase.outgoingRinging:
-        return 'Ringing';
-      case UiCallPhase.joiningRoom:
-        return 'Connecting';
-      case UiCallPhase.inCall:
-        return 'Connecting';
-      case UiCallPhase.incomingRinging:
-        return 'Incoming video call';
-      case UiCallPhase.finished:
-        return 'Call ended';
-      case UiCallPhase.cancelled:
-        return 'Call cancelled';
-      case UiCallPhase.error:
-        return 'Call failed';
-      case UiCallPhase.idle:
-        return 'AOS Video Call';
-    }
+    return switch (state.uiPhase) {
+      UiCallPhase.outgoingStarting => l10n.chat_calling,
+      UiCallPhase.outgoingRinging => l10n.chat_ringing,
+      UiCallPhase.joiningRoom => l10n.chat_connecting,
+      UiCallPhase.inCall => l10n.chat_connecting,
+      UiCallPhase.incomingRinging => l10n.chat_incoming_video_call,
+      UiCallPhase.finished => l10n.chat_call_ended,
+      UiCallPhase.cancelled => l10n.chat_call_cancelled,
+      UiCallPhase.error => l10n.chat_call_failed,
+      UiCallPhase.idle => l10n.chat_video_call,
+    };
   }
 
   static String _formatDuration(Duration duration) {
@@ -540,22 +538,19 @@ class _VideoCallTopBar extends StatelessWidget {
     final colors = context.appColors;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 72, 0),
-      child: SizedBox(
-        height: 76,
-        child: Stack(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 76),
+        child: Row(
           children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: _RoundVideoButton(
-                icon: Icons.keyboard_arrow_down_rounded,
-                semanticLabel: 'Minimize call',
-                onTap: onMinimize,
-              ),
+            _RoundVideoButton(
+              icon: Icons.keyboard_arrow_down_rounded,
+              semanticLabel: context.l10n.chat_minimize_call,
+              onTap: onMinimize,
             ),
-            Align(
+            Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(left: 58),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -581,7 +576,7 @@ class _VideoCallTopBar extends StatelessWidget {
                     Text(
                       statusText,
                       textAlign: TextAlign.center,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: colors.white.withValues(alpha: 0.82),
@@ -600,6 +595,7 @@ class _VideoCallTopBar extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(width: 48, height: 48),
           ],
         ),
       ),
@@ -620,7 +616,7 @@ class _SwitchCameraButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return _RoundVideoButton(
       icon: Icons.cameraswitch_rounded,
-      semanticLabel: 'Switch camera',
+      semanticLabel: context.l10n.chat_switch_camera,
       onTap: canSwitchCamera ? onSwitchCamera : null,
     );
   }

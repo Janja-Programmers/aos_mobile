@@ -1663,4 +1663,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sellerBannerRemoved => 'Store banner removed.';
+
+  @override
+  String get chat_answer_call => 'Answer';
+
+  @override
+  String get chat_decline_call => 'Decline';
+
+  @override
+  String get chat_incoming_voice_call => 'Incoming voice call';
+
+  @override
+  String get chat_incoming_video_call => 'Incoming video call';
+
+  @override
+  String get chat_minimize_call => 'Minimize call';
+
+  @override
+  String get chat_call_ended => 'Call ended';
+
+  @override
+  String get chat_call_cancelled => 'Call cancelled';
+
+  @override
+  String get chat_call_failed => 'Call failed';
+
+  @override
+  String get chat_waiting_for_video => 'Waiting for video…';
+
+  @override
+  String get chat_waiting_for_connection => 'Waiting for connection…';
+
+  @override
+  String get chat_camera_starting => 'Camera is starting…';
+
+  @override
+  String get chat_camera_off => 'Camera is off';
+
+  @override
+  String get chat_switch_camera => 'Switch camera';
+
+  @override
+  String get chat_switch_to_video_call => 'Switch to video call?';
+
+  @override
+  String get chat_switch_to_video => 'Switch';
+
+  @override
+  String get chat_video_upgrade_failed => 'Video upgrade failed';
 }

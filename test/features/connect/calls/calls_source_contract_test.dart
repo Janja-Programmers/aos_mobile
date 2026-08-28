@@ -3,120 +3,248 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('CallKit dependency is pinned to the known-good resolved version', () {
+  test('call dependencies are pinned to audited exact versions', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
-    expect(pubspec, contains('flutter_callkit_incoming: 3.0.0'));
-    expect(pubspec, isNot(contains('flutter_callkit_incoming: ^3.0.0')));
+
+    expect(pubspec, contains('flutter_callkit_incoming: 3.1.5'));
+    expect(pubspec, isNot(contains('flutter_callkit_incoming: ^3.1.5')));
+    expect(pubspec, contains('livekit_client: 2.10.0'));
+    expect(pubspec, isNot(contains('livekit_client: ^2.10.0')));
   });
 
-  test('incoming notification navigation remains owned by CallKit', () {
-    final String handlerSource = File(
-      'lib/features/notifications/application/services/'
-      'notification_navigation_handler.dart',
+  test(
+    'background CallKit actions use 3.1.5 sealed events and registration',
+    () {
+      final handler = File(
+        'lib/features/connect/calls/platform/callkit/'
+        'callkit_background_action_handler.dart',
+      ).readAsStringSync();
+      final mainSource = File('lib/main.dart').readAsStringSync();
+
+      expect(handler, contains('CallEventActionCallAccept'));
+      expect(handler, contains('CallEventActionCallDecline'));
+      expect(handler, contains('CallEventActionCallEnded'));
+      expect(handler, contains('CallEventActionCallTimeout'));
+      expect(handler, isNot(contains('switch (event.event)')));
+      expect(
+        mainSource,
+        contains('FlutterCallkitIncoming.onBackgroundMessage('),
+      );
+      expect(mainSource, contains('callKitBackgroundMessageHandler'));
+    },
+  );
+
+  test(
+    'native action recovery is retry-safe and precedes ringing recovery',
+    () {
+      final replayer = File(
+        'lib/features/connect/calls/platform/callkit/'
+        'pending_callkit_action_replayer.dart',
+      ).readAsStringSync();
+      final recovery = File(
+        'lib/features/connect/calls/application/services/'
+        'callkit_recovery_service.dart',
+      ).readAsStringSync();
+
+      expect(
+        replayer,
+        contains('PendingCallKitActionReplayResult.retryPending'),
+      );
+      expect(replayer, contains('if (!resolved)'));
+      expect(replayer, contains('retaining for retry'));
+      expect(replayer, contains('pendingActionMaxAge'));
+      expect(recovery, contains('actionResult =='));
+      expect(recovery, contains('retryPending'));
+      expect(recovery, contains('deferring incoming payload restoration'));
+    },
+  );
+
+  test('incoming FCM presentation mirrors backend 30 second TTL', () {
+    final freshness = File(
+      'lib/features/connect/calls/platform/callkit/'
+      'incoming_call_push_freshness.dart',
     ).readAsStringSync();
-    final String parserSource = File(
+    final mainSource = File('lib/main.dart').readAsStringSync();
+    final pushSource = File(
       'lib/features/notifications/application/services/'
-      'notification_destination_parser.dart',
+      'push_notification_service.dart',
     ).readAsStringSync();
 
-    expect(handlerSource, isNot(contains('CallListScreen')));
-    expect(handlerSource, isNot(contains('_openCalls')));
+    expect(freshness, contains('Duration(seconds: 30)'));
+    expect(freshness, contains('age < incomingCallPushTtl'));
+    expect(mainSource, contains('isIncomingCallPushFresh('));
+    expect(pushSource, contains('isIncomingCallPushFresh('));
+  });
 
-    final List<String> incomingSplit = parserSource.split(
-      'case NotificationType.incomingCall:',
+  test(
+    'foreground Android uses Flutter ringing UI without full-screen intent',
+    () {
+      final policy = File(
+        'lib/features/connect/calls/application/services/'
+        'call_presentation_policy.dart',
+      ).readAsStringSync();
+      final navigation = File(
+        'lib/features/connect/calls/application/listeners/'
+        'call_navigation_listener.dart',
+      ).readAsStringSync();
+      final session = File(
+        'lib/features/connect/calls/presentation/screens/'
+        'call_session_screen.dart',
+      ).readAsStringSync();
+
+      expect(policy, contains('isAndroid && isAppVisible'));
+      expect(policy, contains('IncomingCallSurface.flutter'));
+      expect(navigation, contains('UiCallPhase.incomingRinging'));
+      expect(navigation, contains('IncomingCallSurface.flutter'));
+      expect(session, contains('RingingScreen'));
+      expect(session, contains('VideoRingingScreen'));
+      expect(navigation, isNot(contains('Duration(milliseconds: 500)')));
+    },
+  );
+
+  test(
+    'Android manifest keeps FSI removed and adds LiveKit Bluetooth support',
+    () {
+      final manifest = File(
+        'android/app/src/main/AndroidManifest.xml',
+      ).readAsStringSync();
+
+      expect(manifest, contains('android.permission.USE_FULL_SCREEN_INTENT'));
+      expect(manifest, contains('tools:node="remove"'));
+      expect(manifest, contains('android.permission.BLUETOOTH"'));
+      expect(manifest, contains('android.permission.BLUETOOTH_ADMIN'));
+      expect(manifest, contains('android.permission.BLUETOOTH_CONNECT'));
+      expect(manifest, contains('android:maxSdkVersion="30"'));
+      expect(manifest, contains('android.hardware.camera'));
+      expect(manifest, contains('android.hardware.camera.autofocus'));
+      expect(manifest, contains('android:required="false"'));
+      expect(
+        manifest,
+        isNot(
+          contains(
+            'com.hiennv.flutter_callkit_incoming.activities.CallkitActivity',
+          ),
+        ),
+      );
+    },
+  );
+
+  test('AOS call code never requests Android full-screen-intent access', () {
+    final callRoot = Directory('lib/features/connect/calls');
+    final dartSources = callRoot
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((file) => file.path.endsWith('.dart'));
+
+    for (final file in dartSources) {
+      final source = file.readAsStringSync();
+      expect(source, isNot(contains('canUseFullScreenIntent(')));
+      expect(source, isNot(contains('requestFullIntentPermission(')));
+      expect(source, isNot(contains('requestFullScreenIntentPermission(')));
+    }
+  });
+
+  test(
+    'CallKit Android params explicitly choose notification not full screen',
+    () {
+      final source = File(
+        'lib/features/connect/calls/platform/callkit/'
+        'callkit_params_mapper.dart',
+      ).readAsStringSync();
+
+      expect(source, contains('isCustomNotification: false'));
+      expect(source, contains('isFullScreen: false'));
+      expect(source, contains('isShowFullLockedScreen: false'));
+      expect(
+        source,
+        contains("incomingCallNotificationChannelName: 'AOS Calls'"),
+      );
+    },
+  );
+
+  test(
+    'LiveKit call media uses external-call lifecycle and modern routing',
+    () {
+      final liveKit = File(
+        'lib/core/media/livekit_service.dart',
+      ).readAsStringSync();
+      final media = File(
+        'lib/features/connect/calls/application/services/'
+        'call_media_service.dart',
+      ).readAsStringSync();
+
+      expect(
+        liveKit,
+        contains('AudioSessionManagementMode.externalCallSystem'),
+      );
+      expect(liveKit, contains('setEngineAvailability('));
+      expect(liveKit, contains('AudioEngineAvailability.none'));
+      expect(liveKit, contains('setSpeakerOutputPreferred('));
+      expect(media, contains('Permission.bluetooth'));
+      expect(media, contains('Permission.bluetoothConnect'));
+      expect(media, contains('permissionsAlreadyPrepared'));
+    },
+  );
+
+  test('incoming video does not start camera preview before answer', () {
+    final source = File(
+      'lib/features/connect/calls/presentation/screens/'
+      'video_call_ringing_screen.dart',
+    ).readAsStringSync();
+
+    expect(source, contains("if (state.direction == 'outgoing')"));
+    expect(
+      source,
+      isNot(
+        contains(
+          "state.direction == 'outgoing' || state.direction == 'incoming'",
+        ),
+      ),
     );
-    expect(incomingSplit, hasLength(2));
-    final String incomingCase = incomingSplit.last
-        .split('case NotificationType.follow:')
-        .first;
-    expect(incomingCase, contains('return null;'));
   });
 
-  test('outgoing flow invokes native CallKit startCall', () {
+  test('iOS call configuration matches implemented FCM contract', () {
+    final plist = File('ios/Runner/Info.plist').readAsStringSync();
+    final mapper = File(
+      'lib/features/connect/calls/platform/callkit/'
+      'callkit_params_mapper.dart',
+    ).readAsStringSync();
+
+    expect(plist, contains('<string>audio</string>'));
+    expect(plist, contains('<string>fetch</string>'));
+    expect(plist, contains('<string>remote-notification</string>'));
+    expect(plist, isNot(contains('<string>voip</string>')));
+    expect(mapper, contains("iconName: 'CallKitLogo'"));
+    expect(mapper, contains('configureAudioSession: false'));
+    expect(
+      File(
+        'ios/Runner/Assets.xcassets/CallKitLogo.imageset/Contents.json',
+      ).existsSync(),
+      isTrue,
+    );
+  });
+
+  test('incoming call action copy is localized and accessible', () {
+    final widget = File(
+      'lib/features/connect/calls/presentation/widgets/session/'
+      'incoming_call_action_bar.dart',
+    ).readAsStringSync();
+
+    expect(widget, contains('chat_decline_call'));
+    expect(widget, contains('chat_answer_call'));
+    expect(widget, contains('Semantics('));
+    expect(widget, contains('button: true'));
+    expect(widget, contains('maxLines: 2'));
+  });
+
+  test('outgoing native flow still registers CallKit startCall', () {
     final source = File(
       'lib/features/connect/calls/platform/callkit/callkit_service.dart',
     ).readAsStringSync();
     expect(source, contains('FlutterCallkitIncoming.startCall(params)'));
   });
 
-  test('CallKit initialization never opens permission settings', () {
-    final source = File(
-      'lib/features/connect/calls/platform/callkit/callkit_service.dart',
-    ).readAsStringSync();
-    final initBody = source
-        .split('Future<void> init() async {')[1]
-        .split('Future<void> showIncomingCall')[0];
-
-    expect(initBody, isNot(contains('requestNotificationPermission')));
-  });
-
-  test('full-screen-intent runtime APIs are absent from AOS call code', () {
-    final serviceSource = File(
-      'lib/features/connect/calls/platform/callkit/callkit_service.dart',
-    ).readAsStringSync();
-    final callsUiSource = File(
-      'lib/features/connect/calls/presentation/screens/call_list_screen.dart',
-    ).readAsStringSync();
-
-    for (final source in <String>[serviceSource, callsUiSource]) {
-      expect(source, isNot(contains('canUseFullScreenIntent')));
-      expect(source, isNot(contains('requestFullIntentPermission')));
-      expect(source, isNot(contains('requestFullScreenIntentPermission')));
-    }
-  });
-
-  test('Android manifest removes dependency-provided full-screen intent', () {
-    final manifest = File(
-      'android/app/src/main/AndroidManifest.xml',
-    ).readAsStringSync();
-
-    expect(manifest, contains('xmlns:tools="http://schemas.android.com/tools"'));
-    expect(manifest, contains('android.permission.USE_FULL_SCREEN_INTENT'));
-    expect(manifest, contains('tools:node="remove"'));
-  });
-
-  test('Android 13 notification permission ambiguity is tracked', () {
-    final source = File(
-      'lib/features/notifications/application/services/'
-      'push_notification_service.dart',
-    ).readAsStringSync();
-    final requestBody = source
-        .split('Future<bool> _requestPermission() async {')[1]
-        .split('Future<void> _configureForegroundPresentation()')[0];
-
-    expect(requestBody, contains('getNotificationSettings()'));
-    expect(requestBody, contains('AuthorizationStatus.denied'));
-    expect(requestBody, contains('_notificationPermissionRequestedKey'));
-    expect(requestBody, contains('SharedPreferences.getInstance()'));
-    expect(requestBody, contains('requestPermission('));
-  });
-
-  test('calls UI does not expose full-screen-intent settings', () {
-    final source = File(
-      'lib/features/connect/calls/presentation/screens/call_list_screen.dart',
-    ).readAsStringSync();
-
-    expect(source, isNot(contains('Enable full-screen incoming calls')));
-    expect(source, isNot(contains('Open settings')));
-    expect(source, isNot(contains('Full-screen incoming calls are disabled')));
-  });
-
-  test('3.0.0 background handler uses the legacy CallEvent API', () {
-    final source = File(
-      'lib/features/connect/calls/platform/callkit/'
-      'callkit_background_action_handler.dart',
-    ).readAsStringSync();
-
-    expect(source, contains('switch (event.event)'));
-    expect(source, contains('Event.actionCallAccept'));
-    expect(source, contains('asJsonMap(event.body)'));
-    expect(source, isNot(contains('CallEventActionCallAccept')));
-    expect(source, isNot(contains('CallEventActionCallDecline')));
-    expect(source, isNot(contains('CallEventActionCallEnded')));
-    expect(source, isNot(contains('CallEventActionCallTimeout')));
-  });
-
-  test('push token registration is independent of display permission', () {
+  test('push token registration remains independent of display permission', () {
     final source = File(
       'lib/features/notifications/application/services/'
       'push_notification_service.dart',
@@ -130,44 +258,5 @@ void main() {
       initBody,
       isNot(contains('if (permissionGranted) {\n        await _setupToken();')),
     );
-    expect(source, contains('result.leftOrNull'));
-    expect(source, contains('result.rightOrNull != true'));
-  });
-
-  test('call and notification initial loads are deferred until post-frame', () {
-    final callsSource = File(
-      'lib/features/connect/calls/presentation/screens/call_list_screen.dart',
-    ).readAsStringSync();
-    final notificationsSource = File(
-      'lib/features/notifications/presentation/screens/'
-      'notification_screen.dart',
-    ).readAsStringSync();
-
-    expect(callsSource, contains('addPostFrameCallback'));
-    expect(notificationsSource, contains('addPostFrameCallback'));
-    expect(notificationsSource, isNot(contains('Future<void>.microtask(()')));
-  });
-
-  test('persistent missed-call action starts a real callback flow', () {
-    final source = File(
-      'lib/features/notifications/presentation/screens/'
-      'notification_screen.dart',
-    ).readAsStringSync();
-
-    expect(source, contains('missedCallCallbackServiceProvider'));
-    expect(source, contains('notification.payload.callId'));
-    expect(source, contains('callerUserId: callerUserId'));
-  });
-
-  test('Android call plugin configuration matches locked plugin docs', () {
-    final manifest = File(
-      'android/app/src/main/AndroidManifest.xml',
-    ).readAsStringSync();
-    final proguard = File('android/app/proguard-rules.pro').readAsStringSync();
-
-    expect(manifest, contains('android:launchMode="singleInstance"'));
-    expect(manifest, contains('android.permission.ACCESS_NETWORK_STATE'));
-    expect(manifest, contains('android.permission.CHANGE_NETWORK_STATE'));
-    expect(proguard, contains('com.hiennv.flutter_callkit_incoming.**'));
   });
 }

@@ -2,77 +2,101 @@
 
 ## Status
 
-The validated Android flows are working for foreground incoming calls, resident-background incoming calls, native Accept, missed calls, callback, LiveKit media, and normal end-call cleanup.
+**Implementation classification: Needs device validation.**
 
-This hardening pass addresses the remaining lifecycle issues found during device testing:
+The Flutter integration has been hardened for Android foreground/background incoming-call presentation, native action recovery, LiveKit 2.10 audio lifecycle coordination, Bluetooth routing prerequisites, localization, accessibility, and stale-push protection. The backend remains authoritative for call lifecycle and media credentials.
 
-- the brief Home flash between native Accept and `CallSessionScreen`;
-- duplicate incoming-call hydration;
-- duplicate microphone permission checks;
-- duplicate native CallKit presentation after recovery;
-- delayed/stale terminated-state incoming payloads;
-- native Accept actions received before the normal Dart listener is ready;
-- insufficient lifecycle and timing diagnostics.
-
-The new terminated-state recovery path requires device revalidation before the feature is classified as fully production-validated.
+The remaining acceptance gate is real-device validation using [`device-test-matrix.md`](device-test-matrix.md) plus the normal Flutter analyzer/test/build commands.
 
 ## Authority and ownership
 
-`backend.zip` remains authoritative for:
+`backend.zip` is authoritative for:
 
-- canonical call and conversation IDs;
-- caller/receiver permissions and blocking;
-- lifecycle transitions and stable errors;
-- LiveKit room names, tokens, and WebSocket URL;
-- the 30-second answer window;
-- realtime events;
-- missed-call notifications;
-- call history, grouping, and per-user deletion visibility.
+- canonical call/conversation IDs;
+- caller/receiver eligibility, permissions and blocking;
+- valid state transitions and stable errors;
+- the 30-second unanswered-call timeout;
+- LiveKit room names, tokens and WebSocket URL;
+- realtime call events;
+- call history, grouping and per-user deletion visibility;
+- FCM device registration/delivery contracts.
 
-The Flutter frontend owns:
+Flutter owns:
 
-- native incoming/outgoing call presentation;
-- FCM and realtime delivery handling;
-- camera and microphone permissions;
-- LiveKit connection and local media controls;
-- UI phases and navigation;
-- lifecycle recovery and stale-event protection;
-- device diagnostics.
+- foreground call UI and navigation;
+- Android native incoming-call notification integration;
+- iOS CallKit integration supported by the current FCM delivery contract;
+- durable native action/payload recovery;
+- microphone/camera/Bluetooth permission preparation;
+- LiveKit room/media lifecycle;
+- local media controls and routing preferences;
+- accessibility/localization of Flutter call surfaces;
+- stale-client protection and reconciliation through `get_call_status`.
 
-The frontend must never infer backend permissions or force an invalid state transition.
+The frontend must not invent backend states, permissions, tokens, IDs, or transitions.
 
-## Backend contract used by Flutter
+## Audited package versions
 
-### Lifecycle endpoints
+The call hardening intentionally pins these exact versions in `pubspec.yaml`:
 
-| Operation | Endpoint method | Valid frontend use |
+```yaml
+flutter_callkit_incoming: 3.1.5
+livekit_client: 2.10.0
+```
+
+Why:
+
+- `flutter_callkit_incoming` 3.1.0 added the background message handler and enhanced Android foreground-service support; 3.1.4/3.1.5 include terminated decline, audio-session, ringtone and foreground-service fixes. The 3.1.x event API uses sealed `CallEvent` classes.
+- LiveKit 2.9.0 added `AudioSessionManagementMode.externalCallSystem`, audio engine availability, and modern `AudioManager` routing. LiveKit 2.10.0 retains those APIs and is the pinned AOS target.
+
+Official references:
+
+- https://pub.dev/packages/flutter_callkit_incoming/versions/3.1.5
+- https://pub.dev/packages/flutter_callkit_incoming/changelog
+- https://pub.dev/documentation/flutter_callkit_incoming/latest/flutter_callkit_incoming/FlutterCallkitIncoming-class.html
+- https://pub.dev/documentation/flutter_callkit_incoming/latest/entities_call_event/CallEvent-class.html
+- https://pub.dev/packages/livekit_client/versions/2.10.0
+- https://pub.dev/packages/livekit_client/changelog
+- https://pub.dev/documentation/livekit_client/latest/livekit_client/AudioSessionManagementMode.html
+- https://pub.dev/documentation/livekit_client/latest/livekit_client/AudioManager-class.html
+- https://github.com/livekit-examples/flutter-callkit
+
+Do not upgrade either dependency independently of this feature without re-running the call device matrix and inspecting the package changelog/native manifest impact.
+
+## Backend contract consumed by Flutter
+
+### Lifecycle methods
+
+| Operation | Method | Frontend use |
 | --- | --- | --- |
-| Start | `initiate_call` | Caller starts audio/video call in an existing conversation |
-| Ringing acknowledgement | `mark_call_ringing` | Receiver confirms incoming UI was presented |
-| Accept | `accept_call` | Receiver accepts an `initiated` or `ringing` call |
+| Start | `initiate_call` | Caller starts audio/video call in a conversation |
+| Ringing acknowledgement | `mark_call_ringing` | Receiver acknowledges ringing presentation |
+| Accept | `accept_call` | Receiver accepts an active incoming call |
 | Reject | `reject_call` | Receiver declines before connection |
 | Cancel | `cancel_call` | Caller cancels before connection |
-| End | `end_call` | Either participant ends an ongoing call |
-| Recovery | `get_call_status` | Validate stale, background, or restored call state |
-| Token recovery | `get_call_token` | Rejoin an active call when media credentials are absent |
+| End | `end_call` | Participant ends an ongoing call |
+| Recovery | `get_call_status` | Authoritative state reconciliation |
+| Media recovery | `get_call_token` | Refresh/join media credentials for ongoing call |
 | History | `list_calls` | Paginated/filterable call history |
 
-Backend statuses represented in Flutter:
+Backend statuses represented by Flutter:
 
 ```text
 initiated
 ringing
 ongoing
-cancelled
+ended
 rejected
 missed
-ended
+cancelled
 failed
 ```
 
-Active backend statuses are `initiated`, `ringing`, and `ongoing`. Terminal status always wins over local UI state.
+`initiated`, `ringing`, and `ongoing` are non-terminal. Backend terminal status always wins over stale local state.
 
 ### Realtime events
+
+Flutter consumes the backend call events already defined by the Calls contract, including:
 
 ```text
 aos_incoming_call
@@ -87,34 +111,33 @@ aos_call_video_upgrade_accepted
 aos_call_video_upgrade_declined
 ```
 
-Realtime event labels describe an event. `get_call_status` remains the canonical recovery source after lifecycle interruption.
+Realtime is a delivery mechanism, not lifecycle authority. Recovery uses `get_call_status`.
 
-## Architecture and state ownership
-
-### Main owners
+## State ownership
 
 | Owner | Responsibility |
 | --- | --- |
-| `CallManager` | One active call domain, backend actions, UI phase, history, duplicate-action locks, stale-result protection |
-| `CallRepository` | Typed frontend boundary over Calls APIs |
-| `SocketCallListener` | Global Frappe realtime call events |
-| `PushNotificationService` | FCM listeners, token registration, terminated launch recovery |
-| `IncomingCallBootstrapper` | Validates a push payload through `get_call_status` before reconstructing Flutter state |
-| `CallKitService` | Native CallKit presentation, UUID mapping, event handoff, native-state reconciliation |
-| `CallKitEarlyActionCapture` | Captures native actions before Riverpod and normal service startup |
-| `CallKitPendingActionRecoveryService` | Replays persisted Accept/Decline/End/Timeout after authenticated startup |
-| `CallMediaService` | Permission preparation and LiveKit join/leave/media controls |
-| `CallNavigationListener` | Sole Flutter call-route owner |
-| `CallKitStateListener` | Mirrors call state to native CallKit without duplicate presentation |
-| `MissedCallCallbackService` | Starts a new call from a persistent backend missed-call notification |
+| `CallManager` | Active call state, backend actions, media lifecycle coordination, duplicate/stale action protection, call history |
+| `CallRepository` | Typed boundary over backend Calls methods |
+| `SocketCallListener` | Global realtime call event delivery |
+| `PushNotificationService` | FCM permission/token lifecycle, foreground/tap/terminated message handling |
+| `IncomingCallBootstrapper` | Validates incoming push payload through backend status before hydrating Flutter call state |
+| `CallKitService` | Native presentation, backend-ID/native-UUID mapping, sealed CallKit events, iOS audio-session event handoff |
+| `callKitBackgroundMessageHandler` | Persists Accept/Decline/End/Timeout while normal foreground Riverpod handling is unavailable |
+| `PendingCallKitActionReplayer` | Idempotent retry-safe native action replay |
+| `CallKitRecoveryService` | Gives native action recovery priority over pending ringing restoration |
+| `CallMediaService` | Required media permission preparation, best-effort Bluetooth preparation, LiveKit join/leave/routing |
+| `LiveKitService` | Room connection, tracks, `AudioManager` audio lifecycle and routing |
+| `CallNavigationListener` | Sole call-session route owner |
+| `CallKitStateListener` | Native state mirroring and visible-lifecycle recovery trigger |
 
-### Backend and UI states are separate
+Backend and Flutter UI phases are intentionally separate:
 
 ```text
-Backend lifecycle:
+Backend:
 initiated → ringing → ongoing → terminal
 
-Flutter UI lifecycle:
+Flutter:
 idle
 outgoingStarting
 outgoingRinging
@@ -124,309 +147,332 @@ inCall
 finished / cancelled / error
 ```
 
-`ongoing` means the backend accepted the call. It does not mean LiveKit media is connected. The UI remains in `joiningRoom` until LiveKit completes.
+`ongoing` does not mean media is already connected. Flutter stays in `joiningRoom` until LiveKit joins successfully.
 
-## Call flows
+## Incoming-call presentation policy
 
-### Outgoing call
+AOS intentionally does **not** request or use Android full-screen intent.
 
-```text
-Entry point
-→ open_conversation
-→ initiate_call
-→ store canonical call and LiveKit credentials
-→ register outgoing native CallKit call
-→ CallSessionScreen/outgoing ringing
-→ aos_call_accepted
-→ join LiveKit
-→ inCall
+`AndroidManifest.xml` keeps:
+
+```xml
+<uses-permission
+    android:name="android.permission.USE_FULL_SCREEN_INTENT"
+    tools:node="remove" />
 ```
 
-Repeated taps are suppressed by call action locks. A terminal backend event cancels any stale room-join completion.
+The call code must not invoke the plugin's full-screen-intent permission APIs.
 
-### Foreground incoming call
-
-```text
-aos_incoming_call via realtime or foreground FCM
-→ validate/normalize payload
-→ mark_call_ringing best effort
-→ incomingRinging state
-→ native CallKit surface and ringtone
-```
-
-Flutter does not push its own incoming-ringing route. Native CallKit owns ringing; the AOS session route begins when the call is accepted.
-
-### Resident-background incoming call
+### Android — app visible/resumed
 
 ```text
-FCM background handler
-→ persist incoming payload/UUID mapping
-→ show native CallKit surface
-→ user opens or accepts
-→ resume MainActivity
-→ validate backend state
-→ accept/reject/end
+incoming realtime/foreground FCM
+→ backend validation/hydration
+→ incomingRinging
+→ CallNavigationListener enters CallSessionScreen
+→ RingingScreen / VideoRingingScreen
+→ localized Flutter Answer / Decline controls
 ```
 
-Realtime can disconnect while the application is backgrounded. FCM is the required fallback for this path.
+The native incoming-call notification is still requested by `CallKitStateListener`; it owns the ringtone and provides the background/system action surface if the app loses visibility during ringing. `AndroidParams.isFullScreen` and `isShowFullLockedScreen` are both false.
 
-### Terminated process and cold-start Accept
-
-Android can deliver a native Accept before the normal Dart CallKit listener is attached. The frontend therefore treats the incoming payload and the native action as separate durable records:
+### Android — background/terminated/locked
 
 ```text
-pending_incoming_call_payload
-pending_callkit_action
+high-priority data FCM
+→ top-level background handler
+→ reject stale push at >= 30 seconds when sentTime is available
+→ persist native call payload/UUID mapping
+→ flutter_callkit_incoming notification/foreground-service path
+→ Answer / Decline native action
+→ background callback persists action
+→ authenticated Flutter runtime replays against backend state
 ```
 
-Startup order is intentional:
+Expected presentation is a high-priority call notification with actions, not a forced full-screen activity.
+
+Android 13+ notification permission remains important. Android documents that when notification permission is denied, an app may still start an FGS but its FGS notice can be visible only in Task Manager instead of the notification drawer. Test this explicitly.
+
+Official references:
+
+- https://developer.android.com/develop/ui/views/notifications/call-style
+- https://developer.android.com/develop/ui/compose/notifications/notification-permission
+- https://pub.dev/packages/flutter_callkit_incoming
+
+### iOS
+
+Incoming ringing stays native CallKit when the supported delivery path reaches the application.
+
+Current AOS backend registration/delivery supports FCM/APNs notification tokens but does **not** expose a PushKit VoIP-token registration/delivery contract. Therefore this frontend does not invent a frontend-only PushKit pipeline.
+
+`Info.plist` enables:
 
 ```text
-Widgets binding
-→ early CallKit action capture
-→ Firebase/bootstrap
-→ authenticated push initialization
-→ inspect native activeCalls accepted state
-→ recover pending native action
-→ process terminated incoming push only when no action is pending
-→ recover untouched incoming payload only when neither path handled it
+audio
+fetch
+remote-notification
 ```
 
-A pending native action supersedes the original incoming payload. The payload is cleared before action dispatch so the same call cannot be presented and rung again during recovery.
+It intentionally does not declare `voip` until the backend can store and target a VoIP token and the full PushKit lifecycle is implemented.
 
-Actions are idempotent:
+This is a real limitation: `flutter_callkit_incoming` documents PushKit for reliable iOS VoIP wake, and Firebase documents that after an iOS user swipes an app away, background messaging does not resume until the app is reopened. Terminated/swipe-away iOS call reliability is therefore **backend-capability blocked**, not solved by Dart-only code.
 
-- handled action signatures are retained for seven days;
-- unresolved actions are retained for a later authenticated startup;
-- actions older than five minutes are discarded with their stale incoming payload;
-- backend status is revalidated before applying the action.
+Official references:
 
-### Stale background message protection
+- https://pub.dev/packages/flutter_callkit_incoming
+- https://firebase.google.com/docs/cloud-messaging/flutter/receive
+- https://github.com/livekit-examples/flutter-callkit
 
-The backend answer window is 30 seconds. The background handler compares `RemoteMessage.sentTime` with device receipt time and rejects an incoming message at or beyond that boundary before requesting native CallKit.
+## Native action recovery
 
-`sentTime` can be unavailable. In that case, the foreground/bootstrap path must still use `get_call_status` to reject a terminal call.
+`flutter_callkit_incoming` 3.1.5 exposes `onBackgroundMessage`, which AOS registers in `main.dart` before normal application startup completes.
 
-### Accept pipeline
-
-The Accept operation now has one coordinator:
+Supported durable actions:
 
 ```text
-native Accept
-→ immediately set joiningRoom
-→ navigate directly to CallSessionScreen
-→ one get_call_status hydration
-→ one permission preparation
-→ accept_call
-→ obtain token if needed
-→ LiveKit join with prepared permissions
-→ inCall
+accept
+decline
+ended
+timeout
 ```
 
-This prevents the Home flash and removes duplicate status and permission work.
+The background handler persists:
 
-### End and timeout
+```text
+call_id
+native callkit UUID when available
+action
+created_at_ms
+```
 
-The frontend selects the backend action from the current lifecycle:
+Recovery order is intentional:
 
-- outgoing pre-connection: `cancel_call`;
-- incoming pre-connection: `reject_call`;
-- ongoing: `end_call`;
-- timeout/missed: reconcile canonical backend state.
+```text
+authenticated Flutter runtime available
+→ replay pending native action
+→ if action outcome is temporarily unavailable, retain it and stop
+→ if action is resolved/terminal, dedupe + clear matching ringing payload
+→ only then attempt pending incoming-call restoration
+```
 
-LiveKit leave, timer cleanup, native CallKit cleanup, and terminal UI updates are best-effort but idempotent.
+Rules:
+
+- backend status is revalidated before the native action is applied;
+- a transient backend/network failure does not mark an action handled;
+- unresolved actions remain pending for a later startup/resume;
+- action signatures are retained for seven days for duplicate protection;
+- pending actions at or beyond five minutes are discarded with the matching stale ringing payload;
+- foreground lifecycle recovery re-runs when the authenticated app becomes visible.
+
+Never dispatch an Accept/Decline based only on stale local UI state or message text.
+
+## Incoming push freshness
+
+The backend unanswered-call timeout is 30 seconds. `incoming_call_push_freshness.dart` mirrors that client-side only to avoid presenting obviously stale background messages:
+
+```text
+age < 30 seconds    → eligible for backend reconciliation
+age >= 30 seconds   → do not present
+missing sentTime    → do not guess; query backend when Flutter is available
+future sentTime     → tolerate clock skew; backend remains authoritative
+```
+
+This is not a second business rule. Backend status still decides whether the call is actionable.
+
+## LiveKit 2.10 media lifecycle
+
+### Permission preparation
+
+`CallMediaService.prepareForCall` performs:
+
+```text
+Android Bluetooth permission request (best effort)
+→ microphone permission (required)
+→ camera permission for video (required)
+→ configure external-call-system audio mode
+```
+
+Bluetooth denial must **not** block handset/wired calling. Microphone denial blocks all calls; camera denial blocks video calls.
+
+The accepted incoming path carries `permissionsAlreadyPrepared` into `joinCall` so microphone/camera permissions are not requested twice.
+
+### Android Bluetooth
+
+The manifest declares the LiveKit/WebRTC Bluetooth prerequisites:
+
+```xml
+<uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+```
+
+LiveKit's Flutter documentation also demonstrates runtime `Permission.bluetooth` and `Permission.bluetoothConnect` requests.
+
+Speaker routing uses:
+
+```dart
+AudioManager.instance.setSpeakerOutputPreferred(...)
+```
+
+LiveKit documents that the non-forced preference preserves wired/Bluetooth headset priority. AOS does not force speaker over an attached headset.
+
+Official reference:
+
+- https://pub.dev/packages/livekit_client/versions/2.10.0
+- https://pub.dev/documentation/livekit_client/latest/livekit_client/AudioManager-class.html
+
+### iOS CallKit audio activation
+
+Before joining a call, AOS selects:
+
+```dart
+AudioSessionManagementMode.externalCallSystem
+```
+
+LiveKit documents this mode for an external telephony owner such as iOS CallKit. LiveKit may configure category/mode/options but must not own session activation/deactivation.
+
+AOS also gates WebRTC engine availability from the plugin's `CallEventActionCallToggleAudioSession` event:
+
+```text
+CallKit active   → AudioEngineAvailability.defaultAvailability
+CallKit inactive → AudioEngineAvailability.none
+```
+
+LiveKit documents `setEngineAvailability` as iOS/macOS-only and a no-op elsewhere, so this cross-platform code does not disable Android audio.
+
+On call leave, AOS restores automatic LiveKit audio-session management for other app media use.
+
+Official references:
+
+- https://pub.dev/documentation/livekit_client/latest/livekit_client/AudioSessionManagementMode.html
+- https://pub.dev/documentation/livekit_client/latest/livekit_client/AudioEngineAvailability-class.html
+- https://github.com/livekit-examples/flutter-callkit
+
+## Camera privacy
+
+An outgoing video caller may start a local preview while ringing.
+
+An incoming video call must **not** start local camera preview before the user answers. Camera publication starts only through the accepted call media path after explicit user action and permission handling.
+
+## CallKit identity mapping
+
+Backend call IDs and native CallKit UUIDs are separate identifiers.
+
+- Backend call ID is the canonical API/realtime identifier.
+- Native UUID is generated for CallKit/plugin presentation.
+- `extra.call_id` carries the canonical backend ID through native events.
+- mapping is persisted so cold-start native actions can recover the backend call.
+
+Do not replace a backend call ID with the native UUID in API requests.
 
 ## Navigation
 
-`CallNavigationListener` is the only owner of Flutter call navigation.
+`CallNavigationListener` is the sole Flutter route owner.
 
-- Incoming ringing stays on native CallKit.
-- `outgoingStarting`, `outgoingRinging`, `joiningRoom`, and `inCall` use `CallSessionScreen`.
-- Navigation uses `goNamed`, not a delayed push, to avoid duplicate routes and Home flashes.
-- Terminal call state returns to the Calls tab only when the current route is the call session.
-- The minimized active-call overlay restores the same global call session.
+It observes both call state and app visibility:
 
-No widget should manually navigate after `accept_call` or a realtime accepted event.
+- foreground Android `incomingRinging` → call session;
+- background Android `incomingRinging` → native surface only;
+- iOS `incomingRinging` → native CallKit only;
+- outgoing start/ringing → call session;
+- joining/in-call → call session;
+- terminal/idle → leave call session when it was the active call route.
 
-## Media and permissions
+No API, socket, FCM, CallKit service, or presentation widget should independently navigate the app after a lifecycle action.
 
-`CallMediaService` owns microphone/camera permission preparation.
+## Accessibility and localization
 
-Audio call:
+Foreground incoming Answer/Decline controls:
 
-```text
-microphone permission
-→ LiveKit connect
-→ microphone enabled
-→ camera disabled
-```
+- use ARB-backed localized labels;
+- expose button semantics and accessible labels;
+- do not rely on color/icon alone;
+- use >= 68x68 visual action targets;
+- wrap action areas in `SafeArea`;
+- support RTL directionality;
+- are covered at 320px width and 200% text scaling.
 
-Video call:
+Changed call UI copy is present in English, French, Swahili, Arabic, and Chinese ARBs.
 
-```text
-microphone + camera permissions
-→ LiveKit connect
-→ microphone enabled
-→ camera enabled
-```
+## Error/offline behavior
 
-The Accept coordinator prepares permissions once and passes `permissionsAlreadyPrepared: true` into LiveKit join. A denied required permission prevents backend acceptance when possible. If backend acceptance has already occurred and media setup fails, the frontend attempts backend cleanup rather than leaving an orphan ongoing call.
-
-The UI exposes mute, speaker, camera enable/disable, camera switch, minimize, end call, and audio-to-video upgrade according to call type and state.
-
-## Push and native presentation
-
-### Token lifecycle
-
-Authenticated startup:
-
-1. inspect/request display permission;
-2. attach foreground/opened-app/token-refresh listeners;
-3. recover native CallKit action before incoming payload;
-4. obtain the FCM token independently of display permission;
-5. register device type, token, and device ID with the backend;
-6. inspect the backend result and retry bounded failures.
-
-Tokens, SIDs, and LiveKit credentials must never be logged.
-
-### Android configuration
-
-Required call-related permissions include:
-
-- notification permission;
-- microphone and camera;
-- internet/network state;
-- audio routing;
-- wake lock;
-- foreground services;
-- full-screen intent.
-
-Full-screen intent special access is requested only from an explicit Calls UI action. Application startup must not open system settings.
-
-Backend call IDs and native CallKit UUIDs are always stored separately.
-
-### iOS boundary
-
-The current frontend supports the existing FCM/CallKit integration and preserves iOS camera, microphone, background audio, VoIP, and remote-notification configuration.
-
-Guaranteed killed-app VoIP wake-up requires a backend PushKit/VoIP-token registration contract. The current Calls contract does not expose one, so the frontend must not claim deterministic terminated-state iOS delivery.
-
-## Notifications, missed calls, and history
-
-Incoming calls are transient and are not inserted into the persistent notification inbox.
-
-The backend persists missed calls. The callback action:
-
-```text
-missed notification
-→ canonical caller account ID
-→ get_call_status when available
-→ recover original audio/video type
-→ start a new outgoing call through CallStarterService
-```
-
-Call history supports backend filters, grouped details, per-row deletion, and per-user clear history. Initial history and notification loading is deferred until after the first frame to avoid provider mutation during widget mount.
-
-## Logging and diagnostics
-
-Call diagnostics use `appLogger` plus compact `AOS_CALLS` runtime markers. Safe fields include call ID, event/status, duration, route phase, message age, and whether credentials are present. Secrets and full push payloads are excluded.
-
-Important log groups:
-
-```text
-[Lifecycle] platform=paused/resumed/...
-Realtime call event
-FCM foreground/background message received
-callkit_early_capture_started
-callkit_action_persisted
-callkit_pending_action_recovery_started
-Incoming call action hydration completed
-accept_call completed
-LiveKit join started/completed
-Call navigation: current → session
-```
-
-Recommended capture:
-
-```bash
-adb logcat -c
-adb logcat -v epoch > aos_calls_full.log
-```
-
-Filtered copy:
-
-```bash
-grep -Ei "AOS_CALLS|Lifecycle|FCM|FirebaseMessaging|FLTFireMsgReceiver|CallKit|incoming.call|missed.call|LiveKit|Realtime|ActivityManager|AndroidRuntime|flutter" \
-  aos_calls_full.log > aos_calls_filtered.log
-```
-
-A killed-process test is confirmed by no PID before the call:
-
-```bash
-adb shell pidof com.africaonlinestores.app
-```
+- Backend validation is authoritative; frontend validation only improves UX.
+- Native action reconciliation retains pending action state on transient failure.
+- Active calls periodically reconcile backend status in `CallManager` so lost socket terminal events do not leave the client permanently active.
+- LiveKit join failure must not fabricate an ongoing media state.
+- Bluetooth permission failure falls back to available non-Bluetooth routes.
+- Required microphone/camera permission failure is explicit and blocks the relevant media path.
+- Duplicate native/realtime actions are guarded by call IDs/action locks and handled-action signatures.
 
 ## Automated tests
 
-Focused tests cover:
+Call-specific coverage includes:
 
-- CallKit parameter and push-payload mapping;
-- backend ID/native UUID separation;
-- native active-call snapshot parsing;
-- incoming-payload and native-action persistence;
-- idempotent pending-action recovery;
-- expired background-message rejection;
-- immediate `joiningRoom` transition on Accept;
-- duplicate Accept suppression;
-- one authoritative `get_call_status` hydration;
-- one media permission preparation;
-- backend cleanup when LiveKit join fails after acceptance;
-- LiveKit permission denial behavior;
-- source contracts for startup order, navigation ownership, permissions, token registration, and Android native configuration;
-- missed-call callback identity/type recovery.
+- exact audited package pins;
+- 3.1.5 background handler/sealed event contract;
+- retry-safe pending action replay;
+- 30-second push freshness boundaries;
+- Android foreground/native presentation policy;
+- FSI prohibition and manifest Bluetooth declarations;
+- LiveKit external-call audio lifecycle source contract;
+- incoming video pre-answer camera privacy;
+- iOS implemented background-mode/logo/audio configuration contract;
+- outgoing native CallKit registration preservation;
+- notification token registration independent of display permission;
+- incoming action semantics, 320px layout, 200% text scale, and RTL;
+- existing call payload/history/callback tests.
 
-## Device regression checklist
-
-| ID | Scenario | Expected result |
-| --- | --- | --- |
-| CALL-01 | Foreground incoming | Native CallKit rings immediately; missed status is correct when unanswered |
-| CALL-02 | Foreground Accept | No Home flash; CallSession shows Connecting until LiveKit joins |
-| CALL-03 | Resident background incoming | FCM presents native UI; tap/Accept restores one call session |
-| CALL-04 | Terminated incoming | CallKit appears before the 30-second answer window expires |
-| CALL-05 | Terminated Accept | Persisted/native accepted action is recovered; call is not shown ringing again |
-| CALL-06 | Delayed incoming payload | Payload at or beyond 30 seconds does not ring |
-| CALL-07 | Duplicate Accept tap/event | One status request and one backend accept action |
-| CALL-08 | Permission denied | Clear error; no invalid media join; backend call is reconciled |
-| CALL-09 | App background/resume during call | Media continues or reconnects deterministically; one call route remains |
-| CALL-10 | End from either participant | Both sides leave LiveKit and native UI closes once |
-| CALL-11 | Missed Call Back | New call starts with canonical recipient and recovered type |
-| CALL-12 | Small/landscape/200%/RTL | Controls remain reachable with no overflow or clipped actions |
-
-## Known limitations and follow-up risks
-
-1. The backend currently sends an incoming call with a notification block plus data. Android may display a system notification in addition to the native CallKit surface. A deterministic single-surface killed-app contract normally requires a backend-aligned data-only/native delivery strategy.
-2. `flutter_callkit_incoming` remains on the locked 3.0.0 baseline. This implementation uses the available event stream, early listener, persisted actions, and `activeCalls()` accepted-state fallback without upgrading the package.
-3. Native Accept has a recoverable snapshot fallback. A native Decline that is never replayed by the platform cannot be inferred solely from an absent active call; backend status remains authoritative.
-4. Global realtime reconnect behavior is shared by Calls, Chat, Live, and Notifications. It was not paused solely for Calls because that could regress other features. Background DNS retry noise remains a cross-cutting realtime hardening item.
-5. Android OEM battery and notification policies can delay background engine startup. Logs must distinguish FCM receipt, Dart handler start, CallKit request, and backend timeout.
-
-## Validation commands
-
-Run from the complete frontend project after applying this ZIP:
+Run in a Flutter/CocoaPods-enabled environment:
 
 ```bash
 flutter pub get
 flutter gen-l10n
 dart format lib test
 dart analyze
-flutter test test/features/connect/calls
+flutter test
 flutter build apk --debug
+cd ios && pod install && cd ..
 ```
 
-The update contains Dart, tests, and documentation only. It does not change dependencies or native project files.
+The source bundle for this hardening was prepared in an environment without Flutter/Dart/CocoaPods. Therefore `flutter pub get` must regenerate the authoritative hosted-package integrity hashes in `pubspec.lock`, and `pod install` must refresh `ios/Podfile.lock` for LiveKit 2.10.0 and its WebRTC dependency before release. Do not hand-edit CocoaPods checksums to simulate this step.
 
-## Delivery classification
+For release validation additionally inspect the merged Android manifest and signed iOS entitlements. See [`implementation-validation.md`](implementation-validation.md) for the static checks performed on the delivered source and the toolchain checks intentionally left to the build environment.
 
-**Shorebird OTA candidate.**
+## Physical-device validation
 
-A store release is still appropriate when bundling this with earlier native Calls changes or other Android/iOS configuration changes.
+Use [`device-test-matrix.md`](device-test-matrix.md). Do not treat emulator-only CallKit/Bluetooth results as release acceptance.
+
+Important terminology:
+
+- **terminated** in the Android matrix means swiped away/process not resident, not Android Settings → Force stop;
+- **force stop** intentionally blocks ordinary background delivery and is not a valid terminated-call acceptance test;
+- iOS swipe-away killed-state incoming reliability remains blocked until PushKit backend capability exists.
+
+## Security and privacy
+
+- No media token is fabricated or persisted as a fallback default.
+- Backend status is queried before recovery actions.
+- Canonical IDs stay distinct from presentation IDs.
+- No plaintext credential or secret is added by this feature.
+- Incoming video camera access waits for explicit Answer.
+- Full-screen intent is deliberately removed to comply with the application's Play policy decision.
+
+## Known limitations
+
+1. **iOS terminated/swipe-away incoming VoIP: backend blocked.** A complete PushKit implementation requires backend VoIP-token registration and APNs VoIP delivery. Do not add `voip` mode or native PushKit registration alone.
+2. **Notification permission/channel state is user-controlled.** On Android 13+, denied notifications can remove the visible notification-drawer call surface. The app must be device-tested with both allowed and denied states.
+3. **OEM power management differs.** Samsung/Xiaomi/Oppo/etc. background behavior must be verified physically; the frontend cannot guarantee vendor task-killer behavior.
+4. LiveKit's external call-system and engine-availability APIs are marked experimental by LiveKit; re-audit on every LiveKit upgrade.
+
+## Release / OTA classification
+
+**Play Store/App Store release required.**
+
+Reasons:
+
+- `flutter_callkit_incoming` native plugin version changed;
+- `livekit_client`/WebRTC native dependency graph changed;
+- Android manifest changed;
+- iOS `Info.plist` and asset catalog changed.
+
+This is not a Shorebird-only update. Later Dart-only call UI/logic fixes may be OTA candidates after this binary baseline is shipped, subject to normal Shorebird compatibility review.

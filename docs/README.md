@@ -30,4 +30,6 @@ must not redefine backend contracts.
 - [Localization, onboarding, and active preferences](frontend/localization_onboarding.md)
 - [AOS Live](features/live/README.md)
 - [AOS Calls](features/calls/README.md)
+  - [Calls physical device test matrix](features/calls/device-test-matrix.md)
+  - [Calls implementation validation](features/calls/implementation-validation.md)
 - [Connect Chat](features/connect-chat.md)

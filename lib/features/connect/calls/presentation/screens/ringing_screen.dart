@@ -3,6 +3,7 @@ import 'package:africaonlinestores/features/connect/calls/application/providers/
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/session/audio_call_view.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,7 +20,9 @@ class RingingScreen extends ConsumerWidget {
     final participant = CallParticipantResolver.otherParticipant(
       state,
       currentUserId: currentUserId,
-      fallbackName: isIncoming ? 'Incoming call' : 'Calling...',
+      fallbackName: isIncoming
+          ? context.l10n.chat_incoming_call
+          : context.l10n.chat_calling,
     );
 
     return AudioCallView(

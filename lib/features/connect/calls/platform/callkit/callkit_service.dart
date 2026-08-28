@@ -13,13 +13,14 @@ import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:uuid/uuid.dart';
 
-/// Coordinates the native call surface for flutter_callkit_incoming 3.0.0.
+/// Coordinates the native call surface for flutter_callkit_incoming 3.1.5.
 ///
 /// Backend call IDs and native CallKit UUIDs intentionally remain separate.
 class CallKitService {
   final CallKitActionHandler actionHandler;
   final CallKitParamsMapper paramsMapper;
   final CallKitPendingPayloadStore pendingPayloadStore;
+  final Future<void> Function(bool isActive)? onAudioSessionChanged;
 
   StreamSubscription<CallEvent?>? _sub;
   String? _currentCallId;
@@ -39,6 +40,7 @@ class CallKitService {
     required this.actionHandler,
     required this.paramsMapper,
     this.pendingPayloadStore = const CallKitPendingPayloadStore(),
+    this.onAudioSessionChanged,
   });
 
   Future<void> init() async {
@@ -117,7 +119,7 @@ class CallKitService {
     CallKitParams params, {
     required String backendCallId,
   }) async {
-    final callkitUuid = params.id?.trim() ?? '';
+    final callkitUuid = params.id.trim();
 
     try {
       CallRuntimeLog.write('callkit_show_requested', callId: backendCallId);
@@ -238,6 +240,7 @@ class CallKitService {
       _callkitUuidByCallId.remove(id);
       if (callkitUuid != null) _callIdByCallkitUuid.remove(callkitUuid);
       await pendingPayloadStore.clearIfMatches(id);
+      await pendingPayloadStore.clearActionIfMatches(id);
       if (_currentCallId == id) _currentCallId = null;
       CallRuntimeLog.write('callkit_ended', callId: id);
     } catch (error, stackTrace) {
@@ -264,6 +267,7 @@ class CallKitService {
       _callkitUuidByCallId.clear();
       _callIdByCallkitUuid.clear();
       await pendingPayloadStore.clear();
+      await pendingPayloadStore.clearAction();
       CallRuntimeLog.write('callkit_all_ended');
     } catch (error, stackTrace) {
       appLogger.w(
@@ -311,14 +315,32 @@ class CallKitService {
   Future<void> _handleEvent(CallEvent? event) async {
     if (event == null) return;
 
+    final eventName = event.eventName;
+    if (event case CallEventActionCallToggleAudioSession(:final isActive)) {
+      appLogger.i('📞 CallKit audio-session event (active=$isActive)');
+      final callback = onAudioSessionChanged;
+      if (callback != null) {
+        try {
+          await callback(isActive);
+        } catch (error, stackTrace) {
+          appLogger.w(
+            '📞 Failed to synchronize CallKit/LiveKit audio session',
+            error: error,
+            stackTrace: stackTrace,
+          );
+        }
+      }
+      return;
+    }
+
     await _hydratePendingCallkitMapping();
-    final extractedCallId = _extractCallId(event);
+    final params = _paramsForLifecycleEvent(event);
+    final extractedCallId = params == null ? null : _extractCallId(params);
     if (extractedCallId != null && extractedCallId.isNotEmpty) {
       _currentCallId = extractedCallId;
     }
 
     final callId = _currentCallId;
-    final eventName = event.event.toString();
     appLogger.i(
       '📞 CallKit event received '
       '(event=$eventName, callId=${callId ?? 'none'})',
@@ -337,26 +359,36 @@ class CallKitService {
       return;
     }
 
-    switch (event.event) {
-      case Event.actionCallAccept:
-        await _handleAccept(callId);
-        return;
-      case Event.actionCallDecline:
-        await _handleDecline(callId);
-        return;
-      case Event.actionCallEnded:
-        await _handleEnded(callId);
-        return;
-      case Event.actionCallTimeout:
-        await _handleTimeout(callId);
-        return;
-      default:
-        appLogger.i(
-          '📞 CallKit event has no AOS lifecycle action '
-          '(event=$eventName, callId=$callId)',
-        );
-        return;
+    if (event is CallEventActionCallAccept) {
+      await _handleAccept(callId);
+      return;
     }
+    if (event is CallEventActionCallDecline) {
+      await _handleDecline(callId);
+      return;
+    }
+    if (event is CallEventActionCallEnded) {
+      await _handleEnded(callId);
+      return;
+    }
+    if (event is CallEventActionCallTimeout) {
+      await _handleTimeout(callId);
+      return;
+    }
+
+    appLogger.i(
+      '📞 CallKit event has no AOS lifecycle action '
+      '(event=$eventName, callId=$callId)',
+    );
+  }
+
+  CallKitParams? _paramsForLifecycleEvent(CallEvent event) {
+    return switch (event) {
+      CallEventActionCallAccept(:final callKitParams) => callKitParams,
+      CallEventActionCallDecline(:final callKitParams) => callKitParams,
+      CallEventActionCallEnded(:final callKitParams) => callKitParams,
+      _ => null,
+    };
   }
 
   Future<void> _handleAccept(String callId) async {
@@ -366,7 +398,13 @@ class CallKitService {
         !_handledAcceptIds.add(callId)) {
       return;
     }
-    await actionHandler.onAccept(callId: callId);
+
+    final resolved = await _executeLifecycleAction(
+      callId: callId,
+      action: PendingCallKitAction.accept,
+      execute: () => actionHandler.onAccept(callId: callId),
+    );
+    if (!resolved) _handledAcceptIds.remove(callId);
   }
 
   Future<void> _handleDecline(String callId) async {
@@ -375,12 +413,24 @@ class CallKitService {
         !_handledDeclineIds.add(callId)) {
       return;
     }
-    await actionHandler.onDecline(callId: callId);
+
+    final resolved = await _executeLifecycleAction(
+      callId: callId,
+      action: PendingCallKitAction.decline,
+      execute: () => actionHandler.onDecline(callId: callId),
+    );
+    if (!resolved) _handledDeclineIds.remove(callId);
   }
 
   Future<void> _handleEnded(String callId) async {
     if (!_handledEndIds.add(callId)) return;
-    await actionHandler.onEnded(callId: callId);
+
+    final resolved = await _executeLifecycleAction(
+      callId: callId,
+      action: PendingCallKitAction.ended,
+      execute: () => actionHandler.onEnded(callId: callId),
+    );
+    if (!resolved) _handledEndIds.remove(callId);
   }
 
   Future<void> _handleTimeout(String callId) async {
@@ -390,30 +440,58 @@ class CallKitService {
         !_handledTimeoutIds.add(callId)) {
       return;
     }
-    await actionHandler.onTimeout(callId: callId);
+
+    final resolved = await _executeLifecycleAction(
+      callId: callId,
+      action: PendingCallKitAction.timeout,
+      execute: () => actionHandler.onTimeout(callId: callId),
+    );
+    if (!resolved) _handledTimeoutIds.remove(callId);
   }
 
-  String? _extractCallId(CallEvent event) {
-    final body = event.body;
-    if (body is! Map) return null;
+  Future<bool> _executeLifecycleAction({
+    required String callId,
+    required PendingCallKitAction action,
+    required Future<bool> Function() execute,
+  }) async {
+    await pendingPayloadStore.saveAction(
+      callId: callId,
+      action: action,
+      callkitUuid: _callkitUuidByCallId[callId],
+    );
 
-    final bodyMap = asJsonMap(body);
-    final extra = asJsonMap(bodyMap['extra']);
-    final backendCallId =
-        _readString(extra, const <String>[
-          'call_id',
-          'backend_call_id',
-          'backendCallId',
-          'aos_call_id',
-        ]) ??
-        _readString(bodyMap, const <String>[
-          'call_id',
-          'backend_call_id',
-          'backendCallId',
-          'aos_call_id',
-        ]);
+    try {
+      final resolved = await execute();
+      if (!resolved) return false;
 
-    final rawNativeId = _clean(bodyMap['id']);
+      await pendingPayloadStore.markActionHandled(
+        callId: callId,
+        action: action,
+      );
+      await pendingPayloadStore.clearActionIfMatches(callId);
+      await pendingPayloadStore.clearIfMatches(callId);
+      return true;
+    } catch (error, stackTrace) {
+      appLogger.w(
+        '📞 CallKit lifecycle action remains pending for recovery '
+        '(callId=$callId, action=${action.name})',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return false;
+    }
+  }
+
+  String? _extractCallId(CallKitParams params) {
+    final extra = params.extra ?? const <String, dynamic>{};
+    final backendCallId = _readString(extra, const <String>[
+      'call_id',
+      'backend_call_id',
+      'backendCallId',
+      'aos_call_id',
+    ]);
+
+    final rawNativeId = _clean(params.id);
     if (backendCallId != null) {
       if (rawNativeId != null) {
         _callkitUuidByCallId[backendCallId] = rawNativeId;

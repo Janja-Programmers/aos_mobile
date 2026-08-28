@@ -1584,4 +1584,52 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sellerBannerRemoved => '店铺横幅已移除。';
+
+  @override
+  String get chat_answer_call => '接听';
+
+  @override
+  String get chat_decline_call => '拒绝';
+
+  @override
+  String get chat_incoming_voice_call => '语音来电';
+
+  @override
+  String get chat_incoming_video_call => '视频来电';
+
+  @override
+  String get chat_minimize_call => '最小化通话';
+
+  @override
+  String get chat_call_ended => '通话已结束';
+
+  @override
+  String get chat_call_cancelled => '通话已取消';
+
+  @override
+  String get chat_call_failed => '通话失败';
+
+  @override
+  String get chat_waiting_for_video => '正在等待视频…';
+
+  @override
+  String get chat_waiting_for_connection => '正在等待连接…';
+
+  @override
+  String get chat_camera_starting => '摄像头正在启动…';
+
+  @override
+  String get chat_camera_off => '摄像头已关闭';
+
+  @override
+  String get chat_switch_camera => '切换摄像头';
+
+  @override
+  String get chat_switch_to_video_call => '切换为视频通话？';
+
+  @override
+  String get chat_switch_to_video => '切换为视频';
+
+  @override
+  String get chat_video_upgrade_failed => '切换视频失败';
 }

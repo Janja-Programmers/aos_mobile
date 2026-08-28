@@ -27,8 +27,10 @@ import 'package:africaonlinestores/features/connect/calls/application/listeners/
 import 'package:africaonlinestores/features/connect/calls/application/listeners/callkit_state_listener.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/call_runtime_log.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_background_action_handler.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_payload_mapper.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_pending_payload_store.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/incoming_call_push_freshness.dart';
 import 'package:africaonlinestores/features/live/application/listeners/live_navigation_listeners.dart';
 import 'package:africaonlinestores/features/notifications/application/providers/notification_providers.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_banner_listener.dart';
@@ -120,6 +122,15 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     return;
   }
 
+  if (!isIncomingCallPushFresh(
+    sentTime: message.sentTime,
+    now: DateTime.now(),
+  )) {
+    CallRuntimeLog.write('fcm_background_stale', callId: callId);
+    appLogger.i('📞 Stale incoming-call FCM ignored (callId=$callId)');
+    return;
+  }
+
   try {
     final params = const CallKitPayloadMapper().fromPushData(data);
     final pendingPayload = asJsonMap(params.extra ?? data);
@@ -197,6 +208,9 @@ void main() {
       );
 
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      await FlutterCallkitIncoming.onBackgroundMessage(
+        callKitBackgroundMessageHandler,
+      );
 
       const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
 

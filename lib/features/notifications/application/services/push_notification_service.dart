@@ -5,9 +5,10 @@ import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/device/device_id.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/connect/calls/application/services/callkit_recovery_service.dart';
 import 'package:africaonlinestores/features/connect/calls/application/services/incoming_call_bootstrapper.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/call_runtime_log.dart';
-import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_pending_payload_store.dart';
+import 'package:africaonlinestores/features/connect/calls/platform/callkit/incoming_call_push_freshness.dart';
 import 'package:africaonlinestores/features/notifications/application/controllers/notification_controller.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_notification_service.dart';
 import 'package:africaonlinestores/features/notifications/application/services/notification_navigation_handler.dart';
@@ -26,6 +27,7 @@ class PushNotificationService {
   final PushTokenRepository _pushRepo;
   final InAppNotificationService _bannerService;
   final IncomingCallBootstrapper _incomingCallBootstrapper;
+  final CallKitRecoveryService _callKitRecoveryService;
 
   StreamSubscription<RemoteMessage>? _foregroundSub;
   StreamSubscription<RemoteMessage>? _tapSub;
@@ -51,12 +53,14 @@ class PushNotificationService {
     required PushTokenRepository pushRepo,
     required InAppNotificationService bannerService,
     required IncomingCallBootstrapper incomingCallBootstrapper,
+    required CallKitRecoveryService callKitRecoveryService,
   }) : _messaging = messaging,
        _controller = controller,
        _navigationHandler = navigationHandler,
        _pushRepo = pushRepo,
        _bannerService = bannerService,
-       _incomingCallBootstrapper = incomingCallBootstrapper;
+       _incomingCallBootstrapper = incomingCallBootstrapper,
+       _callKitRecoveryService = callKitRecoveryService;
 
   // =====================================================
   // INIT
@@ -89,8 +93,8 @@ class PushNotificationService {
     _listenForeground();
     _listenNotificationTap();
 
+    await _callKitRecoveryService.recover();
     await _handleTerminatedLaunch();
-    await _handlePendingCallkitPayload();
 
     if (!permissionGranted) {
       appLogger.w(
@@ -411,6 +415,10 @@ class PushNotificationService {
               'has_notification_block': message.notification != null,
             },
           );
+          if (!_isFreshIncomingCall(message)) {
+            CallRuntimeLog.write('fcm_foreground_stale', callId: callId);
+            return;
+          }
         }
 
         final notification = _mapMessageToNotification(message);
@@ -460,6 +468,11 @@ class PushNotificationService {
           'messageId=${message.messageId ?? 'none'})',
         );
 
+        if (_isIncomingCallEvent(event) && !_isFreshIncomingCall(message)) {
+          CallRuntimeLog.write('fcm_opened_stale', callId: callId);
+          return;
+        }
+
         final notification = _mapMessageToNotification(message);
 
         if (notification == null) return;
@@ -508,6 +521,11 @@ class PushNotificationService {
         'messageId=${message.messageId ?? 'none'})',
       );
 
+      if (_isIncomingCallEvent(event) && !_isFreshIncomingCall(message)) {
+        CallRuntimeLog.write('fcm_terminated_stale', callId: callId);
+        return;
+      }
+
       final notification = _mapMessageToNotification(message);
 
       if (notification == null) return;
@@ -528,43 +546,6 @@ class PushNotificationService {
       _navigationHandler.handleNotificationTap(notification);
     } catch (e, s) {
       appLogger.e('Terminated push handling failed', error: e, stackTrace: s);
-    }
-  }
-
-  Future<void> _handlePendingCallkitPayload() async {
-    try {
-      const store = CallKitPendingPayloadStore();
-      final payload = await store.read();
-
-      if (payload == null || payload.isEmpty) {
-        appLogger.i('📞 No pending CallKit payload to recover');
-        return;
-      }
-
-      final callId =
-          _cleanValue(payload['call_id']) ?? _cleanValue(payload['id']);
-      appLogger.i(
-        '📞 Recovering pending CallKit payload (callId=${callId ?? 'none'})',
-      );
-
-      final handled = await _incomingCallBootstrapper.handlePushPayload(
-        payload,
-      );
-
-      if (!handled) {
-        appLogger.i(
-          '📞 Pending CallKit payload was not actionable and will be cleared',
-        );
-        await store.clear();
-      } else {
-        appLogger.i('📞 Pending CallKit payload recovery completed');
-      }
-    } catch (e, s) {
-      appLogger.w(
-        '⚠️ Pending CallKit payload recovery failed',
-        error: e,
-        stackTrace: s,
-      );
     }
   }
 
@@ -625,6 +606,13 @@ class PushNotificationService {
     return event == 'aos_incoming_call' ||
         event == 'incoming_call' ||
         event == 'call';
+  }
+
+  bool _isFreshIncomingCall(RemoteMessage message) {
+    return isIncomingCallPushFresh(
+      sentTime: message.sentTime,
+      now: DateTime.now(),
+    );
   }
 
   String? _cleanValue(Object? value) {

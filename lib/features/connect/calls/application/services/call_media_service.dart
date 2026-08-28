@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:africaonlinestores/core/media/livekit_service.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:livekit_client/livekit_client.dart';
@@ -10,15 +12,24 @@ class CallMediaService {
 
   Future<void> prepareForCall({required bool isVideo}) async {
     appLogger.i('📞 Preparing call media permissions (video=$isVideo)');
-    await _requestPermissions(isVideo);
+    await _requestBluetoothPermissionsBestEffort();
+    await _requestRequiredMediaPermissions(isVideo);
+    await liveKit.prepareExternalCallAudioLifecycle();
   }
 
   Future<Room> joinCall({
     required String wsUrl,
     required String token,
     required bool isVideo,
+    bool permissionsAlreadyPrepared = false,
   }) async {
-    await _requestPermissions(isVideo);
+    if (!permissionsAlreadyPrepared) {
+      await prepareForCall(isVideo: isVideo);
+    } else {
+      // Idempotent: ensures the CallKit/LiveKit audio contract is configured
+      // even if permission preparation happened earlier in the accept flow.
+      await liveKit.prepareExternalCallAudioLifecycle();
+    }
 
     final host = Uri.tryParse(wsUrl)?.host;
     appLogger.i(
@@ -47,17 +58,40 @@ class CallMediaService {
 
   Future<void> leaveCall() async {
     appLogger.i('📞 LiveKit leave requested');
+    Object? disconnectError;
+    StackTrace? disconnectStackTrace;
+
     try {
       await liveKit.disconnect();
       appLogger.i('📞 LiveKit leave completed');
     } catch (error, stackTrace) {
+      disconnectError = error;
+      disconnectStackTrace = stackTrace;
       appLogger.w(
         '📞 LiveKit leave failed',
         error: error,
         stackTrace: stackTrace,
       );
-      rethrow;
+    } finally {
+      try {
+        await liveKit.restoreAutomaticAudioLifecycle();
+      } catch (error, stackTrace) {
+        appLogger.w(
+          '📞 LiveKit audio lifecycle reset failed',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }
     }
+
+    if (disconnectError != null) {
+      Error.throwWithStackTrace(disconnectError, disconnectStackTrace!);
+    }
+  }
+
+  Future<void> handleExternalAudioSessionChanged(bool isActive) async {
+    appLogger.i('📞 CallKit audio session active=$isActive');
+    await liveKit.setExternalCallAudioSessionActive(isActive);
   }
 
   Future<void> toggleMute(bool enabled) async {
@@ -76,7 +110,36 @@ class CallMediaService {
     await liveKit.switchCamera();
   }
 
-  Future<void> _requestPermissions(bool isVideo) async {
+  Future<void> _requestBluetoothPermissionsBestEffort() async {
+    if (!Platform.isAndroid) return;
+
+    final permissions = <Permission>[
+      Permission.bluetooth,
+      Permission.bluetoothConnect,
+    ];
+
+    try {
+      final statuses = await permissions.request();
+      final denied = statuses.entries.where((entry) => !entry.value.isGranted);
+      if (denied.isNotEmpty) {
+        appLogger.w(
+          '📞 Bluetooth permission not granted; call will continue with '
+          'available handset/wired audio routing '
+          '(state=${_describePermissions(statuses)})',
+        );
+      }
+    } catch (error, stackTrace) {
+      // Bluetooth is optional for the call itself. Never block microphone/call
+      // establishment because a device/API level does not expose the permission.
+      appLogger.w(
+        '📞 Bluetooth permission preparation failed; continuing call setup',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  Future<void> _requestRequiredMediaPermissions(bool isVideo) async {
     final permissions = <Permission>[
       Permission.microphone,
       if (isVideo) Permission.camera,

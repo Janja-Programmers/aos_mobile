@@ -11,6 +11,8 @@ enum BackendCallStatus {
   failed,
 }
 
+enum IncomingCallHydrationOutcome { hydrated, terminal, unavailable, conflict }
+
 enum UiCallPhase {
   idle,
   outgoingStarting,

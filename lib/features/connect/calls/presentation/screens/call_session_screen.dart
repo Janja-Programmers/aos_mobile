@@ -36,9 +36,11 @@ class CallSessionScreen extends ConsumerWidget {
     }
 
     switch (state.uiPhase) {
-      /// Incoming ringing is handled by native CallKit.
+      /// Android foreground calls use the in-app Answer/Decline surface.
+      /// Background/terminated presentation remains owned by the native call
+      /// notification, while iOS incoming ringing remains native CallKit.
       case UiCallPhase.incomingRinging:
-        return ClosingCallView(state: state);
+        return isVideo ? const VideoRingingScreen() : const RingingScreen();
 
       /// Outgoing calls still use AOS ringing UI.
       case UiCallPhase.outgoingStarting:

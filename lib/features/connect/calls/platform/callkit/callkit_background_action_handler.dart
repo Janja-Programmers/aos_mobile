@@ -1,22 +1,16 @@
-import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/connect/calls/platform/callkit/callkit_pending_payload_store.dart';
 import 'package:flutter_callkit_incoming/entities/call_event.dart';
 
-/// Persists native actions using flutter_callkit_incoming 3.0.0's event model.
-///
-/// Version 3.0.0 exposes one [CallEvent] with an [Event] enum and a map-like
-/// `body`. The sealed `CallEventActionCall*` classes belong to 3.1.x and must
-/// not be referenced while the dependency is pinned to 3.0.0.
+/// Persists native actions delivered by flutter_callkit_incoming 3.1.5 while
+/// the foreground Riverpod graph is unavailable.
 @pragma('vm:entry-point')
 Future<void> callKitBackgroundMessageHandler(CallEvent event) async {
   const store = CallKitPendingPayloadStore();
 
   try {
-    final resolved = await _resolveBackgroundAction(event, store);
-    if (resolved == null) {
-      return;
-    }
+    final resolved = await resolveCallKitBackgroundAction(event, store);
+    if (resolved == null) return;
 
     await store.saveAction(
       callId: resolved.callId,
@@ -32,48 +26,48 @@ Future<void> callKitBackgroundMessageHandler(CallEvent event) async {
   }
 }
 
-Future<_ResolvedBackgroundAction?> _resolveBackgroundAction(
+Future<ResolvedCallKitBackgroundAction?> resolveCallKitBackgroundAction(
   CallEvent event,
   CallKitPendingPayloadStore store,
 ) async {
-  final action = switch (event.event) {
-    Event.actionCallAccept => PendingCallKitAction.accept,
-    Event.actionCallDecline => PendingCallKitAction.decline,
-    Event.actionCallEnded => PendingCallKitAction.ended,
-    Event.actionCallTimeout => PendingCallKitAction.timeout,
-    _ => null,
+  final (action, params) = switch (event) {
+    CallEventActionCallAccept(:final callKitParams) => (
+      PendingCallKitAction.accept,
+      callKitParams,
+    ),
+    CallEventActionCallDecline(:final callKitParams) => (
+      PendingCallKitAction.decline,
+      callKitParams,
+    ),
+    CallEventActionCallEnded(:final callKitParams) => (
+      PendingCallKitAction.ended,
+      callKitParams,
+    ),
+    CallEventActionCallTimeout() => (PendingCallKitAction.timeout, null),
+    _ => (null, null),
   };
 
-  if (action == null) {
-    return null;
-  }
+  if (action == null || params == null) return null;
 
-  final body = asJsonMap(event.body);
-  final extra = asJsonMap(body['extra']);
   final pendingPayload = await store.read();
-
   final callId = _clean(
-    extra['call_id'] ??
-        extra['backend_call_id'] ??
-        body['call_id'] ??
-        body['backend_call_id'] ??
+    params.extra?['call_id'] ??
+        params.extra?['backend_call_id'] ??
         pendingPayload?['call_id'] ??
         pendingPayload?['backend_call_id'],
   );
-  if (callId == null) {
-    return null;
-  }
+  if (callId == null) return null;
 
-  final nativeId = _clean(body['id']);
   final callkitUuid = _clean(
-    nativeId ??
-        extra['callkit_uuid'] ??
-        extra['callkit_id'] ??
-        pendingPayload?['callkit_uuid'] ??
-        pendingPayload?['callkit_id'],
+    params.id.isNotEmpty
+        ? params.id
+        : params.extra?['callkit_uuid'] ??
+              params.extra?['callkit_id'] ??
+              pendingPayload?['callkit_uuid'] ??
+              pendingPayload?['callkit_id'],
   );
 
-  return _ResolvedBackgroundAction(
+  return ResolvedCallKitBackgroundAction(
     callId: callId,
     action: action,
     callkitUuid: callkitUuid,
@@ -88,12 +82,12 @@ String? _clean(Object? value) {
   return text;
 }
 
-class _ResolvedBackgroundAction {
+class ResolvedCallKitBackgroundAction {
   final String callId;
   final PendingCallKitAction action;
   final String? callkitUuid;
 
-  const _ResolvedBackgroundAction({
+  const ResolvedCallKitBackgroundAction({
     required this.callId,
     required this.action,
     required this.callkitUuid,

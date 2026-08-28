@@ -162,6 +162,7 @@ final pushNotificationServiceProvider = Provider<PushNotificationService>((
   final pushRepo = ref.read(pushTokenRepositoryProvider);
   final bannerService = ref.read(inAppNotificationServiceProvider);
   final incomingCallBootstrapper = ref.read(incomingCallBootstrapperProvider);
+  final callKitRecoveryService = ref.read(callKitRecoveryServiceProvider);
 
   final service = PushNotificationService(
     messaging: messaging,
@@ -170,6 +171,7 @@ final pushNotificationServiceProvider = Provider<PushNotificationService>((
     pushRepo: pushRepo,
     bannerService: bannerService,
     incomingCallBootstrapper: incomingCallBootstrapper,
+    callKitRecoveryService: callKitRecoveryService,
   );
 
   ref.onDispose(service.dispose);

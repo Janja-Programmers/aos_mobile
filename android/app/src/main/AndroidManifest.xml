@@ -11,8 +11,15 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <!-- ================= MEDIA / LIVEKIT ================= -->
+    <!-- LiveKit 2.10 Android setup. Camera hardware is optional so audio-only
+         devices are not filtered out of Play compatibility. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
 
     <!-- ================= STORAGE / MEDIA PICKER ================= -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
@@ -28,7 +35,7 @@
     <!-- ================= LOCKSCREEN / CALL UI ================= -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <!-- AOS is not eligible for Play pre-granted full-screen intent.
-         flutter_callkit_incoming 3.0.0 declares this transitively, so remove
+         flutter_callkit_incoming declares this transitively, so remove
          it from the merged release manifest while keeping CallStyle/FGS calls. -->
     <uses-permission
         android:name="android.permission.USE_FULL_SCREEN_INTENT"
@@ -83,16 +90,6 @@
 
         </activity>
 
-        <!-- ================= CALLKIT ACTIVITY ================= -->
-        <activity
-            android:name="com.hiennv.flutter_callkit_incoming.activities.CallkitActivity"
-            android:exported="true"
-            android:launchMode="singleTask"
-            android:showWhenLocked="true"
-            android:turnScreenOn="true"
-            android:excludeFromRecents="true"
-            android:taskAffinity=""
-            android:theme="@style/Theme.AppCompat.NoActionBar"/>
 
         <!-- REQUIRED FOR IMAGE CROPPER -->
         <activity

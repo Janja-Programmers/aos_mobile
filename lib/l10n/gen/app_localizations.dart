@@ -3175,6 +3175,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Store banner removed.'**
   String get sellerBannerRemoved;
+
+  /// No description provided for @chat_answer_call.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer'**
+  String get chat_answer_call;
+
+  /// No description provided for @chat_decline_call.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get chat_decline_call;
+
+  /// No description provided for @chat_incoming_voice_call.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming voice call'**
+  String get chat_incoming_voice_call;
+
+  /// No description provided for @chat_incoming_video_call.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming video call'**
+  String get chat_incoming_video_call;
+
+  /// No description provided for @chat_minimize_call.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimize call'**
+  String get chat_minimize_call;
+
+  /// No description provided for @chat_call_ended.
+  ///
+  /// In en, this message translates to:
+  /// **'Call ended'**
+  String get chat_call_ended;
+
+  /// No description provided for @chat_call_cancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Call cancelled'**
+  String get chat_call_cancelled;
+
+  /// No description provided for @chat_call_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Call failed'**
+  String get chat_call_failed;
+
+  /// No description provided for @chat_waiting_for_video.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for video…'**
+  String get chat_waiting_for_video;
+
+  /// No description provided for @chat_waiting_for_connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for connection…'**
+  String get chat_waiting_for_connection;
+
+  /// No description provided for @chat_camera_starting.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera is starting…'**
+  String get chat_camera_starting;
+
+  /// No description provided for @chat_camera_off.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera is off'**
+  String get chat_camera_off;
+
+  /// No description provided for @chat_switch_camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch camera'**
+  String get chat_switch_camera;
+
+  /// No description provided for @chat_switch_to_video_call.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to video call?'**
+  String get chat_switch_to_video_call;
+
+  /// No description provided for @chat_switch_to_video.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get chat_switch_to_video;
+
+  /// No description provided for @chat_video_upgrade_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Video upgrade failed'**
+  String get chat_video_upgrade_failed;
 }
 
 class _AppLocalizationsDelegate

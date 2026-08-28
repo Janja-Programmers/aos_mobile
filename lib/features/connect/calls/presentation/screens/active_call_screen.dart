@@ -2,6 +2,7 @@ import 'package:africaonlinestores/features/account/shared/providers/account_use
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/session/audio_call_view.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,8 +19,8 @@ class ActiveCallScreen extends ConsumerWidget {
       callState,
       currentUserId: currentUserId,
       fallbackName: callState.direction == 'incoming'
-          ? 'Incoming call'
-          : 'Calling...',
+          ? context.l10n.chat_incoming_call
+          : context.l10n.chat_calling,
     );
 
     return AudioCallView(

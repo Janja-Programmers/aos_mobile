@@ -41,8 +41,6 @@ class CallKitPayloadMapper {
       handle: isVideo ? 'Incoming video call' : 'Incoming voice call',
       type: isVideo ? 1 : 0,
       duration: 30000,
-      textAccept: 'Accept',
-      textDecline: 'Decline',
       // Persistent missed-call notifications are owned by the backend. The
       // plugin must not create a second callback notification after timeout.
       missedCallNotification: const NotificationParams(
@@ -59,9 +57,12 @@ class CallKitPayloadMapper {
         'room_name': roomName,
       },
       android: const AndroidParams(
-        isCustomNotification: true,
+        isCustomNotification: false,
         isShowLogo: true,
         isShowCallID: false,
+        textAccept: 'Accept',
+        textDecline: 'Decline',
+        isFullScreen: false,
         // Play policy: AOS uses the incoming-call notification surface
         // rather than privileged full-screen intent.
         isShowFullLockedScreen: false,

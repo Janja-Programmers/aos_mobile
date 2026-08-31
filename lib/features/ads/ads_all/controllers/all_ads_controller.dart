@@ -7,6 +7,8 @@ import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/category_ads_provider.dart';
+import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
+import 'package:africaonlinestores/features/wishlist/controller/wishlist_state.dart';
 import 'package:africaonlinestores/shared/enums/ads_mode.dart';
 import 'package:africaonlinestores/shared/enums/ads_sort.dart';
 import 'package:africaonlinestores/shared/enums/deal_type.dart';
@@ -15,6 +17,13 @@ import 'package:flutter_riverpod/legacy.dart';
 
 class AllAdsController extends StateNotifier<AllAdsState> {
   AllAdsController(this.ref, this.params) : super(const AllAdsState()) {
+    if (isWishlist) {
+      ref.listen<WishlistState>(wishlistControllerProvider, (previous, next) {
+        if (!mounted) return;
+        _reconcileWishlistMembership(next);
+      });
+    }
+
     unawaited(Future<void>.microtask(_init));
   }
 
@@ -31,6 +40,8 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   bool get isWishlist => params.mode == AllAdsMode.wishlist;
 
   List<CategoryNode> _allCategories = <CategoryNode>[];
+  final Map<String, _HiddenWishlistItem> _hiddenWishlistItems =
+      <String, _HiddenWishlistItem>{};
 
   /// Initialize controller from screen navigation
   Future<void> _init() async {
@@ -60,60 +71,46 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   void _resolveChildren() {
     final selected = state.selectedCategoryId;
 
-    // ✅ CASE 1: No category selected
     if (selected == null) {
       final parentId = params.parentCategoryId;
-
-      // 🔥 FIX: if parent is ALSO null → show root categories
       if (parentId == null) {
         state = state.copyWith(children: _allCategories);
         return;
       }
 
-      // Normal parent → show its children
       final CategoryNode? parentNode = _rootById(parentId);
-
       if (parentNode != null) {
         state = state.copyWith(children: parentNode.children);
       } else {
         state = state.copyWith(children: []);
       }
-
       return;
     }
 
-    // ✅ CASE 2: Selected is a parent → show its children
     final CategoryNode? parent = _rootById(selected);
-
     if (parent != null) {
       state = state.copyWith(children: parent.children);
       return;
     }
 
-    // ✅ CASE 3: Selected is a child → show siblings
     for (final CategoryNode root in _allCategories) {
       final bool containsSelected = root.children.any(
         (CategoryNode child) => child.id == selected,
       );
-
       if (containsSelected) {
         state = state.copyWith(children: root.children);
         return;
       }
     }
 
-    // ✅ Fallback
     state = state.copyWith(children: []);
   }
 
   Future<void> _loadAllCategories() async {
     final repository = ref.read(categoriesRepositoryProvider);
-
     final res = await repository.getCategories();
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     final List<CategoryNode>? categories = res.rightOrNull;
     if (categories != null) {
@@ -123,9 +120,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
   CategoryNode? _rootById(String id) {
     for (final CategoryNode root in _allCategories) {
-      if (root.id == id) {
-        return root;
-      }
+      if (root.id == id) return root;
     }
     return null;
   }
@@ -143,7 +138,6 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     );
 
     final api = ref.read(adsApiProvider);
-
     final categoryId = state.selectedCategoryId;
     final dealType = state.selectedDealType.apiValue;
     final sort = state.selectedSort?.apiValue;
@@ -169,9 +163,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
             offset: _offset,
           );
 
-    if (!mounted || requestGeneration != _requestGeneration) {
-      return;
-    }
+    if (!mounted || requestGeneration != _requestGeneration) return;
 
     res.fold(
       (failure) {
@@ -193,7 +185,6 @@ class AllAdsController extends StateNotifier<AllAdsState> {
         final nextOffset = asNullableInt(pagination['next_offset']);
 
         final merged = _offset == 0 ? list : [...state.items, ...list];
-
         _offset = nextOffset ?? (_offset + list.length);
 
         state = state.copyWith(
@@ -203,6 +194,10 @@ class AllAdsController extends StateNotifier<AllAdsState> {
           loadingMore: false,
           clearError: true,
         );
+
+        if (isWishlist) {
+          _reconcileWishlistMembership(ref.read(wishlistControllerProvider));
+        }
       },
     );
   }
@@ -210,9 +205,9 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   Future<void> refresh() async {
     _invalidateActiveRequest();
     _offset = 0;
+    _hiddenWishlistItems.clear();
 
     state = state.copyWith(hasMore: true, items: [], clearError: true);
-
     await load(initial: true);
   }
 
@@ -225,20 +220,18 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   void setCategory(String? id) {
     if (isWishlist) return;
 
-    final nextId = id;
-    if (state.selectedCategoryId == nextId) return;
+    if (state.selectedCategoryId == id) return;
 
     _invalidateActiveRequest();
     _offset = 0;
 
     state = state.copyWith(
-      selectedCategoryId: nextId,
+      selectedCategoryId: id,
       items: [],
       hasMore: true,
     );
 
     _resolveChildren();
-
     unawaited(load(initial: true));
   }
 
@@ -247,9 +240,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     _invalidateActiveRequest();
     _offset = 0;
-
     state = state.copyWith(selectedDealType: type, items: [], hasMore: true);
-
     unawaited(load(initial: true));
   }
 
@@ -258,9 +249,9 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     _invalidateActiveRequest();
     _offset = 0;
+    _hiddenWishlistItems.clear();
 
     state = state.copyWith(selectedSort: sortType, items: [], hasMore: true);
-
     unawaited(load(initial: true));
   }
 
@@ -272,11 +263,10 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     _wishlistSearchDebounce?.cancel();
     _invalidateActiveRequest();
+    _hiddenWishlistItems.clear();
 
     state = state.copyWith(wishlistQuery: clean, clearError: true);
 
-    // The backend accepts either an empty query or at least two characters.
-    // Keep the current results while the user has typed only one character.
     if (clean.length == 1) return;
 
     _offset = 0;
@@ -311,6 +301,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
 
     _invalidateActiveRequest();
     _offset = 0;
+    _hiddenWishlistItems.clear();
     state = state.copyWith(
       wishlistMinPrice: priceMin,
       wishlistMaxPrice: priceMax,
@@ -322,6 +313,84 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     );
 
     unawaited(load(initial: true));
+  }
+
+  void _reconcileWishlistMembership(WishlistState wishlistState) {
+    if (!mounted || !isWishlist) return;
+
+    final items = List<AOSAdListItem>.from(state.items);
+    var changed = false;
+
+    for (var index = items.length - 1; index >= 0; index -= 1) {
+      final ad = items[index];
+      final shouldRemainVisible = wishlistState.resolve(
+        ad.id,
+        fallback: ad.isWishlisted,
+      );
+      if (shouldRemainVisible) continue;
+
+      if (!_hiddenWishlistItems.containsKey(ad.id)) {
+        final previousId = index > 0 ? items[index - 1].id : null;
+        final nextId = index + 1 < items.length ? items[index + 1].id : null;
+        final offsetAdjusted = _offset > 0;
+        if (offsetAdjusted) _offset -= 1;
+
+        _hiddenWishlistItems[ad.id] = _HiddenWishlistItem(
+          item: ad,
+          originalIndex: index,
+          previousId: previousId,
+          nextId: nextId,
+          offsetAdjusted: offsetAdjusted,
+        );
+      }
+
+      items.removeAt(index);
+      changed = true;
+    }
+
+    for (final entry in _hiddenWishlistItems.entries.toList(growable: false)) {
+      final id = entry.key;
+      final snapshot = entry.value;
+      final shouldBeVisible = wishlistState.resolve(
+        id,
+        fallback: snapshot.item.isWishlisted,
+      );
+      if (!shouldBeVisible) continue;
+
+      if (!items.any((item) => item.id == id)) {
+        final insertionIndex = _restoreIndex(items, snapshot);
+        items.insert(insertionIndex, snapshot.item);
+        if (snapshot.offsetAdjusted) _offset += 1;
+        changed = true;
+      }
+
+      _hiddenWishlistItems.remove(id);
+    }
+
+    if (changed) {
+      state = state.copyWith(items: items);
+    }
+  }
+
+  int _restoreIndex(
+    List<AOSAdListItem> items,
+    _HiddenWishlistItem snapshot,
+  ) {
+    final nextId = snapshot.nextId;
+    if (nextId != null) {
+      final nextIndex = items.indexWhere((item) => item.id == nextId);
+      if (nextIndex >= 0) return nextIndex;
+    }
+
+    final previousId = snapshot.previousId;
+    if (previousId != null) {
+      final previousIndex = items.indexWhere((item) => item.id == previousId);
+      if (previousIndex >= 0) return previousIndex + 1;
+    }
+
+    return snapshot.originalIndex > items.length
+        ? items.length
+        : snapshot.originalIndex;
   }
 
   void _invalidateActiveRequest() {
@@ -338,4 +407,20 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     _wishlistSearchDebounce?.cancel();
     super.dispose();
   }
+}
+
+class _HiddenWishlistItem {
+  const _HiddenWishlistItem({
+    required this.item,
+    required this.originalIndex,
+    required this.previousId,
+    required this.nextId,
+    required this.offsetAdjusted,
+  });
+
+  final AOSAdListItem item;
+  final int originalIndex;
+  final String? previousId;
+  final String? nextId;
+  final bool offsetAdjusted;
 }

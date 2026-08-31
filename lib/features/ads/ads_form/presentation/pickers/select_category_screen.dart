@@ -4,6 +4,7 @@ import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/catalog/shared/providers/categories_controller.dart';
 import 'package:africaonlinestores/features/catalog/shared/utils/category_icon_url.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -93,9 +94,8 @@ class SelectCategoryScreen extends ConsumerWidget {
                           ? Icon(Icons.category_outlined, color: colors.primary)
                           : ClipRRect(
                               borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                buildFileUrl(iconUrl) ?? iconUrl,
-                                fit: BoxFit.cover,
+                              child: AppNetworkImage(
+                                url: buildFileUrl(iconUrl) ?? iconUrl,
                                 errorBuilder: (_, _, _) => Icon(
                                   Icons.category_outlined,
                                   color: colors.primary,

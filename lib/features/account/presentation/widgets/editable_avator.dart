@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/account/shared/utils/avator_image.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class EditableAvatar extends StatelessWidget {
@@ -27,11 +28,28 @@ class EditableAvatar extends StatelessWidget {
 
   static const BorderRadius _pill = BorderRadius.all(Radius.circular(99));
 
-  ImageProvider<Object>? _imageProvider() {
-    if (localPhoto != null) return FileImage(localPhoto!);
+  ImageProvider<Object>? _imageProvider(BuildContext context) {
+    if (localPhoto != null) {
+      return AppImageDecode.fileProvider(
+        context,
+        localPhoto!,
+        logicalWidth: 92,
+        logicalHeight: 92,
+      );
+    }
 
-    return resolveAvatarImage(apiUserImage, baseUrl) ??
+    final ImageProvider<Object>? provider =
+        resolveAvatarImage(apiUserImage, baseUrl) ??
         resolveAvatarImage(authUserImage, baseUrl);
+
+    if (provider == null) return null;
+
+    return AppImageDecode.resizeProvider(
+      context,
+      provider,
+      logicalWidth: 92,
+      logicalHeight: 92,
+    );
   }
 
   String _initial() {
@@ -45,7 +63,7 @@ class EditableAvatar extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final colors = context.appColors;
 
-    final img = _imageProvider();
+    final ImageProvider<Object>? img = _imageProvider(context);
     final hasImage = img != null;
 
     return Stack(

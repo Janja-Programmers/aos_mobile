@@ -38,9 +38,8 @@ class _ProfileGridItem extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             if (thumbnail.trim().isNotEmpty)
-              Image.network(
-                thumbnail,
-                fit: BoxFit.cover,
+              AppNetworkImage(
+                url: thumbnail,
                 errorBuilder: (_, _, _) => _PostFallbackIcon(short: short),
                 loadingBuilder: (context, child, progress) {
                   if (progress == null) return child;

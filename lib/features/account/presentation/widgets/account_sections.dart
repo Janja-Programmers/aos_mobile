@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/account/shared/utils/avator_image.dart';
 import 'package:africaonlinestores/shared/components/verified_badge.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class AccountCard extends StatelessWidget {
@@ -68,9 +69,17 @@ class _AccountHeaderCardState extends State<AccountHeaderCard> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    final ImageProvider? img = _imageFailed
+    final ImageProvider<Object>? rawImage = _imageFailed
         ? null
         : resolveAvatarImage(widget.imagePath, widget.baseUrl);
+    final ImageProvider<Object>? img = rawImage == null
+        ? null
+        : AppImageDecode.resizeProvider(
+            context,
+            rawImage,
+            logicalWidth: 48,
+            logicalHeight: 48,
+          );
 
     return AccountCard(
       child: Material(

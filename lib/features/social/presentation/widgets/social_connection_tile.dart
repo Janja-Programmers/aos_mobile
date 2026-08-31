@@ -3,6 +3,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/social/domain/social_friend.dart';
 import 'package:africaonlinestores/shared/components/verified_badge.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class SocialConnectionTile extends StatelessWidget {
@@ -40,7 +41,14 @@ class SocialConnectionTile extends StatelessWidget {
             CircleAvatar(
               radius: 25,
               backgroundColor: colors.border,
-              backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
+              backgroundImage: imageUrl != null
+                  ? AppImageDecode.networkProvider(
+                      context,
+                      imageUrl,
+                      logicalWidth: 50,
+                      logicalHeight: 50,
+                    )
+                  : null,
               child: imageUrl == null
                   ? Text(
                       friend.initials,

@@ -7,6 +7,7 @@ import 'package:africaonlinestores/features/connect/calls/application/state/call
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/session/call_control_dock.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:livekit_client/livekit_client.dart';
 
@@ -488,9 +489,10 @@ class _ParticipantAvatar extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: avatarUrl != null && avatarUrl.isNotEmpty
-          ? Image.network(
-              avatarUrl,
-              fit: BoxFit.cover,
+          ? AppNetworkImage(
+              url: avatarUrl,
+              width: size,
+              height: size,
               errorBuilder: (_, _, _) =>
                   _InitialsAvatar(initials: participant.initials, size: size),
             )

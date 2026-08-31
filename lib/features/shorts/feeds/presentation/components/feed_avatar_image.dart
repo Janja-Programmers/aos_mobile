@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 class FeedAvatarImage extends StatelessWidget {
@@ -16,9 +17,8 @@ class FeedAvatarImage extends StatelessWidget {
     final url = avatar?.trim();
 
     if (url != null && url.isNotEmpty) {
-      return Image.network(
-        url,
-        fit: BoxFit.cover,
+      return AppNetworkImage(
+        url: url,
         errorBuilder: (_, _, _) {
           return _FallbackAvatar(text: fallbackText);
         },

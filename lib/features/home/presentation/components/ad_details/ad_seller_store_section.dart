@@ -5,6 +5,7 @@ import 'package:africaonlinestores/features/account/shared/utils/avator_image.da
 import 'package:africaonlinestores/features/reviews/application/state/review_state.dart';
 import 'package:africaonlinestores/shared/components/cards/section_card.dart';
 import 'package:africaonlinestores/shared/components/verified_badge.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class AdSellerInfoSection extends StatelessWidget {
@@ -47,7 +48,18 @@ class AdSellerInfoSection extends StatelessWidget {
     final safeDisplayName = displayName.trim().isEmpty
         ? 'Seller'
         : displayName.trim();
-    final image = resolveAvatarImage(avatar, AppConfig.normalizedBaseUrl);
+    final ImageProvider<Object>? rawImage = resolveAvatarImage(
+      avatar,
+      AppConfig.normalizedBaseUrl,
+    );
+    final ImageProvider<Object>? image = rawImage == null
+        ? null
+        : AppImageDecode.resizeProvider(
+            context,
+            rawImage,
+            logicalWidth: 48,
+            logicalHeight: 48,
+          );
 
     return SectionCard(
       title: 'Seller Information',

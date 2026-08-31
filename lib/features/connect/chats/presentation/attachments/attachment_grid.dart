@@ -3,6 +3,7 @@ import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_attachment.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/attachment_opener.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/attachments/viewers/inline_audio_player.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -125,6 +126,11 @@ class _MediaTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final url = buildFileUrl(attachment.url);
     final colors = context.appColors;
+    final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
+      context,
+      logicalWidth: width,
+      logicalHeight: height,
+    );
 
     if (url == null) return const SizedBox.shrink();
 
@@ -147,6 +153,8 @@ class _MediaTile extends StatelessWidget {
                   ? CachedNetworkImage(
                       imageUrl: url,
                       fit: BoxFit.cover,
+                      memCacheWidth: decodeSize.width,
+                      memCacheHeight: decodeSize.height,
                       placeholder: (_, _) =>
                           _AttachmentSkeleton(width: width, height: height),
                       errorWidget: (_, _, _) => _AttachmentFallback(

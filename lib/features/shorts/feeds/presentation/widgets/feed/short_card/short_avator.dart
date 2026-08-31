@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -35,6 +36,11 @@ class ShortAvatar extends StatelessWidget {
     final fallbackBackground =
         backgroundColor ?? colors.primary.withValues(alpha: .12);
     final fallbackTextColor = textColor ?? colors.primary;
+    final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
+      context,
+      logicalWidth: size,
+      logicalHeight: size,
+    );
 
     return Container(
       width: size,
@@ -57,6 +63,8 @@ class ShortAvatar extends StatelessWidget {
             : CachedNetworkImage(
                 imageUrl: avatarUrl!,
                 fit: BoxFit.cover,
+                memCacheWidth: decodeSize.width,
+                memCacheHeight: decodeSize.height,
                 placeholder: (_, _) => Container(color: fallbackBackground),
                 errorWidget: (_, _, _) => _FallbackAvatar(
                   initials: initials,

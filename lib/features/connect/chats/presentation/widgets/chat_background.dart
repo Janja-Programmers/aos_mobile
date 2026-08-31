@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/application/controllers/chat_local_preferences_controller.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class ChatBackground extends StatelessWidget {
@@ -23,6 +24,7 @@ class ChatBackground extends StatelessWidget {
     final solid = preferences.solidWallpaper;
     final galleryPath = preferences.wallpaperImagePath?.trim();
     final useGallery = preferences.hasGalleryWallpaper && galleryPath != null;
+    final Size viewportSize = MediaQuery.sizeOf(context);
 
     return Stack(
       children: [
@@ -33,7 +35,12 @@ class ChatBackground extends StatelessWidget {
         if (useGallery)
           Positioned.fill(
             child: Image(
-              image: FileImage(File(galleryPath)),
+              image: AppImageDecode.fileProvider(
+                context,
+                File(galleryPath),
+                logicalWidth: viewportSize.width,
+                logicalHeight: viewportSize.height,
+              ),
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return ColoredBox(color: solid?.color ?? colors.surface);

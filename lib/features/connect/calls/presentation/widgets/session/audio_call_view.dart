@@ -7,6 +7,7 @@ import 'package:africaonlinestores/features/connect/calls/presentation/utils/cal
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/session/call_control_dock.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/widgets/session/incoming_call_action_bar.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 class AudioCallView extends StatelessWidget {
@@ -320,9 +321,8 @@ class _AvatarContent extends StatelessWidget {
     final url = avatarUrl?.trim();
 
     if (url != null && url.isNotEmpty) {
-      return Image.network(
-        url,
-        fit: BoxFit.cover,
+      return AppNetworkImage(
+        url: url,
         errorBuilder: (_, _, _) => _InitialsAvatar(initials: initials),
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;

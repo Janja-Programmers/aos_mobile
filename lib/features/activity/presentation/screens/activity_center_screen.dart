@@ -7,6 +7,7 @@ import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
 import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -306,9 +307,10 @@ class _ActivityTile extends StatelessWidget {
                   height: 54,
                   color: accent.withValues(alpha: .12),
                   child: hasImage
-                      ? Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
+                      ? AppNetworkImage(
+                          url: imageUrl,
+                          width: 54,
+                          height: 54,
                           errorBuilder: (_, _, _) =>
                               Icon(_iconForGroup(item.group), color: accent),
                         )

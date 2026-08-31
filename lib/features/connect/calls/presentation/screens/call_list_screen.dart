@@ -9,6 +9,7 @@ import 'package:africaonlinestores/features/connect/calls/domain/call_log.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_filter_utils.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/show_call_details_sheet.dart';
 import 'package:africaonlinestores/features/connect/conversations/presentation/widgets/connect_state_view.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:africaonlinestores/shared/utils/format_time.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -509,7 +510,12 @@ class _CallHistoryAvatar extends StatelessWidget {
     return CircleAvatar(
       backgroundColor: colors.border,
       backgroundImage: avatar != null && avatar.isNotEmpty
-          ? NetworkImage(avatar)
+          ? AppImageDecode.networkProvider(
+              context,
+              avatar,
+              logicalWidth: 40,
+              logicalHeight: 40,
+            )
           : null,
       child: avatar == null || avatar.isEmpty
           ? Text(

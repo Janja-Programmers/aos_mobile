@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
 import 'package:africaonlinestores/features/notifications/presentation/utils/helpers.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:africaonlinestores/shared/utils/format_time.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -199,7 +200,15 @@ class _NotificationTileState extends State<NotificationTile>
     final avatar = widget.notification.actorAvatar;
 
     if (avatar != null) {
-      return CircleAvatar(radius: 20, backgroundImage: NetworkImage(avatar));
+      return CircleAvatar(
+        radius: 20,
+        backgroundImage: AppImageDecode.networkProvider(
+          context,
+          avatar,
+          logicalWidth: 40,
+          logicalHeight: 40,
+        ),
+      );
     }
 
     final iconData = iconForType(widget.notification.type);

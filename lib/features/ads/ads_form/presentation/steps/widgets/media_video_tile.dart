@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
@@ -64,6 +65,11 @@ class _MediaVideoTileState extends State<MediaVideoTile> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
+      context,
+      logicalWidth: 110,
+      logicalHeight: 110,
+    );
 
     return SizedBox(
       width: 110,
@@ -82,8 +88,8 @@ class _MediaVideoTileState extends State<MediaVideoTile> {
                     fit: BoxFit.cover,
                     width: 110,
                     height: 110,
-                    cacheWidth: 440,
-                    cacheHeight: 440,
+                    cacheWidth: decodeSize.width,
+                    cacheHeight: decodeSize.height,
                   ),
           ),
 

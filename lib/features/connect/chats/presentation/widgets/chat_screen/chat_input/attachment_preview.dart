@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/helpers/chat_pending_attachment.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class AttachmentPreviewBar extends StatelessWidget {
@@ -78,11 +79,17 @@ class _AttachmentPreview extends StatelessWidget {
     final colors = context.appColors;
 
     if (attachment.type == 'image') {
+      final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
+        context,
+        logicalWidth: 66,
+        logicalHeight: 66,
+      );
+
       return Image.file(
         attachment.file,
         fit: BoxFit.cover,
-        cacheWidth: 320,
-        cacheHeight: 320,
+        cacheWidth: decodeSize.width,
+        cacheHeight: decodeSize.height,
         errorBuilder: (_, _, _) {
           return Icon(Icons.broken_image_outlined, color: colors.textMuted);
         },

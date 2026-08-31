@@ -17,6 +17,8 @@ import 'package:africaonlinestores/features/shorts/shared/application/providers/
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 import 'package:africaonlinestores/features/social/domain/social_friend.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -229,6 +231,11 @@ class _PostShortDetailsScreenState
   Widget _mediaPreview() {
     final availableWidth = MediaQuery.sizeOf(context).width - 40;
     final previewSize = availableWidth.clamp(160, 240).toDouble();
+    final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
+      context,
+      logicalWidth: previewSize,
+      logicalHeight: previewSize,
+    );
     return Align(
       alignment: AlignmentDirectional.centerStart,
       child: ClipRRect(
@@ -242,7 +249,12 @@ class _PostShortDetailsScreenState
                 : Stack(
                     fit: StackFit.expand,
                     children: <Widget>[
-                      Image.memory(_thumbnail!, fit: BoxFit.cover),
+                      Image.memory(
+                        _thumbnail!,
+                        fit: BoxFit.cover,
+                        cacheWidth: decodeSize.width,
+                        cacheHeight: decodeSize.height,
+                      ),
                       const Center(
                         child: Icon(
                           Icons.play_circle_outline_rounded,
@@ -563,9 +575,10 @@ class _PostShortDetailsScreenState
                   color: Colors.black12,
                   child: Icon(Icons.image_outlined),
                 )
-              : Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
+              : AppNetworkImage(
+                  url: imageUrl,
+                  width: 48,
+                  height: 48,
                   errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
                 ),
         ),

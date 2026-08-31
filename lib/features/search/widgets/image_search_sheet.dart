@@ -5,6 +5,7 @@ import 'package:africaonlinestores/core/media/application/media_services_provide
 import 'package:africaonlinestores/core/media/domain/media_asset.dart';
 import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -274,6 +275,11 @@ class _SelectedImagePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
+      context,
+      logicalWidth: 52,
+      logicalHeight: 52,
+    );
 
     return Container(
       padding: const EdgeInsets.all(10),
@@ -291,8 +297,8 @@ class _SelectedImagePreview extends StatelessWidget {
               width: 52,
               height: 52,
               fit: BoxFit.cover,
-              cacheWidth: 208,
-              cacheHeight: 208,
+              cacheWidth: decodeSize.width,
+              cacheHeight: decodeSize.height,
             ),
           ),
           const SizedBox(width: 12),

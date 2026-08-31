@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class PostShortMediaWidgets {
@@ -39,16 +40,30 @@ class PostShortMediaWidgets {
 
   /// Thumbnail preview
   static Widget previewItem({
+    required BuildContext context,
     required File file,
     required bool isVideo,
     required VoidCallback onRemove,
     required AppColorTokens colors,
   }) {
+    final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
+      context,
+      logicalWidth: 70,
+      logicalHeight: 70,
+    );
+
     return Stack(
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: Image.file(file, width: 70, height: 70, fit: BoxFit.cover),
+          child: Image.file(
+            file,
+            width: 70,
+            height: 70,
+            fit: BoxFit.cover,
+            cacheWidth: decodeSize.width,
+            cacheHeight: decodeSize.height,
+          ),
         ),
 
         if (isVideo)

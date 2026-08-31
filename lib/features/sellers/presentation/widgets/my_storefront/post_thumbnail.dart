@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class PostThumbnail extends StatelessWidget {
@@ -27,7 +28,15 @@ class PostThumbnail extends StatelessWidget {
             color: colors.border,
             borderRadius: BorderRadius.circular(10),
             image: url != null && url.isNotEmpty
-                ? DecorationImage(image: NetworkImage(url), fit: BoxFit.cover)
+                ? DecorationImage(
+                    image: AppImageDecode.networkProvider(
+                      context,
+                      url,
+                      logicalWidth: 92,
+                      logicalHeight: 72,
+                    ),
+                    fit: BoxFit.cover,
+                  )
                 : null,
           ),
           child: url == null || url.isEmpty

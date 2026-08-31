@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/connect/chats/domain/chat_message.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 class MessageAdPreview extends StatelessWidget {
@@ -153,11 +154,10 @@ class _AdImage extends StatelessWidget {
       );
     }
 
-    return Image.network(
-      url,
+    return AppNetworkImage(
+      url: url,
       width: 52,
       height: 52,
-      fit: BoxFit.cover,
       errorBuilder: (_, _, _) {
         return Container(
           width: 52,

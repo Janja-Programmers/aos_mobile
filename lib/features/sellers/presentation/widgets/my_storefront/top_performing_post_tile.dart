@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/sellers/domain/storefront_post.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class TopPerformingPostTile extends StatelessWidget {
@@ -31,7 +32,12 @@ class TopPerformingPostTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               image: imageUrl != null && imageUrl.isNotEmpty
                   ? DecorationImage(
-                      image: NetworkImage(imageUrl),
+                      image: AppImageDecode.networkProvider(
+                        context,
+                        imageUrl,
+                        logicalWidth: 56,
+                        logicalHeight: 56,
+                      ),
                       fit: BoxFit.cover,
                     )
                   : null,

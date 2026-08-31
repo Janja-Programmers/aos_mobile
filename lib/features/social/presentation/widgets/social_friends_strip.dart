@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/social/domain/social_friend.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class SocialFriendsStrip extends StatelessWidget {
@@ -128,7 +129,7 @@ class _SocialFriendItem extends StatelessWidget {
                   ),
                   child: CircleAvatar(
                     backgroundColor: colors.border,
-                    backgroundImage: _resolveImage(friend.userImage),
+                    backgroundImage: _resolveImage(context, friend.userImage),
                     child: !friend.hasImage
                         ? Text(
                             friend.initials,
@@ -179,13 +180,18 @@ class _SocialFriendItem extends StatelessWidget {
     );
   }
 
-  ImageProvider? _resolveImage(String? imageUrl) {
+  ImageProvider<Object>? _resolveImage(BuildContext context, String? imageUrl) {
     final url = buildFileUrl(imageUrl);
 
     if (url == null || url.trim().isEmpty) {
       return null;
     }
 
-    return NetworkImage(url);
+    return AppImageDecode.networkProvider(
+      context,
+      url,
+      logicalWidth: 58,
+      logicalHeight: 58,
+    );
   }
 }

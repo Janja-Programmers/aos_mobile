@@ -31,6 +31,8 @@ import 'package:africaonlinestores/features/social/navigation/social_navigation.
 import 'package:africaonlinestores/features/social/safety/presentation/widgets/user_safety_sheet.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/verified_badge.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

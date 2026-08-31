@@ -3,6 +3,8 @@ import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/models/short_model.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/feeds_routes.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 class ShortGridCard extends StatelessWidget {
@@ -33,9 +35,8 @@ class ShortGridCard extends StatelessWidget {
             Expanded(
               child: SizedBox(
                 width: double.infinity,
-                child: Image.network(
-                  imageUrl!,
-                  fit: BoxFit.cover,
+                child: AppNetworkImage(
+                  url: imageUrl!,
                   errorBuilder: (_, _, _) => _placeholder(colors),
                 ),
               ),
@@ -113,7 +114,14 @@ class _SellerAvatar extends StatelessWidget {
     return CircleAvatar(
       radius: 12,
       backgroundColor: colors.colorScheme.primary.withValues(alpha: .2),
-      backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+      backgroundImage: avatarUrl != null
+          ? AppImageDecode.networkProvider(
+              context,
+              avatarUrl!,
+              logicalWidth: 24,
+              logicalHeight: 24,
+            )
+          : null,
       child: avatarUrl == null
           ? Text(
               initials,

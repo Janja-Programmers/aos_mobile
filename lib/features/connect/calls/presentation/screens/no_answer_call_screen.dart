@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:africaonlinestores/features/account/shared/providers/account_user_provider.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -129,9 +130,8 @@ class _AvatarContent extends StatelessWidget {
     final url = avatarUrl?.trim();
 
     if (url != null && url.isNotEmpty) {
-      return Image.network(
-        url,
-        fit: BoxFit.cover,
+      return AppNetworkImage(
+        url: url,
         errorBuilder: (_, _, _) => _InitialsAvatar(initials: initials),
         loadingBuilder: (context, child, progress) {
           if (progress == null) return child;

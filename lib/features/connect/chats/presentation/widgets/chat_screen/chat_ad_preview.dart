@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 class ChatAdPreview extends StatelessWidget {
@@ -52,9 +53,10 @@ class ChatAdPreview extends StatelessWidget {
                       color: colors.textMuted,
                       size: 22,
                     )
-                  : Image.network(
-                      imagePath,
-                      fit: BoxFit.cover,
+                  : AppNetworkImage(
+                      url: imagePath,
+                      width: 52,
+                      height: 52,
                       errorBuilder: (_, _, _) => Icon(
                         Icons.broken_image_outlined,
                         color: colors.textMuted,

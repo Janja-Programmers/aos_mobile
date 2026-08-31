@@ -9,6 +9,7 @@ import 'package:africaonlinestores/features/auth/shared/providers/auth_controlle
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/utils/helpers.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -74,9 +75,8 @@ class AdListItem extends ConsumerWidget {
                               color: colors.textMuted,
                             ),
                           )
-                        : Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
+                        : AppNetworkImage(
+                            url: imageUrl,
                             errorBuilder: (_, _, _) => ColoredBox(
                               color: colors.elevated,
                               child: Icon(

@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/social/safety/data/social_safety_api.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,7 +56,12 @@ class BlockedUsersScreen extends ConsumerWidget {
               return ListTile(
                 leading: CircleAvatar(
                   backgroundImage: user.avatar?.isNotEmpty ?? false
-                      ? NetworkImage(user.avatar!)
+                      ? AppImageDecode.networkProvider(
+                          context,
+                          user.avatar!,
+                          logicalWidth: 40,
+                          logicalHeight: 40,
+                        )
                       : null,
                   child: user.avatar?.isNotEmpty ?? false
                       ? null

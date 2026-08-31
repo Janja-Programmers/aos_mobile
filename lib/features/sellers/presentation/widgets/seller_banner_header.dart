@@ -4,6 +4,7 @@ import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
 import 'package:africaonlinestores/features/sellers/domain/aos_seller.dart';
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 class SellerBannerHeader extends StatelessWidget {
@@ -41,9 +42,8 @@ class SellerBannerHeader extends StatelessWidget {
                 children: [
                   _SellerBannerFallback(name: seller.displayName),
                   if (bannerUrl != null && bannerUrl.trim().isNotEmpty)
-                    Image.network(
-                      bannerUrl,
-                      fit: BoxFit.cover,
+                    AppNetworkImage(
+                      url: bannerUrl,
                       errorBuilder: (_, _, _) {
                         return const SizedBox.shrink();
                       },

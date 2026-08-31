@@ -7,6 +7,7 @@ import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/wishlist/controller/wishlist_controller.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -52,9 +53,8 @@ class AdCardImage extends ConsumerWidget {
                     color: colors.elevated,
                     child: Icon(Icons.image_outlined, color: colors.textMuted),
                   )
-                : Image.network(
-                    imageUrl,
-                    fit: BoxFit.cover,
+                : AppNetworkImage(
+                    url: imageUrl,
                     errorBuilder: (_, _, _) =>
                         const Center(child: Icon(Icons.broken_image_outlined)),
                   ),

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -239,6 +240,11 @@ class LiveCoverPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final cleanUrl = imageUrl?.trim() ?? '';
+    final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
+      context,
+      logicalWidth: width,
+      logicalHeight: height,
+    );
 
     final Widget image;
     if (imageFile != null) {
@@ -247,8 +253,8 @@ class LiveCoverPreview extends StatelessWidget {
         width: width,
         height: height,
         fit: BoxFit.cover,
-        cacheWidth: (width * 3).round(),
-        cacheHeight: (height * 3).round(),
+        cacheWidth: decodeSize.width,
+        cacheHeight: decodeSize.height,
         errorBuilder: (_, _, _) =>
             _CoverFallback(width: width, height: height, initial: _initial),
       );

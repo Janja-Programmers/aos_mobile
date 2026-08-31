@@ -8,6 +8,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/reviews/application/controllers/review_create_controller.dart';
 import 'package:africaonlinestores/features/reviews/presentation/widgets/image_picker_bottom_sheet.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -222,6 +223,12 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
     final colors = context.appColors;
     if (_images.isEmpty) return const SizedBox.shrink();
 
+    final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
+      context,
+      logicalWidth: 80,
+      logicalHeight: 80,
+    );
+
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -235,8 +242,8 @@ class _ReviewCreateScreenState extends ConsumerState<ReviewCreateScreen> {
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,
-                cacheWidth: 240,
-                cacheHeight: 240,
+                cacheWidth: decodeSize.width,
+                cacheHeight: decodeSize.height,
               ),
             ),
             Positioned(

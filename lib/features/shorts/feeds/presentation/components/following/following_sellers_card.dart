@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/following/folllowing_section_state.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class FollowingSellerCard extends StatelessWidget {
@@ -45,7 +46,14 @@ class FollowingSellerCard extends StatelessWidget {
           CircleAvatar(
             radius: 30,
             backgroundColor: colors.black.withValues(alpha: .50),
-            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+            backgroundImage: avatarUrl != null
+                ? AppImageDecode.networkProvider(
+                    context,
+                    avatarUrl,
+                    logicalWidth: 60,
+                    logicalHeight: 60,
+                  )
+                : null,
             child: avatarUrl == null
                 ? Text(
                     seller.initials,

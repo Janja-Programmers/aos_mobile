@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 class CallAvatar extends StatelessWidget {
@@ -29,7 +30,9 @@ class CallAvatar extends StatelessWidget {
         ],
       ),
       child: avatarUrl != null
-          ? ClipOval(child: Image.network(avatarUrl!, fit: BoxFit.cover))
+          ? ClipOval(
+              child: AppNetworkImage(url: avatarUrl!, width: 146, height: 146),
+            )
           : Center(
               child: Text(
                 fallback.substring(0, 1).toUpperCase(),

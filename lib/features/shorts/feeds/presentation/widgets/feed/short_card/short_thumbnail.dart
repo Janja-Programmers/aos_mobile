@@ -1,4 +1,5 @@
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -20,46 +21,65 @@ class ShortThumbnail extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    final child = Stack(
-      fit: StackFit.passthrough,
-      children: [
-        imageUrl.trim().isEmpty
-            ? _Fallback(height: height)
-            : CachedNetworkImage(
-                imageUrl: imageUrl,
-                fit: fit,
-                width: double.infinity,
-                height: height,
-                placeholder: (context, url) => _Placeholder(height: height),
-                errorWidget: (context, url, error) => _Fallback(height: height),
-              ),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double? logicalWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : null;
+        final double? logicalHeight =
+            height ??
+            (constraints.maxHeight.isFinite ? constraints.maxHeight : null);
+        final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
+          context,
+          logicalWidth: logicalWidth,
+          logicalHeight: logicalHeight,
+        );
 
-        if (showGradient)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      colors.black.withValues(alpha: .04),
-                      colors.black.withValues(alpha: .10),
-                      colors.black.withValues(alpha: .70),
-                    ],
+        final Widget child = Stack(
+          fit: StackFit.passthrough,
+          children: [
+            imageUrl.trim().isEmpty
+                ? _Fallback(height: height)
+                : CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    fit: fit,
+                    width: double.infinity,
+                    height: height,
+                    memCacheWidth: decodeSize.width,
+                    memCacheHeight: decodeSize.height,
+                    placeholder: (context, url) => _Placeholder(height: height),
+                    errorWidget: (context, url, error) =>
+                        _Fallback(height: height),
+                  ),
+
+            if (showGradient)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          colors.black.withValues(alpha: .04),
+                          colors.black.withValues(alpha: .10),
+                          colors.black.withValues(alpha: .70),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-      ],
+          ],
+        );
+
+        if (height == null) {
+          return child;
+        }
+
+        return SizedBox(height: height, width: double.infinity, child: child);
+      },
     );
-
-    if (height == null) {
-      return child;
-    }
-
-    return SizedBox(height: height, width: double.infinity, child: child);
   }
 }
 

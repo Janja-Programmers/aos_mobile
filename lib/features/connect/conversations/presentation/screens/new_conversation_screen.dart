@@ -14,6 +14,7 @@ import 'package:africaonlinestores/features/social/domain/social_friend.dart';
 import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
 import 'package:africaonlinestores/shared/components/app_search_bar.dart';
 import 'package:africaonlinestores/shared/components/verified_badge.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -620,7 +621,14 @@ class _ContactCard extends StatelessWidget {
         CircleAvatar(
           radius: 24,
           backgroundColor: colors.primary.withValues(alpha: 0.16),
-          backgroundImage: imageUrl == null ? null : NetworkImage(imageUrl),
+          backgroundImage: imageUrl == null
+              ? null
+              : AppImageDecode.networkProvider(
+                  context,
+                  imageUrl,
+                  logicalWidth: 48,
+                  logicalHeight: 48,
+                ),
           child: imageUrl == null
               ? Text(
                   initial,

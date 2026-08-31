@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:africaonlinestores/core/core.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 enum AppCarouselVariant { primary, secondary }
@@ -103,9 +104,8 @@ class _AppCarouselState extends State<AppCarousel> {
                         decoration: BoxDecoration(gradient: item.gradient),
                       )
                     else if (item.imageUrl != null)
-                      Image.network(
-                        item.imageUrl!,
-                        fit: BoxFit.cover,
+                      AppNetworkImage(
+                        url: item.imageUrl!,
                         errorBuilder: (_, _, _) => ColoredBox(
                           color: colors.surface,
                           child: Icon(

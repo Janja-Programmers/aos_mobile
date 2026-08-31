@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_comment.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class CommentMainRow extends StatelessWidget {
@@ -175,7 +176,12 @@ class _CommentAvatar extends StatelessWidget {
       radius: 18,
       backgroundColor: colors.border,
       backgroundImage: avatar != null && avatar.isNotEmpty
-          ? NetworkImage(avatar)
+          ? AppImageDecode.networkProvider(
+              context,
+              avatar,
+              logicalWidth: 36,
+              logicalHeight: 36,
+            )
           : null,
       child: avatar == null || avatar.isEmpty
           ? Text(

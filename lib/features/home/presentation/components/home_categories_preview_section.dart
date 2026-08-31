@@ -7,6 +7,7 @@ import 'package:africaonlinestores/features/catalog/shared/providers/categories_
 import 'package:africaonlinestores/features/catalog/shared/routing/catalog_routes.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/shimmer/category_shimmer.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -140,11 +141,10 @@ class _CategoryTile extends StatelessWidget {
               alignment: Alignment.center,
               child: url != null
                   ? ClipOval(
-                      child: Image.network(
-                        url,
+                      child: AppNetworkImage(
+                        url: url,
                         width: 50,
                         height: 50,
-                        fit: BoxFit.cover,
                         errorBuilder: (_, _, _) => Icon(
                           Icons.category_outlined,
                           size: 26,

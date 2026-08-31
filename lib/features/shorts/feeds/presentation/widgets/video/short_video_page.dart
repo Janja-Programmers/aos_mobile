@@ -6,6 +6,7 @@ import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/ov
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/short_actions_panel.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/overlays/short_bottom_info.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -211,7 +212,10 @@ class _ShortVideoPageState extends State<ShortVideoPage> {
       return;
     }
 
-    final image = NetworkImage(thumbnailUrl);
+    final ImageProvider<Object> image = AppImageDecode.networkProviderForPixels(
+      thumbnailUrl,
+      width: 96,
+    );
     final stream = image.resolve(const ImageConfiguration());
     final completer = Completer<ImageInfo>();
 

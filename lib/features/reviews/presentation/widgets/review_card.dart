@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_model.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -37,7 +38,12 @@ class ReviewCard extends StatelessWidget {
               backgroundColor: colors.primaryRedSoft,
               foregroundImage: buildFileUrl(review.reviewerAvatar) == null
                   ? null
-                  : NetworkImage(buildFileUrl(review.reviewerAvatar)!),
+                  : AppImageDecode.networkProvider(
+                      context,
+                      buildFileUrl(review.reviewerAvatar)!,
+                      logicalWidth: 36,
+                      logicalHeight: 36,
+                    ),
               child: Text(
                 avatarLetter,
                 style: context.pStrong.copyWith(color: colors.surface),

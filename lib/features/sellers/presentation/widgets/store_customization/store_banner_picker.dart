@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class StoreBannerPicker extends StatelessWidget {
@@ -31,7 +32,11 @@ class StoreBannerPicker extends StatelessWidget {
             border: Border.all(color: colors.border),
             image: hasBanner
                 ? DecorationImage(
-                    image: NetworkImage(bannerUrl!),
+                    image: AppImageDecode.networkProvider(
+                      context,
+                      bannerUrl!,
+                      logicalHeight: 150,
+                    ),
                     fit: BoxFit.cover,
                   )
                 : null,

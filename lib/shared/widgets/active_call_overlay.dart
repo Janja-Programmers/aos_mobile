@@ -6,6 +6,7 @@ import 'package:africaonlinestores/features/connect/calls/application/providers/
 import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/connect/calls/application/state/call_status_enum.dart';
 import 'package:africaonlinestores/features/connect/calls/navigation/call_routes.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -256,7 +257,12 @@ class _OverlayAvatar extends StatelessWidget {
       radius: 22,
       backgroundColor: const Color(0xFF263238),
       backgroundImage: avatar != null && avatar.isNotEmpty
-          ? NetworkImage(avatar)
+          ? AppImageDecode.networkProvider(
+              context,
+              avatar,
+              logicalWidth: 44,
+              logicalHeight: 44,
+            )
           : null,
       child: avatar == null || avatar.isEmpty
           ? Text(

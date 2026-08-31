@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -176,9 +177,8 @@ class ImageHeaderMainMedia extends StatelessWidget {
     if (!item.isVideo) {
       return GestureDetector(
         onTap: onImageTap,
-        child: Image.network(
-          buildFileUrl(item.url) ?? '',
-          fit: BoxFit.cover,
+        child: AppNetworkImage(
+          url: buildFileUrl(item.url) ?? '',
           errorBuilder: (_, _, _) {
             return const Center(child: Icon(Icons.broken_image_outlined));
           },
@@ -221,9 +221,8 @@ class VideoPoster extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.network(
-          buildFileUrl(poster) ?? '',
-          fit: BoxFit.cover,
+        AppNetworkImage(
+          url: buildFileUrl(poster) ?? '',
           errorBuilder: (_, _, _) {
             return const Center(child: Icon(Icons.broken_image_outlined));
           },
@@ -258,9 +257,8 @@ class _NetworkThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.network(
-      buildFileUrl(url) ?? '',
-      fit: BoxFit.cover,
+    return AppNetworkImage(
+      url: buildFileUrl(url) ?? '',
       errorBuilder: (_, _, _) {
         return const Center(child: Icon(Icons.broken_image_outlined, size: 18));
       },
@@ -282,9 +280,8 @@ class _VideoThumbnail extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         if (poster.isNotEmpty)
-          Image.network(
-            buildFileUrl(poster) ?? '',
-            fit: BoxFit.cover,
+          AppNetworkImage(
+            url: buildFileUrl(poster) ?? '',
             errorBuilder: (_, _, _) {
               return ColoredBox(color: colors.black);
             },

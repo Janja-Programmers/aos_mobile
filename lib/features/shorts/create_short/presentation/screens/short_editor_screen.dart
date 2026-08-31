@@ -9,6 +9,7 @@ import 'package:africaonlinestores/features/shorts/create_short/presentation/scr
 import 'package:africaonlinestores/features/shorts/music/presentation/music_picker_sheet.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
@@ -306,6 +307,11 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
   }
 
   Widget _timelineStrip() {
+    final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
+      context,
+      logicalHeight: 70,
+    );
+
     return Container(
       height: 86,
       color: const Color(0xFF111217),
@@ -336,7 +342,13 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
               children: items
                   .map(
                     (bytes) => Expanded(
-                      child: Image.memory(bytes, height: 70, fit: BoxFit.cover),
+                      child: Image.memory(
+                        bytes,
+                        height: 70,
+                        fit: BoxFit.cover,
+                        cacheWidth: decodeSize.width,
+                        cacheHeight: decodeSize.height,
+                      ),
                     ),
                   )
                   .toList(growable: false),
@@ -826,6 +838,7 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
         video: path,
         imageFormat: ImageFormat.JPEG,
         quality: 50,
+        maxHeight: 320,
         timeMs: index * 1000,
       );
       if (bytes != null) results.add(bytes);

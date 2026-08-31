@@ -4,6 +4,8 @@ import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 class MediaImageTile extends StatelessWidget {
@@ -30,6 +32,11 @@ class MediaImageTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final url = buildFileUrl(image.url);
     final colors = context.appColors;
+    final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
+      context,
+      logicalWidth: 110,
+      logicalHeight: 110,
+    );
 
     return SizedBox(
       width: 110,
@@ -46,18 +53,17 @@ class MediaImageTile extends StatelessWidget {
                     fit: BoxFit.cover,
                     width: 110,
                     height: 110,
-                    cacheWidth: 440,
-                    cacheHeight: 440,
+                    cacheWidth: decodeSize.width,
+                    cacheHeight: decodeSize.height,
                   )
                 : url == null
                 ? ColoredBox(
                     color: colors.border,
                     child: const Icon(Icons.image_not_supported),
                   )
-                : Image.network(
-                    url,
+                : AppNetworkImage(
                     key: ValueKey(url),
-                    fit: BoxFit.cover,
+                    url: url,
                     width: 110,
                     height: 110,
                     gaplessPlayback: true,

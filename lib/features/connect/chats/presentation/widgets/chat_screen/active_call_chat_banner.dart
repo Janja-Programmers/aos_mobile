@@ -7,6 +7,7 @@ import 'package:africaonlinestores/features/connect/calls/application/state/call
 import 'package:africaonlinestores/features/connect/calls/navigation/call_routes.dart';
 import 'package:africaonlinestores/features/connect/calls/presentation/utils/call_participant_resolver.dart';
 import 'package:africaonlinestores/l10n/gen/app_localizations.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -244,7 +245,14 @@ class _ParticipantAvatar extends StatelessWidget {
     return CircleAvatar(
       radius: 18,
       backgroundColor: colors.white.withValues(alpha: .18),
-      backgroundImage: hasAvatar ? NetworkImage(avatarUrl!.trim()) : null,
+      backgroundImage: hasAvatar
+          ? AppImageDecode.networkProvider(
+              context,
+              avatarUrl!.trim(),
+              logicalWidth: 36,
+              logicalHeight: 36,
+            )
+          : null,
       child: hasAvatar
           ? null
           : Text(

@@ -3,6 +3,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/sellers/domain/seller_list_item.dart';
 import 'package:africaonlinestores/shared/components/verified_badge.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 
 class SellerTile extends StatelessWidget {
@@ -29,7 +30,12 @@ class SellerTile extends StatelessWidget {
         radius: 24,
         backgroundColor: colors.border,
         backgroundImage: seller.avatar != null
-            ? NetworkImage(avatorUrl!)
+            ? AppImageDecode.networkProvider(
+                context,
+                avatorUrl!,
+                logicalWidth: 48,
+                logicalHeight: 48,
+              )
             : null,
         child: seller.avatar == null
             ? Text(

@@ -6,6 +6,7 @@ import 'package:africaonlinestores/features/social/navigation/social_navigation.
 import 'package:africaonlinestores/features/social/safety/application/social_safety_controller.dart';
 import 'package:africaonlinestores/features/social/safety/data/social_safety_api.dart';
 import 'package:africaonlinestores/shared/components/verified_badge.dart';
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -95,7 +96,12 @@ class _UserSearchTile extends StatelessWidget {
     return ListTile(
       leading: CircleAvatar(
         backgroundImage: user.avatar?.isNotEmpty ?? false
-            ? NetworkImage(user.avatar!)
+            ? AppImageDecode.networkProvider(
+                context,
+                user.avatar!,
+                logicalWidth: 40,
+                logicalHeight: 40,
+              )
             : null,
         child: user.avatar?.isNotEmpty ?? false
             ? null

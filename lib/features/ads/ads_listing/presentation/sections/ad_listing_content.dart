@@ -5,6 +5,7 @@ import 'package:africaonlinestores/features/ads/ads_listing/utils/enums.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/shared/utils/helpers.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 class AdListingContentView extends StatelessWidget {
@@ -151,7 +152,7 @@ class _MyAdTile extends StatelessWidget {
                           alignment: Alignment.center,
                           child: const Icon(Icons.image_outlined),
                         )
-                      : Image.network(imageUrl, fit: BoxFit.cover),
+                      : AppNetworkImage(url: imageUrl),
                 ),
               ),
 

@@ -15,18 +15,14 @@ const Color _kKenyaGreen = Color(0xFF0B7A3B);
 const int _kProgressDurationMs = 2080;
 
 const SystemUiOverlayStyle _kSplashSystemUiStyle = SystemUiOverlayStyle(
-  statusBarColor: Colors.transparent,
   statusBarIconBrightness: Brightness.light,
   statusBarBrightness: Brightness.dark,
-  systemNavigationBarColor: Color(0xFF08090C),
   systemNavigationBarIconBrightness: Brightness.light,
 );
 
 const SystemUiOverlayStyle _kErrorSystemUiStyle = SystemUiOverlayStyle(
-  statusBarColor: Colors.transparent,
   statusBarIconBrightness: Brightness.dark,
   statusBarBrightness: Brightness.light,
-  systemNavigationBarColor: Colors.white,
   systemNavigationBarIconBrightness: Brightness.dark,
 );
 

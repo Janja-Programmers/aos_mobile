@@ -77,8 +77,30 @@ sent directly; preparation converts it to backend-supported JPEG. Formats that
 are not transcoded use the backend allowlists exactly: MP4/MOV/M4V video,
 MP3/M4A/AAC/WAV/OGG audio, and PDF documents.
 
-Thumbnail widgets must set `cacheWidth`/`cacheHeight` appropriate to their
-rendered size. Full source resolution is not required for an 80-pixel preview.
+## Display decode policy
+
+Display decoding is owned by `lib/shared/images/app_image_decode.dart`. It is
+separate from acquisition, preparation, cropping, and upload: decode bounds
+only affect the in-memory image used to render a widget and never replace or
+modify the staged/source file sent to an editor or backend.
+
+`AppImageDecode` converts finite logical layout dimensions to physical pixels
+using the current device pixel ratio and applies a 2048-physical-pixel ceiling
+for the shared thumbnail/preview policy. It supplies only one dominant decode
+axis so Flutter preserves the source aspect ratio. `AppNetworkImage` derives a
+finite rendered size from its explicit dimensions or `LayoutBuilder`
+constraints and applies that policy through `cacheWidth`/`cacheHeight`.
+Provider-based avatars and local previews use `AppImageDecode.resizeProvider`,
+`networkProvider`, or `fileProvider`. `Image.memory` preview surfaces apply the
+same decode bounds, and Shorts timeline frames are also generated with bounded
+thumbnail dimensions. `CachedNetworkImage` surfaces use the same calculated
+bounds through `memCacheWidth`/`memCacheHeight`.
+
+Thumbnail, avatar, card, grid, rail, notification, chat-preview, local-picker
+preview, and poster surfaces must use the shared bounded decode policy. The
+intentional exemptions are image editing/inspection surfaces and full-screen
+zoom viewers where source-level detail is user-visible; those exemptions are
+kept explicit by the image decode source-contract test.
 
 ## Camera resource contract
 
@@ -160,12 +182,22 @@ detection, single-owner camera leases, retired helpers, feature upload
 bypasses, and plugin import boundaries. The source-contract allowlist contains
 only the core adapters and the specialized Shorts camera adapter.
 
+`test/shared/images` verifies DPR-aware decode sizing, aspect-ratio-preserving
+one-axis bounds, the shared thumbnail ceiling, and source contracts that reject
+unbounded `Image.network`, `Image.file`, `Image.memory`, `CachedNetworkImage`,
+`NetworkImage`, and `FileImage` use outside explicitly reviewed
+full-resolution/editor surfaces. `test/platform/android_adaptive_window_contract_test.dart`
+protects the Android 15/16 launch-theme cleanup, non-fullscreen native splash,
+adaptive uCrop activity, and Flutter splash system-bar color boundary.
+
 Run:
 
 ```bash
 dart format lib test
 dart analyze .
 flutter test test/core/media
+flutter test test/shared/images
+flutter test test/platform/android_adaptive_window_contract_test.dart
 flutter test test/features/shorts/create_short
 flutter test test/features/live
 flutter test test/features/connect/chats

@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 class SubcategoriesGrid extends StatelessWidget {
@@ -71,9 +72,8 @@ class SubcategoriesGrid extends StatelessWidget {
                             )
                           : ClipRRect(
                               borderRadius: BorderRadius.circular(16),
-                              child: Image.network(
-                                iconUrl,
-                                fit: BoxFit.cover,
+                              child: AppNetworkImage(
+                                url: iconUrl,
                                 width: double.infinity,
                                 height: double.infinity,
                                 errorBuilder: (_, _, _) => Icon(

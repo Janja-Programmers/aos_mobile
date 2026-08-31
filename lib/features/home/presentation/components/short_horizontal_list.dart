@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
+import 'package:africaonlinestores/shared/widgets/app_network_image.dart';
 import 'package:flutter/material.dart';
 
 class ShortsHorizontalList extends StatelessWidget {
@@ -77,9 +78,8 @@ class _ShortPreviewCard extends StatelessWidget {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(
-                        thumbnailUrl ?? '',
-                        fit: BoxFit.cover,
+                      AppNetworkImage(
+                        url: thumbnailUrl ?? '',
                         errorBuilder: (_, _, _) {
                           return ColoredBox(
                             color: colors.black,

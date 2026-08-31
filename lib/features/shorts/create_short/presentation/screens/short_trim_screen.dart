@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:africaonlinestores/shared/images/app_image_decode.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
@@ -171,6 +172,11 @@ class _ShortTrimScreenState extends State<ShortTrimScreen> {
                         child: FutureBuilder<List<Uint8List>>(
                           future: _thumbnails,
                           builder: (context, snapshot) {
+                            final AppImageDecodeSize decodeSize =
+                                AppImageDecode.forBox(
+                                  context,
+                                  logicalHeight: 74,
+                                );
                             if (snapshot.hasError) {
                               return const Center(
                                 child: Icon(
@@ -205,6 +211,8 @@ class _ShortTrimScreenState extends State<ShortTrimScreen> {
                                           bytes,
                                           height: 74,
                                           fit: BoxFit.cover,
+                                          cacheWidth: decodeSize.width,
+                                          cacheHeight: decodeSize.height,
                                         ),
                                       ),
                                     )
@@ -304,6 +312,7 @@ class _ShortTrimScreenState extends State<ShortTrimScreen> {
         video: widget.sourcePath,
         imageFormat: ImageFormat.JPEG,
         quality: 55,
+        maxHeight: 320,
         timeMs: durationMs <= 0
             ? 0
             : (durationMs * index / (count - 1)).round(),

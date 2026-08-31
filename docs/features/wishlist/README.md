@@ -12,6 +12,8 @@ The wishlist feature owns authenticated ad save/remove interactions and the dedi
 - Authentication changes rebuild the controller and clear account-scoped overrides.
 - A pending set prevents duplicate submissions for the same ad.
 - Each mutation sends the explicit desired `wishlisted` state. The final backend response replaces the optimistic value.
+- The dedicated Wishlist list observes the optimistic override. Removing a favorite therefore removes the card from the visible list immediately rather than waiting for a refresh.
+- The list controller retains enough local placement information to restore the same card if the mutation fails or the backend resolves it as still wishlisted.
 
 This avoids a competing local wishlist store, removes an unnecessary startup request, and prevents one account's cached wishlist from leaking into another session.
 
@@ -56,9 +58,10 @@ The backend response `data.wishlisted` is authoritative. Sending the desired sta
 
 - Guest taps continue through the existing authentication guard.
 - Authenticated taps update optimistically.
+- Removing an item from the dedicated Wishlist hides the full card immediately in both grid and list layouts.
 - Repeated taps for the same ad are disabled while the request is pending.
 - Card wishlist actions expose localized semantics and 48×48 logical-pixel touch targets.
-- Failures restore the prior resolved state and retain the backend-provided fallback.
+- Failures restore the prior resolved state and restore a removed Wishlist card at its previous list position.
 - Wishlist controls resolve state from a temporary override first, then the ad payload's `is_wishlisted` value.
 - The unsupported “Preferred Store” filter is not shown.
 - A one-character search remains local and does not produce a backend validation request; search starts at two characters or after clearing the field.
@@ -108,10 +111,6 @@ flutter build apk --debug
 ```
 
 These commands were not executed in the delivery environment because Flutter and Dart were unavailable. Static source review was performed instead.
-
-## Release classification
-
-**Shorebird OTA candidate.** The implementation changes Dart code, tests, and documentation only. It introduces no native code, plugin, permission, asset, SDK, dependency, or storage migration. Removing the obsolete local wishlist key requires no migration because the value is no longer read and is not security-sensitive; an old unused SharedPreferences entry may remain harmlessly on upgraded devices.
 
 ## Known follow-up
 

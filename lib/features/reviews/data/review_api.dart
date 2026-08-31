@@ -18,6 +18,9 @@ final reviewApiProvider = Provider<ReviewApi>((ref) {
 class ReviewApi {
   ReviewApi(this._client);
 
+  static const _reportReviewEndpoint =
+      '/api/method/aos.api.v1.reviews.report_review';
+
   final ApiClient _client;
 
   Future<Either<Failure, Map<String, dynamic>>> getAdReviews({
@@ -102,6 +105,30 @@ class ReviewApi {
       return Either.left(mapDioException(e));
     } catch (_) {
       return Either.left(const Failure('Failed to toggle review.'));
+    }
+  }
+
+  Future<Either<Failure, void>> reportReview({
+    required String reviewId,
+    required String reason,
+    required String details,
+  }) async {
+    try {
+      final res = await _client.post(
+        _reportReviewEndpoint,
+        data: {
+          'review': reviewId,
+          'reason': reason,
+          'details': details,
+        },
+      );
+
+      final parsed = unwrapFrappe(res);
+      return parsed.fold(Either.left, (_) => Either.right(null));
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to report review.'));
     }
   }
 

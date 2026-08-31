@@ -4,11 +4,11 @@ import 'package:africaonlinestores/core/api/api_response.dart';
 import 'package:africaonlinestores/core/api/dio_failure_mapper.dart';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
+import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/features/account/domain/profile_update_request.dart';
 import 'package:dio/dio.dart';
 
 /// Accounts/Profile APIs.
-
 class AccountsApi {
   AccountsApi(this._client);
   final ApiClient _client;
@@ -55,16 +55,78 @@ class AccountsApi {
         );
       }
       final Map<String, dynamic> data = request.toJson();
+      if (data.isEmpty) {
+        return Either.left(
+          const Failure(
+            'At least one profile field is required.',
+            type: FailureType.validation,
+          ),
+        );
+      }
 
-      final res = await _client.dio.post<Map<String, dynamic>>(
+      final String endpoint = _asFrappeV2Method(
         ApiEndpoints.updateProfileEndpoint,
+      );
+      final res = await _client.dio.post<Map<String, dynamic>>(
+        endpoint,
         data: data,
       );
-      return unwrapFrappe(res);
+
+      final Either<Failure, Map<String, dynamic>> unwrapped = unwrapFrappe(res);
+      if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
+
+      final Map<String, dynamic> response =
+          unwrapped.rightOrNull ?? const <String, dynamic>{};
+      final Map<String, dynamic> nested = asJsonMap(response['data']);
+      final Map<String, dynamic> payload =
+          nested.containsKey('ok') || nested.containsKey('error')
+          ? nested
+          : response;
+
+      if (payload['ok'] == false || _hasServerError(payload)) {
+        return Either.left(
+          Failure.fromServerPayload(
+            payload,
+            statusCode: res.statusCode,
+            fallbackMessage: 'Failed to update profile.',
+          ),
+        );
+      }
+
+      return Either.right(payload);
     } on DioException catch (e) {
-      return Either.left(mapDioException(e));
+      return Either.left(_mapProfileUpdateDioException(e));
     } catch (_) {
       return Either.left(const Failure('Unexpected error. Please try again.'));
     }
+  }
+
+  static Failure _mapProfileUpdateDioException(DioException error) {
+    final Response<dynamic>? response = error.response;
+    final Map<String, dynamic> root = asJsonMap(response?.data);
+    final Map<String, dynamic> nested = asJsonMap(root['data']);
+    if (nested.containsKey('ok') || nested.containsKey('error')) {
+      return Failure.fromServerPayload(
+        nested,
+        statusCode: response?.statusCode,
+        fallbackMessage: 'Failed to update profile.',
+      );
+    }
+    return mapDioException(error);
+  }
+
+  static String _asFrappeV2Method(String endpoint) {
+    const String v1Prefix = '/api/method/';
+    const String v2Prefix = '/api/v2/method/';
+    if (endpoint.startsWith(v2Prefix)) return endpoint;
+    if (endpoint.startsWith(v1Prefix)) {
+      return '$v2Prefix${endpoint.substring(v1Prefix.length)}';
+    }
+    return endpoint;
+  }
+
+  static bool _hasServerError(Map<String, dynamic> payload) {
+    final String error = payload['error']?.toString().trim() ?? '';
+    return error.isNotEmpty && error.toLowerCase() != 'null';
   }
 }

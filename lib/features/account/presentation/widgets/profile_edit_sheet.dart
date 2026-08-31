@@ -26,6 +26,8 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
 
   bool _saving = false;
   bool _seededControllers = false;
+  String _initialName = '';
+  String _initialBio = '';
 
   AccountsApi get _api => ref.read(accountsApiProvider);
 
@@ -50,13 +52,16 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       widget.initialFullName,
       authenticated?.user.fullName,
     ]);
-    final initialBio = _firstNonEmpty([
-      widget.initialBio,
-      authenticated?.user.bio,
-    ]);
+    // An explicitly supplied empty bio is authoritative. Do not replace it
+    // with an older auth-state bio just because it is empty.
+    final initialBio = widget.initialBio != null
+        ? widget.initialBio!.trim()
+        : _firstNonEmpty([authenticated?.user.bio]);
 
     _nameCtrl.text = initialName;
     _bioCtrl.text = initialBio;
+    _initialName = initialName;
+    _initialBio = initialBio;
     _seededControllers = true;
   }
 
@@ -75,6 +80,15 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       return;
     }
 
+    if (fullName.length > ProfileUpdateRequest.fullNameMaxLength) {
+      showAppSnack(
+        context,
+        'Name should be ${ProfileUpdateRequest.fullNameMaxLength} characters or less.',
+        position: SnackPosition.top,
+      );
+      return;
+    }
+
     if (bio.length > ProfileUpdateRequest.bioMaxLength) {
       showAppSnack(
         context,
@@ -84,9 +98,37 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
       return;
     }
 
+    final Map<String, dynamic> initialPayload = ProfileUpdateRequest(
+      fullName: _initialName,
+      bio: _initialBio,
+    ).toJson();
+    final Map<String, dynamic> currentPayload = ProfileUpdateRequest(
+      fullName: fullName,
+      bio: bio,
+    ).toJson();
+
+    final String currentName = (currentPayload['full_name'] ?? '').toString();
+    final String initialName = (initialPayload['full_name'] ?? '').toString();
+    final String currentBio = (currentPayload['bio'] ?? '').toString();
+    final String initialBio = (initialPayload['bio'] ?? '').toString();
+
+    final String? changedName = currentName == initialName ? null : currentName;
+    final String? changedBio = currentBio == initialBio ? null : currentBio;
+
+    // The backend update_profile contract is a partial update. Avoid sending
+    // unchanged fields so editing one value can never overwrite another value
+    // with stale form state.
+    if (changedName == null && changedBio == null) {
+      if (mounted) Navigator.pop(context);
+      return;
+    }
+
     setState(() => _saving = true);
 
-    final res = await _api.updateProfile(fullName: fullName, bio: bio);
+    final res = await _api.updateProfile(
+      fullName: changedName,
+      bio: changedBio,
+    );
 
     if (!mounted) return;
 
@@ -104,6 +146,8 @@ class _ProfileEditSheetState extends ConsumerState<ProfileEditSheet> {
     final message = asJsonMap(payload['message']);
     final data = asJsonMap(payload['data'] ?? message['data'] ?? payload);
 
+    // update_profile returns the complete private profile. Use that backend
+    // snapshot as the auth/profile source instead of locally merging fields.
     ref.read(authControllerProvider.notifier).setUserFromMap(data);
 
     showAppSnack(context, 'Profile updated.');

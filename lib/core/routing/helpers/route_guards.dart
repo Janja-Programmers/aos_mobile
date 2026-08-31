@@ -37,6 +37,7 @@ class RouteGuards {
     AppRoutes.verifyOtp,
     AppRoutes.forgotPassword,
     AppRoutes.resetPassword,
+    AppRoutes.restoreAccount,
   ];
 
   static bool isOnboarding(String location) {

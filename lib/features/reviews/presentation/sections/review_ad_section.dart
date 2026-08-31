@@ -97,10 +97,8 @@ class ReviewAdSection extends ConsumerWidget {
                           (_) {},
                         );
                       },
-                      onReport: () => showReviewReportSheet(
-                        context,
-                        reviewId: review.id,
-                      ),
+                      onReport: () =>
+                          showReviewReportSheet(context, reviewId: review.id),
                     ),
                   ),
                 ),

@@ -1,14 +1,19 @@
-import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
+import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
-import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/account/data/account_lifecycle_api.dart';
+import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
+import 'package:africaonlinestores/shared/components/app_text_fields.dart';
+import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class RestoreAccountScreen extends ConsumerStatefulWidget {
-  const RestoreAccountScreen({super.key});
+  const RestoreAccountScreen({super.key, this.prefillEmail});
+
+  final String? prefillEmail;
 
   @override
   ConsumerState<RestoreAccountScreen> createState() =>
@@ -16,93 +21,111 @@ class RestoreAccountScreen extends ConsumerStatefulWidget {
 }
 
 class _RestoreAccountScreenState extends ConsumerState<RestoreAccountScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _otpController = TextEditingController();
-  bool _requested = false;
   bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final String email = widget.prefillEmail?.trim().toLowerCase() ?? '';
+    if (email.isNotEmpty) {
+      _emailController.text = email;
+    }
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
-    _otpController.dispose();
     super.dispose();
   }
 
   Future<void> _request() async {
-    setState(() => _loading = true);
-    final res = await ref
-        .read(accountLifecycleApiProvider)
-        .requestRestore(email: _emailController.text);
-    if (!mounted) return;
-    setState(() => _loading = false);
-    res.fold((f) => ShowSnack(context, f.message).error(), (msg) {
-      setState(() => _requested = true);
-      ShowSnack(context, msg).success();
-    });
-  }
+    if (_loading) return;
+    if (!_formKey.currentState!.validate()) return;
 
-  Future<void> _restore() async {
+    final email = _emailController.text.trim().toLowerCase();
     setState(() => _loading = true);
-    final res = await ref
-        .read(accountLifecycleApiProvider)
-        .restoreAccount(email: _emailController.text, otp: _otpController.text);
-    if (!mounted) return;
-    setState(() => _loading = false);
-    res.fold((f) => ShowSnack(context, f.message).error(), (msg) {
-      ShowSnack(context, msg).success();
-      context.go(AppRoutes.login);
-    });
+
+    try {
+      final result = await ref
+          .read(accountLifecycleApiProvider)
+          .requestRestore(email: email);
+
+      if (!mounted) return;
+
+      result.fold((failure) => ShowSnack(context, failure.message).error(), (
+        message,
+      ) {
+        ShowSnack(context, message).success();
+        context.pushNamed(
+          AppRoutes.nVerifyOtp,
+          extra: {'email': email, 'purpose': OtpPurpose.accountRestore},
+        );
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ShowSnack(
+        context,
+        context.l10n.auth_unexpected_error(error.toString()),
+      ).error();
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.appColors;
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+
     return Scaffold(
-      backgroundColor: colors.surface,
-      appBar: AppBar(title: Text('Restore account', style: context.h5)),
+      backgroundColor: scheme.surface,
+      appBar: AppBar(
+        backgroundColor: scheme.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: context.appColors.textPrimary),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
           children: [
-            Text('Restore deleted account', style: context.h4),
+            Text('Restore account', style: context.h3),
             const SizedBox(height: 8),
             Text(
               'Enter your email. If your account can be restored, we will send a verification code.',
-              style: context.pMuted,
+              style: context.p,
             ),
-            const SizedBox(height: 18),
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            if (_requested) ...[
-              const SizedBox(height: 12),
-              TextField(
-                controller: _otpController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Restore code',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
             const SizedBox(height: 22),
-            ElevatedButton(
-              onPressed: _loading ? null : (_requested ? _restore : _request),
-              child: _loading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(
-                      _requested ? 'Restore account' : 'Send restore code',
-                      style: AppTextStylesX(context).button,
-                    ),
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  AppFormField(
+                    key: const Key('auth.restore.email'),
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    label: l10n.auth_email_address,
+                    validator: Validators.email,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _request(),
+                    autofillHints: const [
+                      AutofillHints.username,
+                      AutofillHints.email,
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  PrimaryButton(
+                    key: const Key('auth.restore.submit'),
+                    text: l10n.auth_send_otp,
+                    onPressed: _loading ? null : _request,
+                    loading: _loading,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

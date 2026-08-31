@@ -12,7 +12,7 @@ class AppConfig {
   static const String googleWebClientId = String.fromEnvironment(
     'AOS_GOOGLE_WEB_CLIENT_ID',
     defaultValue:
-        '779793412118-8n4ml1k5rgeic3bifvg9e57nntdiqdhb.apps.googleusercontent.com',
+        '92816366774-skkbkd75qpkeh2fpj6lf9ut2icuh1uf3.apps.googleusercontent.com',
   );
 
   static const String mapBaseUrl = String.fromEnvironment(

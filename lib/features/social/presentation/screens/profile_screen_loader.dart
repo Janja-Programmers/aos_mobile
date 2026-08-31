@@ -64,17 +64,30 @@ class _ProfileLoader {
       profile['username'],
       profile['handle'],
     ]);
-    final String rawAvatar = _firstNonEmpty(<Object?>[
+
+    // Backend serializers include avatar/user_image and bio even when the
+    // current value is empty. Presence therefore matters: an explicit empty
+    // value means "removed/cleared" and must not fall back to stale auth or
+    // navigation seed data.
+    final bool hasBackendAvatar =
+        profile.containsKey('avatar') ||
+        profile.containsKey('user_image') ||
+        profile.containsKey('image');
+    final String backendAvatar = _firstNonEmpty(<Object?>[
       profile['avatar'],
       profile['user_image'],
       profile['image'],
-      request.fallbackAvatar,
-      isOwnProfile ? request.currentAvatar : null,
     ]);
-    final String bio = _firstNonEmpty(<Object?>[
-      profile['bio'],
-      isOwnProfile ? request.currentBio : null,
-    ]);
+    final String rawAvatar = hasBackendAvatar
+        ? backendAvatar
+        : _firstNonEmpty(<Object?>[
+            request.fallbackAvatar,
+            isOwnProfile ? request.currentAvatar : null,
+          ]);
+
+    final String bio = profile.containsKey('bio')
+        ? _stringValue(profile['bio'])
+        : _firstNonEmpty(<Object?>[isOwnProfile ? request.currentBio : null]);
 
     final bool canInteract = !isOwnProfile && contentAvailable;
 
@@ -269,12 +282,15 @@ class _ProfileLoader {
 
   static String _firstNonEmpty(List<Object?> values) {
     for (final Object? value in values) {
-      final String? clean = value?.toString().trim();
-      if (clean != null && clean.isNotEmpty && clean.toLowerCase() != 'null') {
-        return clean;
-      }
+      final String clean = _stringValue(value);
+      if (clean.isNotEmpty) return clean;
     }
     return '';
+  }
+
+  static String _stringValue(Object? value) {
+    final String clean = value?.toString().trim() ?? '';
+    return clean.toLowerCase() == 'null' ? '' : clean;
   }
 
   static bool _isPrivateShort(Short short) {

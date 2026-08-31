@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/features/account/data/account_lifecycle_api.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/otp_resend_row.dart';
@@ -27,7 +28,6 @@ class VerifyOTPScreen extends ConsumerStatefulWidget {
 
 class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
   bool _loading = false;
-
   String _otp = '';
 
   Future<void> _verify() async {
@@ -42,52 +42,74 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
     try {
       final ctrl = ref.read(authControllerProvider.notifier);
 
-      final result = (widget.purpose == OtpPurpose.passwordReset)
-          ? await ctrl.forgotPasswordVerifyOtp(email: widget.email, otp: _otp)
-          : await ctrl.verifyOtp(email: widget.email, otp: _otp);
+      final result = switch (widget.purpose) {
+        OtpPurpose.passwordReset => ctrl.forgotPasswordVerifyOtp(
+          email: widget.email,
+          otp: _otp,
+        ),
+        OtpPurpose.accountRestore =>
+          ref
+              .read(accountLifecycleApiProvider)
+              .restoreAccount(email: widget.email, otp: _otp),
+        OtpPurpose.emailVerification => ctrl.verifyOtp(
+          email: widget.email,
+          otp: _otp,
+        ),
+      };
 
+      final resolved = await result;
       if (!mounted) return;
 
-      await result.fold((f) async => ShowSnack(context, f.message).error(), (
-        right,
-      ) async {
-        if (!mounted) return;
+      await resolved.fold(
+        (failure) async {
+          ShowSnack(context, failure.message).error();
+        },
+        (right) async {
+          if (!mounted) return;
 
-        if (widget.purpose == OtpPurpose.passwordReset) {
-          final resetToken = right;
-          context.go(
-            AppRoutes.resetPassword,
-            extra: {'email': widget.email, 'reset_token': resetToken},
+          if (widget.purpose == OtpPurpose.passwordReset) {
+            context.go(
+              AppRoutes.resetPassword,
+              extra: {'email': widget.email, 'reset_token': right},
+            );
+            return;
+          }
+
+          if (widget.purpose == OtpPurpose.accountRestore) {
+            ShowSnack(context, right).success();
+            context.go(
+              '${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}',
+            );
+            return;
+          }
+
+          await ctrl.logout();
+
+          if (!mounted) return;
+          ShowSnack(context, right).success();
+
+          await showModalBottomSheet<void>(
+            context: context,
+            backgroundColor: Colors.transparent,
+            builder: (_) => AppSuccessSheet(
+              title: l10n.auth_email_verified_title,
+              message: l10n.auth_email_verified_message,
+              buttonText: l10n.auth_password_updated_button,
+              onPressed: () {
+                if (!context.mounted) return;
+
+                // Close the sheet (Navigator owns overlays).
+                Navigator.of(context).pop();
+
+                // Then route using go_router.
+                context.go(
+                  '${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}',
+                );
+              },
+            ),
           );
-          return;
-        }
-
-        await ctrl.logout();
-
-        if (!mounted) return;
-        ShowSnack(context, right).success();
-
-        await showModalBottomSheet<void>(
-          context: context,
-          backgroundColor: Colors.transparent,
-          builder: (_) => AppSuccessSheet(
-            title: l10n.auth_email_verified_title,
-            message: l10n.auth_email_verified_message,
-            buttonText: l10n.auth_password_updated_button,
-            onPressed: () {
-              if (!context.mounted) return;
-
-              // Close the sheet (Navigator owns overlays).
-              Navigator.of(context).pop();
-
-              // Then route using go_router.
-              context.go(
-                '${AppRoutes.login}?email=${Uri.encodeComponent(widget.email)}',
-              );
-            },
-          ),
-        );
-      });
+        },
+      );
     } catch (e) {
       if (!mounted) return;
       ShowSnack(context, l10n.auth_unexpected_error(e.toString())).error();
@@ -102,21 +124,23 @@ class _VerifyOTPScreenState extends ConsumerState<VerifyOTPScreen> {
     try {
       final ctrl = ref.read(authControllerProvider.notifier);
 
-      final result = (widget.purpose == OtpPurpose.passwordReset)
-          ? await ctrl.forgotPasswordRequest(email: widget.email)
-          : await ctrl.resendOtp(email: widget.email);
+      final result = switch (widget.purpose) {
+        OtpPurpose.passwordReset => ctrl.forgotPasswordRequest(
+          email: widget.email,
+        ),
+        OtpPurpose.accountRestore =>
+          ref
+              .read(accountLifecycleApiProvider)
+              .requestRestore(email: widget.email),
+        OtpPurpose.emailVerification => ctrl.resendOtp(email: widget.email),
+      };
 
+      final resolved = await result;
       if (!mounted) return;
 
-      result.fold(
-        (f) => ShowSnack(
-          context,
-          l10n.auth_unexpected_error(f.toString()),
-        ).error(),
-        (msg) => ShowSnack(
-          context,
-          l10n.auth_unexpected_error(msg.toString()),
-        ).success(),
+      resolved.fold(
+        (failure) => ShowSnack(context, failure.message).error(),
+        (message) => ShowSnack(context, message).success(),
       );
     } catch (e) {
       if (!mounted) return;

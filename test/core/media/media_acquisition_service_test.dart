@@ -10,6 +10,23 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('media lifecycle initialization is idempotent', () async {
+    final gallery = _InitializableGalleryAdapter();
+    final service = MediaAcquisitionService(
+      gallery: gallery,
+      files: const _EmptyFileAdapter(),
+      camera: const _EmptyCameraAdapter(),
+    );
+
+    await Future.wait<void>(<Future<void>>[
+      service.initialize(),
+      service.initialize(),
+      service.initialize(),
+    ]);
+
+    expect(gallery.initializeCalls, 1);
+  });
+
   test(
     'selection is capped by policy and extra staged files are discarded',
     () async {
@@ -78,10 +95,36 @@ void main() {
   );
 }
 
+final class _InitializableGalleryAdapter implements GalleryMediaAdapter {
+  int initializeCalls = 0;
+
+  @override
+  Future<void> initialize() async {
+    initializeCalls += 1;
+  }
+
+  @override
+  Future<List<AcquiredMedia>> pickImages({
+    required MediaUseCase useCase,
+    required bool multiple,
+    required int maxItems,
+  }) async {
+    return const <AcquiredMedia>[];
+  }
+
+  @override
+  Future<AcquiredMedia?> pickVideo({required MediaUseCase useCase}) async {
+    return null;
+  }
+}
+
 final class _FakeGalleryAdapter implements GalleryMediaAdapter {
   const _FakeGalleryAdapter(this.selected);
 
   final List<AcquiredMedia> selected;
+
+  @override
+  Future<void> initialize() async {}
 
   @override
   Future<List<AcquiredMedia>> pickImages({

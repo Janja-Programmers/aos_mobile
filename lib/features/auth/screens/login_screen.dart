@@ -1,5 +1,6 @@
 import 'package:africaonlinestores/core/core.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/features/account/data/account_lifecycle_api.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/auth/shared/utils/enums.dart';
 import 'package:africaonlinestores/features/auth/shared/widgets/platform_social_section.dart';
@@ -80,34 +81,72 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             rememberMe: _rememberMe,
           );
 
+      // If the router-owned auth redirect already ran, this screen will have
+      // been disposed and no imperative navigation is needed. Otherwise,
+      // complete the successful login deterministically at the public landing
+      // page. This does not alter guest routing or add a global login guard.
       if (!mounted) return;
 
-      result.fold(
-        (failure) {
-          ShowSnack(context, failure.message).error();
+      final failure = result.leftOrNull;
+      if (failure == null) {
+        context.go(AppRoutes.home);
+        return;
+      }
 
-          final error = (failure.error ?? '').trim().toUpperCase();
-          final email = _emailCtrl.text.trim().toLowerCase();
+      final error = (failure.error ?? '').trim().toUpperCase();
+      final identifier = _emailCtrl.text.trim().toLowerCase();
 
-          if (error == 'EMAIL_NOT_VERIFIED') {
-            context.pushNamed(
-              AppRoutes.nVerifyOtp,
-              extra: {'email': email, 'purpose': OtpPurpose.emailVerification},
-            );
-          }
-        },
-        (_) {
-          // Authentication state is the only success side effect here.
-          // GoRouter.redirect owns the post-login destination so the login
-          // widget cannot race a router refresh after it is unmounted.
-        },
-      );
+      if (error == 'ACCOUNT_DELETED_RESTORABLE') {
+        await _startRestorableLogin(identifier);
+        return;
+      }
+
+      ShowSnack(context, failure.message).error();
+
+      if (error == 'EMAIL_NOT_VERIFIED') {
+        await context.pushNamed(
+          AppRoutes.nVerifyOtp,
+          extra: {'email': identifier, 'purpose': OtpPurpose.emailVerification},
+        );
+      }
     } catch (_) {
       if (!mounted) return;
       ShowSnack(context, 'Error').error();
     } finally {
       if (mounted) setState(() => _loginLoading = false);
     }
+  }
+
+  Future<void> _startRestorableLogin(String identifier) async {
+    // The restore-request contract accepts an email only. Login itself accepts
+    // a broader identifier, so non-email identifiers fall back to the manual
+    // restore entry screen instead of fabricating an email address.
+    if (Validators.email(identifier) != null) {
+      if (!mounted) return;
+      context.goNamed(AppRoutes.nRestoreAccount);
+      return;
+    }
+
+    final request = await ref
+        .read(accountLifecycleApiProvider)
+        .requestRestore(email: identifier);
+
+    if (!mounted) return;
+
+    final requestFailure = request.leftOrNull;
+    if (requestFailure != null) {
+      ShowSnack(context, requestFailure.message).error();
+      return;
+    }
+
+    // Match the web flow: after password proof confirms that the account is
+    // restorable, request the account_restore OTP and move directly to the
+    // shared OTP screen. The request endpoint intentionally returns a generic
+    // success message, so the stable login error is what authorizes this path.
+    context.goNamed(
+      AppRoutes.nVerifyOtp,
+      extra: {'email': identifier, 'purpose': OtpPurpose.accountRestore},
+    );
   }
 
   Future<void> _googleSignIn() async {

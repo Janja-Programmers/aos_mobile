@@ -11,8 +11,10 @@ void main() {
       'lib/core/media/data/adapters/file_picker_media_adapter.dart': <String>{
         'file_picker',
       },
-      'lib/core/media/data/adapters/image_picker_media_adapter.dart': <String>{
+      'lib/core/media/data/adapters/image_picker_gateway.dart': <String>{
         'image_picker',
+        'image_picker_android',
+        'image_picker_platform_interface',
       },
       'lib/core/media/data/adapters/native_image_preparation_adapter.dart':
           <String>{'flutter_image_compress'},
@@ -20,7 +22,8 @@ void main() {
           <String>{'camera'},
     };
     final importPattern = RegExp(
-      'package:(image_picker|file_picker|camera|flutter_image_compress)/',
+      'package:(image_picker|image_picker_android|image_picker_platform_interface|'
+      'file_picker|camera|flutter_image_compress)/',
     );
     final violations = <String>[];
 
@@ -52,11 +55,11 @@ void main() {
       }
     }
 
-    final galleryAdapter = File(
-      'lib/core/media/data/adapters/image_picker_media_adapter.dart',
+    final galleryGateway = File(
+      'lib/core/media/data/adapters/image_picker_gateway.dart',
     ).readAsStringSync();
     expect(
-      galleryAdapter,
+      galleryGateway,
       isNot(contains('ImageSource.camera')),
       reason: 'Still-camera capture must remain inside the app.',
     );

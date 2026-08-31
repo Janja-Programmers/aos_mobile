@@ -66,7 +66,9 @@ class AccountRoutes {
       GoRoute(
         name: AppRoutes.nRestoreAccount,
         path: AppRoutes.restoreAccount,
-        builder: (context, state) => const RestoreAccountScreen(),
+        builder: (context, state) => RestoreAccountScreen(
+          prefillEmail: state.uri.queryParameters['email'],
+        ),
       ),
     ];
   }

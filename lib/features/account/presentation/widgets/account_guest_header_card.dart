@@ -36,7 +36,6 @@ class AccountGuestHeaderCard extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
         child: Column(
           children: [
-            // Icon badge
             Container(
               width: 56,
               height: 56,
@@ -51,21 +50,18 @@ class AccountGuestHeaderCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
-
             Text(
               l10n.account_guest_title,
               textAlign: TextAlign.center,
               style: context.h4,
             ),
             const SizedBox(height: 6),
-
             Text(
               l10n.account_guest_description,
               textAlign: TextAlign.center,
               style: context.pMuted,
             ),
             const SizedBox(height: 16),
-
             Row(
               children: [
                 Expanded(
@@ -75,7 +71,7 @@ class AccountGuestHeaderCard extends StatelessWidget {
                       onPressed:
                           onLogin ??
                           () {
-                            context.pushNamed(AppRoutes.nLogin);
+                            context.goNamed(AppRoutes.nLogin);
                           },
                       style: OutlinedButton.styleFrom(
                         shape: const StadiumBorder(),
@@ -96,7 +92,7 @@ class AccountGuestHeaderCard extends StatelessWidget {
                       onPressed:
                           onSignUp ??
                           () {
-                            context.pushNamed(AppRoutes.nRegister);
+                            context.goNamed(AppRoutes.nRegister);
                           },
                       style: FilledButton.styleFrom(
                         shape: const StadiumBorder(),

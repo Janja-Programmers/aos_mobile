@@ -107,6 +107,7 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
   bool _flashEnabled = false;
   bool _disposed = false;
   bool _captureTransferred = false;
+  bool _captureFinalizing = false;
   int _generation = 0;
 
   @override
@@ -202,7 +203,8 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
     final controller = _controller;
     if (controller == null ||
         !controller.value.isInitialized ||
-        controller.value.isTakingPicture) {
+        controller.value.isTakingPicture ||
+        _captureFinalizing) {
       return;
     }
 
@@ -212,18 +214,46 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
         await _deleteCapture(captured.path);
         return;
       }
-      await _releaseCamera(discardRecording: false);
-      if (!mounted || _disposed) return;
-      setState(() => _capturedPath = captured.path);
+
+      await _showCapturedPreviewBeforeRelease(captured.path);
     } on Object catch (error, stackTrace) {
       appLogger.e(
         'Shared camera photo capture failed',
         error: error,
         stackTrace: stackTrace,
       );
-      if (mounted) {
-        setState(() => _errorMessage = 'The photo could not be captured.');
+      if (mounted && !_disposed) {
+        setState(() {
+          _captureFinalizing = false;
+          _errorMessage = 'The photo could not be captured.';
+        });
       }
+    }
+  }
+
+  Future<void> _showCapturedPreviewBeforeRelease(String path) async {
+    if (!mounted || _disposed) {
+      await _deleteCapture(path);
+      return;
+    }
+
+    setState(() {
+      _capturedPath = path;
+      _captureFinalizing = true;
+      _recording = false;
+      _errorMessage = null;
+    });
+
+    // Let Flutter render the file-backed review frame before disposing the
+    // controller that powered CameraPreview. This avoids a transient frame
+    // reading a controller while it is being torn down.
+    if (WidgetsBinding.instance.framesEnabled) {
+      await WidgetsBinding.instance.endOfFrame;
+    }
+    await _releaseCamera(discardRecording: false, waitForVideoStop: false);
+
+    if (mounted && !_disposed) {
+      setState(() => _captureFinalizing = false);
     }
   }
 
@@ -234,7 +264,11 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
     }
 
     final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) return;
+    if (controller == null ||
+        !controller.value.isInitialized ||
+        _captureFinalizing) {
+      return;
+    }
     try {
       await controller.startVideoRecording();
       if (!mounted || _disposed) return;
@@ -270,8 +304,15 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
     } finally {
       if (identical(_videoStopFuture, operation)) _videoStopFuture = null;
     }
-    if (!discard) {
+
+    if (!discard && _capturedPath != null && mounted && !_disposed) {
+      if (WidgetsBinding.instance.framesEnabled) {
+        await WidgetsBinding.instance.endOfFrame;
+      }
       await _releaseCamera(discardRecording: false, waitForVideoStop: false);
+      if (mounted && !_disposed) {
+        setState(() => _captureFinalizing = false);
+      }
     }
   }
 
@@ -292,6 +333,8 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
         setState(() {
           _recording = false;
           _capturedPath = captured.path;
+          _captureFinalizing = true;
+          _errorMessage = null;
         });
       } else {
         await _deleteCapture(captured.path);
@@ -303,7 +346,10 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
         stackTrace: stackTrace,
       );
       if (!discard && mounted) {
-        setState(() => _errorMessage = 'The video could not be saved.');
+        setState(() {
+          _captureFinalizing = false;
+          _errorMessage = 'The video could not be saved.';
+        });
       }
     } finally {
       if (mounted && !discard) setState(() => _recording = false);
@@ -311,7 +357,12 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
   }
 
   Future<void> _flipCamera() async {
-    if (_recording || _initializing || _cameras.length < 2) return;
+    if (_recording ||
+        _initializing ||
+        _captureFinalizing ||
+        _cameras.length < 2) {
+      return;
+    }
     _facing = _facing == MediaCameraFacing.front
         ? MediaCameraFacing.rear
         : MediaCameraFacing.front;
@@ -320,7 +371,10 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
 
   Future<void> _toggleFlash() async {
     final controller = _controller;
-    if (controller == null || !controller.value.isInitialized || _recording) {
+    if (controller == null ||
+        !controller.value.isInitialized ||
+        _recording ||
+        _captureFinalizing) {
       return;
     }
     final enabled = !_flashEnabled;
@@ -333,6 +387,7 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
   }
 
   Future<void> _retake() async {
+    if (_captureFinalizing) return;
     final path = _capturedPath;
     _capturedPath = null;
     if (path != null) await _deleteCapture(path);
@@ -341,6 +396,7 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
   }
 
   void _useCapture() {
+    if (_captureFinalizing) return;
     final path = _capturedPath;
     if (path == null) return;
     _captureTransferred = true;
@@ -387,6 +443,12 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
     }
     try {
       await controller?.dispose();
+    } on Object catch (error, stackTrace) {
+      appLogger.w(
+        'Shared camera controller disposal failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
     } finally {
       _recording = false;
       _flashEnabled = false;
@@ -412,7 +474,7 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
   Widget build(BuildContext context) {
     final capturedPath = _capturedPath;
     return PopScope<Object?>(
-      canPop: !_recording,
+      canPop: !_recording && !_captureFinalizing,
       child: Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(
@@ -435,7 +497,7 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
                         context,
                       ).closeButtonTooltip,
                       color: Colors.white,
-                      onPressed: _recording
+                      onPressed: _recording || _captureFinalizing
                           ? null
                           : () {
                               unawaited(Navigator.of(context).maybePop());
@@ -540,7 +602,7 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
             : (_recording ? 'Stop recording' : 'Start recording'),
         child: InkResponse(
           radius: 44,
-          onTap: _initializing
+          onTap: _initializing || _captureFinalizing
               ? null
               : isPhoto
               ? _capturePhoto
@@ -567,7 +629,7 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
       children: <Widget>[
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: _retake,
+            onPressed: _captureFinalizing ? null : _retake,
             style: OutlinedButton.styleFrom(foregroundColor: Colors.white),
             icon: const Icon(Icons.refresh_rounded),
             label: const Text('Retake'),
@@ -576,7 +638,7 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
         const SizedBox(width: 16),
         Expanded(
           child: FilledButton.icon(
-            onPressed: _useCapture,
+            onPressed: _captureFinalizing ? null : _useCapture,
             icon: const Icon(Icons.check_rounded, color: Colors.white),
             label: Text('Use', style: AppTextStylesX(context).button),
           ),

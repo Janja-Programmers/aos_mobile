@@ -1,3 +1,5 @@
+// ignore_for_file: no_adjacent_strings_in_list
+
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';

@@ -312,58 +312,94 @@ class ProfileScreen extends ConsumerWidget {
     required bool hasAvatar,
     String? sellerId,
   }) async {
-    final action = await showModalBottomSheet<_AvatarPhotoAction>(
+    final action = await showDialog<_AvatarPhotoAction>(
       context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) {
-        final colors = sheetContext.appColors;
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 42,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: colors.border,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ListTile(
-                  leading: Icon(
-                    Icons.photo_library_outlined,
-                    color: colors.primary,
-                  ),
-                  title: const Text('Upload photo'),
-                  onTap: () =>
-                      Navigator.pop(sheetContext, _AvatarPhotoAction.gallery),
-                ),
-                ListTile(
-                  leading: Icon(
-                    Icons.photo_camera_outlined,
-                    color: colors.primary,
-                  ),
-                  title: const Text('Take photo'),
-                  onTap: () =>
-                      Navigator.pop(sheetContext, _AvatarPhotoAction.camera),
-                ),
-                if (hasAvatar)
-                  ListTile(
-                    leading: Icon(
-                      Icons.delete_outline_rounded,
-                      color: colors.primary,
+      builder: (dialogContext) {
+        final colors = dialogContext.appColors;
+        return Dialog(
+          backgroundColor: colors.surface,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Profile photo',
+                            style: dialogContext.h5.copyWith(
+                              color: colors.textPrimary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: MaterialLocalizations.of(
+                            dialogContext,
+                          ).closeButtonTooltip,
+                          onPressed: () => Navigator.pop(dialogContext),
+                          icon: Icon(
+                            Icons.close_rounded,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ],
                     ),
-                    title: Text(sheetContext.l10n.profilePhotoRemoveAction),
-                    onTap: () =>
-                        Navigator.pop(sheetContext, _AvatarPhotoAction.remove),
-                  ),
-              ],
+                    const SizedBox(height: 6),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        Icons.photo_library_outlined,
+                        color: colors.primary,
+                      ),
+                      title: const Text('Upload photo'),
+                      onTap: () => Navigator.pop(
+                        dialogContext,
+                        _AvatarPhotoAction.gallery,
+                      ),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        Icons.photo_camera_outlined,
+                        color: colors.primary,
+                      ),
+                      title: const Text('Take photo'),
+                      onTap: () => Navigator.pop(
+                        dialogContext,
+                        _AvatarPhotoAction.camera,
+                      ),
+                    ),
+                    if (hasAvatar)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          Icons.delete_outline_rounded,
+                          color: colors.primary,
+                        ),
+                        title: Text(
+                          dialogContext.l10n.profilePhotoRemoveAction,
+                        ),
+                        onTap: () => Navigator.pop(
+                          dialogContext,
+                          _AvatarPhotoAction.remove,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         );

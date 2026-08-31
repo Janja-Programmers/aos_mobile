@@ -47,6 +47,8 @@ dependencies:
   image: ^4.8.0
   image_cropper: ^11.0.0
   image_picker: ^1.2.1
+  image_picker_android: 0.8.13+16
+  image_picker_platform_interface: 2.11.1
   intl: ^0.20.2
   just_audio: ^0.10.5
   keyboard_actions: ^4.2.1

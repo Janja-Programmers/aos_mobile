@@ -6,7 +6,12 @@ enum MediaFileSelectionType { any, document, audio, media, video }
 
 enum MediaCaptureMode { photo, video }
 
-abstract interface class GalleryMediaAdapter {
+abstract interface class MediaLifecycleInitializable {
+  Future<void> initialize();
+}
+
+abstract interface class GalleryMediaAdapter
+    implements MediaLifecycleInitializable {
   Future<List<AcquiredMedia>> pickImages({
     required MediaUseCase useCase,
     required bool multiple,

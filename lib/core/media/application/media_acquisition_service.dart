@@ -1,12 +1,12 @@
-// ignore_for_file: avoid_slow_async_io
+import 'dart:io';
 
 import 'package:africaonlinestores/core/media/application/media_acquisition_ports.dart';
 import 'package:africaonlinestores/core/media/domain/media_asset.dart';
 import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:flutter/widgets.dart';
 
-class MediaAcquisitionService {
-  const MediaAcquisitionService({
+class MediaAcquisitionService implements MediaLifecycleInitializable {
+  MediaAcquisitionService({
     required GalleryMediaAdapter gallery,
     required FileMediaAdapter files,
     required CameraMediaAdapter camera,
@@ -17,6 +17,22 @@ class MediaAcquisitionService {
   final GalleryMediaAdapter _gallery;
   final FileMediaAdapter _files;
   final CameraMediaAdapter _camera;
+
+  Future<void>? _initialization;
+
+  @override
+  Future<void> initialize() {
+    final existing = _initialization;
+    if (existing != null) return existing;
+
+    final operation = _initialize();
+    _initialization = operation;
+    return operation;
+  }
+
+  Future<void> _initialize() async {
+    await _gallery.initialize();
+  }
 
   Future<AcquiredMedia?> captureImage(
     BuildContext context, {
@@ -57,25 +73,32 @@ class MediaAcquisitionService {
     required MediaUseCase useCase,
     int? maxItems,
   }) async {
+    await initialize();
+
     final policy = MediaPolicies.forUseCase(useCase);
     final boundedMax = (maxItems ?? policy.maxItems)
         .clamp(1, policy.maxItems)
         .toInt();
+
     final selected = await _gallery.pickImages(
       useCase: useCase,
       multiple: boundedMax > 1,
       maxItems: boundedMax,
     );
+
     return _validateMany(selected, policy, boundedMax);
   }
 
   Future<AcquiredMedia?> pickVideo({required MediaUseCase useCase}) async {
+    await initialize();
+
     final policy = MediaPolicies.forUseCase(useCase);
     final media = await _gallery.pickVideo(useCase: useCase);
+
     return _validateOne(media, policy);
   }
 
-  Future<AcquiredMedia?> pickDocument({required MediaUseCase useCase}) async {
+  Future<AcquiredMedia?> pickDocument({required MediaUseCase useCase}) {
     return _pickSingleFile(
       useCase: useCase,
       kind: MediaKind.document,
@@ -83,7 +106,7 @@ class MediaAcquisitionService {
     );
   }
 
-  Future<AcquiredMedia?> pickAudio({required MediaUseCase useCase}) async {
+  Future<AcquiredMedia?> pickAudio({required MediaUseCase useCase}) {
     return _pickSingleFile(
       useCase: useCase,
       kind: MediaKind.audio,
@@ -91,7 +114,7 @@ class MediaAcquisitionService {
     );
   }
 
-  Future<AcquiredMedia?> pickAnyFile({required MediaUseCase useCase}) async {
+  Future<AcquiredMedia?> pickAnyFile({required MediaUseCase useCase}) {
     return _pickSingleFile(
       useCase: useCase,
       kind: MediaKind.file,
@@ -99,7 +122,7 @@ class MediaAcquisitionService {
     );
   }
 
-  Future<AcquiredMedia?> pickMediaFile({required MediaUseCase useCase}) async {
+  Future<AcquiredMedia?> pickMediaFile({required MediaUseCase useCase}) {
     return _pickSingleFile(
       useCase: useCase,
       kind: MediaKind.file,
@@ -113,6 +136,7 @@ class MediaAcquisitionService {
     required MediaFileSelectionType selectionType,
   }) async {
     final policy = MediaPolicies.forUseCase(useCase);
+
     final selected = await _files.pickFiles(
       useCase: useCase,
       kind: kind,
@@ -120,7 +144,9 @@ class MediaAcquisitionService {
       multiple: false,
       maxItems: 1,
     );
+
     if (selected.isEmpty) return null;
+
     return _validateOne(selected.first, policy);
   }
 
@@ -130,14 +156,20 @@ class MediaAcquisitionService {
     int maxItems,
   ) async {
     final accepted = <AcquiredMedia>[];
+
     try {
       for (final media in selected.take(maxItems)) {
         final valid = await _validateOne(media, policy);
-        if (valid != null) accepted.add(valid);
+
+        if (valid != null) {
+          accepted.add(valid);
+        }
       }
+
       for (final extra in selected.skip(maxItems)) {
         await extra.discard();
       }
+
       return accepted;
     } on Object {
       for (final media in selected) {
@@ -152,40 +184,52 @@ class MediaAcquisitionService {
     MediaPolicy policy,
   ) async {
     if (media == null) return null;
+
     final file = media.file;
-    if (!await file.exists()) {
+
+    final int fileSize;
+    try {
+      fileSize = await file.length();
+    } on FileSystemException {
       await media.discard();
       throw const MediaPolicyException(
         'The selected file is empty or missing.',
       );
     }
-    final fileSize = await file.length();
+
     if (fileSize <= 0) {
       await media.discard();
       throw const MediaPolicyException(
         'The selected file is empty or missing.',
       );
     }
+
     if (!policy.allowedKinds.contains(media.kind)) {
       await media.discard();
       throw const MediaPolicyException(
         'This media type is not supported here.',
       );
     }
+
     final extension = mediaExtension(media.originalName);
+
     if (!policy.allowsExtension(extension)) {
       await media.discard();
       throw const MediaPolicyException('This file format is not supported.');
     }
+
     final maxBytes = media.kind == MediaKind.image
         ? policy.maxSourceBytes ?? policy.maxBytes
         : policy.maxBytes;
+
     if (maxBytes != null && fileSize > maxBytes) {
       await media.discard();
       throw MediaPolicyException(
-        'The selected file exceeds the ${maxBytes ~/ (1024 * 1024)} MB limit.',
+        'The selected file exceeds the '
+        '${maxBytes ~/ (1024 * 1024)} MB limit.',
       );
     }
+
     return media;
   }
 }

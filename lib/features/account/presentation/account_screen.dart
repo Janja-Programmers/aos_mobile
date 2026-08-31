@@ -54,8 +54,8 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
 
     if (auth is! AuthAuthenticated) {
       return AccountGuestHeaderCard(
-        onLogin: () => context.pushNamed(AppRoutes.nLogin),
-        onSignUp: () => context.pushNamed(AppRoutes.nRegister),
+        onLogin: () => context.goNamed(AppRoutes.nLogin),
+        onSignUp: () => context.goNamed(AppRoutes.nRegister),
         title: l10n.account_guest_title,
         subtitle: l10n.account_guest_description,
       );
@@ -252,12 +252,13 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                     },
                   ),
 
-                  AccountOptionTile(
-                    icon: Icons.settings_backup_restore_sharp,
-                    title: 'Restore account',
-                    showDivider: false,
-                    onTap: () => context.pushNamed(AppRoutes.nRestoreAccount),
-                  ),
+                  if (!isAuthenticated)
+                    AccountOptionTile(
+                      icon: Icons.settings_backup_restore_sharp,
+                      title: 'Restore account',
+                      showDivider: false,
+                      onTap: () => context.pushNamed(AppRoutes.nRestoreAccount),
+                    ),
                   if (isAuthenticated) ...[
                     AccountOptionTile(
                       icon: Icons.delete_forever_outlined,

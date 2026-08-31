@@ -234,8 +234,11 @@ class _ProfileScaffoldState extends ConsumerState<_ProfileScaffold> {
                     : null,
                 isLive: data.isLive,
                 liveId: data.liveId,
-                onAvatarTap: widget.onAvatarTap,
-                onEditTap: widget.onEditTap,
+                // Do not expose profile mutations while the authoritative
+                // profile payload is still loading. This prevents fallback or
+                // stale auth data from seeding an edit operation.
+                onAvatarTap: widget.isLoading ? null : widget.onAvatarTap,
+                onEditTap: widget.isLoading ? null : widget.onEditTap,
                 onMessageTap: widget.onMessageTap == null
                     ? null
                     : _handleMessageTap,

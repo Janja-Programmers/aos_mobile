@@ -116,11 +116,7 @@ class ReviewApi {
     try {
       final res = await _client.post(
         _reportReviewEndpoint,
-        data: {
-          'review': reviewId,
-          'reason': reason,
-          'details': details,
-        },
+        data: {'review': reviewId, 'reason': reason, 'details': details},
       );
 
       final parsed = unwrapFrappe(res);

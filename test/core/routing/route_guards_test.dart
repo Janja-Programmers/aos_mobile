@@ -3,40 +3,76 @@ import 'package:africaonlinestores/core/routing/helpers/route_guards.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('RouteGuards', () {
-    test('treats protected route query strings as part of the same path', () {
+  group('RouteGuards.authenticationRedirect', () {
+    test('keeps public home reachable for guests', () {
       expect(
-        RouteGuards.isProtectedRoute('${AppRoutes.createAd}?draftId=DRAFT-1'),
-        isTrue,
+        RouteGuards.authenticationRedirect(
+          currentLocation: AppRoutes.home,
+          isGuest: true,
+          isAuthenticated: false,
+        ),
+        isNull,
       );
     });
 
-    test('matches the static base of a protected dynamic route', () {
-      expect(RouteGuards.isProtectedRoute('/report-ad/AD-1'), isTrue);
+    test('sends a guest on a protected route to login', () {
+      final redirect = RouteGuards.authenticationRedirect(
+        currentLocation: AppRoutes.connect,
+        isGuest: true,
+        isAuthenticated: false,
+      );
+
+      expect(
+        redirect,
+        '${AppRoutes.login}?redirect=${Uri.encodeComponent(AppRoutes.connect)}',
+      );
     });
 
-    test('does not protect a public ad detail route', () {
-      expect(RouteGuards.isProtectedRoute('/ads/detail/AD-1'), isFalse);
+    test('sends an authenticated user on login to home', () {
+      expect(
+        RouteGuards.authenticationRedirect(
+          currentLocation: AppRoutes.login,
+          isGuest: false,
+          isAuthenticated: true,
+        ),
+        AppRoutes.home,
+      );
     });
 
-    test(
-      'app lock protects authenticated account content without making the guest account route private',
-      () {
-        expect(RouteGuards.isProtectedRoute(AppRoutes.account), isFalse);
-        expect(RouteGuards.isAppLockProtectedRoute(AppRoutes.account), isTrue);
-        expect(
-          RouteGuards.isAppLockProtectedRoute('/ads/detail/AD-1'),
-          isFalse,
-        );
-      },
-    );
+    test('preserves a valid protected post-login destination', () {
+      final loginLocation =
+          '${AppRoutes.login}?redirect=${Uri.encodeComponent(AppRoutes.connect)}';
 
-    test(
-      'recognizes only exact auth route paths after removing query data',
-      () {
-        expect(RouteGuards.isAuthRoute('/login?redirect=%2Fconnect'), isTrue);
-        expect(RouteGuards.isAuthRoute('/login/other'), isFalse);
-      },
-    );
+      expect(
+        RouteGuards.authenticationRedirect(
+          currentLocation: loginLocation,
+          isGuest: false,
+          isAuthenticated: true,
+        ),
+        AppRoutes.connect,
+      );
+    });
+
+    test('keeps restore public for guests', () {
+      expect(
+        RouteGuards.authenticationRedirect(
+          currentLocation: AppRoutes.restoreAccount,
+          isGuest: true,
+          isAuthenticated: false,
+        ),
+        isNull,
+      );
+    });
+
+    test('keeps authenticated accounts out of restore flow', () {
+      expect(
+        RouteGuards.authenticationRedirect(
+          currentLocation: AppRoutes.restoreAccount,
+          isGuest: false,
+          isAuthenticated: true,
+        ),
+        AppRoutes.home,
+      );
+    });
   });
 }

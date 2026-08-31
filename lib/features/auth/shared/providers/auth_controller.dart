@@ -493,14 +493,14 @@ class AuthController extends StateNotifier<AuthState> {
     final int generation = ++_operationGeneration;
 
     try {
-      final String? idToken = await GoogleAuthService.signInAndGetIdToken();
+      final String idToken = await GoogleAuthService.signInAndGetIdToken();
       if (!_isCurrent(generation)) {
         return Either<Failure, void>.left(
           const Failure('Google sign-in was superseded.'),
         );
       }
 
-      if (idToken == null || idToken.isEmpty) {
+      if (idToken.isEmpty) {
         return Either<Failure, void>.left(
           const Failure('Google sign-in cancelled.'),
         );

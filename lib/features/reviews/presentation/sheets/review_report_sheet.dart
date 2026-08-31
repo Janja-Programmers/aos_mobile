@@ -72,7 +72,9 @@ class _ReviewReportSheetState extends ConsumerState<_ReviewReportSheet> {
 
     setState(() => _submitting = true);
 
-    final result = await ref.read(reviewApiProvider).reportReview(
+    final result = await ref
+        .read(reviewApiProvider)
+        .reportReview(
           reviewId: widget.reviewId,
           reason: reason,
           details: _detailsController.text.trim(),
@@ -127,35 +129,33 @@ class _ReviewReportSheetState extends ConsumerState<_ReviewReportSheet> {
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : _error != null
-                      ? _ErrorState(message: _error!, onRetry: _loadReasons)
-                      : _reasons.isEmpty
-                          ? Center(
-                              child: Text(
-                                'No report reasons available right now.',
-                                style: context.pMuted,
-                              ),
-                            )
-                          : ListView.separated(
-                              shrinkWrap: true,
-                              itemCount: _reasons.length,
-                              separatorBuilder: (_, _) => Divider(
-                                height: 1,
-                                color: colors.border,
-                              ),
-                              itemBuilder: (context, index) {
-                                final reason = _reasons[index];
-                                return ReportReasonTile(
-                                  label: reason.title,
-                                  icon: Icons.flag_outlined,
-                                  selected: _selectedReason == reason.id,
-                                  mutedColor: colors.textMuted,
-                                  onTap: () {
-                                    if (_submitting) return;
-                                    setState(() => _selectedReason = reason.id);
-                                  },
-                                );
-                              },
-                            ),
+                  ? _ErrorState(message: _error!, onRetry: _loadReasons)
+                  : _reasons.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No report reasons available right now.',
+                        style: context.pMuted,
+                      ),
+                    )
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: _reasons.length,
+                      separatorBuilder: (_, _) =>
+                          Divider(height: 1, color: colors.border),
+                      itemBuilder: (context, index) {
+                        final reason = _reasons[index];
+                        return ReportReasonTile(
+                          label: reason.title,
+                          icon: Icons.flag_outlined,
+                          selected: _selectedReason == reason.id,
+                          mutedColor: colors.textMuted,
+                          onTap: () {
+                            if (_submitting) return;
+                            setState(() => _selectedReason = reason.id);
+                          },
+                        );
+                      },
+                    ),
             ),
             if (!_loading && _error == null) ...[
               const SizedBox(height: 14),

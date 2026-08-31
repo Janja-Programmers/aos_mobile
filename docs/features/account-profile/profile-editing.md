@@ -2,16 +2,24 @@
 
 ## Implemented fields
 
-The current sheet edits only:
+The name/bio sheet edits:
 
-- `full_name`
+- `full_name` (backend alias of canonical `display_name`)
 - `bio`
 
-The backend also supports avatar fields through the dedicated avatar workflow. Gender, birth date, interests, phone, location, and legal name are not part of this profile-update screen and are not documented as supported here.
+Avatar remains a deliberately separate UI flow. Replacement sends only `avatar_media_id`; removal sends only `remove_avatar=true` after the existing media workflow.
+
+## Backend patch semantics
+
+`update_profile` is POST-only but applies partial profile changes. Every editable field is optional at request level; the backend requires at least one supported field. Fields not supplied are not changed.
+
+The frontend therefore sends only values that changed. If only name changes, bio is omitted. If only bio changes, name is omitted. Unchanged normalized values do not trigger a profile-update request.
 
 ## Prefill
 
-`ProfileEditSheet` seeds controllers once from explicit `initialFullName` / `initialBio`, then authenticated user fields as fallback. This preserves an existing profile bio instead of replacing it with an empty controller value.
+Edit actions are unavailable until the authoritative `get_profile` payload has loaded. `ProfileEditSheet` then seeds name and bio once from that payload.
+
+An explicitly empty backend bio is authoritative and must remain empty; it must not fall back to stale authenticated-user state. The same rule applies to a cleared avatar: backend-present empty avatar fields mean no avatar and must not fall back to navigation/auth seeds.
 
 ## Validation and normalization
 
@@ -24,16 +32,27 @@ The backend also supports avatar fields through the dedicated avatar workflow. G
 
 Backend validation remains authoritative.
 
-## Request and response
+## Response/state synchronization
 
-`AccountsApi.updateProfile` POSTs only supported keys. The returned profile data is passed to `AuthController.setUserFromMap`, the sheet closes, and the caller invalidates account/profile state.
+A successful `update_profile` returns the complete private profile. The frontend feeds that backend snapshot into `AuthController.setUserFromMap`, closes the editor, and invalidates account/profile state through the existing caller flow. It does not construct a merged profile from local form values.
 
-The save button uses `_saving` to prevent duplicate submissions. Backend/Dio failures end loading and show a safe message without clearing unchanged fields.
+## Regression coverage
 
-## Preserving unchanged data
+Tests cover:
 
-Nullable request fields are omitted. The sheet submits both displayed fields because they are prefilled with current values. Avatar replacement uses a separate request containing canonical `avatar_media_id`; avatar removal uses `remove_avatar=true`.
+- explicit empty bio prefill without stale auth fallback
+- name-only update omitting bio
+- bio-only update omitting name
+- normalized no-op save issuing no update request
+- existing duplicate-submit protection
+- existing avatar-media and remove-avatar request contracts
 
-## Extension rule
+## Frappe RPC transport
 
-A new editable field requires all of the following: confirmed backend validator/serializer support, request-model serialization, prefill mapping, validation, regression tests, privacy review, and documentation update. Database fields alone do not establish API support.
+Profile reads continue through the existing v1 method endpoint. Profile mutations call the same whitelisted `aos.api.v1.accounts.update_profile` backend method through Frappe RPC v2 (`/api/v2/method/...`). Frappe v1 injects its routing `cmd` value into `frappe.form_dict`; the account backend deliberately rejects unknown profile fields, so v2 is required to keep framework routing metadata out of the strict partial-update payload. The AOS backend method, auth, validation, and field contract are unchanged.
+
+Frappe v2 wraps custom method results under `data`; `AccountsApi.updateProfile` normalizes that envelope back to the AOS `{ok,message,data,error}` shape. Its profile-update error path also recognizes nested v2 AOS errors so stable backend IDs remain available without changing global Dio behavior.
+
+## Avatar chooser UX
+
+Avatar acquisition remains separate from the name/bio edit form. Tapping the own-profile avatar opens a centered modal dialog with gallery, camera, and (when an avatar exists) remove actions. It must not use a bottom sheet. The selected action still uses the shared media acquisition/upload contract and sends only `avatar_media_id` or `remove_avatar` to `update_profile`.

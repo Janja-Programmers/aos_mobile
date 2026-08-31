@@ -14,12 +14,24 @@
       },
       "oauth_client": [
         {
+          "client_id": "92816366774-2e11s7m5i8im9lfntrh9k39v6u5l7hm8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.africaonlinestores.app",
+            "certificate_hash": "cef8155bd8008b1adfdf0cc9f8b6f7dcd7a83f90"
+          }
+        },
+        {
           "client_id": "92816366774-3jdl0doj5josvp47ermok9qno32o9lct.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.africaonlinestores.app",
             "certificate_hash": "997350ff4ee86299cd09d447f3e6edd926d38244"
           }
+        },
+        {
+          "client_id": "92816366774-skkbkd75qpkeh2fpj6lf9ut2icuh1uf3.apps.googleusercontent.com",
+          "client_type": 3
         }
       ],
       "api_key": [
@@ -29,7 +41,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "92816366774-skkbkd75qpkeh2fpj6lf9ut2icuh1uf3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

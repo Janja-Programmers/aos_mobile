@@ -225,11 +225,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     _invalidateActiveRequest();
     _offset = 0;
 
-    state = state.copyWith(
-      selectedCategoryId: id,
-      items: [],
-      hasMore: true,
-    );
+    state = state.copyWith(selectedCategoryId: id, items: [], hasMore: true);
 
     _resolveChildren();
     unawaited(load(initial: true));
@@ -372,10 +368,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     }
   }
 
-  int _restoreIndex(
-    List<AOSAdListItem> items,
-    _HiddenWishlistItem snapshot,
-  ) {
+  int _restoreIndex(List<AOSAdListItem> items, _HiddenWishlistItem snapshot) {
     final nextId = snapshot.nextId;
     if (nextId != null) {
       final nextIndex = items.indexWhere((item) => item.id == nextId);

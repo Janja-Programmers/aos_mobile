@@ -2,15 +2,20 @@ import 'dart:io';
 
 import 'package:africaonlinestores/core/media/application/media_acquisition_ports.dart';
 import 'package:africaonlinestores/core/media/application/media_file_staging_service.dart';
+import 'package:africaonlinestores/core/media/application/media_picker_operation_coordinator.dart';
 import 'package:africaonlinestores/core/media/domain/media_asset.dart';
 import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:file_picker/file_picker.dart';
 
 class FilePickerMediaAdapter implements FileMediaAdapter {
-  FilePickerMediaAdapter({required MediaFileStagingService staging})
-    : _staging = staging;
+  FilePickerMediaAdapter({
+    required MediaFileStagingService staging,
+    required MediaPickerOperationCoordinator pickerOperations,
+  }) : _staging = staging,
+       _pickerOperations = pickerOperations;
 
   final MediaFileStagingService _staging;
+  final MediaPickerOperationCoordinator _pickerOperations;
 
   @override
   Future<List<AcquiredMedia>> pickFiles({
@@ -29,6 +34,8 @@ class FilePickerMediaAdapter implements FileMediaAdapter {
       MediaFileSelectionType.media => FileType.media,
       MediaFileSelectionType.video => FileType.video,
     };
+
+    final lease = _acquirePickerLease();
 
     try {
       final result = await FilePicker.pickFiles(
@@ -68,6 +75,18 @@ class FilePickerMediaAdapter implements FileMediaAdapter {
     } on Exception catch (error) {
       throw MediaAcquisitionException(
         'The file browser could not be opened: $error',
+      );
+    } finally {
+      lease.release();
+    }
+  }
+
+  MediaPickerLease _acquirePickerLease() {
+    try {
+      return _pickerOperations.acquire(MediaPickerOwner.fileBrowser);
+    } on MediaPickerBusyException {
+      throw const MediaAcquisitionException(
+        'Another media selection is already in progress.',
       );
     }
   }

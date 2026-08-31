@@ -79,12 +79,12 @@ void main() {
   });
 
   group('AccountsApi updateProfile', () {
-    test('posts exact backend-supported fields', () async {
+    test('uses Frappe v2 and posts exact backend-supported fields', () async {
       final Map<String, dynamic> fixture =
           await loadAccountProfileMessageFixture('profile_update_success.json');
       final RecordingHttpClientAdapter adapter = RecordingHttpClientAdapter(
         (RequestOptions options) =>
-            jsonResponse(<String, dynamic>{'message': fixture}),
+            jsonResponse(<String, dynamic>{'data': fixture}),
       );
       final AccountProfileApiHarness harness =
           await buildAccountProfileApiHarness(adapter);
@@ -98,18 +98,56 @@ void main() {
 
       expect(result.isRight, isTrue);
       expect(adapter.singleRequest.method, 'POST');
-      expect(adapter.singleRequest.path, ApiEndpoints.updateProfileEndpoint);
+      expect(
+        adapter.singleRequest.path,
+        '/api/v2/method/aos.api.v1.accounts.update_profile',
+      );
       expect(adapter.singleRequest.data, <String, dynamic>{
         'full_name': 'Updated Owner',
         'bio': 'Updated bio.',
         'avatar_media_id': 'MEDIA-TEST-PROFILE-002',
       });
+      expect(
+        (adapter.singleRequest.data as Map<String, dynamic>).containsKey('cmd'),
+        isFalse,
+      );
+    });
+
+    test('normalizes the Frappe v2 data envelope', () async {
+      final RecordingHttpClientAdapter adapter = RecordingHttpClientAdapter(
+        (RequestOptions options) => jsonResponse(<String, dynamic>{
+          'data': <String, dynamic>{
+            'ok': true,
+            'message': 'Profile updated.',
+            'data': <String, dynamic>{
+              'account_id': 'ACC-ABCDEFGHIJKLMNOPQRST',
+              'display_name': 'Owner',
+              'bio': 'Updated bio',
+            },
+          },
+        }),
+      );
+      final AccountProfileApiHarness harness =
+          await buildAccountProfileApiHarness(adapter);
+      addTearDown(harness.container.dispose);
+
+      final result = await harness.accountsApi.updateProfile(
+        bio: 'Updated bio',
+      );
+
+      expect(result.isRight, isTrue);
+      expect(result.rightOrNull?['ok'], isTrue);
+      expect(result.rightOrNull?['message'], 'Profile updated.');
+      expect(
+        (result.rightOrNull?['data'] as Map<String, dynamic>)['bio'],
+        'Updated bio',
+      );
     });
 
     test('uses remove_avatar for avatar clearing', () async {
       final RecordingHttpClientAdapter adapter = RecordingHttpClientAdapter(
         (RequestOptions options) => jsonResponse(<String, dynamic>{
-          'message': <String, dynamic>{
+          'data': <String, dynamic>{
             'ok': true,
             'message': 'Profile updated.',
             'data': <String, dynamic>{'user': 'owner@example.invalid'},
@@ -125,6 +163,30 @@ void main() {
       expect(adapter.singleRequest.data, <String, dynamic>{
         'remove_avatar': true,
       });
+    });
+
+    test('preserves nested v2 backend error IDs and messages', () async {
+      final RecordingHttpClientAdapter adapter = RecordingHttpClientAdapter(
+        (RequestOptions options) => jsonResponse(<String, dynamic>{
+          'data': <String, dynamic>{
+            'ok': false,
+            'message': 'Invalid avatar media.',
+            'error': 'INVALID_AVATAR_MEDIA',
+            'data': <String, dynamic>{},
+          },
+        }, statusCode: 422),
+      );
+      final AccountProfileApiHarness harness =
+          await buildAccountProfileApiHarness(adapter);
+      addTearDown(harness.container.dispose);
+
+      final result = await harness.accountsApi.updateProfile(
+        userImageMedia: 'MEDIA-TEST-PROFILE-002',
+      );
+
+      expect(result.isLeft, isTrue);
+      expect(result.leftOrNull?.error, 'INVALID_AVATAR_MEDIA');
+      expect(result.leftOrNull?.message, 'Invalid avatar media.');
     });
 
     test('maps timeout deterministically', () async {

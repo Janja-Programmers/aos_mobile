@@ -65,8 +65,8 @@ class _ProfileHeader extends StatelessWidget {
 
   final VoidCallback? onFollowingTap;
   final VoidCallback? onFollowersTap;
-  final VoidCallback onAvatarTap;
-  final VoidCallback onEditTap;
+  final VoidCallback? onAvatarTap;
+  final VoidCallback? onEditTap;
   final VoidCallback? onMessageTap;
   final VoidCallback? onSellerStoreTap;
   final VoidCallback? onFollowTap;
@@ -162,7 +162,7 @@ class _ProfileHeader extends StatelessWidget {
                       : null,
                 ),
               ),
-              if (isOwnProfile)
+              if (isOwnProfile && onAvatarTap != null)
                 Positioned(
                   left: -3,
                   bottom: -3,
@@ -304,7 +304,7 @@ class _ProfileHeader extends StatelessWidget {
                       _MainProfileActionButton(
                         label: 'Visit Seller Storefront',
                         icon: Icons.storefront_outlined,
-                        onTap: onSellerStoreTap!,
+                        onTap: onSellerStoreTap,
                         expanded: true,
                         outlined: true,
                       ),
@@ -320,7 +320,7 @@ class _ProfileHeader extends StatelessWidget {
                                 key: const Key('profile_message_action'),
                                 label: 'Message',
                                 icon: Icons.send_rounded,
-                                onTap: onMessageTap!,
+                                onTap: onMessageTap,
                                 expanded: true,
                                 loading: messageLoading,
                               ),
@@ -388,7 +388,7 @@ class _ProfileStat extends StatelessWidget {
 class _MainProfileActionButton extends StatelessWidget {
   final String label;
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final bool expanded;
   final bool outlined;
   final bool loading;
@@ -406,49 +406,53 @@ class _MainProfileActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final bool enabled = onTap != null && !loading;
 
-    final child = Container(
-      height: 48,
-      width: expanded ? double.infinity : null,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: outlined ? Colors.transparent : colors.elevated,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: outlined ? colors.border : colors.elevated),
-      ),
-      child: loading
-          ? Center(
-              child: SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: colors.textPrimary,
-                ),
-              ),
-            )
-          : Row(
-              mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (!outlined) ...[
-                  Icon(icon, color: colors.textPrimary, size: 18),
-                  const SizedBox(width: 6),
-                ],
-                Text(
-                  label,
-                  style: context.pStrong.copyWith(
+    final child = Opacity(
+      opacity: enabled || loading ? 1.0 : 0.55,
+      child: Container(
+        height: 48,
+        width: expanded ? double.infinity : null,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: outlined ? Colors.transparent : colors.elevated,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: outlined ? colors.border : colors.elevated),
+        ),
+        child: loading
+            ? Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
                     color: colors.textPrimary,
-                    fontWeight: FontWeight.w800,
                   ),
                 ),
-              ],
-            ),
+              )
+            : Row(
+                mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (!outlined) ...[
+                    Icon(icon, color: colors.textPrimary, size: 18),
+                    const SizedBox(width: 6),
+                  ],
+                  Text(
+                    label,
+                    style: context.pStrong.copyWith(
+                      color: colors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+      ),
     );
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: loading ? null : onTap,
+      onTap: enabled ? onTap : null,
       child: expanded ? SizedBox(width: double.infinity, child: child) : child,
     );
   }

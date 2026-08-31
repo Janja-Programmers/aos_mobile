@@ -3,6 +3,7 @@ import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/reviews/application/controllers/review_controller.dart';
 import 'package:africaonlinestores/features/reviews/application/navigation/reviews_routes.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_model.dart';
+import 'package:africaonlinestores/features/reviews/presentation/sheets/review_report_sheet.dart';
 import 'package:africaonlinestores/features/reviews/presentation/widgets/review_card.dart';
 import 'package:africaonlinestores/features/reviews/presentation/widgets/section_outlined_button.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
@@ -30,7 +31,6 @@ class ReviewAdSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        /// HEADER
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -53,10 +53,7 @@ class ReviewAdSection extends ConsumerWidget {
             ),
           ],
         ),
-
         const SizedBox(height: 12),
-
-        /// REVIEW LIST
         Column(
           children: [
             ...visibleReviews.map(
@@ -80,6 +77,7 @@ class ReviewAdSection extends ConsumerWidget {
                               isLikeAction: true,
                             );
 
+                        if (!context.mounted) return;
                         result.fold(
                           (e) => ShowSnack(context, e).error(),
                           (_) {},
@@ -93,11 +91,16 @@ class ReviewAdSection extends ConsumerWidget {
                               isLikeAction: false,
                             );
 
+                        if (!context.mounted) return;
                         result.fold(
                           (e) => ShowSnack(context, e).error(),
                           (_) {},
                         );
                       },
+                      onReport: () => showReviewReportSheet(
+                        context,
+                        reviewId: review.id,
+                      ),
                     ),
                   ),
                 ),
@@ -105,8 +108,6 @@ class ReviewAdSection extends ConsumerWidget {
             ),
           ],
         ),
-
-        /// ALL Reviews
         if (totalReviews > 4) ...[
           const SizedBox(height: 8),
           SectionOutlineButton(

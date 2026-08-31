@@ -12,11 +12,13 @@ class ReviewCard extends StatelessWidget {
     required this.review,
     this.onLike,
     this.onDislike,
+    this.onReport,
   });
 
   final AdReview review;
   final VoidCallback? onLike;
   final VoidCallback? onDislike;
+  final VoidCallback? onReport;
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +75,17 @@ class ReviewCard extends StatelessWidget {
                 ],
               ),
             ),
+            if (onReport != null)
+              IconButton(
+                tooltip: 'Report review',
+                visualDensity: VisualDensity.compact,
+                onPressed: onReport,
+                icon: Icon(
+                  Icons.flag_outlined,
+                  size: 18,
+                  color: colors.textMuted,
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 12),

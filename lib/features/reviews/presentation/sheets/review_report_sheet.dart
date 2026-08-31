@@ -149,11 +149,10 @@ class _ReviewReportSheetState extends ConsumerState<_ReviewReportSheet> {
                                   icon: Icons.flag_outlined,
                                   selected: _selectedReason == reason.id,
                                   mutedColor: colors.textMuted,
-                                  onTap: _submitting
-                                      ? null
-                                      : () => setState(
-                                            () => _selectedReason = reason.id,
-                                          ),
+                                  onTap: () {
+                                    if (_submitting) return;
+                                    setState(() => _selectedReason = reason.id);
+                                  },
                                 );
                               },
                             ),

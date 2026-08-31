@@ -4,6 +4,7 @@ import 'package:africaonlinestores/features/reviews/application/controllers/revi
 import 'package:africaonlinestores/features/reviews/application/navigation/reviews_routes.dart';
 import 'package:africaonlinestores/features/reviews/domain/review_sort.dart';
 import 'package:africaonlinestores/features/reviews/presentation/sheets/review_rating_filter_sheet.dart';
+import 'package:africaonlinestores/features/reviews/presentation/sheets/review_report_sheet.dart';
 import 'package:africaonlinestores/features/reviews/presentation/sheets/review_sort_sheet.dart';
 import 'package:africaonlinestores/features/reviews/presentation/widgets/chip.dart';
 import 'package:africaonlinestores/features/reviews/presentation/widgets/review_card.dart';
@@ -162,6 +163,10 @@ class ReviewScreen extends ConsumerWidget {
                                 react(reviewId: review.id, isLikeAction: true),
                             onDislike: () =>
                                 react(reviewId: review.id, isLikeAction: false),
+                            onReport: () => showReviewReportSheet(
+                              context,
+                              reviewId: review.id,
+                            ),
                           ),
                         ),
                       ),

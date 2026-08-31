@@ -394,7 +394,7 @@ class _MusicPickerSheetState extends ConsumerState<MusicPickerSheet> {
               if (clean.isEmpty) return;
               Navigator.pop(context, (clean, artist.text.trim()));
             },
-            child: const Text('Import'),
+            child: const Text('Import', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

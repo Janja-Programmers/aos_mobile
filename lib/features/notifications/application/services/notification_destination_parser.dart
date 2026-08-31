@@ -46,17 +46,25 @@ class NotificationDestinationParser {
                 canonicalId: userId,
               );
       case NotificationType.adApproved:
-      case NotificationType.adRejected:
-      case NotificationType.adExpired:
+      case NotificationType.reviewReceived:
+      case NotificationType.reviewApproved:
+      case NotificationType.reviewRejected:
         final String? adId = _safeIdentifier(payload.adId);
         return adId == null
             ? const ProtectedNavigationDestination(
-                kind: ProtectedNavigationKind.myAds,
+                kind: ProtectedNavigationKind.notifications,
               )
             : ProtectedNavigationDestination(
                 kind: ProtectedNavigationKind.adDetails,
                 canonicalId: adId,
               );
+      case NotificationType.adRejected:
+      case NotificationType.adExpired:
+        // Rejected/expired ads are intentionally excluded from public get_ad.
+        // Route to the authenticated owner's listing management surface.
+        return const ProtectedNavigationDestination(
+          kind: ProtectedNavigationKind.myAds,
+        );
       case NotificationType.verificationApproved:
         return const ProtectedNavigationDestination(
           kind: ProtectedNavigationKind.account,
@@ -78,6 +86,7 @@ class NotificationDestinationParser {
       case NotificationType.newShort:
       case NotificationType.shortLike:
       case NotificationType.shortComment:
+      case NotificationType.shortMention:
       case NotificationType.commentReply:
         final String? shortId = _safeIdentifier(
           payload.shortId ?? _readShortIdFromRoute(payload.route),
@@ -266,7 +275,6 @@ bool _containsUnsafePathSyntax(String route) {
 String? _safeIdentifier(String? value) {
   final String? cleanValue = _clean(value);
   if (cleanValue == null || cleanValue.length > 200) return null;
-
   final RegExp allowed = RegExp(r'^[A-Za-z0-9._@+:-]+$');
   return allowed.hasMatch(cleanValue) ? cleanValue : null;
 }
@@ -281,7 +289,6 @@ String? _safeDisplayText(String? value) {
 String? _safeMediaUrl(String? value) {
   final String? cleanValue = _clean(value);
   if (cleanValue == null || cleanValue.length > 2048) return null;
-
   final Uri? uri = Uri.tryParse(cleanValue);
   if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) {
     return null;
@@ -291,8 +298,6 @@ String? _safeMediaUrl(String? value) {
 
 String? _clean(String? value) {
   final String? text = value?.trim();
-  if (text == null || text.isEmpty || text.toLowerCase() == 'null') {
-    return null;
-  }
+  if (text == null || text.isEmpty || text.toLowerCase() == 'null') return null;
   return text;
 }

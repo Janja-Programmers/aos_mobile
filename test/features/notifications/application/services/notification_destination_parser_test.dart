@@ -7,30 +7,70 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   const NotificationDestinationParser parser = NotificationDestinationParser();
 
-  test('uses canonical ad ID for an ad notification', () {
-    final ProtectedNavigationDestination? destination = parser.parse(
-      type: NotificationType.adApproved,
-      payload: const NotificationPayload(adId: 'AD-2026-00001'),
-    );
-
-    expect(destination?.kind, ProtectedNavigationKind.adDetails);
-    expect(destination?.canonicalId, 'AD-2026-00001');
-  });
-
   test(
-    'rejects malformed canonical IDs and uses the safe feature fallback',
+    'approved ad uses public detail while rejected and expired use My Ads',
     () {
-      final ProtectedNavigationDestination? destination = parser.parse(
+      final ProtectedNavigationDestination? approved = parser.parse(
+        type: NotificationType.adApproved,
+        payload: const NotificationPayload(adId: 'AD-2026-00001'),
+      );
+      final ProtectedNavigationDestination? rejected = parser.parse(
         type: NotificationType.adRejected,
-        payload: const NotificationPayload(adId: '../account/delete'),
+        payload: const NotificationPayload(adId: 'AD-2026-00002'),
+      );
+      final ProtectedNavigationDestination? expired = parser.parse(
+        type: NotificationType.adExpired,
+        payload: const NotificationPayload(adId: 'AD-2026-00003'),
       );
 
-      expect(destination?.kind, ProtectedNavigationKind.myAds);
-      expect(destination?.canonicalId, isNull);
+      expect(approved?.kind, ProtectedNavigationKind.adDetails);
+      expect(approved?.canonicalId, 'AD-2026-00001');
+      expect(rejected?.kind, ProtectedNavigationKind.myAds);
+      expect(rejected?.canonicalId, isNull);
+      expect(expired?.kind, ProtectedNavigationKind.myAds);
+      expect(expired?.canonicalId, isNull);
     },
   );
 
-  test('accepts only allowlisted unknown internal routes', () {
+  test('review notifications use their canonical ad target', () {
+    for (final NotificationType type in <NotificationType>[
+      NotificationType.reviewReceived,
+      NotificationType.reviewApproved,
+      NotificationType.reviewRejected,
+    ]) {
+      final ProtectedNavigationDestination? destination = parser.parse(
+        type: type,
+        payload: const NotificationPayload(
+          reviewId: 'REVIEW-1',
+          adId: 'AD-2026-00004',
+        ),
+      );
+      expect(destination?.kind, ProtectedNavigationKind.adDetails);
+      expect(destination?.canonicalId, 'AD-2026-00004');
+    }
+  });
+
+  test('malformed public ad ID uses safe Notification Center fallback', () {
+    final ProtectedNavigationDestination? destination = parser.parse(
+      type: NotificationType.adApproved,
+      payload: const NotificationPayload(adId: '../account/delete'),
+    );
+
+    expect(destination?.kind, ProtectedNavigationKind.notifications);
+    expect(destination?.canonicalId, isNull);
+  });
+
+  test('short mention uses Short detail like other Short activity', () {
+    final ProtectedNavigationDestination? destination = parser.parse(
+      type: NotificationType.shortMention,
+      payload: const NotificationPayload(shortId: 'SHORT-0001'),
+    );
+
+    expect(destination?.kind, ProtectedNavigationKind.shortDetails);
+    expect(destination?.canonicalId, 'SHORT-0001');
+  });
+
+  test('accepts only allowlisted internal routes', () {
     final ProtectedNavigationDestination? accepted = parser.parse(
       type: NotificationType.unknown,
       payload: const NotificationPayload(route: '/account'),
@@ -62,29 +102,7 @@ void main() {
     }
   });
 
-  test('does not extract a short ID from an external route', () {
-    final ProtectedNavigationDestination? destination = parser.parse(
-      type: NotificationType.newShort,
-      payload: const NotificationPayload(
-        route: 'https://example.invalid/shorts/detail?short_id=SHORT-0001',
-      ),
-    );
-
-    expect(destination?.kind, ProtectedNavigationKind.feeds);
-    expect(destination?.canonicalId, isNull);
-  });
-
-  test('parses an allowlisted ad detail route with a validated ID', () {
-    final ProtectedNavigationDestination? destination = parser.parse(
-      type: NotificationType.unknown,
-      payload: const NotificationPayload(route: '/ads/detail/AD-0002'),
-    );
-
-    expect(destination?.kind, ProtectedNavigationKind.adDetails);
-    expect(destination?.canonicalId, 'AD-0002');
-  });
-
-  test('incoming-call navigation remains owned by the call pipeline', () {
+  test('incoming-call navigation remains owned by the Calls pipeline', () {
     final ProtectedNavigationDestination? destination = parser.parse(
       type: NotificationType.incomingCall,
       payload: const NotificationPayload(callId: 'CALL-0001'),

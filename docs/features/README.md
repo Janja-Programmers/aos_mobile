@@ -25,6 +25,8 @@ The first recommended feature is **authentication and session** because it estab
 - [Calls](calls/README.md)
 - [Catalog](catalog/README.md)
 - [Live](live/README.md)
+- [Activity Center](activity/README.md)
+- [Notifications](notifications/README.md)
 - [Wishlist](wishlist/README.md)
 - [Seller storefront media](seller-storefront-media.md)
 

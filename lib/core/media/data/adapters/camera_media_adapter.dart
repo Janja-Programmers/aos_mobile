@@ -571,7 +571,10 @@ class _SharedCameraCaptureScreenState extends State<_SharedCameraCaptureScreen>
             ? const CircularProgressIndicator(color: Colors.white)
             : FilledButton(
                 onPressed: _initialize,
-                child: const Text('Retry camera'),
+                child: const Text(
+                  'Retry camera',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
       );
     }

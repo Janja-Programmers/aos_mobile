@@ -316,7 +316,13 @@ class _StateMessage extends StatelessWidget {
             ],
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 18),
-              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
+              FilledButton(
+                onPressed: onAction,
+                child: Text(
+                  actionLabel!,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
             ],
           ],
         ),

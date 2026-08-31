@@ -235,7 +235,10 @@ void _showFilterSheet(BuildContext context) {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Done'),
+                    child: const Text(
+                      'Done',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
               ],

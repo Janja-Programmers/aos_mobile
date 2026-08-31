@@ -286,7 +286,10 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen> {
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(l10n.chat_clear),
+              child: Text(
+                l10n.chat_clear,
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),

@@ -10,36 +10,29 @@ class RealtimeService {
 
   io.Socket? _socket;
 
-  // -----------------------------
-  // Connection State
-  // -----------------------------
   bool _isConnected = false;
   bool get isConnected => _isConnected;
 
-  // -----------------------------
-  // Event Stream
-  // -----------------------------
-  final _controller = StreamController<RealtimeEvent>.broadcast();
+  final StreamController<RealtimeEvent> _controller =
+      StreamController<RealtimeEvent>.broadcast();
   Stream<RealtimeEvent> get events => _controller.stream;
-  final _connectionController = StreamController<void>.broadcast();
+
+  final StreamController<void> _connectionController =
+      StreamController<void>.broadcast();
   Stream<void> get connections => _connectionController.stream;
 
-  // -----------------------------
-  // Connect
-  // -----------------------------
   void connect({
     required String baseUrl,
     required String siteName,
     required String sid,
     required String email,
   }) {
-    // 🔥 Prevent duplicate connections
     if (_socket != null && _isConnected) {
       appLogger.i('[Realtime] Connect ignored: socket already connected');
       return;
     }
 
-    final url = '$baseUrl/$siteName';
+    final String url = '$baseUrl/$siteName';
     appLogger.i(
       '[Realtime] Connect requested '
       '(host=${Uri.tryParse(baseUrl)?.host ?? 'unknown'}, site=$siteName, '
@@ -50,27 +43,23 @@ class RealtimeService {
       url,
       io.OptionBuilder()
           .setPath('/socket.io')
-          .setTransports(['websocket'])
+          .setTransports(<String>['websocket'])
           .disableAutoConnect()
           .enableForceNew()
           .enableReconnection()
-          .setExtraHeaders({'Cookie': 'sid=$sid'})
+          .setExtraHeaders(<String, String>{'Cookie': 'sid=$sid'})
           .build(),
     );
 
-    // -----------------------------
-    // Core Events
-    // -----------------------------
     _socket!.onConnect((_) {
       _isConnected = true;
       _connectionController.add(null);
-
       appLogger.i('[Realtime] ✅ Connected (site=$siteName)');
     });
 
     _socket!.onDisconnect((reason) {
       _isConnected = false;
-      final reasonText = reason is String && reason.trim().isNotEmpty
+      final String reasonText = reason is String && reason.trim().isNotEmpty
           ? reason.trim()
           : 'unspecified';
       appLogger.w('[Realtime] Disconnected (reason=$reasonText)');
@@ -100,21 +89,20 @@ class RealtimeService {
       );
     });
 
-    // -----------------------------
-    // All Events
-    // -----------------------------
     _socket!.onAny((event, data) {
-      final mapped = mapRealtimeEvent(event);
-
-      _controller.add(RealtimeEvent(type: mapped, data: data));
+      final String eventName = event.toString();
+      _controller.add(
+        RealtimeEvent(
+          type: mapRealtimeEvent(eventName),
+          eventName: eventName,
+          data: data,
+        ),
+      );
     });
 
     _socket!.connect();
   }
 
-  // -----------------------------
-  // Emit
-  // -----------------------------
   void emit(String event, Object? data) {
     if (!_isConnected) return;
     _socket?.emit(event, data);
@@ -124,19 +112,14 @@ class RealtimeService {
     if (!_isConnected || _socket == null) {
       throw Exception('Socket not connected');
     }
-
-    _socket!.emit('join_live_room', {'live_id': liveId});
+    _socket!.emit('join_live_room', <String, String>{'live_id': liveId});
   }
 
   Future<void> leaveSocketRoom(String liveId) async {
     if (!_isConnected || _socket == null) return;
-
-    _socket!.emit('leave_live_room', {'live_id': liveId});
+    _socket!.emit('leave_live_room', <String, String>{'live_id': liveId});
   }
 
-  // -----------------------------
-  // Disconnect
-  // -----------------------------
   void disconnect() {
     if (_socket != null || _isConnected) {
       appLogger.i('[Realtime] Disconnect requested');
@@ -146,9 +129,6 @@ class RealtimeService {
     _isConnected = false;
   }
 
-  // -----------------------------
-  // Dispose (optional)
-  // -----------------------------
   void dispose() {
     disconnect();
     unawaited(_controller.close());

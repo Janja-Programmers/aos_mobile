@@ -345,7 +345,7 @@ class _ShortTrimScreenState extends State<ShortTrimScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Discard'),
+            child: const Text('Discard', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

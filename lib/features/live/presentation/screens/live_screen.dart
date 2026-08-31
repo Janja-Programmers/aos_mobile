@@ -232,7 +232,10 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(canEnd ? 'End' : 'Leave'),
+              child: Text(
+                canEnd ? 'End' : 'Leave',
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );

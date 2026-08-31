@@ -159,7 +159,10 @@ class _ChatEditMessageSheetState extends State<_ChatEditMessageSheet> {
                         ),
                         child: Text(
                           l10n.common_save,
-                          style: const TextStyle(fontWeight: FontWeight.w800),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),

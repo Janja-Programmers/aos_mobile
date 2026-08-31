@@ -1,196 +1,157 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:africaonlinestores/core/realtime/realtime_event.dart';
-import 'package:africaonlinestores/core/realtime/realtime_event_type.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/notifications/application/controllers/notification_controller.dart';
+import 'package:africaonlinestores/features/notifications/domain/notification_category.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
-import 'package:africaonlinestores/features/notifications/domain/notification_payload.dart';
-import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
 
 class NotificationRealtimeListener {
-  final Stream<RealtimeEvent> _eventStream;
-  final NotificationController _controller;
-
-  StreamSubscription<RealtimeEvent>? _sub;
-
   NotificationRealtimeListener({
     required Stream<RealtimeEvent> eventStream,
+    required Stream<void> connectionStream,
     required NotificationController controller,
   }) : _eventStream = eventStream,
+       _connectionStream = connectionStream,
        _controller = controller;
 
-  // =====================================================
-  // ATTACH
-  // =====================================================
+  static const String _eventName = 'aos_notification_center';
+  static const int _version = 1;
+  static const int _tombstoneCapacity = 256;
+
+  final Stream<RealtimeEvent> _eventStream;
+  final Stream<void> _connectionStream;
+  final NotificationController _controller;
+  final LinkedHashSet<String> _deletedIds = LinkedHashSet<String>();
+
+  StreamSubscription<RealtimeEvent>? _eventSub;
+  StreamSubscription<void>? _connectionSub;
+  Future<void> _tail = Future<void>.value();
+
   void attach() {
-    _sub = _eventStream.listen(
-      _onEvent,
-      onError: (Object e, StackTrace s) {
+    if (_eventSub != null) return;
+    _eventSub = _eventStream.listen(
+      _enqueue,
+      onError: (Object error, StackTrace stackTrace) {
         appLogger.e(
-          'NotificationRealtimeListener stream error',
-          error: e,
-          stackTrace: s,
+          'Notification realtime stream failed',
+          error: error,
+          stackTrace: stackTrace,
         );
       },
     );
+    _connectionSub = _connectionStream.listen((_) {
+      _tail = _tail.then<void>((_) => _controller.reconcileAfterReconnect());
+    });
   }
 
-  // =====================================================
-  // DISPOSE
-  // =====================================================
-  void dispose() {
-    unawaited(_sub?.cancel());
-  }
-
-  // =====================================================
-  // EVENT HANDLER
-  // =====================================================
-  void _onEvent(RealtimeEvent event) {
-    try {
-      if (!_isNotificationEvent(event.type)) return;
-
-      _handleNotificationEvent(event.type, asJsonMap(event.data));
-    } catch (e, s) {
+  void _enqueue(RealtimeEvent event) {
+    if (event.eventName != _eventName) return;
+    _tail = _tail.then<void>((_) => _handle(event)).onError((
+      Object error,
+      StackTrace stackTrace,
+    ) {
       appLogger.e(
-        'NotificationRealtimeListener event handling failed',
-        error: e,
-        stackTrace: s,
+        'Notification realtime event failed',
+        error: error,
+        stackTrace: stackTrace,
       );
-    }
+    });
   }
 
-  // =====================================================
-  // DETECT NOTIFICATION EVENTS
-  // =====================================================
-  bool _isNotificationEvent(RealtimeEventType type) {
-    switch (type) {
-      case RealtimeEventType.aosFollow:
-      case RealtimeEventType.aosMissedCall:
-      case RealtimeEventType.aosAdApproved:
-      case RealtimeEventType.aosAdRejected:
-      case RealtimeEventType.aosAdExpired:
-      case RealtimeEventType.aosVerificationApproved:
-      case RealtimeEventType.aosVerificationRejected:
-      case RealtimeEventType.aosNewShort:
-      case RealtimeEventType.aosShortLike:
-      case RealtimeEventType.aosShortComment:
-      case RealtimeEventType.aosCommentReply:
-        return true;
-
-      default:
-        return false;
+  Future<void> _handle(RealtimeEvent event) async {
+    final Map<String, dynamic> data = asJsonMap(event.data);
+    if (_asInt(data['version']) != _version) {
+      appLogger.w('Ignoring unsupported notification realtime version');
+      return;
     }
-  }
 
-  // =====================================================
-  // HANDLE NOTIFICATION EVENT
-  // =====================================================
-  void _handleNotificationEvent(
-    RealtimeEventType type,
-    Map<String, dynamic> data,
-  ) {
-    try {
-      final notification = _mapToNotification(type, data);
+    final String action = data['action']?.toString().trim().toLowerCase() ?? '';
+    final int? unreadCountValue = _asInt(data['unread_count']);
+    if (unreadCountValue == null || unreadCountValue < 0) {
+      appLogger.w('Notification realtime event has invalid unread_count');
+      await _controller.reconcileAfterReconnect();
+      return;
+    }
+    final int unreadCount = unreadCountValue;
 
-      if (notification == null) {
-        appLogger.w('⚠️ Failed to map notification: $data');
+    switch (action) {
+      case 'created':
+        final Map<String, dynamic> rawNotification = asJsonMap(
+          data['notification'],
+        );
+        final NotificationItem item = NotificationItem.fromJson(
+          rawNotification,
+        );
+        if (!item.hasCanonicalPersistentId) return;
+        if (_deletedIds.remove(item.id)) {
+          await _controller.reconcileAfterReconnect();
+          return;
+        }
+        _controller.applyRealtimeCreated(item, unreadCount: unreadCount);
         return;
-      }
-
-      _controller.upsertNotification(notification);
-    } catch (e, s) {
-      appLogger.e('handleNotificationEvent failed', error: e, stackTrace: s);
+      case 'read':
+        final String? id = _clean(data['notification_id']);
+        if (id != null) {
+          _controller.applyRealtimeRead(id, unreadCount: unreadCount);
+        }
+        return;
+      case 'read_all':
+        _controller.applyRealtimeReadAll(unreadCount: unreadCount);
+        return;
+      case 'deleted':
+        final String? id = _clean(data['notification_id']);
+        if (id != null) {
+          _rememberDeleted(id);
+          _controller.applyRealtimeDeleted(id, unreadCount: unreadCount);
+        }
+        return;
+      case 'cleared':
+        final NotificationCategory? category =
+            NotificationCategory.tryFromBackendValue(data['category']);
+        if (category == null) {
+          await _controller.reconcileAfterReconnect();
+          return;
+        }
+        _controller.applyRealtimeCleared(category, unreadCount: unreadCount);
+        // Clear can race with an older `created` transport frame. The inbox is
+        // authoritative, so reconcile immediately instead of inventing event
+        // ordering rules the backend does not expose.
+        await _controller.reconcileAfterReconnect();
+        return;
+      default:
+        appLogger.w('Ignoring unknown notification realtime action: $action');
     }
   }
 
-  // =====================================================
-  // MAP EVENT → NotificationItem
-  // =====================================================
-  NotificationItem? _mapToNotification(
-    RealtimeEventType type,
-    Map<String, dynamic> data,
-  ) {
-    try {
-      final now = DateTime.now();
+  void _rememberDeleted(String id) {
+    _deletedIds.add(id);
+    while (_deletedIds.length > _tombstoneCapacity) {
+      _deletedIds.remove(_deletedIds.first);
+    }
+  }
 
-      switch (type) {
-        case RealtimeEventType.aosFollow:
-          final follower = data['follower']?.toString();
-          if (follower == null) return null;
+  int? _asInt(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
+  }
 
-          return NotificationItem(
-            id: 'follow_${follower}_$now',
-            type: NotificationType.follow,
-            title: 'New Follower',
-            body: '$follower started following you',
-            actorId: follower,
-            actorName: follower,
-            isRead: false,
-            createdAt: now,
-            payload: NotificationPayload.fromJson(data),
-          );
-
-        case RealtimeEventType.aosMissedCall:
-          final caller = data['caller']?.toString();
-          final callId = data['call_id']?.toString();
-          if (caller == null || callId == null) return null;
-
-          return NotificationItem(
-            id: 'missed_call_$callId',
-            type: NotificationType.missedCall,
-            title: 'Missed Call',
-            body: 'You missed a call from $caller',
-            actorId: caller,
-            actorName: caller,
-            isRead: false,
-            createdAt: now,
-            payload: NotificationPayload.fromJson(data),
-          );
-
-        case RealtimeEventType.aosAdApproved:
-          return NotificationItem(
-            id: 'ad_approved_${data['ad_id']}_$now',
-            type: NotificationType.adApproved,
-            title: 'Ad Approved',
-            body: 'Your ad has been approved',
-            isRead: false,
-            createdAt: now,
-            payload: NotificationPayload.fromJson(data),
-          );
-
-        case RealtimeEventType.aosAdRejected:
-          return NotificationItem(
-            id: 'ad_rejected_${data['ad_id']}_$now',
-            type: NotificationType.adRejected,
-            title: 'Ad Rejected',
-            body: 'Your ad was rejected',
-            isRead: false,
-            createdAt: now,
-            payload: NotificationPayload.fromJson(data),
-          );
-
-        case RealtimeEventType.aosNewShort:
-          final actor = data['actor']?.toString();
-          return NotificationItem(
-            id: 'short_${data['short_id']}_$now',
-            type: NotificationType.newShort,
-            title: 'New Short 🎬',
-            body: '$actor posted a new short',
-            actorId: actor,
-            actorName: actor,
-            isRead: false,
-            createdAt: now,
-            payload: NotificationPayload.fromJson(data),
-          );
-
-        default:
-          return null;
-      }
-    } catch (e, s) {
-      appLogger.e('_mapToNotification failed', error: e, stackTrace: s);
+  String? _clean(Object? value) {
+    final String? text = value?.toString().trim();
+    if (text == null || text.isEmpty || text.toLowerCase() == 'null') {
       return null;
     }
+    return text;
+  }
+
+  void dispose() {
+    unawaited(_eventSub?.cancel());
+    unawaited(_connectionSub?.cancel());
+    _eventSub = null;
+    _connectionSub = null;
+    _deletedIds.clear();
   }
 }

@@ -1,83 +1,67 @@
+import 'package:africaonlinestores/features/notifications/domain/notification_category.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
 
 class NotificationState {
-  final List<NotificationItem> items;
-
-  final bool isLoading;
-  final bool isRefreshing;
-
-  final String? errorMessage;
-
   const NotificationState({
     required this.items,
+    required this.category,
+    required this.unreadCount,
     required this.isLoading,
     required this.isRefreshing,
+    required this.isLoadingMore,
+    required this.hasLoaded,
+    this.nextCursor,
     this.errorMessage,
   });
 
-  // =====================================================
-  // INITIAL
-  // =====================================================
+  final List<NotificationItem> items;
+  final NotificationCategory category;
+  final int unreadCount;
+  final String? nextCursor;
+  final bool isLoading;
+  final bool isRefreshing;
+  final bool isLoadingMore;
+  final bool hasLoaded;
+  final String? errorMessage;
+
   factory NotificationState.initial() {
     return const NotificationState(
-      items: [],
+      items: <NotificationItem>[],
+      category: NotificationCategory.all,
+      unreadCount: 0,
       isLoading: false,
       isRefreshing: false,
+      isLoadingMore: false,
+      hasLoaded: false,
     );
   }
 
-  // =====================================================
-  // COMPUTED
-  // =====================================================
-
-  /// Derived unread count (single source of truth)
-  int get unreadCount => items.where((n) => !n.isRead).length;
-
-  /// Whether there are no notifications
   bool get isEmpty => items.isEmpty;
+  bool get hasMore => nextCursor != null && nextCursor!.isNotEmpty;
 
-  /// Whether initial load has happened
-  bool get hasData => items.isNotEmpty;
-
-  // =====================================================
-  // COPY WITH
-  // =====================================================
   NotificationState copyWith({
     List<NotificationItem>? items,
+    NotificationCategory? category,
+    int? unreadCount,
+    String? nextCursor,
+    bool clearNextCursor = false,
     bool? isLoading,
     bool? isRefreshing,
+    bool? isLoadingMore,
+    bool? hasLoaded,
     String? errorMessage,
     bool clearError = false,
   }) {
     return NotificationState(
       items: items ?? this.items,
+      category: category ?? this.category,
+      unreadCount: unreadCount ?? this.unreadCount,
+      nextCursor: clearNextCursor ? null : (nextCursor ?? this.nextCursor),
       isLoading: isLoading ?? this.isLoading,
       isRefreshing: isRefreshing ?? this.isRefreshing,
-      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
-    );
-  }
-
-  // =====================================================
-  // HELPERS (STATE TRANSITIONS)
-  // =====================================================
-
-  NotificationState loading() {
-    return copyWith(isLoading: true);
-  }
-
-  NotificationState refreshing() {
-    return copyWith(isRefreshing: true);
-  }
-
-  NotificationState success(List<NotificationItem> newItems) {
-    return copyWith(items: newItems, isLoading: false, isRefreshing: false);
-  }
-
-  NotificationState failure(String message) {
-    return copyWith(
-      isLoading: false,
-      isRefreshing: false,
-      errorMessage: message,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasLoaded: hasLoaded ?? this.hasLoaded,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
   }
 }

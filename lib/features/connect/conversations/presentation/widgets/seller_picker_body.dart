@@ -172,7 +172,10 @@ class _SellerListErrorView extends StatelessWidget {
             const SizedBox(height: 12),
             Text(message, textAlign: TextAlign.center, style: context.body),
             const SizedBox(height: 12),
-            FilledButton(onPressed: onRetry, child: const Text('Retry')),
+            FilledButton(
+              onPressed: onRetry,
+              child: const Text('Retry', style: TextStyle(color: Colors.white)),
+            ),
           ],
         ),
       ),

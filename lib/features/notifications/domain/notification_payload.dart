@@ -2,10 +2,32 @@ import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/core/utils/media_url.dart';
 
 class NotificationPayload {
+  const NotificationPayload({
+    this.conversationId,
+    this.messageId,
+    this.callId,
+    this.liveId,
+    this.adId,
+    this.reviewId,
+    this.shortId,
+    this.commentId,
+    this.userId,
+    this.otherUser,
+    this.actorName,
+    this.actorAvatar,
+    this.otherUserName,
+    this.route,
+    this.event,
+    this.notificationType,
+    this.extra = const <String, dynamic>{},
+  });
+
   final String? conversationId;
+  final String? messageId;
   final String? callId;
   final String? liveId;
   final String? adId;
+  final String? reviewId;
   final String? shortId;
   final String? commentId;
   final String? userId;
@@ -18,56 +40,41 @@ class NotificationPayload {
   final String? notificationType;
   final Map<String, dynamic> extra;
 
-  const NotificationPayload({
-    this.conversationId,
-    this.callId,
-    this.liveId,
-    this.adId,
-    this.shortId,
-    this.commentId,
-    this.userId,
-    this.otherUser,
-    this.actorName,
-    this.actorAvatar,
-    this.otherUserName,
-    this.route,
-    this.event,
-    this.notificationType,
-    this.extra = const {},
-  });
-
   factory NotificationPayload.fromJson(Map<String, dynamic>? json) {
-    if (json == null) return const NotificationPayload();
+    if (json == null) {
+      return const NotificationPayload();
+    }
 
-    final data = asJsonMap(json);
+    final Map<String, dynamic> data = asJsonMap(json);
 
     String? read(String key) {
-      final value = data[key];
-      final text = value?.toString().trim();
-
+      final String? text = data[key]?.toString().trim();
       if (text == null || text.isEmpty || text.toLowerCase() == 'null') {
         return null;
       }
-
       return text;
     }
 
-    final userId =
+    final String? userId =
         read('user_id') ??
         read('userId') ??
         read('target_user') ??
         read('targetUser') ??
         read('actor_id') ??
         read('actor') ??
+        read('sender_account_id') ??
         read('sender') ??
+        read('caller_account_id') ??
         read('caller') ??
         read('follower') ??
         read('host_user');
 
-    final otherUser =
+    final String? otherUser =
         read('other_user') ??
         read('otherUser') ??
+        read('sender_account_id') ??
         read('sender') ??
+        read('caller_account_id') ??
         read('caller') ??
         read('actor') ??
         read('follower');
@@ -77,9 +84,11 @@ class NotificationPayload {
           read('conversation_id') ??
           read('conversationId') ??
           read('conversation'),
+      messageId: read('message_id') ?? read('messageId'),
       callId: read('call_id') ?? read('callId') ?? read('call'),
       liveId: read('live_id') ?? read('liveId') ?? read('live'),
       adId: read('ad_id') ?? read('adId') ?? read('ad'),
+      reviewId: read('review_id') ?? read('reviewId') ?? read('review'),
       shortId:
           read('short_id') ??
           read('shortId') ??
@@ -90,6 +99,7 @@ class NotificationPayload {
       userId: userId,
       otherUser: otherUser,
       actorName:
+          read('actor_display_name') ??
           read('actor_name') ??
           read('actorName') ??
           read('sender_display_name') ??
@@ -109,6 +119,7 @@ class NotificationPayload {
           read('otherUserDisplayName') ??
           read('sender_display_name') ??
           read('caller_display_name') ??
+          read('actor_display_name') ??
           read('actor_name'),
       route: read('route'),
       event: read('event'),
@@ -119,12 +130,14 @@ class NotificationPayload {
   }
 
   Map<String, dynamic> toJson() {
-    final data = <String, dynamic>{
+    return <String, dynamic>{
       ...extra,
       if (conversationId != null) 'conversation_id': conversationId,
+      if (messageId != null) 'message_id': messageId,
       if (callId != null) 'call_id': callId,
       if (liveId != null) 'live_id': liveId,
       if (adId != null) 'ad_id': adId,
+      if (reviewId != null) 'review_id': reviewId,
       if (shortId != null) 'short_id': shortId,
       if (commentId != null) 'comment_id': commentId,
       if (userId != null) 'user_id': userId,
@@ -136,7 +149,5 @@ class NotificationPayload {
       if (event != null) 'event': event,
       if (notificationType != null) 'notification_type': notificationType,
     };
-
-    return data;
   }
 }

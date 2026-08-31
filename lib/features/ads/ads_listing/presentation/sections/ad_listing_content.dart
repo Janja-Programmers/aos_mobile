@@ -215,7 +215,13 @@ class _MyAdTile extends StatelessWidget {
                   );
 
                 case AdActionType.disabled:
-                  return FilledButton(onPressed: null, child: Text(a.label));
+                  return FilledButton(
+                    onPressed: null,
+                    child: Text(
+                      a.label,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  );
               }
             }).toList(),
           ),

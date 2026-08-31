@@ -2,98 +2,79 @@ import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_item.dart';
 import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
 import 'package:flutter/material.dart';
-// =====================================================
-// GROUPING (Today / Yesterday / Earlier)
-// =====================================================
 
 Map<String, List<NotificationItem>> groupByDate(List<NotificationItem> items) {
-  final Map<String, List<NotificationItem>> grouped = {};
-  final now = DateTime.now();
+  final Map<String, List<NotificationItem>> grouped =
+      <String, List<NotificationItem>>{};
+  final DateTime now = DateTime.now();
 
-  for (final item in items) {
-    final diff = now.difference(item.createdAt);
-
-    String key;
-    if (diff.inDays == 0) {
-      key = 'Today';
-    } else if (diff.inDays == 1) {
-      key = 'Yesterday';
-    } else {
-      key = 'Earlier';
-    }
-
-    grouped.putIfAbsent(key, () => []).add(item);
+  for (final NotificationItem item in items) {
+    final DateTime localCreated = item.createdAt.toLocal();
+    final DateTime today = DateTime(now.year, now.month, now.day);
+    final DateTime itemDay = DateTime(
+      localCreated.year,
+      localCreated.month,
+      localCreated.day,
+    );
+    final int days = today.difference(itemDay).inDays;
+    final String key = days <= 0
+        ? 'Today'
+        : days == 1
+        ? 'Yesterday'
+        : 'Earlier';
+    grouped.putIfAbsent(key, () => <NotificationItem>[]).add(item);
   }
-
   return grouped;
 }
 
-// =====================================================
-// FILTERING
-// =====================================================
-List<NotificationItem> filterNotifications(
-  List<NotificationItem> items,
-  String selectedTab,
-) {
-  switch (selectedTab) {
-    case 'Messages':
-      return items.where((n) => n.type == NotificationType.message).toList();
-
-    case 'Activity':
-      return items.where((n) {
-        return n.type == NotificationType.follow ||
-            n.type == NotificationType.missedCall ||
-            n.type == NotificationType.liveStarted ||
-            n.type == NotificationType.adApproved ||
-            n.type == NotificationType.adRejected;
-      }).toList();
-
-    case 'All':
-    default:
-      return items;
-  }
-}
-
 IconData iconForType(NotificationType type) {
-  switch (type) {
-    case NotificationType.message:
-      return Icons.chat_bubble;
-
-    case NotificationType.follow:
-      return Icons.person_add;
-
-    case NotificationType.missedCall:
-      return Icons.phone_missed;
-
-    case NotificationType.liveStarted:
-      return Icons.wifi_tethering;
-
-    case NotificationType.adApproved:
-      return Icons.check_circle;
-
-    case NotificationType.adRejected:
-      return Icons.cancel;
-
-    default:
-      return Icons.notifications;
-  }
+  return switch (type) {
+    NotificationType.message => Icons.chat_bubble_outline_rounded,
+    NotificationType.follow => Icons.person_add_alt_1_rounded,
+    NotificationType.missedCall => Icons.phone_missed_rounded,
+    NotificationType.liveStarted => Icons.wifi_tethering_rounded,
+    NotificationType.adApproved => Icons.check_circle_outline_rounded,
+    NotificationType.adRejected => Icons.cancel_outlined,
+    NotificationType.adExpired => Icons.schedule_rounded,
+    NotificationType.reviewReceived => Icons.rate_review_outlined,
+    NotificationType.reviewApproved => Icons.reviews_outlined,
+    NotificationType.reviewRejected => Icons.rate_review_outlined,
+    NotificationType.verificationApproved => Icons.verified_outlined,
+    NotificationType.verificationRejected => Icons.gpp_bad_outlined,
+    NotificationType.newShort => Icons.play_circle_outline_rounded,
+    NotificationType.shortLike => Icons.favorite_border_rounded,
+    NotificationType.shortComment => Icons.mode_comment_outlined,
+    NotificationType.shortMention => Icons.alternate_email_rounded,
+    NotificationType.commentReply => Icons.reply_rounded,
+    NotificationType.incomingCall ||
+    NotificationType.callRejected ||
+    NotificationType.callEnded => Icons.phone_outlined,
+    NotificationType.unknown => Icons.notifications_none_rounded,
+  };
 }
 
 Color colorForType(NotificationType type, AppColorTokens colors) {
-  switch (type) {
-    case NotificationType.liveStarted:
-      return colors.primary;
-
-    case NotificationType.follow:
-      return colors.blue;
-
-    case NotificationType.adApproved:
-      return colors.success;
-
-    case NotificationType.adRejected:
-      return colors.primary;
-
-    default:
-      return colors.primary;
-  }
+  return switch (type) {
+    NotificationType.follow => colors.blue,
+    NotificationType.adApproved ||
+    NotificationType.reviewApproved ||
+    NotificationType.verificationApproved => colors.success,
+    NotificationType.adRejected ||
+    NotificationType.reviewRejected ||
+    NotificationType.verificationRejected => colors.primary,
+    NotificationType.liveStarted ||
+    NotificationType.message ||
+    NotificationType.missedCall ||
+    NotificationType.callRejected ||
+    NotificationType.callEnded ||
+    NotificationType.incomingCall ||
+    NotificationType.adExpired ||
+    NotificationType.reviewReceived ||
+    NotificationType.newShort ||
+    NotificationType.shortLike ||
+    NotificationType.shortComment ||
+    NotificationType.shortMention ||
+    NotificationType.commentReply ||
+    NotificationType.unknown => colors.primary,
+  };
 }

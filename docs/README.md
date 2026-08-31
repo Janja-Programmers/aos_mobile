@@ -33,3 +33,8 @@ must not redefine backend contracts.
   - [Calls physical device test matrix](features/calls/device-test-matrix.md)
   - [Calls implementation validation](features/calls/implementation-validation.md)
 - [Connect Chat](features/connect-chat.md)
+- [Activity Center](features/activity/README.md)
+  - [Activity physical device checklist](features/activity/device-test-matrix.md)
+- [Notifications](features/notifications/README.md)
+  - [Notifications physical device checklist](features/notifications/device-test-matrix.md)
+- [Notifications + Activity hardening validation](features/notifications-activity-hardening-validation.md)

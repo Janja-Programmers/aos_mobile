@@ -186,7 +186,13 @@ class _ReducedEditListingScreenState
               children: [
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
-                FilledButton(onPressed: _load, child: const Text('Retry')),
+                FilledButton(
+                  onPressed: _load,
+                  child: const Text(
+                    'Retry',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
               ],
             ),
           ),

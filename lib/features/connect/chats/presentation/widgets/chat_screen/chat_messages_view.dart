@@ -276,7 +276,13 @@ class _MessageStateView extends StatelessWidget {
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 16),
-              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
+              FilledButton(
+                onPressed: onAction,
+                child: Text(
+                  actionLabel!,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
             ],
           ],
         ),

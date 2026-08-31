@@ -429,7 +429,7 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _controller.initialize,
-              child: const Text('Retry'),
+              child: const Text('Retry', style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -565,7 +565,10 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
                           Navigator.pop(context, (clean, color));
                         }
                       },
-                      child: const Text('Done'),
+                      child: const Text(
+                        'Done',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ],
                 ),
@@ -725,7 +728,10 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
                 const Spacer(),
                 FilledButton(
                   onPressed: () => Navigator.pop(context, text.text.trim()),
-                  child: const Text('Done'),
+                  child: const Text(
+                    'Done',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             ),

@@ -175,7 +175,7 @@ class _PostShortMediaPickerScreenState
               onPressed: () => ref
                   .read(shortRecorderControllerProvider.notifier)
                   .initialize(),
-              child: const Text('Retry'),
+              child: const Text('Retry', style: TextStyle(color: Colors.white)),
             ),
             if (isPermission)
               TextButton(
@@ -503,7 +503,10 @@ class _PostShortMediaPickerScreenState
             const SizedBox(height: 20),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Resume draft'),
+              child: const Text(
+                'Resume draft',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, false),

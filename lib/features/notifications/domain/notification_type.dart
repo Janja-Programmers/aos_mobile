@@ -7,6 +7,9 @@ enum NotificationType {
   adApproved,
   adRejected,
   adExpired,
+  reviewReceived,
+  reviewApproved,
+  reviewRejected,
   verificationApproved,
   verificationRejected,
   liveStarted,
@@ -14,6 +17,7 @@ enum NotificationType {
   newShort,
   shortLike,
   shortComment,
+  shortMention,
   commentReply,
   unknown,
 }
@@ -24,127 +28,67 @@ extension NotificationTypeX on NotificationType {
   }
 
   static NotificationType fromBackendValue(String? value) {
-    final normalized = value
+    final String? normalized = value
         ?.trim()
         .toLowerCase()
         .replaceAll('-', '_')
         .replaceAll(' ', '_');
 
-    switch (normalized) {
-      // CHAT
-      case 'message':
-      case 'aos_new_message':
-        return NotificationType.message;
-
-      // CALLS
-      // Backend type is "call", event is "aos_incoming_call".
-      case 'call':
-      case 'incoming_call':
-      case 'aos_incoming_call':
-        return NotificationType.incomingCall;
-
-      case 'missed_call':
-      case 'aos_missed_call':
-        return NotificationType.missedCall;
-
-      case 'call_rejected':
-      case 'aos_call_rejected':
-        return NotificationType.callRejected;
-
-      case 'call_ended':
-      case 'aos_call_ended':
-        return NotificationType.callEnded;
-
-      // ADS
-      case 'ad_approved':
-      case 'aos_ad_approved':
-        return NotificationType.adApproved;
-
-      case 'ad_rejected':
-      case 'aos_ad_rejected':
-        return NotificationType.adRejected;
-
-      case 'ad_expired':
-      case 'aos_ad_expired':
-        return NotificationType.adExpired;
-
-      // SELLER / PROFILE VERIFICATION
-      case 'verification_approved':
-      case 'aos_verification_approved':
-        return NotificationType.verificationApproved;
-
-      case 'verification_rejected':
-      case 'aos_verification_rejected':
-        return NotificationType.verificationRejected;
-
-      // LIVE
-      case 'live_started':
-      case 'aos_live_started':
-        return NotificationType.liveStarted;
-
-      // FOLLOW
-      case 'follow':
-      case 'aos_follow':
-        return NotificationType.follow;
-
-      // SHORTS
-      case 'new_short':
-      case 'aos_new_short':
-        return NotificationType.newShort;
-
-      case 'short_like':
-      case 'aos_short_like':
-        return NotificationType.shortLike;
-
-      case 'short_comment':
-      case 'aos_short_comment':
-        return NotificationType.shortComment;
-
-      case 'comment_reply':
-      case 'aos_comment_reply':
-        return NotificationType.commentReply;
-
-      default:
-        return NotificationType.unknown;
-    }
+    return switch (normalized) {
+      'message' || 'aos_new_message' => NotificationType.message,
+      'call' ||
+      'incoming_call' ||
+      'aos_incoming_call' => NotificationType.incomingCall,
+      'missed_call' || 'aos_missed_call' => NotificationType.missedCall,
+      'call_rejected' || 'aos_call_rejected' => NotificationType.callRejected,
+      'call_ended' || 'aos_call_ended' => NotificationType.callEnded,
+      'ad_approved' || 'aos_ad_approved' => NotificationType.adApproved,
+      'ad_rejected' || 'aos_ad_rejected' => NotificationType.adRejected,
+      'ad_expired' || 'aos_ad_expired' => NotificationType.adExpired,
+      'review_received' ||
+      'aos_review_received' => NotificationType.reviewReceived,
+      'review_approved' ||
+      'aos_review_approved' => NotificationType.reviewApproved,
+      'review_rejected' ||
+      'aos_review_rejected' => NotificationType.reviewRejected,
+      'verification_approved' ||
+      'aos_verification_approved' => NotificationType.verificationApproved,
+      'verification_rejected' ||
+      'aos_verification_rejected' => NotificationType.verificationRejected,
+      'live_started' || 'aos_live_started' => NotificationType.liveStarted,
+      'follow' || 'aos_follow' => NotificationType.follow,
+      'new_short' || 'aos_new_short' => NotificationType.newShort,
+      'short_like' || 'aos_short_like' => NotificationType.shortLike,
+      'short_comment' || 'aos_short_comment' => NotificationType.shortComment,
+      'short_mention' || 'aos_short_mention' => NotificationType.shortMention,
+      'comment_reply' || 'aos_comment_reply' => NotificationType.commentReply,
+      _ => NotificationType.unknown,
+    };
   }
 
   String get value {
-    switch (this) {
-      case NotificationType.message:
-        return 'message';
-      case NotificationType.incomingCall:
-        return 'incoming_call';
-      case NotificationType.missedCall:
-        return 'missed_call';
-      case NotificationType.callRejected:
-        return 'call_rejected';
-      case NotificationType.callEnded:
-        return 'call_ended';
-      case NotificationType.adApproved:
-        return 'ad_approved';
-      case NotificationType.adRejected:
-        return 'ad_rejected';
-      case NotificationType.adExpired:
-        return 'ad_expired';
-      case NotificationType.verificationApproved:
-        return 'verification_approved';
-      case NotificationType.verificationRejected:
-        return 'verification_rejected';
-      case NotificationType.liveStarted:
-        return 'live_started';
-      case NotificationType.follow:
-        return 'follow';
-      case NotificationType.newShort:
-        return 'new_short';
-      case NotificationType.shortLike:
-        return 'short_like';
-      case NotificationType.shortComment:
-        return 'short_comment';
-      case NotificationType.commentReply:
-        return 'comment_reply';
-      case NotificationType.unknown:
-        return 'unknown';
-    }
+    return switch (this) {
+      NotificationType.message => 'message',
+      NotificationType.incomingCall => 'incoming_call',
+      NotificationType.missedCall => 'missed_call',
+      NotificationType.callRejected => 'call_rejected',
+      NotificationType.callEnded => 'call_ended',
+      NotificationType.adApproved => 'ad_approved',
+      NotificationType.adRejected => 'ad_rejected',
+      NotificationType.adExpired => 'ad_expired',
+      NotificationType.reviewReceived => 'review_received',
+      NotificationType.reviewApproved => 'review_approved',
+      NotificationType.reviewRejected => 'review_rejected',
+      NotificationType.verificationApproved => 'verification_approved',
+      NotificationType.verificationRejected => 'verification_rejected',
+      NotificationType.liveStarted => 'live_started',
+      NotificationType.follow => 'follow',
+      NotificationType.newShort => 'new_short',
+      NotificationType.shortLike => 'short_like',
+      NotificationType.shortComment => 'short_comment',
+      NotificationType.shortMention => 'short_mention',
+      NotificationType.commentReply => 'comment_reply',
+      NotificationType.unknown => 'unknown',
+    };
   }
 }

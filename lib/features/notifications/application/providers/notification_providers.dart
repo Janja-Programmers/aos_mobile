@@ -3,15 +3,18 @@ import 'package:africaonlinestores/core/navigation/protected_navigation_coordina
 import 'package:africaonlinestores/core/providers.dart';
 import 'package:africaonlinestores/core/realtime/realtime_provider.dart';
 import 'package:africaonlinestores/core/routing/app_router.dart';
+import 'package:africaonlinestores/features/ads/shared/providers/ads_api_provider.dart';
 import 'package:africaonlinestores/features/app_lock/application/app_lock_controller.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/connect/calls/application/providers/call_providers.dart';
+import 'package:africaonlinestores/features/connect/calls/application/state/call_state.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
 import 'package:africaonlinestores/features/notifications/application/controllers/notification_controller.dart';
 import 'package:africaonlinestores/features/notifications/application/controllers/push_token_controller.dart';
 import 'package:africaonlinestores/features/notifications/application/services/go_router_protected_navigation_executor.dart';
 import 'package:africaonlinestores/features/notifications/application/services/in_app_notification_service.dart';
+import 'package:africaonlinestores/features/notifications/application/services/notification_missed_call_action_coordinator.dart';
 import 'package:africaonlinestores/features/notifications/application/services/notification_navigation_handler.dart';
 import 'package:africaonlinestores/features/notifications/application/services/notification_realtime_listener.dart';
 import 'package:africaonlinestores/features/notifications/application/services/push_notification_service.dart';
@@ -22,53 +25,32 @@ import 'package:africaonlinestores/features/notifications/data/push_token_api.da
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-// =====================================================
-// API
-// =====================================================
 
 final notificationApiProvider = Provider<NotificationApi>((ref) {
-  final apiClient = ref.watch(apiClientProvider);
-  return NotificationApi(apiClient);
+  return NotificationApi(ref.watch(apiClientProvider));
 });
 
 final pushTokenApiProvider = Provider<PushTokenApi>((ref) {
-  final apiClient = ref.watch(apiClientProvider);
-  return PushTokenApi(apiClient);
+  return PushTokenApi(ref.watch(apiClientProvider));
 });
 
-// =====================================================
-// REPOSITORY
-// =====================================================
-
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
-  final api = ref.watch(notificationApiProvider);
-  return NotificationRepositoryImpl(api);
+  return NotificationRepositoryImpl(ref.watch(notificationApiProvider));
 });
 
 final pushTokenRepositoryProvider = Provider<PushTokenRepository>((ref) {
-  final api = ref.watch(pushTokenApiProvider);
-  return PushTokenRepositoryImpl(api);
+  return PushTokenRepositoryImpl(ref.watch(pushTokenApiProvider));
 });
-
-// =====================================================
-// CONTROLLERS
-// =====================================================
 
 final notificationControllerProvider =
     StateNotifierProvider<NotificationController, NotificationState>((ref) {
-      final repo = ref.watch(notificationRepositoryProvider);
-      return NotificationController(repo);
+      return NotificationController(ref.watch(notificationRepositoryProvider));
     });
 
 final pushTokenControllerProvider =
     StateNotifierProvider<PushTokenController, AsyncValue<void>>((ref) {
-      final repo = ref.watch(pushTokenRepositoryProvider);
-      return PushTokenController(repo);
+      return PushTokenController(ref.watch(pushTokenRepositoryProvider));
     });
-
-// =====================================================
-// PROTECTED NAVIGATION FOUNDATION
-// =====================================================
 
 final pendingProtectedNavigationStoreProvider =
     StateNotifierProvider<
@@ -89,6 +71,7 @@ final protectedNavigationExecutorProvider =
       return GoRouterProtectedNavigationExecutor(
         router: ref.watch(appRouterProvider),
         liveManager: ref.read(liveManagerProvider.notifier),
+        adsApi: ref.read(adsApiProvider),
       );
     });
 
@@ -102,16 +85,36 @@ final protectedNavigationCoordinatorProvider =
           );
 
       coordinator.handleAuthState(ref.read(authControllerProvider));
-      ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      ref.listen<AuthState>(authControllerProvider, (
+        AuthState? previous,
+        AuthState next,
+      ) {
         coordinator.handleAuthState(next);
       });
-
       return coordinator;
     });
 
-// =====================================================
-// NOTIFICATION NAVIGATION HANDLER
-// =====================================================
+final notificationMissedCallActionCoordinatorProvider =
+    Provider<NotificationMissedCallActionCoordinator>((ref) {
+      return NotificationMissedCallActionCoordinator(
+        recoverCallLifecycle: (String? originalCallId) async {
+          final callKit = ref.read(callKitServiceProvider);
+          await ref.read(callKitRecoveryServiceProvider).recover();
+
+          final String? callId = originalCallId?.trim();
+          if (callId != null && callId.isNotEmpty) {
+            await callKit.endCall(callId: callId);
+          }
+        },
+        isCallLifecycleBusy: () {
+          final CallState callState = ref.read(callManagerProvider);
+          return callState.isBusy ||
+              callState.isCallInProgress ||
+              callState.hasIncomingCallUi ||
+              callState.hasActiveRoom;
+        },
+      );
+    });
 
 final notificationNavigationHandlerProvider =
     Provider<NotificationNavigationHandler>((ref) {
@@ -120,35 +123,24 @@ final notificationNavigationHandlerProvider =
       );
     });
 
-// =====================================================
-// REALTIME LISTENER
-// =====================================================
-
 final notificationRealtimeListenerProvider =
     Provider<NotificationRealtimeListener>((ref) {
       final realtime = ref.watch(realtimeServiceProvider);
-      final controller = ref.read(notificationControllerProvider.notifier);
-
-      final listener = NotificationRealtimeListener(
-        eventStream: realtime.events,
-        controller: controller,
-      );
-
+      final NotificationRealtimeListener listener =
+          NotificationRealtimeListener(
+            eventStream: realtime.events,
+            connectionStream: realtime.connections,
+            controller: ref.read(notificationControllerProvider.notifier),
+          );
       listener.attach();
-
       ref.onDispose(listener.dispose);
-
       return listener;
     });
-
-// =====================================================
-// PUSH SERVICE
-// =====================================================
 
 final inAppNotificationServiceProvider = Provider<InAppNotificationService>((
   ref,
 ) {
-  final service = InAppNotificationService();
+  final InAppNotificationService service = InAppNotificationService();
   ref.onDispose(service.dispose);
   return service;
 });
@@ -156,25 +148,15 @@ final inAppNotificationServiceProvider = Provider<InAppNotificationService>((
 final pushNotificationServiceProvider = Provider<PushNotificationService>((
   ref,
 ) {
-  final messaging = FirebaseMessaging.instance;
-  final controller = ref.read(notificationControllerProvider.notifier);
-  final navigationHandler = ref.read(notificationNavigationHandlerProvider);
-  final pushRepo = ref.read(pushTokenRepositoryProvider);
-  final bannerService = ref.read(inAppNotificationServiceProvider);
-  final incomingCallBootstrapper = ref.read(incomingCallBootstrapperProvider);
-  final callKitRecoveryService = ref.read(callKitRecoveryServiceProvider);
-
-  final service = PushNotificationService(
-    messaging: messaging,
-    controller: controller,
-    navigationHandler: navigationHandler,
-    pushRepo: pushRepo,
-    bannerService: bannerService,
-    incomingCallBootstrapper: incomingCallBootstrapper,
-    callKitRecoveryService: callKitRecoveryService,
+  final PushNotificationService service = PushNotificationService(
+    messaging: FirebaseMessaging.instance,
+    controller: ref.read(notificationControllerProvider.notifier),
+    navigationHandler: ref.read(notificationNavigationHandlerProvider),
+    pushRepo: ref.read(pushTokenRepositoryProvider),
+    bannerService: ref.read(inAppNotificationServiceProvider),
+    incomingCallBootstrapper: ref.read(incomingCallBootstrapperProvider),
+    callKitRecoveryService: ref.read(callKitRecoveryServiceProvider),
   );
-
   ref.onDispose(service.dispose);
-
   return service;
 });

@@ -629,7 +629,10 @@ class _PostShortDetailsScreenState
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(54),
                 ),
-                child: const Text('Post'),
+                child: const Text(
+                  'Post',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -704,12 +707,18 @@ class _PostShortDetailsScreenState
                         if (state.shortId != null)
                           FilledButton(
                             onPressed: _controller.retryProcessingCurrent,
-                            child: const Text('Retry processing'),
+                            child: const Text(
+                              'Retry processing',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           )
                         else
                           FilledButton(
                             onPressed: _controller.upload,
-                            child: const Text('Retry upload'),
+                            child: const Text(
+                              'Retry upload',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
                         TextButton(
                           onPressed: () {

@@ -837,7 +837,13 @@ class _CenteredState extends StatelessWidget {
             Text(message, textAlign: TextAlign.center, style: context.pMuted),
             if (actionText != null && onAction != null) ...[
               const SizedBox(height: 18),
-              FilledButton(onPressed: onAction, child: Text(actionText!)),
+              FilledButton(
+                onPressed: onAction,
+                child: Text(
+                  actionText!,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
             ],
           ],
         ),

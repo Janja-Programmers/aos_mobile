@@ -6,17 +6,6 @@ import 'package:africaonlinestores/features/notifications/domain/notification_pa
 import 'package:africaonlinestores/features/notifications/domain/notification_type.dart';
 
 class NotificationItem {
-  final String id;
-  final NotificationType type;
-  final String title;
-  final String body;
-  final String? actorId;
-  final String? actorName;
-  final String? actorAvatar;
-  final bool isRead;
-  final DateTime createdAt;
-  final NotificationPayload payload;
-
   const NotificationItem({
     required this.id,
     required this.type,
@@ -29,6 +18,22 @@ class NotificationItem {
     required this.createdAt,
     required this.payload,
   });
+
+  final String id;
+  final NotificationType type;
+  final String title;
+  final String body;
+  final String? actorId;
+  final String? actorName;
+  final String? actorAvatar;
+  final bool isRead;
+  final DateTime createdAt;
+  final NotificationPayload payload;
+
+  bool get hasCanonicalPersistentId =>
+      id.isNotEmpty &&
+      !id.startsWith('push_') &&
+      !id.startsWith('notification_');
 
   NotificationItem copyWith({
     String? id,
@@ -57,36 +62,38 @@ class NotificationItem {
   }
 
   factory NotificationItem.fromJson(Map<String, dynamic> json) {
-    final payloadMap = _parsePayload(json['payload']);
-    final payload = NotificationPayload.fromJson(payloadMap);
+    final Map<String, dynamic>? payloadMap = _parsePayload(json['payload']);
+    final NotificationPayload payload = NotificationPayload.fromJson(
+      payloadMap,
+    );
 
-    final typeValue =
+    final String? typeValue =
         _read(json, 'type') ??
         payload.event ??
         payload.notificationType ??
         _read(payloadMap, 'event') ??
         _read(payloadMap, 'notification_type') ??
         _read(payloadMap, 'type');
+    final NotificationType type = NotificationTypeX.fromBackendValue(typeValue);
 
-    final type = NotificationTypeX.fromBackendValue(typeValue);
-
-    final actorId =
-        _read(json, 'actor_id') ??
+    final String? actorId =
         _read(json, 'actor') ??
-        payload.userId ??
+        _read(json, 'actor_id') ??
         _read(payloadMap, 'actor') ??
-        _read(payloadMap, 'sender') ??
-        _read(payloadMap, 'caller') ??
+        _read(payloadMap, 'sender_account_id') ??
+        _read(payloadMap, 'caller_account_id') ??
         _read(payloadMap, 'follower') ??
-        _read(payloadMap, 'host_user');
+        _read(payloadMap, 'host_user') ??
+        payload.userId;
 
     return NotificationItem(
-      id: _resolveId(json, payloadMap),
+      id: _resolvePersistentId(json, payloadMap),
       type: type,
       title: _read(json, 'title') ?? _fallbackTitleForType(type),
       body: _read(json, 'body') ?? '',
       actorId: actorId,
       actorName:
+          _read(json, 'actor_display_name') ??
           _read(json, 'actor_name') ??
           _read(payloadMap, 'actor_name') ??
           actorId,
@@ -94,12 +101,13 @@ class NotificationItem {
         _read(json, 'actor_avatar') ?? _read(payloadMap, 'actor_avatar'),
       ),
       isRead: _parseBool(json['is_read']),
-      createdAt: _parseDate(json['created_at']) ?? DateTime.now(),
+      createdAt:
+          _parseDate(json['created_at']) ??
+          DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
       payload: payload,
     );
   }
 
-  /// Useful when creating NotificationItem from FCM RemoteMessage.data.
   factory NotificationItem.fromPushData({
     required Map<String, dynamic> data,
     String? messageId,
@@ -107,38 +115,42 @@ class NotificationItem {
     String? body,
     DateTime? sentTime,
   }) {
-    final payload = NotificationPayload.fromJson(data);
-
-    final eventOrType =
+    final NotificationPayload payload = NotificationPayload.fromJson(data);
+    final String? eventOrType =
         _read(data, 'event') ??
         _read(data, 'notification_type') ??
         _read(data, 'type') ??
         payload.event ??
         payload.notificationType;
+    final NotificationType type = NotificationTypeX.fromBackendValue(
+      eventOrType,
+    );
 
-    final type = NotificationTypeX.fromBackendValue(eventOrType);
-
-    final actorId =
-        _read(data, 'actor_id') ??
+    final String? actorId =
         _read(data, 'actor') ??
+        _read(data, 'actor_id') ??
+        _read(data, 'sender_account_id') ??
+        _read(data, 'caller_account_id') ??
         _read(data, 'sender') ??
         _read(data, 'caller') ??
         _read(data, 'follower') ??
         _read(data, 'host_user') ??
         payload.userId;
 
-    final now = DateTime.now();
+    final DateTime now = DateTime.now();
+    final String? persistentId = _read(data, 'notification_id');
+    final String id =
+        persistentId ??
+        'push_${messageId ?? eventOrType ?? type.value}_${now.microsecondsSinceEpoch}';
 
     return NotificationItem(
-      id:
-          _read(data, 'notification_id') ??
-          messageId ??
-          'push_${eventOrType ?? type.value}_${now.microsecondsSinceEpoch}',
+      id: id,
       type: type,
       title: title ?? _read(data, 'title') ?? _fallbackTitleForType(type),
       body: body ?? _read(data, 'body') ?? '',
       actorId: actorId,
       actorName:
+          _read(data, 'actor_display_name') ??
           _read(data, 'actor_name') ??
           _read(data, 'sender_display_name') ??
           _read(data, 'caller_display_name') ??
@@ -155,13 +167,13 @@ class NotificationItem {
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    return <String, dynamic>{
       'id': id,
       'type': type.value,
       'title': title,
       'body': body,
       'actor': actorId,
-      'actor_name': actorName,
+      'actor_display_name': actorName,
       'actor_avatar': actorAvatar,
       'is_read': isRead ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
@@ -172,72 +184,59 @@ class NotificationItem {
 
 String? _read(Map<String, dynamic>? json, String key) {
   if (json == null) return null;
-
-  final value = json[key];
-  final text = value?.toString().trim();
-
-  if (text == null || text.isEmpty || text == 'null') {
-    return null;
-  }
-
+  final String? text = json[key]?.toString().trim();
+  if (text == null || text.isEmpty || text.toLowerCase() == 'null') return null;
   return text;
 }
 
-String _resolveId(Map<String, dynamic> json, Map<String, dynamic>? payload) {
+String _resolvePersistentId(
+  Map<String, dynamic> json,
+  Map<String, dynamic>? payload,
+) {
   return _read(json, 'id') ??
       _read(json, 'name') ??
       _read(json, 'notification_id') ??
       _read(payload, 'notification_id') ??
-      'notification_${DateTime.now().microsecondsSinceEpoch}';
+      '';
 }
 
-bool _parseBool(dynamic value) {
+bool _parseBool(Object? value) {
   if (value is bool) return value;
   if (value is int) return value == 1;
-
   if (value is String) {
-    final normalized = value.trim().toLowerCase();
+    final String normalized = value.trim().toLowerCase();
     return normalized == '1' || normalized == 'true' || normalized == 'yes';
   }
-
   return false;
 }
 
-DateTime? _parseDate(dynamic value) {
+DateTime? _parseDate(Object? value) {
   if (value == null) return null;
-
   if (value is DateTime) return value;
-
-  final text = value.toString().trim();
-  if (text.isEmpty) return null;
-
-  return DateTime.tryParse(text);
+  final String text = value.toString().trim();
+  return text.isEmpty ? null : DateTime.tryParse(text);
 }
 
-Map<String, dynamic>? _parsePayload(dynamic raw) {
+Map<String, dynamic>? _parsePayload(Object? raw) {
   try {
     if (raw == null) return null;
-
-    if (raw is Map<String, dynamic>) {
-      return asJsonMap(raw);
+    if (raw is Map<String, dynamic>) return asJsonMap(raw);
+    if (raw is Map<Object?, Object?>) {
+      return raw.map<String, dynamic>(
+        (Object? key, Object? value) =>
+            MapEntry<String, dynamic>(key.toString(), value),
+      );
     }
-
-    if (raw is Map) {
-      return raw.map((key, value) => MapEntry(key.toString(), value));
-    }
-
     if (raw is String && raw.trim().isNotEmpty) {
-      final decoded = jsonDecode(raw);
-
-      if (decoded is Map<String, dynamic>) {
-        return asJsonMap(decoded);
-      }
-
-      if (decoded is Map) {
-        return decoded.map((key, value) => MapEntry(key.toString(), value));
+      final Object? decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) return asJsonMap(decoded);
+      if (decoded is Map<Object?, Object?>) {
+        return decoded.map<String, dynamic>(
+          (Object? key, Object? value) =>
+              MapEntry<String, dynamic>(key.toString(), value),
+        );
       }
     }
-
     return null;
   } catch (_) {
     return null;
@@ -245,40 +244,27 @@ Map<String, dynamic>? _parsePayload(dynamic raw) {
 }
 
 String _fallbackTitleForType(NotificationType type) {
-  switch (type) {
-    case NotificationType.message:
-      return 'New Message';
-    case NotificationType.incomingCall:
-      return 'Incoming Call';
-    case NotificationType.missedCall:
-      return 'Missed Call';
-    case NotificationType.callRejected:
-      return 'Call Rejected';
-    case NotificationType.callEnded:
-      return 'Call Ended';
-    case NotificationType.adApproved:
-      return 'Ad Approved';
-    case NotificationType.adRejected:
-      return 'Ad Rejected';
-    case NotificationType.adExpired:
-      return 'Ad Expired';
-    case NotificationType.verificationApproved:
-      return 'Verification Approved';
-    case NotificationType.verificationRejected:
-      return 'Verification Rejected';
-    case NotificationType.liveStarted:
-      return 'Live Started';
-    case NotificationType.follow:
-      return 'New Follower';
-    case NotificationType.newShort:
-      return 'New Short';
-    case NotificationType.shortLike:
-      return 'New Like';
-    case NotificationType.shortComment:
-      return 'New Comment';
-    case NotificationType.commentReply:
-      return 'New Reply';
-    case NotificationType.unknown:
-      return 'Notification';
-  }
+  return switch (type) {
+    NotificationType.message => 'New Message',
+    NotificationType.incomingCall => 'Incoming Call',
+    NotificationType.missedCall => 'Missed Call',
+    NotificationType.callRejected => 'Call Rejected',
+    NotificationType.callEnded => 'Call Ended',
+    NotificationType.adApproved => 'Ad Approved',
+    NotificationType.adRejected => 'Ad Rejected',
+    NotificationType.adExpired => 'Ad Expired',
+    NotificationType.reviewReceived => 'New Review',
+    NotificationType.reviewApproved => 'Review Approved',
+    NotificationType.reviewRejected => 'Review Rejected',
+    NotificationType.verificationApproved => 'Verification Approved',
+    NotificationType.verificationRejected => 'Verification Rejected',
+    NotificationType.liveStarted => 'Live Started',
+    NotificationType.follow => 'New Follower',
+    NotificationType.newShort => 'New Short',
+    NotificationType.shortLike => 'New Like',
+    NotificationType.shortComment => 'New Comment',
+    NotificationType.shortMention => 'New Mention',
+    NotificationType.commentReply => 'New Reply',
+    NotificationType.unknown => 'Notification',
+  };
 }

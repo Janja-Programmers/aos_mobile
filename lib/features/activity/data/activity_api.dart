@@ -12,14 +12,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 @immutable
 class ActivityTarget {
-  final String? doctype;
-  final String? name;
-  final String? title;
-  final String? subtitle;
-  final String? image;
-  final String? routeType;
-  final String? routeId;
-
   const ActivityTarget({
     this.doctype,
     this.name,
@@ -30,29 +22,29 @@ class ActivityTarget {
     this.routeId,
   });
 
+  final String? doctype;
+  final String? name;
+  final String? title;
+  final String? subtitle;
+  final String? image;
+  final String? routeType;
+  final String? routeId;
+
   factory ActivityTarget.fromJson(Map<String, dynamic>? json) {
     return ActivityTarget(
-      doctype: json?['doctype']?.toString(),
-      name: json?['name']?.toString(),
-      title: json?['title']?.toString(),
-      subtitle: json?['subtitle']?.toString(),
-      image: json?['image']?.toString(),
-      routeType: json?['route_type']?.toString(),
-      routeId: json?['route_id']?.toString(),
+      doctype: _clean(json?['doctype']),
+      name: _clean(json?['name']),
+      title: _clean(json?['title']),
+      subtitle: _clean(json?['subtitle']),
+      image: _clean(json?['image']),
+      routeType: _clean(json?['route_type']),
+      routeId: _clean(json?['route_id']),
     );
   }
 }
 
 @immutable
 class ActivityItem {
-  final String id;
-  final String group;
-  final String type;
-  final ActivityTarget target;
-  final int count;
-  final DateTime? occurredAt;
-  final DateTime? lastOccurrenceAt;
-
   const ActivityItem({
     required this.id,
     required this.group,
@@ -63,30 +55,29 @@ class ActivityItem {
     this.lastOccurrenceAt,
   });
 
+  final String id;
+  final String group;
+  final String type;
+  final ActivityTarget target;
+  final int count;
+  final DateTime? occurredAt;
+  final DateTime? lastOccurrenceAt;
+
   factory ActivityItem.fromJson(Map<String, dynamic> json) {
-    final target = json['target'];
     return ActivityItem(
-      id: json['id']?.toString() ?? json['name']?.toString() ?? '',
-      group: json['activity_group']?.toString() ?? 'Other',
-      type: json['activity_type']?.toString() ?? '',
-      target: ActivityTarget.fromJson(asJsonMap(target)),
-      count: int.tryParse(json['count']?.toString() ?? '0') ?? 0,
-      occurredAt: DateTime.tryParse(json['occurred_at']?.toString() ?? ''),
-      lastOccurrenceAt: DateTime.tryParse(
-        json['last_occurrence_at']?.toString() ?? '',
-      ),
+      id: _clean(json['id']) ?? _clean(json['name']) ?? '',
+      group: _clean(json['activity_group']) ?? 'Other',
+      type: _clean(json['activity_type']) ?? '',
+      target: ActivityTarget.fromJson(asJsonMap(json['target'])),
+      count: asInt(json['count']),
+      occurredAt: _parseDate(json['occurred_at']),
+      lastOccurrenceAt: _parseDate(json['last_occurrence_at']),
     );
   }
 }
 
 @immutable
 class ActivityPage {
-  final List<ActivityItem> items;
-  final int total;
-  final int start;
-  final int limit;
-  final bool hasMore;
-
   const ActivityPage({
     required this.items,
     required this.total,
@@ -95,48 +86,78 @@ class ActivityPage {
     required this.hasMore,
   });
 
+  final List<ActivityItem> items;
+  final int total;
+  final int start;
+  final int limit;
+  final bool hasMore;
+
   factory ActivityPage.fromJson(Map<String, dynamic> json) {
-    final rawItems = json['items'];
     return ActivityPage(
-      items: asJsonMapList(rawItems).map(ActivityItem.fromJson).toList(),
-      total: int.tryParse(json['total']?.toString() ?? '0') ?? 0,
-      start: int.tryParse(json['start']?.toString() ?? '0') ?? 0,
-      limit: int.tryParse(json['limit']?.toString() ?? '20') ?? 20,
-      hasMore: json['has_more'] == true || json['has_more']?.toString() == '1',
+      items: asJsonMapList(json['items'])
+          .map(ActivityItem.fromJson)
+          .where((ActivityItem item) => item.id.isNotEmpty)
+          .toList(growable: false),
+      total: asInt(json['total']),
+      start: asInt(json['start']),
+      limit: asInt(json['limit'], fallback: 20),
+      hasMore: asBool(json['has_more']),
     );
   }
+}
+
+abstract interface class ActivityRepository {
+  Future<Either<Failure, ActivityPage>> listActivity({
+    int start = 0,
+    int limit = 20,
+    String? group,
+    String? type,
+  });
+
+  Future<Either<Failure, String>> hideActivity(String activityId);
+
+  Future<Either<Failure, int>> clearActivity({String? group, String? type});
 }
 
 final activityApiProvider = Provider<ActivityApi>((ref) {
   return ActivityApi(ref.read(apiClientProvider));
 });
 
-class ActivityApi {
-  final ApiClient _client;
+final activityRepositoryProvider = Provider<ActivityRepository>((ref) {
+  return ref.watch(activityApiProvider);
+});
 
+class ActivityApi implements ActivityRepository {
   const ActivityApi(this._client);
 
+  final ApiClient _client;
+
+  @override
   Future<Either<Failure, ActivityPage>> listActivity({
     int start = 0,
     int limit = 20,
     String? group,
+    String? type,
   }) async {
     try {
-      final res = await _client.get(
+      final Response<Map<String, dynamic>> res = await _client.get(
         ApiEndpoints.listActivity,
-        queryParameters: {
+        queryParameters: <String, dynamic>{
           'start': start,
           'limit': limit,
-          if (group != null && group != 'All') 'group': group,
+          if (_clean(group) != null && group != 'All') 'group': group!.trim(),
+          if (_clean(type) != null) 'type': type!.trim(),
         },
       );
-      final unwrapped = unwrapFrappe(res);
-      if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
-      final data = unwrapped.rightOrNull?['data'];
-      if (data is! Map) {
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+
+      final Map<String, dynamic> envelope = asJsonMap(result.rightOrNull);
+      final Map<String, dynamic> data = asJsonMap(envelope['data']);
+      if (data.isEmpty && envelope['data'] == null) {
         return Either.left(const Failure('Invalid activity response.'));
       }
-      return Either.right(ActivityPage.fromJson(asJsonMap(data)));
+      return Either.right(ActivityPage.fromJson(data));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
@@ -144,15 +165,20 @@ class ActivityApi {
     }
   }
 
-  Future<Either<Failure, void>> hideActivity(String activityId) async {
+  @override
+  Future<Either<Failure, String>> hideActivity(String activityId) async {
+    final String id = activityId.trim();
+    if (id.isEmpty) return Either.left(const Failure('Invalid activity.'));
     try {
-      final res = await _client.post(
+      final Response<Map<String, dynamic>> res = await _client.post(
         ApiEndpoints.hideActivity,
-        data: {'activity_id': activityId},
+        data: <String, dynamic>{'activity_id': id},
       );
-      final unwrapped = unwrapFrappe(res);
-      if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
-      return Either.right(null);
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+      final Map<String, dynamic> envelope = asJsonMap(result.rightOrNull);
+      final Map<String, dynamic> data = asJsonMap(envelope['data']);
+      return Either.right(_clean(data['id']) ?? id);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
@@ -160,19 +186,39 @@ class ActivityApi {
     }
   }
 
-  Future<Either<Failure, void>> clearActivity({String? group}) async {
+  @override
+  Future<Either<Failure, int>> clearActivity({
+    String? group,
+    String? type,
+  }) async {
     try {
-      final res = await _client.post(
+      final Response<Map<String, dynamic>> res = await _client.post(
         ApiEndpoints.clearActivity,
-        data: {if (group != null && group != 'All') 'group': group},
+        data: <String, dynamic>{
+          if (_clean(group) != null && group != 'All') 'group': group!.trim(),
+          if (_clean(type) != null) 'type': type!.trim(),
+        },
       );
-      final unwrapped = unwrapFrappe(res);
-      if (unwrapped.isLeft) return Either.left(unwrapped.leftOrNull!);
-      return Either.right(null);
+      final result = unwrapFrappe(res);
+      if (result.isLeft) return Either.left(result.leftOrNull!);
+      final Map<String, dynamic> envelope = asJsonMap(result.rightOrNull);
+      final Map<String, dynamic> data = asJsonMap(envelope['data']);
+      return Either.right(asInt(data['cleared_count']));
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
       return Either.left(const Failure('Failed to clear activity.'));
     }
   }
+}
+
+String? _clean(Object? value) {
+  final String? text = value?.toString().trim();
+  if (text == null || text.isEmpty || text.toLowerCase() == 'null') return null;
+  return text;
+}
+
+DateTime? _parseDate(Object? value) {
+  final String? text = _clean(value);
+  return text == null ? null : DateTime.tryParse(text);
 }

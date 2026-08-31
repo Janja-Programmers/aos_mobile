@@ -4,6 +4,7 @@ import 'package:africaonlinestores/core/navigation/protected_navigation_coordina
 import 'package:africaonlinestores/core/navigation/protected_navigation_destination.dart';
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
+import 'package:africaonlinestores/features/ads/data/ads_api.dart';
 import 'package:africaonlinestores/features/live/application/managers/live_manager.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,11 +13,14 @@ class GoRouterProtectedNavigationExecutor
   const GoRouterProtectedNavigationExecutor({
     required GoRouter router,
     required LiveManager liveManager,
+    required AdsApi adsApi,
   }) : _router = router,
-       _liveManager = liveManager;
+       _liveManager = liveManager,
+       _adsApi = adsApi;
 
   final GoRouter _router;
   final LiveManager _liveManager;
+  final AdsApi _adsApi;
 
   @override
   void execute(ProtectedNavigationDestination destination) {
@@ -65,12 +69,7 @@ class GoRouterProtectedNavigationExecutor
             .ignore();
         return;
       case ProtectedNavigationKind.adDetails:
-        _router
-            .pushNamed<void>(
-              AppRoutes.nAdDetails,
-              pathParameters: <String, String>{'id': destination.canonicalId!},
-            )
-            .ignore();
+        unawaited(_openAdDetailsIfAvailable(destination.canonicalId!));
         return;
       case ProtectedNavigationKind.account:
         _router.pushNamed<void>(AppRoutes.nAccount).ignore();
@@ -92,20 +91,38 @@ class GoRouterProtectedNavigationExecutor
             .ignore();
         return;
       case ProtectedNavigationKind.notifications:
-        _router.pushNamed<void>(AppRoutes.nNotification).ignore();
+        _router.goNamed(AppRoutes.nNotification);
         return;
       case ProtectedNavigationKind.feeds:
         _router.pushNamed<void>(AppRoutes.nFeeds).ignore();
         return;
       case ProtectedNavigationKind.myAds:
-        _router.pushNamed<void>(AppRoutes.nMyAds).ignore();
+        _router.goNamed(AppRoutes.nMyAds);
         return;
     }
   }
 
+  Future<void> _openAdDetailsIfAvailable(String adId) async {
+    final result = await _adsApi.getAd(adId: adId);
+    if (result.isLeft) {
+      appLogger.w(
+        'Notification target ad is unavailable; returning to Notification Center '
+        '(adId=$adId, error=${result.leftOrNull?.error ?? 'unknown'})',
+      );
+      _router.goNamed(AppRoutes.nNotification);
+      return;
+    }
+    _router
+        .pushNamed<void>(
+          AppRoutes.nAdDetails,
+          pathParameters: <String, String>{'id': adId},
+        )
+        .ignore();
+  }
+
   Future<void> _joinLiveWithFallback(String liveId) async {
     try {
-      final joined = await _liveManager.joinLive(liveId: liveId);
+      final bool joined = await _liveManager.joinLive(liveId: liveId);
       if (!joined) _openLiveRoute(liveId);
     } catch (error, stackTrace) {
       appLogger.w(

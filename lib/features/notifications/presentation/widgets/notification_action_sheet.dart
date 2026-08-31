@@ -24,78 +24,73 @@ class NotificationActionSheet extends StatelessWidget {
         color: colors.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 42,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(99),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
               ),
-            ),
-          ),
-
-          const SizedBox(height: 28),
-
-          Text(
-            notification.title,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-          ),
-
-          const SizedBox(height: 16),
-
-          Text(
-            notification.body,
-            style: const TextStyle(fontSize: 15, height: 1.45),
-          ),
-
-          const SizedBox(height: 28),
-
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: onAction,
-              child: Text(
-                _actionText(notification),
-                style: AppTextStylesX(context).button,
+              const SizedBox(height: 28),
+              Text(
+                notification.title,
+                style: context.h4.copyWith(fontWeight: FontWeight.w700),
               ),
-            ),
+              if (notification.body.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 16),
+                Text(notification.body, style: context.p),
+              ],
+              const SizedBox(height: 28),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: onAction,
+                  child: Text(
+                    _actionText(notification),
+                    style: AppTextStylesX(context).button,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
+}
 
-  String _actionText(NotificationItem notification) {
-    switch (notification.type) {
-      case NotificationType.message:
-        return 'Open Chat';
-
-      case NotificationType.liveStarted:
-        return 'Watch Now';
-
-      case NotificationType.incomingCall:
-        return 'Answer Call';
-
-      case NotificationType.missedCall:
-        return 'Call Back';
-
-      case NotificationType.adApproved:
-        return 'View Ad';
-
-      case NotificationType.adRejected:
-        return 'Review Ad';
-
-      case NotificationType.follow:
-        return 'View Profile';
-
-      default:
-        return 'Open';
-    }
-  }
+String _actionText(NotificationItem notification) {
+  return switch (notification.type) {
+    NotificationType.message => 'Open Chat',
+    NotificationType.liveStarted => 'Watch Now',
+    NotificationType.incomingCall => 'Answer Call',
+    NotificationType.missedCall => 'Call Back',
+    NotificationType.adApproved => 'View Ad',
+    NotificationType.adRejected => 'Review Ad',
+    NotificationType.adExpired => 'View Listings',
+    NotificationType.reviewReceived ||
+    NotificationType.reviewApproved ||
+    NotificationType.reviewRejected => 'View Ad',
+    NotificationType.follow => 'View Profile',
+    NotificationType.newShort ||
+    NotificationType.shortLike ||
+    NotificationType.shortComment ||
+    NotificationType.shortMention ||
+    NotificationType.commentReply => 'View Short',
+    NotificationType.verificationApproved ||
+    NotificationType.verificationRejected => 'Open Account',
+    NotificationType.callRejected || NotificationType.callEnded => 'View Calls',
+    NotificationType.unknown => 'Open',
+  };
 }

@@ -4,6 +4,7 @@ import 'package:africaonlinestores/core/theme/app_color_tokens.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/application/user_verification_provider.dart';
+import 'package:africaonlinestores/features/verifications/user_verification/presentation/steps/user_verification_step_body.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/presentation/steps/user_verification_step_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,8 +28,7 @@ class IdentityDocumentStep extends ConsumerWidget {
     final controller = ref.read(userVerificationControllerProvider.notifier);
     final draft = state.draft;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+    return UserVerificationStepBody(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -38,12 +38,12 @@ class IdentityDocumentStep extends ConsumerWidget {
             subtitle:
                 "Upload a clear photo of your government-issued ID. We accept National ID, Passport, or Driver's License.",
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
           Text('Select ID Type', style: context.pStrong),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 8,
             children: const ['National ID', 'Passport', "Driver's License"].map(
               (type) {
                 final selected = draft.idType == type;
@@ -66,25 +66,25 @@ class IdentityDocumentStep extends ConsumerWidget {
               },
             ).toList(),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
           Text('Front of ID', style: context.pStrong),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           _UploadTile(
             title: 'Take or upload front side',
             uploaded: draft.hasFront,
             loading: state.isUploadingFront || isPreparingFront,
             onTap: () => unawaited(onUpload(front: true)),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 16),
           Text('Back of ID', style: context.pStrong),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           _UploadTile(
             title: 'Take or upload back side',
             uploaded: draft.hasBack,
             loading: state.isUploadingBack || isPreparingBack,
             onTap: () => unawaited(onUpload(front: false)),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 18),
           _GuidelinesCard(colors: colors),
         ],
       ),
@@ -111,13 +111,13 @@ class _UploadTile extends StatelessWidget {
 
     return InkWell(
       onTap: loading ? null : onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 92),
-        padding: const EdgeInsets.all(18),
+        constraints: const BoxConstraints(minHeight: 80),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: colors.elevated,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: uploaded ? colors.success : colors.border,
             width: uploaded ? 2 : 1,
@@ -126,17 +126,17 @@ class _UploadTile extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 58,
-              height: 58,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: uploaded
                     ? colors.success.withValues(alpha: 0.12)
                     : colors.surfaceBright,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: loading
                   ? const Padding(
-                      padding: EdgeInsets.all(17),
+                      padding: EdgeInsets.all(14),
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : Icon(
@@ -144,23 +144,25 @@ class _UploadTile extends StatelessWidget {
                           ? Icons.check_rounded
                           : Icons.credit_card_rounded,
                       color: uploaded ? colors.success : colors.textMuted,
+                      size: 22,
                     ),
             ),
-            const SizedBox(width: 18),
+            const SizedBox(width: 14),
             Expanded(
               child: Text(
                 uploaded ? 'Uploaded' : title,
-                style: context.h6.copyWith(
+                style: context.pStrong.copyWith(
                   color: uploaded ? colors.success : colors.textPrimary,
-                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
+            const SizedBox(width: 8),
             Icon(
               uploaded
                   ? Icons.check_circle_rounded
                   : Icons.add_a_photo_outlined,
               color: uploaded ? colors.success : colors.primary,
+              size: 22,
             ),
           ],
         ),
@@ -185,10 +187,10 @@ class _GuidelinesCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: colors.blue.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: colors.blue.withValues(alpha: 0.45)),
       ),
       child: Column(
@@ -196,18 +198,18 @@ class _GuidelinesCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline_rounded, color: colors.blue),
-              const SizedBox(width: 10),
+              Icon(Icons.info_outline_rounded, color: colors.blue, size: 20),
+              const SizedBox(width: 8),
               Text(
                 'Photo Guidelines',
                 style: context.pStrong.copyWith(color: colors.blue),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           for (final tip in tips)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -215,11 +217,11 @@ class _GuidelinesCard extends StatelessWidget {
                     '•',
                     style: context.p.copyWith(
                       color: colors.blue,
-                      fontSize: 22,
-                      height: 0.9,
+                      fontSize: 18,
+                      height: 1,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Expanded(child: Text(tip, style: context.p)),
                 ],
               ),

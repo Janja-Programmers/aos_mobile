@@ -17,7 +17,8 @@ class UserVerificationStepper extends StatelessWidget {
   final bool Function(int step) isStepAccessible;
 
   static const int _stepCount = 4;
-  static const double _buttonExtent = 52;
+  static const double _buttonExtent = 48;
+  static const double _circleExtent = 40;
 
   @override
   Widget build(BuildContext context) {
@@ -43,10 +44,10 @@ class UserVerificationStepper extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 22),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 10, 16, 14),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 346),
+          constraints: const BoxConstraints(maxWidth: 320),
           child: Row(children: children),
         ),
       ),
@@ -80,36 +81,34 @@ class _StepButton extends StatelessWidget {
     final foreground = completed || active ? colors.white : colors.textMuted;
 
     return Semantics(
+      excludeSemantics: true,
       button: true,
       enabled: accessible,
       selected: active,
-      label: 'Verification step ${index + 1}',
+      label: 'Verification step ${index + 1} of 4',
       child: Opacity(
         opacity: accessible ? 1 : 0.45,
         child: Material(
           color: Colors.transparent,
           child: InkResponse(
             onTap: accessible ? onTap : null,
-            radius: 28,
+            radius: 24,
             child: SizedBox.square(
               dimension: UserVerificationStepper._buttonExtent,
               child: Center(
                 child: Container(
-                  width: 44,
-                  height: 44,
+                  width: UserVerificationStepper._circleExtent,
+                  height: UserVerificationStepper._circleExtent,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: background,
                   ),
                   child: completed && !active
-                      ? Icon(Icons.check_rounded, color: foreground, size: 25)
+                      ? Icon(Icons.check_rounded, color: foreground, size: 22)
                       : Text(
                           '${index + 1}',
-                          style: context.pStrong.copyWith(
-                            color: foreground,
-                            fontSize: 17,
-                          ),
+                          style: context.pStrong.copyWith(color: foreground),
                         ),
                 ),
               ),
@@ -131,7 +130,7 @@ class _StepConnector extends StatelessWidget {
     final colors = context.appColors;
 
     return Container(
-      height: 4,
+      height: 2,
       margin: const EdgeInsets.symmetric(horizontal: 2),
       decoration: BoxDecoration(
         color: completed ? colors.success : colors.border,

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/application/user_verification_provider.dart';
+import 'package:africaonlinestores/features/verifications/user_verification/presentation/steps/user_verification_step_body.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/presentation/steps/user_verification_step_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,8 +25,7 @@ class SelfieVerificationStep extends ConsumerWidget {
     final draft = state.draft;
     final isLoading = state.isUploadingSelfie || isPreparing;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+    return UserVerificationStepBody(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -35,56 +35,66 @@ class SelfieVerificationStep extends ConsumerWidget {
             subtitle:
                 "Take a clear selfie or upload one. We'll match it with your ID photo to verify your identity.",
           ),
-          const SizedBox(height: 34),
-          Center(
-            child: InkWell(
-              onTap: isLoading ? null : () => unawaited(onChooseSelfie()),
-              borderRadius: BorderRadius.circular(160),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 230,
-                    height: 230,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: colors.elevated,
-                      border: Border.all(
-                        color: draft.hasSelfie
-                            ? colors.success
-                            : colors.primary,
-                        width: 4,
-                      ),
-                    ),
-                    child: isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : Icon(
-                            draft.hasSelfie
-                                ? Icons.person_rounded
-                                : Icons.add_a_photo_outlined,
-                            color: colors.textMuted,
-                            size: 90,
-                          ),
-                  ),
-                  if (draft.hasSelfie)
-                    Positioned(
-                      right: 16,
-                      bottom: 20,
-                      child: CircleAvatar(
-                        radius: 30,
-                        backgroundColor: colors.success,
-                        child: Icon(
-                          Icons.check_rounded,
-                          color: colors.white,
-                          size: 32,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
           const SizedBox(height: 22),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final selfieExtent = (constraints.maxWidth * 0.52).clamp(
+                152.0,
+                184.0,
+              );
+              final personIconSize = selfieExtent * 0.34;
+
+              return Center(
+                child: InkWell(
+                  onTap: isLoading ? null : () => unawaited(onChooseSelfie()),
+                  borderRadius: BorderRadius.circular(selfieExtent / 2),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: selfieExtent,
+                        height: selfieExtent,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: colors.elevated,
+                          border: Border.all(
+                            color: draft.hasSelfie
+                                ? colors.success
+                                : colors.primary,
+                            width: 3,
+                          ),
+                        ),
+                        child: isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : Icon(
+                                draft.hasSelfie
+                                    ? Icons.person_rounded
+                                    : Icons.add_a_photo_outlined,
+                                color: colors.textMuted,
+                                size: personIconSize,
+                              ),
+                      ),
+                      if (draft.hasSelfie)
+                        PositionedDirectional(
+                          end: 8,
+                          bottom: 12,
+                          child: CircleAvatar(
+                            radius: 24,
+                            backgroundColor: colors.success,
+                            child: Icon(
+                              Icons.check_rounded,
+                              color: colors.white,
+                              size: 26,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
           Center(
             child: OutlinedButton.icon(
               onPressed: isLoading ? null : () => unawaited(onChooseSelfie()),
@@ -98,9 +108,12 @@ class SelfieVerificationStep extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 32),
-          Text('Tips for a good selfie', style: context.h5),
-          const SizedBox(height: 14),
+          const SizedBox(height: 22),
+          Text(
+            'Tips for a good selfie',
+            style: context.h6.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 10),
           const _SelfieTip(
             icon: Icons.wb_sunny_outlined,
             title: 'Good Lighting',
@@ -143,30 +156,31 @@ class _SelfieTip extends StatelessWidget {
     final colors = context.appColors;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: colors.elevated,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: colors.border),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 52,
-            height: 52,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: colors.surfaceBright,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: colors.textPrimary),
+            child: Icon(icon, color: colors.textPrimary, size: 22),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: context.pStrong.copyWith(fontSize: 16)),
+                Text(title, style: context.pStrong),
                 const SizedBox(height: 2),
                 Text(subtitle, style: context.pMuted.copyWith(height: 1.3)),
               ],

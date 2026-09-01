@@ -18,26 +18,35 @@ class UserVerificationStepHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: colors.primary.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Icon(icon, color: colors.primary, size: 34),
-        ),
-        const SizedBox(height: 28),
-        Text(title, style: context.h3.copyWith(fontSize: 32)),
-        const SizedBox(height: 12),
-        Text(
-          subtitle,
-          style: context.pMuted.copyWith(fontSize: 16, height: 1.45),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 360;
+        final tileExtent = compact ? 56.0 : 64.0;
+        final tileRadius = compact ? 16.0 : 18.0;
+        final iconSize = compact ? 26.0 : 28.0;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: tileExtent,
+              height: tileExtent,
+              decoration: BoxDecoration(
+                color: colors.primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(tileRadius),
+              ),
+              child: Icon(icon, color: colors.primary, size: iconSize),
+            ),
+            SizedBox(height: compact ? 16 : 18),
+            Text(
+              title,
+              style: context.h4.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+            Text(subtitle, style: context.pMuted.copyWith(height: 1.4)),
+          ],
+        );
+      },
     );
   }
 }

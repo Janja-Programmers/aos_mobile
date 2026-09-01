@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/application/user_verification_provider.dart';
+import 'package:africaonlinestores/features/verifications/user_verification/presentation/steps/user_verification_step_body.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/presentation/steps/user_verification_step_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,8 +15,7 @@ class UserVerificationReviewStep extends ConsumerWidget {
     final state = ref.watch(userVerificationControllerProvider);
     final draft = state.draft;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+    return UserVerificationStepBody(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -25,7 +25,7 @@ class UserVerificationReviewStep extends ConsumerWidget {
             subtitle:
                 'Please review your information before submitting for verification.',
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
           _ReviewTile(
             icon: Icons.person_outline_rounded,
             label: 'Legal Name',
@@ -50,10 +50,10 @@ class UserVerificationReviewStep extends ConsumerWidget {
             value: 'Face verification photo',
             ok: draft.hasSelfie,
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(22),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -63,7 +63,7 @@ class UserVerificationReviewStep extends ConsumerWidget {
                   colors.primary.withValues(alpha: 0.04),
                 ],
               ),
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: colors.primary.withValues(alpha: 0.25)),
             ),
             child: Column(
@@ -74,13 +74,18 @@ class UserVerificationReviewStep extends ConsumerWidget {
                     Icon(
                       Icons.verified_rounded,
                       color: colors.primary,
-                      size: 32,
+                      size: 24,
                     ),
-                    const SizedBox(width: 12),
-                    Text('Verification Benefits', style: context.h5),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Verification Benefits',
+                        style: context.h6.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 for (final benefit in const [
                   'Verified badge on your profile',
                   'Increased buyer trust',
@@ -88,15 +93,16 @@ class UserVerificationReviewStep extends ConsumerWidget {
                   'Priority customer support',
                 ])
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.only(bottom: 8),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Icon(
                           Icons.check_circle_rounded,
                           color: colors.success,
-                          size: 22,
+                          size: 20,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 10),
                         Expanded(child: Text(benefit, style: context.p)),
                       ],
                     ),
@@ -104,7 +110,7 @@ class UserVerificationReviewStep extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           Text(
             'By submitting, you agree to our verification terms and privacy policy. Your documents are securely stored and only used for verification purposes.',
             style: context.pMuted.copyWith(height: 1.45),
@@ -134,45 +140,46 @@ class _ReviewTile extends StatelessWidget {
     final displayedValue = value.trim().isEmpty ? 'Not provided' : value;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: colors.elevated,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: colors.border),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 58,
-            height: 58,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: (ok ? colors.success : colors.amber).withValues(
                 alpha: 0.12,
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: ok ? colors.success : colors.textMuted),
+            child: Icon(
+              icon,
+              color: ok ? colors.success : colors.textMuted,
+              size: 22,
+            ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label, style: context.pMuted),
-                Text(
-                  displayedValue,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.pStrong.copyWith(fontSize: 16),
-                ),
+                Text(displayedValue, style: context.pStrong),
               ],
             ),
           ),
+          const SizedBox(width: 8),
           Icon(
             ok ? Icons.check_circle_rounded : Icons.error_outline_rounded,
             color: ok ? colors.success : colors.amber,
-            size: 30,
+            size: 24,
           ),
         ],
       ),

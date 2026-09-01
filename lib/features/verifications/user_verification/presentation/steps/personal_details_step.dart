@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/application/user_verification_provider.dart';
+import 'package:africaonlinestores/features/verifications/user_verification/presentation/steps/user_verification_step_body.dart';
 import 'package:africaonlinestores/features/verifications/user_verification/presentation/steps/user_verification_step_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,8 +17,7 @@ class PersonalDetailsStep extends ConsumerWidget {
     final controller = ref.read(userVerificationControllerProvider.notifier);
     final draft = state.draft;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+    return UserVerificationStepBody(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -27,7 +27,7 @@ class PersonalDetailsStep extends ConsumerWidget {
             subtitle:
                 'Enter your legal name exactly as it appears on your identity document and provide a reachable phone number.',
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
           _DetailsField(
             key: const ValueKey('user-verification-legal-name'),
             label: 'Legal Name *',
@@ -43,7 +43,7 @@ class PersonalDetailsStep extends ConsumerWidget {
               controller.updatePersonalDetails(legalName: value);
             },
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           _DetailsField(
             key: const ValueKey('user-verification-phone-number'),
             label: 'Phone Number *',
@@ -62,13 +62,13 @@ class PersonalDetailsStep extends ConsumerWidget {
               controller.updatePersonalDetails(phoneNumber: value);
             },
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 18),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: colors.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: colors.primary.withValues(alpha: 0.20)),
             ),
             child: Row(
@@ -77,9 +77,9 @@ class PersonalDetailsStep extends ConsumerWidget {
                 Icon(
                   Icons.info_outline_rounded,
                   color: colors.primary,
-                  size: 22,
+                  size: 20,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Use a phone number you currently own and can be reached on. Include the country code.',
@@ -142,7 +142,7 @@ class _DetailsField extends StatelessWidget {
               : TextCapitalization.none,
           decoration: InputDecoration(
             hintText: hintText,
-            prefixIcon: Icon(prefixIcon, color: colors.textMuted, size: 21),
+            prefixIcon: Icon(prefixIcon, color: colors.textMuted, size: 20),
           ).applyDefaults(Theme.of(context).inputDecorationTheme),
           onChanged: onChanged,
         ),

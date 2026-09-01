@@ -17,8 +17,13 @@ class ShortsUploadApi {
     String audience = 'everyone',
     bool allowComments = true,
     bool allowDownloads = false,
+    String? soundId,
+    int soundStartMs = 0,
+    int soundDurationMs = 0,
+    double soundVolume = 1,
   }) async {
     try {
+      final cleanSoundId = soundId?.trim();
       final res = await _client.post(
         ApiEndpoints.createShort,
         data: {
@@ -27,6 +32,14 @@ class ShortsUploadApi {
           'audience': audience,
           'allow_comments': allowComments,
           'allow_downloads': allowDownloads,
+          if (cleanSoundId != null && cleanSoundId.isNotEmpty)
+            'sound_id': cleanSoundId,
+          if (cleanSoundId != null && cleanSoundId.isNotEmpty)
+            'sound_start_ms': soundStartMs,
+          if (cleanSoundId != null && cleanSoundId.isNotEmpty)
+            'sound_duration_ms': soundDurationMs,
+          if (cleanSoundId != null && cleanSoundId.isNotEmpty)
+            'sound_volume': soundVolume,
         },
       );
 
@@ -56,10 +69,10 @@ class ShortsUploadApi {
 
   Future<Either<Failure, void>> updateMetadata({
     required String shortId,
-    required String contentMode,
     String? adId,
-    String? caption,
-    List<String>? hashtags,
+    bool includeAdId = false,
+    String caption = '',
+    List<String> hashtags = const <String>[],
     String audience = 'everyone',
     bool allowComments = true,
     bool allowDownloads = false,
@@ -69,21 +82,22 @@ class ShortsUploadApi {
     double soundVolume = 1,
   }) async {
     try {
+      final cleanSoundId = soundId?.trim();
       final data = <String, dynamic>{
         'short_id': shortId,
-        'content_mode': contentMode,
-        if (adId != null && adId.trim().isNotEmpty) 'ad_id': adId,
-        if (caption != null && caption.trim().isNotEmpty) 'caption': caption,
-        if (hashtags != null && hashtags.isNotEmpty) 'hashtags': hashtags,
+        if (includeAdId) 'ad_id': adId?.trim() ?? '',
+        'caption': caption,
+        'hashtags': hashtags,
         'audience': audience,
         'allow_comments': allowComments,
         'allow_downloads': allowDownloads,
-        if (soundId != null && soundId.trim().isNotEmpty) 'sound_id': soundId,
-        if (soundId != null && soundId.trim().isNotEmpty)
+        if (cleanSoundId != null && cleanSoundId.isNotEmpty)
+          'sound_id': cleanSoundId,
+        if (cleanSoundId != null && cleanSoundId.isNotEmpty)
           'sound_start_ms': soundStartMs,
-        if (soundId != null && soundId.trim().isNotEmpty)
+        if (cleanSoundId != null && cleanSoundId.isNotEmpty)
           'sound_duration_ms': soundDurationMs,
-        if (soundId != null && soundId.trim().isNotEmpty)
+        if (cleanSoundId != null && cleanSoundId.isNotEmpty)
           'sound_volume': soundVolume,
       };
 

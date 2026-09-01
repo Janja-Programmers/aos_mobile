@@ -90,15 +90,10 @@ class UploadState extends Equatable {
   bool get hasError => status == UploadStatus.failed;
   bool get hasMedia => media.isNotEmpty;
   SelectedMedia? get primaryMedia => media.isEmpty ? null : media.first;
-  bool get requiresAd => ShortContentModes.requiresAd(contentMode);
   bool get hasSelectedAd => selectedAdId?.trim().isNotEmpty ?? false;
   bool get isVideo => primaryMedia?.type == MediaType.video;
 
-  bool get canUpload {
-    if (!hasMedia || !isVideo || isBusy || shortId != null) return false;
-    if (requiresAd && !hasSelectedAd) return false;
-    return true;
-  }
+  bool get canUpload => hasMedia && isVideo && !isBusy && shortId == null;
 
   UploadState copyWith({
     UploadStatus? status,

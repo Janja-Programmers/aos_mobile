@@ -45,6 +45,8 @@ class MediaUploadCoordinator {
   Future<Either<Failure, MediaUploadResult>> upload({
     required AcquiredMedia media,
     required MediaUseCase useCase,
+    double? durationSeconds,
+    String? uploadMode,
     String? idempotencyKey,
     CancelToken? cancelToken,
     bool discardSourceWhenDone = false,
@@ -66,6 +68,8 @@ class MediaUploadCoordinator {
         file: prepared.file,
         purpose: purpose,
         contentType: prepared.contentType,
+        durationSeconds: durationSeconds,
+        uploadMode: uploadMode,
         idempotencyKey: idempotencyKey,
         cancelToken: cancelToken,
         onStage: (stage) {
@@ -94,6 +98,8 @@ class MediaUploadCoordinator {
   Future<Either<Failure, MediaUploadResult>> uploadFile({
     required File file,
     required MediaUseCase useCase,
+    double? durationSeconds,
+    String? uploadMode,
     String? idempotencyKey,
     CancelToken? cancelToken,
     void Function(ManagedMediaUploadStage stage)? onStage,
@@ -105,6 +111,8 @@ class MediaUploadCoordinator {
     return upload(
       media: AcquiredMedia.external(file: file, kind: kind),
       useCase: useCase,
+      durationSeconds: durationSeconds,
+      uploadMode: uploadMode,
       idempotencyKey: idempotencyKey,
       cancelToken: cancelToken,
       onStage: onStage,

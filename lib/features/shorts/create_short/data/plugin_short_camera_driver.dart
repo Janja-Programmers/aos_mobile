@@ -40,7 +40,7 @@ class PluginShortCameraDriver implements ShortCameraDriver {
   int get cameraCount => _cameras.length;
 
   @override
-  Future<void> initialize(int cameraIndex) async {
+  Future<void> initialize(int cameraIndex, {required bool enableAudio}) async {
     _lease ??= _cameraResources.acquire(MediaCameraOwner.shorts);
     try {
       _cameras = await availableCameras();
@@ -57,6 +57,7 @@ class PluginShortCameraDriver implements ShortCameraDriver {
       final controller = CameraController(
         _cameras[boundedIndex],
         ResolutionPreset.high,
+        enableAudio: enableAudio,
       );
       _controller = controller;
       await controller.initialize();

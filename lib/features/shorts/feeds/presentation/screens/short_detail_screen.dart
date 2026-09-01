@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/features/live/navigation/live_routes.dart';
+import 'package:africaonlinestores/features/shorts/create_short/presentation/widgets/edit_short_metadata_sheet.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/short_detail_state.dart';
 import 'package:africaonlinestores/features/shorts/feeds/presentation/widgets/video/short_video_page.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
@@ -32,14 +35,12 @@ class _ShortDetailScreenState extends ConsumerState<ShortDetailScreen> {
   @override
   void initState() {
     super.initState();
-
     _args = ShortDetailArgs(
       initialShorts: widget.initialShorts,
       initialIndex: widget.initialIndex,
       initialNextCursor: widget.initialNextCursor,
       initialHasMore: widget.initialHasMore,
     );
-
     _pageController = PageController(initialPage: widget.initialIndex);
   }
 
@@ -66,64 +67,82 @@ class _ShortDetailScreenState extends ConsumerState<ShortDetailScreen> {
           final shortId = short.id.value;
           final targetUser = short.viewerState.targetUser ?? short.creator.user;
 
-          return ShortVideoPage(
-            key: ValueKey(shortId),
-            short: short,
-            isActive: index == state.currentIndex,
-            shouldPrepare: controller.shouldPrepareVideo(index),
-
-            // Like
-            isLikedPending: state.pendingLikeIds.contains(shortId),
-            onToggleLike: controller.toggleLike,
-
-            // Comment
-            onCommentAdded: controller.incrementCommentCount,
-
-            // Creator / seller
-            onCreatorTap: () {
-              final creatorUser = short.creator.user.trim();
-              if (creatorUser.isEmpty) return;
-
-              final liveId = short.creator.liveId?.trim() ?? '';
-              if (short.creator.isLive && liveId.isNotEmpty) {
-                LiveNavigation.toLiveRoom(context, liveId: liveId);
-                return;
-              }
-
-              SocialNavigation.toProfileScreen(
-                context,
-                user: creatorUser,
-                displayName: short.creator.displayName,
-                avatar: short.creator.avatar,
-              );
-            },
-
-            // Follow
-            isFollowPending: state.pendingFollowUserIds.contains(targetUser),
-            onToggleFollow: controller.toggleFollow,
-
-            // Repost
-            isRepostPending: state.pendingRepostIds.contains(shortId),
-            onRepost: controller.toggleRepost,
-
-            // Share
-            isSharePending: state.pendingShareIds.contains(shortId),
-            onShare: controller.shareShort,
-
-            // Save
-            isSaved: short.viewerState.isSaved,
-            isSavePending: state.pendingSaveIds.contains(shortId),
-            onSave: controller.toggleSave,
-
-            // Download / Report / Tracking
-            isDownloadPending: state.pendingDownloadIds.contains(shortId),
-            onDownload: controller.downloadShort,
-            onReport: controller.reportShort,
-            onImpression: controller.trackImpression,
-            onWatchProgress: controller.trackWatchProgress,
+          return Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              ShortVideoPage(
+                key: ValueKey(shortId),
+                short: short,
+                isActive: index == state.currentIndex,
+                shouldPrepare: controller.shouldPrepareVideo(index),
+                isLikedPending: state.pendingLikeIds.contains(shortId),
+                onToggleLike: controller.toggleLike,
+                onCommentAdded: controller.incrementCommentCount,
+                onCreatorTap: () {
+                  final creatorUser = short.creator.user.trim();
+                  if (creatorUser.isEmpty) return;
+                  final liveId = short.creator.liveId?.trim() ?? '';
+                  if (short.creator.isLive && liveId.isNotEmpty) {
+                    LiveNavigation.toLiveRoom(context, liveId: liveId);
+                    return;
+                  }
+                  SocialNavigation.toProfileScreen(
+                    context,
+                    user: creatorUser,
+                    displayName: short.creator.displayName,
+                    avatar: short.creator.avatar,
+                  );
+                },
+                isFollowPending: state.pendingFollowUserIds.contains(
+                  targetUser,
+                ),
+                onToggleFollow: controller.toggleFollow,
+                isRepostPending: state.pendingRepostIds.contains(shortId),
+                onRepost: controller.toggleRepost,
+                isSharePending: state.pendingShareIds.contains(shortId),
+                onShare: controller.shareShort,
+                isSaved: short.viewerState.isSaved,
+                isSavePending: state.pendingSaveIds.contains(shortId),
+                onSave: controller.toggleSave,
+                isDownloadPending: state.pendingDownloadIds.contains(shortId),
+                onDownload: controller.downloadShort,
+                onReport: controller.reportShort,
+                onImpression: controller.trackImpression,
+                onWatchProgress: controller.trackWatchProgress,
+              ),
+              if (short.isOwner && short.canEdit)
+                PositionedDirectional(
+                  top: MediaQuery.paddingOf(context).top + 12,
+                  end: 12,
+                  child: Semantics(
+                    button: true,
+                    label: 'Edit Short metadata and sound',
+                    child: IconButton.filled(
+                      tooltip: 'Edit Short',
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.black54,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () => unawaited(_editShort(short)),
+                      icon: const Icon(Icons.edit_outlined),
+                    ),
+                  ),
+                ),
+            ],
           );
         },
       ),
     );
+  }
+
+  Future<void> _editShort(Short short) async {
+    final changed = await showEditShortMetadataSheet(context, short: short);
+    if (!changed || !mounted) return;
+    await ref.read(shortsControllerProvider.notifier).loadInitial();
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Short updated.')));
+    Navigator.pop(context);
   }
 }

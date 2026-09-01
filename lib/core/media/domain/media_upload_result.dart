@@ -44,6 +44,48 @@ class MediaObject {
   }
 }
 
+class MultipartUploadDescriptor {
+  const MultipartUploadDescriptor({
+    required this.contractVersion,
+    required this.sessionId,
+    required this.partSizeBytes,
+    required this.partCount,
+    required this.partUrlBatchSize,
+    required this.maxParallelParts,
+    required this.partUrlExpiresIn,
+    required this.sessionExpiresIn,
+  });
+
+  final int contractVersion;
+  final String sessionId;
+  final int partSizeBytes;
+  final int partCount;
+  final int partUrlBatchSize;
+  final int maxParallelParts;
+  final int partUrlExpiresIn;
+  final int sessionExpiresIn;
+
+  factory MultipartUploadDescriptor.fromJson(Map<String, dynamic> json) {
+    return MultipartUploadDescriptor(
+      contractVersion: asInt(json['contract_version']),
+      sessionId: asString(json['session_id']),
+      partSizeBytes: asInt(json['part_size_bytes']),
+      partCount: asInt(json['part_count']),
+      partUrlBatchSize: asInt(json['part_url_batch_size']),
+      maxParallelParts: asInt(json['max_parallel_parts']),
+      partUrlExpiresIn: asInt(json['part_url_expires_in']),
+      sessionExpiresIn: asInt(json['session_expires_in']),
+    );
+  }
+
+  bool get isValid =>
+      sessionId.isNotEmpty &&
+      partSizeBytes > 0 &&
+      partCount > 0 &&
+      partUrlBatchSize > 0 &&
+      maxParallelParts > 0;
+}
+
 class MediaUploadInitResponse {
   const MediaUploadInitResponse({
     required this.media,
@@ -51,6 +93,9 @@ class MediaUploadInitResponse {
     required this.uploadUrl,
     required this.uploadHeaders,
     required this.expiresIn,
+    required this.uploadMode,
+    required this.uploadContractVersion,
+    this.multipart,
   });
 
   final MediaObject media;
@@ -58,10 +103,17 @@ class MediaUploadInitResponse {
   final String uploadUrl;
   final Map<String, String> uploadHeaders;
   final int expiresIn;
+  final String uploadMode;
+  final int uploadContractVersion;
+  final MultipartUploadDescriptor? multipart;
+
+  bool get isMultipart => uploadMode == 'multipart';
+  bool get isDirect => uploadMode.isEmpty || uploadMode == 'direct';
 
   factory MediaUploadInitResponse.fromJson(Map<String, dynamic> json) {
     final media = MediaObject.fromJson(asJsonMap(json['media']));
     final mediaId = asString(json['media_id'] ?? media.id);
+    final multipartJson = asJsonMap(json['multipart']);
 
     return MediaUploadInitResponse(
       media: media,
@@ -69,6 +121,11 @@ class MediaUploadInitResponse {
       uploadUrl: asString(json['upload_url']),
       uploadHeaders: _stringMap(json['upload_headers']),
       expiresIn: asInt(json['expires_in']),
+      uploadMode: asString(json['upload_mode']).trim().toLowerCase(),
+      uploadContractVersion: asInt(json['upload_contract_version']),
+      multipart: multipartJson.isEmpty
+          ? null
+          : MultipartUploadDescriptor.fromJson(multipartJson),
     );
   }
 }

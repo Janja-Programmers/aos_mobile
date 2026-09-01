@@ -62,17 +62,13 @@ class ShortPublishingCoordinator {
           if (short.isPlayable) {
             final metadata = await _uploadApi.updateMetadata(
               shortId: job.shortId,
-              contentMode: job.contentMode,
               adId: job.adId,
+              includeAdId: job.adId?.trim().isNotEmpty ?? false,
               caption: job.caption,
               hashtags: job.hashtags,
               audience: job.audience,
               allowComments: job.allowComments,
               allowDownloads: job.allowDownloads,
-              soundId: job.sound.isOriginal ? null : job.sound.id,
-              soundStartMs: job.sound.startMs,
-              soundDurationMs: job.sound.durationMs,
-              soundVolume: job.sound.volume,
             );
             if (metadata.isLeft) {
               onProgress?.call(PublicationProgress.failed);

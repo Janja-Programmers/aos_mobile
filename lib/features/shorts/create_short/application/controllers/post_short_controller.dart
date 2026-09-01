@@ -11,7 +11,6 @@ import 'package:africaonlinestores/features/shorts/create_short/domain/pending_s
 import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_management_api.dart';
 import 'package:africaonlinestores/features/shorts/shared/data/api/shorts_upload_api.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/value_objects/short_id.dart';
 import 'package:dio/dio.dart';
@@ -40,9 +39,21 @@ class PostShortController extends StateNotifier<UploadState> {
   bool _disposed = false;
   CancelToken? _uploadCancelToken;
   PendingShortPublication? _pendingPublication;
+  int _uploadOperationVersion = 1;
 
   void setMedia(List<SelectedMedia> media) {
     if (_disposed || state.isBusy) return;
+    final previous = state.primaryMedia;
+    final next = media.isEmpty ? null : media.first;
+    if (previous != null &&
+        next != null &&
+        (previous.file.path != next.file.path ||
+            previous.durationSeconds != next.durationSeconds)) {
+      // A re-edit can reuse the same editor session but produce a different
+      // logical file. The backend intentionally rejects reusing an init-upload
+      // idempotency key with different file metadata.
+      _uploadOperationVersion += 1;
+    }
     state = state.copyWith(
       media: media,
       status: media.isEmpty ? UploadStatus.idle : UploadStatus.picked,
@@ -50,35 +61,26 @@ class PostShortController extends StateNotifier<UploadState> {
     );
   }
 
-  void setContentMode(String contentMode) {
-    if (_disposed || state.isBusy) return;
-    final normalized = ShortContentModes.normalize(contentMode);
-    final requiresAd = ShortContentModes.requiresAd(normalized);
-    final soundAllowed = !requiresAd || state.selectedSound.isCommercialSafe;
-    state = state.copyWith(
-      contentMode: normalized,
-      clearSelectedAd: !requiresAd,
-      selectedSound: soundAllowed ? state.selectedSound : ShortSound.original,
-      errorMessage: soundAllowed
-          ? null
-          : 'That sound cannot be used with Shop content. Original audio was selected.',
-      clearError: soundAllowed,
-    );
-  }
-
   void setAd(String? adId, {AOSAdListItem? preview}) {
     if (_disposed || state.isBusy) return;
     final clean = adId?.trim();
+    final hasAd = clean != null && clean.isNotEmpty;
+    final soundAllowed = !hasAd || state.selectedSound.isCommercialSafe;
     state = state.copyWith(
       selectedAdId: clean,
       selectedAdPreview: preview,
-      clearSelectedAd: clean == null || clean.isEmpty,
+      clearSelectedAd: !hasAd,
+      selectedSound: soundAllowed ? state.selectedSound : ShortSound.original,
+      errorMessage: soundAllowed
+          ? null
+          : 'That sound cannot be used with a tagged product. Original audio was selected.',
+      clearError: soundAllowed,
     );
   }
 
   void clearAd() {
     if (_disposed || state.isBusy) return;
-    state = state.copyWith(clearSelectedAd: true);
+    state = state.copyWith(clearSelectedAd: true, clearError: true);
   }
 
   void setAudience(String audience) {
@@ -110,9 +112,9 @@ class PostShortController extends StateNotifier<UploadState> {
 
   void setSound(ShortSound sound) {
     if (_disposed || state.isBusy) return;
-    if (state.requiresAd && !sound.isCommercialSafe) {
+    if (state.hasSelectedAd && !sound.isCommercialSafe) {
       state = state.copyWith(
-        errorMessage: 'Choose a commercial-safe sound for Shop content.',
+        errorMessage: 'Choose a commercial-safe sound for a product Short.',
       );
       return;
     }
@@ -140,6 +142,16 @@ class PostShortController extends StateNotifier<UploadState> {
     if (_submitting || _disposed || !state.canUpload) return;
     final media = state.primaryMedia;
     if (media == null || media.type != MediaType.video) return;
+
+    final durationSeconds = media.durationSeconds ?? 0;
+    if (durationSeconds <= 0) {
+      _fail('Video duration is unavailable. Reopen the video and try again.');
+      return;
+    }
+    if (durationSeconds > 600) {
+      _fail('Shorts can be up to 10 minutes long.');
+      return;
+    }
 
     _submitting = true;
     _uploadCancelToken = CancelToken();
@@ -171,7 +183,9 @@ class PostShortController extends StateNotifier<UploadState> {
       final uploaded = await mediaUploadCoordinator.uploadFile(
         file: file,
         useCase: MediaUseCase.shortVideo,
-        idempotencyKey: 'short-raw:$sessionId:v1',
+        durationSeconds: durationSeconds,
+        uploadMode: 'auto',
+        idempotencyKey: 'short-raw:$sessionId:v$_uploadOperationVersion',
         cancelToken: _uploadCancelToken,
         onStage: (ManagedMediaUploadStage stage) {
           if (_disposed) return;
@@ -193,6 +207,10 @@ class PostShortController extends StateNotifier<UploadState> {
         },
       );
       if (_disposed) return;
+      if (_uploadCancelToken?.isCancelled ?? false) {
+        _markCancelled();
+        return;
+      }
       final mediaId = uploaded.fold<String?>((failure) {
         _fail(failure.message);
         return null;
@@ -204,6 +222,10 @@ class PostShortController extends StateNotifier<UploadState> {
         audience: state.audience,
         allowComments: state.allowComments,
         allowDownloads: state.allowDownloads,
+        soundId: state.selectedSound.isOriginal ? null : state.selectedSound.id,
+        soundStartMs: state.selectedSound.startMs,
+        soundDurationMs: state.selectedSound.durationMs,
+        soundVolume: state.selectedSound.volume,
       );
       if (_disposed) return;
       final shortId = created.fold<String?>((failure) {
@@ -218,7 +240,7 @@ class PostShortController extends StateNotifier<UploadState> {
         shortId: shortId,
         localMediaPath: media.file.path,
         contentMode: state.contentMode,
-        adId: state.requiresAd ? state.selectedAdId : null,
+        adId: state.selectedAdId,
         caption: state.caption,
         hashtags: state.hashtags,
         audience: state.audience,
@@ -240,11 +262,11 @@ class PostShortController extends StateNotifier<UploadState> {
       );
     } on DioException catch (error) {
       if (!_disposed) {
-        _fail(
-          CancelToken.isCancel(error)
-              ? 'Upload cancelled.'
-              : 'Upload failed. Please retry.',
-        );
+        if (CancelToken.isCancel(error)) {
+          _markCancelled();
+        } else {
+          _fail('Upload failed. Please retry.');
+        }
       }
     } catch (_) {
       if (!_disposed) _fail('Upload failed. Please retry.');
@@ -282,7 +304,7 @@ class PostShortController extends StateNotifier<UploadState> {
           );
           return;
         case PublicationProgress.failed:
-          _fail('Video processing failed. Retry when you are ready.');
+          _fail('Your Short could not be finished. Retry when you are ready.');
           return;
         case PublicationProgress.timedOut:
           _fail(
@@ -328,6 +350,10 @@ class PostShortController extends StateNotifier<UploadState> {
 
   void cancelUpload() {
     if (state.shortId != null) return;
+    if (state.status != UploadStatus.initializing &&
+        state.status != UploadStatus.uploading) {
+      return;
+    }
     _uploadCancelToken?.cancel('Cancelled by user.');
   }
 
@@ -335,6 +361,16 @@ class PostShortController extends StateNotifier<UploadState> {
     if (_disposed || state.isBusy) return;
     _pendingPublication = null;
     state = UploadState.initial();
+  }
+
+  void _markCancelled() {
+    if (_disposed) return;
+    _uploadOperationVersion += 1;
+    state = state.copyWith(
+      status: UploadStatus.failed,
+      progress: 0,
+      errorMessage: 'Upload cancelled.',
+    );
   }
 
   void _fail(String message) {

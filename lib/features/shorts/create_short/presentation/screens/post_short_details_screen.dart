@@ -3,18 +3,19 @@ import 'dart:typed_data';
 
 import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
+import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/file_url.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/controllers/post_short_controller.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_mentions_controller.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/providers/short_creation_providers.dart';
-import 'package:africaonlinestores/features/shorts/create_short/application/state/post_category_options.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/state/upload_state.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/helpers/post_short_media_helpers.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/widgets/ad_picker_bottom_sheet.dart';
+import 'package:africaonlinestores/features/shorts/create_short/presentation/widgets/short_sound_controls_sheet.dart';
 import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:africaonlinestores/features/shorts/shared/application/providers/shorts_providers.dart';
-import 'package:africaonlinestores/features/shorts/shared/domain/entities/short_content_modes.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 import 'package:africaonlinestores/features/social/domain/social_friend.dart';
 import 'package:africaonlinestores/shared/images/app_image_decode.dart';
@@ -43,76 +44,34 @@ class PostShortDetailsScreen extends ConsumerStatefulWidget {
 class _PostShortDetailsScreenState
     extends ConsumerState<PostShortDetailsScreen> {
   final TextEditingController _captionController = TextEditingController();
-  final TextEditingController _hashtagController = TextEditingController();
   final FocusNode _captionFocus = FocusNode();
-  late final ProviderSubscription<UploadState> _uploadSubscription;
   late final PostShortController _controller;
-  late PostCategoryOption _selectedCategory;
   final Map<String, String> _mentionAccountIds = <String, String>{};
   Uint8List? _thumbnail;
   bool _showMentions = false;
-  bool _didRedirect = false;
-  bool _failureDismissed = false;
+  bool _didStartPost = false;
 
   @override
   void initState() {
     super.initState();
-    _selectedCategory = postCategoriesData.firstWhere(
-      (item) => item.contentMode == ShortContentModes.geo,
-      orElse: () => postCategoriesData.first,
-    );
     final provider = postShortControllerProvider(widget.sessionId);
     _controller = ref.read(provider.notifier);
-    _uploadSubscription = ref.listenManual<UploadState>(
-      provider,
-      _onUploadStateChanged,
-    );
     _captionController.addListener(_onCaptionChanged);
-    _hashtagController.addListener(_onHashtagsChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _controller
         ..setMedia(widget.media)
-        ..setSound(widget.selectedSound)
-        ..setContentMode(_selectedCategory.contentMode);
+        ..setSound(widget.selectedSound);
       unawaited(_generateThumbnail());
     });
   }
 
   @override
   void dispose() {
-    _uploadSubscription.close();
     _captionController
       ..removeListener(_onCaptionChanged)
       ..dispose();
-    _hashtagController
-      ..removeListener(_onHashtagsChanged)
-      ..dispose();
     _captionFocus.dispose();
     super.dispose();
-  }
-
-  void _onUploadStateChanged(UploadState? previous, UploadState next) {
-    if (next.status == UploadStatus.failed &&
-        previous?.status != UploadStatus.failed &&
-        mounted) {
-      setState(() => _failureDismissed = false);
-    }
-    if (next.isBusy || next.status == UploadStatus.ready) {
-      ref.read(activeShortUploadSessionProvider.notifier).state =
-          widget.sessionId;
-    }
-    if (!_didRedirect &&
-        next.status == UploadStatus.processing &&
-        previous?.status != UploadStatus.processing) {
-      _didRedirect = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.goNamed(AppRoutes.nFeeds, extra: 0);
-      });
-    }
-    if (next.status == UploadStatus.ready &&
-        previous?.status != UploadStatus.ready) {
-      unawaited(ref.read(shortsControllerProvider.notifier).loadInitial());
-    }
   }
 
   void _onCaptionChanged() {
@@ -131,169 +90,171 @@ class _PostShortDetailsScreenState
     );
   }
 
-  void _onHashtagsChanged() {
-    final tags = _hashtagController.text
-        .split(RegExp(r'[\s,]+'))
-        .where((item) => item.trim().isNotEmpty)
-        .toList(growable: false);
-    _controller.setHashtags(tags);
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(postShortControllerProvider(widget.sessionId));
-    final canPost = state.canUpload;
+    final isSeller =
+        ref.watch(authControllerProvider).asAuthenticated?.seller.isSeller ??
+        false;
+
     return Scaffold(
-      appBar: AppBar(centerTitle: true, title: const Text('New Post')),
-      body: Stack(
-        children: <Widget>[
-          SafeArea(
-            child: Column(
+      appBar: AppBar(
+        titleSpacing: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text('Publish Short', style: context.h5),
+            Text(
+              'Add a caption and choose who can see it.',
+              style: context.smallMuted,
+            ),
+          ],
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 700;
+            final content = _publishContent(state, isSeller: isSeller);
+            final preview = _mediaPreview(state);
+            return Column(
               children: <Widget>[
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        _mediaPreview(),
-                        const SizedBox(height: 20),
-                        Text('Category *', style: context.pStrong),
-                        const SizedBox(height: 10),
-                        _categorySelector(state),
-                        const SizedBox(height: 18),
-                        _captionField(),
-                        if (_showMentions) _mentionSuggestions(),
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: _hashtagController,
-                          maxLength: 160,
-                          textInputAction: TextInputAction.done,
-                          decoration: const InputDecoration(
-                            hintText:
-                                '#hashtags (e.g. #fashion #deals #trending)',
-                            counterText: '',
-                            border: OutlineInputBorder(),
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+                    child: wide
+                        ? Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Expanded(flex: 4, child: preview),
+                              const SizedBox(width: 24),
+                              Expanded(flex: 6, child: content),
+                            ],
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: <Widget>[
+                              preview,
+                              const SizedBox(height: 20),
+                              content,
+                            ],
                           ),
-                        ),
-                        if (!state.selectedSound.isOriginal) ...<Widget>[
-                          const SizedBox(height: 14),
-                          _selectedSoundRow(state.selectedSound),
-                        ],
-                        const SizedBox(height: 14),
-                        _settingsRow(
-                          icon: Icons.public,
-                          title: audienceLabel(state.audience),
-                          onTap: () => _showPrivacy(state),
-                        ),
-                        const Divider(height: 1),
-                        _settingsRow(
-                          icon: Icons.settings_outlined,
-                          title: 'More options',
-                          onTap: () => _showInteractionOptions(state),
-                        ),
-                        if (state.requiresAd) ...<Widget>[
-                          const SizedBox(height: 18),
-                          Text('Product *', style: context.pStrong),
-                          const SizedBox(height: 8),
-                          state.hasSelectedAd
-                              ? _selectedAd(state)
-                              : _addProductButton(),
-                        ],
-                        if (state.errorMessage != null &&
-                            !state.isBusy) ...<Widget>[
-                          const SizedBox(height: 14),
-                          Text(
-                            state.errorMessage!,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
                   ),
                 ),
-                _footer(canPost),
+                _footer(state.canUpload),
               ],
-            ),
-          ),
-          if (state.isBusy ||
-              (state.status == UploadStatus.failed && !_failureDismissed))
-            _uploadOverlay(state),
-        ],
-      ),
-    );
-  }
-
-  Widget _mediaPreview() {
-    final availableWidth = MediaQuery.sizeOf(context).width - 40;
-    final previewSize = availableWidth.clamp(160, 240).toDouble();
-    final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
-      context,
-      logicalWidth: previewSize,
-      logicalHeight: previewSize,
-    );
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: SizedBox.square(
-          dimension: previewSize,
-          child: ColoredBox(
-            color: Colors.black,
-            child: _thumbnail == null
-                ? const Center(child: CircularProgressIndicator())
-                : Stack(
-                    fit: StackFit.expand,
-                    children: <Widget>[
-                      Image.memory(
-                        _thumbnail!,
-                        fit: BoxFit.cover,
-                        cacheWidth: decodeSize.width,
-                        cacheHeight: decodeSize.height,
-                      ),
-                      const Center(
-                        child: Icon(
-                          Icons.play_circle_outline_rounded,
-                          color: Colors.white70,
-                          size: 58,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _categorySelector(UploadState state) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: postCategoriesData
-            .map((category) {
-              final selected = category.id == _selectedCategory.id;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  selected: selected,
-                  avatar: Icon(category.icon, size: 18),
-                  label: Text(category.label),
-                  onSelected: state.isBusy
-                      ? null
-                      : (_) {
-                          setState(() => _selectedCategory = category);
-                          _controller.setContentMode(category.contentMode);
-                        },
-                ),
-              );
-            })
-            .toList(growable: false),
-      ),
+  Widget _publishContent(UploadState state, {required bool isSeller}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        _captionField(),
+        if (_showMentions) _mentionSuggestions(),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            ActionChip(
+              avatar: const Icon(Icons.tag_rounded, size: 18),
+              label: Text(
+                state.hashtags.isEmpty
+                    ? 'Hashtags'
+                    : 'Hashtags (${state.hashtags.length})',
+              ),
+              onPressed: state.isBusy ? null : _showHashtagSheet,
+            ),
+            ActionChip(
+              avatar: const Icon(Icons.alternate_email_rounded, size: 18),
+              label: const Text('Mention'),
+              onPressed: state.isBusy ? null : _showMentionSheet,
+            ),
+          ],
+        ),
+        if (state.hashtags.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: state.hashtags
+                .map(
+                  (tag) => InputChip(
+                    label: Text('#$tag'),
+                    onDeleted: state.isBusy
+                        ? null
+                        : () => _controller.setHashtags(
+                            state.hashtags
+                                .where((item) => item != tag)
+                                .toList(growable: false),
+                          ),
+                  ),
+                )
+                .toList(growable: false),
+          ),
+        ],
+        if (!state.selectedSound.isOriginal) ...<Widget>[
+          const SizedBox(height: 16),
+          _selectedSoundRow(state),
+        ],
+        const SizedBox(height: 18),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(color: context.appColors.border),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            children: <Widget>[
+              _settingsRow(
+                icon: Icons.public,
+                title: 'Who can view',
+                subtitle: audienceLabel(state.audience),
+                onTap: () => _showPrivacy(state),
+              ),
+              const Divider(height: 1),
+              _settingsRow(
+                icon: Icons.tune_rounded,
+                title: 'More options',
+                subtitle:
+                    'Comments ${state.allowComments ? 'on' : 'off'} · '
+                    'Downloads ${state.allowDownloads ? 'on' : 'off'}',
+                onTap: () => _showInteractionOptions(state),
+              ),
+            ],
+          ),
+        ),
+        if (isSeller) ...<Widget>[
+          const SizedBox(height: 20),
+          Text('Tag a product', style: context.pStrong),
+          const SizedBox(height: 4),
+          Text(
+            'Optional. Tagging one of your active products gives the backend Shop context.',
+            style: context.smallMuted,
+          ),
+          const SizedBox(height: 10),
+          state.hasSelectedAd ? _selectedAd(state) : _addProductButton(),
+        ],
+        if (state.errorMessage != null && !state.isBusy) ...<Widget>[
+          const SizedBox(height: 14),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              state.errorMessage!,
+              style: context.p.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -306,10 +267,119 @@ class _PostShortDetailsScreenState
       maxLength: 1000,
       textCapitalization: TextCapitalization.sentences,
       decoration: const InputDecoration(
-        hintText:
-            "What's on your mind? Describe your post, share a story, or tell people about your product…",
+        hintText: 'Write a caption…',
         alignLabelWithHint: true,
         border: OutlineInputBorder(),
+      ),
+    );
+  }
+
+  Widget _mediaPreview(UploadState state) {
+    final availableWidth = MediaQuery.sizeOf(context).width - 40;
+    final previewWidth = availableWidth.clamp(180, 360).toDouble();
+    final previewHeight = (previewWidth * 16 / 9).clamp(280, 540).toDouble();
+    final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
+      context,
+      logicalWidth: previewWidth,
+      logicalHeight: previewHeight,
+    );
+    return Align(
+      alignment: AlignmentDirectional.topCenter,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: SizedBox(
+              width: previewWidth,
+              height: previewHeight,
+              child: ColoredBox(
+                color: Colors.black,
+                child: _thumbnail == null
+                    ? const Center(child: CircularProgressIndicator())
+                    : Stack(
+                        fit: StackFit.expand,
+                        children: <Widget>[
+                          Image.memory(
+                            _thumbnail!,
+                            fit: BoxFit.cover,
+                            cacheWidth: decodeSize.width,
+                            cacheHeight: decodeSize.height,
+                          ),
+                          if (!state.selectedSound.isOriginal)
+                            PositionedDirectional(
+                              top: 12,
+                              start: 12,
+                              end: 12,
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    borderRadius: BorderRadius.circular(99),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      const Icon(
+                                        Icons.music_note_rounded,
+                                        size: 18,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Text(
+                                          state.selectedSound.title,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          const Center(
+                            child: Icon(
+                              Icons.play_circle_outline_rounded,
+                              color: Colors.white70,
+                              size: 58,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              _InfoBadge(label: 'Duration', value: _clipDurationLabel()),
+              _InfoBadge(
+                label: 'Visibility',
+                value: audienceShortLabel(state.audience),
+              ),
+              _InfoBadge(
+                label: 'Comments',
+                value: state.allowComments ? 'Allowed' : 'Off',
+              ),
+              _InfoBadge(
+                label: 'Downloads',
+                value: state.allowDownloads ? 'Allowed' : 'Off',
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -405,11 +475,12 @@ class _PostShortDetailsScreenState
     final result = insertShortMention(_captionController.value, friend);
     _mentionAccountIds[result.token] = result.canonicalAccountId;
     _captionController.value = result.value;
-    setState(() => _showMentions = false);
+    if (mounted) setState(() => _showMentions = false);
     _captionFocus.requestFocus();
   }
 
-  Widget _selectedSoundRow(ShortSound sound) {
+  Widget _selectedSoundRow(UploadState state) {
+    final sound = state.selectedSound;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       shape: RoundedRectangleBorder(
@@ -419,26 +490,26 @@ class _PostShortDetailsScreenState
       leading: const Icon(Icons.music_note_rounded),
       title: Text(sound.title, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
-        sound.artist,
+        sound.artist.trim().isEmpty ? 'Selected sound' : sound.artist,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: const Tooltip(
-        message: 'Sound is selected in the editor',
-        child: Icon(Icons.lock_outline_rounded),
-      ),
+      trailing: const Icon(Icons.tune_rounded),
+      onTap: state.isBusy ? null : () => _showSoundControls(state),
     );
   }
 
   Widget _settingsRow({
     required IconData icon,
     required String title,
+    required String subtitle,
     required VoidCallback onTap,
   }) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
       leading: Icon(icon),
       title: Text(title, style: context.pStrong),
+      subtitle: Text(subtitle, style: context.smallMuted),
       trailing: const Icon(Icons.chevron_right_rounded),
       onTap: onTap,
     );
@@ -451,13 +522,13 @@ class _PostShortDetailsScreenState
       isScrollControlled: true,
       builder: (context) => ShortOptionSheet(
         title: 'Privacy settings',
-        subtitle: 'Who can view this post',
+        subtitle: 'Who can view this Short',
         current: state.audience,
         options: const <ShortOptionSheetItem>[
           ShortOptionSheetItem(
             'everyone',
             'Everyone',
-            'Anyone can view this post.',
+            'Anyone can view this Short.',
           ),
           ShortOptionSheetItem(
             'followers',
@@ -491,59 +562,316 @@ class _PostShortDetailsScreenState
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) => Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Row(
-                children: <Widget>[
-                  const Expanded(
-                    child: Text(
-                      'More options',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Column(
+                        children: <Widget>[
+                          Text('More options', style: context.h5),
+                          Text(
+                            'Choose how people can interact.',
+                            style: context.pMuted,
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              SwitchListTile.adaptive(
-                value: comments,
-                title: const Text('Allow comments'),
-                subtitle: const Text('Let viewers comment on your post.'),
-                onChanged: (value) {
-                  setSheetState(() => comments = value);
-                  _controller.setAllowComments(value);
-                },
-              ),
-              SwitchListTile.adaptive(
-                value: downloads,
-                title: const Text('Allow downloading'),
-                subtitle: const Text('Let viewers download this video.'),
-                onChanged: (value) {
-                  setSheetState(() => downloads = value);
-                  _controller.setAllowDownloads(value);
-                },
-              ),
-              SwitchListTile.adaptive(
-                value: saveToDevice,
-                title: const Text('Save to device'),
-                subtitle: const Text('Also save this video to your gallery.'),
-                onChanged: (value) {
-                  setSheetState(() => saveToDevice = value);
-                  _controller.setSaveToDevice(value);
-                },
-              ),
-            ],
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile.adaptive(
+                  value: comments,
+                  secondary: const Icon(Icons.chat_bubble_outline_rounded),
+                  title: const Text('Allow comments'),
+                  subtitle: const Text('Let viewers comment.'),
+                  onChanged: (value) {
+                    setSheetState(() => comments = value);
+                    _controller.setAllowComments(value);
+                  },
+                ),
+                SwitchListTile.adaptive(
+                  value: downloads,
+                  secondary: const Icon(Icons.download_outlined),
+                  title: const Text('Allow downloads'),
+                  subtitle: const Text('Let viewers save the video.'),
+                  onChanged: (value) {
+                    setSheetState(() => downloads = value);
+                    _controller.setAllowDownloads(value);
+                  },
+                ),
+                SwitchListTile.adaptive(
+                  value: saveToDevice,
+                  secondary: const Icon(Icons.save_alt_rounded),
+                  title: const Text('Save to device'),
+                  subtitle: const Text('Also save this video to your gallery.'),
+                  onChanged: (value) {
+                    setSheetState(() => saveToDevice = value);
+                    _controller.setSaveToDevice(value);
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _showHashtagSheet() async {
+    final initial = ref
+        .read(postShortControllerProvider(widget.sessionId))
+        .hashtags
+        .toList(growable: true);
+    final text = TextEditingController();
+    var tags = initial;
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          void addTag() {
+            final clean = normalizeShortHashtag(text.text);
+            if (clean == null || tags.contains(clean) || tags.length >= 10) {
+              return;
+            }
+            setSheetState(() {
+              tags = <String>[...tags, clean];
+              text.clear();
+            });
+            _controller.setHashtags(tags);
+          }
+
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              MediaQuery.viewInsetsOf(context).bottom + 24,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text('Hashtags', style: context.h5),
+                            Text(
+                              'Add up to 10 hashtags.',
+                              style: context.pMuted,
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: TextField(
+                          controller: text,
+                          autofocus: true,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => addTag(),
+                          decoration: const InputDecoration(
+                            prefixText: '# ',
+                            hintText: 'Hashtag',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      FilledButton(
+                        onPressed: tags.length >= 10 ? null : addTag,
+                        child: Text(
+                          'Add',
+                          style: AppTextStylesX(context).button,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (tags.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: tags
+                          .map((tag) {
+                            return InputChip(
+                              label: Text('#$tag'),
+                              onDeleted: () {
+                                setSheetState(
+                                  () => tags = tags
+                                      .where((item) => item != tag)
+                                      .toList(growable: true),
+                                );
+                                _controller.setHashtags(tags);
+                              },
+                            );
+                          })
+                          .toList(growable: false),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    text.dispose();
+  }
+
+  Future<void> _showMentionSheet() async {
+    final search = TextEditingController();
+    ref.read(shortMentionsControllerProvider.notifier).search('');
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => Consumer(
+        builder: (context, ref, _) {
+          final state = ref.watch(shortMentionsControllerProvider);
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              MediaQuery.viewInsetsOf(context).bottom + 20,
+            ),
+            child: SizedBox(
+              height: MediaQuery.sizeOf(context).height * .62,
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text('Mention someone', style: context.h5),
+                            Text(
+                              'Find someone to mention.',
+                              style: context.pMuted,
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: search,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.alternate_email_rounded),
+                      hintText: 'Search people',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      final clean = value.trim();
+                      if (clean.length >= 2) {
+                        ref
+                            .read(shortMentionsControllerProvider.notifier)
+                            .search(clean);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: search.text.trim().length < 2
+                        ? const Center(
+                            child: Text('Type at least two characters.'),
+                          )
+                        : _mentionModalResults(state, sheetContext),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    search.dispose();
+  }
+
+  Widget _mentionModalResults(
+    ShortMentionsState state,
+    BuildContext sheetContext,
+  ) {
+    if (state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (state.errorMessage != null && state.items.isEmpty) {
+      return Center(child: Text(state.errorMessage!));
+    }
+    if (state.items.isEmpty) {
+      return const Center(child: Text('No people found.'));
+    }
+    return NotificationListener<ScrollEndNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.extentAfter < 100) {
+          unawaited(
+            ref.read(shortMentionsControllerProvider.notifier).loadMore(),
+          );
+        }
+        return false;
+      },
+      child: ListView.builder(
+        itemCount: state.items.length + (state.isLoadingMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == state.items.length) {
+            return const Padding(
+              padding: EdgeInsets.all(12),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final friend = state.items[index];
+          return ListTile(
+            leading: CircleAvatar(child: Text(friend.initials)),
+            title: Text(friend.displayName),
+            subtitle: Text('@${mentionTokenForFriend(friend)}'),
+            trailing: friend.isVerified
+                ? const Icon(Icons.verified, size: 18)
+                : null,
+            onTap: () {
+              Navigator.pop(sheetContext);
+              _insertMention(friend);
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _showSoundControls(UploadState state) async {
+    final result = await showShortSoundControlsSheet(
+      context,
+      sound: state.selectedSound,
+      clipDuration: _clipDuration(),
+    );
+    if (result != null) _controller.setSound(result);
   }
 
   Widget _addProductButton() {
@@ -554,7 +882,7 @@ class _PostShortDetailsScreenState
       ),
       onPressed: _openAdPicker,
       icon: const Icon(Icons.sell_outlined),
-      label: const Text('Tag a product (required)'),
+      label: const Text('Tag a product (optional)'),
     );
   }
 
@@ -584,7 +912,7 @@ class _PostShortDetailsScreenState
         ),
       ),
       title: Text(ad?.title ?? 'Product tagged'),
-      subtitle: Text(state.selectedAdId ?? ''),
+      subtitle: const Text('Optional product tag'),
       onTap: _openAdPicker,
       trailing: IconButton(
         tooltip: 'Remove product',
@@ -620,135 +948,27 @@ class _PostShortDetailsScreenState
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              FilledButton(
-                onPressed: canPost ? _controller.upload : null,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(54),
-                ),
-                child: const Text(
-                  'Post',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'I confirm that there are no private messages in my content',
-                textAlign: TextAlign.center,
-              ),
-            ],
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+          child: FilledButton(
+            onPressed: canPost && !_didStartPost ? _startPost : null,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(54),
+            ),
+            child: Text('Post', style: AppTextStylesX(context).button),
           ),
         ),
       ),
     );
   }
 
-  Widget _uploadOverlay(UploadState state) {
-    final failed = state.status == UploadStatus.failed;
-    return Positioned.fill(
-      child: ColoredBox(
-        color: Colors.black54,
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Material(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(28),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 430),
-                child: Padding(
-                  padding: const EdgeInsets.all(28),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Icon(
-                        failed
-                            ? Icons.error_outline
-                            : Icons.cloud_upload_outlined,
-                        size: 68,
-                        color: failed
-                            ? Theme.of(context).colorScheme.error
-                            : Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(height: 18),
-                      Text(
-                        uploadStageTitle(state),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      if (!failed)
-                        LinearProgressIndicator(
-                          value: state.status == UploadStatus.uploading
-                              ? state.progress.clamp(0, 1).toDouble()
-                              : state.status == UploadStatus.publishing ||
-                                    state.status == UploadStatus.processing
-                              ? null
-                              : 0,
-                        ),
-                      if (state.status == UploadStatus.uploading) ...<Widget>[
-                        const SizedBox(height: 10),
-                        Text(
-                          '${(state.progress * 100).clamp(0, 100).round()}%',
-                        ),
-                      ],
-                      if (failed) ...<Widget>[
-                        const SizedBox(height: 8),
-                        Text(
-                          state.errorMessage ?? 'Publishing failed.',
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 18),
-                        if (state.shortId != null)
-                          FilledButton(
-                            onPressed: _controller.retryProcessingCurrent,
-                            child: const Text(
-                              'Retry processing',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          )
-                        else
-                          FilledButton(
-                            onPressed: _controller.upload,
-                            child: const Text(
-                              'Retry upload',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        TextButton(
-                          onPressed: () {
-                            ref
-                                    .read(
-                                      activeShortUploadSessionProvider.notifier,
-                                    )
-                                    .state =
-                                null;
-                            setState(() => _failureDismissed = true);
-                          },
-                          child: const Text('Close'),
-                        ),
-                      ] else if (state.status ==
-                          UploadStatus.uploading) ...<Widget>[
-                        const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: _controller.cancelUpload,
-                          child: const Text('Cancel'),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+  void _startPost() {
+    final state = ref.read(postShortControllerProvider(widget.sessionId));
+    if (_didStartPost || !state.canUpload) return;
+    _didStartPost = true;
+    ref.read(activeShortUploadSessionProvider.notifier).state =
+        widget.sessionId;
+    unawaited(_controller.upload());
+    context.goNamed(AppRoutes.nFeeds, extra: 0);
   }
 
   Future<void> _generateThumbnail() async {
@@ -757,6 +977,48 @@ class _PostShortDetailsScreenState
       widget.media.first.file,
     );
     if (mounted) setState(() => _thumbnail = thumb);
+  }
+
+  Duration _clipDuration() {
+    if (widget.media.isEmpty) return Duration.zero;
+    final seconds = widget.media.first.durationSeconds ?? 0;
+    if (seconds <= 0) return Duration.zero;
+    return Duration(milliseconds: (seconds * 1000).round());
+  }
+
+  String _clipDurationLabel() {
+    final duration = _clipDuration();
+    if (duration <= Duration.zero) return '—';
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds.remainder(60);
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+}
+
+class _InfoBadge extends StatelessWidget {
+  const _InfoBadge({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 100),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.appColors.border),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(label, style: AppTextStylesX(context).caption),
+          Text(value, style: context.pStrong),
+        ],
+      ),
+    );
   }
 }
 
@@ -780,22 +1042,24 @@ String? activeMentionQuery(TextEditingValue value) {
   return match?.group(1);
 }
 
+String? normalizeShortHashtag(String value) {
+  final clean = value.trim().replaceFirst(RegExp('^#+'), '').toLowerCase();
+  if (clean.isEmpty || clean.contains(RegExp(r'\s'))) return null;
+  return clean;
+}
+
 String audienceLabel(String value) => switch (value) {
-  'followers' => 'Followers can view this post',
-  'friends' => 'Friends can view this post',
-  'only_me' => 'Only you can view this post',
-  _ => 'Everyone can view this post',
+  'followers' => 'Followers',
+  'friends' => 'Friends',
+  'only_me' => 'Only you',
+  _ => 'Everyone',
 };
 
-String uploadStageTitle(UploadState state) => switch (state.status) {
-  UploadStatus.initializing => 'Preparing your upload',
-  UploadStatus.uploading => 'Uploading your short',
-  UploadStatus.confirming => 'Confirming your upload',
-  UploadStatus.publishing => 'Publishing your short',
-  UploadStatus.processing => 'Publishing continues in the background',
-  UploadStatus.failed => 'Your short was not published',
-  UploadStatus.ready => 'Your short is ready',
-  UploadStatus.idle || UploadStatus.picked => 'Preparing your short',
+String audienceShortLabel(String value) => switch (value) {
+  'followers' => 'Followers',
+  'friends' => 'Friends',
+  'only_me' => 'Only me',
+  _ => 'Everyone',
 };
 
 class ShortOptionSheetItem {
@@ -833,10 +1097,7 @@ class ShortOptionSheet extends StatelessWidget {
                   child: Text(
                     title,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: context.h5,
                   ),
                 ),
                 IconButton(
@@ -845,14 +1106,12 @@ class ShortOptionSheet extends StatelessWidget {
                 ),
               ],
             ),
-            Text(subtitle, style: const TextStyle(fontWeight: FontWeight.w700)),
+            Text(subtitle, style: context.pStrong),
             const SizedBox(height: 8),
             RadioGroup<String>(
               groupValue: current,
               onChanged: (String? value) {
-                if (value != null) {
-                  Navigator.pop(context, value);
-                }
+                if (value != null) Navigator.pop(context, value);
               },
               child: Column(
                 children: options
@@ -863,7 +1122,7 @@ class ShortOptionSheet extends StatelessWidget {
                         subtitle: Text(option.subtitle),
                       ),
                     )
-                    .toList(),
+                    .toList(growable: false),
               ),
             ),
           ],

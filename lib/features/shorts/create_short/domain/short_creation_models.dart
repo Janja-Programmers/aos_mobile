@@ -3,11 +3,11 @@ import 'dart:ui';
 import 'package:africaonlinestores/features/shorts/music/domain/short_sound.dart';
 import 'package:equatable/equatable.dart';
 
-/// Recording limits represented by the production design.
+/// Recording limits supported by the Shorts backend.
 enum ShortRecordingLimit {
   fifteenSeconds(Duration(seconds: 15), '15s'),
   sixtySeconds(Duration(seconds: 60), '60s'),
-  threeMinutes(Duration(minutes: 3), '3m');
+  tenMinutes(Duration(minutes: 10), '10m');
 
   const ShortRecordingLimit(this.duration, this.label);
 
@@ -37,6 +37,7 @@ class ShortRecorderState extends Equatable {
     this.cameraCount = 0,
     this.cameraIndex = 0,
     this.flashEnabled = false,
+    this.microphoneEnabled = true,
   });
 
   factory ShortRecorderState.initial() => const ShortRecorderState(
@@ -53,6 +54,7 @@ class ShortRecorderState extends Equatable {
   final int cameraCount;
   final int cameraIndex;
   final bool flashEnabled;
+  final bool microphoneEnabled;
 
   bool get isBusy =>
       phase == ShortRecorderPhase.initializing ||
@@ -76,6 +78,7 @@ class ShortRecorderState extends Equatable {
     int? cameraCount,
     int? cameraIndex,
     bool? flashEnabled,
+    bool? microphoneEnabled,
     bool clearRecordedPath = false,
     bool clearError = false,
   }) {
@@ -90,6 +93,7 @@ class ShortRecorderState extends Equatable {
       cameraCount: cameraCount ?? this.cameraCount,
       cameraIndex: cameraIndex ?? this.cameraIndex,
       flashEnabled: flashEnabled ?? this.flashEnabled,
+      microphoneEnabled: microphoneEnabled ?? this.microphoneEnabled,
     );
   }
 
@@ -103,6 +107,7 @@ class ShortRecorderState extends Equatable {
     cameraCount,
     cameraIndex,
     flashEnabled,
+    microphoneEnabled,
   ];
 }
 
@@ -121,8 +126,6 @@ class ShortOverlay extends Equatable {
   final String id;
   final ShortOverlayKind kind;
   final String content;
-
-  /// Center of the overlay relative to the visible video canvas, in [0, 1].
   final Offset normalizedPosition;
   final int colorValue;
   final double scale;

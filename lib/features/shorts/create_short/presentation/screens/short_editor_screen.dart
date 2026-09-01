@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/controllers/short_editor_controller.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/providers/short_creation_providers.dart';
 import 'package:africaonlinestores/features/shorts/create_short/domain/short_creation_models.dart';
 import 'package:africaonlinestores/features/shorts/create_short/presentation/screens/short_trim_screen.dart';
+import 'package:africaonlinestores/features/shorts/create_short/presentation/widgets/short_sound_controls_sheet.dart';
 import 'package:africaonlinestores/features/shorts/music/presentation/music_picker_sheet.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/enums/selected_media_type.dart';
 import 'package:africaonlinestores/features/shorts/shared/navigation/shorts_routes.dart';
@@ -94,12 +96,12 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
       child: Row(
         children: <Widget>[
           IconButton.filled(
-            tooltip: 'Close editor',
+            tooltip: 'Discard recording',
             style: IconButton.styleFrom(
               backgroundColor: const Color(0x88000000),
               foregroundColor: Colors.white,
             ),
-            onPressed: state.isExporting ? null : _showExitOptions,
+            onPressed: state.isExporting ? null : _confirmDiscardRecording,
             icon: const Icon(Icons.close_rounded),
           ),
           const Spacer(),
@@ -118,6 +120,7 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
                     : state.selectedSound.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+                style: AppTextStylesX(context).button,
               ),
             ),
           ),
@@ -125,8 +128,7 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
           FilledButton.icon(
             onPressed: state.isInitialized && !state.isExporting ? _next : null,
             iconAlignment: IconAlignment.end,
-            icon: const Icon(Icons.arrow_forward_rounded),
-            label: const Text('Next'),
+            label: Text('Next', style: AppTextStylesX(context).button),
           ),
         ],
       ),
@@ -311,7 +313,6 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
       context,
       logicalHeight: 70,
     );
-
     return Container(
       height: 86,
       color: const Color(0xFF111217),
@@ -362,7 +363,13 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
   Widget _editorActions(ShortEditorState state) {
     final items = <({IconData icon, String label, VoidCallback action})>[
       (icon: Icons.content_cut_rounded, label: 'Trim', action: _openTrim),
-      (icon: Icons.music_note_rounded, label: 'Audio', action: _pickSound),
+      (icon: Icons.music_note_rounded, label: 'Sound', action: _pickSound),
+      if (!state.selectedSound.isOriginal)
+        (
+          icon: Icons.tune_rounded,
+          label: 'Edit sound',
+          action: _editSoundControls,
+        ),
       (icon: Icons.text_fields_rounded, label: 'Text', action: _addText),
       (
         icon: Icons.emoji_emotions_outlined,
@@ -384,22 +391,24 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
           children: items
               .map((item) {
                 return SizedBox(
-                  width: 112,
+                  width: 104,
                   child: Column(
                     children: <Widget>[
                       IconButton.filled(
                         tooltip: item.label,
                         onPressed: state.isExporting ? null : item.action,
                         style: IconButton.styleFrom(
-                          minimumSize: const Size(64, 64),
+                          minimumSize: const Size(58, 58),
                           backgroundColor: const Color(0xFF232429),
                           foregroundColor: Colors.white,
                         ),
-                        icon: Icon(item.icon, size: 30),
+                        icon: Icon(item.icon, size: 28),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(color: Colors.white),
                       ),
                     ],
@@ -429,7 +438,7 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _controller.initialize,
-              child: const Text('Retry', style: TextStyle(color: Colors.white)),
+              child: Text('Retry', style: AppTextStylesX(context).button),
             ),
           ],
         ),
@@ -465,9 +474,7 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
               style: const TextStyle(color: Colors.white70),
             ),
             TextButton(
-              onPressed: () {
-                unawaited(_controller.cancelExport());
-              },
+              onPressed: () => unawaited(_controller.cancelExport()),
               child: const Text('Cancel'),
             ),
           ],
@@ -494,6 +501,20 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
   Future<void> _pickSound() async {
     final selected = await showMusicPickerSheet(context);
     if (selected != null) _controller.setSound(selected);
+  }
+
+  Future<void> _editSoundControls() async {
+    final state = ref.read(shortEditorControllerProvider(widget.seed));
+    if (state.selectedSound.isOriginal) {
+      await _pickSound();
+      return;
+    }
+    final result = await showShortSoundControlsSheet(
+      context,
+      sound: state.selectedSound,
+      clipDuration: state.selectedDuration,
+    );
+    if (result != null) _controller.setSound(result);
   }
 
   Future<void> _addText() async {
@@ -565,9 +586,9 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
                           Navigator.pop(context, (clean, color));
                         }
                       },
-                      child: const Text(
+                      child: Text(
                         'Done',
-                        style: TextStyle(color: Colors.white),
+                        style: AppTextStylesX(context).button,
                       ),
                     ),
                   ],
@@ -728,10 +749,7 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
                 const Spacer(),
                 FilledButton(
                   onPressed: () => Navigator.pop(context, text.text.trim()),
-                  child: const Text(
-                    'Done',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: Text('Done', style: AppTextStylesX(context).button),
                 ),
               ],
             ),
@@ -759,12 +777,43 @@ class _ShortEditorScreenState extends ConsumerState<ShortEditorScreen> {
     final output = await _controller.export();
     if (output == null || !mounted) return;
     final state = ref.read(shortEditorControllerProvider(widget.seed));
+    final durationSeconds =
+        state.selectedDuration.inMilliseconds / Duration.millisecondsPerSecond;
     ShortsNavigation.toPostShortDetails(
       context,
       sessionId: state.sessionId,
-      media: <SelectedMedia>[SelectedMedia(File(output), MediaType.video)],
+      media: <SelectedMedia>[
+        SelectedMedia(
+          File(output),
+          MediaType.video,
+          durationSeconds: durationSeconds,
+        ),
+      ],
       selectedSound: state.selectedSound,
     );
+  }
+
+  Future<void> _confirmDiscardRecording() async {
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Discard this recording?'),
+        content: const Text('This recording will be removed.'),
+        actions: <Widget>[
+          OutlinedButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep it'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Discard', style: AppTextStylesX(context).button),
+          ),
+        ],
+      ),
+    );
+    if (discard != true) return;
+    await _controller.discard();
+    if (mounted) Navigator.pop(context);
   }
 
   Future<void> _showExitOptions() async {

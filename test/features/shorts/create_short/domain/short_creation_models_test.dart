@@ -3,15 +3,24 @@ import 'package:africaonlinestores/features/shorts/create_short/domain/short_cre
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('recording limits match the production design', () {
+  test('recording limits match the backend 10 minute ceiling', () {
     expect(
       ShortRecordingLimit.values.map((value) => value.duration).toList(),
       const <Duration>[
         Duration(seconds: 15),
         Duration(seconds: 60),
-        Duration(minutes: 3),
+        Duration(minutes: 10),
       ],
     );
+    expect(
+      ShortRecordingLimit.values.map((value) => value.label).toList(),
+      const <String>['15s', '60s', '10m'],
+    );
+  });
+
+  test('recorder starts with microphone enabled', () {
+    final state = ShortRecorderState.initial();
+    expect(state.microphoneEnabled, isTrue);
   });
 
   group('trim validation', () {

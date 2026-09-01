@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
 import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/shorts/create_short/application/providers/short_creation_providers.dart';
@@ -153,6 +154,7 @@ class _PostShortMediaPickerScreenState
 
   Widget _errorState(ShortRecorderState state) {
     final isPermission = state.phase == ShortRecorderPhase.permissionDenied;
+    final controller = ref.read(shortRecorderControllerProvider.notifier);
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(28),
@@ -171,25 +173,28 @@ class _PostShortMediaPickerScreenState
               style: const TextStyle(color: Colors.white, fontSize: 17),
             ),
             const SizedBox(height: 20),
+            if (isPermission && state.microphoneEnabled) ...<Widget>[
+              FilledButton.icon(
+                onPressed: controller.toggleMicrophone,
+                icon: const Icon(Icons.mic_off_outlined),
+                label: Text(
+                  'Record without microphone',
+                  style: AppTextStylesX(context).button,
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
             FilledButton(
-              onPressed: () => ref
-                  .read(shortRecorderControllerProvider.notifier)
-                  .initialize(),
-              child: const Text('Retry', style: TextStyle(color: Colors.white)),
+              onPressed: controller.initialize,
+              child: Text('Retry', style: AppTextStylesX(context).button),
             ),
             if (isPermission)
               TextButton(
-                onPressed: () => ref
-                    .read(shortRecorderControllerProvider.notifier)
-                    .openSettings(),
+                onPressed: controller.openSettings,
                 child: const Text('Open settings'),
               ),
             TextButton(
-              onPressed: () async {
-                await ref
-                    .read(shortRecorderControllerProvider.notifier)
-                    .importVideo();
-              },
+              onPressed: controller.importVideo,
               child: const Text('Upload a video instead'),
             ),
           ],
@@ -223,6 +228,7 @@ class _PostShortMediaPickerScreenState
                 _selectedSound.isOriginal ? 'Add sound' : _selectedSound.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+                style: AppTextStylesX(context).button,
               ),
             ),
           ),
@@ -250,6 +256,13 @@ class _PostShortMediaPickerScreenState
             icon: state.flashEnabled ? Icons.flash_on : Icons.flash_off,
             label: 'Flash',
             onPressed: state.isRecording ? null : controller.toggleFlash,
+          ),
+          _verticalAction(
+            icon: state.microphoneEnabled
+                ? Icons.mic_none_rounded
+                : Icons.mic_off_outlined,
+            label: state.microphoneEnabled ? 'Mic' : 'Muted',
+            onPressed: state.isRecording ? null : controller.toggleMicrophone,
           ),
         ],
       ),
@@ -284,36 +297,38 @@ class _PostShortMediaPickerScreenState
                   ),
                 ),
               const SizedBox(height: 12),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: ShortRecordingLimit.values
-                      .map((limit) {
-                        final selected = state.limit == limit;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Semantics(
-                            selected: selected,
-                            button: true,
-                            label: '${limit.label} recording duration',
-                            child: TextButton(
-                              onPressed: state.isRecording
-                                  ? null
-                                  : () => controller.setLimit(limit),
-                              style: TextButton.styleFrom(
-                                backgroundColor: selected ? Colors.white : null,
-                                foregroundColor: selected
-                                    ? Colors.black
-                                    : Colors.white,
-                              ),
-                              child: Text(limit.label),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                children: ShortRecordingLimit.values
+                    .map((limit) {
+                      final selected = state.limit == limit;
+                      return Semantics(
+                        selected: selected,
+                        button: true,
+                        label: '${limit.label} recording duration',
+                        child: TextButton(
+                          onPressed: state.isRecording
+                              ? null
+                              : () => controller.setLimit(limit),
+                          style: TextButton.styleFrom(
+                            backgroundColor: selected
+                                ? Colors.white
+                                : Colors.black38,
+                            foregroundColor: selected
+                                ? Colors.black
+                                : Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
                             ),
+                            visualDensity: VisualDensity.compact,
                           ),
-                        );
-                      })
-                      .toList(growable: false),
-                ),
+                          child: Text(limit.label),
+                        ),
+                      );
+                    })
+                    .toList(growable: false),
               ),
               const SizedBox(height: 10),
               Row(
@@ -365,9 +380,7 @@ class _PostShortMediaPickerScreenState
                     label: 'Upload',
                     onPressed: state.isRecording
                         ? null
-                        : () async {
-                            await controller.importVideo();
-                          },
+                        : controller.importVideo,
                   ),
                 ],
               ),
@@ -400,14 +413,17 @@ class _PostShortMediaPickerScreenState
     required VoidCallback? onPressed,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Column(
         children: <Widget>[
-          IconButton(
+          IconButton.filled(
             tooltip: label,
             onPressed: onPressed,
-            color: Colors.white,
-            icon: Icon(icon, size: 30),
+            style: IconButton.styleFrom(
+              backgroundColor: const Color(0x88000000),
+              foregroundColor: Colors.white,
+            ),
+            icon: Icon(icon, size: 26),
           ),
           Text(
             label,
@@ -503,9 +519,9 @@ class _PostShortMediaPickerScreenState
             const SizedBox(height: 20),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text(
+              child: Text(
                 'Resume draft',
-                style: TextStyle(color: Colors.white),
+                style: AppTextStylesX(context).button,
               ),
             ),
             TextButton(

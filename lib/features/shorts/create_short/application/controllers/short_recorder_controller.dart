@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 abstract interface class ShortPermissionGate {
-  Future<bool> requestCameraAndMicrophone();
+  Future<bool> requestCameraAndMicrophone({required bool microphoneEnabled});
   Future<void> openSettings();
 }
 
@@ -17,11 +17,12 @@ class PluginShortPermissionGate implements ShortPermissionGate {
   const PluginShortPermissionGate();
 
   @override
-  Future<bool> requestCameraAndMicrophone() async {
-    final statuses = await <Permission>[
-      Permission.camera,
-      Permission.microphone,
-    ].request();
+  Future<bool> requestCameraAndMicrophone({
+    required bool microphoneEnabled,
+  }) async {
+    final permissions = <Permission>[Permission.camera];
+    if (microphoneEnabled) permissions.add(Permission.microphone);
+    final statuses = await permissions.request();
     return statuses.values.every((PermissionStatus status) => status.isGranted);
   }
 
@@ -36,7 +37,7 @@ abstract interface class ShortCameraDriver {
   Size? get previewSize;
   bool get isRecording;
   int get cameraCount;
-  Future<void> initialize(int cameraIndex);
+  Future<void> initialize(int cameraIndex, {required bool enableAudio});
   Future<String> startRecording();
   Future<String> stopRecording();
   Future<void> setFlash(bool enabled);
@@ -105,19 +106,30 @@ class ShortRecorderController extends StateNotifier<ShortRecorderState> {
       clearError: true,
     );
     try {
-      final granted = await _permissionGate.requestCameraAndMicrophone();
+      final granted = await _permissionGate.requestCameraAndMicrophone(
+        microphoneEnabled: state.microphoneEnabled,
+      );
       if (_disposed || generation != _operationGeneration) return;
       if (!granted) {
-        if (!_disposed) {
+        // A microphone toggle can re-enter initialization while a muted
+        // camera controller is still active. Release it before exposing the
+        // permission state so the shared camera lease is never stranded.
+        await _cameraDriver.dispose();
+        if (!_disposed && generation == _operationGeneration) {
           state = state.copyWith(
             phase: ShortRecorderPhase.permissionDenied,
-            errorMessage: 'Camera and microphone permission are required.',
+            errorMessage: state.microphoneEnabled
+                ? 'Camera and microphone permission are required.'
+                : 'Camera permission is required.',
           );
         }
         return;
       }
 
-      await _cameraDriver.initialize(state.cameraIndex);
+      await _cameraDriver.initialize(
+        state.cameraIndex,
+        enableAudio: state.microphoneEnabled,
+      );
       if (!_disposed && generation == _operationGeneration) {
         state = state.copyWith(
           phase: ShortRecorderPhase.ready,
@@ -151,6 +163,16 @@ class ShortRecorderController extends StateNotifier<ShortRecorderState> {
   void setLimit(ShortRecordingLimit value) {
     if (state.isRecording || state.isBusy) return;
     state = state.copyWith(limit: value, elapsed: Duration.zero);
+  }
+
+  Future<void> toggleMicrophone() async {
+    if (_operationInProgress || state.isRecording || _disposed) return;
+    state = state.copyWith(
+      microphoneEnabled: !state.microphoneEnabled,
+      flashEnabled: false,
+      clearError: true,
+    );
+    await initialize();
   }
 
   Future<void> toggleRecording() async {

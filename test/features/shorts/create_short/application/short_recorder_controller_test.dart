@@ -25,6 +25,7 @@ void main() {
 
       await controller.initialize();
       expect(controller.state.phase, ShortRecorderPhase.ready);
+      expect(driver.lastEnableAudio, isTrue);
 
       await controller.startRecording();
       await controller.startRecording();
@@ -42,6 +43,24 @@ void main() {
       expect(driver.disposeCalls, 1);
     },
   );
+
+  test('microphone can be disabled before recording', () async {
+    final driver = _FakeCameraDriver(outputPath: '/unused.mp4');
+    final permissionGate = _RecordingPermissionGate();
+    final controller = ShortRecorderController(
+      cameraDriver: driver,
+      videoPicker: const _FakeVideoPicker(),
+      permissionGate: permissionGate,
+    );
+    addTearDown(controller.dispose);
+
+    await controller.initialize();
+    await controller.toggleMicrophone();
+
+    expect(controller.state.microphoneEnabled, isFalse);
+    expect(driver.lastEnableAudio, isFalse);
+    expect(permissionGate.microphoneRequests, <bool>[true, false]);
+  });
 
   test('denied permissions produce an explicit permission state', () async {
     final controller = ShortRecorderController(
@@ -66,6 +85,7 @@ final class _FakeCameraDriver implements ShortCameraDriver {
   int startCalls = 0;
   int stopCalls = 0;
   int disposeCalls = 0;
+  bool? lastEnableAudio;
 
   @override
   Widget? get previewWidget => null;
@@ -86,7 +106,9 @@ final class _FakeCameraDriver implements ShortCameraDriver {
   }
 
   @override
-  Future<void> initialize(int cameraIndex) async {}
+  Future<void> initialize(int cameraIndex, {required bool enableAudio}) async {
+    lastEnableAudio = enableAudio;
+  }
 
   @override
   Future<void> setFlash(bool enabled) async {}
@@ -121,7 +143,9 @@ final class _GrantedPermissionGate implements ShortPermissionGate {
   Future<void> openSettings() async {}
 
   @override
-  Future<bool> requestCameraAndMicrophone() async => true;
+  Future<bool> requestCameraAndMicrophone({
+    required bool microphoneEnabled,
+  }) async => true;
 }
 
 final class _DeniedPermissionGate implements ShortPermissionGate {
@@ -131,5 +155,22 @@ final class _DeniedPermissionGate implements ShortPermissionGate {
   Future<void> openSettings() async {}
 
   @override
-  Future<bool> requestCameraAndMicrophone() async => false;
+  Future<bool> requestCameraAndMicrophone({
+    required bool microphoneEnabled,
+  }) async => false;
+}
+
+final class _RecordingPermissionGate implements ShortPermissionGate {
+  final List<bool> microphoneRequests = <bool>[];
+
+  @override
+  Future<void> openSettings() async {}
+
+  @override
+  Future<bool> requestCameraAndMicrophone({
+    required bool microphoneEnabled,
+  }) async {
+    microphoneRequests.add(microphoneEnabled);
+    return true;
+  }
 }

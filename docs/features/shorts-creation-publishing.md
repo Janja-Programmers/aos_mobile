@@ -2,140 +2,190 @@
 
 ## Scope
 
-This frontend implements the mobile Shorts workflow from camera/import through local editing, drafts, direct media upload, backend processing, and final metadata publication. Backend contracts remain authoritative.
+This document covers the Flutter Shorts creation, upload, metadata-edit, and sound-edit flows. Backend contracts are authoritative; the frontend mirrors limits only for UX and does not own classification, permissions, moderation, or state transitions.
 
 ## Architecture and state ownership
 
-- `ShortRecorderController` owns camera permission, initialization, duration, start/stop, elapsed time, interruption handling, flash, camera switching, and imported media.
-- The plugin recorder adapter owns the `camera` import and holds the shared `shorts` camera lease; gallery import uses `MediaAcquisitionService` and app-owned staging.
-- `ShortEditorController` owns source media, trim range, selected sound, overlays, draft state, unsaved changes, playback, and export progress.
-- `SoundPickerController` and `ShortsSoundsApi` are the single sound-picker path used before recording and from the editor.
-- `ShortDraftRepository` owns typed, versioned local drafts and durable app-owned source media.
-- `PostShortController` owns the post form, media upload, duplicate-submit protection, and transition into publishing.
-- `ShortPublishingCoordinator` owns durable pending publication, processing polling, final metadata application, retry/resume, and cleanup.
-- `ShortMentionsController` owns debounced, paginated friend lookup with stale-response protection.
+- `ShortRecorderController` owns camera permission, camera lifecycle, recording duration, microphone enable/disable, flash, camera switching, elapsed time, and gallery import.
+- `PluginShortCameraDriver` is the camera-package adapter and holds the shared Shorts camera lease. `CameraController(enableAudio: ...)` is recreated when the microphone setting changes.
+- `ShortEditorController` owns trim, overlays, selected sound, draft state, playback, export, and unsaved changes.
+- `PostShortController` owns selected upload media, caption/hashtags, audience, interaction settings, optional product tag, selected sound, duplicate-submit protection, upload progress, cancellation, and Short creation.
+- `MediaUploadCoordinator` remains the shared preparation/upload boundary. Shorts pass truthful duration metadata and request `upload_mode=auto`.
+- `MediaUploadApi` owns direct PUT and resumable multipart transport details.
+- `ShortPublishingCoordinator` owns post-processing polling, final metadata publication, durable pending publication, and cleanup.
+- `ShortsSoundsApi` owns post-publication `change_short_sound` and `remove_short_sound` calls.
 
-Widgets render explicit controller states and do not own backend workflows.
+Widgets render controller state and do not make backend classification decisions.
 
 ## Backend contracts
 
-The client follows the current backend sequence:
+### Media admission and upload
 
-1. Prepare through the shared media coordinator, then initialize a media upload using purpose `short_video_raw` and an idempotency key.
-2. Upload the video directly to the provided MinIO URL while reporting real byte progress.
-3. Confirm the media upload.
-4. Create the Short using the confirmed raw media ID, audience, comment permission, and download permission.
-5. Poll the canonical Short while background video processing runs.
-6. Apply caption, hashtags, content mode, optional ad, audience/interactions, and canonical sound metadata only when the Short becomes playable.
-7. Keep failed/pending work durable for retry or app restart.
+For `purpose=short_video_raw`, the frontend submits:
 
-Stable backend error identifiers are preserved by `unwrapFrappe`; HTTP-successful `{ok: false}` envelopes are treated as failures.
+- `filename`
+- `content_type`
+- exact `size_bytes`
+- real `duration_seconds`
+- `upload_mode=auto`
+- a logical-operation idempotency key
 
-## Recording lifecycle
+The backend accepts up to 300 MiB and 600 seconds. The frontend rejects a missing/non-positive duration and a duration above 600 seconds before transfer, but the backend remains authoritative.
 
-The recorder exposes `initializing`, `ready`, `starting`, `recording`, `stopping`, `recorded`, `permissionDenied`, `unavailable`, and `error` states. Supported design durations are 15 seconds, 60 seconds, and 3 minutes. Progress comes from a `Stopwatch`, recording stops at the selected duration, and duplicate start/stop operations are guarded. Backgrounding stops an active recording and disposes the camera deterministically; resuming reinitializes when appropriate.
+The backend chooses one of two upload modes:
 
-Camera and microphone denial, unavailable camera, initialization error, and import fallback each have a reachable UI state.
+1. `direct`: PUT to the returned whole-object URL, then call `confirm_upload`.
+2. `multipart`: reconcile with `multipart_status`, request bounded part URLs, upload exact byte ranges with bounded parallelism, reconcile again, then call `complete_multipart_upload`. Multipart completion already performs media confirmation.
 
-The recorder UI remains specialized. Its adapter releases the shared camera
-lease whenever the controller disposes it on pause, detach, camera switch
-failure, or route disposal. It does not change Calls lifecycle or native launch
-mode.
+A user cancellation before Short creation cancels the active byte transfer. Multipart cancellation also calls backend abort best-effort. The next explicit retry uses a new logical upload idempotency key after cancellation.
 
-## Sound selection
+### Short creation and sound
 
-The shared picker uses backend sound listing, cursor pagination, search, favorites, custom sound import where supported, canonical sound IDs, and preview playback. Starting a new preview stops the previous one. The selected ID is retained separately from its display title. Shop content accepts only backend-marked commercial-safe sounds; the backend remains authoritative.
+After media upload completes, `create_short` receives the confirmed raw media ID plus audience/comment/download settings. A selected reusable sound is attached at `create_short` time so the backend can include it in the first processing generation rather than forcing a second audio-only processing pass.
 
-## Editor tools
+### Metadata publication and classification
 
-The editor supports:
+After the video becomes playable, `update_short_metadata` receives caption, hashtags, audience, interaction settings, optional `ad_id`, and any required sound metadata. The frontend does **not** send `content_mode` as authoritative input. The backend owns automatic Shop/Geo/Vibes/Learn classification.
 
-- non-destructive start/end trimming with a minimum valid range;
-- shared sound replacement;
-- text overlays with color;
-- emoji/sticker overlays;
-- bottom-centered on-video captions;
-- dragging, scaling, editing, and removal;
-- a bottom-center delete target that deletes only when the drag ends inside its zone;
-- export progress and cancellation.
+A validated owned active `ad_id` is optional seller commerce context. Supplying an empty `ad_id` on an edit explicitly detaches the product. Non-sellers do not see product tagging UI.
 
-Visual overlays are rendered into the exported video. The original source is not mutated.
+Metadata edits can hide the Short and requeue moderation according to backend rules. The frontend does not fabricate a local moderation state.
 
-## Overlay coordinate model
+### Change/remove sound
 
-Overlay centers are stored as normalized `(x, y)` values in `[0, 1]` relative to the visible video canvas. Dragging converts device-space deltas into normalized coordinates and clamps them to safe bounds. Export maps the normalized values to the source video dimensions, so placement remains stable across screen sizes and export resolution.
+Owners with backend permission can:
 
-## Local drafts
+- change sound via `change_short_sound` using canonical sound ID, start offset, duration, and volume;
+- remove sound via `remove_short_sound`.
 
-Draft metadata is a typed `ShortDraft` with an explicit schema version. It stores the durable source path, trim range, canonical sound metadata, overlays, source dimensions/duration, owner ID, and timestamps. Large media bytes are never placed in SharedPreferences.
+When a metadata edit and a new sound are submitted together, the frontend uses `update_short_metadata` with the new sound so backend classification/sound validation and audio reprocessing remain coordinated. Sound removal uses the dedicated remove endpoint.
 
-Source media is copied into application-support storage. Draft lookup is owner-scoped, missing media is removed safely, abandoned drafts are pruned after 30 days, and unsupported schemas are ignored/cleaned rather than interpreted as current data. Draft existence never implies that a Short was published.
+## Recorder UI
 
-## Mentions
+Supported recording limits are:
 
-Typing `@` activates debounced backend friend search. Pagination, loading, empty, error, retry, and stale responses are handled. Selection inserts a safe token at the current cursor and retains the canonical account ID in client state.
+- 15 seconds
+- 60 seconds
+- 10 minutes
 
-Current backend limitation: publication accepts mention tokens parsed from caption text and does not expose a structured mention-ID field. Canonical IDs are retained client-side but cannot be submitted separately until that contract exists. Display names are not treated as identity.
+The recorder exposes a microphone toggle before recording. Turning the microphone off recreates the camera controller with audio disabled, so the recorded video contains no microphone track from the camera plugin. If microphone permission is denied, the user can choose to continue recording without microphone permission.
 
-## Privacy and interactions
+Recorder lifecycle remains deterministic: duplicate start/stop calls are ignored, backgrounding disposes the camera, an active recording is stopped before suspension, and resume reinitializes when appropriate.
 
-Audience values map only to backend-supported values: `everyone`, `followers`, `friends`, and `only_me`. Comment and download permissions are submitted through their backend fields. The design's “Save to device” control is local-only. No unsupported resharing field is fabricated.
+## Editor
 
-## Upload, publishing, and recovery
+The editor preserves the existing trim, text, sticker, caption, drag/scale/delete, playback, draft, and export behaviors. The close action now asks for confirmation before destructive discard. Selected sound controls allow start position, segment duration, volume, and removal.
 
-The progress UI distinguishes preparation, MinIO transfer, confirmation, publishing, processing, ready, and failed states. MinIO transfer progress uses actual sent/total bytes. Duplicate Post taps are blocked.
+Exported media carries the editor-selected duration into `SelectedMedia`; upload therefore uses the measured edited duration instead of fabricating a value later.
 
-After a canonical Short ID exists, a `PendingShortPublication` is persisted before background processing continues. Authenticated startup resumes matching owner jobs. Source/export media and draft files are removed only after metadata publication succeeds.
+## Publish screen
 
-Retry uses the existing canonical Short ID and backend `retry_processing` capability. Cancelling is offered only before a Short ID exists and only cancels the active transfer.
+The publish screen is responsive and keeps the video preview prominent while reducing duplicated controls. It provides:
 
-Known backend limitation: media initialization is idempotent, but `create_short` has no client idempotency field. A connection loss after backend creation but before the response cannot be made perfectly duplicate-safe by the frontend alone.
+- caption and mentions;
+- hashtags;
+- audience;
+- comments/downloads/local-save options;
+- selected sound controls;
+- optional seller product tagging;
+- compact duration/visibility/comment/download badges.
 
-## Errors and offline behavior
+Tapping Post immediately navigates back to Feed while upload continues through the retained upload session provider.
 
-Network, backend-envelope, validation, media, permission, export, processing, and missing-file failures remain explicit. Failed uploads preserve the draft/source for retry. Pending processing survives normal navigation and app restart. No arbitrary delay is used for state coordination; the only delay is bounded backend processing polling.
+## Upload progress UI
+
+Feed shows a compact upload card with:
+
+- current stage;
+- local filename;
+- byte percentage while transferring;
+- determinate/indeterminate progress;
+- Cancel during initialization/transfer;
+- Retry after cancellation/failure;
+- dismiss after transfer is no longer active;
+- ready state that can open the Short detail.
+
+The transfer is not blocked by the publishing screen remaining mounted.
+
+## Metadata editing UI
+
+An owner with `canEdit` gets an Edit Short action on Short detail. The sheet supports:
+
+- caption;
+- hashtags;
+- audience;
+- comments/downloads;
+- sound change/remove and sound controls;
+- optional active product tagging for sellers.
+
+Canonical IDs remain separate from display titles. Stable backend failures are shown to the user without branching on message text.
+
+## Persistence and offline behavior
+
+Draft and pending-publication persistence from the existing implementation are preserved. Processing/publishing can continue after leaving the creation screen.
+
+Current limitation: multipart transport can reconcile and retry parts within the active process, but this patch does not add a new durable multipart-session store for process-death recovery. The backend contract supports durable resume using `media_id` plus a same-file fingerprint; implementing that persistence layer remains a separate production-hardening item if process-death resumability is required before release.
+
+## Security and privacy
+
+- No signed upload URL, multipart upload ID, or part ETag is persisted by this patch.
+- Product ownership/activity and commercial-safe sound rules remain backend-authoritative.
+- Camera and microphone permissions are requested only for the selected recording mode.
+- No backend endpoint, enum, permission, classification rule, or default is invented.
 
 ## Accessibility and responsive behavior
 
-Changed controls include semantics for recording, elapsed time, selected duration, sounds, trim range, overlays, delete target, privacy selection, and publishing progress. Recorder/editor surfaces use SafeArea, scrollable lower controls, bounded video canvases, keyboard-aware sheets, wrapping, and normalized overlays. Device validation must still cover TalkBack/VoiceOver, 200% text scale, RTL, landscape, and smallest supported screens.
+Changed controls use SafeArea, scrollable/keyboard-aware sheets, wrapping duration controls, bounded preview sizes, semantic labels for recording/microphone/edit actions, and live regions for important errors. Device validation should cover TalkBack/VoiceOver, 200% text scale, RTL, small screens, landscape, keyboard-open sheets, light/dark mode, and no RenderFlex overflow.
 
-## Tests
+## Automated tests
 
-Focused tests cover:
+Focused tests in this patch cover:
 
-- Frappe failure-envelope mapping;
-- recording limits and trim validation;
-- overlay, draft, and pending-publication serialization;
-- mention detection and cursor insertion;
-- upload-state defaults and privacy/interactions;
-- existing Shorts feed/share regressions.
+- 15s / 60s / 10m recording limits;
+- microphone-enabled default and microphone toggle contract;
+- recorder duplicate start/stop behavior;
+- upload state no longer requiring client-owned Shop classification;
+- direct and multipart media-contract parsing;
+- existing trim and overlay serialization behavior.
 
-Camera, export, MinIO, and complete navigation remain device/integration checks because they depend on plugins and real media services.
+Existing Shorts tests should also be run because shared media and recorder interfaces changed.
 
 ## Validation
 
-Run from the frontend project root:
+Run from the frontend project root after applying the patch:
 
 ```bash
 flutter pub get
 flutter gen-l10n
 dart format lib test
 dart analyze
-flutter test
-flutter test test/core/api/api_response_test.dart
+flutter test test/core/media/media_upload_result_test.dart
 flutter test test/features/shorts/create_short
 flutter test test/features/shorts
+flutter test
 flutter build apk --debug
 ```
 
-The camera and video-export plugins already belong to the supplied dependency
-graph. This media-boundary migration does not change `pubspec.yaml` or
-`pubspec.lock`.
+Flutter/Dart are not available in the packaging environment used to prepare this patch, so these commands are intentionally left for the device/build environment and are not claimed as passed.
+
+## Device checks
+
+At minimum verify:
+
+- camera with mic on/off, including microphone denied + camera allowed;
+- 15s, 60s, and 10m selection and auto-stop;
+- imported clips near and over 10 minutes;
+- small and large direct uploads;
+- multipart upload over Wi-Fi/mobile-data changes;
+- cancel then retry;
+- background/foreground during upload;
+- selected sound, sound trim/volume, remove/change sound;
+- seller and non-seller publish screens;
+- attach/detach active product;
+- metadata edit and re-moderation behavior;
+- small screen, landscape, keyboard open, RTL, 200% text scale, light/dark mode;
+- no overflow/clipped actions.
 
 ## Delivery and rollback
 
-This migration changes Dart, tests, and documentation only and is therefore a
-**Shorebird OTA candidate**, subject to analyzer, test, and device validation on
-the exact release baseline. Draft and pending-publication files remain versioned
-and can be ignored safely by an older build, but rolling back during an active
-local edit can leave app-support media for later pruning.
+No dependency, SDK, permission, native platform, asset, or storage-schema change is included. This is a **Shorebird OTA candidate**, subject to analyzer/test/device validation against the exact release baseline.

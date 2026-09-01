@@ -16,7 +16,8 @@ class ShortUploadProgressBanner extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final state = ref.watch(postShortControllerProvider(sessionId));
+    final provider = postShortControllerProvider(sessionId);
+    final state = ref.watch(provider);
     if (state.status == UploadStatus.idle ||
         state.status == UploadStatus.picked) {
       return const SizedBox.shrink();
@@ -25,90 +26,140 @@ class ShortUploadProgressBanner extends ConsumerWidget {
     final colors = context.appColors;
     final isDone = state.status == UploadStatus.ready;
     final isFailed = state.status == UploadStatus.failed;
-    final progress = state.status == UploadStatus.uploading
+    final isUploading = state.status == UploadStatus.uploading;
+    final canCancel = state.status == UploadStatus.initializing || isUploading;
+    final transferActive = canCancel || state.status == UploadStatus.confirming;
+    final filename = _filename(state);
+    final progress = isUploading
         ? state.progress.clamp(0.0, 1.0).toDouble()
-        : state.status == UploadStatus.publishing ||
-              state.status == UploadStatus.processing
-        ? null
         : isDone
         ? 1.0
-        : 0.0;
+        : null;
 
     return SafeArea(
       bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-        child: Material(
-          elevation: 8,
-          borderRadius: BorderRadius.circular(16),
-          color: colors.surface,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: isDone && state.shortId != null
-                ? () {
-                    ShortsNavigation.toShortDetailById(
-                      context,
-                      shortId: state.shortId!.value,
-                    );
-                  }
-                : null,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: isFailed
-                        ? Colors.red.withValues(alpha: .12)
-                        : colors.primary.withValues(alpha: .12),
-                    child: Icon(
-                      isDone
-                          ? Icons.check_rounded
-                          : isFailed
-                          ? Icons.error_outline_rounded
-                          : Icons.video_library_outlined,
-                      color: isFailed ? Colors.red : colors.primary,
-                    ),
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+            child: Material(
+              elevation: 12,
+              borderRadius: BorderRadius.circular(20),
+              color: colors.surface,
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: isDone && state.shortId != null
+                    ? () => ShortsNavigation.toShortDetailById(
+                        context,
+                        shortId: state.shortId!.value,
+                      )
+                    : null,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      _StatusDisc(
+                        progress: progress,
+                        isDone: isDone,
+                        isFailed: isFailed,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Text(
+                              _titleFor(state),
+                              style: context.pStrong.copyWith(
+                                color: isDone
+                                    ? colors.success
+                                    : isFailed
+                                    ? Theme.of(context).colorScheme.error
+                                    : null,
+                              ),
+                            ),
+                            if (filename.isNotEmpty) ...<Widget>[
+                              const SizedBox(height: 2),
+                              Text(
+                                filename,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.p.copyWith(
+                                  color: colors.textMuted,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 8),
+                            LinearProgressIndicator(
+                              value: progress,
+                              minHeight: 5,
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                            if (canCancel) ...<Widget>[
+                              const SizedBox(height: 6),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: const Size(48, 32),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                onPressed: () =>
+                                    ref.read(provider.notifier).cancelUpload(),
+                                child: const Text('Cancel upload'),
+                              ),
+                            ] else if (isFailed) ...<Widget>[
+                              const SizedBox(height: 6),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: const Size(48, 32),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                onPressed: state.shortId != null
+                                    ? () => ref
+                                          .read(provider.notifier)
+                                          .retryProcessingCurrent()
+                                    : () =>
+                                          ref.read(provider.notifier).upload(),
+                                child: Text(
+                                  state.shortId != null
+                                      ? 'Retry'
+                                      : 'Retry upload',
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: isDone
+                            ? 'Dismiss upload complete message'
+                            : 'Dismiss upload message',
+                        onPressed: transferActive
+                            ? null
+                            : () {
+                                ref
+                                        .read(
+                                          activeShortUploadSessionProvider
+                                              .notifier,
+                                        )
+                                        .state =
+                                    null;
+                              },
+                        icon: Icon(
+                          Icons.close_rounded,
+                          color: colors.textMuted,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_titleFor(state), style: context.pStrong),
-                        const SizedBox(height: 5),
-                        if (progress == null)
-                          const LinearProgressIndicator(minHeight: 4)
-                        else
-                          LinearProgressIndicator(
-                            value: progress,
-                            minHeight: 4,
-                          ),
-                      ],
-                    ),
-                  ),
-                  if (isFailed && state.shortId != null)
-                    TextButton(
-                      onPressed: () {
-                        ref
-                            .read(
-                              postShortControllerProvider(sessionId).notifier,
-                            )
-                            .retryProcessingCurrent();
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  IconButton(
-                    tooltip: 'Dismiss upload message',
-                    onPressed: () {
-                      ref
-                              .read(activeShortUploadSessionProvider.notifier)
-                              .state =
-                          null;
-                    },
-                    icon: Icon(Icons.close_rounded, color: colors.textMuted),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -117,25 +168,86 @@ class ShortUploadProgressBanner extends ConsumerWidget {
     );
   }
 
-  String _titleFor(UploadState state) {
+  static String _filename(UploadState state) {
+    final path = state.primaryMedia?.file.path.trim() ?? '';
+    if (path.isEmpty) return '';
+    final normalized = path.replaceAll('\\', '/');
+    return normalized.split('/').last;
+  }
+
+  static String _titleFor(UploadState state) {
     switch (state.status) {
       case UploadStatus.initializing:
-        return 'Preparing short...';
+        return 'Preparing upload…';
       case UploadStatus.uploading:
-        return 'Uploading ${(state.progress * 100).clamp(0, 100).round()}%';
+        return 'Uploading… ${(state.progress * 100).clamp(0, 100).round()}%';
       case UploadStatus.confirming:
-        return 'Confirming upload...';
+        return 'Completing upload…';
       case UploadStatus.publishing:
-        return 'Publishing short...';
       case UploadStatus.processing:
-        return 'Processing video...';
+        return 'Uploaded. Finishing your Short…';
       case UploadStatus.ready:
-        return 'Short is ready — tap to view';
+        return 'Uploaded. Your Short is being reviewed.';
       case UploadStatus.failed:
-        return state.errorMessage ?? 'Short upload failed';
+        return state.errorMessage ?? 'Your Short could not be posted.';
       case UploadStatus.idle:
       case UploadStatus.picked:
         return 'Short selected';
     }
+  }
+}
+
+class _StatusDisc extends StatelessWidget {
+  const _StatusDisc({
+    required this.progress,
+    required this.isDone,
+    required this.isFailed,
+  });
+
+  final double? progress;
+  final bool isDone;
+  final bool isFailed;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    if (isDone) {
+      return SizedBox.square(
+        dimension: 48,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: scheme.primary.withValues(alpha: .10),
+          ),
+          child: Icon(
+            Icons.check_circle_outline_rounded,
+            color: scheme.primary,
+          ),
+        ),
+      );
+    }
+    if (isFailed) {
+      return SizedBox.square(
+        dimension: 48,
+        child: Icon(Icons.error_outline_rounded, color: scheme.error, size: 34),
+      );
+    }
+    final value = progress;
+    return SizedBox.square(
+      dimension: 48,
+      child: Stack(
+        alignment: Alignment.center,
+        children: <Widget>[
+          CircularProgressIndicator(value: value, strokeWidth: 3),
+          if (value != null)
+            Text(
+              '${(value * 100).clamp(0, 100).round()}%',
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
+            )
+          else
+            const Icon(Icons.upload_rounded, size: 20),
+        ],
+      ),
+    );
   }
 }

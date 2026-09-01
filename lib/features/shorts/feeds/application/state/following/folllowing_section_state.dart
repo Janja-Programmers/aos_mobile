@@ -32,24 +32,29 @@ class FollowingSectionState {
 
 class SellerSuggestion {
   final String sellerId;
-  final String shopName;
+  final String displayName;
   final String? avatar;
   final int totalFollowers;
   final bool isFollowing;
 
   const SellerSuggestion({
     required this.sellerId,
-    required this.shopName,
+    required this.displayName,
     required this.avatar,
     required this.totalFollowers,
     required this.isFollowing,
   });
 
   factory SellerSuggestion.fromJson(Map<String, dynamic> json) {
+    final rawDisplayName = json['display_name']?.toString().trim() ?? '';
+
     return SellerSuggestion(
-      sellerId: json['seller'] as String? ?? '',
-      shopName: json['shop_name'] as String? ?? 'Seller',
-      avatar: json['avatar'] as String?,
+      sellerId:
+          json['seller']?.toString().trim() ??
+          json['seller_id']?.toString().trim() ??
+          '',
+      displayName: rawDisplayName.isEmpty ? 'AOS User' : rawDisplayName,
+      avatar: json['avatar']?.toString(),
       totalFollowers: (json['total_followers'] as num?)?.toInt() ?? 0,
       isFollowing: json['is_following'] == true,
     );
@@ -59,14 +64,14 @@ class SellerSuggestion {
 
   SellerSuggestion copyWith({
     String? sellerId,
-    String? shopName,
+    String? displayName,
     String? avatar,
     int? totalFollowers,
     bool? isFollowing,
   }) {
     return SellerSuggestion(
       sellerId: sellerId ?? this.sellerId,
-      shopName: shopName ?? this.shopName,
+      displayName: displayName ?? this.displayName,
       avatar: avatar ?? this.avatar,
       totalFollowers: totalFollowers ?? this.totalFollowers,
       isFollowing: isFollowing ?? this.isFollowing,
@@ -74,7 +79,7 @@ class SellerSuggestion {
   }
 
   String get initials {
-    final clean = shopName.trim();
+    final clean = displayName.trim();
     if (clean.isEmpty) return '?';
 
     final parts = clean.split(RegExp(r'\s+'));

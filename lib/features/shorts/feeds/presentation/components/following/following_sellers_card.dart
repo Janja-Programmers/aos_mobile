@@ -33,13 +33,13 @@ class FollowingSellerCard extends StatelessWidget {
       child: Column(
         children: [
           Align(
-            alignment: Alignment.topRight,
+            alignment: AlignmentDirectional.topEnd,
             child: GestureDetector(
               onTap: onDismiss,
-              child: Icon(
-                Icons.close,
-                size: 16,
-                color: colors.black.withValues(alpha: .65),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Icon(Icons.close, size: 16, color: colors.textMuted),
               ),
             ),
           ),
@@ -65,9 +65,10 @@ class FollowingSellerCard extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            seller.shopName,
+            seller.displayName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: context.pStrong,
           ),
           const SizedBox(height: 3),
@@ -78,19 +79,25 @@ class FollowingSellerCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const Spacer(),
-          SizedBox(
-            width: double.infinity,
+          Center(
             child: ElevatedButton(
               onPressed: onFollowTap,
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.primary,
+                minimumSize: const Size(96, 40),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                tapTargetSize: MaterialTapTargetSize.padded,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(99),
                   side: BorderSide(color: colors.primary),
                 ),
                 elevation: 0,
               ),
-              child: Text('Follow', style: AppTextStylesX(context).button),
+              child: Text(
+                'Follow',
+                maxLines: 1,
+                style: AppTextStylesX(context).button.copyWith(fontSize: 12),
+              ),
             ),
           ),
         ],

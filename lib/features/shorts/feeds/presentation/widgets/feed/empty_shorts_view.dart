@@ -1,11 +1,14 @@
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/shorts/feeds/application/state/shorts_feed_type.dart';
+import 'package:africaonlinestores/features/shorts/feeds/presentation/feed_l10n.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
 class EmptyShortsView extends StatelessWidget {
   final ShortsFeedType feedType;
   final String? categoryLabel;
+  final bool hasCategoryFilter;
   final Future<void> Function() onRefresh;
 
   const EmptyShortsView({
@@ -13,14 +16,14 @@ class EmptyShortsView extends StatelessWidget {
     required this.feedType,
     required this.onRefresh,
     this.categoryLabel,
+    this.hasCategoryFilter = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
-    final title = _title;
-    final message = _message;
+    final title = _title(context);
+    final message = _message(context);
 
     return RefreshIndicator(
       onRefresh: onRefresh,
@@ -28,93 +31,82 @@ class EmptyShortsView extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         children: [
-          const SizedBox(height: 130),
-
-          Container(
-            width: 82,
-            height: 82,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colors.primary.withValues(alpha: .08),
+          const SizedBox(height: 96),
+          Semantics(
+            liveRegion: true,
+            child: Column(
+              children: [
+                Container(
+                  width: 82,
+                  height: 82,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colors.primary.withValues(alpha: .08),
+                  ),
+                  child: Icon(_icon, size: 36, color: colors.primary),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: context.h5.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: context.pMuted.copyWith(height: 1.35),
+                ),
+              ],
             ),
-            child: Icon(_icon, size: 36, color: colors.primary),
           ),
-
           const SizedBox(height: 18),
-
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: context.h5.copyWith(
-              fontWeight: FontWeight.w800,
-              color: colors.textPrimary,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: context.pMuted.copyWith(height: 1.35),
-          ),
-
-          const SizedBox(height: 18),
-
           Center(
             child: OutlinedButton.icon(
               onPressed: onRefresh,
               icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Refresh'),
+              label: Text(context.l10n.feedRefresh),
             ),
           ),
+          const SizedBox(height: 48),
         ],
       ),
     );
   }
 
   IconData get _icon {
-    switch (feedType) {
-      case ShortsFeedType.forYou:
-        return Icons.play_circle_outline_rounded;
-      case ShortsFeedType.following:
-        return Icons.people_outline_rounded;
-      case ShortsFeedType.live:
-        return Icons.sensors_rounded;
-    }
+    return switch (feedType) {
+      ShortsFeedType.forYou => Icons.play_circle_outline_rounded,
+      ShortsFeedType.following => Icons.people_outline_rounded,
+      ShortsFeedType.live => Icons.sensors_rounded,
+    };
   }
 
-  String get _title {
-    final category = categoryLabel?.trim();
-
-    if (category != null && category.isNotEmpty && category != 'All') {
-      return 'No $category shorts yet';
+  String _title(BuildContext context) {
+    final category = categoryLabel?.trim() ?? '';
+    if (hasCategoryFilter && category.isNotEmpty) {
+      return context.l10n.feedNoCategoryShortsTitle(category);
     }
 
-    switch (feedType) {
-      case ShortsFeedType.forYou:
-        return 'No shorts yet';
-      case ShortsFeedType.following:
-        return 'No following shorts yet';
-      case ShortsFeedType.live:
-        return 'No live yet';
-    }
+    return switch (feedType) {
+      ShortsFeedType.forYou => context.l10n.feedNoShortsTitle,
+      ShortsFeedType.following => context.l10n.feedNoFollowingShortsTitle,
+      ShortsFeedType.live => context.l10n.feedNoLivesTitle,
+    };
   }
 
-  String get _message {
-    final category = categoryLabel?.trim();
-
-    if (category != null && category.isNotEmpty && category != 'All') {
-      return 'There are no shorts in this category right now. Pull down or tap refresh to check again.';
+  String _message(BuildContext context) {
+    if (hasCategoryFilter) {
+      return context.l10n.feedNoCategoryShortsMessage;
     }
 
-    switch (feedType) {
-      case ShortsFeedType.forYou:
-        return 'Fresh shorts will appear here when creators start posting.';
-      case ShortsFeedType.following:
-        return 'Follow creators and shops to see their latest shorts here.';
-      case ShortsFeedType.live:
-        return 'Live content will appear here when creators go live.';
-    }
+    return switch (feedType) {
+      ShortsFeedType.forYou => context.l10n.feedNoShortsMessage,
+      ShortsFeedType.following => context.l10n.feedNoFollowingShortsMessage,
+      ShortsFeedType.live => context.l10n.feedNoLivesMessage,
+    };
   }
 }

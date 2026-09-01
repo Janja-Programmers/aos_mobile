@@ -8,6 +8,8 @@ class ShortThumbnail extends StatelessWidget {
   final BoxFit fit;
   final double? height;
   final bool showGradient;
+  final Color? fallbackBackgroundColor;
+  final IconData fallbackIcon;
 
   const ShortThumbnail({
     super.key,
@@ -15,11 +17,14 @@ class ShortThumbnail extends StatelessWidget {
     this.fit = BoxFit.contain,
     this.height,
     this.showGradient = false,
+    this.fallbackBackgroundColor,
+    this.fallbackIcon = Icons.video_library_outlined,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final fallbackColor = fallbackBackgroundColor ?? colors.surface;
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
@@ -39,7 +44,11 @@ class ShortThumbnail extends StatelessWidget {
           fit: StackFit.passthrough,
           children: [
             imageUrl.trim().isEmpty
-                ? _Fallback(height: height)
+                ? _Fallback(
+                    height: height,
+                    backgroundColor: fallbackColor,
+                    icon: fallbackIcon,
+                  )
                 : CachedNetworkImage(
                     imageUrl: imageUrl,
                     fit: fit,
@@ -47,11 +56,16 @@ class ShortThumbnail extends StatelessWidget {
                     height: height,
                     memCacheWidth: decodeSize.width,
                     memCacheHeight: decodeSize.height,
-                    placeholder: (context, url) => _Placeholder(height: height),
-                    errorWidget: (context, url, error) =>
-                        _Fallback(height: height),
+                    placeholder: (context, url) => _Placeholder(
+                      height: height,
+                      backgroundColor: fallbackColor,
+                    ),
+                    errorWidget: (context, url, error) => _Fallback(
+                      height: height,
+                      backgroundColor: fallbackColor,
+                      icon: fallbackIcon,
+                    ),
                   ),
-
             if (showGradient)
               Positioned.fill(
                 child: IgnorePointer(
@@ -85,8 +99,9 @@ class ShortThumbnail extends StatelessWidget {
 
 class _Placeholder extends StatelessWidget {
   final double? height;
+  final Color backgroundColor;
 
-  const _Placeholder({required this.height});
+  const _Placeholder({required this.height, required this.backgroundColor});
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +110,7 @@ class _Placeholder extends StatelessWidget {
     return Container(
       height: height ?? 180,
       width: double.infinity,
-      color: colors.surface,
+      color: backgroundColor,
       child: Center(
         child: SizedBox(
           width: 18,
@@ -112,8 +127,14 @@ class _Placeholder extends StatelessWidget {
 
 class _Fallback extends StatelessWidget {
   final double? height;
+  final Color backgroundColor;
+  final IconData icon;
 
-  const _Fallback({required this.height});
+  const _Fallback({
+    required this.height,
+    required this.backgroundColor,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -122,12 +143,8 @@ class _Fallback extends StatelessWidget {
     return Container(
       height: height ?? 180,
       width: double.infinity,
-      color: colors.surface,
-      child: Icon(
-        Icons.video_library_outlined,
-        color: colors.textMuted,
-        size: 30,
-      ),
+      color: backgroundColor,
+      child: Icon(icon, color: colors.textMuted, size: 30),
     );
   }
 }

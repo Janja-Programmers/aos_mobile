@@ -37,18 +37,18 @@ class _FallbackAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-
     final initial = text.trim().isEmpty ? '?' : text.trim()[0].toUpperCase();
 
-    return Container(
-      color: colors.white,
-      alignment: Alignment.center,
-      child: Text(
-        initial,
-        style: TextStyle(
-          color: colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: 20,
+    return ColoredBox(
+      color: colors.primary.withValues(alpha: .12),
+      child: Center(
+        child: Text(
+          initial,
+          style: TextStyle(
+            color: colors.primary,
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+          ),
         ),
       ),
     );

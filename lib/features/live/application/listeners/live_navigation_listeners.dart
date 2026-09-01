@@ -33,43 +33,30 @@ class _LiveNavigationListenerState
       previous,
       next,
     ) {
-      if (previous == next) return;
+      // This listener owns only the automatic host entry after Start succeeds.
+      // LiveScreen owns every exit so host analytics can remain visible until
+      // Done and viewer/notification routes can return to their origin.
+      if (previous == next || !next) return;
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        _handleNavigation(shouldShowLive: next);
+        _openLiveScreenIfNeeded();
       });
     });
 
     return widget.child;
   }
 
-  void _handleNavigation({required bool shouldShowLive}) {
+  void _openLiveScreenIfNeeded() {
     if (_isNavigating) return;
 
     final router = ref.read(appRouterProvider);
     final currentLocation = router.state.matchedLocation;
-
     final isOnLiveScreen = currentLocation.contains(AppRoutes.liveRoom);
+    if (isOnLiveScreen) return;
 
-    // 👉 ENTER LIVE
-    if (shouldShowLive && !isOnLiveScreen) {
-      _isNavigating = true;
-
-      router.goNamed(AppRoutes.nLiveRoom);
-
-      _isNavigating = false;
-
-      return;
-    }
-
-    // 👉 EXIT LIVE
-    if (!shouldShowLive && isOnLiveScreen) {
-      _isNavigating = true;
-
-      router.goNamed(AppRoutes.nHome);
-
-      _isNavigating = false;
-    }
+    _isNavigating = true;
+    router.goNamed(AppRoutes.nLiveRoom);
+    _isNavigating = false;
   }
 }

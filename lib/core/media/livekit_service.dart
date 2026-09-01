@@ -7,18 +7,40 @@ import 'package:africaonlinestores/core/media/livekit_track_events.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
 
-class LiveKitViewerParticipant {
+class LiveKitAudienceParticipant {
+  const LiveKitAudienceParticipant({
+    required this.livekitIdentity,
+    required this.accountId,
+    required this.displayName,
+    required this.avatar,
+    required this.role,
+    required this.isGuest,
+  });
+
   final String livekitIdentity;
-  final String accountId;
+  final String? accountId;
   final String displayName;
   final String? avatar;
+  final String role;
+  final bool isGuest;
 
+  bool get isCohost => role == 'cohost';
+  bool get canOpenProfile =>
+      !isGuest && (accountId?.toUpperCase().startsWith('ACC-') ?? false);
+}
+
+class LiveKitViewerParticipant {
   const LiveKitViewerParticipant({
     required this.livekitIdentity,
     required this.accountId,
     required this.displayName,
     this.avatar,
   });
+
+  final String livekitIdentity;
+  final String accountId;
+  final String displayName;
+  final String? avatar;
 }
 
 class LiveKitService {
@@ -26,7 +48,15 @@ class LiveKitService {
   void Function()? _roomEventsCancel;
 
   final _controller = StreamController<MediaTrackEvent>.broadcast();
+  final _audienceController =
+      StreamController<List<LiveKitAudienceParticipant>>.broadcast();
+
   Stream<MediaTrackEvent> get events => _controller.stream;
+
+  Stream<List<LiveKitAudienceParticipant>> watchAudienceParticipants() async* {
+    yield getAudienceParticipants();
+    yield* _audienceController.stream;
+  }
 
   void emitCurrentTracks() {
     _emitExistingLocalVideoTrack();
@@ -55,8 +85,8 @@ class LiveKitService {
       await _room!.connect(wsUrl, token);
 
       _listen();
-
       _controller.add(const RoomConnectedEvent());
+      _emitAudienceParticipants();
 
       return _room!;
     } catch (e, s) {
@@ -80,6 +110,7 @@ class LiveKitService {
 
       _controller.add(const TrackClearedEvent());
       _controller.add(const RoomDisconnectedEvent());
+      _emitAudienceParticipants();
 
       if (!silent) {
         appLogger.i('👋 LiveKit disconnected');
@@ -114,6 +145,12 @@ class LiveKitService {
         }
       }
 
+      if (event is lk.ParticipantConnectedEvent ||
+          event is lk.ParticipantDisconnectedEvent ||
+          event is lk.ParticipantMetadataUpdatedEvent) {
+        _emitAudienceParticipants();
+      }
+
       if (event is lk.RoomDisconnectedEvent) {
         _controller.add(const RoomDisconnectedEvent());
       }
@@ -125,6 +162,7 @@ class LiveKitService {
       if (event is lk.RoomReconnectedEvent) {
         _controller.add(const RoomReconnectedEvent());
         emitCurrentTracks();
+        _emitAudienceParticipants();
       }
     });
 
@@ -182,9 +220,6 @@ class LiveKitService {
     await lk.AudioManager.instance.setSpeakerOutputPreferred(enabled);
   }
 
-  /// Configures LiveKit for an external telephony owner such as iOS CallKit.
-  /// `setEngineAvailability` is documented as an Apple-only no-op elsewhere,
-  /// so this remains safe for Android while Android keeps automatic routing.
   Future<void> prepareExternalCallAudioLifecycle() async {
     if (!_externalCallAudioConfigured) {
       await lk.AudioManager.instance.setAudioSessionManagementMode(
@@ -200,8 +235,6 @@ class LiveKitService {
     }
   }
 
-  /// Gates the WebRTC audio engine to CallKit's didActivate/didDeactivate
-  /// window on Apple platforms. The LiveKit API is a no-op elsewhere.
   Future<void> setExternalCallAudioSessionActive(bool active) async {
     if (!_externalCallAudioConfigured) {
       await lk.AudioManager.instance.setAudioSessionManagementMode(
@@ -253,11 +286,9 @@ class LiveKitService {
       }
 
       final currentDeviceId = track.currentOptions.deviceId;
-
       final currentIndex = cameras.indexWhere(
         (camera) => camera.deviceId == currentDeviceId,
       );
-
       final nextIndex = (currentIndex + 1) % cameras.length;
       final nextCamera = cameras[nextIndex];
 
@@ -272,54 +303,102 @@ class LiveKitService {
     }
   }
 
-  List<LiveKitViewerParticipant> getViewerParticipants() {
+  /// Returns the privacy-safe, room-local audience roster that the backend
+  /// embedded in the signed LiveKit token metadata. The host is excluded,
+  /// while viewers, co-hosts, and guests are retained for the viewer sheet.
+  List<LiveKitAudienceParticipant> getAudienceParticipants() {
     final room = _room;
-    if (room == null) return const [];
+    if (room == null) return const <LiveKitAudienceParticipant>[];
 
-    final participants = <LiveKitViewerParticipant>[];
+    final participants = <LiveKitAudienceParticipant>[];
     final seen = <String>{};
 
     for (final participant in room.remoteParticipants.values) {
-      final parsed = _parseViewerParticipant(
+      final parsed = _parseAudienceParticipant(
         identity: participant.identity,
         metadata: participant.metadata,
+        participantName: participant.name,
       );
-
-      if (parsed == null) continue;
-      if (!seen.add(parsed.livekitIdentity)) continue;
-
-      participants.add(parsed);
+      if (parsed != null && seen.add(parsed.livekitIdentity)) {
+        participants.add(parsed);
+      }
     }
 
-    participants.sort((a, b) => a.displayName.compareTo(b.displayName));
+    final local = room.localParticipant;
+    if (local != null) {
+      final parsed = _parseAudienceParticipant(
+        identity: local.identity,
+        metadata: local.metadata,
+        participantName: local.name,
+      );
+      if (parsed != null && seen.add(parsed.livekitIdentity)) {
+        participants.add(parsed);
+      }
+    }
 
-    return participants;
+    participants.sort(
+      (left, right) => left.displayName.toLowerCase().compareTo(
+        right.displayName.toLowerCase(),
+      ),
+    );
+    return List<LiveKitAudienceParticipant>.unmodifiable(participants);
   }
 
-  LiveKitViewerParticipant? _parseViewerParticipant({
+  /// Eligible co-host invite candidates remain the narrower signed-in viewer
+  /// subset. This preserves the existing co-host security contract.
+  List<LiveKitViewerParticipant> getViewerParticipants() {
+    return getAudienceParticipants()
+        .where(
+          (participant) =>
+              participant.role == 'viewer' &&
+              !participant.isGuest &&
+              participant.accountId != null,
+        )
+        .map(
+          (participant) => LiveKitViewerParticipant(
+            livekitIdentity: participant.livekitIdentity,
+            accountId: participant.accountId!,
+            displayName: participant.displayName,
+            avatar: participant.avatar,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  LiveKitAudienceParticipant? _parseAudienceParticipant({
     required String identity,
     required String? metadata,
+    required String participantName,
   }) {
     final metadataMap = _decodeMetadata(metadata);
-    final role = metadataMap['role']?.toString().trim().toLowerCase();
-    final isGuest = _metadataBool(metadataMap['is_guest']);
+    final role = metadataMap['role']?.toString().trim().toLowerCase() ?? '';
+    if (role == 'host') return null;
+    if (role != 'viewer' && role != 'cohost') return null;
+    if (!identity.startsWith('aos:participant:')) return null;
 
-    if (role != 'viewer') return null;
-    if (isGuest) return null;
+    final rawAccountId = metadataMap['account_id']?.toString().trim() ?? '';
+    final accountId = rawAccountId.toUpperCase().startsWith('ACC-')
+        ? rawAccountId.toUpperCase()
+        : null;
+    final isGuest = _metadataBool(metadataMap['is_guest']) || accountId == null;
+    final metadataName = metadataMap['display_name']?.toString().trim() ?? '';
+    final safeParticipantName = participantName.trim();
+    final displayName = metadataName.isNotEmpty
+        ? metadataName
+        : safeParticipantName.isNotEmpty
+        ? safeParticipantName
+        : isGuest
+        ? 'Guest viewer'
+        : 'AOS viewer';
+    final avatarValue = metadataMap['avatar']?.toString().trim() ?? '';
 
-    final accountId = metadataMap['account_id']?.toString().trim() ?? '';
-    if (!identity.startsWith('aos:participant:') || accountId.isEmpty) {
-      return null;
-    }
-
-    final displayName = metadataMap['display_name']?.toString().trim();
-    final avatar = metadataMap['avatar']?.toString().trim();
-
-    return LiveKitViewerParticipant(
+    return LiveKitAudienceParticipant(
       livekitIdentity: identity,
       accountId: accountId,
-      displayName: displayName?.isNotEmpty ?? false ? displayName! : accountId,
-      avatar: avatar?.isNotEmpty ?? false ? avatar : null,
+      displayName: displayName,
+      avatar: avatarValue.isEmpty ? null : avatarValue,
+      role: role,
+      isGuest: isGuest,
     );
   }
 
@@ -340,6 +419,11 @@ class LiveKitService {
     } on Object {
       return const {};
     }
+  }
+
+  void _emitAudienceParticipants() {
+    if (_audienceController.isClosed) return;
+    _audienceController.add(getAudienceParticipants());
   }
 
   void _emitExistingLocalVideoTrack() {
@@ -374,6 +458,7 @@ class LiveKitService {
   Future<void> dispose() async {
     await disconnect(silent: true);
     await restoreAutomaticAudioLifecycle();
+    await _audienceController.close();
     await _controller.close();
   }
 }

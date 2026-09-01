@@ -21,9 +21,12 @@ class LiveMediaService {
   lk.LocalVideoTrack? _ownedVideoTrack;
   MediaCameraLease? _cameraLease;
   bool _videoTrackPublished = false;
+  lk.CameraPosition? _cameraPosition;
   Future<void> _cameraTransitionTail = Future<void>.value();
 
   Stream<MediaTrackEvent> get events => liveKit.events;
+  Stream<List<LiveKitAudienceParticipant>> get audienceParticipants =>
+      liveKit.watchAudienceParticipants();
   lk.LocalVideoTrack? get preparedVideoTrack => _ownedVideoTrack;
 
   Future<lk.LocalVideoTrack> prepareCamera({required bool frontCamera}) {
@@ -52,6 +55,9 @@ class LiveMediaService {
       );
       _ownedVideoTrack = track;
       _videoTrackPublished = false;
+      _cameraPosition = frontCamera
+          ? lk.CameraPosition.front
+          : lk.CameraPosition.back;
       return track;
     } on Object {
       _cameraLease?.release();
@@ -119,6 +125,7 @@ class LiveMediaService {
     final track = _ownedVideoTrack;
     _ownedVideoTrack = null;
     _videoTrackPublished = false;
+    _cameraPosition = null;
     try {
       await track?.stop();
     } finally {
@@ -166,14 +173,38 @@ class LiveMediaService {
     if (cameras.length < 2) return false;
 
     final currentOptions = ownedTrack.currentOptions;
-    final currentPosition = currentOptions is lk.CameraCaptureOptions
-        ? currentOptions.cameraPosition
-        : lk.CameraPosition.front;
+    final currentDeviceId = currentOptions is lk.CameraCaptureOptions
+        ? currentOptions.deviceId
+        : null;
+    final currentIndex = cameras.indexWhere(
+      (camera) => camera.deviceId == currentDeviceId,
+    );
+    final nextIndex = currentIndex < 0
+        ? 0
+        : (currentIndex + 1) % cameras.length;
+    final nextCamera = cameras[nextIndex];
+    final currentPosition =
+        _cameraPosition ??
+        (currentOptions is lk.CameraCaptureOptions
+            ? currentOptions.cameraPosition
+            : lk.CameraPosition.front);
     final nextPosition = currentPosition == lk.CameraPosition.front
         ? lk.CameraPosition.back
         : lk.CameraPosition.front;
 
+    // A prepared Go Live preview has no RTCRtpSender yet. LiveKit's normal
+    // restartTrack/setCameraPosition path requires a sender and therefore
+    // throws before publication. Fast switch delegates to flutter_webrtc's
+    // native camera switch while retaining the same LocalVideoTrack so the
+    // preview can be published unchanged when Start succeeds.
+    if (!_videoTrackPublished) {
+      await ownedTrack.switchCamera(nextCamera.deviceId, fastSwitch: true);
+      _cameraPosition = nextPosition;
+      return true;
+    }
+
     await ownedTrack.setCameraPosition(nextPosition);
+    _cameraPosition = nextPosition;
     return true;
   }
 
@@ -187,6 +218,10 @@ class LiveMediaService {
       }
     });
     return completer.future;
+  }
+
+  List<LiveKitAudienceParticipant> getAudienceParticipants() {
+    return liveKit.getAudienceParticipants();
   }
 
   List<LiveKitViewerParticipant> getViewerParticipants() {

@@ -117,19 +117,10 @@ class LiveApi {
       );
       final unwrapped = unwrapFrappe(response);
 
-      return unwrapped.fold(Either.left, (payload) {
-        final data = asJsonMap(payload['data']);
-        final rawLive = data['live'];
-        if (rawLive is! Map<Object?, Object?>) {
-          return Either.left(
-            const Failure(
-              'Invalid Live detail response.',
-              type: FailureType.parse,
-            ),
-          );
-        }
-        return Either.right(mapLiveStream(asJsonMap(rawLive)));
-      });
+      return unwrapped.fold(
+        Either.left,
+        (payload) => _parseLivePayload(payload, operation: 'detail'),
+      );
     } on DioException catch (error) {
       return Either.left(mapDioException(error));
     } on Object {
@@ -253,18 +244,34 @@ class LiveApi {
     }
   }
 
-  Future<Either<Failure, void>> endLive({required String liveId}) async {
+  /// Ends the Live and preserves the backend's canonical final analytics
+  /// snapshot instead of discarding `data.live`.
+  Future<Either<Failure, LiveStream>> endLive({required String liveId}) async {
     try {
       final response = await _client.post(
         ApiEndpoints.endLiveEndpoint,
         data: <String, dynamic>{'live_id': liveId},
       );
       final unwrapped = unwrapFrappe(response);
-      return unwrapped.fold(Either.left, (_) => Either.right(null));
+      return unwrapped.fold(
+        Either.left,
+        (payload) => _parseLivePayload(
+          payload,
+          operation: 'end',
+          expectedLiveId: liveId,
+        ),
+      );
     } on DioException catch (error) {
       return Either.left(mapDioException(error));
-    } on Object {
-      return Either.left(const Failure('Failed to end Live.'));
+    } on Object catch (error, stackTrace) {
+      appLogger.e(
+        'endLive response parsing failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return Either.left(
+        const Failure('Invalid end Live response.', type: FailureType.parse),
+      );
     }
   }
 
@@ -317,6 +324,30 @@ class LiveApi {
     }
   }
 
+  Either<Failure, LiveStream> _parseLivePayload(
+    Map<String, dynamic> payload, {
+    required String operation,
+    String? expectedLiveId,
+  }) {
+    try {
+      final data = asJsonMap(payload['data']);
+      final rawLive = data['live'];
+      if (rawLive is! Map<Object?, Object?>) {
+        throw const FormatException('Missing Live payload.');
+      }
+      final live = mapLiveStream(asJsonMap(rawLive));
+      if (live.id.isEmpty ||
+          (expectedLiveId != null && live.id != expectedLiveId)) {
+        throw const FormatException('Unexpected Live identifier.');
+      }
+      return Either.right(live);
+    } on Object {
+      return Either.left(
+        Failure('Invalid Live $operation response.', type: FailureType.parse),
+      );
+    }
+  }
+
   Future<Either<Failure, LiveStream?>> _track({
     required String endpoint,
     required String liveId,
@@ -333,9 +364,7 @@ class LiveApi {
       return unwrapped.fold(Either.left, (payload) {
         final data = asJsonMap(payload['data']);
         final rawLive = data['live'];
-        if (rawLive is! Map<Object?, Object?>) {
-          return Either.right(null);
-        }
+        if (rawLive is! Map<Object?, Object?>) return Either.right(null);
         return Either.right(mapLiveStream(asJsonMap(rawLive)));
       });
     } on DioException catch (error) {

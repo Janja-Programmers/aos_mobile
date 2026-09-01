@@ -1,147 +1,128 @@
-import 'dart:async';
-
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/live/comments/live_comment.dart';
+import 'package:africaonlinestores/features/live/presentation/live_l10n.dart';
+import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:flutter/material.dart';
 
-class LiveInputBar extends StatefulWidget {
-  final TextEditingController controller;
-  final Future<void> Function() onSend;
-  final bool isSending;
-
+class LiveInputBar extends StatelessWidget {
   const LiveInputBar({
     super.key,
     required this.controller,
+    required this.isSending,
     required this.onSend,
-    this.isSending = false,
+    this.replyTo,
+    this.onCancelReply,
   });
 
-  @override
-  State<LiveInputBar> createState() => _LiveInputBarState();
-}
-
-class _LiveInputBarState extends State<LiveInputBar> {
-  final FocusNode _focusNode = FocusNode();
-  bool _hasText = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _hasText = widget.controller.text.trim().isNotEmpty;
-    widget.controller.addListener(_handleTextChanged);
-  }
-
-  @override
-  void didUpdateWidget(covariant LiveInputBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller == widget.controller) return;
-    oldWidget.controller.removeListener(_handleTextChanged);
-    _hasText = widget.controller.text.trim().isNotEmpty;
-    widget.controller.addListener(_handleTextChanged);
-  }
-
-  void _handleTextChanged() {
-    final next = widget.controller.text.trim().isNotEmpty;
-    if (next == _hasText) return;
-    setState(() => _hasText = next);
-  }
-
-  void _submit() {
-    if (!_hasText || widget.isSending) return;
-    unawaited(widget.onSend());
-  }
+  final TextEditingController controller;
+  final bool isSending;
+  final VoidCallback onSend;
+  final LiveComment? replyTo;
+  final VoidCallback? onCancelReply;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final canSend = _hasText && !widget.isSending;
-
+    final target = replyTo;
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
 
-    return AnimatedPositioned(
-      duration: const Duration(milliseconds: 180),
+    return AnimatedPositionedDirectional(
+      duration: const Duration(milliseconds: 160),
       curve: Curves.easeOutCubic,
-      left: 12,
-      right: 12,
+      start: 0,
+      end: 0,
       bottom: keyboardInset,
       child: SafeArea(
         top: false,
-        minimum: const EdgeInsets.only(bottom: 10),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: .46),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: Colors.white.withValues(alpha: .14)),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 18,
-                color: Colors.black.withValues(alpha: .22),
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsetsDirectional.only(
-              start: 14,
-              end: 6,
-              top: 6,
-              bottom: 6,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(10, 6, 10, keyboardInset > 0 ? 6 : 10),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.black.withValues(alpha: .78),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: colors.white.withValues(alpha: .16)),
             ),
-            child: Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: widget.controller,
-                    focusNode: _focusNode,
-                    minLines: 1,
-                    maxLines: 4,
-                    textInputAction: TextInputAction.send,
-                    keyboardType: TextInputType.multiline,
-                    style: context.p.copyWith(color: Colors.white),
-                    cursorColor: colors.primary,
-                    onSubmitted: (_) => _submit(),
-                    decoration: InputDecoration(
-                      isDense: true,
-                      hintText: 'Comment live...',
-                      hintStyle: AppTextStylesX(
-                        context,
-                      ).caption.copyWith(color: Colors.white70),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                InkResponse(
-                  onTap: canSend ? _submit : null,
-                  radius: 24,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 160),
-                    width: 42,
-                    height: 42,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: canSend
-                          ? colors.primary
-                          : Colors.white.withValues(alpha: .16),
-                      shape: BoxShape.circle,
-                    ),
-                    child: widget.isSending
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                        : const Icon(
-                            Icons.send_rounded,
-                            color: Colors.white,
-                            size: 20,
+                if (target != null)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(14, 8, 6, 0),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.reply_rounded,
+                          size: 16,
+                          color: Colors.white70,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            context.l10n.liveReplyingTo(target.authorLabel),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.p.copyWith(color: Colors.white70),
                           ),
+                        ),
+                        IconButton(
+                          tooltip: context.l10n.liveCancel,
+                          onPressed: onCancelReply,
+                          icon: const Icon(Icons.close_rounded, size: 18),
+                          color: Colors.white70,
+                        ),
+                      ],
+                    ),
                   ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        key: const Key('live_comment_input'),
+                        controller: controller,
+                        enabled: !isSending,
+                        minLines: 1,
+                        maxLines: 4,
+                        maxLength: 500,
+                        textInputAction: TextInputAction.newline,
+                        style: context.p.copyWith(color: colors.white),
+                        decoration: InputDecoration(
+                          hintText: target == null
+                              ? context.l10n.liveCommentHint
+                              : context.l10n.liveReplyHint,
+                          hintStyle: context.p.copyWith(color: Colors.white54),
+                          counterText: '',
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsetsDirectional.fromSTEB(
+                            14,
+                            12,
+                            6,
+                            12,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: IconButton.filled(
+                        tooltip: target == null
+                            ? context.l10n.liveCommentHint
+                            : context.l10n.liveReply,
+                        onPressed: isSending ? null : onSend,
+                        icon: isSending
+                            ? SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: colors.white,
+                                ),
+                              )
+                            : Icon(Icons.send_rounded, color: colors.white),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -149,12 +130,5 @@ class _LiveInputBarState extends State<LiveInputBar> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_handleTextChanged);
-    _focusNode.dispose();
-    super.dispose();
   }
 }

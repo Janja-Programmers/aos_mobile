@@ -88,6 +88,39 @@ void main() {
     expect(liveKit.connectCalls, 1);
   });
 
+  test('openLive hydrates an ended Live without issuing join_live', () async {
+    repository.getLiveResponses[testLiveId] = testLive(
+      status: 'ended',
+      isActive: false,
+      canJoin: false,
+      canWatch: false,
+    );
+
+    final opened = await manager.openLive(liveId: testLiveId);
+
+    expect(opened, isFalse);
+    expect(repository.getLiveRequests, <String>[testLiveId]);
+    expect(repository.joinRequests, isEmpty);
+    expect(liveKit.connectCalls, 0);
+    expect(manager.currentState.status, LiveStatus.ended);
+    expect(manager.currentState.live?.id, testLiveId);
+    expect(manager.currentState.session, isNull);
+    expect(manager.currentState.hasActiveRoom, isFalse);
+  });
+
+  test('openLive preflights active detail before joining once', () async {
+    repository.getLiveResponses[testLiveId] = testLive();
+    repository.joinResponses[testLiveId] = Completer<LiveBootstrap>()
+      ..complete(testBootstrap());
+
+    final opened = await manager.openLive(liveId: testLiveId);
+
+    expect(opened, isTrue);
+    expect(repository.getLiveRequests, <String>[testLiveId]);
+    expect(repository.joinRequests, <String>[testLiveId]);
+    expect(liveKit.connectCalls, 1);
+  });
+
   test('reaction events are scoped and deduplicated by canonical ID', () async {
     repository.joinResponses[testLiveId] = Completer<LiveBootstrap>()
       ..complete(testBootstrap());
@@ -168,6 +201,9 @@ class _ScriptedLiveRepository implements LiveRepository {
   reactionRequests =
       <({String liveId, LiveReactionType type, String? sessionId})>[];
   Completer<LiveReaction>? reactionResponse;
+  final Map<String, LiveStream> getLiveResponses = <String, LiveStream>{};
+  final List<String> getLiveRequests = <String>[];
+  LiveStream? endResponse;
 
   @override
   Future<LiveBootstrap> joinLive({required String liveId, String? sessionId}) {
@@ -218,7 +254,8 @@ class _ScriptedLiveRepository implements LiveRepository {
     required String liveId,
     String? sessionId,
   }) async {
-    return testLive(liveId: liveId);
+    getLiveRequests.add(liveId);
+    return getLiveResponses[liveId] ?? testLive(liveId: liveId);
   }
 
   @override
@@ -231,7 +268,10 @@ class _ScriptedLiveRepository implements LiveRepository {
   }
 
   @override
-  Future<void> endLive({required String liveId}) async {}
+  Future<LiveStream> endLive({required String liveId}) async {
+    return endResponse ??
+        testLive(liveId: liveId, status: 'ended', isActive: false);
+  }
 
   @override
   Future<void> shareLiveToChat({

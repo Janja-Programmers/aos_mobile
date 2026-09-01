@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:africaonlinestores/core/media/livekit_track_events.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/utils/logger.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
@@ -19,14 +18,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:livekit_client/livekit_client.dart' as lk;
 
 class ShortsFeedTab extends ConsumerStatefulWidget {
-  final ShortsFeedType feedType;
-  final String? contentMode;
-  final String? categoryLabel;
-  final bool isActive;
-
   const ShortsFeedTab({
     super.key,
     required this.feedType,
@@ -35,17 +28,20 @@ class ShortsFeedTab extends ConsumerStatefulWidget {
     this.isActive = true,
   });
 
+  final ShortsFeedType feedType;
+  final String? contentMode;
+  final String? categoryLabel;
+  final bool isActive;
+
   @override
   ConsumerState<ShortsFeedTab> createState() => _ShortsFeedTabState();
 }
 
 class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
   final _scrollController = ScrollController();
-  final _pageController = PageController();
 
   late final ShortsRepository _repository;
-
-  final List<Object> _items = [];
+  final List<Object> _items = <Object>[];
 
   String? _nextCursor;
   bool _hasMore = true;
@@ -53,10 +49,6 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
   bool _isLoadingMore = false;
   String? _errorMessage;
   int _requestGeneration = 0;
-  StreamSubscription<MediaTrackEvent>? _mediaSubscription;
-  lk.RemoteVideoTrack? _remoteVideoTrack;
-  String? _activeLiveId;
-  int _activeLiveIndex = 0;
 
   bool get _canLoadMore {
     return !_isLoading &&
@@ -68,19 +60,12 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
   @override
   void initState() {
     super.initState();
-
     _repository = ShortsRepository(
       ref.read(shortsFeedApiProvider),
       ref.read(liveApiProvider),
     );
-
     unawaited(_loadInitial());
     _scrollController.addListener(_onScroll);
-    if (widget.feedType == ShortsFeedType.live) {
-      final liveKit = ref.read(liveKitCoreProvider);
-      _mediaSubscription = liveKit.events.listen(_onMediaEvent);
-      liveKit.emitCurrentTracks();
-    }
   }
 
   @override
@@ -88,41 +73,16 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
-    _pageController.dispose();
-    unawaited(_mediaSubscription?.cancel());
-    final activeLiveId = _activeLiveId;
-    if (activeLiveId != null) {
-      unawaited(
-        ref
-            .read(liveManagerProvider.notifier)
-            .leaveBackgroundLive(activeLiveId),
-      );
-    }
-
     super.dispose();
   }
 
   @override
   void didUpdateWidget(covariant ShortsFeedTab oldWidget) {
     super.didUpdateWidget(oldWidget);
-
     if (oldWidget.contentMode != widget.contentMode ||
         oldWidget.feedType != widget.feedType) {
-      _deactivateVisibleLive();
       unawaited(_loadInitial());
-
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(0);
-      }
-    }
-
-    if (oldWidget.isActive != widget.isActive &&
-        widget.feedType == ShortsFeedType.live) {
-      if (widget.isActive) {
-        unawaited(_activateVisibleLive(_activeLiveIndex));
-      } else {
-        _deactivateVisibleLive();
-      }
+      if (_scrollController.hasClients) _scrollController.jumpTo(0);
     }
   }
 
@@ -142,7 +102,6 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
           nextCursor: page.nextCursor,
           hasMore: page.hasMore,
         );
-
       case ShortsFeedType.following:
         final page = await _repository.fetchFollowing(
           cursor: cursor,
@@ -153,7 +112,6 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
           nextCursor: page.nextCursor,
           hasMore: page.hasMore,
         );
-
       case ShortsFeedType.live:
         final page = await _repository.fetchLive(cursor: cursor);
         return (
@@ -183,17 +141,12 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
         feedType: feedType,
         contentMode: contentMode,
       );
-
       if (!mounted || generation != _requestGeneration) return;
-
       setState(() {
         _items.addAll(page.items);
         _nextCursor = page.nextCursor;
         _hasMore = page.hasMore;
       });
-      if (feedType == ShortsFeedType.live && widget.isActive) {
-        await _activateVisibleLive(0);
-      }
     } on Object catch (error, stackTrace) {
       appLogger.e(
         'Feed initial load failed',
@@ -201,7 +154,6 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
         stackTrace: stackTrace,
       );
       if (!mounted || generation != _requestGeneration) return;
-
       setState(() {
         _items.clear();
         _nextCursor = null;
@@ -217,15 +169,12 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
 
   Future<void> _loadMore() async {
     if (!_canLoadMore) return;
-
     final cursor = _nextCursor?.trim();
-
     if (cursor == null || cursor.isEmpty) return;
 
     final generation = _requestGeneration;
     final feedType = widget.feedType;
     final contentMode = widget.contentMode;
-
     setState(() => _isLoadingMore = true);
 
     try {
@@ -234,11 +183,12 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
         contentMode: contentMode,
         cursor: cursor,
       );
-
       if (!mounted || generation != _requestGeneration) return;
-
       setState(() {
-        _items.addAll(page.items);
+        final existingKeys = _items.map(_itemKey).toSet();
+        for (final item in page.items) {
+          if (existingKeys.add(_itemKey(item))) _items.add(item);
+        }
         _nextCursor = page.nextCursor;
         _hasMore = page.hasMore;
       });
@@ -255,96 +205,21 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     }
   }
 
+  Object _itemKey(Object item) {
+    if (item is LiveStream) return 'live:${item.id}';
+    if (item is Short) return 'short:${item.id.value}';
+    return item;
+  }
+
   void _onScroll() {
-    if (!_scrollController.hasClients) return;
-    if (!_canLoadMore) return;
-
-    final extentAfter = _scrollController.position.extentAfter;
-
-    if (extentAfter < 700) {
+    if (!_scrollController.hasClients || !_canLoadMore) return;
+    if (_scrollController.position.extentAfter < 700) {
       unawaited(_loadMore());
     }
   }
 
-  void _onMediaEvent(MediaTrackEvent event) {
-    if (!mounted || widget.feedType != ShortsFeedType.live) return;
-    if (event is RemoteVideoTrackEvent) {
-      if (_remoteVideoTrack == null) {
-        setState(() => _remoteVideoTrack = event.track);
-      }
-      return;
-    }
-    if (event is RemoteVideoRemovedEvent || event is TrackClearedEvent) {
-      setState(() => _remoteVideoTrack = null);
-    }
-  }
-
-  Future<void> _activateVisibleLive(int index) async {
-    if (!mounted ||
-        !widget.isActive ||
-        widget.feedType != ShortsFeedType.live ||
-        index < 0 ||
-        index >= _items.length) {
-      return;
-    }
-
-    final live = _items[index];
-    if (live is! LiveStream ||
-        !live.isActive ||
-        live.viewerState.isHost ||
-        !live.viewerState.canWatch ||
-        !live.viewerState.canJoin) {
-      _deactivateVisibleLive();
-      return;
-    }
-
-    _activeLiveIndex = index;
-    if (_activeLiveId != live.id) {
-      setState(() {
-        _activeLiveId = live.id;
-        _remoteVideoTrack = null;
-      });
-    }
-
-    final joined = await ref
-        .read(liveManagerProvider.notifier)
-        .joinLive(liveId: live.id, showLiveUi: false);
-    if (!mounted || _activeLiveId != live.id || !widget.isActive) {
-      return;
-    }
-    if (!joined) {
-      setState(() {
-        _activeLiveId = null;
-        _remoteVideoTrack = null;
-      });
-      return;
-    }
-    ref.read(liveKitCoreProvider).emitCurrentTracks();
-  }
-
-  void _deactivateVisibleLive() {
-    final liveId = _activeLiveId;
-    _activeLiveId = null;
-    _remoteVideoTrack = null;
-    if (liveId == null) return;
-    unawaited(
-      ref.read(liveManagerProvider.notifier).leaveBackgroundLive(liveId),
-    );
-  }
-
-  void _onLivePageChanged(int index) {
-    _activeLiveIndex = index;
-    unawaited(_activateVisibleLive(index));
-    if (index >= _items.length - 3) unawaited(_loadMore());
-  }
-
-  void _openDetail(int index) {
-    if (widget.feedType == ShortsFeedType.live) {
-      return;
-    }
-
-    final shorts = _items.whereType<Short>().toList();
-
+  void _openShortDetail(int index) {
+    final shorts = _items.whereType<Short>().toList(growable: false);
     ShortsNavigation.toShortDetail(
       context,
       initialShorts: shorts,
@@ -354,7 +229,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     );
   }
 
-  Widget _buildShortItem(BuildContext context, int index) {
+  Widget _buildItem(BuildContext context, int index) {
     if (index >= _items.length) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 24),
@@ -363,27 +238,20 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
     }
 
     final item = _items[index];
-
     if (item is LiveStream) {
       return RepaintBoundary(
         key: ValueKey('live_${item.id}'),
         child: LiveCard(
           live: item,
-          isActive: _activeLiveId == item.id,
-          remoteVideoTrack: _activeLiveId == item.id ? _remoteVideoTrack : null,
-          fullScreen: widget.feedType == ShortsFeedType.live,
-          onTap: () {
-            LiveNavigation.toLiveRoom(context, liveId: item.id);
-          },
+          onTap: () => LiveNavigation.toLiveRoom(context, liveId: item.id),
         ),
       );
     }
 
     final short = item as Short;
-
     return RepaintBoundary(
       key: ValueKey('short_${short.id.value}'),
-      child: ShortCard(short: short, onTap: () => _openDetail(index)),
+      child: ShortCard(short: short, onTap: () => _openShortDetail(index)),
     );
   }
 
@@ -409,7 +277,10 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
                 const SizedBox(height: 12),
                 FilledButton.tonal(
                   onPressed: () => unawaited(_loadInitial()),
-                  child: const Text('Try again'),
+                  child: const Text(
+                    'Try again',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             ),
@@ -430,9 +301,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
         padding: const EdgeInsets.all(16),
         children: [
           const SuggestedSellersSection(),
-
           const SizedBox(height: 22),
-
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -440,9 +309,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
                 'Following Shorts',
                 style: context.h6.copyWith(fontWeight: FontWeight.w700),
               ),
-
               const SizedBox(height: 12),
-
               MasonryGridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -451,7 +318,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
                 itemCount: _items.length + (_isLoadingMore ? 1 : 0),
-                itemBuilder: _buildShortItem,
+                itemBuilder: _buildItem,
               ),
             ],
           ),
@@ -459,26 +326,9 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
       );
     }
 
-    if (widget.feedType == ShortsFeedType.live) {
-      return Stack(
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            scrollDirection: Axis.vertical,
-            itemCount: _items.length,
-            onPageChanged: _onLivePageChanged,
-            itemBuilder: _buildShortItem,
-          ),
-          if (_isLoadingMore)
-            const PositionedDirectional(
-              end: 16,
-              bottom: 16,
-              child: SafeArea(child: CircularProgressIndicator(strokeWidth: 2)),
-            ),
-        ],
-      );
-    }
-
+    // Live deliberately uses the same listing pattern as Shorts. Browsing the
+    // list no longer joins a LiveKit room or creates viewer presence. Presence
+    // begins only after the user taps a Live and enters Live Detail.
     return MasonryGridView.count(
       controller: _scrollController,
       padding: const EdgeInsets.all(8),
@@ -486,7 +336,7 @@ class _ShortsFeedTabState extends ConsumerState<ShortsFeedTab> {
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,
       itemCount: _items.length + (_isLoadingMore ? 1 : 0),
-      itemBuilder: _buildShortItem,
+      itemBuilder: _buildItem,
     );
   }
 }

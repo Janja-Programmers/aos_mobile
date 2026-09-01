@@ -19,6 +19,7 @@ class LiveTopBar extends StatelessWidget {
     this.isFollowInFlight = false,
     this.followLabel = 'Follow',
     this.onFollow,
+    this.onViewers,
   });
 
   final int viewerCount;
@@ -33,6 +34,7 @@ class LiveTopBar extends StatelessWidget {
   final bool isFollowInFlight;
   final String followLabel;
   final VoidCallback? onFollow;
+  final VoidCallback? onViewers;
 
   @override
   Widget build(BuildContext context) {
@@ -58,17 +60,18 @@ class LiveTopBar extends StatelessWidget {
                     runSpacing: 6,
                     children: [
                       _liveBadge(context),
-                      _blackBox(
+                      _metricBox(
                         context,
                         humanizeCount(reactionCount),
                         icon: Icons.favorite_rounded,
                         semanticsLabel: '$reactionCount reactions',
                       ),
-                      _blackBox(
+                      _metricBox(
                         context,
                         humanizeCount(viewerCount),
                         icon: Icons.remove_red_eye_outlined,
                         semanticsLabel: '$viewerCount viewers',
+                        onTap: onViewers,
                       ),
                     ],
                   ),
@@ -86,6 +89,7 @@ class LiveTopBar extends StatelessWidget {
                         : isHost
                         ? 'End'
                         : 'Leave',
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ],
@@ -186,30 +190,43 @@ class LiveTopBar extends StatelessWidget {
     );
   }
 
-  Widget _blackBox(
+  Widget _metricBox(
     BuildContext context,
     String text, {
     required IconData icon,
     required String semanticsLabel,
+    VoidCallback? onTap,
   }) {
+    final colors = context.appColors;
+    final child = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 44),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: Colors.white),
+            const SizedBox(width: 4),
+            Text(text, style: context.p.copyWith(color: Colors.white)),
+          ],
+        ),
+      ),
+    );
+
     return Semantics(
       label: semanticsLabel,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: .62),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 14, color: Colors.white),
-              const SizedBox(width: 4),
-              Text(text, style: context.p.copyWith(color: Colors.white)),
-            ],
-          ),
-        ),
+      button: onTap != null,
+      child: Material(
+        color: colors.black.withValues(alpha: .62),
+        borderRadius: BorderRadius.circular(8),
+        child: onTap == null
+            ? child
+            : InkWell(
+                key: const Key('live_viewer_count_button'),
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(8),
+                child: child,
+              ),
       ),
     );
   }

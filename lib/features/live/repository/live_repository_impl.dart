@@ -13,7 +13,7 @@ abstract class LiveRepository {
 
   Future<LiveBootstrap> joinLive({required String liveId, String? sessionId});
 
-  Future<void> endLive({required String liveId});
+  Future<LiveStream> endLive({required String liveId});
 
   Future<LiveStream> getLive({required String liveId, String? sessionId});
 
@@ -72,9 +72,9 @@ class LiveRepositoryImpl implements LiveRepository {
   }
 
   @override
-  Future<void> endLive({required String liveId}) async {
+  Future<LiveStream> endLive({required String liveId}) async {
     final result = await api.endLive(liveId: liveId);
-    return result.fold((failure) => throw failure, (_) {});
+    return result.fold((failure) => throw failure, (value) => value);
   }
 
   @override

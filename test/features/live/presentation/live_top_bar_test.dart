@@ -6,9 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../helpers/pump_app.dart';
 
 void main() {
-  testWidgets('shows one reaction aggregate beside the Live badge', (
+  testWidgets('shows one reaction aggregate beside the tappable viewer count', (
     tester,
   ) async {
+    var viewerTaps = 0;
     await tester.pumpTestApp(
       Stack(
         children: [
@@ -16,6 +17,7 @@ void main() {
             viewerCount: 17,
             reactionCount: 42,
             onEnd: () {},
+            onViewers: () => viewerTaps++,
             isHost: false,
             hostName: 'Test Host',
             title: 'A production Live',
@@ -28,6 +30,10 @@ void main() {
     expect(find.bySemanticsLabel('42 reactions'), findsOneWidget);
     expect(find.bySemanticsLabel('17 viewers'), findsOneWidget);
     expect(find.text('Leave'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('live_viewer_count_button')));
+    await tester.pump();
+    expect(viewerTaps, 1);
   });
 
   testWidgets('follow action uses primary background and button text color', (

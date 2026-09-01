@@ -30,10 +30,6 @@ class LiveManager extends StateNotifier<LiveState> {
   final LiveMediaService mediaService;
   final RealtimeService realtimeService;
 
-  /// Read-only snapshot for collaborators that coordinate Live domains.
-  ///
-  /// Mutations remain owned by this manager; callers must use its intent
-  /// methods rather than accessing [StateNotifier.state] directly.
   LiveState get currentState => state;
 
   late final StreamSubscription<MediaTrackEvent> _mediaSubscription;
@@ -43,6 +39,7 @@ class LiveManager extends StateNotifier<LiveState> {
 
   Future<void> _transitionTail = Future<void>.value();
   int _transitionGeneration = 0;
+  int _openGeneration = 0;
   bool _startInFlight = false;
   bool _reactionInFlight = false;
   String? _pendingViewerLiveId;
@@ -138,6 +135,79 @@ class LiveManager extends StateNotifier<LiveState> {
       return false;
     });
     return transition.whenComplete(() => _startInFlight = false);
+  }
+
+  /// Opens a canonical Live route without blindly calling `join_live`.
+  ///
+  /// `get_live` is the detail/status preflight. Ended or otherwise
+  /// non-watchable Lives are hydrated into terminal UI without requesting
+  /// LiveKit credentials, which keeps notification/deep-link navigation from
+  /// producing an expected `LIVE_INVALID_STATE` join failure.
+  Future<bool> openLive({
+    required String liveId,
+    bool showLiveUi = true,
+    String? sessionId,
+  }) async {
+    final cleanLiveId = liveId.trim();
+    if (cleanLiveId.isEmpty) return false;
+
+    if (_isCurrentLive(cleanLiveId) && state.hasActiveRoom) {
+      return joinLive(
+        liveId: cleanLiveId,
+        showLiveUi: showLiveUi,
+        sessionId: sessionId,
+      );
+    }
+
+    final generation = ++_openGeneration;
+    try {
+      final requestedSessionId = sessionId?.trim().isNotEmpty ?? false
+          ? sessionId!.trim()
+          : _viewerSessionIds[cleanLiveId];
+      final live = await repository.getLive(
+        liveId: cleanLiveId,
+        sessionId: requestedSessionId,
+      );
+      if (!mounted || generation != _openGeneration) return false;
+
+      if (!live.isActive ||
+          !live.viewerState.canWatch ||
+          !live.viewerState.canJoin) {
+        if (state.session != null || state.hasActiveRoom) {
+          await leaveLive();
+          if (!mounted || generation != _openGeneration) return false;
+        }
+
+        _seenReactionIds.clear();
+        _hydrate(live);
+        state = state.copyWith(
+          status: LiveStatus.ended,
+          live: live,
+          clearSession: true,
+          clearRole: true,
+          roomState: RoomState.disconnected,
+          hasActiveRoom: false,
+          isPublishing: false,
+          isSubscribed: false,
+          clearActiveCohostId: true,
+          hasLiveUi: false,
+          viewerCount: live.viewerCount,
+          clearError: true,
+        );
+        return false;
+      }
+
+      if (generation != _openGeneration) return false;
+      return joinLive(
+        liveId: cleanLiveId,
+        showLiveUi: showLiveUi,
+        sessionId: requestedSessionId,
+      );
+    } on Object catch (error, stackTrace) {
+      if (!mounted || generation != _openGeneration) return false;
+      _setJoinFailure(error, stackTrace);
+      return false;
+    }
   }
 
   Future<bool> joinLive({
@@ -370,9 +440,9 @@ class LiveManager extends StateNotifier<LiveState> {
               }
             }
           } on Failure catch (failure, stackTrace) {
-            if (failure.error == 'NOT_FOUND' ||
-                failure.error == 'INVALID_STATE' ||
-                failure.error == 'PERMISSION_DENIED') {
+            if (failure.error == 'LIVE_NOT_FOUND' ||
+                failure.error == 'LIVE_INVALID_STATE' ||
+                failure.error == 'LIVE_ACCESS_DENIED') {
               await _leaveCurrent(trackLeave: true);
               if (!mounted) return;
               state = state.ended();
@@ -426,24 +496,28 @@ class LiveManager extends StateNotifier<LiveState> {
     }
   }
 
-  Future<void> endLive() {
+  /// Ends a host-owned Live and returns the canonical final backend snapshot
+  /// containing the persisted analytics used by the post-Live modal.
+  Future<LiveStream?> endLive() {
     ++_transitionGeneration;
-    return _enqueue<void>(() async {
+    return _enqueue<LiveStream?>(() async {
       final liveId = state.session?.liveId ?? state.live?.id;
-      if (liveId == null || !state.isHost || state.isEnding) return;
+      if (liveId == null || !state.isHost || state.isEnding) return null;
 
       state = state.copyWith(isEnding: true, clearError: true);
       try {
-        await repository.endLive(liveId: liveId);
-        if (!mounted) return;
+        final endedLive = await repository.endLive(liveId: liveId);
+        if (!mounted) return endedLive;
         await _leaveCurrent(trackLeave: false);
-        if (!mounted) return;
-        state = state.ended();
+        if (!mounted) return endedLive;
+        state = state.copyWith(live: endedLive).ended();
+        return endedLive;
       } on Object catch (error, stackTrace) {
-        if (!mounted) return;
+        if (!mounted) return null;
         final message = _messageFor(error, fallback: 'Could not end Live.');
         state = state.copyWith(isEnding: false, errorMessage: message);
         appLogger.e('endLive failed', error: error, stackTrace: stackTrace);
+        return null;
       }
     });
   }
@@ -836,7 +910,8 @@ class LiveManager extends StateNotifier<LiveState> {
 
   void _setJoinFailure(Object error, StackTrace stackTrace) {
     if (error is Failure &&
-        (error.error == 'NOT_FOUND' || error.error == 'INVALID_STATE')) {
+        (error.error == 'LIVE_NOT_FOUND' ||
+            error.error == 'LIVE_INVALID_STATE')) {
       state = state.copyWith(
         status: LiveStatus.ended,
         roomState: RoomState.disconnected,

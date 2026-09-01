@@ -78,7 +78,7 @@ class GoRouterProtectedNavigationExecutor
         _router.pushNamed<void>(AppRoutes.nSellerVerification).ignore();
         return;
       case ProtectedNavigationKind.live:
-        unawaited(_joinLiveWithFallback(destination.canonicalId!));
+        _openLiveRoute(destination.canonicalId!);
         return;
       case ProtectedNavigationKind.shortDetails:
         _router
@@ -120,21 +120,13 @@ class GoRouterProtectedNavigationExecutor
         .ignore();
   }
 
-  Future<void> _joinLiveWithFallback(String liveId) async {
-    try {
-      final bool joined = await _liveManager.joinLive(liveId: liveId);
-      if (!joined) _openLiveRoute(liveId);
-    } catch (error, stackTrace) {
-      appLogger.w(
-        'Live manager navigation failed; using the live route',
-        error: error,
-        stackTrace: stackTrace,
-      );
-      _openLiveRoute(liveId);
-    }
-  }
-
   void _openLiveRoute(String liveId) {
+    final active = _liveManager.currentState;
+    if (active.hasLiveUi && active.live?.id == liveId) return;
+
+    // Route first. LiveScreen performs a canonical get_live status preflight
+    // and joins only when the Live is still active/watchable. This prevents
+    // notification taps from issuing two join_live requests for ended Lives.
     _router
         .pushNamed<void>(
           AppRoutes.nLiveRoom,

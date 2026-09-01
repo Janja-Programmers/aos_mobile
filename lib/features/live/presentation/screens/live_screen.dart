@@ -3,32 +3,42 @@ import 'dart:async';
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/media/livekit_service.dart';
 import 'package:africaonlinestores/core/media/livekit_track_events.dart';
+import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/core/sharing/aos_share_links.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/auth/domain/auth_state.dart';
+import 'package:africaonlinestores/features/auth/shared/providers/auth_controller_provider.dart';
 import 'package:africaonlinestores/features/connect/chats/presentation/widgets/chat_screen/chat_forward_conversation_picker.dart';
 import 'package:africaonlinestores/features/live/application/controllers/live_cohost_controller.dart';
+import 'package:africaonlinestores/features/live/application/managers/live_manager.dart';
 import 'package:africaonlinestores/features/live/application/providers/live_providers.dart';
 import 'package:africaonlinestores/features/live/application/state/live_status_enum.dart';
 import 'package:africaonlinestores/features/live/application/state/room_state_enum.dart';
+import 'package:africaonlinestores/features/live/comments/live_comment.dart';
 import 'package:africaonlinestores/features/live/comments/live_comments_controller.dart';
-import 'package:africaonlinestores/features/live/domain/live_chat_message.dart';
 import 'package:africaonlinestores/features/live/domain/live_cohost.dart';
 import 'package:africaonlinestores/features/live/domain/live_reaction.dart';
+import 'package:africaonlinestores/features/live/presentation/live_l10n.dart';
 import 'package:africaonlinestores/features/live/presentation/views/host_live_view.dart';
 import 'package:africaonlinestores/features/live/presentation/views/viewer_live_view.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/floating_hearts.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_chat_overlay.dart';
+import 'package:africaonlinestores/features/live/presentation/widgets/live_ended_analytics_dialog.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_input_bar.dart';
+import 'package:africaonlinestores/features/live/presentation/widgets/live_profile_sheet.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_right_actions.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_top_bar.dart';
 import 'package:africaonlinestores/features/live/presentation/widgets/live_video_stage.dart';
+import 'package:africaonlinestores/features/live/presentation/widgets/live_viewers_sheet.dart';
 import 'package:africaonlinestores/features/social/application/providers/social_providers.dart';
+import 'package:africaonlinestores/features/social/navigation/social_navigation.dart';
 import 'package:africaonlinestores/l10n/l10n_extension.dart';
 import 'package:africaonlinestores/shared/components/app_circle_avatar.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:livekit_client/livekit_client.dart' as lk;
 import 'package:share_plus/share_plus.dart';
 
@@ -44,9 +54,14 @@ class LiveScreen extends ConsumerStatefulWidget {
 class _LiveScreenState extends ConsumerState<LiveScreen> {
   final TextEditingController _chatController = TextEditingController();
 
+  late final LiveManager _liveManager;
+  late final LiveCommentsController _commentsController;
+  late final LiveCohostController _cohostController;
+
   StreamSubscription<MediaTrackEvent>? _mediaSubscription;
   lk.LocalVideoTrack? _localVideoTrack;
   lk.RemoteVideoTrack? _remoteVideoTrack;
+  LiveComment? _replyTarget;
   String? _preparedLiveId;
   bool _isInitializing = true;
   bool _isFollowInFlight = false;
@@ -56,10 +71,13 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
   @override
   void initState() {
     super.initState();
+    _liveManager = ref.read(liveManagerProvider.notifier);
+    _commentsController = ref.read(liveCommentsControllerProvider.notifier);
+    _cohostController = ref.read(liveCohostControllerProvider.notifier);
     final liveKit = ref.read(liveKitCoreProvider);
     _mediaSubscription = liveKit.events.listen(_onMediaEvent);
     liveKit.emitCurrentTracks();
-    unawaited(_initialize(++_initializationGeneration));
+    _scheduleInitialize();
   }
 
   @override
@@ -67,8 +85,17 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.liveId?.trim() == widget.liveId?.trim()) return;
     _preparedLiveId = null;
+    _replyTarget = null;
     _isInitializing = true;
-    unawaited(_initialize(++_initializationGeneration));
+    _scheduleInitialize();
+  }
+
+  void _scheduleInitialize() {
+    final generation = ++_initializationGeneration;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || generation != _initializationGeneration) return;
+      unawaited(_initialize(generation));
+    });
   }
 
   Future<void> _initialize(int generation) async {
@@ -78,9 +105,8 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
       final shouldRefresh =
           existingState.hasActiveRoom &&
           existingState.session?.liveId == requestedLiveId;
-      final manager = ref.read(liveManagerProvider.notifier);
-      final joined = await manager.joinLive(liveId: requestedLiveId);
-      if (joined && shouldRefresh) await manager.refreshActiveLive();
+      final joined = await _liveManager.openLive(liveId: requestedLiveId);
+      if (joined && shouldRefresh) await _liveManager.refreshActiveLive();
     }
     if (!mounted || generation != _initializationGeneration) return;
     setState(() => _isInitializing = false);
@@ -95,17 +121,15 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
     if (_preparedLiveId == liveId) return;
     _preparedLiveId = liveId;
 
-    final comments = ref.read(liveCommentsControllerProvider.notifier);
-    comments.resetForLive(liveId);
-    await comments.fetchComments(liveId);
+    _commentsController.resetForLive(liveId);
+    await _commentsController.fetchComments(liveId);
     if (!mounted || ref.read(liveManagerProvider).live?.id != liveId) return;
 
     final live = ref.read(liveManagerProvider).live;
     if (live == null) return;
-    final cohosts = ref.read(liveCohostControllerProvider.notifier);
-    cohosts.hydrate(live);
+    _cohostController.hydrate(live);
     if (live.viewerState.isHost || live.viewerState.cohostWorkflow != null) {
-      await cohosts.load(liveId: liveId);
+      await _cohostController.load(liveId: liveId);
     }
   }
 
@@ -143,20 +167,115 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
     final text = _chatController.text.trim();
     if (live == null || !live.viewerState.canComment || text.isEmpty) return;
 
+    final replyTarget = _replyTarget;
     _chatController.clear();
     final comments = ref.read(liveCommentsControllerProvider.notifier);
-    final sent = await comments.addComment(
-      liveId: live.id,
-      comment: text,
-      sessionId: state.session?.sessionId,
-    );
-    if (!mounted || sent) return;
+    final sent = replyTarget == null
+        ? await comments.addComment(
+            liveId: live.id,
+            comment: text,
+            sessionId: state.session?.sessionId,
+          )
+        : await comments.replyComment(
+            liveId: live.id,
+            parentMessageId: replyTarget.id,
+            comment: text,
+            sessionId: state.session?.sessionId,
+          );
+    if (!mounted) return;
+    if (sent) {
+      if (_replyTarget != null) setState(() => _replyTarget = null);
+      return;
+    }
 
     _chatController.text = text;
     ShowSnack(
       context,
       comments.errorMessage ?? 'Could not send comment.',
     ).error();
+  }
+
+  void _selectReply(LiveComment comment) {
+    if (comment.isSystem) return;
+    setState(() => _replyTarget = comment);
+  }
+
+  bool _canDeleteComment(LiveComment comment) {
+    final live = ref.read(liveManagerProvider).live;
+    if (live == null || !live.isActive || !comment.isComment) return false;
+    if (live.viewerState.isHost) return true;
+    final auth = ref.read(authControllerProvider);
+    if (auth is! AuthAuthenticated) return false;
+    final currentAccount = auth.user.accountId.trim().toUpperCase();
+    return currentAccount.isNotEmpty &&
+        currentAccount == comment.userId.trim().toUpperCase();
+  }
+
+  Future<void> _deleteComment(LiveComment comment) async {
+    if (!_canDeleteComment(comment)) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: Text(context.l10n.liveDeleteCommentConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(context.l10n.liveCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              context.l10n.liveDeleteComment,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+
+    final deleted = await ref
+        .read(liveCommentsControllerProvider.notifier)
+        .deleteComment(commentId: comment.id);
+    if (!mounted) return;
+    if (!deleted) {
+      final error = ref.read(liveCommentsControllerProvider).errorMessage;
+      ShowSnack(context, error ?? 'Could not delete this comment.').error();
+      return;
+    }
+
+    final target = _replyTarget;
+    if (target != null &&
+        (target.id == comment.id ||
+            target.parentId == comment.id ||
+            target.rootId == comment.id)) {
+      setState(() => _replyTarget = null);
+    }
+  }
+
+  Future<void> _showViewerProfile(String accountId) async {
+    final clean = accountId.trim().toUpperCase();
+    if (!clean.startsWith('ACC-')) return;
+    final result = await showLiveProfileSheet(context, accountId: clean);
+    if (!mounted || result == null) return;
+    SocialNavigation.toProfileScreen(
+      context,
+      user: result.accountId,
+      displayName: result.displayName,
+      avatar: result.avatarUrl,
+    );
+  }
+
+  Future<void> _showViewers() async {
+    final state = ref.read(liveManagerProvider);
+    if (state.session == null || !state.hasActiveRoom) return;
+    final accountId = await showLiveViewersSheet(
+      context,
+      viewerCount: state.viewerCount,
+      participants: ref.read(liveMediaServiceProvider).audienceParticipants,
+    );
+    if (!mounted || accountId == null) return;
+    await _showViewerProfile(accountId);
   }
 
   Future<void> _followHost() async {
@@ -243,23 +362,30 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
     );
     if (!mounted || confirmed != true) return;
 
-    final manager = ref.read(liveManagerProvider.notifier);
+    final manager = _liveManager;
     if (canEnd) {
-      await manager.endLive();
-    } else {
-      final activeCohostId = state.activeCohostId;
-      if (state.isCohost && activeCohostId != null) {
-        final cohostEnded = await ref
-            .read(liveCohostControllerProvider.notifier)
-            .end(cohostId: activeCohostId, resumeAsViewer: false);
-        if (!mounted) return;
-        if (!cohostEnded) {
-          ShowSnack(context, 'Could not leave co-hosting.').error();
-          return;
-        }
-      }
-      await manager.leaveLive();
+      final endedLive = await manager.endLive();
+      if (!mounted || endedLive == null) return;
+      await showLiveEndedAnalyticsDialog(context, live: endedLive);
+      if (!mounted) return;
+      await _closeAsync();
+      return;
     }
+
+    final activeCohostId = state.activeCohostId;
+    if (state.isCohost && activeCohostId != null) {
+      final cohostEnded = await ref
+          .read(liveCohostControllerProvider.notifier)
+          .end(cohostId: activeCohostId, resumeAsViewer: false);
+      if (!mounted) return;
+      if (!cohostEnded) {
+        ShowSnack(context, 'Could not leave co-hosting.').error();
+        return;
+      }
+    }
+    await manager.leaveLive();
+    if (!mounted) return;
+    await _closeAsync();
   }
 
   Future<void> _showShareOptions({
@@ -484,6 +610,7 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
                 isFollowInFlight: _isFollowInFlight,
                 followLabel: viewerState?.actionLabel ?? 'Follow',
                 onFollow: () => unawaited(_followHost()),
+                onViewers: () => unawaited(_showViewers()),
                 onEnd: () => unawaited(_confirmEndOrLeave()),
               ),
               FloatingHearts(
@@ -523,21 +650,30 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
                   showReaction: canReact,
                   showCohost: canUseCohost,
                 ),
-              LiveChatOverlay(
-                bottom: canComment ? keyboardInset + 112 : 18,
-                messages: commentsState.comments
-                    .map(
-                      (comment) => LiveChatMessage(
-                        username: comment.authorLabel,
-                        message: comment.comment,
-                      ),
-                    )
-                    .toList(growable: false),
+              PositionedDirectional(
+                start: 0,
+                end: keyboardVisible ? 0 : 58,
+                bottom: canComment ? keyboardInset + 88 : 18,
+                child: LiveChatOverlay(
+                  comments: commentsState.comments,
+                  onReply: _selectReply,
+                  onOpenProfile: (accountId) =>
+                      unawaited(_showViewerProfile(accountId)),
+                  canDelete: _canDeleteComment,
+                  onDelete: (comment) => unawaited(_deleteComment(comment)),
+                  hasMore: commentsState.hasMore,
+                  isLoadingMore: commentsState.isLoadingMore,
+                  onLoadMore: ref
+                      .read(liveCommentsControllerProvider.notifier)
+                      .loadMore,
+                ),
               ),
               if (canComment)
                 LiveInputBar(
                   controller: _chatController,
                   isSending: commentsState.isSubmitting,
+                  replyTo: _replyTarget,
+                  onCancelReply: () => setState(() => _replyTarget = null),
                   onSend: _submitComment,
                 ),
             ],
@@ -630,16 +766,17 @@ class _LiveScreenState extends ConsumerState<LiveScreen> {
   }
 
   Future<void> _closeAsync() async {
-    await Navigator.of(context).maybePop();
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    context.goNamed(AppRoutes.nHome);
   }
 
   @override
   void dispose() {
-    final manager = ref.read(liveManagerProvider.notifier);
-    manager.hideLiveUi();
-    unawaited(manager.leaveLive());
-    ref.read(liveCommentsControllerProvider.notifier).clear();
-    ref.read(liveCohostControllerProvider.notifier).clear();
+    ++_initializationGeneration;
     _chatController.dispose();
     unawaited(_mediaSubscription?.cancel());
     super.dispose();
@@ -703,7 +840,10 @@ class _LiveTerminalState extends StatelessWidget {
                   const SizedBox(height: 16),
                   FilledButton.tonal(
                     onPressed: onClose,
-                    child: const Text('Close'),
+                    child: Text(
+                      context.l10n.liveClose,
+                      style: const TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               ),
@@ -854,7 +994,10 @@ class _ViewerCohostTools extends StatelessWidget {
                   ? null
                   : () => unawaited(_request(context, validSessionId)),
               icon: const Icon(Icons.waving_hand_outlined),
-              label: const Text('Request to co-host'),
+              label: const Text(
+                'Request to co-host',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           )
         else

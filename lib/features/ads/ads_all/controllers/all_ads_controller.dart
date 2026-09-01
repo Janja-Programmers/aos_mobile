@@ -38,12 +38,13 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   bool _bootstrapped = false;
 
   bool get isWishlist => params.mode == AllAdsMode.wishlist;
+  bool get isSellerStorefront => params.sellerId?.trim().isNotEmpty ?? false;
 
   List<CategoryNode> _allCategories = <CategoryNode>[];
   final Map<String, _HiddenWishlistItem> _hiddenWishlistItems =
       <String, _HiddenWishlistItem>{};
 
-  /// Initialize controller from screen navigation
+  /// Initialize controller from screen navigation.
   Future<void> _init() async {
     if (_bootstrapped) return;
     _bootstrapped = true;
@@ -54,17 +55,15 @@ class AllAdsController extends StateNotifier<AllAdsState> {
       selectedSort: params.sort,
     );
 
-    if (!isWishlist) {
+    // Seller storefronts already have a fixed seller scope and do not need the
+    // category tree just to render their product list.
+    if (!isWishlist && !isSellerStorefront) {
       await _loadAllCategories();
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
       _resolveChildren();
     }
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
     await load(initial: true);
   }
 
@@ -148,18 +147,22 @@ class AllAdsController extends StateNotifier<AllAdsState> {
             offset: _offset,
             sort: sort,
             q: wishlistQuery.isEmpty ? null : wishlistQuery,
-            priceMin: state.wishlistMinPrice,
-            priceMax: state.wishlistMaxPrice,
-            ratingMin: state.wishlistMinRating,
-            verifiedSeller: switch (state.wishlistVerifiedSellers) {
+            priceMin: state.filterMinPrice,
+            priceMax: state.filterMaxPrice,
+            ratingMin: state.filterMinRating,
+            verifiedSeller: switch (state.filterVerifiedSellers) {
               true => true,
               false => null,
             },
           )
         : await api.listAds(
+            sellerId: params.sellerId,
             categoryId: categoryId,
             promotionType: dealType,
             sort: sort,
+            priceMin: state.filterMinPrice?.toDouble(),
+            priceMax: state.filterMaxPrice?.toDouble(),
+            ratingMin: state.filterMinRating?.toDouble(),
             offset: _offset,
           );
 
@@ -179,9 +182,10 @@ class AllAdsController extends StateNotifier<AllAdsState> {
           responseData['items'],
         ).map(AOSAdListItem.fromJson).toList();
         final pagination = asJsonMap(responseData['pagination']);
-        final hasMore = pagination.isEmpty
-            ? list.length == _limit
-            : asBool(pagination['has_more']);
+        final returned = asInt(pagination['returned'], fallback: list.length);
+        final hasMore = pagination.containsKey('has_more')
+            ? asBool(pagination['has_more'])
+            : returned >= _limit;
         final nextOffset = asNullableInt(pagination['next_offset']);
 
         final merged = _offset == 0 ? list : [...state.items, ...list];
@@ -218,8 +222,7 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   }
 
   void setCategory(String? id) {
-    if (isWishlist) return;
-
+    if (isWishlist || isSellerStorefront) return;
     if (state.selectedCategoryId == id) return;
 
     _invalidateActiveRequest();
@@ -232,7 +235,9 @@ class AllAdsController extends StateNotifier<AllAdsState> {
   }
 
   void setDealType(DealType type) {
-    if (isWishlist || state.selectedDealType == type) return;
+    if (isWishlist || isSellerStorefront || state.selectedDealType == type) {
+      return;
+    }
 
     _invalidateActiveRequest();
     _offset = 0;
@@ -280,34 +285,56 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     });
   }
 
-  void applyWishlistFilters({
+  /// Applies backend-supported list filters in the current discovery scope.
+  /// Verified-seller filtering is only available on the wishlist endpoint;
+  /// seller storefronts already have a fixed seller identity.
+  void applyFilters({
     int? priceMin,
     int? priceMax,
     int? ratingMin,
     bool verifiedSellers = false,
   }) {
-    if (!isWishlist) return;
-
+    final effectiveVerified = isWishlist && verifiedSellers;
     final unchanged =
-        state.wishlistMinPrice == priceMin &&
-        state.wishlistMaxPrice == priceMax &&
-        state.wishlistMinRating == ratingMin &&
-        state.wishlistVerifiedSellers == verifiedSellers;
+        state.filterMinPrice == priceMin &&
+        state.filterMaxPrice == priceMax &&
+        state.filterMinRating == ratingMin &&
+        state.filterVerifiedSellers == effectiveVerified;
     if (unchanged) return;
 
     _invalidateActiveRequest();
     _offset = 0;
     _hiddenWishlistItems.clear();
     state = state.copyWith(
-      wishlistMinPrice: priceMin,
-      wishlistMaxPrice: priceMax,
-      wishlistMinRating: ratingMin,
-      wishlistVerifiedSellers: verifiedSellers,
+      filterMinPrice: priceMin,
+      filterMaxPrice: priceMax,
+      filterMinRating: ratingMin,
+      filterVerifiedSellers: effectiveVerified,
       items: [],
       hasMore: true,
       clearError: true,
     );
 
+    unawaited(load(initial: true));
+  }
+
+  void resetSortAndFilters() {
+    final alreadyReset = state.selectedSort == null && !state.hasFilters;
+    if (alreadyReset) return;
+
+    _invalidateActiveRequest();
+    _offset = 0;
+    _hiddenWishlistItems.clear();
+    state = state.copyWith(
+      selectedSort: null,
+      filterMinPrice: null,
+      filterMaxPrice: null,
+      filterMinRating: null,
+      filterVerifiedSellers: false,
+      items: [],
+      hasMore: true,
+      clearError: true,
+    );
     unawaited(load(initial: true));
   }
 
@@ -391,8 +418,8 @@ class AllAdsController extends StateNotifier<AllAdsState> {
     state = state.copyWith(loading: false, loadingMore: false);
   }
 
-  void clearWishlistFilters() {
-    applyWishlistFilters();
+  void clearFilters() {
+    applyFilters();
   }
 
   @override

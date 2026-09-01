@@ -19,10 +19,10 @@ class AllAdsState {
     this.selectedSort,
     this.children = const [],
     this.wishlistQuery = '',
-    this.wishlistMinPrice,
-    this.wishlistMaxPrice,
-    this.wishlistMinRating,
-    this.wishlistVerifiedSellers = false,
+    this.filterMinPrice,
+    this.filterMaxPrice,
+    this.filterMinRating,
+    this.filterVerifiedSellers = false,
   });
 
   final List<AOSAdListItem> items;
@@ -33,29 +33,30 @@ class AllAdsState {
 
   final ViewMode view;
 
-  /// Active category pill
+  /// Active category pill.
   final String? selectedCategoryId;
 
-  /// Active deals pill
+  /// Active deals pill.
   final DealType selectedDealType;
 
   final AdsSort? selectedSort;
 
-  /// Children of parent category
+  /// Children of parent category.
   final List<CategoryNode> children;
 
-  /// Wishlist-only search and filters.
+  /// Wishlist-only search query. Discovery filters are shared by any
+  /// list context that the backend supports, including seller storefronts.
   final String wishlistQuery;
-  final int? wishlistMinPrice;
-  final int? wishlistMaxPrice;
-  final int? wishlistMinRating;
-  final bool wishlistVerifiedSellers;
+  final int? filterMinPrice;
+  final int? filterMaxPrice;
+  final int? filterMinRating;
+  final bool filterVerifiedSellers;
 
-  bool get hasWishlistFilters {
-    return wishlistMinPrice != null ||
-        wishlistMaxPrice != null ||
-        wishlistMinRating != null ||
-        wishlistVerifiedSellers;
+  bool get hasFilters {
+    return filterMinPrice != null ||
+        filterMaxPrice != null ||
+        filterMinRating != null ||
+        filterVerifiedSellers;
   }
 
   AllAdsState copyWith({
@@ -71,10 +72,10 @@ class AllAdsState {
     Object? selectedSort = _unset,
     List<CategoryNode>? children,
     String? wishlistQuery,
-    Object? wishlistMinPrice = _unset,
-    Object? wishlistMaxPrice = _unset,
-    Object? wishlistMinRating = _unset,
-    bool? wishlistVerifiedSellers,
+    Object? filterMinPrice = _unset,
+    Object? filterMaxPrice = _unset,
+    Object? filterMinRating = _unset,
+    bool? filterVerifiedSellers,
   }) {
     return AllAdsState(
       items: items ?? this.items,
@@ -92,17 +93,17 @@ class AllAdsState {
           : selectedSort as AdsSort?,
       children: children ?? this.children,
       wishlistQuery: wishlistQuery ?? this.wishlistQuery,
-      wishlistMinPrice: wishlistMinPrice == _unset
-          ? this.wishlistMinPrice
-          : wishlistMinPrice as int?,
-      wishlistMaxPrice: wishlistMaxPrice == _unset
-          ? this.wishlistMaxPrice
-          : wishlistMaxPrice as int?,
-      wishlistMinRating: wishlistMinRating == _unset
-          ? this.wishlistMinRating
-          : wishlistMinRating as int?,
-      wishlistVerifiedSellers:
-          wishlistVerifiedSellers ?? this.wishlistVerifiedSellers,
+      filterMinPrice: filterMinPrice == _unset
+          ? this.filterMinPrice
+          : filterMinPrice as int?,
+      filterMaxPrice: filterMaxPrice == _unset
+          ? this.filterMaxPrice
+          : filterMaxPrice as int?,
+      filterMinRating: filterMinRating == _unset
+          ? this.filterMinRating
+          : filterMinRating as int?,
+      filterVerifiedSellers:
+          filterVerifiedSellers ?? this.filterVerifiedSellers,
     );
   }
 }

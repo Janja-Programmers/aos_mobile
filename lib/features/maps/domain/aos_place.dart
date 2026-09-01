@@ -17,6 +17,7 @@ class AOSPlace {
   final String? instructions;
   final String? updatedAt;
   final bool hasLocation;
+  final int? locationVersion;
 
   const AOSPlace({
     required this.id,
@@ -34,6 +35,7 @@ class AOSPlace {
     this.instructions,
     this.updatedAt,
     this.hasLocation = true,
+    this.locationVersion,
   });
 
   String get shortLabel => name.isNotEmpty ? name : displayAddress;
@@ -78,6 +80,7 @@ class AOSPlace {
         json['has_location'],
         fallback: lat != 0 || lon != 0,
       ),
+      locationVersion: _toInt(json['location_version']),
     );
   }
 
@@ -98,6 +101,7 @@ class AOSPlace {
       'instructions': instructions,
       'updated_at': updatedAt,
       'has_location': hasLocation,
+      'location_version': locationVersion,
     };
   }
 
@@ -117,6 +121,7 @@ class AOSPlace {
     String? instructions,
     String? updatedAt,
     bool? hasLocation,
+    int? locationVersion,
   }) {
     return AOSPlace(
       id: id ?? this.id,
@@ -134,6 +139,7 @@ class AOSPlace {
       instructions: instructions ?? this.instructions,
       updatedAt: updatedAt ?? this.updatedAt,
       hasLocation: hasLocation ?? this.hasLocation,
+      locationVersion: locationVersion ?? this.locationVersion,
     );
   }
 
@@ -148,6 +154,13 @@ class AOSPlace {
     if (value is int) return value.toDouble();
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString());
   }
 
   static bool _toBool(dynamic value, {bool fallback = false}) {

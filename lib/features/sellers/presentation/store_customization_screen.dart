@@ -34,12 +34,10 @@ class _StoreCustomizationScreenState
   final _categoryCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   late final OperatingHoursForm _hoursForm;
-
   late final MediaUploadApi _mediaUploadApi;
 
   String? _uploadedShopBannerMediaId;
   String? _uploadedShopBannerPreview;
-
   bool _changed = false;
   bool _saving = false;
   bool _uploading = false;
@@ -48,7 +46,6 @@ class _StoreCustomizationScreenState
   @override
   void initState() {
     super.initState();
-
     _hoursForm = OperatingHoursForm();
     _mediaUploadApi = ref.read(mediaUploadApiProvider);
 
@@ -79,9 +76,7 @@ class _StoreCustomizationScreenState
   }
 
   void _markChanged() {
-    if (!_changed && mounted) {
-      setState(() => _changed = true);
-    }
+    if (!_changed && mounted) setState(() => _changed = true);
   }
 
   void _setCategorySilently(String value) {
@@ -104,7 +99,6 @@ class _StoreCustomizationScreenState
 
   void _hydrateFromSeller(AOSSellerProfile seller) {
     if (_initializedFromSeller) return;
-
     _hydrateFields(seller);
     _initializedFromSeller = true;
   }
@@ -120,7 +114,6 @@ class _StoreCustomizationScreenState
     }
 
     setState(() => _uploading = true);
-
     final uploaded = await ref
         .read(mediaUploadCoordinatorProvider)
         .upload(media: media, useCase: MediaUseCase.sellerBanner);
@@ -163,9 +156,7 @@ class _StoreCustomizationScreenState
       initialTime:
           _hoursForm.openTimes[day] ?? const TimeOfDay(hour: 9, minute: 0),
     );
-
     if (!mounted || picked == null) return;
-
     setState(() {
       _hoursForm.openTimes[day] = picked;
       _changed = true;
@@ -178,9 +169,7 @@ class _StoreCustomizationScreenState
       initialTime:
           _hoursForm.closeTimes[day] ?? const TimeOfDay(hour: 18, minute: 0),
     );
-
     if (!mounted || picked == null) return;
-
     setState(() {
       _hoursForm.closeTimes[day] = picked;
       _changed = true;
@@ -194,20 +183,9 @@ class _StoreCustomizationScreenState
     });
   }
 
-  Future<void> _openLocationEditor() async {
-    if (_saving || _uploading) return;
-
-    await SellerNavigation.toSellerLocation(context);
-    if (!mounted) return;
-
-    await ref.read(sellerStateProvider(widget.sellerId).notifier).load();
-  }
-
   Future<void> _save() async {
     if (_saving || _uploading) return;
-
     setState(() => _saving = true);
-
     final stagedBannerId = _uploadedShopBannerMediaId?.trim() ?? '';
 
     try {
@@ -233,18 +211,14 @@ class _StoreCustomizationScreenState
       }
 
       ShowSnack(context, 'Updated successfully').success();
-
       setState(() {
         _changed = false;
         _uploadedShopBannerMediaId = null;
         _uploadedShopBannerPreview = null;
       });
-
       Navigator.pop(context, true);
     } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -258,7 +232,6 @@ class _StoreCustomizationScreenState
     }
 
     _hydrateFromSeller(seller);
-
     final bannerUri = _uploadedShopBannerPreview ?? seller.shopBanner;
     final banner = buildFileUrl(bannerUri);
 
@@ -317,16 +290,6 @@ class _StoreCustomizationScreenState
             ),
             const SizedBox(height: 24),
             const SectionTitle(
-              icon: Icons.location_on_outlined,
-              label: 'Store Location',
-            ),
-            const SizedBox(height: 12),
-            _StoreLocationCard(
-              location: seller.location,
-              onTap: _openLocationEditor,
-            ),
-            const SizedBox(height: 24),
-            const SectionTitle(
               icon: Icons.description_outlined,
               label: 'Store Description',
             ),
@@ -372,95 +335,6 @@ class _StoreCustomizationScreenState
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StoreLocationCard extends StatelessWidget {
-  const _StoreLocationCard({required this.location, required this.onTap});
-
-  final AOSSellerLocation? location;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appColors;
-    final hasLocation = location != null;
-    final title = hasLocation ? location!.title : 'Add store location';
-    final subtitle = hasLocation
-        ? location!.subtitle ?? 'Location saved'
-        : 'Let buyers find your shop or pickup point.';
-    final instructions = location?.instructions?.trim();
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Ink(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colors.border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: colors.primary.withValues(alpha: .1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.store_mall_directory_outlined,
-                color: colors.primary,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.pStrong.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.smallMuted,
-                  ),
-                  if (instructions != null && instructions.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      instructions,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.small.copyWith(color: colors.textPrimary),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              hasLocation ? 'Edit' : 'Add',
-              style: context.small.copyWith(
-                color: colors.primary,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(Icons.chevron_right_rounded, color: colors.textMuted),
           ],
         ),
       ),

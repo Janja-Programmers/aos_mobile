@@ -29,6 +29,7 @@ The first recommended feature is **authentication and session** because it estab
 - [Notifications](notifications/README.md)
 - [Wishlist](wishlist/README.md)
 - [Seller storefront media](seller-storefront-media.md)
+- [Seller storefront discovery and active hours](seller-storefront-discovery.md)
 
 - [Application lock](native-app-lock.md)
 

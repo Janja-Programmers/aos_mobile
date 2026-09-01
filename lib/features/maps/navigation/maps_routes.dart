@@ -2,6 +2,7 @@ import 'package:africaonlinestores/core/routing/helpers/app_routes.dart';
 import 'package:africaonlinestores/features/maps/domain/aos_place.dart';
 import 'package:africaonlinestores/features/maps/presentation/screens/map_picker_screen.dart';
 import 'package:africaonlinestores/features/maps/presentation/screens/maps_explorer_screen.dart';
+import 'package:africaonlinestores/features/maps/presentation/screens/seller_map_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,9 +15,13 @@ class MapsRoutes {
         name: AppRoutes.nMaps,
         path: AppRoutes.maps,
         builder: (context, state) {
+          final sellerId = state.uri.queryParameters['seller']?.trim();
+          if (sellerId != null && sellerId.isNotEmpty) {
+            return SellerMapScreen(sellerId: sellerId);
+          }
+
           final extra = state.extra;
           return MapsExplorerScreen(
-            initialSellerId: state.uri.queryParameters['seller'],
             initialPlace: extra is AOSPlace ? extra : null,
           );
         },

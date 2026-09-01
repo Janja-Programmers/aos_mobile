@@ -3,23 +3,26 @@ import 'package:africaonlinestores/features/sellers/location/data/seller_locatio
 import 'package:flutter_riverpod/legacy.dart';
 
 class SellerLocationState {
-  final bool loading;
-  final bool saving;
-  final AOSPlace? location;
-  final String? error;
-
   const SellerLocationState({
     required this.loading,
     required this.saving,
     required this.location,
+    required this.locationVersion,
     required this.error,
   });
+
+  final bool loading;
+  final bool saving;
+  final AOSPlace? location;
+  final int? locationVersion;
+  final String? error;
 
   factory SellerLocationState.initial() {
     return const SellerLocationState(
       loading: false,
       saving: false,
       location: null,
+      locationVersion: null,
       error: null,
     );
   }
@@ -29,6 +32,7 @@ class SellerLocationState {
     bool? saving,
     AOSPlace? location,
     bool clearLocation = false,
+    int? locationVersion,
     String? error,
     bool clearError = false,
   }) {
@@ -36,6 +40,7 @@ class SellerLocationState {
       loading: loading ?? this.loading,
       saving: saving ?? this.saving,
       location: clearLocation ? null : (location ?? this.location),
+      locationVersion: locationVersion ?? this.locationVersion,
       error: clearError ? null : (error ?? this.error),
     );
   }
@@ -50,19 +55,21 @@ final sellerLocationControllerProvider =
     });
 
 class SellerLocationController extends StateNotifier<SellerLocationState> {
-  final SellerLocationApi api;
-
   SellerLocationController(this.api) : super(SellerLocationState.initial());
+
+  final SellerLocationApi api;
 
   Future<void> load({String? seller}) async {
     state = state.copyWith(loading: true, clearError: true);
     final res = await api.getSellerLocation(seller: seller);
     res.fold(
-      (f) => state = state.copyWith(loading: false, error: f.message),
-      (location) => state = state.copyWith(
+      (failure) =>
+          state = state.copyWith(loading: false, error: failure.message),
+      (snapshot) => state = state.copyWith(
         loading: false,
-        location: location,
-        clearLocation: location == null,
+        location: snapshot.location,
+        clearLocation: snapshot.location == null,
+        locationVersion: snapshot.locationVersion,
       ),
     );
   }
@@ -72,6 +79,7 @@ class SellerLocationController extends StateNotifier<SellerLocationState> {
     String? locationName,
     String? instructions,
   }) async {
+    if (state.saving) return false;
     state = state.copyWith(saving: true, clearError: true);
     final res = await api.setMySellerLocation(
       latitude: place.latitude,
@@ -80,30 +88,42 @@ class SellerLocationController extends StateNotifier<SellerLocationState> {
           ? locationName!.trim()
           : place.shortLabel,
       locationInstructions: instructions,
+      expectedVersion: state.locationVersion,
     );
 
     return res.fold(
-      (f) {
-        state = state.copyWith(saving: false, error: f.message);
+      (failure) {
+        state = state.copyWith(saving: false, error: failure.message);
         return false;
       },
       (location) {
-        state = state.copyWith(saving: false, location: location);
+        state = state.copyWith(
+          saving: false,
+          location: location,
+          locationVersion: location.locationVersion,
+        );
         return true;
       },
     );
   }
 
   Future<bool> remove() async {
+    if (state.saving) return false;
     state = state.copyWith(saving: true, clearError: true);
-    final res = await api.removeMySellerLocation();
+    final res = await api.removeMySellerLocation(
+      expectedVersion: state.locationVersion,
+    );
     return res.fold(
-      (f) {
-        state = state.copyWith(saving: false, error: f.message);
+      (failure) {
+        state = state.copyWith(saving: false, error: failure.message);
         return false;
       },
-      (_) {
-        state = state.copyWith(saving: false, clearLocation: true);
+      (version) {
+        state = state.copyWith(
+          saving: false,
+          clearLocation: true,
+          locationVersion: version,
+        );
         return true;
       },
     );

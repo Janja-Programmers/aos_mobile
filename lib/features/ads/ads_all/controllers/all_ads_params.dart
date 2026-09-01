@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 class AllAdsParams {
   final String? parentCategoryId;
   final String? initialCategoryId;
+  final String? sellerId;
   final DealType dealType;
   final AdsSort? sort;
   final AllAdsMode mode;
@@ -14,6 +15,7 @@ class AllAdsParams {
   const AllAdsParams({
     this.parentCategoryId,
     this.initialCategoryId,
+    this.sellerId,
     this.dealType = DealType.all,
     this.sort,
     this.mode = AllAdsMode.normal,
@@ -24,12 +26,19 @@ class AllAdsParams {
     return other is AllAdsParams &&
         other.parentCategoryId == parentCategoryId &&
         other.initialCategoryId == initialCategoryId &&
+        other.sellerId == sellerId &&
         other.dealType == dealType &&
         other.sort == sort &&
         other.mode == mode;
   }
 
   @override
-  int get hashCode =>
-      Object.hash(parentCategoryId, initialCategoryId, dealType, sort, mode);
+  int get hashCode => Object.hash(
+    parentCategoryId,
+    initialCategoryId,
+    sellerId,
+    dealType,
+    sort,
+    mode,
+  );
 }

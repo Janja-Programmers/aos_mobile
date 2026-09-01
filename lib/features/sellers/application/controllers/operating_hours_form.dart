@@ -20,7 +20,9 @@ class OperatingHoursForm {
           final isOpen = dayEnabled[day] ?? false;
 
           return {
-            'day_of_week': _dayCode(day),
+            // Backend validation owns the canonical operating-day contract and
+            // accepts full English weekday names only.
+            'day_of_week': day,
             'is_open': isOpen ? 1 : 0,
             if (isOpen) 'open_time': _formatTimeForApi(openTimes[day]!),
             if (isOpen) 'close_time': _formatTimeForApi(closeTimes[day]!),
@@ -91,27 +93,6 @@ class OperatingHoursForm {
       'Saturday': const TimeOfDay(hour: 16, minute: 0),
       'Sunday': const TimeOfDay(hour: 18, minute: 0),
     };
-  }
-
-  static String _dayCode(String day) {
-    switch (day) {
-      case 'Monday':
-        return 'Mon';
-      case 'Tuesday':
-        return 'Tue';
-      case 'Wednesday':
-        return 'Wed';
-      case 'Thursday':
-        return 'Thu';
-      case 'Friday':
-        return 'Fri';
-      case 'Saturday':
-        return 'Sat';
-      case 'Sunday':
-        return 'Sun';
-      default:
-        return day;
-    }
   }
 
   static String? _fullDayName(String? value) {

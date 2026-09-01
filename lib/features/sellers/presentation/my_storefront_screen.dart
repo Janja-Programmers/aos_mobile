@@ -49,27 +49,83 @@ class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
       return;
     }
 
-    final action = await showModalBottomSheet<_StoreBannerAction>(
+    final action = await showDialog<_StoreBannerAction>(
       context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_camera_outlined),
-              title: Text(sheetContext.l10n.sellerBannerChangeAction),
-              onTap: () =>
-                  Navigator.pop(sheetContext, _StoreBannerAction.change),
+      builder: (dialogContext) {
+        final colors = dialogContext.appColors;
+        return Dialog(
+          backgroundColor: colors.surface,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Store banner',
+                            style: dialogContext.h5.copyWith(
+                              color: colors.textPrimary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: MaterialLocalizations.of(
+                            dialogContext,
+                          ).closeButtonTooltip,
+                          onPressed: () => Navigator.pop(dialogContext),
+                          icon: Icon(
+                            Icons.close_rounded,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        Icons.photo_library_outlined,
+                        color: colors.primary,
+                      ),
+                      title: Text(dialogContext.l10n.sellerBannerChangeAction),
+                      onTap: () => Navigator.pop(
+                        dialogContext,
+                        _StoreBannerAction.change,
+                      ),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        Icons.delete_outline_rounded,
+                        color: colors.primary,
+                      ),
+                      title: Text(dialogContext.l10n.sellerBannerRemoveAction),
+                      onTap: () => Navigator.pop(
+                        dialogContext,
+                        _StoreBannerAction.remove,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline_rounded),
-              title: Text(sheetContext.l10n.sellerBannerRemoveAction),
-              onTap: () =>
-                  Navigator.pop(sheetContext, _StoreBannerAction.remove),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
     if (!mounted || action == null) return;
 
@@ -159,6 +215,12 @@ class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
     await _refresh();
   }
 
+  Future<void> _openLocation() async {
+    final changed = await SellerNavigation.toSellerLocation(context);
+    if (!mounted || changed != true) return;
+    await _refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(sellerStateProvider(widget.sellerId));
@@ -210,6 +272,7 @@ class _MyStorefrontScreenState extends ConsumerState<MyStorefrontScreen> {
                   uploadingBanner: _uploadingBanner,
                   onEditBanner: _showBannerActions,
                   onCustomize: _openCustomize,
+                  onLocation: _openLocation,
                   onPreview: () {
                     SellerNavigation.toSellerStore(
                       context,
@@ -235,6 +298,7 @@ class _MyStorefrontHeader extends StatelessWidget {
     required this.uploadingBanner,
     required this.onEditBanner,
     required this.onCustomize,
+    required this.onLocation,
     required this.onPreview,
   });
 
@@ -242,6 +306,7 @@ class _MyStorefrontHeader extends StatelessWidget {
   final bool uploadingBanner;
   final VoidCallback onEditBanner;
   final VoidCallback onCustomize;
+  final VoidCallback onLocation;
   final VoidCallback onPreview;
 
   @override
@@ -318,18 +383,32 @@ class _MyStorefrontHeader extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
+                child: OutlinedButton(
                   onPressed: onCustomize,
-                  icon: const Icon(Icons.tune_rounded, size: 18),
-                  label: const Text('Customize'),
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('Customize', maxLines: 1, softWrap: false),
+                  ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 6),
               Expanded(
-                child: OutlinedButton.icon(
+                child: OutlinedButton(
                   onPressed: onPreview,
-                  icon: const Icon(Icons.remove_red_eye_outlined, size: 18),
-                  label: const Text('Preview'),
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('Preview', maxLines: 1, softWrap: false),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onLocation,
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('Location', maxLines: 1, softWrap: false),
+                  ),
                 ),
               ),
             ],

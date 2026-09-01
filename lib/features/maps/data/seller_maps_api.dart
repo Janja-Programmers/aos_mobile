@@ -85,7 +85,6 @@ class SellerMapsApi {
     required double west,
     required double east,
     required int zoom,
-    int limit = 100,
   }) async {
     try {
       final res = await _client.get(
@@ -96,7 +95,6 @@ class SellerMapsApi {
           'west': west,
           'east': east,
           'zoom': zoom,
-          'limit': limit,
         },
       );
 
